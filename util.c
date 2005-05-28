@@ -61,9 +61,7 @@ static char *versionSite[]   = {
 static HostTraffic* _getFirstHost(u_int actualDeviceId, u_int beginIdx) {
   u_int idx;
 
-#ifdef CFG_MULTITHREADED
   /* accessMutex(&myGlobals.hostsHashMutex, "_getFirstHost"); */
-#endif
 
   for(idx=beginIdx; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
     HostTraffic *el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
@@ -74,16 +72,12 @@ static HostTraffic* _getFirstHost(u_int actualDeviceId, u_int beginIdx) {
 		   CONST_MAGIC_NUMBER, el->magic, actualDeviceId);
       }
 
-#ifdef CFG_MULTITHREADED
       /* releaseMutex(&myGlobals.hostsHashMutex); */
-#endif
       return(el);
     }
   }
 
-#ifdef CFG_MULTITHREADED
   /* releaseMutex(&myGlobals.hostsHashMutex); */
-#endif
   return(NULL);
 }
 
@@ -98,9 +92,7 @@ HostTraffic* getFirstHost(u_int actualDeviceId) {
 HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {
   if(host == NULL) return(NULL);
 
-#ifdef CFG_MULTITHREADED
   /* accessMutex(&myGlobals.hostsHashMutex, "getNextHost"); */
-#endif
 
   if(host->next != NULL) {
     if(host->next->magic != CONST_MAGIC_NUMBER) {
@@ -108,16 +100,12 @@ HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {
 		 CONST_MAGIC_NUMBER, host->next->magic);
     }
 
-#ifdef CFG_MULTITHREADED
     /* releaseMutex(&myGlobals.hostsHashMutex); */
-#endif
     return(host->next);
   } else {
     u_int nextIdx = host->hostTrafficBucket+1;
 
-#ifdef CFG_MULTITHREADED
     /* releaseMutex(&myGlobals.hostsHashMutex); */
-#endif
     if(nextIdx < myGlobals.device[actualDeviceId].actualHashSize)
       return(_getFirstHost(actualDeviceId, nextIdx));
     else
@@ -1666,7 +1654,6 @@ int getLocalHostAddress(struct in_addr *hostAddress, char* device) {
 /* ********************************* */
 
 #ifndef WIN32
-#ifdef CFG_MULTITHREADED
 
 /* *********** MULTITHREAD STUFF *********** */
 
@@ -2097,15 +2084,14 @@ int deleteSem(sem_t *semId) {
 }
 #endif
 
-#endif /* CFG_MULTITHREADED */
 #endif /* WIN32 */
 
 /* ************************************ */
 
 int checkCommand(char* commandName) {
-#ifdef WIN32
-  return(0);
-#else
+
+#ifndef WIN32
+
   char buf[256], *workBuf;
   struct stat statBuf;
   int rc, ecode=0;
@@ -2178,9 +2164,11 @@ int checkCommand(char* commandName) {
              errno,
              commandName,
              ecode == 7 ? " (tool exists but is not suid root)" : "");
-  return(0);
 
 #endif
+
+  return(0);
+
 }
 
 /* ************************************ */
@@ -2512,11 +2500,7 @@ void traceEvent(int eventTraceLevel, char* file,
     time_t theTime = time(NULL);
     struct tm t;
     char bufTime[LEN_TIMEFORMAT_BUFFER];
-#ifndef CHKVER_DEBUG
-    char buf[LEN_GENERAL_WORK_BUFFER];
-#else
-    char buf[LEN_CHECKVERSION_BUFFER];
-#endif
+    char buf[LEN_HUGE_WORK_BUFFER];
     char bufMsg[LEN_GENERAL_WORK_BUFFER];
     char bufMsgID[LEN_MEDIUM_WORK_BUFFER];
     char bufLineID[LEN_MEDIUM_WORK_BUFFER];
@@ -2591,7 +2575,6 @@ void traceEvent(int eventTraceLevel, char* file,
     if ((eventTraceLevel <= CONST_INFO_TRACE_LEVEL) &&
         (myGlobals.logView != NULL)) {
 
-#ifdef CFG_MULTITHREADED
       if(myGlobals.logViewMutex.isInitialized) {
 #ifdef WIN32
 	WaitForSingleObject(myGlobals.logViewMutex.mutex, INFINITE);
@@ -2599,7 +2582,6 @@ void traceEvent(int eventTraceLevel, char* file,
 	pthread_mutex_lock(&myGlobals.logViewMutex.mutex);
 #endif
       }
-#endif
 
       if (myGlobals.logView[myGlobals.logViewNext] != NULL)
 	free(myGlobals.logView[myGlobals.logViewNext]);
@@ -2608,7 +2590,6 @@ void traceEvent(int eventTraceLevel, char* file,
 
       myGlobals.logViewNext = (myGlobals.logViewNext + 1) % CONST_LOG_VIEW_BUFFER_SIZE;
 
-#ifdef CFG_MULTITHREADED
       if(myGlobals.logViewMutex.isInitialized) {
 #ifdef WIN32
 	ReleaseMutex(myGlobals.logViewMutex.mutex);
@@ -2616,7 +2597,6 @@ void traceEvent(int eventTraceLevel, char* file,
 	pthread_mutex_unlock(&myGlobals.logViewMutex.mutex);
 #endif
       }
-#endif
     }
 
     /* If ntop is a Win32 service, we're done - we don't (yet) write to the
@@ -2833,26 +2813,16 @@ FILE* getNewRandomFile(char* fileName, int len) {
   FILE* fd;
 
 #ifndef WIN32
-#if 0
-  int tmpfd;
-
-  /* Patch courtesy of Thomas Biege <thomas@suse.de> */
-  if(((tmpfd = mkstemp(fileName)) < 0)
-     || (fchmod(tmpfd, 0600) < 0)
-     || ((fd = fdopen(tmpfd, "wb")) == NULL))
-    fd = NULL;
-#else
   char tmpFileName[NAME_MAX];
 
   strcpy(tmpFileName, fileName);
   safe_snprintf(__FILE__, __LINE__, fileName, len, "%s-%lu", tmpFileName,
 		myGlobals.numHandledRequests[0]+myGlobals.numHandledRequests[1]);
-  fd = fopen(fileName, "wb");
-#endif /* 0 */
 #else
   tmpnam(fileName);
-  fd = fopen(fileName, "wb");
 #endif
+
+  fd = fopen(fileName, "wb");
 
   if(fd == NULL)
     traceEvent(CONST_TRACE_WARNING, "Unable to create temp. file (%s). ", fileName);
@@ -3893,21 +3863,17 @@ void checkUserIdentity(int userSpecified) {
 #ifndef HAVE_LOCALTIME_R
 #undef localtime
 
-#ifdef CFG_MULTITHREADED
 static PthreadMutex localtimeMutex;
 static char localtimeMutexInitialized = 0;
-#endif
 
 struct tm *localtime_r(const time_t *t, struct tm *tp) {
   struct tm *theTime;
 
-#if defined(CFG_MULTITHREADED)
   if(!localtimeMutexInitialized) {
     createMutex(&localtimeMutex);
     localtimeMutexInitialized = 1;
   }
   accessMutex(&localtimeMutex, "localtime_r");
-#endif
 
   theTime = localtime(t);
 
@@ -3916,9 +3882,7 @@ struct tm *localtime_r(const time_t *t, struct tm *tp) {
   else
     memset(tp, 0, sizeof(struct tm)); /* What shall I do ? */
 
-#if defined(CFG_MULTITHREADED)
   releaseMutex(&localtimeMutex);
-#endif
 
   return(tp);
 }
@@ -4146,24 +4110,6 @@ char *ip2CountryCode(HostAddr ip) {
 
 /* ******************************************************** */
 
-#ifdef PARM_SHOW_NTOP_HEARTBEAT
-void _HEARTBEAT(int beatLevel, char* file, int line, char * format, ...) {
-  char buf[LEN_GENERAL_WORK_BUFFER];
-  va_list va_ap;
-
-  myGlobals.heartbeatCounter++;
-
-  if((format != NULL) && (PARM_SHOW_NTOP_HEARTBEAT >= beatLevel) ) {
-    memset(buf, 0, LEN_GENERAL_WORK_BUFFER);
-    va_start(va_ap, format);
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER-1, format, va_ap);
-    va_end(va_ap);
-
-    traceEvent(CONST_TRACE_INFO, "HEARTBEAT(%09u)[%s:%d]: %s", myGlobals.heartbeatCounter, file, line, buf);
-  }
-}
-#endif
-
 #ifdef MAKE_WITH_I18N
 char *i18n_xvert_locale2common(const char *input) {
   /*
@@ -4383,17 +4329,13 @@ void setHostFingerprint(HostTraffic *srcHost) {
 int ntop_gdbm_delete(GDBM_FILE g, datum d) {
   int rc;
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_delete");
-#endif
 
   rc = gdbm_delete(g, d);
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     releaseMutex(&myGlobals.gdbmMutex);
-#endif
 
   return(rc);
 }
@@ -4405,17 +4347,13 @@ datum ntop_gdbm_firstkey(GDBM_FILE g) {
 
   memset(&theData, 0, sizeof(theData));
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_firstkey");
-#endif
 
   theData = gdbm_firstkey(g);
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     releaseMutex(&myGlobals.gdbmMutex);
-#endif
 
   return(theData);
 }
@@ -4423,17 +4361,13 @@ datum ntop_gdbm_firstkey(GDBM_FILE g) {
 /* ****************************************** */
 
 void ntop_gdbm_close(GDBM_FILE g) {
-#ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_close");
-#endif
 
   gdbm_close(g);
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     releaseMutex(&myGlobals.gdbmMutex);
-#endif
 }
 
 /* ******************************************* */
@@ -4443,17 +4377,13 @@ datum ntop_gdbm_nextkey(GDBM_FILE g, datum d) {
 
   memset(&theData, 0, sizeof(theData));
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_nextkey");
-#endif
 
   theData = gdbm_nextkey(g, d);
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     releaseMutex(&myGlobals.gdbmMutex);
-#endif
 
   return(theData);
 }
@@ -4465,17 +4395,13 @@ datum ntop_gdbm_fetch(GDBM_FILE g, datum d) {
 
   memset(&theData, 0, sizeof(theData));
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_fetch");
-#endif
 
   theData = gdbm_fetch(g, d);
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     releaseMutex(&myGlobals.gdbmMutex);
-#endif
 
   return(theData);
 }
@@ -4485,17 +4411,13 @@ datum ntop_gdbm_fetch(GDBM_FILE g, datum d) {
 int ntop_gdbm_store(GDBM_FILE g, datum d, datum v, int r) {
   int rc;
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_store");
-#endif
 
   rc = gdbm_store(g, d, v, r);
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     releaseMutex(&myGlobals.gdbmMutex);
-#endif
 
   return(rc);
 }
@@ -4811,32 +4733,18 @@ fcwwn_to_str (const u_int8_t *ad)
 
 /* ************************************ */
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
-
-#undef sched_yield
 
 /* BStrauss - August 2003 - Check the flag and skip the call... */
-extern int ntop_sched_yield(char *file, int line) {
-#ifdef DEBUG
-  static int firstTime=0;
+int ntop_conditional_sched_yield(void) {
 
-  if(firstTime) {
-    traceEvent(CONST_TRACE_INFO, "DEBUG: firstTime in ntop_sched_yield()");
-    firstTime = 1;
-  }
-#endif
-
+#ifdef MAKE_WITH_SCHED_YIELD
   if(!myGlobals.runningPref.disableSchedYield) {
     return(sched_yield());
-#ifdef DEBUG
-  } else {
-    traceEvent(CONST_TRACE_INFO, "DEBUG: skipping sched_yield()");
-#endif
   }
+#endif
 
   return(0);
 }
-#endif
 
 /* ********************************* */
 
@@ -5787,7 +5695,7 @@ void* checkVersion(void* notUsed _UNUSED_) {
   /* The work buffer is a big boy so we can eat the entire XML file all at once
    * and avoid making this logic any more complex!
    */
-  char buf[LEN_CHECKVERSION_BUFFER];
+  char buf[LEN_HUGE_WORK_BUFFER];
   int rc=0, idx = 0;
 
   displayPrivacyNotice();

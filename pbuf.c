@@ -792,9 +792,7 @@ void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_in
   if((sport >= MAX_IP_PORT) || (dport >= MAX_IP_PORT))
     return;
 
-#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.purgePortsMutex, "updateInterfacePorts");
-#endif
 
   if(myGlobals.device[actualDeviceId].ipPorts[sport] == NULL) {
     myGlobals.device[actualDeviceId].ipPorts[sport] = (PortCounter*)malloc(sizeof(PortCounter));
@@ -815,9 +813,7 @@ void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_in
   myGlobals.device[actualDeviceId].ipPorts[sport]->sent += length;
   myGlobals.device[actualDeviceId].ipPorts[dport]->rcvd += length;
 
-#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.purgePortsMutex);
-#endif
 }
 
 /* ************************************ */
@@ -2231,8 +2227,6 @@ static void processIpPkt(const u_char *bp,
 
 /* ************************************ */
 
-#ifdef CFG_MULTITHREADED
-
 void queuePacket(u_char *_deviceId,
 		 const struct pcap_pkthdr *h,
 		 const u_char *p) {
@@ -2333,12 +2327,8 @@ void queuePacket(u_char *_deviceId,
 
     incrementTrafficCounter(&myGlobals.device[getActualInterface(deviceId)].droppedPkts, 1);
 
-#ifdef MAKE_WITH_SCHED_YIELD
-    sched_yield(); /* Allow other threads (dequeue) to run */
-#endif
-    HEARTBEAT(0, "queuePacket() drop, sleep(1)...", NULL);
+    ntop_conditional_sched_yield(); /* Allow other threads (dequeue) to run */
     sleep(1);
-    HEARTBEAT(0, "queuePacket() drop, sleep(1)...woke", NULL);
   } else {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "About to queue packet... ");
@@ -2380,9 +2370,7 @@ void queuePacket(u_char *_deviceId,
 #else
   signalCondvar(&myGlobals.queueCondvar);
 #endif
-#ifdef MAKE_WITH_SCHED_YIELD
-  sched_yield(); /* Allow other threads (dequeue) to run */
-#endif
+  ntop_conditional_sched_yield(); /* Allow other threads (dequeue) to run */
 }
 
 /* ************************************ */
@@ -2461,7 +2449,6 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
 	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
 
-    HEARTBEAT(9, "dequeuePacket()...processing...", NULL);
     myGlobals.actTime = time(NULL);
     accessMutex(&myGlobals.packetProcessMutex, "dequeuePacket");
     processPacket((u_char*)((long)deviceId), &h, p);
@@ -2475,9 +2462,6 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
 
   return(NULL);
 }
-
-#endif /* CFG_MULTITHREADED */
-
 
 /* ************************************ */
 
@@ -2738,9 +2722,7 @@ void processPacket(u_char *_deviceId,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.tooLong, 1);
   }
 
-#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "processPacket");
-#endif
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "actualDeviceId = %d", actualDeviceId);
@@ -2803,9 +2785,7 @@ void processPacket(u_char *_deviceId,
 		Patch below courtesy of
 		Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>
 	      */
-#ifdef CFG_MULTITHREADED
 	      releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 	      return;
 	    }
 	  }
@@ -2966,9 +2946,7 @@ void processPacket(u_char *_deviceId,
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (5) [Low memory?]");
-#ifdef CFG_MULTITHREADED
 	  releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 	  lowMemoryMsgShown = 1;
 	  return;
 	}
@@ -2977,9 +2955,7 @@ void processPacket(u_char *_deviceId,
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (6) [Low memory?]");
-#ifdef CFG_MULTITHREADED
 	  releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 	  lowMemoryMsgShown = 1;
 	  return;
 	}
@@ -3021,9 +2997,7 @@ void processPacket(u_char *_deviceId,
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (7) [Low memory?]");
-#ifdef CFG_MULTITHREADED
 	  releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 	  lowMemoryMsgShown = 1;
 	  return;
 	}
@@ -3032,9 +3006,7 @@ void processPacket(u_char *_deviceId,
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (8) [Low memory?]");
-#ifdef CFG_MULTITHREADED
 	  releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 	  lowMemoryMsgShown = 1;
 	  return;
 	}
@@ -3079,9 +3051,7 @@ void processPacket(u_char *_deviceId,
 	  if(srcHost == NULL) {
 	    /* Sanity check */
 	    if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (9) [Low memory?]");
-#ifdef CFG_MULTITHREADED
 	    releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 	    lowMemoryMsgShown = 1;
 	    return;
 	  }
@@ -3090,9 +3060,7 @@ void processPacket(u_char *_deviceId,
 	  if(dstHost == NULL) {
 	    /* Sanity check */
 	    if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (10) [Low memory?]");
-#ifdef CFG_MULTITHREADED
 	    releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 	    lowMemoryMsgShown = 1;
 	    return;
 	  }
@@ -3563,9 +3531,7 @@ void processPacket(u_char *_deviceId,
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (11) [Low memory?]");
-#ifdef CFG_MULTITHREADED
 	  releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 	  lowMemoryMsgShown = 1;
 	  return;
 	}
@@ -3574,9 +3540,7 @@ void processPacket(u_char *_deviceId,
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (12) [Low memory?]");
-#ifdef CFG_MULTITHREADED
 	  releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 	  lowMemoryMsgShown = 1;
 	  return;
 	}
@@ -3718,9 +3682,7 @@ void processPacket(u_char *_deviceId,
   if(myGlobals.flowsList != NULL) /* Handle flows last */
     flowsProcess(h, p, deviceId);
 
-#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 
 #ifdef MAX_PROCESS_BUFFER
   {

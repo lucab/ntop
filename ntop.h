@@ -268,7 +268,11 @@ ntop.h
 #ifndef WIN32
 #include <netdb.h>
 #include <netinet/in.h>
+
+#ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
+#endif
+
 #include <net/if.h>
 
 #ifdef HAVE_SCTP
@@ -370,31 +374,26 @@ ntop.h
  *
  * **************************************************************************************/
 
-#if defined(CFG_MULTITHREADED)
-# ifndef WIN32
-#  if defined(HAVE_SYS_SCHED_H) && !defined(FREEBSD)
-#   include <sys/sched.h>
-#  endif
+#ifndef WIN32
+# if defined(HAVE_SYS_SCHED_H) && !defined(FREEBSD)
+#  include <sys/sched.h>
+# endif
 
-#  if defined(HAVE_SCHED_H)
-#   include <sched.h>
-#  endif
+# if defined(HAVE_SCHED_H)
+#  include <sched.h>
+# endif
 
 /*
  * Switched pthread with semaphore.
  * Courtesy of
  * Wayne Roberts <wroberts1@cx983858-b.orng1.occa.home.com>
  */
-#  include <pthread.h>
+# include <pthread.h>
 
-#  if defined(HAVE_SEMAPHORE_H)
-#   include <semaphore.h>
-#  else
-#   undef MAKE_WITH_SEMAPHORES
-#  endif
-# endif /* WIN32 */
-
-#endif /* ! CFG_MULTITHREADED */
+# if defined(HAVE_SEMAPHORE_H)
+#  include <semaphore.h>
+# endif
+#endif /* WIN32 */
 
 /*
  * Packet Capture Library by Lawrence Berkeley National Laboratory

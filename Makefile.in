@@ -161,7 +161,6 @@ distcleancheck_listfiles = find . -type f -print
 # Fake out the missing tests for the auto* tools
 #
 ACLOCAL = /bin/sh ./missing --run echo
-ALLOCA = @ALLOCA@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@

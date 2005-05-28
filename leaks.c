@@ -59,16 +59,14 @@ unsigned int PrintMemoryBlocks(); /* Forward declaration */
 static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile, int lockMutex) {
   MemoryBlock *tmpBlock;
 
-#if defined(CFG_MULTITHREADED)
-  if(lockMutex) accessMutex(&leaksMutex, "storePtr");
-#endif
+  if(lockMutex)
+    accessMutex(&leaksMutex, "storePtr");
 
   tmpBlock = (MemoryBlock*)malloc(sizeof(MemoryBlock));
 
   if(tmpBlock == NULL) {
-#if defined(CFG_MULTITHREADED)
-    if(lockMutex) releaseMutex(&leaksMutex);
-#endif
+    if(lockMutex)
+      releaseMutex(&leaksMutex);
     traceEvent(CONST_TRACE_FATALERROR, "malloc (not enough memory): %s, %d",  theFile, theLine);
     exit(-1);
   }
@@ -87,9 +85,8 @@ static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile, int lock
 		"%s", tmpStr);
   tmpBlock->nextBlock = theRoot;
   theRoot = tmpBlock;
-#if defined(CFG_MULTITHREADED)
-  if(lockMutex) releaseMutex(&leaksMutex);
-#endif
+  if(lockMutex)
+    releaseMutex(&leaksMutex);
 }
 
 /* ********************************* */
@@ -120,9 +117,7 @@ static void* myCalloc(size_t numObj, size_t theSize, int theLine, char* theFile)
 static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile) {
   MemoryBlock *theScan, *lastPtr, *theNewPtr;
   
-#if defined(CFG_MULTITHREADED)
   accessMutex(&leaksMutex, "myRealloc");
-#endif
 
   theScan = theRoot;
  
@@ -134,9 +129,7 @@ static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile)
   if(theScan == NULL) {
     traceEvent(CONST_TRACE_WARNING, "Realloc error (Ptr %p NOT allocated): %s, %d", 
 	       thePtr, theFile, theLine);
-#if defined(CFG_MULTITHREADED)
     releaseMutex(&leaksMutex);
-#endif
     return(NULL);
   } else {    
     theNewPtr = myMalloc(theSize, theLine, theFile, 0);
@@ -155,9 +148,7 @@ static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile)
 
     free(theScan);     
 
-#if defined(CFG_MULTITHREADED)
     releaseMutex(&leaksMutex);
-#endif
 
     return(theNewPtr);
   }
@@ -168,9 +159,7 @@ static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile)
 static void myFree(void **thePtr, int theLine, char* theFile) {
   MemoryBlock *theScan, *lastPtr;
   
-#if defined(CFG_MULTITHREADED)
   accessMutex(&leaksMutex, "myFree");
-#endif
 
   theScan = theRoot;
  
@@ -182,9 +171,7 @@ static void myFree(void **thePtr, int theLine, char* theFile) {
   if(theScan == NULL) {
     traceEvent(CONST_TRACE_WARNING, "Free error (Ptr %p NOT allocated): %s, %d", 
 	       *thePtr, theFile, theLine);
-#if defined(CFG_MULTITHREADED)
     releaseMutex(&leaksMutex);
-#endif
     return;
   } else {
     myGlobals.allocatedMemory -= theScan->blockSize;
@@ -203,9 +190,7 @@ static void myFree(void **thePtr, int theLine, char* theFile) {
     *thePtr = NULL;
   }
 
-#if defined(CFG_MULTITHREADED)
   releaseMutex(&leaksMutex);
-#endif
 }
 
 /* *************************************** */
@@ -360,18 +345,14 @@ void initLeaks(void) {
   myGlobals.runningPref.traceLevel      = 999;
   myGlobals.allocatedMemory = 0;  
 
-#ifdef CFG_MULTITHREADED
   createMutex(&leaksMutex);
-#endif
 }
 
 /* *************************************** */
 
 void termLeaks(void) {
   PrintMemoryBlocks();
-#ifdef CFG_MULTITHREADED
   deleteMutex(&leaksMutex);
-#endif
 }
 
 /* ************************************ */

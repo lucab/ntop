@@ -23,9 +23,7 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-#ifdef CFG_MULTITHREADED
 static void* netflowMainLoop(void* _deviceId);
-#endif
 
 /* #define DEBUG_FLOWS   */
 
@@ -280,7 +278,6 @@ static int setNetFlowInSocket(int deviceId) {
 	       myGlobals.device[deviceId].netflowGlobals->netFlowInPort);
   }
 
-#ifdef CFG_MULTITHREADED
   if((myGlobals.device[deviceId].netflowGlobals->netFlowInPort != 0)
      && (!myGlobals.device[deviceId].netflowGlobals->threadActive)) {
     /* This plugin works only with threads */
@@ -290,7 +287,6 @@ static int setNetFlowInSocket(int deviceId) {
                  (long)myGlobals.device[deviceId].netflowGlobals->netFlowThread,
                  myGlobals.device[deviceId].netflowGlobals->netFlowInPort);
   }
-#endif
 
   return(0);
 }
@@ -447,9 +443,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
       myGlobals.device[actualDeviceId].rcvdPktStats.upTo1518.value += numPkts;
   }
 
-#ifdef CFG_MULTITHREADED
   /* accessMutex(&myGlobals.hostsHashMutex, "processNetFlowPacket"); */
-#endif
 
   if(!skipSRC) {
     switch((skipSRC = isOKtoSave(ntohl(record->srcaddr),
@@ -737,9 +731,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
     }
   }
 
-#ifdef CFG_MULTITHREADED
   /* releaseMutex(&myGlobals.hostsHashMutex); */
-#endif
 
   return(0);
 }
@@ -1193,10 +1185,8 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
       traceEvent(CONST_TRACE_INFO, "dissectFlow(%d flows)", numFlows);
 #endif
 
-#ifdef CFG_MULTITHREADED
     /* Lock white/black lists for duration of this flow packet */
     accessMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex, "flowPacket");
-#endif
 
     /*
       Reset the record so that fields that are not contained
@@ -1228,16 +1218,12 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
     if(flowVersion == 5) /* Skip converted V1/V7 flows */
       myGlobals.device[deviceId].netflowGlobals->numNetFlowsV5Rcvd += numFlows;
 
-#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex);
-#endif
   } else
     myGlobals.device[deviceId].netflowGlobals->numBadNetFlowsVersionsRcvd++; /* CHANGE */
 }
 
 /* ****************************** */
-
-#ifdef CFG_MULTITHREADED
 
 #ifdef MAKE_WITH_NETFLOWSIGTRAP
 RETSIGTYPE netflowcleanup(int signo) {
@@ -1433,8 +1419,6 @@ static void* netflowMainLoop(void* _deviceId) {
   return(NULL);
 }
 
-#endif
-
 /* ****************************** */
 
 static void initNetFlowDevice(int deviceId) {
@@ -1452,14 +1436,8 @@ static void initNetFlowDevice(int deviceId) {
 
   setPluginStatus(NULL);
 
-#ifdef CFG_MULTITHREADED
   myGlobals.device[deviceId].netflowGlobals->threadActive = 0;
   createMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex);
-#else
-  /* This plugin works only with threads */
-  setPluginStatus("Disabled - requires POSIX thread support.");
-  return(-1);
-#endif
 
   if(fetchPrefsValue(nfValue(deviceId, "netFlowInPort", 1), value, sizeof(value)) == -1)
     storePrefsValue(nfValue(deviceId, "netFlowInPort", 1), "0");
@@ -1489,9 +1467,7 @@ static void initNetFlowDevice(int deviceId) {
   } else
     myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList = strdup(value);
 
-#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex, "initNetFlowDevice");
-#endif
   handleWhiteBlackListAddresses((char*)&value,
                                 myGlobals.device[deviceId].netflowGlobals->whiteNetworks,
                                 &myGlobals.device[deviceId].netflowGlobals->numWhiteNets,
@@ -1500,9 +1476,7 @@ static void initNetFlowDevice(int deviceId) {
   if(myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList != NULL)
     free(myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList);
   myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList = strdup(workList);
-#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex);
-#endif
   traceEvent(CONST_TRACE_INFO, "NETFLOW: White list initialized to '%s'",
 	     myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList);
 
@@ -1512,9 +1486,7 @@ static void initNetFlowDevice(int deviceId) {
   } else
     myGlobals.device[deviceId].netflowGlobals->netFlowBlackList=strdup(value);
 
-#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex, "initNetFlowDevice()");
-#endif
   handleWhiteBlackListAddresses((char*)&value, myGlobals.device[deviceId].netflowGlobals->blackNetworks,
                                 &myGlobals.device[deviceId].netflowGlobals->numBlackNets, (char*)&workList,
                                 sizeof(workList));
@@ -1522,9 +1494,7 @@ static void initNetFlowDevice(int deviceId) {
     free(myGlobals.device[deviceId].netflowGlobals->netFlowBlackList);
 
   myGlobals.device[deviceId].netflowGlobals->netFlowBlackList = strdup(workList);
-#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex);
-#endif
   traceEvent(CONST_TRACE_INFO, "NETFLOW: Black list initialized to '%s'",
 	     myGlobals.device[deviceId].netflowGlobals->netFlowBlackList);
 
@@ -2535,10 +2505,8 @@ static void handleNetflowHTTPrequest(char* _url) {
 	    }
 	    tPtr[0]='\0';
 
-#ifdef CFG_MULTITHREADED
 	    accessMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex,
 			"handleNetflowHTTPrequest()w");
-#endif
 	    handleWhiteBlackListAddresses(value,
 					  myGlobals.device[deviceId].netflowGlobals->whiteNetworks,
 					  &myGlobals.device[deviceId].netflowGlobals->numWhiteNets,
@@ -2547,9 +2515,7 @@ static void handleNetflowHTTPrequest(char* _url) {
 	    if(myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList != NULL)
 	      free(myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList);
 	    myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList=strdup(workList);
-#ifdef CFG_MULTITHREADED
 	    releaseMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex);
-#endif
 	    storePrefsValue(nfValue(deviceId, "whiteList", 1),
 			    myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList);
 	  }
@@ -2568,10 +2534,8 @@ static void handleNetflowHTTPrequest(char* _url) {
 	    }
 	    tPtr[0]='\0';
 
-#ifdef CFG_MULTITHREADED
 	    accessMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex,
 			"handleNetflowHTTPrequest()b");
-#endif
 	    handleWhiteBlackListAddresses(value,
 					  myGlobals.device[deviceId].netflowGlobals->blackNetworks,
 					  &myGlobals.device[deviceId].netflowGlobals->numBlackNets,
@@ -2580,9 +2544,7 @@ static void handleNetflowHTTPrequest(char* _url) {
 	    if(myGlobals.device[deviceId].netflowGlobals->netFlowBlackList != NULL)
 	      free(myGlobals.device[deviceId].netflowGlobals->netFlowBlackList);
 	    myGlobals.device[deviceId].netflowGlobals->netFlowBlackList=strdup(workList);
-#ifdef CFG_MULTITHREADED
 	    releaseMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex);
-#endif
 	    storePrefsValue(nfValue(deviceId, "blackList", 1),
 			    myGlobals.device[deviceId].netflowGlobals->netFlowBlackList);
 	  }
@@ -2741,7 +2703,6 @@ static void handleNetflowHTTPrequest(char* _url) {
 		 "</ul></td>\n"
 		 "<td width=\"25%\">&nbsp;</td>\n</tr>\n</table>\n");
 
-#ifdef CFG_MULTITHREADED
       if(myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex.isLocked) {
 	sendString("<table><tr><td colspan=\"2\">&nbsp;</td></tr>\n"
 		   "<tr " TR_ON ">\n"
@@ -2754,7 +2715,6 @@ static void handleNetflowHTTPrequest(char* _url) {
 			 "White/Black list mutex");
 	sendString("</table><td></tr></table>\n");
       }
-#endif
     }
 
     /* ******************************
@@ -2805,14 +2765,12 @@ static void termNetflowDevice(int deviceId) {
   }
 
   if((deviceId >= 0) && (deviceId < myGlobals.numDevices)) {
-#ifdef CFG_MULTITHREADED
     if(myGlobals.device[deviceId].netflowGlobals->threadActive) {
       killThread(&myGlobals.device[deviceId].netflowGlobals->netFlowThread);
       myGlobals.device[deviceId].netflowGlobals->threadActive = 0;
     }
     tryLockMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex, "termNetflow");
     deleteMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex);
-#endif
 
     if(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket > 0) {
       closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSocket);

@@ -85,7 +85,6 @@ int optind, opterr;
 static u_short dumpPermissions;
 #endif
 
-#ifdef CFG_MULTITHREADED
 static PthreadMutex rrdMutex;
 static pthread_t rrdThread, rrdTrafficThread;
 
@@ -100,7 +99,6 @@ static u_short dumpDomains, dumpFlows, dumpHosts,
   dumpInterfaces, dumpMatrix, shownCreate=0;
 
 static Counter rrdGraphicRequests=0;
-#endif
 
 /* forward */
 static void setPluginStatus(char * status);
@@ -109,7 +107,6 @@ static void arbitraryActionPage(void);
 static void statisticsPage(void);
 static void printRRDPluginTrailer(void);
 static void handleRRDHTTPrequest(char* url);
-#ifdef CFG_MULTITHREADED
 static char* spacer(char* str, char *tmpStr, int tmpStrLen);
 
 static int sumCounter(char *rrdPath, char *rrdFilePath,
@@ -123,7 +120,6 @@ static void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *coun
 char x2c(char *what);
 static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
 static void addRrdDelay();
-#endif
 
 /* ************************************* */
 
@@ -147,11 +143,7 @@ static PluginInfo rrdPluginInfo[] = {
     ConfigureOnly, /* use extra pages for the views */
     1, /* Inactive setup */
     initRRDfunct, /* TermFunc   */
-#ifdef CFG_MULTITHREADED
     termRRDfunct, /* TermFunc   */
-#else
-    NULL,
-#endif
     NULL, /* PluginFunc */
     handleRRDHTTPrequest,
     NULL, /* no host creation/deletion handle */
@@ -160,29 +152,6 @@ static PluginInfo rrdPluginInfo[] = {
     rrdExtraPages  /* no extra pages */
   }
 };
-
-#ifndef CFG_MULTITHREADED
-//
-// Minimal 'sorry charlie' if not threaded...
-//
-
-static int initRRDfunct(void) {
-  traceEvent(CONST_TRACE_INFO, "RRD: Welcome to the RRD plugin");
-  setPluginStatus("Disabled - requires POSIX thread support.");
-  return(-1);
-}
-
-/* ****************************** */
-
-static void handleRRDHTTPrequest(char* url) {
-
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-  printHTMLheader("Sorry", NULL, 0);
-  sendString("<p>The rrd plugin requires POSIX threads.</p>\n");
-  printHTMLtrailer();
-}
-
-#else
 
 /* ****************************************************** */
 
@@ -2902,9 +2871,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		      dumpInterval,
 		      endTime);
 
-    HEARTBEAT(0, "rrdMainLoop(), sleep(%d)...", sleep_tm);
     sleep(sleep_tm);
-    HEARTBEAT(0, "rrdMainLoop(), sleep(%d)...woke", sleep_tm);
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
     if(active == 0) return(NULL);
 
@@ -3396,8 +3363,6 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
   initialized = 0; /* Reinit on restart */
   active = 0;
 }
-
-#endif /* MULTITHREADED */
 
 /* ****************************** */
 

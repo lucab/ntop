@@ -301,8 +301,6 @@ typedef struct protocolsList {
   struct protocolsList *next;
 } ProtocolsList;
 
-#ifdef CFG_MULTITHREADED
-
 #ifndef WIN32
 
 typedef struct conditionalVariable {
@@ -357,9 +355,6 @@ typedef struct packetInformation {
   struct pcap_pkthdr h;
   u_char p[MAX_PACKET_LEN];
 } PacketInformation;
-
-#endif /* CFG_MULTITHREADED */
-
 
 typedef struct hash_list {
   u_int16_t idx;          /* Index of this entry in hostTraffic */
@@ -1256,11 +1251,9 @@ typedef struct netFlowGlobals {
   HostTraffic *dummyHost;
   FlowSetV9 *templates;
 
-#ifdef CFG_MULTITHREADED
   pthread_t netFlowThread;
   int threadActive;
   PthreadMutex whiteblackListMutex;
-#endif
 } NetFlowGlobals;
 
 /* *********************************** */
@@ -1321,11 +1314,9 @@ typedef struct sFlowGlobals {
   Counter flowProcessedBytes;
   HostTraffic *dummyHost;
 
-#ifdef CFG_MULTITHREADED
   pthread_t sflowThread;
   int threadActive;
   PthreadMutex whiteblackListMutex;
-#endif
 
   u_long numSamplesReceived, initialPool, lastSample;
   u_int32_t flowSampleSeqNo, numSamplesToGo;
@@ -1472,9 +1463,7 @@ typedef struct ntopInterface {
 
   TrafficCounter numEstablishedTCPConnections; /* = # really established connections */
 
-#ifdef CFG_MULTITHREADED
   pthread_t pcapDispatchThreadId;
-#endif
 
   u_int  hostsno;        /* # of valid entries in the following table */
   u_int  actualHashSize;
@@ -1982,7 +1971,7 @@ typedef struct _userPref {
   bool useSSLwatchdog;          /* --ssl-watchdog '133' */
 #endif
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+#ifdef MAKE_WITH_SCHED_YIELD
   bool disableSchedYield;       /* --disable-schedyield '134' */
 #endif
 
@@ -2072,24 +2061,17 @@ typedef struct ntopGlobals {
 #endif
 
   /* Multi-thread related */
-#ifdef CFG_MULTITHREADED
-
   unsigned short numThreads;       /* # of running threads */
 
 #ifdef MAKE_WITH_SEMAPHORES
-  sem_t queueSem;
 
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
+  sem_t queueSem;
   sem_t queueAddressSem;
-#endif /* MAKE_ASYNC_ADDRESS_RESOLUTION */
 
 #else /* ! MAKE_WITH_SEMAPHORES */
 
   ConditionalVariable queueCondvar;
-
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   ConditionalVariable queueAddressCondvar;
-#endif /* MAKE_WITH_SEMAPHORES */
 
 #endif /* ! MAKE_WITH_SEMAPHORES */
 
@@ -2125,10 +2107,8 @@ typedef struct ntopGlobals {
    * DNSAR - DNS Address Resolution - optional
    */
   unsigned short numDequeueThreads;
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   PthreadMutex addressResolutionMutex;
   pthread_t dequeueAddressThreadId[MAX_NUM_DEQUEUE_THREADS];
-#endif
 
   /*
    * Control mutexes
@@ -2143,8 +2123,6 @@ typedef struct ntopGlobals {
 #endif
 
   pthread_t handleWebConnectionsThreadId;
-
-#endif /* CFG_MULTITHREADED */
 
   /* SSL support */
 
@@ -2167,10 +2145,6 @@ typedef struct ntopGlobals {
   short endNtop;             /* graceful shutdown ntop 0=run, 1=shutting down, 2=stopped */
   u_char resetHashNow;       /* used for hash reset */
 
-#ifdef PARM_SHOW_NTOP_HEARTBEAT
-  u_long heartbeatCounter;
-#endif
-
   /* Filter Chains */
   FlowFilterList *flowsList;
 
@@ -2181,10 +2155,8 @@ typedef struct ntopGlobals {
     dnsSniffARPACount,
     dnsSniffStoredInCache;
 
-#if defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
   u_long addressQueuedCount;
   u_int addressQueuedDup, addressQueuedCurrent, addressQueuedMax;
-#endif
 
   /*
    *  We count calls to ipaddr2str()
@@ -2259,11 +2231,9 @@ typedef struct ntopGlobals {
   PortProtoMapperHandler ipPortMapper;
 
   /* Packet Capture */
-#if defined(CFG_MULTITHREADED)
   PacketInformation packetQueue[CONST_PACKET_QUEUE_LENGTH+1];
   u_int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;
   Counter receivedPackets, receivedPacketsProcessed, receivedPacketsQueued, receivedPacketsLostQ;
-#endif
 
   TransactionTime transTimeHash[CONST_NUM_TRANSACTION_ENTRIES];
 
@@ -2373,9 +2343,7 @@ typedef struct ntopGlobals {
   /* LogView */
   char ** logView;         /* vector of log messages */
   int logViewNext;
-#ifdef CFG_MULTITHREADED
   PthreadMutex logViewMutex;
-#endif
 
   /* SCSI */
   char scsiDefaultDevType;

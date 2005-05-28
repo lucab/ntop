@@ -498,13 +498,9 @@ void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
 static void decrementRefCount(HostTraffic *el) {
   if(el->refCount == 0) return;
 
-#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "dumpNtopHashes");
-#endif
   el->refCount--;
-#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 }
 
 /* ********************************** */
@@ -568,13 +564,9 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
 
-#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.hostsHashMutex, "dumpNtopHashes");
-#endif
     el->refCount++;
-#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 
     strncpy(workSymIpAddress, el->hostResolvedName, MAX_LEN_SYM_HOST_NAME_HTML);
 
@@ -1144,9 +1136,7 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
 
-#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.hostsHashMutex, "dumpNtopHashes");
-#endif
 
     if(!broadcastHost(el)) {
       char *hostKey;
@@ -1161,9 +1151,7 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
       numEntries++;
     }
 
-#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.hostsHashMutex);
-#endif
   } /* for */
 
   endWriteArray(fDescr, lang);

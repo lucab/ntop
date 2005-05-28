@@ -29,8 +29,8 @@
  * Hello World! This is ntop speaking...
  */
 void welcome (FILE * fp) {
-  fprintf (fp, "Welcome to %s v.%s %s\n[Configured on %s, built on %s]\n",
-	   myGlobals.program_name, version, THREAD_MODE, configureDate, buildDate);
+  fprintf (fp, "Welcome to %s v.%s\n[Configured on %s, built on %s]\n",
+	   myGlobals.program_name, version, configureDate, buildDate);
   
   fprintf (fp, "Copyright 1998-2005 by %s.\n", author);
   fprintf (fp, "Get the freshest ntop from http://www.ntop.org/\n");
@@ -131,7 +131,7 @@ void usage(FILE * fp) {
 
   fprintf(fp, "    [--disable-instantsessionpurge]                       %sDisable instant FIN session purge\n", newLine);
   fprintf(fp, "    [--disable-mutexextrainfo]                            %sDisable extra mutex info\n", newLine);
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+#ifdef MAKE_WITH_SCHED_YIELD
   fprintf(fp, "    [--disable-schedyield]                                %sTurn off sched_yield() calls, if ntop is deadlocking on them\n", newLine);
 #endif
   fprintf(fp, "    [--disable-stopcap]                                   %sCapture packets even if there's no memory left\n", newLine);
@@ -448,7 +448,7 @@ int main(int argc, char *argv[]) {
 
   myGlobals.capturePackets = verifyOptions();
 
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s %s", version, THREAD_MODE);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s", version);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Configured on %s, built on %s.", configureDate, buildDate);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2005 by %s", author);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Get the freshest ntop from http://www.ntop.org/");
@@ -566,18 +566,13 @@ int main(int argc, char *argv[]) {
 #endif  
 
   /*
-   * In multithread mode, a separate thread handles packet sniffing
+   * A separate thread handles packet sniffing
    */
-#ifndef CFG_MULTITHREADED
-  packetCaptureLoop(&lastTime, myGlobals.runningPref.refreshRate);
-#else
   startSniffer();
-#endif
 
 #ifndef WIN32
 
   while(!myGlobals.endNtop) {
-    HEARTBEAT(0, "main(), sleep()...", NULL);
     sleep(10);
 
     /* Periodic recheck of the version status */
@@ -585,7 +580,6 @@ int main(int argc, char *argv[]) {
        (time(NULL) > myGlobals.checkVersionStatusAgain))
       checkVersion(NULL);
 
-    HEARTBEAT(0, "main(), sleep()...woke", NULL);
   }
 #endif
 

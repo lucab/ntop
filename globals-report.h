@@ -150,9 +150,7 @@ extern FcFabricElementHash *getFcFabricElementHash (u_short vsanId, int actualDe
 extern void dumpFcFabricElementHash (FcFabricElementHash **theHash, char* label,
                                      u_char dumpLoopbackTraffic, u_char vsanHash);
 
-#ifdef CFG_MULTITHREADED
 extern void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName);
-#endif
 
 extern void printPluginTrailer(char *left, char *middle);
 
@@ -274,9 +272,7 @@ extern void shutdownNtop(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
 extern void printNtopConfigHInfo(int textPrintFlag);
 extern void printHostColorCode(int textPrintFlag, int isInfo);
-#ifdef CFG_MULTITHREADED
 extern void printMutexStatusReport(int textPrintFlag);
-#endif
 extern void printNtopConfigInfo(int textPrintFlag, UserPref *pref);
 extern void printNtopProblemReport(void);
 extern void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr);

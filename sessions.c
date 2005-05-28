@@ -475,9 +475,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 
     prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
 
-#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.tcpSessionsMutex, "purgeIdleHosts");
-#endif
 
     while(theSession != NULL) {
       if(theSession->magic != CONST_MAGIC_NUMBER) {
@@ -526,9 +524,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	theSession = nextSession;
       }
     } /* while */
-#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.tcpSessionsMutex);
-#endif
   } /* end for */
 
 #ifdef DEBUG
@@ -1758,9 +1754,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   int len = 0;
   char *pnotes, *snotes, *dnotes;
 
-#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.tcpSessionsMutex, "handleTCPSession");
-#endif
 
   idx = computeIdx(&srcHost->hostIpAddress,&dstHost->hostIpAddress, sport, dport);
   idx %= MAX_TOT_NUM_SESSIONS;
@@ -2440,15 +2434,11 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 #else
     freeSession(theSession, actualDeviceId, 1, 1 /* lock purgeMutex */);
 #endif
-#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.tcpSessionsMutex);
-#endif
     return(NULL);
   }
 
-#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.tcpSessionsMutex);
-#endif
 
   return(theSession);
 }
@@ -3401,9 +3391,7 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
 
   idx %= MAX_TOT_NUM_SESSIONS;
 
-#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.fcSessionsMutex, "handleFcSession");
-#endif
 
   prevSession = theSession = myGlobals.device[actualDeviceId].fcSession[idx];
 
@@ -3650,8 +3638,6 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
     break;
   }
 
-#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.fcSessionsMutex);
-#endif
   return (theSession);
 }

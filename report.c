@@ -3476,9 +3476,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   */
   for(idx=1, numSessions=0, printedSessions=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
     if(el && (printedSessions >= el->numHostSessions)) break;
-#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.tcpSessionsMutex, "printActiveTCPSessions");
-#endif
 
     if(myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx] != NULL) {
       char *sport, *dport;
@@ -3592,9 +3590,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	printedSessions++;
       }
     }
-#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.tcpSessionsMutex);
-#endif
   }
 
   if(printedSessions > 0) {

@@ -102,20 +102,16 @@ void clearUserUrlList(void) {
 
   traceEvent(CONST_TRACE_NOISY, "SECURITY: Loading items table");
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.securityItemsMutex.isInitialized == 1)
     accessMutex(&myGlobals.securityItemsMutex, "clear");
-#endif
 
   for (i=0; i<myGlobals.securityItemsLoaded; i++) {
     free(myGlobals.securityItems[i]);
   }
   myGlobals.securityItemsLoaded = 0;
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.securityItemsMutex.isInitialized == 1)
     releaseMutex(&myGlobals.securityItemsMutex);
-#endif
 }
 
 /* *******************************/
@@ -1026,7 +1022,7 @@ int processNtopConfigData (char *buf, int savePref)
     tmpPrefs.useSSLwatchdog = 0;
 #endif
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+#ifdef MAKE_WITH_SCHED_YIELD
     tmpPrefs.disableSchedYield = 0;
 #endif
 
@@ -1140,7 +1136,7 @@ int processNtopConfigData (char *buf, int savePref)
     }
 #endif
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+#ifdef MAKE_WITH_SCHED_YIELD
     if (myGlobals.savedPref.disableSchedYield && !tmpPrefs.disableSchedYield) {
         processNtopPref (NTOP_PREF_NO_SCHEDYLD, FALSE, savePref, &tmpPrefs);
     }
@@ -1621,7 +1617,7 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 			 "");
 #endif
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+#ifdef MAKE_WITH_SCHED_YIELD
     CONFIG_RADIO_ENTRY (DARK_BG, "Disable SchedYield",
 			 NTOP_PREF_NO_SCHEDYLD, pref->disableSchedYield,
 			 "");

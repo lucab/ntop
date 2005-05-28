@@ -29,9 +29,7 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-#ifdef CFG_MULTITHREADED
 static void* sflowMainLoop(void* _deviceId);
-#endif
 
 /* #define DEBUG_FLOWS */
 
@@ -1346,7 +1344,6 @@ static int setsFlowInSocket(int deviceId) {
 	       myGlobals.device[deviceId].sflowGlobals->sflowInPort);
   }
 
-#ifdef CFG_MULTITHREADED
   if((myGlobals.device[deviceId].sflowGlobals->sflowInPort != 0)
      && (!myGlobals.device[deviceId].sflowGlobals->threadActive)) {
     /* This plugin works only with threads */
@@ -1356,7 +1353,6 @@ static int setsFlowInSocket(int deviceId) {
                  (long)myGlobals.device[deviceId].sflowGlobals->sflowThread,
                  myGlobals.device[deviceId].sflowGlobals->sflowInPort);
   }
-#endif
 
   return(0);
 }
@@ -2895,8 +2891,6 @@ static void dissectFlow(SFSample *sample, int deviceId) {
 
 /* ****************************** */
 
-#ifdef CFG_MULTITHREADED
-
 #ifdef MAKE_WITH_SFLOWSIGTRAP
 RETSIGTYPE sflowcleanup(int signo) {
   static int msgSent = 0;
@@ -3073,8 +3067,6 @@ static void* sflowMainLoop(void* _deviceId) {
   return(NULL);
 }
 
-#endif
-
 /* ****************************** */
 
 static void initsFlowDevice(int deviceId) {
@@ -3092,14 +3084,8 @@ static void initsFlowDevice(int deviceId) {
 
   setPluginStatus(NULL);
 
-#ifdef CFG_MULTITHREADED
   myGlobals.device[deviceId].sflowGlobals->threadActive = 0;
   createMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
-#else
-  /* This plugin works only with threads */
-  setPluginStatus("Disabled - requires POSIX thread support.");
-  return(-1);
-#endif
 
   if(fetchPrefsValue(sfValue(deviceId, "sflowInPort", 1), value, sizeof(value)) == -1)
     storePrefsValue(sfValue(deviceId, "sflowInPort", 1), "0");
@@ -3129,9 +3115,7 @@ static void initsFlowDevice(int deviceId) {
   } else
     myGlobals.device[deviceId].sflowGlobals->sflowWhiteList = strdup(value);
 
-#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex, "initsFlowDevice");
-#endif
   handleWhiteBlackListAddresses((char*)&value,
                                 myGlobals.device[deviceId].sflowGlobals->whiteNetworks,
                                 &myGlobals.device[deviceId].sflowGlobals->numWhiteNets,
@@ -3140,9 +3124,7 @@ static void initsFlowDevice(int deviceId) {
   if(myGlobals.device[deviceId].sflowGlobals->sflowWhiteList != NULL)
     free(myGlobals.device[deviceId].sflowGlobals->sflowWhiteList);
   myGlobals.device[deviceId].sflowGlobals->sflowWhiteList = strdup(workList);
-#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
-#endif
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "SFLOW: White list initialized to '%s'",
 	     myGlobals.device[deviceId].sflowGlobals->sflowWhiteList);
 
@@ -3152,9 +3134,7 @@ static void initsFlowDevice(int deviceId) {
   } else
     myGlobals.device[deviceId].sflowGlobals->sflowBlackList=strdup(value);
 
-#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex, "initsFlowDevice()");
-#endif
   handleWhiteBlackListAddresses((char*)&value, myGlobals.device[deviceId].sflowGlobals->blackNetworks,
                                 &myGlobals.device[deviceId].sflowGlobals->numBlackNets, (char*)&workList,
                                 sizeof(workList));
@@ -3162,9 +3142,7 @@ static void initsFlowDevice(int deviceId) {
     free(myGlobals.device[deviceId].sflowGlobals->sflowBlackList);
 
   myGlobals.device[deviceId].sflowGlobals->sflowBlackList = strdup(workList);
-#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
-#endif
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "SFLOW: Black list initialized to '%s'",
 	     myGlobals.device[deviceId].sflowGlobals->sflowBlackList);
 
@@ -4102,10 +4080,8 @@ static void handlesFlowHTTPrequest(char* _url) {
 	    }
 	    tPtr[0]='\0';
 
-#ifdef CFG_MULTITHREADED
 	    accessMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex,
 			"handlesFlowHTTPrequest()w");
-#endif
 	    handleWhiteBlackListAddresses(value,
 					  myGlobals.device[deviceId].sflowGlobals->whiteNetworks,
 					  &myGlobals.device[deviceId].sflowGlobals->numWhiteNets,
@@ -4114,9 +4090,7 @@ static void handlesFlowHTTPrequest(char* _url) {
 	    if(myGlobals.device[deviceId].sflowGlobals->sflowWhiteList != NULL)
 	      free(myGlobals.device[deviceId].sflowGlobals->sflowWhiteList);
 	    myGlobals.device[deviceId].sflowGlobals->sflowWhiteList=strdup(workList);
-#ifdef CFG_MULTITHREADED
 	    releaseMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
-#endif
 	    storePrefsValue(sfValue(deviceId, "whiteList", 1),
 			    myGlobals.device[deviceId].sflowGlobals->sflowWhiteList);
 	  }
@@ -4135,10 +4109,8 @@ static void handlesFlowHTTPrequest(char* _url) {
 	    }
 	    tPtr[0]='\0';
 
-#ifdef CFG_MULTITHREADED
 	    accessMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex,
 			"handlesFlowHTTPrequest()b");
-#endif
 	    handleWhiteBlackListAddresses(value,
 					  myGlobals.device[deviceId].sflowGlobals->blackNetworks,
 					  &myGlobals.device[deviceId].sflowGlobals->numBlackNets,
@@ -4147,9 +4119,7 @@ static void handlesFlowHTTPrequest(char* _url) {
 	    if(myGlobals.device[deviceId].sflowGlobals->sflowBlackList != NULL)
 	      free(myGlobals.device[deviceId].sflowGlobals->sflowBlackList);
 	    myGlobals.device[deviceId].sflowGlobals->sflowBlackList=strdup(workList);
-#ifdef CFG_MULTITHREADED
 	    releaseMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
-#endif
 	    storePrefsValue(sfValue(deviceId, "blackList", 1),
 			    myGlobals.device[deviceId].sflowGlobals->sflowBlackList);
 	  }
@@ -4380,7 +4350,6 @@ static void handlesFlowHTTPrequest(char* _url) {
 		 "</ul></td>\n"
 		 "<td width=\"25%\">&nbsp;</td>\n</tr>\n</table>\n");
 
-#ifdef CFG_MULTITHREADED
       if(myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex.isLocked) {
 	sendString("<table><tr><td colspan=\"2\">&nbsp;</td></tr>\n"
 		   "<tr " TR_ON ">\n"
@@ -4393,7 +4362,6 @@ static void handlesFlowHTTPrequest(char* _url) {
 			 "White/Black list mutex");
 	sendString("</table><td></tr></table>\n");
       }
-#endif
     }
   }
 
@@ -4428,14 +4396,12 @@ static void termsFlowDevice(int deviceId) {
   }
 
   if((deviceId >= 0) && (deviceId < myGlobals.numDevices)) {
-#ifdef CFG_MULTITHREADED
     if(myGlobals.device[deviceId].sflowGlobals->threadActive) {
       killThread(&myGlobals.device[deviceId].sflowGlobals->sflowThread);
       myGlobals.device[deviceId].sflowGlobals->threadActive = 0;
     }
     tryLockMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex, "termsFlow");
     deleteMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
-#endif
 
     if(myGlobals.device[deviceId].sflowGlobals->sflowInSocket > 0) {
       closeNwSocket(&myGlobals.device[deviceId].sflowGlobals->sflowInSocket);

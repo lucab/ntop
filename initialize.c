@@ -760,15 +760,11 @@ void resetStats(int deviceId) {
   traceEvent(CONST_TRACE_INFO, "Resetting traffic statistics for device %s",
 	     myGlobals.device[deviceId].humanFriendlyName);
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.purgeMutex.isInitialized != 0)
     accessMutex(&myGlobals.purgeMutex, "resetStats");
-#endif
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.hostsHashMutex.isInitialized != 0)
     accessMutex(&myGlobals.hostsHashMutex, "resetStats");
-#endif
 
   for(j=FIRST_HOSTS_ENTRY; j<myGlobals.device[deviceId].actualHashSize; j++) {
     HostTraffic *el = myGlobals.device[deviceId].hash_hostTraffic[j], *elNext;
@@ -830,15 +826,11 @@ void resetStats(int deviceId) {
     myGlobals.otherHostEntry->next = NULL;
   }
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.hostsHashMutex.isInitialized != 0)
     releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 
-#ifdef CFG_MULTITHREADED
   if(myGlobals.purgeMutex.isInitialized)
     releaseMutex(&myGlobals.purgeMutex);
-#endif
 }
 
 /* ******************************* */
@@ -929,7 +921,7 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 
 /* ************************************************************ */
 
-#if defined(CFG_MULTITHREADED) && defined(HAVE_PTHREAD_ATFORK)
+#ifdef HAVE_PTHREAD_ATFORK
 void reinitMutexes (void) {
 
 /*
@@ -958,13 +950,11 @@ void reinitMutexes (void) {
   createMutex(&myGlobals.hostsHashMutex);
   createMutex(&myGlobals.securityItemsMutex);
 
- #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.runningPref.numericFlag == 0) {
     createMutex(&myGlobals.addressResolutionMutex);
   }
- #endif
 }
-#endif /* CFG_MULTITHREADED */
+#endif /* HAVE_PTHREAD_ATFORK */
 
 /*
  * Initialize all the threads used by ntop to:
@@ -976,7 +966,6 @@ void reinitMutexes (void) {
 void initThreads(void) {
   int i;
 
-#ifdef CFG_MULTITHREADED
   if (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
       createThread(&myGlobals.dequeueThreadId, dequeuePacket, NULL);
       traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for network packet analyser",
@@ -1000,7 +989,6 @@ void initThreads(void) {
 	       (long)myGlobals.scanIdleThreadId);
   }
 
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.runningPref.numericFlag == 0) {
     createMutex(&myGlobals.addressResolutionMutex);
 
@@ -1013,9 +1001,6 @@ void initThreads(void) {
 		 (long)myGlobals.dequeueAddressThreadId[i]);
     }
   }
-#endif
-
-#endif /* CFG_MULTITHREADED */
 
 #ifdef MAKE_WITH_SSLWATCHDOG
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
@@ -1808,7 +1793,6 @@ void initSignals(void) {
 void startSniffer(void) {
   int i;
 
-#ifdef CFG_MULTITHREADED
   if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT)
       return;
 
@@ -1825,7 +1809,6 @@ void startSniffer(void) {
       traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for network packet sniffing on %s",
 		 (long)myGlobals.device[i].pcapDispatchThreadId, myGlobals.device[i].name);
     }
-#endif
 }
 
 /* ***************************** */

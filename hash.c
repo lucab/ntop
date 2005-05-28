@@ -164,9 +164,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 
       if(host->numHostSessions == 0) return;
 
-#ifdef CFG_MULTITHREADED
       accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions");
-#endif
 
       prevSession = theSession = myGlobals.device[theDevice].tcpSession[i];
 
@@ -195,12 +193,8 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 	}
       } /* while */
 
-#ifdef CFG_MULTITHREADED
       releaseMutex(&myGlobals.tcpSessionsMutex);
-#ifdef MAKE_WITH_SCHED_YIELD
-      sched_yield(); /* Allow other threads to run */
-#endif
-#endif
+      ntop_conditional_sched_yield(); /* Allow other threads to run */
     } /* for */
 
 #ifndef DELAY_SESSION_PURGE
@@ -219,9 +213,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 
       if(host->numHostSessions == 0) return;
 
-#ifdef CFG_MULTITHREADED
       accessMutex(&myGlobals.fcSessionsMutex, "freeHostSessions");
-#endif
 
       prevSession = theSession = myGlobals.device[theDevice].fcSession[i];
 
@@ -250,12 +242,8 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 	}
       } /* while */
 
-#ifdef CFG_MULTITHREADED
       releaseMutex(&myGlobals.fcSessionsMutex);
-#ifdef MAKE_WITH_SCHED_YIELD
-      sched_yield(); /* Allow other threads to run */
-#endif
-#endif
+      ntop_conditional_sched_yield(); /* Allow other threads to run */
     } /* for */
 
 #ifndef DELAY_SESSION_PURGE
@@ -554,9 +542,7 @@ void freeHostInstances(int actualDeviceId) {
 	el->next = NULL;
 	num++;
 	freeHostInfo(el, actualDeviceId);
-#ifdef MAKE_WITH_SCHED_YIELD
-	sched_yield(); /* Allow other threads to run */
-#endif
+	ntop_conditional_sched_yield(); /* Allow other threads to run */
 	el = nextEl;
       }
 
@@ -615,15 +601,10 @@ int purgeIdleHosts(int actDevice) {
 	     noSessionPurgeTime, withSessionPurgeTime);
 #endif
 
-#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
-#endif
   purgeOldFragmentEntries(actDevice); /* let's do this too */
-#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 
-#ifdef CFG_MULTITHREADED
 #ifdef IDLE_PURGE_DEBUG
   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: accessMutex(purgeMutex)...calling");
 #endif
@@ -631,16 +612,13 @@ int purgeIdleHosts(int actDevice) {
 #ifdef IDLE_PURGE_DEBUG
   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: accessMutex(purgeMutex)...locked");
 #endif
-#endif
 
 #ifdef HASH_DEBUG
   hashSanityCheck();
 #endif
 
   for(idx=0; idx<myGlobals.device[actDevice].actualHashSize; idx++) {
-#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
-#endif
 
     if((el = myGlobals.device[actDevice].hash_hostTraffic[idx]) != NULL) {
       prev = NULL;
@@ -682,29 +660,23 @@ int purgeIdleHosts(int actDevice) {
       } /* while */
 
       if(numHosts >= (maxHosts-1)) {
-#ifdef CFG_MULTITHREADED
         releaseMutex(&myGlobals.hostsHashMutex);
-#endif
         break;
       }
     }
-#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.hostsHashMutex);
-#endif
   }
 
 #ifdef HASH_DEBUG
   hashSanityCheck();
 #endif
 
-#ifdef CFG_MULTITHREADED
 #ifdef IDLE_PURGE_DEBUG
   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: releaseMutex(purgeMutex)...calling");
 #endif
   releaseMutex(&myGlobals.purgeMutex);
 #ifdef IDLE_PURGE_DEBUG
   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: releaseMutex(purgeMutex)...released");
-#endif
 #endif
 
   traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d [%s] FINISHED selection, %d [out of %d] hosts selected",
@@ -718,9 +690,7 @@ int purgeIdleHosts(int actDevice) {
 #endif
     freeHostInfo(theFlaggedHosts[idx], actDevice);
     numFreedBuckets++;
-#ifdef MAKE_WITH_SCHED_YIELD
-    sched_yield(); /* Allow other threads to run */
-#endif
+    ntop_conditional_sched_yield(); /* Allow other threads to run */
   }
 
   free(theFlaggedHosts);
@@ -789,9 +759,6 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 			u_char checkForMultihoming, u_char forceUsingIPaddress,
 			int actualDeviceId) {
   u_int idx, isMultihomed = 0;
-#ifndef CFG_MULTITHREADED
-  u_int run=0;
-#endif
   HostTraffic *el=NULL;
   char buf[MAX_LEN_SYM_HOST_NAME_HTML];
   short useIPAddressForSearching = forceUsingIPaddress;
@@ -1195,9 +1162,6 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
                            int actualDeviceId) {
   u_int idx;
-#ifndef CFG_MULTITHREADED
-  u_int run=0;
-#endif
   HostTraffic *el=NULL;
   FcNameServerCacheEntry *fcnsEntry;
   u_short numRuns=0;

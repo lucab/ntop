@@ -37,7 +37,7 @@ extern struct in6_addr _in6addr_linklocal_allnodes;
 #endif
 
 /* Fix courtesy of Tim Gardner <timg@tpi.com> */
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+#ifdef ASYNC_ADDRESS_RESOLUTION
 #define accessAddrResMutex(a) if(myGlobals.runningPref.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex,a)
 #define releaseAddrResMutex() if(myGlobals.runningPref.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex)
 #else
@@ -58,12 +58,12 @@ extern char *version, *osName, *author, *buildDate, *configureDate,
             *compiler_cflags,
             *include_path,
             *system_libs,
+            *install_path,
 #ifdef MAKE_WITH_I18N
             *locale_dir,
 #endif
             *distro,
             *release,
-            *install_path,
             *force_runtime;
 
 /* util.c */
@@ -74,9 +74,7 @@ extern int optind;
 extern int opterr;
 extern int optopt;
 #endif /* HAVE_GETOPT_H */
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
-extern int ntop_sched_yield(char *file, int line);
-#endif
+extern int ntop_sched_yield(void);
 extern char *reportNtopVersionCheck(void);
 extern void* checkVersion(void*);
 extern unsigned int convertNtopVersionToNumber(char *versionString);
@@ -317,11 +315,8 @@ extern void createPortHash(void);
 extern void handleProtocols(void);
 extern void addDefaultProtocols(void);
 extern int mapGlobalToLocalIdx(int port);
-#ifdef CFG_MULTITHREADED
 extern void *scanIdleLoop(void *notUsed);
 extern void *scanFingerprintLoop(void *notUsed);
-extern void packetCaptureLoop(time_t *lastTime, int refreshRate);
-#endif
 extern RETSIGTYPE cleanup(int signo);
 
 /* pbuf.c */
@@ -340,11 +335,9 @@ extern void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
 			      TrafficCounter length, Counter numPkts,
 			      int actualDeviceId);
 
-#ifdef CFG_MULTITHREADED
 extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h, const u_char *p);
 extern void cleanupPacketQueue(void);
 extern void *dequeuePacket(void* notUsed);
-#endif
 extern void updateDevicePacketStats(u_int length, int actualDeviceId);
 extern void updateFcDevicePacketStats(u_int length, int actualDeviceId);
 extern void dumpSuspiciousPacket(int actualDeviceId);
@@ -430,6 +423,7 @@ extern HostTraffic* getFirstHost(u_int actualDeviceId);
 extern HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host);
 extern char* serial2str(HostSerial theSerial, char *buf, int buf_len);
 extern void str2serial(HostSerial *theSerial, char *buf, int buf_len);
+extern int ntop_conditional_sched_yield(void);
 extern HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualDeviceId);
 extern HostTraffic* findHostBySerial(HostSerial serial, u_int actualDeviceId);
 extern HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId);
@@ -481,7 +475,6 @@ extern char *dotToSlash(char *name);
 extern int getLocalHostAddress(struct in_addr *hostIpAddress, char* device);
 extern NtopIfaceAddr * getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
 extern void fillDomainName(HostTraffic *el);
-#ifdef CFG_MULTITHREADED
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *), char* userParm);
 extern int killThread(pthread_t *threadId);
 
@@ -517,7 +510,6 @@ extern int incrementSem(sem_t *semId);
 extern int decrementSem(sem_t *semId);
 extern int deleteSem(sem_t *semId);
 #endif /* HAVE_SEMAPHORE_H */
-#endif /* CFG_MULTITHREADED */
 extern void setNBnodeNameType(HostTraffic *theHost, char nodeType, char isQuery, char* nbName);
 extern void trimString(char*);
 extern FILE* getNewRandomFile(char* fileName, int len);
@@ -623,13 +615,6 @@ extern void removeNtopPid(void);
 
 #ifdef WIN32
 extern int snprintf(char *str, size_t n, const char *fmt, ...);
-#endif
-
-#ifdef PARM_SHOW_NTOP_HEARTBEAT
-    #define HEARTBEAT(a, b, ...)     _HEARTBEAT(a, __FILE__, __LINE__, b, __VA_ARGS__)
-    extern void _HEARTBEAT(int beatLevel, char* file, int line, char * format, ...);
-#else
-    #define HEARTBEAT
 #endif
 
 /* pseudo- utility functions (i.e. #define only, but of utility nature) go here */
@@ -774,10 +759,6 @@ extern int h_errno; /* netdb.h */
 
 #define NOW ((time_t) time ((time_t *) 0))
 
-#if defined(CFG_NEED_GETDOMAINNAME)
-int getdomainname(char *name, size_t len);
-#endif
-
 #if defined(LBL_ALIGN)
 #define EXTRACT_16BITS(p) \
 	((u_short)*((u_char *)(p) + 0) << 8 | \
@@ -811,12 +792,6 @@ int getdomainname(char *name, size_t len);
 
 #ifndef WIN32
 #define closesocket(a) close(a)
-#endif
-
-#ifdef PARM_SHOW_NTOP_HEARTBEAT
-    #define HEARTBEAT(a, b, ...)     _HEARTBEAT(a, __FILE__, __LINE__, b, __VA_ARGS__)
-#else
-    #define HEARTBEAT
 #endif
 
 #define GetShort(cp)	_ns_get16(cp); cp += INT16SZ;
@@ -959,13 +934,6 @@ int getdomainname(char *name, size_t len);
    Used in all the prints flowing from printNtopConfigInfo...
    ********************************************************** */
 #define texthtml(a, b) (textPrintFlag == TRUE ? a : b)
-
-/* **********************************************************
-   invoke our sched_yield routine
-   ********************************************************** */
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
-#define sched_yield() ntop_sched_yield(__FILE__, __LINE__)
-#endif
 
 /* Stringification */
 #define xstr(s) str(s)

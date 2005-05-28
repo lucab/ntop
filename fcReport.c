@@ -2974,9 +2974,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
       
     urlFixupToRFC1945Inplace(url);
 
-#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.fcSessionsMutex, "printScsiSessionBytes");
-#endif
 
     /* Let's count sessions first */
     for (idx=1, numSessions=0; idx < MAX_TOT_NUM_SESSIONS; idx++) {
@@ -3071,17 +3069,13 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
         }
     }
     else {
-#ifdef CFG_MULTITHREADED
        releaseMutex(&myGlobals.fcSessionsMutex);
-#endif
        printNoDataYet ();
        free (tmpTable);
        return 0;
     }
 
-#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.fcSessionsMutex);
-#endif
 
     /*
       Due to the way sessions are handled, sessions before those to
@@ -3338,9 +3332,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
       
     urlFixupFromRFC1945Inplace(url);
 
-#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.fcSessionsMutex, "printScsiSessionTimes");
-#endif
 
     /* Let's count sessions first */
     for (idx=1, numSessions=0; idx < MAX_TOT_NUM_SESSIONS; idx++) {
@@ -3425,17 +3417,13 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
         }
     }
     else {
-#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.fcSessionsMutex);
-#endif
         printNoDataYet();
         free (tmpTable);
         return 0;
     }
 
-#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.fcSessionsMutex);
-#endif
     /*
       Due to the way sessions are handled, sessions before those to
       display need to be skipped
@@ -3626,9 +3614,7 @@ int printScsiSessionStatusInfo(int actualDeviceId, int sortedColumn,
       
   urlFixupFromRFC1945Inplace(url);
 
-#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.fcSessionsMutex, "printScsiSessionStatusInfo");
-#endif
   /* Let's count sessions first */
   for (idx=1, numSessions=0; idx < MAX_TOT_NUM_SESSIONS; idx++) {
     session = myGlobals.device[myGlobals.actualReportDeviceId].fcSession[idx];
@@ -3709,16 +3695,12 @@ int printScsiSessionStatusInfo(int actualDeviceId, int sortedColumn,
     }
   }
   else {
-#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.fcSessionsMutex);
-#endif
     printNoDataYet();
     free (tmpTable);
     return 0;
   }
-#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.fcSessionsMutex);
-#endif
   /*
     Due to the way sessions are handled, sessions before those to
     display need to be skipped
@@ -3867,9 +3849,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
       
     urlFixupFromRFC1945Inplace(url);
 
-#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.fcSessionsMutex, "printScsiSessionTmInfo");
-#endif
     /* Let's count sessions first */
     for (idx=1, numSessions=0; idx < MAX_TOT_NUM_SESSIONS; idx++) {
         session = myGlobals.device[myGlobals.actualReportDeviceId].fcSession[idx];
@@ -3949,19 +3929,14 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
                 theAnchor[i] = htmlAnchor1;
             }
         }
-    }
-    else {
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.fcSessionsMutex);
-#endif
+    } else {
+        releaseMutex(&myGlobals.fcSessionsMutex);
         printNoDataYet();
         free (tmpTable);
         return 0;
     }
 
-#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.fcSessionsMutex);
-#endif
     /*
       Due to the way sessions are handled, sessions before those to
       display need to be skipped
@@ -4115,9 +4090,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
       display need to be skipped
     */
 
-#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.fcSessionsMutex, "printFCSessions");
-#endif
     /* Let's count sessions first */
     for (idx=1, numSessions=0; idx < MAX_TOT_NUM_SESSIONS; idx++) {
         session = myGlobals.device[myGlobals.actualReportDeviceId].fcSession[idx];
@@ -4135,9 +4108,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
         }
     }
 
-#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.fcSessionsMutex);
-#endif
 
     if(numSessions <= 0) {
         printNoDataYet ();

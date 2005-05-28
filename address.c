@@ -508,8 +508,6 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 
 /* *************************** */
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-
 static void queueAddress(HostAddr elem, int forceResolution) {
   datum key_data, data_data;
   char dataBuf[sizeof(StoredAddress)+4];
@@ -598,8 +596,6 @@ void cleanupAddressQueue(void) {
 
 /* ************************************ */
 
-#ifdef CFG_MULTITHREADED
-
 void* dequeueAddress(void *_i) {
   int dqaIndex = (int)_i;
 
@@ -641,8 +637,6 @@ void* dequeueAddress(void *_i) {
       }
 #endif
 
-      HEARTBEAT(2, "dequeueAddress()", NULL);
-
 #ifdef DNS_DEBUG
       traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Dequeued address... [%s][key=%s] (#addr=%d)",
 		 addrtostr(&addr), key_data.dptr == NULL ? "<>" : key_data.dptr,
@@ -669,9 +663,6 @@ void* dequeueAddress(void *_i) {
              dqaIndex+1, getpid(), pthread_self());
   return(NULL); /* NOTREACHED */
 }
-
-#endif /* defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION) */
-#endif
 
 #ifdef INET6
 
@@ -877,11 +868,7 @@ void ipaddr2str(HostAddr hostIpAddress, int updateHost) {
   if(fetchAddressFromCache(hostIpAddress, buf, &type)  && (buf[0] != '\0')) {
     if(updateHost) updateHostNameInfo(hostIpAddress, buf, type);
   } else {
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
     queueAddress(hostIpAddress, !updateHost);
-#else
-    resolveAddress(&hostIpAddress, 0);
-#endif
   }
 }
 

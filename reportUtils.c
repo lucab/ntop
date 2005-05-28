@@ -4659,7 +4659,6 @@ static void printFingerprintCounts(int countScanned, int countWithoutFP, int cou
              "we have not tried to resolve them yet.\n"
              "<ul>");
 
-#ifdef CFG_MULTITHREADED
   if((myGlobals.nextFingerprintScan > 0) &&
      (countUnknownFP > 0) &&
      (myGlobals.runningPref.debugMode != 1)) {
@@ -4669,7 +4668,6 @@ static void printFingerprintCounts(int countScanned, int countWithoutFP, int cou
         sendString(buf);
         sendString(" (approximately).</li>\n");
       }
-#endif
 
   if(unknownFPs[0] != '\0') {
     unknownFPs[0]=' ';
@@ -4935,7 +4933,6 @@ void printHostsStats(int fingerprintRemote) {
 
 /* ******************************************************** */
 
-#ifdef CFG_MULTITHREADED
 void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName) {
   char buf[LEN_GENERAL_WORK_BUFFER], bufAttempt[64], bufLock[64], bufUnlock[64];
   struct tm t;
@@ -5043,7 +5040,6 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
     sendString(buf);
   }
 }
-#endif
 
 void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, char *url) {
   char buf[LEN_GENERAL_WORK_BUFFER];

@@ -55,18 +55,6 @@ static short alternateColor=0;
 /* Forward */
 static void handleSingleWebConnection(fd_set *fdmask);
 
-#if defined(CFG_NEED_INET_ATON)
-/*
- * Minimal implementation of inet_aton.
- * Cannot distinguish between failure and a local broadcast address.
- */
-static int inet_aton(const char *cp, struct in_addr *addr) {
-  addr->s_addr = inet_addr(cp);
-  return (addr->s_addr == INADDR_NONE) ? 0 : 1;
-}
-
-#endif /* CFG_NEED_INET_ATON */
-
 /* ************************************* */
 
 #if !defined(WIN32) && defined(PARM_USE_CGI)
@@ -1361,40 +1349,8 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "CFG_MULTITHREADED",
-#ifdef CFG_MULTITHREADED
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "CFG_NEED_INET_ATON",
 #ifdef CFG_NEED_INET_ATON
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_ALARM",
-#ifdef HAVE_ALARM
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_ALLOCA",
-#ifdef HAVE_ALLOCA
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_ALLOCA_H",
-#ifdef HAVE_ALLOCA_H
                          "yes"
 #else
                          "no"
@@ -1425,14 +1381,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "HAVE_BZERO",
-#ifdef HAVE_BZERO
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "HAVE_CRYPTGETFORMAT",
 #ifdef HAVE_CRYPTGETFORMAT
                          "yes"
@@ -1443,14 +1391,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "HAVE_CRYPT_H",
 #ifdef HAVE_CRYPT_H
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_CTIME_R",
-#ifdef HAVE_CTIME_R
                          "yes"
 #else
                          "no"
@@ -1683,14 +1623,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "HAVE_IN6_ADDR",
 #ifdef HAVE_IN6_ADDR
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_INET_NTOA",
-#ifdef HAVE_INET_NTOA
                          "yes"
 #else
                          "no"
@@ -2361,30 +2293,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "HAVE_RE_COMP",
-#ifdef HAVE_RE_COMP
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_REGCOMP",
-#ifdef HAVE_REGCOMP
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_REGEX",
-#ifdef HAVE_REGEX
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "HAVE_SCHED_H",
 #ifdef HAVE_SCHED_H
                          "yes"
@@ -2403,14 +2311,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "HAVE_SCTP",
 #ifdef HAVE_SCTP
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SECURITY_PAM_APPL_H",
-#ifdef HAVE_SECURITY_PAM_APPL_H
                          "yes"
 #else
                          "no"
@@ -3068,14 +2968,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #ifdef CFG_RUN_DIR
   printFeatureConfigInfo(textPrintFlag, "CFG_RUN_DIR - run file directory", CFG_RUN_DIR);
 #endif
-
-  printFeatureConfigInfo(textPrintFlag, "CFG_NEED_GETDOMAINNAME (getdomainname(2) function)",
-#ifdef CFG_NEED_GETDOMAINNAME
-			 "no"
-#else
-			 "yes"
-#endif
-			 );
 
   printFeatureConfigInfo(textPrintFlag, "CFG_xxxxxx_ENDIAN (Hardware Endian)",
 #if defined(CFG_LITTLE_ENDIAN)
@@ -4934,14 +4826,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "LEN_WWN_ADDRESS", "undefined");
 #endif
 
-  printFeatureConfigInfo(textPrintFlag, "MAKE_ASYNC_ADDRESS_RESOLUTION",
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "MAKE_NTOP_PACKETSZ_DECLARATIONS",
 #ifdef MAKE_NTOP_PACKETSZ_DECLARATIONS
                          "yes"
@@ -5816,14 +5700,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "PARM_SESSION_PURGE_MINIMUM_IDLE", "undefined");
 #endif
 
-  printFeatureConfigInfo(textPrintFlag, "PARM_SHOW_NTOP_HEARTBEAT",
-#ifdef PARM_SHOW_NTOP_HEARTBEAT
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
 #ifdef PARM_SSLWATCHDOG_WAIT_INTERVAL
   printFeatureConfigNum(textPrintFlag, "PARM_SSLWATCHDOG_WAIT_INTERVAL", PARM_SSLWATCHDOG_WAIT_INTERVAL);
 #else
@@ -5892,12 +5768,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "SFLOW_DEVICE_NAME", SFLOW_DEVICE_NAME);
 #else
   printFeatureConfigInfo(textPrintFlag, "SFLOW_DEVICE_NAME", "undefined");
-#endif
-
-#ifdef THREAD_MODE
-  printFeatureConfigInfo(textPrintFlag, "THREAD_MODE", THREAD_MODE);
-#else
-  printFeatureConfigInfo(textPrintFlag, "THREAD_MODE", "undefined");
 #endif
 
 #ifdef UNKNOWN_P2P_FILE
@@ -6414,7 +6284,6 @@ void printHostColorCode(int textPrintFlag, int isInfo) {
 
 /* ******************************** */
 
-#ifdef CFG_MULTITHREADED
 void printMutexStatusReport(int textPrintFlag) {
   sendString(texthtml("\nMutexes:\n\n",
                       "<p>"TABLE_ON"<table border=\"1\" "TABLE_DEFAULTS">\n"
@@ -6434,10 +6303,8 @@ void printMutexStatusReport(int textPrintFlag) {
   printMutexStatus(textPrintFlag, &myGlobals.packetQueueMutex, "packetQueueMutex");
   printMutexStatus(textPrintFlag, &myGlobals.purgeMutex, "purgeMutex");
 
-#if defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.runningPref.numericFlag == 0)
     printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
-#endif
 
   printMutexStatus(textPrintFlag, &myGlobals.hostsHashMutex,   "hostsHashMutex");
   printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
@@ -6446,8 +6313,6 @@ void printMutexStatusReport(int textPrintFlag) {
 
   sendString(texthtml("\n\n", "</table>"TABLE_OFF"</p>\n"));
 }
-
-#endif
 
 /* ******************************** */
 
@@ -6525,16 +6390,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     }
 
   }
-#endif
-#ifdef PARM_SHOW_NTOP_HEARTBEAT
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.heartbeatCounter);
-  printFeatureConfigInfo(textPrintFlag, "Heartbeat (counter)", buf);
-  printInfoSectionNote(textPrintFlag, 
-                   "The value of the heartbeat counter is meaningless.  It's just incremented "
-                   "in various places. On a busy network, it will grow quickly, on a quiet network "
-                   "it will grow slowly.  If it STOPS being incremented, ntop is locked up. "
-                   "If you suspect ntop is locked up, check the Mutexes at the end of this report - "
-                   "a value in the 'blocked' column for more than a few seconds is a bad sign.");
 #endif
 
   /* *************************** */
@@ -6774,7 +6629,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     printFeatureConfigInfo(textPrintFlag, "-X", buf);
   }
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+#ifdef MAKE_WITH_SCHED_YIELD
   printParameterConfigInfo(textPrintFlag, "--disable-schedYield",
                            pref->disableSchedYield == TRUE ? "Yes" : "No",
                            "No");
@@ -7241,7 +7096,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   printInfoSectionTitle(textPrintFlag, "Packets");
 
-#ifdef CFG_MULTITHREADED
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.receivedPackets);
   printFeatureConfigInfo(textPrintFlag, "Received", buf);
 
@@ -7267,7 +7121,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "(Limit " xstr(CONST_PACKET_QUEUE_LENGTH) ") %d",
                 myGlobals.maxPacketQueueLen);
   printFeatureConfigInfo(textPrintFlag, "Maximum Queue", buf);
-#endif
 
 #ifdef MAX_PROCESS_BUFFER
 {
@@ -7478,8 +7331,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     printFeatureConfigNum(textPrintFlag, "........Too old in cache", (int)myGlobals.numFetchAddressFromCacheCallsSTALE);
   }
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-
   if(pref->numericFlag == 0) {
     printInfoSectionTitle(textPrintFlag, "Queued - dequeueAddress()");
     printFeatureConfigNum(textPrintFlag, "Total Queued", (int)myGlobals.addressQueuedCount);
@@ -7488,8 +7339,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     printFeatureConfigNum(textPrintFlag, "Current Queue", (int)myGlobals.addressQueuedCurrent);
 
   }
-
-#endif
 
   if(textPrintFlag == TRUE) {
     printInfoSectionTitle(textPrintFlag, "Resolved - resolveAddress():");
@@ -7584,7 +7433,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   /* **** */
 
-#if defined(CFG_MULTITHREADED)
   printInfoSectionTitle(textPrintFlag, "Thread counts");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numThreads);
@@ -7593,7 +7441,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "Dequeue", buf);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numChildren);
   printFeatureConfigInfo(textPrintFlag, "Children (active)", buf);
-#endif
 
   /* **** */
 
@@ -7872,12 +7719,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   /* **************************** */
 
-#ifdef CFG_MULTITHREADED
- #if !defined(DEBUG) && !defined(WIN32)
+#if !defined(DEBUG) && !defined(WIN32)
   if(pref->debugMode)
- #endif /* DEBUG or WIN32 */
+#endif /* DEBUG or WIN32 */
     printMutexStatusReport(textPrintFlag);
-#endif /* CFG_MULTITHREADED */
 
   if(textPrintFlag != TRUE) {
     sendString("<p>[ Click <a href=\"" CONST_TEXT_INFO_NTOP_HTML "\" title=\"Text version of this page\">"
@@ -7917,12 +7762,10 @@ int printNtopLogReport(int printAsText) {
       sendString("<pre>");
     }
 
-#ifdef CFG_MULTITHREADED
 #ifdef WIN32
     WaitForSingleObject(myGlobals.logViewMutex.mutex, INFINITE);
 #else
     pthread_mutex_lock(&myGlobals.logViewMutex.mutex);
-#endif
 #endif
 
     for (i=0; i<CONST_LOG_VIEW_BUFFER_SIZE; i++) {
@@ -7936,12 +7779,10 @@ int printNtopLogReport(int printAsText) {
         }
     }
 
-#ifdef CFG_MULTITHREADED
 #ifdef WIN32
     ReleaseMutex(myGlobals.logViewMutex.mutex);
 #else
     pthread_mutex_unlock(&myGlobals.logViewMutex.mutex);
-#endif
 #endif
 
     if(!printAsText) {
@@ -8064,13 +7905,10 @@ void printNtopProblemReport(void) {
   sendString(buf2);
 #endif
 
-#ifdef PARM_SHOW_NTOP_HEARTBEAT
-  v += myGlobals.heartbeatCounter /* If we have it */ ;
 #ifdef PROBLEMREPORTID_DEBUG
   safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Heartbeat",
 	      myGlobals.heartbeatCounter, myGlobals.heartbeatCounter, v);
   sendString(buf2);
-#endif
 #endif
 
   v += (unsigned int) t;
@@ -8158,15 +7996,11 @@ void printNtopProblemReport(void) {
 
   sendString("\nPackets\n");
 
-#ifdef CFG_MULTITHREADED
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Received:  %10u\n", myGlobals.receivedPackets);
   sendString(buf);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Processed: %10u (immediately)\n",
               myGlobals.receivedPacketsProcessed);
   sendString(buf);
-#endif
-
-#ifdef CFG_MULTITHREADED
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Queued:    %10u\n",
               myGlobals.receivedPacketsQueued);
   sendString(buf);
@@ -8177,7 +8011,6 @@ void printNtopProblemReport(void) {
               myGlobals.packetQueueLen,
               myGlobals.maxPacketQueueLen);
   sendString(buf);
-#endif
 
   sendString("\nNetwork:\n");
 
@@ -8517,7 +8350,6 @@ void initWeb(void) {
   }
 #endif
 
-#ifdef CFG_MULTITHREADED
   traceEvent(CONST_TRACE_INFO, "INITWEB: Starting web server");
   createThread(&myGlobals.handleWebConnectionsThreadId, handleWebConnections, NULL);
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: Started thread (t%lu) for web server",
@@ -8563,8 +8395,6 @@ void initWeb(void) {
       sslwatchdogClearLock(FLAG_SSLWATCHDOG_BOTH);
     }
 #endif /* MAKE_WITH_SSLWATCHDOG */
-
-#endif /* CFG_MULTITHREADED */
 
   traceEvent(CONST_TRACE_NOISY, "INITWEB: Server started... continuing with initialization");
 }
@@ -8830,7 +8660,7 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
 
 /* ******************************************* */
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_HTTPSIGTRAP)
+#ifdef MAKE_WITH_HTTPSIGTRAP
 
 RETSIGTYPE webservercleanup(int signo) {
   static int msgSent = 0;
@@ -8886,20 +8716,14 @@ RETSIGTYPE webservercleanup(int signo) {
 
   exit(0);
 }
-#endif /* CFG_MULTITHREADED && MAKE_WITH_HTTPSIGTRAP */
+#endif /* MAKE_WITH_HTTPSIGTRAP */
 
 /* ******************************************* */
 
 void* handleWebConnections(void* notUsed _UNUSED_) {
-#ifndef CFG_MULTITHREADED
-    struct timeval wait_time;
-#else
     int rc;
-#endif
     fd_set mask, mask_copy;
     int topSock = myGlobals.sock;
-
-#ifdef CFG_MULTITHREADED
 
 #ifndef WIN32
     traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: Server connection thread running [p%d, t%lu]...", getpid(), pthread_self());
@@ -8934,10 +8758,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 #endif
 #endif /* MAKE_WITH_HTTPSIGTRAP */
 
-#endif
-
 #ifndef WIN32
-#ifdef CFG_MULTITHREADED
     /*
      *  The great ntop "mysterious web server death" fix... and other tales of
      *  sorcery.
@@ -9027,7 +8848,6 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 	    traceEvent(CONST_TRACE_INFO, "Note: SIGPIPE handler set (ignore)");
 	}
     }
-#endif /* CFG_MULTITHREADED */
 #endif /* WIN32 */
 
     FD_ZERO(&mask);
@@ -9047,12 +8867,6 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: ntop's web server is now processing requests");
 
-#ifndef CFG_MULTITHREADED
-    /* select returns immediately */
-    wait_time.tv_sec = 0, wait_time.tv_usec = 0;
-    if(select(topSock+1, &mask, 0, 0, &wait_time) == 1)
-	handleSingleWebConnection(&mask);
-#else /* CFG_MULTITHREADED */
     while(myGlobals.capturePackets != FLAG_NTOPSTATE_TERM) {
 	sslwatchdogDebug("BEGINloop", FLAG_SSLWATCHDOG_BOTH, "");
 #ifdef DEBUG
@@ -9064,7 +8878,6 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 	traceEvent(CONST_TRACE_INFO, "DEBUG: select returned: %d", rc);
 #endif
 	if(rc > 0) {
-	  HEARTBEAT(1, "handleWebConnections()", NULL);
 	  /* Now, handle the web connection ends up in SSL_Accept() */
 	  sslwatchdogDebug("->hSWC()", FLAG_SSLWATCHDOG_PARENT, "");
 	  handleSingleWebConnection(&mask);
@@ -9076,8 +8889,6 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
     myGlobals.handleWebConnectionsThreadId = 0;
 
     traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: Server connection thread terminated [p%d, t%lu]...", getpid(), pthread_self());
-
-#endif /* CFG_MULTITHREADED */
 
     return(NULL);
 

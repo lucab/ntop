@@ -130,11 +130,6 @@
  */
 /* #define PARM_PRINT_ALL_SESSIONS */
 
-/* Define PARM_SHOW_NTOP_HEARTBEAT to see minimal status messages every cycle
- * from various timed processes
- */
-/* #define PARM_SHOW_NTOP_HEARTBEAT 1 */
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Timeouts and intervals - in seconds (x*60 = x minutes)
  */
@@ -195,14 +190,6 @@
 /* Win32 - Force various things to make up for lack of ./configure process */
 #ifdef WIN32
 
- #ifndef CFG_MULTITHREADED
-  #define CFG_MULTITHREADED
- #endif
-
- #ifndef MAKE_ASYNC_ADDRESS_RESOLUTION
-  #define MAKE_ASYNC_ADDRESS_RESOLUTION
- #endif
-
  #define MAKE_STATIC_PLUGIN
 
  #define CFG_LITTLE_ENDIAN                  1
@@ -233,17 +220,6 @@
  #define MAKE_NTOP_PACKETSZ_DECLARATIONS
 #endif
 
-#ifdef CFG_MULTITHREADED
-/*
- * Comment out the line below if asynchronous
- * numeric -> symbolic address resolution
- * has problems on your system
- */
- #ifndef MAKE_ASYNC_ADDRESS_RESOLUTION
-  #define MAKE_ASYNC_ADDRESS_RESOLUTION
- #endif
-#endif
-
 /*
  * MAKE_WITH_SYSLOG is shorthand for defined(HAVE_SYS_SYSLOG_H) || defined(HAVE_SYSLOG_H)
  * Use that ifdef everywhere else for code dependent on the includes.
@@ -258,15 +234,7 @@
 #endif
 #endif
 
-/*
- * MAKE_WITH_SEMAPHORES is shorthand for defined(HAVE_SEMAPHORE_H) && !defined(DARWIN).
- */
-/* Courtesy of Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr> */
-#if defined(HAVE_SEMAPHORE_H) && !defined(DARWIN)
-#define MAKE_WITH_SEMAPHORES   1
-#else
 #undef MAKE_WITH_SEMAPHORES
-#endif
 
 /*
  * MAKE_WITH_SCHED_YIELD is shorthand
@@ -511,7 +479,7 @@
 /*                                                                                 */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#if defined(CFG_MULTITHREADED) && defined(HAVE_OPENSSL) && defined(HAVE_PTHREAD_H) && defined(HAVE_SETJMP_H) && !defined(WIN32)
+#if defined(HAVE_OPENSSL) && defined(HAVE_PTHREAD_H) && defined(HAVE_SETJMP_H) && !defined(WIN32)
  #define MAKE_WITH_SSLWATCHDOG
  #ifdef MAKE_WITH_SSLWATCHDOG_COMPILETIME
   /* Compile Time option */
@@ -1230,7 +1198,7 @@
 #define LEN_TIMEFORMAT_BUFFER               48
 #define LEN_CMDLINE_BUFFER                  4096
 #define LEN_FGETS_BUFFER                    512
-#define LEN_CHECKVERSION_BUFFER             4096
+#define LEN_HUGE_WORK_BUFFER                4096
 #define LEN_GENERAL_WORK_BUFFER             1024
 #define LEN_MEDIUM_WORK_BUFFER              128
 #define LEN_SMALL_WORK_BUFFER               24 /* nnn.nnn.nnn.nnn\n */
@@ -2043,7 +2011,7 @@
  */
 #define DEFAULT_TRACE_LEVEL                 3
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+#ifdef MAKE_WITH_SCHED_YIELD
 #define DEFAULT_NTOP_SCHED_YIELD            TRUE
 #endif
 
@@ -2600,22 +2568,6 @@
 /* Derived constants and values                                                    */
 /*           these encapsulate complex definitions for simplicity                  */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-#ifdef CFG_MULTITHREADED
- #if defined(HAVE_OPENSSL)
-  #define THREAD_MODE "MT (SSL)"
- #else
-  #define THREAD_MODE "MT"
- #endif
-
-#else /* ! CFG_MULTITHREADED */
-
- #if defined(HAVE_OPENSSL)
-  #define THREAD_MODE "ST (SSL)"
- #else
-  #define THREAD_MODE "ST"
- #endif
-#endif /* CFG_MULTITHREADED */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Other, OS specific stuff                                                        */

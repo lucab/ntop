@@ -135,7 +135,7 @@ static struct option const long_options[] = {
   { "ssl-watchdog",                     no_argument,       NULL, 133 },
 #endif
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+#ifdef MAKE_WITH_SCHED_YIELD
   { "disable-schedyield",               optional_argument, NULL, 134 },
 #endif
 
@@ -595,7 +595,7 @@ int parseOptions(int argc, char* argv[]) {
       break;
 #endif
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+#ifdef MAKE_WITH_SCHED_YIELD
     case 134: /* disable-schedyield */
       myGlobals.runningPref.disableSchedYield = TRUE;
       break;
@@ -1248,7 +1248,7 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
     processBoolPref (NTOP_PREF_NO_MUTEX_EXTRA, value2bool(value),
 		     &pref->disableMutexExtraInfo, savePref);
   }
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+#ifdef MAKE_WITH_SCHED_YIELD
   else if (strcmp (key, NTOP_PREF_NO_SCHEDYLD) == 0) {
     processBoolPref (NTOP_PREF_NO_SCHEDYLD, value2bool(value),
 		     &pref->disableSchedYield, savePref);
@@ -1316,7 +1316,7 @@ void initUserPrefs(UserPref *pref) {
    pref->useSSLwatchdog = 0;
 #endif
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+#ifdef MAKE_WITH_SCHED_YIELD
    pref->disableSchedYield = DEFAULT_NTOP_SCHED_YIELD;
 #endif
 

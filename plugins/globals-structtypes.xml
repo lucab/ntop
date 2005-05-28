@@ -1172,13 +1172,11 @@ typedef struct hostTraffic {
 /*XML n:u dnsSniffARPACount                 Work                "" */
 /*XML n:u dnsSniffStoredInCache             Work                "" */
 
-#if defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
 /*XML e Queued                              Work:Work2          "" */
 /*XML n:u addressQueuedCount                Work2               "" */
 /*XML n:u addressQueuedDup                  Work2               "" */
 /*XML n:u addressQueuedCurrent              Work2               "" */
 /*XML n:u addressQueuedMax                  Work2               "" */
-#endif
 
 /*XML e IPaddr2Str                          Work:Work2          "" */
 /*XML n:u numipaddr2strCalls                Work2               "" */
@@ -1287,7 +1285,6 @@ typedef struct hostTraffic {
 /*XML e DequeueThreads                      Work:Work2          "" */
 /*XML n:u numDequeueThreads                 Work2               "" */
  
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
 /*XMLFOR indexT 0 MAX_NUM_DEQUEUE_THREADS */
 /*XML *              indexT                 Work2:Work3         "" 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", indexT);
@@ -1295,8 +1292,6 @@ typedef struct hostTraffic {
   newxml(elWork2, "DequeueThread", "index", buf, "thread", buf2);
   XML*/
 /*XMLROF*/
-
-#endif
 
 /*XML n:u handleWebConnectionsThreadId      Work                "pthread_t" */
 

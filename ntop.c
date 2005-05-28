@@ -37,7 +37,6 @@ static unsigned long long setNonBlockingSleepCount;
 
 /* *************************** */
 
-#ifdef CFG_MULTITHREADED
 static void printMutexInfo(PthreadMutex *mutexId, char *mutexName) {
 
   traceEvent(CONST_TRACE_INFO, "%s is %s (last lock %s:%d) [max lock time %s:%d (%.6f sec)]",
@@ -48,24 +47,19 @@ static void printMutexInfo(PthreadMutex *mutexId, char *mutexName) {
 	     mutexId->max.line,
 	     mutexId->maxLockedDuration);
 }
-#endif
 
 #ifndef WIN32
 void handleSigHup(int signalId _UNUSED_) {
-#ifdef CFG_MULTITHREADED
   traceEvent(CONST_TRACE_INFO, "========================================");
   printMutexInfo(&myGlobals.gdbmMutex, "myGlobals.gdbmMutex");
   printMutexInfo(&myGlobals.packetProcessMutex, "myGlobals.packetProcessMutex");
   printMutexInfo(&myGlobals.packetQueueMutex, "myGlobals.packetQueueMutex");
 
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.runningPref.numericFlag == 0)
     printMutexInfo(&myGlobals.addressResolutionMutex, "myGlobals.addressResolutionMutex");
-#endif
 
   printMutexInfo(&myGlobals.hostsHashMutex, "myGlobals.hostsHashMutex");
   traceEvent(CONST_TRACE_INFO, "========================================");
-#endif /* CFG_MULTITHREADED */
 
   (void)signal(SIGHUP,  handleSigHup);
 }
@@ -74,7 +68,6 @@ void handleSigHup(int signalId _UNUSED_) {
 
 /* *************************** */
 
-#ifdef CFG_MULTITHREADED
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
@@ -93,7 +86,6 @@ void* pcapDispatch(void *_i) {
   }
 
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
-    HEARTBEAT(2, "pcapDispatch()", NULL);
     /* rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i); */
 
 #if defined(FREEBSD) && defined(__FreeBSD_cc_version) && (__FreeBSD_cc_version < 500000) && defined(HAVE_PCAP_SETNONBLOCK)
@@ -145,7 +137,6 @@ void* pcapDispatch(void *_i) {
 
   return(NULL);
 }
-#endif /* CFG_MULTITHREADED */
 
 /* **************************************** */
 
@@ -210,9 +201,6 @@ void daemonize(void) {
 /* **************************************** */
 
 void detachFromTerminal(int doChdir) {
-#ifndef CFG_MULTITHREADED
-  alarm(120); /* Don't freeze */
-#endif
 
 #if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
   /* Child processes must log to syslog.
@@ -619,9 +607,7 @@ static void purgeIpPorts(int theDevice) {
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].numHosts == 0) return;
 
-#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.purgePortsMutex, "purgeIpPorts");
-#endif
 
   for(i=1; i<MAX_IP_PORT; i++) {
     if(myGlobals.device[theDevice].ipPorts[i] != NULL) {
@@ -630,9 +616,7 @@ static void purgeIpPorts(int theDevice) {
     }
   }
 
-#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.purgePortsMutex);
-#endif
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "purgeIpPorts(%d) completed", theDevice);
@@ -641,7 +625,6 @@ static void purgeIpPorts(int theDevice) {
 
 /* **************************************** */
 
-#ifdef CFG_MULTITHREADED
 
 void* scanIdleLoop(void* notUsed _UNUSED_) {
 
@@ -651,11 +634,9 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
   for(;;) {
     int i, purged=0;
 
-    HEARTBEAT(0, "scanIdleLoop(), sleep(60)...", NULL);
     sleep(60 /* do not change */);
 
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
-    HEARTBEAT(0, "scanIdleLoop(), sleep(60)...woke", NULL);
     if(myGlobals.runningPref.rFileName == NULL)
         myGlobals.actTime = time(NULL);
 
@@ -666,9 +647,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 	purgeIpPorts(i);
 #endif
 
-#ifdef MAKE_WITH_SCHED_YIELD
-	sched_yield(); /* Allow other threads to run */
-#endif
+	ntop_conditional_sched_yield(); /* Allow other threads to run */
       }
 
     updateThpt(1);
@@ -678,11 +657,8 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
              getpid(), pthread_self());
   return(NULL);
 }
-#endif
 
 /* **************************************** */
-
-#ifdef CFG_MULTITHREADED
 
 void* scanFingerprintLoop(void* notUsed _UNUSED_) {
   HostTraffic *el;
@@ -700,11 +676,9 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
 
     myGlobals.nextFingerprintScan = time(NULL) + CONST_FINGERPRINT_LOOP_INTERVAL;
 
-    HEARTBEAT(0, "scanFingerprintLoop(), sleep()...", NULL);
     sleep(CONST_FINGERPRINT_LOOP_INTERVAL);
 
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
-    HEARTBEAT(0, "scanFingerprintLoop(), sleep()...woke", NULL);
     if(myGlobals.runningPref.rFileName == NULL)
         myGlobals.actTime = time(NULL);
         countCycle++;
@@ -724,9 +698,7 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
         if((el->fingerprint[0] == ':') && (el->fingerprint[0] != '\0')) countResolved++;
       }
 
-#ifdef MAKE_WITH_SCHED_YIELD
-      sched_yield(); /* Allow other threads to run */
-#endif
+      ntop_conditional_sched_yield(); /* Allow other threads to run */
 
     }
 
@@ -741,81 +713,6 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
   myGlobals.nextFingerprintScan = 0;
   return(NULL);
 }
-#endif
-
-/* **************************************** */
-
-#ifndef CFG_MULTITHREADED
-void packetCaptureLoop(time_t *lastTime, int refreshRate) {
-  int numPkts=0, pcap_fd = pcap_fileno(myGlobals.device[0].pcapPtr);
-  fd_set readMask;
-  struct timeval timeout;
-
-  if((pcap_fd == -1) && (myGlobals.runningPref.rFileName != NULL)) {
-    /*
-      This is a patch to overcome a bug of libpcap
-      while reading from a traffic file instead
-      of sniffying live from a NIC.
-    */
-    struct mypcap {
-      int fd, snapshot, linktype, tzoff, offset;
-      FILE *rfile;
-
-      /* Other fields have been skipped. Please refer
-	 to pcap-int.h for the full datatype.
-      */
-    };
-
-    pcap_fd = fileno(((struct mypcap *)(myGlobals.device[0].pcapPtr))->rfile);
-  }
-
-  for(;;) {
-    short loopItem = -1;
-    int rc;
-
-    if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
-
-    FD_ZERO(&readMask);
-    if(pcap_fd != -1) FD_SET(pcap_fd, &readMask);
-
-    timeout.tv_sec  = 5 /* seconds */;
-    timeout.tv_usec = 0;
-
-    if(select(pcap_fd+1, &readMask, NULL, NULL, &timeout) > 0) {
-      rc = pcap_dispatch(myGlobals.device[0].pcapPtr, 1, processPacket, NULL);
-
-      if(rc == -1) {
-	traceEvent(CONST_TRACE_ERROR, "Reading packets: '%s'",
-		   pcap_geterr(myGlobals.device[0].pcapPtr));
-	continue;
-      } else if((rc == 0) && (myGlobals.runningPref.rFileName != NULL)) {
-	traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d "
-		   "[No more packets to read]", rc);
-	pcap_fd = -1;
-      }
-    }
-
-    myGlobals.actTime = time(NULL);
-
-    if(myGlobals.actTime > (*lastTime)) {
-      /* So, the clock has ticked... approximately 30 seconds (depends on traffic, the select
-	 above could delay 5s
-
-	 Let's purge one of the devices...
-      */
-      loopItem++;
-      if(loopItem >= myGlobals.numDevices) {
-	loopItem = 0;
-      }
-
-      updateThpt(1); /* Update Throughput */
-      (*lastTime) = myGlobals.actTime + PARM_THROUGHPUT_REFRESH_INTERVAL;
-    }
-
-    handleWebConnections(NULL);
-  } /* for(;;) */
-}
-#endif
 
 /* **************************************** */
 
@@ -868,22 +765,17 @@ RETSIGTYPE cleanup(int signo) {
   myGlobals.capturePackets = FLAG_NTOPSTATE_TERM;
 
 #ifndef WIN32
-#ifdef CFG_MULTITHREADED
 
   killThread(&myGlobals.dequeueThreadId);
 
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.runningPref.numericFlag == 0) {
     for(i=0; i<myGlobals.numDequeueThreads; i++)
       killThread(&myGlobals.dequeueAddressThreadId[i]);
   }
-#endif
 
   killThread(&myGlobals.handleWebConnectionsThreadId);
-#if !defined(WIN32) && defined(CFG_MULTITHREADED)
   traceEvent(CONST_TRACE_INFO, "SIGPIPE: Handled (ignored) %lu errors",
 	     myGlobals.numHandledSIGPIPEerrors);
-#endif
 
 #ifdef MAKE_WITH_SSLWATCHDOG
   if(myGlobals.sslwatchdogChildThreadId != 0) {
@@ -897,8 +789,6 @@ RETSIGTYPE cleanup(int signo) {
     }
 #endif
 
-#endif
-
 #else /* #ifndef WIN32 */
 
   /*
@@ -906,37 +796,26 @@ RETSIGTYPE cleanup(int signo) {
     Wies-Software <wies@wiessoft.de>
 
     #else clause added to force dequeue threads to terminate
-    MAKE_WITH_SEMAPHORES is *NOT* tested!!!
   */
-#ifdef CFG_MULTITHREADED
 #ifdef MAKE_WITH_SEMAPHORES
   incrementSem(&myGlobals.queueSem);
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   incrementSem(&myGlobals.queueAddressSem);
-#endif
 #else
   signalCondvar(&myGlobals.queueCondvar);
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   signalCondvar(&myGlobals.queueAddressCondvar);
 #endif
-#endif
-#endif /* MULTITREADED */
 #endif /* #ifndef WIN32 */
 
 
 #if 0
-#ifdef CFG_MULTITHREADED
   traceEvent(CONST_TRACE_INFO, "CLEANUP: Waiting until threads terminate");
   sleep(3); /* Just to wait until threads complete */
 #endif
-#endif
 
-#ifdef CFG_MULTITHREADED
   /* Prevents the web interface from running */
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "CLEANUP: Locking purge mutex (may block for a little while)");
   accessMutex(&myGlobals.purgeMutex, "cleanup");
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "CLEANUP: Locked purge mutex, continuing shutdown");
-#endif
 
   for(i=0; i<myGlobals.numDevices; i++) {
     freeHostInstances(i);
@@ -964,41 +843,31 @@ RETSIGTYPE cleanup(int signo) {
   endservent();
 #endif
 
-#ifdef CFG_MULTITHREADED
   tryLockMutex(&myGlobals.packetProcessMutex, "cleanup");
   deleteMutex(&myGlobals.packetProcessMutex);
   tryLockMutex(&myGlobals.packetQueueMutex, "cleanup");
   deleteMutex(&myGlobals.packetQueueMutex);
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.runningPref.numericFlag == 0) {
     tryLockMutex(&myGlobals.addressResolutionMutex, "cleanup");
     deleteMutex(&myGlobals.addressResolutionMutex);
   }
-#endif
   tryLockMutex(&myGlobals.hostsHashMutex, "cleanup");
   deleteMutex(&myGlobals.hostsHashMutex);
 
 #ifdef MAKE_WITH_SEMAPHORES
   deleteSem(&myGlobals.queueSem);
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   deleteSem(&myGlobals.queueAddressSem);
-#endif
 #else
   deleteCondvar(&myGlobals.queueCondvar);
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   deleteCondvar(&myGlobals.queueAddressCondvar);
-#endif
-#endif
 #endif
 
   termGdbm();
 
-#ifdef CFG_MULTITHREADED
   tryLockMutex(&myGlobals.gdbmMutex, "cleanup");
   deleteMutex(&myGlobals.gdbmMutex);
   tryLockMutex(&myGlobals.purgeMutex, "cleanup");
   deleteMutex(&myGlobals.purgeMutex);
-#endif
 
   for(i=0; i<myGlobals.numDevices; i++) {
     int j;
@@ -1013,10 +882,8 @@ RETSIGTYPE cleanup(int signo) {
 	traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (according to libpcap)",
 		   formatPkts((Counter)pcapStat.ps_drop, buf, sizeof(buf)));
       }
-#ifdef CFG_MULTITHREADED
       traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (by ntop)",
 		 formatPkts(myGlobals.device[i].droppedPkts.value, buf, sizeof(buf)));
-#endif
     }
 
     if(myGlobals.device[i].ipTrafficMatrix != NULL) {
@@ -1049,14 +916,10 @@ RETSIGTYPE cleanup(int signo) {
     }
 
 
-#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.tcpSessionsMutex, "cleanup");
-#endif
     if(myGlobals.device[i].tcpSession != NULL)
       free(myGlobals.device[i].tcpSession);
-#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.tcpSessionsMutex);
-#endif
 
     free(myGlobals.device[i].humanFriendlyName);
     free(myGlobals.device[i].name);
@@ -1106,7 +969,6 @@ RETSIGTYPE cleanup(int signo) {
 
   if(myGlobals.startedAs != NULL) free(myGlobals.startedAs);
 
-#ifdef CFG_MULTITHREADED
   tryLockMutex(&myGlobals.tcpSessionsMutex, "cleanup");
   deleteMutex(&myGlobals.tcpSessionsMutex);
   tryLockMutex(&myGlobals.purgePortsMutex, "cleanup");
@@ -1114,7 +976,6 @@ RETSIGTYPE cleanup(int signo) {
   tryLockMutex(&myGlobals.securityItemsMutex, "cleanup");
   deleteMutex(&myGlobals.securityItemsMutex);
   /* DO NOT DO deleteMutex(&myGlobals.logViewMutex); - need it for the last traceEvent()s */
-#endif
 
   if(myGlobals.logView != NULL) {
     for(i=0; i<CONST_LOG_VIEW_BUFFER_SIZE; i++)

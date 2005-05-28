@@ -145,10 +145,8 @@
 /*
  * Static variables
  */
-#ifdef CFG_MULTITHREADED
 static pthread_t snmpThreadId;
 static PthreadMutex snmpMutex;
-#endif
 
 static int actual_deviceId = 0, pluginActive = 0, everInitialized = 0;
 static HostTraffic *my_el;
@@ -267,10 +265,8 @@ initSnmpFunct (void)
 
   pluginActive = 1;
   traceEvent (CONST_TRACE_ALWAYSDISPLAY, "SnmpPlugin: initializing agent ");
-#ifdef CFG_MULTITHREADED
   createThread (&snmpThreadId, snmpAgentLoop, NULL);
   createMutex(&snmpMutex);
-#endif
   return(0);
 }
 
@@ -281,12 +277,10 @@ termSnmpFunct (u_char termNtop /* 0=term plugin, 1=term ntop */)
 {
   traceEvent (CONST_TRACE_ALWAYSDISPLAY,
 	      "SnmpPlugin: terminating snmp (snmp_shutdown) ");
-#ifdef CFG_MULTITHREADED
   if(pluginActive){
     killThread(&snmpThreadId);
     deleteMutex(&snmpMutex);
   }
-#endif
   traceEvent (CONST_TRACE_INFO,
 	      "SnmpPlugin: Thanks for using ntop snmpPlugin");
   traceEvent (CONST_TRACE_ALWAYSDISPLAY, "SnmpPlugin: Done");
@@ -370,7 +364,6 @@ start_agent ()
 
 }
 
-#ifdef CFG_MULTITHREADED
 static void *
 snmpAgentLoop (void *notUsed _UNUSED_)
 {
@@ -382,7 +375,6 @@ snmpAgentLoop (void *notUsed _UNUSED_)
 
   return (NULL);
 }
-#endif
 
 static int
 getHostSerialFromIndex (netsnmp_table_request_info * table_info,

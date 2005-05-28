@@ -226,17 +226,12 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   /* administrative */
   myGlobals.shortDomainName = NULL;
 
-#ifdef CFG_MULTITHREADED
   myGlobals.numThreads = 0;            /* # of running threads */
 
   myGlobals.numDequeueThreads = 1;
 
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   for (i = 0; i < MAX_NUM_DEQUEUE_THREADS; i ++)
     myGlobals.dequeueAddressThreadId[i] = (pthread_t)-1;
-#endif
-
-#endif /* CFG_MULTITHREADED */
 
 #ifdef HAVE_OPENSSL
   myGlobals.sslInitialized = 0;
@@ -253,12 +248,10 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.dnsSniffARPACount = 0;
   myGlobals.dnsSniffStoredInCache = 0;
 
-#if defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
   myGlobals.addressQueuedCount = 0;
   myGlobals.addressQueuedDup = 0;
   myGlobals.addressQueuedCurrent = 0;
   myGlobals.addressQueuedMax = 0;
-#endif
 
   /* Address Resolution counters */
   myGlobals.numipaddr2strCalls = 0;
@@ -326,12 +319,10 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.numHandledSSIRequests = 0;
 
 /* create the logView stuff Mutex first... must be before the 1st traceEvent() call */
-#ifdef CFG_MULTITHREADED
   createMutex(&myGlobals.logViewMutex);     /* synchronize logView buffer */
 #ifdef FORPRENPTL
   #warning Making version for Pre NPTL Thread Library...
   createMutex(&myGlobals.preNPTLlogMutex);     /* synchronize logView buffer */
-#endif
 #endif
   myGlobals.logViewNext = 0;
   myGlobals.logView = (char**)calloc(sizeof(char*),
@@ -343,7 +334,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
    * Create semaphores and mutexes associated with packet capture
    * ============================================================
    */
-#ifdef CFG_MULTITHREADED
 #ifdef HAVE_PTHREAD_ATFORK
   i = pthread_atfork(NULL, NULL, &reinitMutexes);
   /* traceEvent(CONST_TRACE_INFO, "NOTE: atfork() handler registered for mutexes, rc %d", i); */
@@ -355,20 +345,12 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 #ifdef MAKE_WITH_SEMAPHORES
 
   createSem(&myGlobals.queueSem, 0);
-
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   createSem(&myGlobals.queueAddressSem, 0);
-#endif
 
 #else
 
   createCondvar(&myGlobals.queueCondvar);
-
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   createCondvar(&myGlobals.queueAddressCondvar);
-#endif
-
-#endif
 
   createMutex(&myGlobals.gdbmMutex);        /* data to synchronize thread access to db files */
   createMutex(&myGlobals.tcpSessionsMutex); /* data to synchronize TCP sessions access */
@@ -381,7 +363,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   createMutex(&myGlobals.hostsHashMutex);
 
   /* Packet Capture */
-#if defined(CFG_MULTITHREADED)
   for (i = 0; i <= CONST_PACKET_QUEUE_LENGTH; i ++)
     memset(&myGlobals.packetQueue[i], 0, sizeof(PacketInformation));
 
@@ -394,8 +375,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.packetQueueHead = 0;
   myGlobals.packetQueueTail = 0;
 #endif
-
-#endif /* CFG_MULTITHREADED */
 
   /* NB: Log View is allocated in main.c so it's available for the very 1st traceEvent() */
 
@@ -494,10 +473,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
   myGlobals.mtuSize        = _mtuSize;
   myGlobals.headerSize     = _headerSize;
-
-#ifdef CFG_MULTITHREADED
   myGlobals.numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
-#endif
 
   /* ********************************** */
 
@@ -666,14 +642,8 @@ void initNtop(char *devices) {
 
 
   if(myGlobals.runningPref.skipVersionCheck != TRUE) {
-#ifdef CFG_MULTITHREADED
-    {
       pthread_t myThreadId;
       createThread(&myThreadId, checkVersion, NULL);
-    }
-#else
-    checkVersion(NULL);
-#endif
   }
 }
 

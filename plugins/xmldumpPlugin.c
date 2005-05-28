@@ -1814,7 +1814,9 @@ static int dumpXML(char * url) {
 
       xmlDebug(__FILE__, __LINE__, 2, "......fork()ed child is %d fork() took %.6f", myGlobals.childntoppid, elapsed);
 
+#if defined(HAVE_ALARM) && defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
       alarm(0); /* Cancel any pre-existing alarm call */
+#endif
 
     } /* not debug */
 #endif /* With fork() */
