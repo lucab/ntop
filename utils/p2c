@@ -61,6 +61,8 @@ if [ "x${year}${month}" = "x200504" ]; then
   afrinic="ftp://ftp.afrinic.net/pub/stats/afrinic/delegated-afrinic-20050415"
 else
   afrinic="ftp://ftp.afrinic.net/pub/stats/afrinic/delegated-afrinic-${year}${month}01"
+  afrinic02="ftp://ftp.afrinic.net/pub/stats/afrinic/delegated-afrinic-${year}${month}02"
+  afrinic03="ftp://ftp.afrinic.net/pub/stats/afrinic/delegated-afrinic-${year}${month}03"
 fi
 apnic="ftp://ftp.apnic.net/pub/stats/apnic/delegated-apnic-${year}${month}01"
 arin="ftp://ftp.arin.net/pub/stats/arin/delegated-arin-${year}${month}01"
@@ -70,7 +72,10 @@ ripe="ftp://ftp.ripe.net/ripe/stats/${year}/delegated-ripencc-${year}${month}01.
 ripealt="ftp://ftp.ripe.net/ripe/dbase/split/ripe.db.inetnum.gz"
 apnicalt="ftp://ftp.apnic.net/pub/apnic/whois-data/APNIC/split/apnic.db.inetnum.gz"
 
-cwdata="ftp://ftp.cw.net/pub/rr/split/cw.db.in.gz"
+# We used to get updated data from Cable & Wireless.
+#  They spun this off to SAAVIS, who doesn't appear to be doing it any more...
+# We leave the hook in place, but code is protective...
+extradata=""
 
 echo ""
 echo "  Destination: ${dest}, work directory: ${work}"
@@ -113,7 +118,7 @@ echo ""
 echo "  Downloading data..."
 echo ""
 echo "         This will take a while, especially on a slow link"
-echo "                  (the ripe file is over 40MB)."
+echo "                  (the ripe file is over 70MB)."
 echo ""
 echo "                   Time for a cup of coffee..."
 echo ""
@@ -122,6 +127,14 @@ gcc -lm -o prefixtablegen prefixtablegen.c p2clib.o
 gcc -o inetnum2countryalloc inetnum2countryalloc.c p2clib.o
 
 wget -O 1_afrinic.data $afrinic
+rc=$?
+if [ $rc -ne 0 ]; then
+  wget -O 1_afrinic.data $afrinic02
+  rc=$?
+  if [ $rc -ne 0 ]; then
+    wget -O 1_afrinic.data $afrinic03
+  fi
+fi
 wget -O 1_apnic.data $apnic
 wget -O 1_arin.data $arin
 wget -O 1_lacnic.data $lacnic
@@ -148,18 +161,22 @@ echo "  Processing alternate APNIC data..."
 echo ""
 zcat apnicalt.data.gz | ./inetnum2countryalloc > 2_apnicalt.data
 
-echo ""
-echo "  Downloading Cable and Wireless data..."
-echo ""
-wget -O cwdata.data.gz $cwdata
+if [ "x${extradata}" != "x" ]; then
+  echo ""
+  echo "  Downloading Extra data..."
+  echo ""
+  wget -O extradata.data.gz $extradata
 
-if [ -r cwdata.data.gz ]; then
-  echo ""
-  echo "  Processing Cable and Wireless data..."
-  echo ""
-  zcat cwdata.data.gz | ./inetnum2countryalloc > 3_cwdata.data
+  if [ -r extradata.data.gz ]; then
+    echo ""
+    echo "  Processing Extra data..."
+    echo ""
+    zcat extradata.data.gz | ./inetnum2countryalloc > 3_extradata.data
+  else
+    touch 3_extradata.data
+  fi
 else
-  touch 3_cwdata.data
+  touch 3_extradata.data
 fi
 
 echo ""
