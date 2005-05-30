@@ -1376,6 +1376,7 @@ AC_CHECK_HEADERS([pcap-bpf.h])
 
 AC_CHECK_LIB([pcap], [pcap_open_live])
 AC_CHECK_LIB([pcap], [pcap_findalldevs], AC_DEFINE_UNQUOTED(HAVE_PCAP_FINDALLDEVS, 1, [libpcap has pcap_findalldevs]))
+AC_CHECK_LIB([pcap], [pcap_freecode], AC_DEFINE_UNQUOTED(HAVE_PCAP_FREECODE, 1, [libpcap has pcap_freecode]))
 
 if test ".${ac_cv_header_pcap_h}" != ".yes" ||
    (test ".${ac_cv_header_net_bpf_h}" != ".yes" &&

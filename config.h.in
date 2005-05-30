@@ -352,6 +352,9 @@
 /* libpcap has pcap_freealldevs */
 #undef HAVE_PCAP_FREEALLDEVS
 
+/* libpcap has pcap_freecode */
+#undef HAVE_PCAP_FREECODE
+
 /* Define to 1 if you have the <pcap.h> header file. */
 #undef HAVE_PCAP_H
 
