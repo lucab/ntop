@@ -4785,7 +4785,7 @@ void printThptStatsMatrix(int sortedColumn) {
 void printThptStats(int sortedColumn _UNUSED_) {
   char tmpBuf[512], formatBuf[32], formatBuf1[32];
   struct stat statbuf;
-  int i;
+  int i, useRRD = 1;
 
   printHTMLheader("Network Load Statistics", NULL, 0);
 
@@ -4804,60 +4804,86 @@ void printThptStats(int sortedColumn _UNUSED_) {
   for(i=0; i<strlen(tmpBuf); i++) if(tmpBuf[i] == ' ') tmpBuf[i] = '_';
 
   if((i = stat(tmpBuf, &statbuf)) != 0) {
-    printNoDataYet();
+    useRRD = 0;
     return;
   }
+   
+    
+  if(useRRD) {
+    sendString("<CENTER>\n");
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR, 
+		  0, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		  "now-600s", "Last+10+Minutes+Throughput");
+    sendString(tmpBuf);
 
-  sendString("<CENTER>\n");
-
-#ifndef EMBEDDED
-  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR, 
-		0, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		"now-600s", "Last+10+Minutes+Throughput");
-  sendString(tmpBuf);
-
-  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
-		formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
-		formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));    
-  sendString(tmpBuf);
-
-
-  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR, 
-		1, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		"now-1h", "Last+Hour+Throughput");
-  sendString(tmpBuf);
-#endif
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
+		  formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
+		  formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));    
+    sendString(tmpBuf);
+    
+    
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR, 
+		  1, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		  "now-1h", "Last+Hour+Throughput");
+    sendString(tmpBuf);
+  } else {
+    if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples == 0) {
+      printNoDataYet();
+      return;
+    }
+    
+    sendString("<CENTER>\n");
+    sendString("<A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=1\" BORDER=0 BGCOLOR=white>"
+	       "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=1\" alt=\"Current Hour throughput chart\"></A><BR>\n");
+  }
 
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
 		formatTimeStamp(0, 0, 60, formatBuf, sizeof(formatBuf)),
 		formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
-
   sendString(tmpBuf);
 
-#ifndef EMBEDDED
-  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR, 
-		2, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		"now-1d", "Current+Day+Throughput");
-  sendString(tmpBuf);
-#endif
+  if(useRRD) {
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR, 
+		  2, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		  "now-1d", "Current+Day+Throughput");
+    sendString(tmpBuf);
+  } else {
+    if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 60)
+      goto endPrintThptStats;   
+    else
+      sendString("<P><A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=2\" BORDER=0 BGCOLOR=white>"
+		 "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=2\" alt=\"Current Day throughput chart\"></A><BR>\n");
+  }
+  
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
 		formatTimeStamp(0, 24, 0, formatBuf, sizeof(formatBuf)),
 		formatTimeStamp(0,  0, 0, formatBuf1, sizeof(formatBuf1)));
 
   sendString(tmpBuf);
 
-#ifndef EMBEDDED
-  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR, 
-		3, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		"now-1m", "Last+Month+Throughput");
-  sendString(tmpBuf);
+
+  if(useRRD) {
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR, 
+		  3, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		  "now-1m", "Last+Month+Throughput");
+    sendString(tmpBuf);
+  } else {
+    if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 1440 /* 60 * 24 */)
+      goto endPrintThptStats;   
+
+    sendString("<P><IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=3\" alt=\"Current 30day throughput chart\"><BR>\n");
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
+		  formatTimeStamp(30, 0, 0, formatBuf, sizeof(formatBuf)),
+		  formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1)));
+    sendString(tmpBuf);
+  }
 
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
 		formatTimeStamp(30, 0, 0, formatBuf, sizeof(formatBuf)),
 		formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1)));
   sendString(tmpBuf);    
-#endif
 
+ endPrintThptStats:
   sendString("</CENTER>\n");
 }
 
