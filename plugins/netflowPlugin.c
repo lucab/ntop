@@ -25,10 +25,10 @@
 
 static void* netflowMainLoop(void* _deviceId);
 
-/* #define DEBUG_FLOWS   */
+/* #define DEBUG_FLOWS */
 
 #define valueOf(a) (a == NULL ? "" : a)
-#define isEmpty(a) (a == NULL ? 1 : 0)
+#define isEmpty(a) ((a == NULL) || (a[0] == '\0') ? 1 : 0)
 
 /* ********************************* */
 
@@ -82,7 +82,9 @@ struct generic_netflow_record {
   u_int32_t nw_latency_sec, nw_latency_usec;
 
   /* VoIP Extensions */
-  char *sip_call_id, *sip_calling_party, *sip_called_party;
+  char sip_call_id[50], sip_calling_party[50], sip_called_party[50], rtp_codecs[32];
+  u_int32_t rtp_ssrc, rtp_ts;
+  u_int8_t rtp_ini_codecs;
 };
 
 /* ****************************** */
@@ -345,8 +347,8 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   lastSeen  = (ntohl(record->Last)/1000) + initTime;
 
   /* Sanity check */
-  if(firstSeen > lastSeen) firstSeen = lastSeen;
   if(lastSeen > myGlobals.actTime) lastSeen = myGlobals.actTime;
+  if(firstSeen > lastSeen) firstSeen = lastSeen;
 
   myGlobals.device[deviceId].netflowGlobals->numNetFlowsProcessed++;
 
@@ -694,9 +696,14 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 	char tmpStr[256];
 	
 	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
-		      "callId=%s<br>calling party=%s<br>called party=%s",
-		      valueOf(record->sip_call_id), valueOf(record->sip_calling_party),
-		      valueOf(record->sip_called_party));
+		      "Call Id: %s<br>"
+		      "'%s' called '%s<br>"
+		      "[SSCR=%d][TS=%d]<br>"
+		      "[IniCodecs=%d][Codecs=%s]",
+		      valueOf(record->sip_call_id),
+		      valueOf(record->sip_calling_party), valueOf(record->sip_called_party),
+		      record->rtp_ssrc, record->rtp_ts, record->rtp_ini_codecs,
+		      valueOf(record->rtp_codecs));
 
 	/* traceEvent(CONST_TRACE_INFO, "DEBUG: ->>>>>>>> '%s'", tmpStr); */
 	session->session_info = strdup(tmpStr);
@@ -1142,13 +1149,27 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 
 		  /* VoIP Extensions */
 		case 130: /* SIP_CALL_ID */
-		  record.sip_call_id = strdup(&buffer[displ]);
+		  memcpy(&record.sip_call_id, &buffer[displ], 50);
+		  break;
+		case 132: /* RTP_SSRC */
+		  memcpy(&record.rtp_ssrc, &buffer[displ], 4); 
+		  record.rtp_ssrc = ntohl(record.rtp_ssrc);
+		  break;
+		case 133: /* RTP_TS */
+		  memcpy(&record.rtp_ts, &buffer[displ], 4); 
+		  record.rtp_ts = ntohl(record.rtp_ts);
 		  break;
 		case 134: /* SIP_CALLING_PARTY */
-		  record.sip_calling_party = strdup(&buffer[displ]);
+		  memcpy(&record.sip_calling_party, &buffer[displ], 50);
 		  break;
 		case 135: /* SIP_CALLED_PARTY */
-		  record.sip_called_party = strdup(&buffer[displ]);
+		  memcpy(&record.sip_called_party, &buffer[displ], 50);
+		  break;
+		case 136: /* RTP_INI_CODECS */
+		  memcpy(&record.rtp_ini_codecs, &buffer[displ], 1); 
+		  break;
+		case 137: /* RTP_CODECS */
+		  memcpy(&record.rtp_codecs, &buffer[displ], 32);
 		  break;
 		}
 		
@@ -1157,10 +1178,6 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 
 	      handleGenericFlow(recordActTime, recordSysUpTime, &record, deviceId);
 	      myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd++;
-
-	      if(record.sip_call_id)       free(record.sip_call_id);
-	      if(record.sip_calling_party) free(record.sip_calling_party);
-	      if(record.sip_called_party)  free(record.sip_called_party);
 	    }
 	  } else {
 #ifdef DEBUG_FLOWS
