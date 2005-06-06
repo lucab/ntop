@@ -1199,12 +1199,17 @@ void addDevice(char* deviceName, char* deviceDescr) {
       }
 
     if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-        safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
-                myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-                CONST_PATH_SEP,
-                myGlobals.device[deviceId].humanFriendlyName != NULL ?
-                    myGlobals.device[deviceId].humanFriendlyName :
-                    myGlobals.device[deviceId].name);
+        if(myGlobals.runningPref.rFileName == NULL)
+	  safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
+			myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+			CONST_PATH_SEP,
+			myGlobals.device[deviceId].humanFriendlyName != NULL ?
+			myGlobals.device[deviceId].humanFriendlyName :
+			myGlobals.device[deviceId].name);
+	else
+	  safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.pcap",
+			myGlobals.runningPref.rFileName,
+			CONST_PATH_SEP);
 
 	myGlobals.device[deviceId].pcapErrDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
@@ -1212,7 +1217,8 @@ void addDevice(char* deviceName, char* deviceDescr) {
           myGlobals.runningPref.enableSuspiciousPacketDump = 0;
 	  traceEvent(CONST_TRACE_ERROR, "pcap_dump_open(..., '%s') failed (suspicious packets)", myName);
 	  traceEvent(CONST_TRACE_INFO, "Continuing without suspicious packet dump");
-        }
+        } else
+	  traceEvent(CONST_TRACE_NOISY, "Saving packets into file %s", myName);
       }
 
       if(myGlobals.runningPref.enableOtherPacketDump) {
@@ -1229,7 +1235,8 @@ void addDevice(char* deviceName, char* deviceDescr) {
           myGlobals.runningPref.enableOtherPacketDump = 0;
 	  traceEvent(CONST_TRACE_ERROR, "pcap_dump_open(..., '%s') failed (other (unknown) packets)", myName);
 	  traceEvent(CONST_TRACE_INFO, "Continuing without other (unknown) packet dump");
-        }
+        } else
+	  traceEvent(CONST_TRACE_NOISY, "Saving packets into file %s", myName);
       }
     } else {
       myGlobals.device[deviceId].virtualDevice = 1;
@@ -1476,17 +1483,23 @@ void initDevices(char* devices) {
     initDeviceDatalink(0);
 
     if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-      safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.%s.pcap",
-              myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-              CONST_PATH_SEP,
-              myGlobals.device[0].humanFriendlyName != NULL ?
-                  myGlobals.device[0].humanFriendlyName :
-                  myGlobals.device[0].name);
+      if(myGlobals.runningPref.rFileName == NULL)
+	safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.%s.pcap",
+		      myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+		      CONST_PATH_SEP,
+		      myGlobals.device[0].humanFriendlyName != NULL ?
+		      myGlobals.device[0].humanFriendlyName :
+		      myGlobals.device[0].name);
+      else
+	safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s.ntop-suspicious-pkts.pcap",
+		      myGlobals.runningPref.rFileName);
 
         myGlobals.device[0].pcapErrDumper = pcap_dump_open(myGlobals.device[0].pcapPtr, myName);
 
         if(myGlobals.device[0].pcapErrDumper == NULL)
-            traceEvent(CONST_TRACE_ALWAYSDISPLAY, "pcap_dump_open() for suspicious packets: '%s'", ebuf);
+	  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "pcap_dump_open() for suspicious packets: '%s'", ebuf);
+	else
+	  traceEvent(CONST_TRACE_NOISY, "Saving packets into file %s", myName);
     }
 
     free(myGlobals.device[0].name);
