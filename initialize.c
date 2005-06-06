@@ -763,11 +763,12 @@ void resetStats(int deviceId) {
   if(myGlobals.purgeMutex.isInitialized != 0)
     accessMutex(&myGlobals.purgeMutex, "resetStats");
 
-  if(myGlobals.hostsHashMutex.isInitialized != 0)
-    accessMutex(&myGlobals.hostsHashMutex, "resetStats");
-
   for(j=FIRST_HOSTS_ENTRY; j<myGlobals.device[deviceId].actualHashSize; j++) {
     HostTraffic *el = myGlobals.device[deviceId].hash_hostTraffic[j], *elNext;
+
+#ifdef CFG_MULTITHREADED
+    if(el) lockHostsHashMutex(el, "resetStats");
+#endif
 
     while(el != NULL) {
       elNext = el->next;
@@ -775,6 +776,9 @@ void resetStats(int deviceId) {
       if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
 	freeHostInfo(el, deviceId);
 
+#ifdef CFG_MULTITHREADED
+      if(!elNext) unlockHostsHashMutex(el);
+#endif
       el = elNext;
     }
 
@@ -825,9 +829,6 @@ void resetStats(int deviceId) {
     FD_SET(FLAG_BROADCAST_HOST, &(myGlobals.broadcastEntry->flags));
     myGlobals.otherHostEntry->next = NULL;
   }
-
-  if(myGlobals.hostsHashMutex.isInitialized != 0)
-    releaseMutex(&myGlobals.hostsHashMutex);
 
   if(myGlobals.purgeMutex.isInitialized)
     releaseMutex(&myGlobals.purgeMutex);
@@ -923,6 +924,7 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 
 #ifdef HAVE_PTHREAD_ATFORK
 void reinitMutexes (void) {
+  int i;
 
 /*
  * Although the fork()ed child gets a copy of the storage for the mutexes,
@@ -947,7 +949,14 @@ void reinitMutexes (void) {
   createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
   createMutex(&myGlobals.packetQueueMutex);
   createMutex(&myGlobals.packetProcessMutex);
-  createMutex(&myGlobals.hostsHashMutex);
+
+  createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
+
+  for(i=0; i<CONST_HASH_INITIAL_SIZE; i++) {
+    createMutex(&myGlobals.hostsHashMutex[i]);
+    myGlobals.hostsHashMutexNumLocks[i] = 0;
+  }
+
   createMutex(&myGlobals.securityItemsMutex);
 
   if(myGlobals.runningPref.numericFlag == 0) {

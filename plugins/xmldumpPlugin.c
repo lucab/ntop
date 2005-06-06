@@ -25,6 +25,8 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+static int dumpXML(char * url);
+
 #ifdef MAKE_WITH_XMLDUMP
 #include <stdarg.h>
 #include <setjmp.h>
@@ -138,7 +140,6 @@ jmp_buf siglongjmpEnv, siglongjmpBasicEnv;
 
 /* **** f o r w a r d **** */
 
-static int dumpXML(char * url);
 static void handleXmldumpHTTPrequest(char* url);
 
 GdomeElement * _newxml(char * filename, int linenum,

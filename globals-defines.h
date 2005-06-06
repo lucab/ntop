@@ -553,7 +553,7 @@
 #define MAX_NUM_DEQUEUE_THREADS             1
 
 /* Hash size */
-#define CONST_HASH_INITIAL_SIZE             16*1024
+#define CONST_HASH_INITIAL_SIZE             32*1024
 
 /*
  * These change the break points for the "Network Traffic: xxxx" reports

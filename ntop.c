@@ -58,7 +58,6 @@ void handleSigHup(int signalId _UNUSED_) {
   if(myGlobals.runningPref.numericFlag == 0)
     printMutexInfo(&myGlobals.addressResolutionMutex, "myGlobals.addressResolutionMutex");
 
-  printMutexInfo(&myGlobals.hostsHashMutex, "myGlobals.hostsHashMutex");
   traceEvent(CONST_TRACE_INFO, "========================================");
 
   (void)signal(SIGHUP,  handleSigHup);
@@ -852,8 +851,11 @@ RETSIGTYPE cleanup(int signo) {
     tryLockMutex(&myGlobals.addressResolutionMutex, "cleanup");
     deleteMutex(&myGlobals.addressResolutionMutex);
   }
-  tryLockMutex(&myGlobals.hostsHashMutex, "cleanup");
-  deleteMutex(&myGlobals.hostsHashMutex);
+  
+  for(i=0; i<CONST_HASH_INITIAL_SIZE; i++) {
+    tryLockMutex(&myGlobals.hostsHashMutex[i], "cleanup");
+    deleteMutex(&myGlobals.hostsHashMutex[i]);
+  }
 
 #ifdef MAKE_WITH_SEMAPHORES
   deleteSem(&myGlobals.queueSem);

@@ -360,7 +360,12 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   createMutex(&myGlobals.securityItemsMutex);
   createMutex(&myGlobals.packetProcessMutex);
   createMutex(&myGlobals.packetQueueMutex);
-  createMutex(&myGlobals.hostsHashMutex);
+  createMutex(&myGlobals.hostsHashLockMutex);
+
+  for(i=0; i<CONST_HASH_INITIAL_SIZE; i++) {
+    createMutex(&myGlobals.hostsHashMutex[i]);
+    myGlobals.hostsHashMutexNumLocks[i] = 0;
+  }
 
   /* Packet Capture */
   for (i = 0; i <= CONST_PACKET_QUEUE_LENGTH; i ++)

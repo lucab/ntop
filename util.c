@@ -1830,6 +1830,54 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
 
 /* ************************************ */
 
+int lockHostsHashMutex(HostTraffic *host, char *where) {
+  int rc;
+  
+  if(host) {
+    accessMutex(&myGlobals.hostsHashLockMutex, "lockHostsHashMutex");
+    if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 0) {
+      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]++;
+      accessMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], where);
+    } else {
+      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]++;
+      rc = 0; /* Already locked */
+    }
+    releaseMutex(&myGlobals.hostsHashLockMutex);
+  } else {
+    rc = -1;
+  }
+
+  return(rc);
+}
+
+/* ************************************ */
+
+int unlockHostsHashMutex(HostTraffic *host) {
+  int rc;
+  
+  if(host) {
+    accessMutex(&myGlobals.hostsHashLockMutex, "unlockHostsHashMutex");
+    if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] > 1) {
+      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]--;
+      rc = 0;
+    } else if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 1) {
+      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]--;
+      rc = releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket]);
+    } else {
+      /* myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 0 */
+      traceEvent(CONST_TRACE_WARNING, "Error: attempting to unlock an unlocked mutex");
+      rc = 0;
+    }
+    releaseMutex(&myGlobals.hostsHashLockMutex);
+  } else {
+    rc = -1;
+  }
+
+  return(rc);
+}
+
+/* ************************************ */
+
 int _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLine) {
   int rc;
 

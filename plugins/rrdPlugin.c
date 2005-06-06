@@ -2493,8 +2493,6 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
     return;
   }
 
-  accessMutex(&myGlobals.hostsHashMutex, "rrdDumpHosts");
-
   /* ********************************************* */
 
   numLocalNets = 0;
@@ -2511,7 +2509,6 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
       if((numLocalNets > 0)
 	 && (el->hostIpAddress.hostFamily == AF_INET) /* IPv4 ONLY <-- FIX */
 	 && (!__pseudoLocalAddress(&el->hostIpAddress.Ip4Address, networks, numLocalNets))) {
-	releaseMutex(&myGlobals.hostsHashMutex);
 	return;
       }
 
@@ -2528,7 +2525,6 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
     } else {
       /* For the time being do not save IP-less hosts */
 
-      releaseMutex(&myGlobals.hostsHashMutex);
       return;
     }
 
@@ -2656,8 +2652,6 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
       free(adjHostName);
   }
 
-  releaseMutex(&myGlobals.hostsHashMutex);
-
 #ifdef MAKE_WITH_SCHED_YIELD
   sched_yield(); /* Allow other threads to run */
 #endif
@@ -2672,7 +2666,9 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
   char *adjHostName;
   char hostKey[128];
 
-  accessMutex(&myGlobals.hostsHashMutex, "rrdDumpHosts");
+#ifdef CFG_MULTITHREADED
+  lockHostsHashMutex(el, "rrdUpdateFcHostStats");
+#endif
 
   if((el->bytesSent.value > 0) || (el->bytesRcvd.value > 0)) {
     if(el->fcCounters->hostNumFcAddress[0] != '\0') {
@@ -2681,8 +2677,10 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
 		    el->fcCounters->vsanId);
     } else {
       /* For the time being do not save IP-less hosts */
-      releaseMutex(&myGlobals.hostsHashMutex);
-      return;
+#ifdef CFG_MULTITHREADED
+      unlockHostsHashMutex(el);
+#endif
+    return;
     }
 
     adjHostName = dotToSlash(hostKey);
@@ -2735,7 +2733,9 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
       free(adjHostName);
   }
 
-  releaseMutex(&myGlobals.hostsHashMutex);
+#ifdef CFG_MULTITHREADED
+      unlockHostsHashMutex(el);
+#endif
 
 #ifdef MAKE_WITH_SCHED_YIELD
   sched_yield(); /* Allow other threads to run */

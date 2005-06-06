@@ -45,6 +45,8 @@ extern struct in6_addr _in6addr_linklocal_allnodes;
 #define releaseAddrResMutex()
 #endif
 
+
+
 #ifdef HAVE_LIBWRAP
 extern int allow_severity, deny_severity;
 #endif
@@ -488,6 +490,9 @@ extern int  _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine);
 #define deleteMutex(a)     _deleteMutex(a, __FILE__, __LINE__)
 #define tryLockMutex(a, b) _tryLockMutex(a, b, __FILE__, __LINE__)
 #define releaseMutex(a)    _releaseMutex(a, __FILE__, __LINE__)
+
+extern int lockHostsHashMutex(HostTraffic *host, char *where);
+extern int unlockHostsHashMutex(HostTraffic *host);
 
 #define setHolder(a) { \
                        if(fileName != NULL) { strncpy(a.file, fileName, sizeof(a.file)-1); a.file[sizeof(a.file)-1]='\0'; } else \

@@ -495,12 +495,16 @@ void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
 
 /* ********************************** */
 
-static void decrementRefCount(HostTraffic *el) {
+static void updateRefCount(HostTraffic *el, int value) {
   if(el->refCount == 0) return;
 
-  accessMutex(&myGlobals.hostsHashMutex, "dumpNtopHashes");
-  el->refCount--;
-  releaseMutex(&myGlobals.hostsHashMutex);
+ #ifdef CFG_MULTITHREADED
+  lockHostsHashMutex(el, "decrementRefCount");
+#endif
+  el->refCount += value;
+#ifdef CFG_MULTITHREADED
+  unlockHostsHashMutex(el);
+#endif
 }
 
 /* ********************************** */
@@ -564,9 +568,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
 
-    accessMutex(&myGlobals.hostsHashMutex, "dumpNtopHashes");
-    el->refCount++;
-    releaseMutex(&myGlobals.hostsHashMutex);
+    updateRefCount(el, 1);
 
     strncpy(workSymIpAddress, el->hostResolvedName, MAX_LEN_SYM_HOST_NAME_HTML);
 
@@ -577,7 +579,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
       if(strcmp(el->hostNumIpAddress, key)
 	 && strcmp(el->ethAddressString, key)
 	 && strcmp(workSymIpAddress, key)) {
-	decrementRefCount(el);
+	updateRefCount(el, -1);
 	continue;
       }
     }
@@ -587,12 +589,12 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
       if(localView) {
 	if(((!subnetPseudoLocalHost(el))
 	    && (!multicastHost(el)))) {
-	  decrementRefCount(el);
+	  updateRefCount(el, -1);
 	  continue;
 	}
       }
     } else {
-      if(localView) { decrementRefCount(el); continue; }
+      if(localView) { 	updateRefCount(el, -1); continue; }
       hostKey = el->ethAddressString;
     }
 
@@ -1088,7 +1090,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 
     if((lang == FLAG_NO_LANGUAGE) && (numEntries == 1)) goto REPEAT_HOSTS;
 
-    decrementRefCount(el);
+    updateRefCount(el, -1);
   } /* for */
 
   if(numEntries > 0) endWriteKey(fDescr, lang,"", (lang == FLAG_XML_LANGUAGE) ? "host-information" : hostKey, ' ');
@@ -1136,7 +1138,9 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
 
-    accessMutex(&myGlobals.hostsHashMutex, "dumpNtopHashes");
+#ifdef CFG_MULTITHREADED
+    lockHostsHashMutex(el, "dumpNtopHashes");
+#endif
 
     if(!broadcastHost(el)) {
       char *hostKey;
@@ -1151,7 +1155,9 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
       numEntries++;
     }
 
-    releaseMutex(&myGlobals.hostsHashMutex);
+#ifdef CFG_MULTITHREADED
+    unlockHostsHashMutex(el);
+#endif
   } /* for */
 
   endWriteArray(fDescr, lang);

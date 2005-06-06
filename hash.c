@@ -600,9 +600,7 @@ int purgeIdleHosts(int actDevice) {
 	     noSessionPurgeTime, withSessionPurgeTime);
 #endif
 
-  accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
   purgeOldFragmentEntries(actDevice); /* let's do this too */
-  releaseMutex(&myGlobals.hostsHashMutex);
 
 #ifdef IDLE_PURGE_DEBUG
   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: accessMutex(purgeMutex)...calling");
@@ -616,9 +614,11 @@ int purgeIdleHosts(int actDevice) {
   hashSanityCheck();
 #endif
 
-  for(idx=0; idx<myGlobals.device[actDevice].actualHashSize; idx++) {
-    accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
+#ifdef CFG_MULTITHREADED
+  accessMutex(&myGlobals.hostsHashLockMutex, "scanIdleLoop");
+#endif
 
+  for(idx=0; idx<myGlobals.device[actDevice].actualHashSize; idx++) {
     if((el = myGlobals.device[actDevice].hash_hostTraffic[idx]) != NULL) {
       prev = NULL;
 
@@ -659,12 +659,14 @@ int purgeIdleHosts(int actDevice) {
       } /* while */
 
       if(numHosts >= (maxHosts-1)) {
-        releaseMutex(&myGlobals.hostsHashMutex);
         break;
       }
     }
-    releaseMutex(&myGlobals.hostsHashMutex);
   }
+
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.hostsHashLockMutex);
+#endif
 
 #ifdef HASH_DEBUG
   hashSanityCheck();

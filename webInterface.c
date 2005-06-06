@@ -6306,7 +6306,6 @@ void printMutexStatusReport(int textPrintFlag) {
   if(myGlobals.runningPref.numericFlag == 0)
     printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
 
-  printMutexStatus(textPrintFlag, &myGlobals.hostsHashMutex,   "hostsHashMutex");
   printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
   printMutexStatus(textPrintFlag, &myGlobals.purgePortsMutex,  "purgePortsMutex");
   printMutexStatus(textPrintFlag, &myGlobals.securityItemsMutex,  "securityItemsMutex");
@@ -7262,7 +7261,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 			     formatBytes(sizeof(HostTraffic), 0, buf, sizeof(buf)));
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.device[i].actualHashSize);
-      printFeatureConfigInfo(textPrintFlag, "Actual Jost Hash Size", buf);
+      printFeatureConfigInfo(textPrintFlag, "Actual Host Hash Size", buf);
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.device[i].hostsno);
       printFeatureConfigInfo(textPrintFlag, "Stored hosts", buf);
