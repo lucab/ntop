@@ -7186,26 +7186,38 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                                   TRUE, myGlobals.qmaxDelay, TRUE, myGlobals.pmaxDelay,
                                   TRUE);
 
+   printFeatureConfigInfo3ColFlt6(textPrintFlag,
+                                   "Min Estimated Thpt (pps)",
+                                   TRUE, 0,
+                                   TRUE, 1/qmaxDelay*100,
+                                   TRUE);
+
+    printFeatureConfigInfo3ColFlt6(textPrintFlag,
+                                   "Average Estimated Thpt (pps)",
+                                   TRUE, 0,
+                                   TRUE, (float)((int)(1/pXBAR)*100)/100,
+                                   TRUE);
+    
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                   "'Queue' time is the elapsed time between the packet arrival (libpcap) "
-                   "and the gettimeofday() value as the packet starts processPacket(). For a queued "
-                   "packet, this includes the time in queue. "
-                   "<br><br>'Processing' time is the elapsed time between starting and finishing "
-                   "processPacket().  Errors and/or unrecognized packets may cause processing to be "
-                   "abandoned and those packets are not counted in the 'processing' averages. This means "
-                   "that the " xstr(MAX_PROCESS_BUFFER) " packets for the 'queue' and 'processing' "
-                   "calculations are not necessarily the same physical packets, and may lead to over "
-                   "estimation of the per-packet 'processing' time."
-                   "<br><br>Small averages are good, especially if the standard deviation is small "
-                   "(standard deviation is a measurement of the variability of the actual values "
-                   "around the average). The computations are based only on the most recent "
-                   xstr(MAX_PROCESS_BUFFER) " packets processed."
-                   "<br><br>Maximum ever ignores the first 100 packets for each device - this lets "
-                   "<b>ntop</b> get over startup agony."
-                   "<br><br>What does this mean? Not much.  Still, 1/(queue-average+process-average) "
-                   "(i.e. %.1f) gives a very rough indication of the packet per second rate this "
-                   "instance of ntop can handle.",
-                   1.0 / (qXBAR+pXBAR));
+		  "'Queue' time is the elapsed time between the packet arrival (libpcap) "
+		  "and the gettimeofday() value as the packet starts processPacket(). For a queued "
+		  "packet, this includes the time in queue. "
+		  "<br><br>'Processing' time is the elapsed time between starting and finishing "
+		  "processPacket().  Errors and/or unrecognized packets may cause processing to be "
+		  "abandoned and those packets are not counted in the 'processing' averages. This means "
+		  "that the " xstr(MAX_PROCESS_BUFFER) " packets for the 'queue' and 'processing' "
+		  "calculations are not necessarily the same physical packets, and may lead to over "
+		  "estimation of the per-packet 'processing' time."
+		  "<br><br>Small averages are good, especially if the standard deviation is small "
+		  "(standard deviation is a measurement of the variability of the actual values "
+		  "around the average). The computations are based only on the most recent "
+		  xstr(MAX_PROCESS_BUFFER) " packets processed."
+		  "<br><br>Maximum ever ignores the first 100 packets for each device - this lets "
+		  "<b>ntop</b> get over startup agony."
+		  "<br><br>What does this mean? Not much.  Still, 1/(queue-average+process-average) "
+		  "(i.e. %.1f) gives a very rough indication of the packet per second rate this "
+		  "instance of ntop can handle.",
+		  1.0 / (qXBAR+pXBAR));
     printInfoSectionNote(textPrintFlag, buf);
   }
 }
