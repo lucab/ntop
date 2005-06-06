@@ -83,6 +83,7 @@ void* pcapDispatch(void *_i) {
   /* Reset stats before to start (needed by modern libpcap versions) */
   if(myGlobals.runningPref.rFileName == NULL) {
     pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats);
+    myGlobals.device[i].initialPcapDroppedPkts.value = pcapStats.ps_drop;
   }
 
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {

@@ -526,7 +526,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
       if (myGlobals.fcnsCacheHash != NULL) {
           free (myGlobals.fcnsCacheHash);
       }
-      myGlobals.fcnsCacheHash = malloc (CONST_HASH_INITIAL_SIZE * sizeof(FcNameServerCacheEntry *));
+      myGlobals.fcnsCacheHash = malloc(CONST_HASH_INITIAL_SIZE * sizeof(FcNameServerCacheEntry *));
       if (myGlobals.fcnsCacheHash == NULL) {
           traceEvent (CONST_TRACE_ERROR, "Unable to allocate fc Name Server Cache\n");
       }

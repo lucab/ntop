@@ -342,6 +342,8 @@ void printTrafficSummary (int revertOrder) {
 
     if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
       if(pcap_stats(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr, &pcapStat) >= 0) {
+	Counter realDropped;
+	
 	/*
 	  Recent libpcap versions do not report total/cumulative values
 	  but their value is reset everytime is read
@@ -349,19 +351,20 @@ void printTrafficSummary (int revertOrder) {
 
 	if(myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value > pcapStat.ps_recv) {
 	  /* The counter is reset at each run */
-	  myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value += pcapStat.ps_drop;
+	  realDropped = (myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value += pcapStat.ps_drop);
+	  
 	} else {
 	  /* The counter is NOT reset at each run */
 	  myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value = pcapStat.ps_drop;
+	  realDropped = myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value
+	    - myGlobals.device[myGlobals.actualReportDeviceId].initialPcapDroppedPkts.value;
 	}
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;(libpcap)</th>"
 		      "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
 		      getRowColor(),
-		      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value,
-				 formatBuf, sizeof(formatBuf)),
-		      (float)(myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value*100)
+		      formatPkts(realDropped, formatBuf, sizeof(formatBuf)), (float)(realDropped*100)
 		      /(float)myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value);
 	sendString(buf);
       }

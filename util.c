@@ -275,7 +275,7 @@ unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int d
      * Patch on the line below courtesy of
      * Paul Chapman <pchapman@fury.bio.dfo.ca>
      */
-    idx = (u_int)(dstAddr->Ip4Address.s_addr+srcAddr->Ip4Address.s_addr+sport+dport) ;
+    idx = (u_int)(dstAddr->Ip4Address.s_addr+srcAddr->Ip4Address.s_addr+sport+dport);
     break;
 #ifdef INET6
   case AF_INET6:

@@ -1756,7 +1756,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 
   accessMutex(&myGlobals.tcpSessionsMutex, "handleTCPSession");
 
-  idx = computeIdx(&srcHost->hostIpAddress,&dstHost->hostIpAddress, sport, dport);
+  idx = computeIdx(&srcHost->hostIpAddress, &dstHost->hostIpAddress, sport, dport);
   idx %= MAX_TOT_NUM_SESSIONS;
 
   prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];

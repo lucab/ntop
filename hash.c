@@ -131,10 +131,9 @@ u_int hashFcHost (FcAddress *fcaddr, u_short vsanId, HostTraffic **el,
   idx = (fcaddr->domain & 0xff) ^ (fcaddr->area & 0xff) ^ (fcaddr->port & 0xff) ^ vsanId;
 
   if(actualDeviceId == -1) {
-      idx = idx % CONST_HASH_INITIAL_SIZE;
-  }
-  else {
-      idx = idx % myGlobals.device[actualDeviceId].actualHashSize;
+    idx = idx % CONST_HASH_INITIAL_SIZE;
+  } else {
+    idx = idx % myGlobals.device[actualDeviceId].actualHashSize;
   }
 
   /* Skip reserved entries */

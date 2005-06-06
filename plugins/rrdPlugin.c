@@ -1055,7 +1055,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 
     if(isCounter) {
       safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr),
-		    "DS:counter:COUNTER:%d:0:%u", step, topValue);
+		    "DS:counter:COUNTER:%d:0:%u", 2*step, topValue);
     } else {
       /*
 	Unlimited (sort of)
