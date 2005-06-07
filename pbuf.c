@@ -2276,6 +2276,12 @@ void queuePacket(u_char *_deviceId,
       myGlobals.device[actDeviceId].droppedSamples = 0;
   }
 
+  if(myGlobals.runningPref.dontTrustMACaddr && (h->len <= 64)) {
+    /* Filter out noise */
+    updateDevicePacketStats(h->len, actDeviceId);
+    return;
+  }
+
   if(tryLockMutex(&myGlobals.packetProcessMutex, "queuePacket") == 0) {
     /* Locked so we can process the packet now */
     u_char p1[MAX_PACKET_LEN];
@@ -2336,7 +2342,8 @@ void queuePacket(u_char *_deviceId,
     accessMutex(&myGlobals.packetQueueMutex, "queuePacket");
     myGlobals.receivedPacketsQueued++;
     memcpy(&myGlobals.packetQueue[myGlobals.packetQueueHead].h, h, sizeof(struct pcap_pkthdr));
-    memset(myGlobals.packetQueue[myGlobals.packetQueueHead].p, 0, sizeof(myGlobals.packetQueue[myGlobals.packetQueueHead].p));
+    memset(myGlobals.packetQueue[myGlobals.packetQueueHead].p, 0,
+	   sizeof(myGlobals.packetQueue[myGlobals.packetQueueHead].p));
     /* Just to be safe */
     len = h->caplen;
     if (myGlobals.runningPref.printIpOnly) {
@@ -2361,7 +2368,8 @@ void queuePacket(u_char *_deviceId,
 #endif
 
 #ifdef DEBUG_THREADS
-    traceEvent(CONST_TRACE_INFO, "+ [packet queue=%d/max=%d]", myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
+    traceEvent(CONST_TRACE_INFO, "+ [packet queue=%d/max=%d]",
+	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
   }
 
