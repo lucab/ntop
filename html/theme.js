@@ -40,6 +40,6 @@ var cmThemeOffice =
 };
 
 // for horizontal menu split
-var cmThemeOfficeHSplit = [_cmNoAction, '<td class="ThemeOfficeMenuItemLeft"></td><td colspan="2"><div class="ThemeOfficeMenuSplit"></div></td>'];
-var cmThemeOfficeMainHSplit = [_cmNoAction, '<td class="ThemeOfficeMainItemLeft"></td><td colspan="2"><div class="ThemeOfficeMenuSplit"></div></td>'];
-var cmThemeOfficeMainVSplit = [_cmNoAction, '|'];
+var cmThemeOfficeHSplit = [null, '<td class="ThemeOfficeMenuItemLeft"></td><td colspan="2"><div class="ThemeOfficeMenuSplit"></div></td>'];
+var cmThemeOfficeMainHSplit = [null, '<td class="ThemeOfficeMainItemLeft"></td><td colspan="2"><div class="ThemeOfficeMenuSplit"></div></td>'];
+var cmThemeOfficeMainVSplit = [null, '|'];

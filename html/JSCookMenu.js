@@ -1,5 +1,5 @@
 /*
-	JSCookMenu v1.3.  (c) Copyright 2002-2004 by Heng Yuan
+	JSCookMenu v1.31.  (c) Copyright 2002-2005 by Heng Yuan
 
 	Permission is hereby granted, free of charge, to any person obtaining a
 	copy of this software and associated documentation files (the "Software"),
@@ -922,6 +922,10 @@ function cmGetProperties (obj)
 	return msg;
 }
 
+/* JSCookMenu v1.31 1. fix a bug on IE with causes submenus to display at the top
+					   left corner due to doctype.  The fix was provided by
+					   Burton Strauss <Burton@ntopsupport.com>.
+*/
 /* JSCookMenu v1.3	1. automatically realign (left and right) the submenu when
 					   client space is not enough.
 					2. add _cmNoClick to get rid of menu closing behavior
