@@ -969,23 +969,23 @@ void addDefaultAdminUser(void) {
 #define NTOP_SAVE_PREFS     "SP"
 #define NTOP_RESTORE_DEF    "RD"
 #define CONFIG_STR_ENTRY(bg,title,name,size,configvalue,descr) \
-        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s</td><td><INPUT NAME=%s SIZE=%d VALUE=%s><BR>%s</td></TR>\n", bg, title, name, size, (configvalue != NULL) ? configvalue : "", descr); \
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s</td><td align=left><INPUT NAME=%s SIZE=%d VALUE=%s><BR>%s</td></TR>\n", bg, title, name, size, (configvalue != NULL) ? configvalue : "", descr); \
         sendString (buf);
 
 #define CONFIG_FILE_ENTRY(bg,title,name,size,value,descr) \
-        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td><INPUT NAME=%s SIZE=%d VALUE=%s TYPE=FILE><BR>%s</TD></TR>\n", bg, title, name, size, (value != NULL) ? value : "(null)", descr); \
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td align=left><INPUT NAME=%s SIZE=%d VALUE=%s TYPE=FILE><BR>%s</TD></TR>\n", bg, title, name, size, (value != NULL) ? value : "(null)", descr); \
         sendString (buf);
 
 #define CONFIG_INT_ENTRY(bg,title,name,size,value,descr) \
-        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td><INPUT NAME=%s SIZE=%d VALUE=%d><BR>%s</TD></TR>\n", bg, title, name, size, value, descr); \
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td align=left><INPUT NAME=%s SIZE=%d VALUE=%d><BR>%s</TD></TR>\n", bg, title, name, size, value, descr); \
         sendString (buf);
 
 #define CONFIG_CHKBOX_ENTRY(bg,title,name,value,descr) \
-        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td><INPUT TYPE=checkbox NAME=%s VALUE=%d %s><BR>%s</TD></TR>\n", bg, title, name, value, value ? "CHECKED" : "", descr); \
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td align=left><INPUT TYPE=checkbox NAME=%s VALUE=%d %s><BR>%s</TD></TR>\n", bg, title, name, value, value ? "CHECKED" : "", descr); \
         sendString (buf);
 
 #define CONFIG_RADIO_ENTRY(bg,title,name,value,descr) \
-        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td><INPUT TYPE=radio NAME=%s VALUE=1 %s>Yes<INPUT TYPE=radio NAME=%s VALUE=0 %s>No<br>%s</TD></TR>\n", bg, title, name, value ? "CHECKED" : "", name, !value ? "CHECKED" : "", descr); \
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td align=left><INPUT TYPE=radio NAME=%s VALUE=1 %s>Yes<INPUT TYPE=radio NAME=%s VALUE=0 %s>No<br>%s</TD></TR>\n", bg, title, name, value ? "CHECKED" : "", name, !value ? "CHECKED" : "", descr); \
         sendString (buf);
 
 /* ************************************************* */
@@ -1370,7 +1370,7 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
       char ebuf[CONST_SIZE_PCAP_ERR_BUF];
 
       sendString("<TR><INPUT TYPE=HIDDEN NAME=BASIC_PREFS VALUE=1>"
-		 "<TD ALIGN=LEFT "DARK_BG">Capture Interfaces (-i)</TD><TD>\n");
+		 "<TD ALIGN=LEFT "DARK_BG">Capture Interfaces (-i)</TD><TD ALIGN=LEFT>\n");
 
       if(((rc = pcap_findalldevs(&devpointer, ebuf)) >= 0) && (devpointer != NULL)) {
 
@@ -1484,7 +1484,7 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 		      "Max number of lines that ntop will display on each "
 		      " generated HTML page");
 
-    sendString("<TR><TD ALIGN=LEFT "DARK_BG">Show Menus For</TD><TD>");
+    sendString("<TR><TD ALIGN=LEFT "DARK_BG">Show Menus For</TD><TD ALIGN=LEFT>");
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<INPUT TYPE=radio NAME=%s  VALUE=%d %s>IP<br>\n",
 		  NTOP_PREF_PRINT_FCORIP, NTOP_PREF_VALUE_PRINT_IPONLY,
@@ -1516,7 +1516,7 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
     break;
 
   case showPrefIPPref:
-    sendString("<TR><TD ALIGN=LEFT "DARK_BG">Use IPv4 or IPv6 (-4/-6)</TD><TD>");
+    sendString("<TR><TD ALIGN=LEFT "DARK_BG">Use IPv4 or IPv6 (-4/-6)</TD><TD ALIGN=LEFT>");
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<INPUT TYPE=radio NAME=%s VALUE=%d %s>v4<br>\n",
 		  NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_INET,
