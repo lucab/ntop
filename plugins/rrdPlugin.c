@@ -20,8 +20,6 @@
 
 /* This plugin works only with threads */
 
-#define RRD_DEBUG  8 
-
 /*
 
 Plugin History
