@@ -177,7 +177,6 @@ static int verifyOptions (void)
             traceEvent(CONST_TRACE_INFO, "This may or may not be what you want");
             traceEvent(CONST_TRACE_INFO, "but without the web interface you can't set plugin parameters");
             myGlobals.webInterfaceDisabled = 1;
-            /* exit(-1); */
     }
 
     /*
@@ -242,9 +241,9 @@ static int verifyOptions (void)
             }
         } else {
             traceEvent(CONST_TRACE_ERROR, "The specified root password is not correct.");
-            traceEvent(CONST_TRACE_ERROR, "Sorry, %s uses network interface(s) in promiscuous mode, "
+            traceEvent(CONST_TRACE_FATALERROR, "Sorry, %s uses network interface(s) in promiscuous mode, "
                        "so it needs root permission to run.\n", myGlobals.program_name);
-            exit(-1);
+            exit(18);
         }
     } else if (myGlobals.runningPref.disablePromiscuousMode == 1)
         traceEvent(CONST_TRACE_WARNING,
@@ -510,7 +509,7 @@ int main(int argc, char *argv[]) {
   }
 
   if((ifStr == NULL) || (ifStr[0] == '\0')) {
-    traceEvent(CONST_TRACE_FATALERROR, "No interface has been selected. Capture not started...");
+    traceEvent(CONST_TRACE_ERROR, "No interface has been selected. Capture not started...");
     createDummyInterface("none");
   } else
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Listening on [%s]", ifStr);

@@ -1421,12 +1421,10 @@
 #define CONST_WARNING_TRACE_LEVEL           2
 #define CONST_INFO_TRACE_LEVEL              3
 #define CONST_NOISY_TRACE_LEVEL             4
-    /*
-     * Used as the limiting value (http.c) and (util.c).
-     *   DETAILED is NOISY + EXTRA FILELINE
-     */
+    /*   DETAILED is NOISY + EXTRA FILELINE */
 #define CONST_DETAIL_TRACE_LEVEL            5
-#define CONST_VERY_DETAIL_TRACE_LEVEL       6
+#define CONST_BEYONDNOISY_TRACE_LEVEL       6
+    /* CONST_BEYONDNOISY_TRACE_LEVEL is used as the limiting value in prefs.c */
 
 #define CONST_TRACE_ALWAYSDISPLAY           CONST_ALWAYSDISPLAY_TRACE_LEVEL, __FILE__, __LINE__
 #define CONST_TRACE_FATALERROR              CONST_FATALERROR_TRACE_LEVEL, __FILE__, __LINE__
@@ -1434,6 +1432,7 @@
 #define CONST_TRACE_WARNING                 CONST_WARNING_TRACE_LEVEL, __FILE__, __LINE__
 #define CONST_TRACE_INFO                    CONST_INFO_TRACE_LEVEL, __FILE__, __LINE__
 #define CONST_TRACE_NOISY                   CONST_NOISY_TRACE_LEVEL, __FILE__, __LINE__
+#define CONST_TRACE_BEYONDNOISY             CONST_BEYONDNOISY_TRACE_LEVEL, __FILE__, __LINE__
 
 
 /*

@@ -567,7 +567,7 @@ char* copy_argv(register char **argv) {
   buf = (char*)malloc(len);
   if(buf == NULL) {
     traceEvent(CONST_TRACE_FATALERROR, "Insufficient memory for copy_argv");
-    exit(-1);
+    exit(20); /* Just in case */
   }
 
   p = argv;
@@ -1541,9 +1541,9 @@ void handleFlowsSpecs(void) {
           newFlow = (FlowFilterList*)calloc(1, sizeof(FlowFilterList));
 
           if(newFlow == NULL) {
-            traceEvent(CONST_TRACE_INFO, "Fatal error: not enough memory. Bye!");
             if(buffer != NULL) free(buffer);
-            exit(-1);
+            traceEvent(CONST_TRACE_FATALERROR, "Fatal error: not enough memory. Bye!");
+            exit(21); /* Just in case */
           } else {
             int i;
 
@@ -2252,34 +2252,6 @@ char* decodeNBstring(char* theString, char *theBuffer) {
 
 /* ************************************ */
 
-char* savestr(const char *str)
-{
-  u_int size;
-  char *p;
-  static char *strptr = NULL;
-  static u_int strsize = 0;
-
-  size = strlen(str) + 1;
-  if(size > strsize) {
-    strsize = 1024;
-    if(strsize < size)
-      strsize = size;
-    strptr = (char*)malloc(strsize);
-    if(strptr == NULL) {
-      fprintf(stderr, "savestr: malloc\n");
-      exit(1);
-    }
-  }
-  (void)strncpy(strptr, str, strsize);
-  p = strptr;
-  strptr += size;
-  strsize -= size;
-  return(p);
-}
-
-
-/* ************************************ */
-
 /* The function below has been inherited by tcpdump */
 
 
@@ -2647,10 +2619,15 @@ void traceEvent(int eventTraceLevel, char* file,
       }
     }
 
+#ifdef WIN32
     /* If ntop is a Win32 service, we're done - we don't (yet) write to the
      * windows event logs and there's no console...
+     *
+     * If it's fatal, die, otherwise just return...
+     *
      */
-#ifdef WIN32
+    if(eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL)
+      raise(SIGINT);
     if(isNtopAservice) return;
 #endif
 
@@ -2715,6 +2692,11 @@ void traceEvent(int eventTraceLevel, char* file,
   }
 
   va_end (va_ap);
+
+  /* If it's fatal, die */
+  if(eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL)
+    raise(SIGINT);
+
 }
 
 /* ******************************************** */
@@ -2893,7 +2875,7 @@ void stringSanityCheck(char* string, char* parm) {
 
   if(string == NULL)  {
     traceEvent(CONST_TRACE_FATALERROR, "Invalid (empty) string specified for option %s", parm);
-    exit(-1);
+    exit(22); /* Just in case */
   }
 
   for(i=0, j=1; i<strlen(string); i++) {
@@ -2908,9 +2890,10 @@ void stringSanityCheck(char* string, char* parm) {
 
   if(j == 0) {
     if(strlen(string) > 20) string[20] = '\0';
-    traceEvent(CONST_TRACE_FATALERROR, "Invalid string specified for option %s", parm);
+    traceEvent(CONST_TRACE_ERROR, "Invalid string specified for option %s", parm);
     traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
-    exit(-1);
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid option string, ntop shutting down...");
+    exit(23); /* Just in case */
   }
 
   if((string[strlen(string)-1] == '/') ||
@@ -2947,7 +2930,7 @@ void uriSanityCheck(char* string, char* parm, int allowParms) {
 
   if(string == NULL)  {
     traceEvent(CONST_TRACE_FATALERROR, "Invalid (empty) uri specified for option %s", parm);
-    exit(-1);
+    exit(24); /* Just in case */
   }
 
   for(i=0, j=1; i<strlen(string); i++) {
@@ -2981,9 +2964,10 @@ void uriSanityCheck(char* string, char* parm, int allowParms) {
 
   if(j == 0) {
     if(strlen(string) > 40) string[40] = '\0';
-    traceEvent(CONST_TRACE_FATALERROR, "Invalid uri specified for option %s", parm);
+    traceEvent(CONST_TRACE_ERROR, "Invalid uri specified for option %s", parm);
     traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
-    exit(-1);
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid uri, ntop shutting down...");
+    exit(25); /* Just in case */
   }
 }
 
@@ -3009,7 +2993,7 @@ void pathSanityCheck(char* string, char* parm) {
 
   if(string == NULL)  {
     traceEvent(CONST_TRACE_FATALERROR, "Invalid (empty) path specified for option %s", parm);
-    exit(-1);
+    exit(26); /* Just in case */
   }
 
   /* one time load of table */
@@ -3047,9 +3031,10 @@ void pathSanityCheck(char* string, char* parm) {
 
   if(j == 0) {
     if(strlen(string) > 40) string[40] = '\0';
-    traceEvent(CONST_TRACE_FATALERROR, "Invalid path/filename specified for option %s", parm);
+    traceEvent(CONST_TRACE_ERROR, "Invalid path/filename specified for option %s", parm);
     traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
-    exit(-1);
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid path/filename, ntop shutting down...");
+    exit(27); /* Just in case */
   }
 }
 
@@ -3076,7 +3061,7 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
     if(nonFatal == 1) return(-1);
 
     traceEvent(CONST_TRACE_FATALERROR, "Invalid (empty) filename specified for option %s", parm);
-    exit(-1);
+    exit(28); /* Just in case */
   }
 
   /* one time load of table */
@@ -3115,9 +3100,10 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
 
     if(nonFatal == -1) return(-1);
 
-    traceEvent(CONST_TRACE_FATALERROR, "Invalid filename specified for option %s", parm);
+    traceEvent(CONST_TRACE_ERROR, "Invalid filename specified for option %s", parm);
     traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
-    exit(-1);
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid filename, ntop shutting down...");
+    exit(29); /* Just in case */
   }
 
   return(0);
@@ -3143,7 +3129,7 @@ int ipSanityCheck(char* string, char* parm, int nonFatal) {
     if(nonFatal == 1) return(-1);
 
     traceEvent(CONST_TRACE_FATALERROR, "Invalid (empty) path specified for option %s", parm);
-    exit(-1);
+    exit(30); /* Just in case */
   }
 
   /* one time load of table */
@@ -3170,9 +3156,10 @@ int ipSanityCheck(char* string, char* parm, int nonFatal) {
 
     if(nonFatal == 1) return(-1);
 
-    traceEvent(CONST_TRACE_FATALERROR, "Invalid ip address specified for option %s", parm);
+    traceEvent(CONST_TRACE_ERROR, "Invalid ip address specified for option %s", parm);
     traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
-    exit(-1);
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid ip address, ntop shutting down...");
+    exit(31); /* Just in case */
   }
 
   return(0);
@@ -3208,7 +3195,7 @@ void deviceSanityCheck(char* string) {
 
   if(j == 0) {
     traceEvent(CONST_TRACE_FATALERROR, "Invalid device specified");
-    exit(-1);
+    exit(32); /* Just in case */
   }
 }
 
@@ -3872,7 +3859,7 @@ void checkUserIdentity(int userSpecified) {
     /* setuid binary, drop privileges */
     if((setgid(getgid()) != 0) || (setuid(getuid()) != 0)) {
       traceEvent(CONST_TRACE_FATALERROR, "Unable to drop privileges");
-      exit(-1);
+      exit(33); /* Just in case */
     }
   }
 
@@ -3885,16 +3872,17 @@ void checkUserIdentity(int userSpecified) {
       if((myGlobals.userId != 0) || (myGlobals.groupId != 0)) {
 	if((setgid(myGlobals.groupId) != 0) || (setuid(myGlobals.userId) != 0)) {
 	  traceEvent(CONST_TRACE_FATALERROR, "Unable to change user");
-	  exit(-1);
+	  exit(34); /* Just in case */
 	}
       }
     } else {
       if((geteuid() == 0) || (getegid() == 0)) {
 	if(!userSpecified) {
-	  traceEvent(CONST_TRACE_FATALERROR, "For security reasons you cannot run ntop as root - aborting");
+	  traceEvent(CONST_TRACE_ERROR, "For security reasons you cannot run ntop as root - aborting");
 	  traceEvent(CONST_TRACE_INFO, "Unless you really, really, know what you're doing");
 	  traceEvent(CONST_TRACE_INFO, "Please specify the user name using the -u option!");
-	  exit(0);
+	  traceEvent(CONST_TRACE_FATALERROR, "ntop shutting down for security reasons...");
+	  exit(35); /* Just in case */
 	} else {
 	  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "For security reasons you should not run ntop as root (-u)!");
 	}
@@ -4096,7 +4084,7 @@ u_int32_t xaton(char *s) {
 
 /* ******************************************************************* */
 
-void addNodeInternal(u_int32_t ip, int prefix, char *country, int as) {
+void* addNodeInternal(u_int32_t ip, int prefix, char *country, int as) {
   IPNode *p1 = NULL, *p2 = NULL;
   int i, b;
 
@@ -4109,7 +4097,8 @@ void addNodeInternal(u_int32_t ip, int prefix, char *country, int as) {
     b=(ip>>(31-i)) & 0x1;
     if(!p1->b[b]) {
       if(!(p2=malloc(sizeof(IPNode))))
-        exit(1);
+        return(NULL);
+
       memset(p2, 0, sizeof(IPNode));
 
       if(country != NULL)
@@ -4131,6 +4120,9 @@ void addNodeInternal(u_int32_t ip, int prefix, char *country, int as) {
     if(p2->node.as == 0)
       p2->node.as = as;
   }
+
+  return(p2);
+
 }
 
 /* ******************************************************************* */
@@ -4540,7 +4532,7 @@ int setSpecifiedUser(void) {
   /* user id specified on commandline */
   if((setgid(myGlobals.groupId) != 0) || (setuid(myGlobals.userId) != 0)) {
     traceEvent(CONST_TRACE_FATALERROR, "Unable to change user ID");
-    exit(-1);
+    exit(36); /* Just in case */
   }
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Now running as requested user '%s' (%d:%d)",
              myGlobals.effectiveUserName, myGlobals.userId, myGlobals.groupId);

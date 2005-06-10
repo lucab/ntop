@@ -528,7 +528,6 @@ extern int checkCommand(char* commandName);
 extern void setHostFingerprint(HostTraffic *srcHost);
 extern char* decodeNBstring(char* theString, char *theBuffer);
 extern void closeNwSocket(int *sockId);
-extern char *savestr(const char *str);
 extern int name_interpret(char *in, char *out, int in_len);
 
 extern char *getNwInterfaceType(int i);
@@ -585,7 +584,7 @@ extern u_int numActiveSenders(u_int deviceId);
 extern u_int numActiveNxPorts(u_int deviceId);
 extern u_int numActiveVsans(u_int deviceId);
 extern u_int32_t xaton(char *s);
-extern void addNodeInternal(u_int32_t ip, int prefix, char *country, int as);
+extern void* addNodeInternal(u_int32_t ip, int prefix, char *country, int as);
 extern char *ip2CountryCode(HostAddr ip);
 extern short addrcmp(HostAddr *addr1, HostAddr *addr2);
 extern HostAddr     * addrcpy(HostAddr *dst, HostAddr *src);

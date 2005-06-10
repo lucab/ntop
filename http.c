@@ -1745,7 +1745,7 @@ RETSIGTYPE httpcleanup(int signo) {
   char **strings;
 
   if(msgSent<10) {
-    traceEvent(CONST_TRACE_FATALERROR, "http: caught signal %d %s", signo,
+    traceEvent(CONST_TRACE_ERROR, "http: caught signal %d %s", signo,
                signo == SIGHUP ? "SIGHUP" :
                  signo == SIGINT ? "SIGINT" :
                  signo == SIGQUIT ? "SIGQUIT" :
@@ -1780,14 +1780,15 @@ RETSIGTYPE httpcleanup(int signo) {
   size = backtrace(array, 20);
   strings = (char**)backtrace_symbols(array, size);
 
-  traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:     backtrace is:");
+  traceEvent(CONST_TRACE_ERROR, "http: BACKTRACE:     backtrace is:");
   if(size < 2)
-      traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:         **unavailable!");
+      traceEvent(CONST_TRACE_ERROR, "http: BACKTRACE:         **unavailable!");
   else /* Ignore the 0th entry, that's our cleanup() */
     for(i=1; i<size; i++)
-      traceEvent(CONST_TRACE_FATALERROR, "http: BACKTRACE:          %2d. %s", i, strings[i]);
+      traceEvent(CONST_TRACE_ERROR, "http: BACKTRACE:          %2d. %s", i, strings[i]);
 
-  exit(0);
+  traceEvent(CONST_TRACE_FATALERROR, "http: ntop shutting down...");
+  exit(3); /* Just in case */
  #endif
 }
 #endif /* MAKE_WITH_HTTPSIGTRAP */

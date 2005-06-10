@@ -8288,7 +8288,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
     if((*sock < 0) || (errno != 0)) {
       traceEvent(CONST_TRACE_FATALERROR, "INITWEB: Unable to create a new%s socket - returned %d, error is '%s'(%d)",
                  sslOrNot, *sock, strerror(errno), errno);
-      exit(-1);
+      exit(37); /* Just in case */
     }
     traceEvent(CONST_TRACE_NOISY, "INITWEB: Created a new%s socket (%d)", sslOrNot, *sock);
 
@@ -8302,7 +8302,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   if((rc < 0) || (errno != 0)) {
     traceEvent(CONST_TRACE_FATALERROR, "INITWEB: Unable to set%s socket options - '%s'(%d)",
                sslOrNot, strerror(errno), errno);
-    exit(-1);
+    exit(38); /* Just in case */
   }
 #ifdef INITWEB_DEBUG
   traceEvent(CONST_TRACE_INFO, "INITWEB_DEBUG:%s socket %d, options set", sslOrNot, *sock);
@@ -8317,13 +8317,14 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   rc = bind(*sock, (struct sockaddr *)&sockIn, sizeof(sockIn));
 #endif
   if((rc < 0) || (errno != 0)) {
-    traceEvent(CONST_TRACE_FATALERROR,
+    closeNwSocket(&myGlobals.sock);
+    traceEvent(CONST_TRACE_ERROR,
                "INITWEB:%s binding problem - '%s'(%d)",
                sslOrNot, strerror(errno), errno);
     traceEvent(CONST_TRACE_INFO, "Check if another instance of ntop is running");
     traceEvent(CONST_TRACE_INFO, "or if the current user (-u) can bind to the specified port");
-    closeNwSocket(&myGlobals.sock);
-    exit(-1);
+    traceEvent(CONST_TRACE_FATALERROR, "Binding problem, ntop shutting down...");
+    exit(39); /* Just in case */
   }
 
 #ifdef INITWEB_DEBUG
@@ -8333,13 +8334,13 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   errno = 0;
   rc = listen(*sock, myGlobals.webServerRequestQueueLength);
   if((rc < 0) || (errno != 0)) {
+    closeNwSocket(&myGlobals.sock);
     traceEvent(CONST_TRACE_FATALERROR, "INITWEB:%s listen(%d, %d) error %s(%d)",
                sslOrNot,
                *sock,
                myGlobals.webServerRequestQueueLength,
                strerror(errno), errno);
-    closeNwSocket(&myGlobals.sock);
-    exit(-1);
+    exit(40); /* Just in case */
   }
 
   traceEvent(CONST_TRACE_INFO, "INITWEB: Initialized%s socket, port %d, address %s",
@@ -8744,16 +8745,17 @@ RETSIGTYPE webservercleanup(int signo) {
   size = backtrace(array, 20);
   strings = (char**)backtrace_symbols(array, size);
 
-  traceEvent(CONST_TRACE_FATALERROR, "webserver: BACKTRACE:     backtrace is:");
+  traceEvent(CONST_TRACE_ERROR, "webserver: BACKTRACE:     backtrace is:");
   if(size < 2)
-      traceEvent(CONST_TRACE_FATALERROR, "webserver: BACKTRACE:         **unavailable!");
+      traceEvent(CONST_TRACE_ERROR, "webserver: BACKTRACE:         **unavailable!");
   else
       /* Ignore the 0th entry, that's our cleanup() */
       for (i=1; i<size; i++)
-          traceEvent(CONST_TRACE_FATALERROR, "webserver: BACKTRACE:          %2d. %s", i, strings[i]);
+          traceEvent(CONST_TRACE_ERROR, "webserver: BACKTRACE:          %2d. %s", i, strings[i]);
  #endif
 
-  exit(0);
+  traceEvent(CONST_TRACE_FATALERROR, "webserver: ntop shutting down...");
+  exit(41); /* Just in case */
 }
 #endif /* MAKE_WITH_HTTPSIGTRAP */
 

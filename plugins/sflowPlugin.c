@@ -2939,18 +2939,19 @@ RETSIGTYPE sflowcleanup(int signo) {
   size = backtrace(array, 20);
   strings = (char**)backtrace_symbols(array, size);
 
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_FATALERROR, "SFLOW: BACKTRACE:     backtrace is:");
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_ERROR, "SFLOW: BACKTRACE:     backtrace is:");
   if (size < 2) {
-    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_FATALERROR, "SFLOW: BACKTRACE:         **unavailable!");
+    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_ERROR, "SFLOW: BACKTRACE:         **unavailable!");
   } else {
     /* Ignore the 0th entry, that's our cleanup() */
     for (i=1; i<size; i++) {
-      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_FATALERROR, "SFLOW: BACKTRACE:          %2d. %s", i, strings[i]);
+      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_ERROR, "SFLOW: BACKTRACE:          %2d. %s", i, strings[i]);
     }
   }
 #endif /* HAVE_BACKTRACE */
 
-  exit(0);
+  traceEvent(CONST_TRACE_FATALERROR, "SFLOW: ntop shutting down...");
+  exit(102);
 }
 #endif /* MAKE_WITH_SFLOWSIGTRAP */
 
@@ -3051,7 +3052,7 @@ static void* sflowMainLoop(void* _deviceId) {
       }
     } else {
       if(rc < 0) {
-	if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_FATALERROR, "SFLOW: select() failed(%d, %s), terminating sflow",
+	if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_ERROR, "SFLOW: select() failed(%d, %s), terminating sflow",
 		   errno, strerror(errno));
 	break;
       }

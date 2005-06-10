@@ -121,7 +121,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
   
   if(newFlow == NULL) {
     traceEvent(CONST_TRACE_FATALERROR, "Not enough memory for plugin flow filter - aborting");
-    exit(-1);
+    exit(19); /* Just in case */
   } else {
     newFlow->fcode = (struct bpf_program*)calloc(MAX_NUM_DEVICES, sizeof(struct bpf_program));
     newFlow->flowName = strdup(pluginInfo->pluginName);

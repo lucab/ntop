@@ -587,11 +587,11 @@ void initNtop(char *devices) {
   if((myGlobals.runningPref.rFileName != NULL) &&
      ((myGlobals.runningPref.localAddresses == NULL) &&
       !myGlobals.runningPref.printFcOnly)) {
+      myGlobals.capturePackets = FLAG_NTOPSTATE_NOTINIT;
       traceEvent(CONST_TRACE_FATALERROR,
                  "-m | local-subnets must be specified when the -f | --traffic-dump-file option is used"
                  "Capture not started");
-      myGlobals.capturePackets = FLAG_NTOPSTATE_NOTINIT;
-      exit(1);
+      exit(2); /* Just in case */
   }
 
   if(myGlobals.runningPref.currentFilterExpression != NULL)

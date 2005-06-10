@@ -860,7 +860,7 @@ static void addKeyIfMissing(char* key, char* value,
 	 */
 	traceEvent(CONST_TRACE_FATALERROR, 
 		   "No password for admin user - please re-run ntop in non-daemon mode first");
-	exit(1);
+	exit(1); /* Just in case */
       }
 
       memset(pw1, 0, sizeof(pw1)); memset(pw2, 0, sizeof(pw2));

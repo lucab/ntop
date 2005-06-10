@@ -1290,18 +1290,19 @@ RETSIGTYPE netflowcleanup(int signo) {
   size = backtrace(array, 20);
   strings = (char**)backtrace_symbols(array, size);
 
-  traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: BACKTRACE:     backtrace is:");
+  traceEvent(CONST_TRACE_ERROR, "NETFLOW: BACKTRACE:     backtrace is:");
   if (size < 2) {
-    traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: BACKTRACE:         **unavailable!");
+    traceEvent(CONST_TRACE_ERROR, "NETFLOW: BACKTRACE:         **unavailable!");
   } else {
     /* Ignore the 0th entry, that's our cleanup() */
     for (i=1; i<size; i++) {
-      traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: BACKTRACE:          %2d. %s", i, strings[i]);
+      traceEvent(CONST_TRACE_ERROR, "NETFLOW: BACKTRACE:          %2d. %s", i, strings[i]);
     }
   }
 #endif /* HAVE_BACKTRACE */
 
-  exit(0);
+  traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: ntop shutting down...");
+  exit(100);
 }
 #endif /* MAKE_WITH_NETFLOWSIGTRAP */
 
@@ -1420,7 +1421,7 @@ static void* netflowMainLoop(void* _deviceId) {
       }
     } else {
       if((rc < 0) && (!myGlobals.endNtop) && (errno != EINTR /* Interrupted system call */)) {
-	traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: select() failed(%d, %s), terminating netFlow",
+	traceEvent(CONST_TRACE_ERROR, "NETFLOW: select() failed(%d, %s), terminating netFlow",
 		   errno, strerror(errno));
 	break;
       }

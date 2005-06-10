@@ -2459,18 +2459,19 @@ RETSIGTYPE rrdcleanup(int signo) {
   size = backtrace(array, 20);
   strings = (char**)backtrace_symbols(array, size);
 
-  traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:     backtrace is:");
+  traceEvent(CONST_TRACE_ERROR, "RRD: BACKTRACE:     backtrace is:");
   if(size < 2) {
-    traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:         **unavailable!");
+    traceEvent(CONST_TRACE_ERROR, "RRD: BACKTRACE:         **unavailable!");
   } else {
     /* Ignore the 0th entry, that's our cleanup() */
     for (i=1; i<size; i++) {
-      traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:          %2d. %s", i, strings[i]);
+      traceEvent(CONST_TRACE_ERROR, "RRD: BACKTRACE:          %2d. %s", i, strings[i]);
     }
   }
 #endif /* HAVE_BACKTRACE */
 
-  exit(0);
+  traceEvent(CONST_TRACE_FATALERROR, "RRD: ntop shutting down...");
+  exit(101);
 }
 #endif /* MAKE_WITH_RRDSIGTRAP */
 

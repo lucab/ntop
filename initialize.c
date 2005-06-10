@@ -216,7 +216,7 @@ static void initIPCountryTable(void) {
   myGlobals.ipCountryCount = 0;
   if((myGlobals.countryFlagHead = malloc(sizeof(IPNode))) == NULL) {
     traceEvent(CONST_TRACE_FATALERROR, "IP2CC: Unable to allocate table memory. Quitting...");
-    exit(1);
+    exit(4); /* Just in case */
   }
   myGlobals.ipCountryMem += sizeof(IPNode);
 
@@ -248,7 +248,12 @@ static void initIPCountryTable(void) {
 
               strtolower(cc);
 
-              addNodeInternal(xaton(ip), atoi(prefix), cc, 0);
+              if(addNodeInternal(xaton(ip), atoi(prefix), cc, 0) == NULL) {
+                traceEvent(CONST_TRACE_FATALERROR,
+                           "IP2CC: Insufficient memory to load table");
+                /* This isn't fatal of an itself, but we'll fail every malloc() from here on ... */
+                exit(5); /* Just in case */
+              }
           }
 
           myGlobals.ipCountryCount += numRead;
@@ -559,7 +564,13 @@ void initCounters(void) {
               if((ip = strtok_r(NULL, "/", &strtokState)) == NULL)  continue;
               if((prefix = strtok_r(NULL, "\n", &strtokState)) == NULL)  continue;
 
-              addNodeInternal(xaton(ip), atoi(prefix), NULL, atoi(as));
+              if(addNodeInternal(xaton(ip), atoi(prefix), NULL, atoi(as)) == NULL) {
+                traceEvent(CONST_TRACE_FATALERROR,
+                           "ASN: Insufficient memory to load table");
+                /* This isn't fatal of an itself, but we'll fail every malloc() from here on ... */
+                exit(6); /* Just in case */
+              }
+
               myGlobals.asCount++;
           }
           traceEvent(CONST_TRACE_INFO, "ASN: ....Used %d KB of memory (%d per entry)",
@@ -901,7 +912,7 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
   *database = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
   if(*database == NULL) {
-    traceEvent(CONST_TRACE_FATALERROR, "....open of %s failed: %s",
+    traceEvent(CONST_TRACE_ERROR, "....open of %s failed: %s",
 	       tmpBuf,
 #if defined(WIN32) && defined(__GNUC__)
 	       "unknown gdbm errno"
@@ -916,7 +927,8 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
       traceEvent(CONST_TRACE_INFO, "1. Is another instance of ntop running?");
       traceEvent(CONST_TRACE_INFO, "2. Make sure that the user you specified can write in the target directory");
     }
-    exit(-1);
+    traceEvent(CONST_TRACE_FATALERROR, "GDBM open failed, ntop shutting down...");
+    exit(7); /* Just in case */
   }
 }
 
@@ -1133,7 +1145,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	if(a == NULL) {
 	  traceEvent(CONST_TRACE_FATALERROR, "Unable to open device '%s' (invalid name?)",
 		     myGlobals.device[deviceId].name);
-	  exit(-1);
+	  exit(8); /* Just in case */
 	}
 	if(PacketGetNetType (a,&adapter)) {
 	  myGlobals.device[deviceId].deviceSpeed = adapter.LinkSpeed;
@@ -1144,7 +1156,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 #else
     if(setuid(0) == -1) {
       traceEvent(CONST_TRACE_FATALERROR, "Unable to become root");
-      exit(1);
+      exit(9); /* Just in case */
     }
 #endif
 
@@ -1164,14 +1176,15 @@ void addDevice(char* deviceName, char* deviceDescr) {
     }
 
       if(myGlobals.device[deviceId].pcapPtr == NULL) {
-	traceEvent(CONST_TRACE_FATALERROR, "pcap_open_live(): '%s'", ebuf);
+	traceEvent(CONST_TRACE_ERROR, "pcap_open_live(): '%s'", ebuf);
 	if(myGlobals.runningPref.disablePromiscuousMode == 1)
 	  traceEvent(CONST_TRACE_INFO,
 		     "Sorry, but on this system, even with -s, it appears "
 		     "that ntop must be started as root");
 	traceEvent(CONST_TRACE_INFO, "Please correct the problem or select "
 		   "a different interface using the -i flag");
-	    exit(1);
+	traceEvent(CONST_TRACE_FATALERROR, "Not root, ntop shutting down...");
+        exit(10); /* Just in case */
       }
 
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
@@ -1202,9 +1215,10 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
 	if(myGlobals.device[deviceId].pcapDumper == NULL) {
           traceEvent(CONST_TRACE_FATALERROR, "pcap_dump_open(..., '%s') failed", myName);
-	  exit(-1);
-	} else
-	  traceEvent(CONST_TRACE_NOISY, "Saving packets into file %s", myName);
+	  exit(11); /* Just in case */
+	}
+
+	traceEvent(CONST_TRACE_NOISY, "Saving packets into file %s", myName);
       }
 
     if(myGlobals.runningPref.enableSuspiciousPacketDump) {
@@ -1306,7 +1320,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 									sizeof(TrafficEntry*));
     if(myGlobals.device[deviceId].ipTrafficMatrix == NULL) {
       traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for ipTraffixMatrix failed", memlen);
-      exit(-1);
+      exit(12); /* Just in case */
     }
 
     traceEvent(CONST_TRACE_NOISY, "MEMORY: ipTrafficMatrix base (no TrafficEntry) for interface '%s' is %5.2fMB",
@@ -1320,7 +1334,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
     if(myGlobals.device[deviceId].ipTrafficMatrixHosts == NULL) {
       traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for ipTraffixMatrixHosts failed", memlen);
-      exit(-1);
+      exit(13); /* Just in case */
     }
 
     /* Allocate FC Traffic Matrices */
@@ -1331,8 +1345,8 @@ void addDevice(char* deviceName, char* deviceDescr) {
                                                                             *myGlobals.device[deviceId].numHosts,
                                                                             sizeof(TrafficEntry*));
         if(myGlobals.device[deviceId].fcTrafficMatrix == NULL) {
-            traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for fcTraffixMatrix failed", memlen);
-            exit(-1);
+          traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for fcTraffixMatrix failed", memlen);
+          exit(14); /* Just in case */
         }
         myGlobals.fcTrafficMatrixMemoryUsage += memlen;
 
@@ -1755,11 +1769,12 @@ void parseTrafficFilter(void) {
 		     myGlobals.runningPref.currentFilterExpression,
 		     pcap_geterr(myGlobals.device[i].pcapPtr),
 		     myGlobals.device[i].name[0] == '0' ? "<pcap file>" : myGlobals.device[i].name);
-	  exit(-1);
-	} else
-	  traceEvent(CONST_TRACE_NOISY, "Setting filter to \"%s\" on device %s.",
+	  exit(15); /* Just in case */
+	}
+
+        traceEvent(CONST_TRACE_NOISY, "Setting filter to \"%s\" on device %s.",
 		     myGlobals.runningPref.currentFilterExpression, myGlobals.device[i].name);
-          pcap_freecode(&fcode);
+        pcap_freecode(&fcode);
       }
     }
   } else
@@ -1885,7 +1900,7 @@ u_int createDummyInterface(char *ifName) {
                                                                       sizeof(TrafficEntry*));
   if(myGlobals.device[deviceId].fcTrafficMatrix == NULL) {
       traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for fcTraffixMatrix failed", mallocLen);
-      exit(-1);
+      exit(16); /* Just in case */
   }
 
   mallocLen = sizeof(struct hostTraffic*)*myGlobals.device[deviceId].numHosts;
@@ -1894,7 +1909,7 @@ u_int createDummyInterface(char *ifName) {
 
   if(myGlobals.device[deviceId].fcTrafficMatrixHosts == NULL) {
       traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for fcTrafficMatrixHosts failed", mallocLen);
-      exit(-1);
+      exit(17); /* Just in case */
   }
 #endif
 

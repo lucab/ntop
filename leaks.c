@@ -68,7 +68,7 @@ static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile, int lock
     if(lockMutex)
       releaseMutex(&leaksMutex);
     traceEvent(CONST_TRACE_FATALERROR, "malloc (not enough memory): %s, %d",  theFile, theLine);
-    exit(-1);
+    exit(300); /* Just in case */
   }
   
   tmpBlock->blockSize        = ptrLen;
@@ -490,7 +490,7 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
 #endif
 
   if(thePtr == NULL) {
-    traceEvent(CONST_TRACE_FATALERROR, "malloc(%d) @ %s:%d returned NULL [no more memory?]",
+    traceEvent(CONST_TRACE_ERROR, "malloc(%d) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
     if ((myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
 	(myGlobals.runningPref.disableStopcap != TRUE)) {
@@ -526,7 +526,7 @@ void* ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line) {
 #endif
 
   if(thePtr == NULL) {
-    traceEvent(CONST_TRACE_FATALERROR, 
+    traceEvent(CONST_TRACE_ERROR, 
 	       "calloc(%d) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
     if ( (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
@@ -562,7 +562,7 @@ void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
 #endif
 
   if(thePtr == NULL) {
-    traceEvent(CONST_TRACE_FATALERROR, 
+    traceEvent(CONST_TRACE_ERROR, 
 	       "realloc(%d) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
     if ( (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&

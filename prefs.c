@@ -209,7 +209,7 @@ void loadPrefs(int argc, char* argv[]) {
     case 't':
       /* Trace Level Initialization */
       myGlobals.runningPref.traceLevel = min(max(1, atoi(optarg)),
-					     CONST_VERY_DETAIL_TRACE_LEVEL);
+					     CONST_BEYONDNOISY_TRACE_LEVEL);
       /* DETAILED is NOISY + FileLine stamp, unless already set */
       break;
 
@@ -384,7 +384,7 @@ int parseOptions(int argc, char* argv[]) {
     case 't':
       /* Trace Level Initialization */
       myGlobals.runningPref.traceLevel = min(max(1, atoi(optarg)),
-                                             CONST_VERY_DETAIL_TRACE_LEVEL);
+                                             CONST_BEYONDNOISY_TRACE_LEVEL);
       /* DETAILED is NOISY + FileLine stamp, unless already set */
       break;
 
