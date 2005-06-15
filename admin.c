@@ -995,7 +995,7 @@ int processNtopConfigData (char *buf, int savePref)
     char *strtokState, *mainState;
     int startCap = FALSE, action;
     UserPref tmpPrefs;
-    char *devices = NULL, foundDevices = 0, *token;
+    char *devices = NULL, *foundDevices = NULL, *token;
 
     /* traceEvent(CONST_TRACE_INFO, "RRD: buf='%s'", buf);   */
 
@@ -1027,9 +1027,9 @@ int processNtopConfigData (char *buf, int savePref)
 #endif
 
     devices = tmpPrefs.devices;
-    tmpPrefs.devices = NULL;
+	tmpPrefs.devices = NULL;
 
-    while(token != NULL) {
+	while(token != NULL) {
         char *key, *value;
 
         key = strtok_r(token, "=", &strtokState);
@@ -1044,19 +1044,21 @@ int processNtopConfigData (char *buf, int savePref)
                 startCap = TRUE;
             }
 
-	    if((!strcmp(key, NTOP_PREF_DEVICES)) || (!strcmp(key, "BASIC_PREFS")))
-	      foundDevices = 1;
+	    if(!strcmp(key, NTOP_PREF_DEVICES))
+	      foundDevices = value;
         }
         token = strtok_r(NULL, "&", &mainState);
     }
 
-    if((tmpPrefs.devices == NULL) && (!foundDevices))
-      tmpPrefs.devices = devices;
-    else {
-      if(devices != NULL) free(devices);
-    }
+	if(!foundDevices) {
+       delPrefsValue(NTOP_PREF_DEVICES);
+	   if(tmpPrefs.devices) free(tmpPrefs.devices);
+	   tmpPrefs.devices = NULL;
+	}
 
-    if(tmpPrefs.devices == NULL) delPrefsValue(NTOP_PREF_DEVICES);
+	if(devices) {
+	 free(devices);
+    }
 
     /* Now we need to delete all the preferences that were unchecked.
      * Radio box & checkbox preferences that were set in a previous instance

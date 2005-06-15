@@ -6431,7 +6431,7 @@ void revertSlashIfWIN32(char *str, int mode) {
     switch(mode) {
     case 0:
       if(str[i] == '/') str[i] = '\\';
-      else if(str[i] == ' ') str[i] = '_';
+      //else if(str[i] == ' ') str[i] = '_';
       break;
     case 1:
       if(str[i] == '\\') str[i] = '/';

@@ -1290,7 +1290,8 @@ void printTrafficStatistics(int revertOrder) {
 		myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
 
-  for(i=0; i<strlen(buf); i++) if(buf[i] == ' ') buf[i] = '_';
+ 
+  revertSlashIfWIN32(buf, 0);
 
   if((i = stat(buf, &statbuf)) == 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
@@ -2215,6 +2216,8 @@ void makeDot() {
     snprintf(dotPath, sizeof(dotPath), "/usr/local/bin/dot");
     storePrefsValue("dot.path", dotPath); /* Set the default */
   }
+
+  revertSlashIfWIN32(dotPath, 0);
 
   if(stat(dotPath, &statbuf) != 0) {
     snprintf(buf, sizeof(buf),
@@ -4129,8 +4132,8 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 		      myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
 	
-	for(i=0; i<strlen(buf); i++) if(buf[i] == ' ') buf[i] = '_';
-	
+    revertSlashIfWIN32(buf, 0);
+
 	if((i = stat(buf, &statbuf)) == 0) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 			"<TR "TR_ON" "DARK_BG"><TH "TH_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
@@ -4804,7 +4807,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 		myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
   
-  for(i=0; i<strlen(tmpBuf); i++) if(tmpBuf[i] == ' ') tmpBuf[i] = '_';
+  revertSlashIfWIN32(tmpBuf, 0);
 
   if((i = stat(tmpBuf, &statbuf)) != 0) {
     useRRD = 0;
@@ -5317,7 +5320,7 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
 		  myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,domainName);
 
-    for(i=0; i<strlen(buf); i++) if(buf[i] == ' ') buf[i] = '_';
+    revertSlashIfWIN32(buf, 0);
 
     if((i = stat(buf, &statbufDomain)) == 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),

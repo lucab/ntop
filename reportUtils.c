@@ -4056,6 +4056,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 	     dotToSlash(key));
 
+    revertSlashIfWIN32(buf, 0);
+
     if(stat(buf, &statbuf) == 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
@@ -4276,7 +4278,9 @@ void printTableEntry(char *buf, int bufLen,
 		  myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		  label);
-    
+
+	revertSlashIfWIN32(rrdBuf, 0);
+
     if(stat(rrdBuf, &statbuf) == 0) {      
       safe_snprintf(__FILE__, __LINE__, rrdBuf, sizeof(rrdBuf), 
 		    "<p><IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=IP_%sBytes"
