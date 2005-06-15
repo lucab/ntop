@@ -6609,7 +6609,9 @@ void mkdir_p(char *tag, char *path, int permission) {
 
 #ifndef HAVE_PCAP_OPEN_DEAD
 
- #warning using ntop work-around for missing pcap_open_dead ... strongly suggest upgrading!
+#ifndef WIN32
+#warning using ntop work-around for missing pcap_open_dead ... strongly suggest upgrading!
+#endif
 
 struct pcap_sf {
   FILE *rfile;
@@ -6694,9 +6696,10 @@ pcap_t *pcap_open_dead(int linktype, int snaplen)
               just define the function here and in globals-core.h if we
               don't have it.
  */
+#ifndef WIN32
 
 #ifndef HAVE_PCAP_FREECODE
- #warning using ntop work-around for missing pcap_freecode ... no worries
+#warning using ntop work-around for missing pcap_freecode ... no worries
 void pcap_freecode(struct bpf_program *pgm) {
 }
 #endif
@@ -6715,4 +6718,5 @@ void pcap_freealldevs(pcap_if_t *alldevs) {
 }
 #endif
 
+#endif /* WIN32 */
 
