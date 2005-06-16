@@ -187,10 +187,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   deny_severity = DEFAULT_TCPWRAP_DENY;
 #endif
 
-#ifdef MAKE_WITH_GDCHART
-  myGlobals.throughput_chart_type = DEFAULT_NTOP_CHART_TYPE;
-#endif
-
   /* Other flags (to be set via command line options one day) */
   myGlobals.enableFragmentHandling = 1;
 
