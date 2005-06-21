@@ -3060,7 +3060,7 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
 
     if(nonFatal == 1) return(-1);
 
-    traceEvent(CONST_TRACE_FATALERROR, "Invalid (empty) filename specified for option %s", parm);
+    traceEvent(CONST_TRACE_ERROR, "Invalid (empty) filename specified for option %s", parm);
     exit(28); /* Just in case */
   }
 
@@ -3073,6 +3073,7 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
     fnChar['.']=1;
     fnChar['_']=1;
     fnChar['-']=1;
+    fnChar['+']=1;
 #ifdef WIN32
     fnChar[' ']=1;
     fnChar[':']=1;
@@ -3082,14 +3083,22 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
   }
 
   k=0;
+
 #ifdef WIN32
   /* Strip "ed string for test */
   if((string[0] != '"') || (string[strlen(string)-1] != '"') )
     k=1;
 #endif
 
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "Sanitizing string '%s'", string);
+#endif
+
   for(i=k, j=1; i<strlen(string)-k; i++) {
     if(fnChar[string[i]] == 0) {
+#ifdef DEBUG
+      traceEvent(CONST_TRACE_INFO, "Sanitized invalid char '%c'", string[i]);
+#endif
       string[i]='.';
       j = 0;
     }
@@ -3098,11 +3107,9 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
   if(j == 0) {
     if(strlen(string) > 40) string[40] = '\0';
 
-    if(nonFatal == -1) return(-1);
-
     traceEvent(CONST_TRACE_ERROR, "Invalid filename specified for option %s", parm);
     traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
-    traceEvent(CONST_TRACE_FATALERROR, "Invalid filename, ntop shutting down...");
+    if(nonFatal == 1) return(-1);
     exit(29); /* Just in case */
   }
 
@@ -3113,23 +3120,20 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
 
 int ipSanityCheck(char* string, char* parm, int nonFatal) {
   int i, j, rc = 0;
-
   static char ipChar[256];
 
-// Common:
-//     Numbers  0 - 9
-//     .
-//
-// INET6
-//     Upper and lower case letters:  A - Z and a - z  
-//     :
+  // Common:
+  //     Numbers  0 - 9
+  //     .
+  //
+  // INET6
+  //     Upper and lower case letters:  A - Z and a - z  
+  //     :
 
   if(string == NULL)  {
-
+    traceEvent(CONST_TRACE_WARNING, "Invalid (empty) path specified for option %s", parm);
     if(nonFatal == 1) return(-1);
-
-    traceEvent(CONST_TRACE_FATALERROR, "Invalid (empty) path specified for option %s", parm);
-    exit(30); /* Just in case */
+    return(-1); /* LDE */
   }
 
   /* one time load of table */
@@ -3158,14 +3162,11 @@ int ipSanityCheck(char* string, char* parm, int nonFatal) {
 
     traceEvent(CONST_TRACE_ERROR, "Invalid ip address specified for option %s", parm);
     traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
-    traceEvent(CONST_TRACE_FATALERROR, "Invalid ip address, ntop shutting down...");
-    exit(31); /* Just in case */
+    exit(30); /* Just in case */
   }
 
   return(0);
 }
-
-
 
 /* ****************************************************** */
 

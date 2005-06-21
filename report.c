@@ -3035,7 +3035,8 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->otherIpPortsSent[idx] >= 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		      "<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
 		      el->otherIpPortsSent[idx],
 		      getAllPortByNum(el->otherIpPortsSent[idx], portBuf, sizeof(portBuf)));
 	sendString(buf);
@@ -3048,7 +3049,8 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->otherIpPortsRcvd[idx] >= 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		      "<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
 		      el->otherIpPortsRcvd[idx],
 		      getAllPortByNum(el->otherIpPortsRcvd[idx], portBuf, sizeof(portBuf)));
 	sendString(buf);
@@ -3077,7 +3079,8 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->recentlyUsedClientPorts[idx] >= 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		      "<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
 		      el->recentlyUsedClientPorts[idx],
 		      getAllPortByNum(el->recentlyUsedClientPorts[idx], portBuf, sizeof(portBuf)));
 	sendString(buf);
@@ -3091,7 +3094,8 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->recentlyUsedServerPorts[idx] >= 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		      "<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
 		      el->recentlyUsedServerPorts[idx],
 		      getAllPortByNum(el->recentlyUsedServerPorts[idx], portBuf, sizeof(portBuf)));
 	sendString(buf);
@@ -3186,7 +3190,8 @@ void printLocalRoutersList(int actualDeviceId) {
       HostTraffic tmpEl;
 
       if((router = quickHostLink(routerList[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>%s</TH><TD "TD_BG" ALIGN=LEFT><UL>\n",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		      "<TR "TR_ON" %s><TH "TH_BG" align=left>%s</TH><TD "TD_BG" ALIGN=LEFT><UL>\n",
 		      getRowColor(),
 		      makeHostLink(router, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
 				   hostLinkBuf, sizeof(hostLinkBuf)));
@@ -4157,7 +4162,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 
       /* *********************** */
 
-      if ((remainingTraffic > 0) && printGraph) {
+      if((remainingTraffic > 0) && printGraph) {
 	PortCounter **ipPorts;
 	int idx = 0;
 
@@ -5450,7 +5455,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
   }
 
   sendString("<CENTER>\n");
-  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\">\n<TR "DARK_BG">");
+  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\">\n<TR "TR_ON" "DARK_BG">");
   sendString("<TH "TH_BG">Time</TH>");
   sendString("<TH "TH_BG">Tot. Traffic Sent</TH>");
   sendString("<TH "TH_BG">% Traffic Sent</TH>");
@@ -5464,7 +5469,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
   for (i = 0, j = hourId; i < 24; i++) {
     j = j%24;
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR><TH "TH_BG" ALIGN=RIGHT "DARK_BG">%s</TH>\n", hours[j]);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=RIGHT "DARK_BG">%s</TH>\n", hours[j]);
     sendString(buf);
     printHostHourlyTrafficEntry(el, j, tcSent, tcRcvd);
     if(!j)
@@ -5473,7 +5478,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
       j--;
   }
 
-  sendString("<TR><TH "TH_BG" "DARK_BG">Total</TH>\n");
+  sendString("<TR "TR_ON"><TH "TH_BG" "DARK_BG">Total</TH>\n");
 
   if (isFcHost (el)) {
     targetStr = el->fcCounters->hostNumFcAddress;
@@ -5728,7 +5733,7 @@ void showPortTraffic(u_short portNr) {
     if(recentlyUsedPort(el, portNr, 0)) {
       if(numRecords == 0) {
 	sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "DARK_BG"><TH>Client</TH><TH>Server</TH></TR>\n");
-	sendString("<TR>\n<TD>\n");
+	sendString("<TR>\n<TD nowrap><ul>\n");
       }
 
       sendString("\n<LI> ");
@@ -5748,7 +5753,7 @@ void showPortTraffic(u_short portNr) {
   firstRun = 1;
 
   if(numRecords > 0) {
-    sendString("\n&nbsp;\n</TD><TD>\n");
+    sendString("\n&nbsp;\n</ul></TD><TD nowrap><ul>\n");
   }
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
@@ -5758,7 +5763,7 @@ void showPortTraffic(u_short portNr) {
       if(numRecords == 0) {
 	sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "DARK_BG"><TH>Client</TH><TH>Server</TH></TR>\n");
 	sendString("<TR>\n<TD>\n");
-	sendString("\n&nbsp;\n</TD><TD>\n");
+	sendString("\n&nbsp;\n</TD><TD nowrap><ul>\n");
       }
 
       sendString("\n<LI> ");
@@ -5779,7 +5784,7 @@ void showPortTraffic(u_short portNr) {
   if(numRecords == 0) {
     sendString("<P>No hosts found: the information for this port has been purged in the meantime</CENTER><P>\n");
   } else
-    sendString("\n&nbsp;\n</TD>\n</TR>\n</TABLE>\n</CENTER>");
+    sendString("\n&nbsp;\n</ul></TD>\n</TR>\n</TABLE>\n</CENTER>");
 
 }
 

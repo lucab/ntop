@@ -425,6 +425,38 @@ static int readHTTPheader(char* theRequestedURL,
 
 /* ************************* */
 
+char* encodeString(char* in, char* out, u_int out_len) {
+  int i, out_idx;
+
+  out[0] = '\0';
+  
+  for(i = out_idx = 0; i < strlen(in); i++) {
+      if(isalnum(in[i])) {
+	out[out_idx++] = in[i];
+	if(out_idx >= out_len) return(out);
+
+      } else if(in[i] == ' ') {
+	out[out_idx++] = '+';
+	if(out_idx >= out_len) return(out);
+      } else {
+	char hex_str[8];
+
+	out[out_idx++] = '%';
+
+	sprintf(hex_str, "%02X", in[i] & 0xFF);
+	out[out_idx++] = hex_str[0];
+	if(out_idx >= out_len) return(out);
+	out[out_idx++] = hex_str[1];
+	if(out_idx >= out_len) return(out);
+      }
+  }
+  
+  out[out_idx++] = '\0';
+  return(out);
+}
+
+/* ************************* */
+
 static int decodeString(char *bufcoded,
 			unsigned char *bufplain,
 			int outbufsize) {

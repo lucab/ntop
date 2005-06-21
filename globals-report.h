@@ -31,7 +31,7 @@
 #define TABLE_OFF ""
 #define TH_BG     ""
 #define TD_BG     ""
-#define TR_ON     ""
+#define TR_ON     "onMouseOver=\"this.bgColor = '#EDF3FE'\" onMouseOut =\"this.bgColor = '#FFFFFF'\""
 #define TABLE_DEFAULTS " CELLSPACING=0 CELLPADDING=2"
 #define DARK_BG   "BGCOLOR=\"#F3F3F3\"" /* If you change it change it into the
                                          * stylesheet too */
@@ -155,6 +155,7 @@ extern void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mut
 extern void printPluginTrailer(char *left, char *middle);
 
 /* http.c */
+extern char* encodeString(char* in, char* out, u_int out_len);
 extern void printHTMLtrailer(void);
 extern void returnHTTPredirect(char* destination);
 void returnHTTPpageNotFound(char* additionalText);

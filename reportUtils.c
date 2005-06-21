@@ -3471,7 +3471,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     else
       multivlaned = "";
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;%s&nbsp;[%s%s%s%s]",
 		getRowColor(),
 		"IP&nbsp;Address",
@@ -3488,7 +3488,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     
     if(isMultihomed(el) && (!broadcastHost(el))) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		    "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD ALIGN=RIGHT>&nbsp;<OL>",
+		    "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD ALIGN=RIGHT>&nbsp;<OL>",
 		    getRowColor(), "Multihomed Addresses");
       sendString(buf);
       
@@ -3506,7 +3506,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     }
 
     if((el->protocolInfo != NULL) && (el->protocolInfo->dhcpStats != NULL)) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>",
 		  getRowColor(), "DHCP Information");
       sendString(buf);
 
@@ -3613,7 +3613,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     }
   }
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 	      "<TD "TD_BG" ALIGN=RIGHT>"
 	      "%s&nbsp;&nbsp;-&nbsp;&nbsp;%s&nbsp;[Inactive since %s]</TD></TR>\n",
 	      getRowColor(),
@@ -3624,14 +3624,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   sendString(buf);
 
   if(el->hostAS != 0) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"<A HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%d\">%d</A></TD></TR>\n",
 		getRowColor(), "Autonomous System", el->hostAS, el->hostAS);
     sendString(buf);
   }
 
   if(el->dnsDomainValue && (el->dnsDomainValue[0] != '\0')) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%s</TD></TR>\n", getRowColor(),
 		"Domain", el->dnsDomainValue);
     sendString(buf);
@@ -3650,7 +3650,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       strcpy(symLink, symMacAddr);
       urlFixupToRFC1945Inplace(symLink);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "<A HREF=%s.html>%s</A>%s</TD></TR>\n",
 		  getRowColor(), "Main Host MAC Address",
 		  symLink, symMacAddr,
@@ -3658,7 +3658,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       sendString(buf);
 
     } else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s%s</TD></TR>\n",
 		  getRowColor(), "MAC&nbsp;Address <IMG ALT=\"Network Interface Card (NIC)\" SRC=/card.gif BORDER=0 "TABLE_DEFAULTS">",
 		  el->ethAddressString,
@@ -3668,7 +3668,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
     vendorName = getVendorInfo(el->ethAddress, 1);
     if(vendorName[0] != '\0') {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT NOWRAP>%s%s</TD></TR>\n",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT NOWRAP>%s%s</TD></TR>\n",
 		  getRowColor(), "Nw&nbsp;Board&nbsp;Vendor",
 		  vendorName,
 		  myGlobals.separator /* it avoids empty cells not to be rendered */);
@@ -3697,7 +3697,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       strcpy(shortBuf, symMacAddr);
     }
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%s"
 		"%s</TD></TR>\n",
 		getRowColor(),
@@ -3711,7 +3711,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     setHostFingerprint(el);
 
     if((el->fingerprint != NULL) && (el->fingerprint[0] == ':') && (strlen(el->fingerprint) > 2)) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s%s</TD></TR>\n",
 		  getRowColor(), "OS&nbsp;Name",
 		  getOSFlag(el, NULL, 1, osBuf, sizeof(osBuf)),
@@ -3721,7 +3721,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if((as = getHostAS(el)) != 0) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%d</TD></TR>\n", getRowColor(), "Origin&nbsp;AS", as);
     sendString(buf);
   }
@@ -3729,7 +3729,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if(el->vlanId != -1) {
     char tmpBuf[64];
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(), "VLAN&nbsp;Id", vlan2name(el->vlanId, tmpBuf, sizeof(tmpBuf)));
     sendString(buf);
   }
@@ -3738,14 +3738,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     if((el->nonIPTraffic->nbHostName != NULL) || (el->nonIPTraffic->nbDomainName != NULL)) {
       if(el->nonIPTraffic->nbAccountName) {
 	if(el->nonIPTraffic->nbDomainName != NULL) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		      "%s@%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
 		      getRowColor(), "NetBios&nbsp;Name",
 		      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName,
 		      getNbNodeType(el->nonIPTraffic->nbNodeType),
 		      el->nonIPTraffic->nbDescr ? el->nonIPTraffic->nbDescr : "");
 	} else {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		      "%s@%s (%s) %s</TD></TR>\n",
 		      getRowColor(), "NetBios&nbsp;Name",
 		      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName,
@@ -3754,7 +3754,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	}
       } else {
 	if(el->nonIPTraffic->nbDomainName != NULL) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		      "%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
 		      getRowColor(), "NetBios&nbsp;Name",
 		      el->nonIPTraffic->nbHostName != NULL ? el->nonIPTraffic->nbHostName : "",
@@ -3762,7 +3762,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		      getNbNodeType(el->nonIPTraffic->nbNodeType),
 		      el->nonIPTraffic->nbDescr ? el->nonIPTraffic->nbDescr : "");
 	} else {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		      "%s (%s) %s</TD></TR>\n",
 		      getRowColor(), "NetBios&nbsp;Name",
 		      el->nonIPTraffic->nbHostName,
@@ -3773,7 +3773,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
       sendString(buf);
     } else if(el->nonIPTraffic->nbHostName != NULL) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s&nbsp;(%s) %s</TD></TR>\n",
 		  getRowColor(), "NetBios&nbsp;Name",
 		  el->nonIPTraffic->nbHostName, getNbNodeType(el->nonIPTraffic->nbNodeType),
@@ -3786,7 +3786,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
       if(nodeName == NULL) nodeName = "";
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s&nbsp;\n",
 		  getRowColor(), "AppleTalk&nbsp;Name",
 		  nodeName);
@@ -3811,7 +3811,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     }
 
     if(el->nonIPTraffic->ipxHostName != NULL) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>"
 		  "%s&nbsp;[", getRowColor(), "IPX&nbsp;Name",
 		  el->nonIPTraffic->ipxHostName);
@@ -3828,12 +3828,12 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(!multicastHost(el)) {
     if(subnetPseudoLocalHost(el)) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(),
 		  "Host&nbsp;Location",
 		  "Local (inside specified/local subnet)");
     } else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(),
 		  "Host&nbsp;Location",
 		  "Remote (outside specified/local subnet)");
@@ -3843,27 +3843,27 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(el->hwModel) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		  "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(), "Hardware Model", el->hwModel);
     sendString(buf);
   }
 
   if(el->description) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		  "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(), "Description", el->description);
     sendString(buf);
   }
 
   if(el->minTTL > 0) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%d:%d&nbsp;[~%d&nbsp;hop(s)]</TD></TR>\n",
 		getRowColor(), "IP&nbsp;TTL&nbsp;(Time to Live)",
 		el->minTTL, el->maxTTL, guessHops(el));
     sendString(buf);
   }
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
 	      "</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
 	      getRowColor(), "Total&nbsp;Data&nbsp;Sent",
@@ -3874,14 +3874,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	      );
   sendString(buf);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s Pkts</TD></TR>\n",
 	      getRowColor(), "Broadcast&nbsp;Pkts&nbsp;Sent",
 	      formatPkts(el->pktBroadcastSent.value, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   if(el->routedTraffic != NULL) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR  "TR_ON"%s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%s/%s Pkts</TD></TR>\n",
 		getRowColor(), "Routed Traffic",
 		formatBytes(el->routedTraffic->routedBytes.value, 1, formatBuf, sizeof(formatBuf)),
@@ -3890,7 +3890,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if((el->pktMulticastSent.value > 0) || (el->pktMulticastRcvd.value > 0)) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>",
 		getRowColor(), "Multicast&nbsp;Traffic");
     sendString(buf);
 
@@ -3928,7 +3928,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     }
   }
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
 	      "</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
 	      getRowColor(), "Total&nbsp;Data&nbsp;Rcvd",
@@ -3979,7 +3979,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
 	if(router != NULL) {
 	  if(!printedHeader) {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">"
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">"
 			"Used&nbsp;Subnet&nbsp;Routers</TH><TD "TD_BG" ALIGN=RIGHT>\n",
 			getRowColor());
 	    sendString(buf);
@@ -4009,7 +4009,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   /* **************************** */
 
   if((el->protocolInfo) && (el->protocolInfo->userList != NULL)) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">"
 		"Known&nbsp;Users&nbsp;" CONST_IMG_HAS_USERS "</TH><TD "TD_BG" ALIGN=RIGHT>\n",
 		getRowColor());
     sendString(buf);
@@ -4024,13 +4024,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
      && (!subnetPseudoLocalHost(el))
      && (!multicastHost(el))
      && (!privateIPAddress(el))) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"[ <A HREF=\"http://www.radb.net/cgi-bin/radb/whois.cgi?obj=%s\">Whois</A> ]</TD></TR>\n",
 		getRowColor(), "Further Host Information", el->hostNumIpAddress);
     sendString(buf);
 
     if(myGlobals.runningPref.mapperURL) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "<IMG SRC=\"%s?host=%s\" alt=\"map of host location\" WIDTH=320 HEIGHT=200></TD></TR>\n",
 		  getRowColor(),
 		  "Host Physical Location",
@@ -4060,7 +4060,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
     if(stat(buf, &statbuf) == 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                  "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
+                  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
                   "<TD "TD_BG" ALIGN=\"right\">"
                   "[ <a href=\"/" CONST_PLUGINS_HEADER 
 		  "rrdPlugin?action=list&amp;key=interfaces/%s/hosts/%s&amp;title=host%%20%s\">"
@@ -4250,6 +4250,11 @@ void printTableEntry(char *buf, int bufLen,
   int int_perc;
   char formatBuf[32], flowBuf[64], tmpBuf[32], rrdBuf[256];
   struct stat statbuf;
+  char _label[256];
+
+  encodeString(label, _label, sizeof(_label));
+
+  /* traceEvent(CONST_TRACE_INFO,  "'%s' -> '%s'", label, _label); */
 
   if(total == 0) return;
 
@@ -4279,13 +4284,13 @@ void printTableEntry(char *buf, int bufLen,
 		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		  label);
 
-	revertSlashIfWIN32(rrdBuf, 0);
+    revertSlashIfWIN32(rrdBuf, 0);
 
     if(stat(rrdBuf, &statbuf) == 0) {      
       safe_snprintf(__FILE__, __LINE__, rrdBuf, sizeof(rrdBuf), 
 		    "<p><IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=IP_%sBytes"
 		    "&arbiface=%s&arbip=&start=now-12h&end=now&counter=&title=\" BORDER=0>", 
-		    label, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
+		    _label, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
     } else {
       rrdBuf[0] = '\0';
       /* traceEvent(CONST_TRACE_INFO,  "-> Unable to find file '%s'", rrdBuf); */
@@ -4538,7 +4543,7 @@ void printHostsCharacterization(void) {
   if(!headerSent) {
     printNoDataYet();
   } else {
-    sendString("<TR><TH>Total</TH>");
+    sendString("<TR "TR_ON"><TH>Total</TH>");
     if(unhealthy > 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "<TD ALIGN=CENTER>%d [%.1f %%]</TD>",
@@ -5132,7 +5137,7 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
 
   case SORT_FC_ACTIVITY:
     sendString("<CENTER>\n");
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR >"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" >"
 		"<TH "TH_BG" "DARK_BG">%s" FLAG_DOMAIN_DUMMY_IDX_STR "\">VSAN%s</A></TH>"
 		"<TH "TH_BG" "DARK_BG">%s" FLAG_HOST_DUMMY_IDX_STR "\">FC_Port%s</A></TH>\n",
 		theAnchor[1], arrow[1], theAnchor[0], arrow[0]);

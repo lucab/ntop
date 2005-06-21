@@ -59,6 +59,10 @@ patch courtesy of Dominique Karg <dk@ipsoluciones.com>
 #include "myrrd/rrd_tool.h"
 #include "myrrd/rrd_format.h"
 
+#define REMOTE_SERVER_PORT 2005
+static u_char useDaemon = 0;
+static int sd = -1;
+static struct sockaddr_in cliAddr, remoteServAddr;
 
 #if defined(RRD_DEBUG) && (RRD_DEBUG > 0)
 #define traceEventRRDebug(level, ...) { if(RRD_DEBUG >= level) \
@@ -1004,227 +1008,294 @@ static time_t checkLast(char *rrd) {
 
 /* ******************************* */
 
+static void initUdp() {
+  struct hostent *h;
+
+  if(!useDaemon) return;
+
+  /* bind any port */
+  cliAddr.sin_family = AF_INET;
+  cliAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  cliAddr.sin_port = htons(0);
+  
+  /* get server IP address (no check if input is IP address or DNS name */
+  h = gethostbyname("127.0.0.1");
+  if(h == NULL) {
+    traceEvent(CONST_TRACE_WARNING, "RRD: unknown RRD server host\n");
+  }
+  
+  remoteServAddr.sin_family = h->h_addrtype;
+  memcpy((char *) &remoteServAddr.sin_addr.s_addr,
+	 h->h_addr_list[0], h->h_length);
+  remoteServAddr.sin_port = htons(REMOTE_SERVER_PORT);
+  
+
+  /* socket creation */
+  sd = socket(AF_INET, SOCK_DGRAM, 0);
+  if(sd < 0) {
+    traceEvent(CONST_TRACE_WARNING, "RRD: cannot create RRD socket");
+    useDaemon = 0;
+  }
+}
+
+/* ******************************* */
+
+static void updateUdpParams() {
+    char buf[512];
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "CFG %d\t%d\t%d\t%d\t%d\t%d",
+		  dumpInterval, shortDumpInterval, dumpHours, dumpDays, dumpMonths, dumpDelay);
+    
+    sendto(sd, buf, strlen(buf), 0,
+	   (struct sockaddr *)&remoteServAddr,
+	   sizeof(remoteServAddr));
+}
+
+/* ******************************* */
+
+static void termUdp() {
+  if(!useDaemon) return;
+  if(sd < 0) return;
+  
+  close(sd);
+  sd = -1;
+}
+
+/* ******************************* */
+
 static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, char short_step) {
-  char path[512], *argv[32], cmd[64];
-  struct stat statbuf;
-  int argc = 0, rc, createdCounter = 0, i;
+  if(useDaemon) {
+    char buf[128];
+    int rc;
+    
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "CMD %s\t%s\t%lu\t%d\t%d",
+		  hostPath, key, value, isCounter, short_step);
+    
+    rc = sendto(sd, buf, strlen(buf), 0,
+	       (struct sockaddr *)&remoteServAddr,
+	       sizeof(remoteServAddr));
+  } else {
+    char path[512], *argv[32], cmd[64];
+    struct stat statbuf;
+    int argc = 0, rc, createdCounter = 0, i;
 
-  if(value == 0) return;
+    if(value == 0) return;
 
-  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s%s.rrd", hostPath, key);
+    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s%s.rrd", hostPath, key);
 
-  /* Avoid path problems */
-  for(i=strlen(hostPath); i<strlen(path); i++)
-    if(path[i] == '/') path[i]='_';
+    /* Avoid path problems */
+    for(i=strlen(hostPath); i<strlen(path); i++)
+      if(path[i] == '/') path[i]='_';
 
-  revertSlashIfWIN32(path, 0);
+    revertSlashIfWIN32(path, 0);
 
-  if(stat(path, &statbuf) != 0) {
-    char startStr[32], stepStr[32], counterStr[64], intervalStr[32];
-    char minStr[32], maxStr[32], daysStr[32], monthsStr[32];
+    if(stat(path, &statbuf) != 0) {
+      char startStr[32], stepStr[32], counterStr[64], intervalStr[32];
+      char minStr[32], maxStr[32], daysStr[32], monthsStr[32];
 #ifdef HAVE_RRD_ABERRANT_BEHAVIOR
-    char tempStr[64];
+      char tempStr[64];
 #endif
-    int step;
-    int value1, value2, rrdDumpInterval;
-    unsigned long topValue;
+      int step;
+      int value1, value2, rrdDumpInterval;
+      unsigned long topValue;
 
-    rrdDumpInterval = short_step ? (2*shortDumpInterval) : dumpInterval;
-    step = rrdDumpInterval;
+      rrdDumpInterval = short_step ? (2*shortDumpInterval) : dumpInterval;
+      step = rrdDumpInterval;
 
-    topValue = 1000000000 /* 1 Gbit/s */;
+      topValue = 1000000000 /* 1 Gbit/s */;
 
-    if(strncmp(key, "pkt", 3) == 0) {
-      topValue /= 8*64 /* 64 bytes is the shortest packet we care of */;
-    } else {
-      topValue /= 8 /* 8 bytes */;
-    }
+      if(strncmp(key, "pkt", 3) == 0) {
+	topValue /= 8*64 /* 64 bytes is the shortest packet we care of */;
+      } else {
+	topValue /= 8 /* 8 bytes */;
+      }
 
-    argv[argc++] = "rrd_create";
-    argv[argc++] = path;
-    argv[argc++] = "--start";
-    safe_snprintf(__FILE__, __LINE__, startStr, sizeof(startStr), "%u",
-		  rrdTime-1 /* -1 avoids subsequent rrd_update call problems */);
-    argv[argc++] = startStr;
+      argv[argc++] = "rrd_create";
+      argv[argc++] = path;
+      argv[argc++] = "--start";
+      safe_snprintf(__FILE__, __LINE__, startStr, sizeof(startStr), "%u",
+		    rrdTime-1 /* -1 avoids subsequent rrd_update call problems */);
+      argv[argc++] = startStr;
 
-    argv[argc++] = "--step";
-    safe_snprintf(__FILE__, __LINE__, stepStr, sizeof(stepStr), "%u", rrdDumpInterval);
-    argv[argc++] = stepStr;
+      argv[argc++] = "--step";
+      safe_snprintf(__FILE__, __LINE__, stepStr, sizeof(stepStr), "%u", rrdDumpInterval);
+      argv[argc++] = stepStr;
 
-    if(isCounter) {
-      safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr),
-		    "DS:counter:COUNTER:%d:0:%u", 2*step, topValue);
-    } else {
-      /*
-	Unlimited (sort of)
-	Well I have decided to add a limit too in order to avoid crazy values.
-      */
-      safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr),
-		    "DS:counter:GAUGE:%d:0:%u", step, topValue);
-    }
-    argv[argc++] = counterStr;
+      if(isCounter) {
+	safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr),
+		      "DS:counter:COUNTER:%d:0:%u", 2*step, topValue);
+      } else {
+	/*
+	  Unlimited (sort of)
+	  Well I have decided to add a limit too in order to avoid crazy values.
+	*/
+	safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr),
+		      "DS:counter:GAUGE:%d:0:%u", step, topValue);
+      }
+      argv[argc++] = counterStr;
 
-    /* rrdDumpInterval is in seconds.  There are 60m*60s = 3600s in an hour.
-     * value1 is the # of rrdDumpIntervals per hour
-     */
-    value1 = (60*60 + rrdDumpInterval - 1) / rrdDumpInterval;
-    /* value2 is the # of value1 (hours) for dumpHours hours */
-    value2 = value1 * dumpHours;
-    safe_snprintf(__FILE__, __LINE__, intervalStr, sizeof(intervalStr),
-		  "RRA:AVERAGE:%.1f:1:%d", 0.5, value2);
-    argv[argc++] = intervalStr;
+      /* rrdDumpInterval is in seconds.  There are 60m*60s = 3600s in an hour.
+       * value1 is the # of rrdDumpIntervals per hour
+       */
+      value1 = (60*60 + rrdDumpInterval - 1) / rrdDumpInterval;
+      /* value2 is the # of value1 (hours) for dumpHours hours */
+      value2 = value1 * dumpHours;
+      safe_snprintf(__FILE__, __LINE__, intervalStr, sizeof(intervalStr),
+		    "RRA:AVERAGE:%.1f:1:%d", 0.5, value2);
+      argv[argc++] = intervalStr;
 
-    /* Store the MIN/MAX 5m value for a # of hours */
-    safe_snprintf(__FILE__, __LINE__, minStr, sizeof(minStr), "RRA:MIN:%.1f:1:%d",
-		  0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
-    argv[argc++] = minStr;
-    safe_snprintf(__FILE__, __LINE__, maxStr, sizeof(maxStr), "RRA:MAX:%.1f:1:%d",
-		  0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
-    argv[argc++] = maxStr;
+      /* Store the MIN/MAX 5m value for a # of hours */
+      safe_snprintf(__FILE__, __LINE__, minStr, sizeof(minStr), "RRA:MIN:%.1f:1:%d",
+		    0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
+      argv[argc++] = minStr;
+      safe_snprintf(__FILE__, __LINE__, maxStr, sizeof(maxStr), "RRA:MAX:%.1f:1:%d",
+		    0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
+      argv[argc++] = maxStr;
 
-    if(dumpDays > 0) {
-      safe_snprintf(__FILE__, __LINE__, daysStr, sizeof(daysStr), "RRA:AVERAGE:%.1f:%d:%d",
-		    0.5, value1, dumpDays * 24);
-      argv[argc++] = daysStr;
-    }
+      if(dumpDays > 0) {
+	safe_snprintf(__FILE__, __LINE__, daysStr, sizeof(daysStr), "RRA:AVERAGE:%.1f:%d:%d",
+		      0.5, value1, dumpDays * 24);
+	argv[argc++] = daysStr;
+      }
 
-    /* Compute the rollup - how many rrdDumpInterval seconds interval are in a day */
-    value1 = (24*60*60 + rrdDumpInterval - 1) / rrdDumpInterval;
-    if(dumpMonths > 0) {
-      safe_snprintf(__FILE__, __LINE__, monthsStr, sizeof(monthsStr),
-		    "RRA:AVERAGE:%.1f:%d:%d",
-		    0.5, value1, dumpMonths * 30);
-      argv[argc++] = monthsStr;
-    }
+      /* Compute the rollup - how many rrdDumpInterval seconds interval are in a day */
+      value1 = (24*60*60 + rrdDumpInterval - 1) / rrdDumpInterval;
+      if(dumpMonths > 0) {
+	safe_snprintf(__FILE__, __LINE__, monthsStr, sizeof(monthsStr),
+		      "RRA:AVERAGE:%.1f:%d:%d",
+		      0.5, value1, dumpMonths * 30);
+	argv[argc++] = monthsStr;
+      }
 
 #ifdef HAVE_RRD_ABERRANT_BEHAVIOR
-    safe_snprintf(__FILE__, __LINE__, tempStr, sizeof(tempStr),
-		  "RRA:HWPREDICT:1440:0.1:0.0035:20");
-    argv[argc++] = tempStr;
+      safe_snprintf(__FILE__, __LINE__, tempStr, sizeof(tempStr),
+		    "RRA:HWPREDICT:1440:0.1:0.0035:20");
+      argv[argc++] = tempStr;
 #endif
 
 #if DEBUG
-    if(shownCreate == 0) {
-      char buf[LEN_GENERAL_WORK_BUFFER];
-      int i;
+      if(shownCreate == 0) {
+	char buf[LEN_GENERAL_WORK_BUFFER];
+	int i;
 
-      shownCreate=1;
+	shownCreate=1;
 
-      memset(buf, 0, sizeof(buf));
+	memset(buf, 0, sizeof(buf));
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", argv[4]);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", argv[4]);
 
-      for (i=5; i<argc; i++) {
-	strncat(buf, " ", (sizeof(buf) - strlen(buf) - 1));
-	strncat(buf, argv[i], (sizeof(buf) - strlen(buf) - 1));
+	for (i=5; i<argc; i++) {
+	  strncat(buf, " ", (sizeof(buf) - strlen(buf) - 1));
+	  strncat(buf, argv[i], (sizeof(buf) - strlen(buf) - 1));
+	}
+
+	traceEvent(CONST_TRACE_INFO, "RRD: rrdtool create --start now-1 file %s", buf);
+      }
+#endif
+
+      accessMutex(&rrdMutex, "rrd_create");
+      optind=0; /* reset gnu getopt */
+      opterr=0; /* no error messages */
+
+      fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
+      rrd_clear_error();
+      addRrdDelay();
+      rc = rrd_create(argc, argv);
+
+      if(rrd_test_error()) {
+	traceEventRRDebugARGV(3);
+
+	traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s",
+		   path, rrd_get_error());
+	rrd_clear_error();
+	numRRDerrors++;
       }
 
-      traceEvent(CONST_TRACE_INFO, "RRD: rrdtool create --start now-1 file %s", buf);
+      releaseMutex(&rrdMutex);
+
+      /* traceEventRRDebug("rrd_create(%s, %s)=%d", hostPath, key, rc); */
+      createdCounter = 1;
+    }
+
+#if RRD_DEBUG > 0
+    {
+      if(checkLast(path) >= rrdTime)
+	traceEventRRDebug(0, "WARNING rrd_update not performed (RRD already updated)");
     }
 #endif
 
-    accessMutex(&rrdMutex, "rrd_create");
+    argc = 0;
+    argv[argc++] = "rrd_update";
+    argv[argc++] = path;
+
+#if 0 /* Luca: what's this code about ? */
+    if((!createdCounter) && (numRuns == 1)) {
+      return;
+    } else 
+#endif
+      {
+#ifdef WIN32
+	safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%I64u", rrdTime, value);
+#else
+	safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%llu", rrdTime, value);
+#endif
+      }
+
+    argv[argc++] = cmd;
+
+    accessMutex(&rrdMutex, "rrd_update");
     optind=0; /* reset gnu getopt */
     opterr=0; /* no error messages */
 
     fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
     rrd_clear_error();
     addRrdDelay();
-    rc = rrd_create(argc, argv);
+    rc = rrd_update(argc, argv);
+
+    numRRDUpdates++;
+    numTotalRRDUpdates++;
 
     if(rrd_test_error()) {
+      int x;
+      char *rrdError;
+
       traceEventRRDebugARGV(3);
 
-      traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s",
-		 path, rrd_get_error());
-      rrd_clear_error();
       numRRDerrors++;
+      rrdError = rrd_get_error();
+      if(rrdError != NULL) {
+	traceEvent(CONST_TRACE_WARNING, "RRD: rrd_update(%s) error: %s", path, rrdError);
+	traceEvent(CONST_TRACE_NOISY, "RRD: call stack (counter created: %d):", createdCounter);
+	for (x = 0; x < argc; x++)
+	  traceEvent(CONST_TRACE_NOISY, "RRD:   argv[%d]: %s", x, argv[x]);
+
+	if(!strcmp(rrdError, "error: illegal attempt to update using time")) {
+	  char errTimeBuf1[32], errTimeBuf2[32], errTimeBuf3[32];
+	  struct tm workT;
+	  time_t rrdLast = checkLast(path);
+	  strftime(errTimeBuf1, sizeof(errTimeBuf1), CONST_LOCALE_TIMESPEC, localtime_r(&myGlobals.actTime, &workT));
+	  strftime(errTimeBuf2, sizeof(errTimeBuf2), CONST_LOCALE_TIMESPEC, localtime_r(&rrdTime, &workT));
+	  strftime(errTimeBuf3, sizeof(errTimeBuf3), CONST_LOCALE_TIMESPEC, localtime_r(&rrdLast, &workT));
+	  traceEvent(CONST_TRACE_WARNING,
+		     "RRD: actTime = %d(%s), rrdTime %d(%s), lastUpd %d(%s)",
+		     myGlobals.actTime,
+		     errTimeBuf1,
+		     rrdTime,
+		     errTimeBuf2,
+		     rrdLast,
+		     rrdLast == -1 ? "rrdlast ERROR" : errTimeBuf3);
+	} else if(strstr(rrdError, "is not an RRD file")) {
+	  unlink(path);
+	}
+
+	rrd_clear_error();
+      } else {
+	traceEventRRDebug(0, "rrd_update(%s, %s, %s)=%d", hostPath, key, cmd, rc);
+      }
     }
 
     releaseMutex(&rrdMutex);
-
-    /* traceEventRRDebug("rrd_create(%s, %s)=%d", hostPath, key, rc); */
-    createdCounter = 1;
   }
-
-#if RRD_DEBUG > 0
-  {
-    if(checkLast(path) >= rrdTime)
-      traceEventRRDebug(0, "WARNING rrd_update not performed (RRD already updated)");
-  }
-#endif
-
-  argc = 0;
-  argv[argc++] = "rrd_update";
-  argv[argc++] = path;
-
-#if 0 /* Luca: what's this code about ? */
-  if((!createdCounter) && (numRuns == 1)) {
-    return;
-  } else 
-#endif
-    {
-#ifdef WIN32
-    safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%I64u", rrdTime, value);
-#else
-    safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%llu", rrdTime, value);
-#endif
-  }
-
-  argv[argc++] = cmd;
-
-  accessMutex(&rrdMutex, "rrd_update");
-  optind=0; /* reset gnu getopt */
-  opterr=0; /* no error messages */
-
-  fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
-  rrd_clear_error();
-  addRrdDelay();
-  rc = rrd_update(argc, argv);
-
-  numRRDUpdates++;
-  numTotalRRDUpdates++;
-
-  if(rrd_test_error()) {
-    int x;
-    char *rrdError;
-
-    traceEventRRDebugARGV(3);
-
-    numRRDerrors++;
-    rrdError = rrd_get_error();
-    if(rrdError != NULL) {
-      traceEvent(CONST_TRACE_WARNING, "RRD: rrd_update(%s) error: %s", path, rrdError);
-      traceEvent(CONST_TRACE_NOISY, "RRD: call stack (counter created: %d):", createdCounter);
-      for (x = 0; x < argc; x++)
-	traceEvent(CONST_TRACE_NOISY, "RRD:   argv[%d]: %s", x, argv[x]);
-
-      if(!strcmp(rrdError, "error: illegal attempt to update using time")) {
-	char errTimeBuf1[32], errTimeBuf2[32], errTimeBuf3[32];
-	struct tm workT;
-	time_t rrdLast = checkLast(path);
-	strftime(errTimeBuf1, sizeof(errTimeBuf1), CONST_LOCALE_TIMESPEC, localtime_r(&myGlobals.actTime, &workT));
-	strftime(errTimeBuf2, sizeof(errTimeBuf2), CONST_LOCALE_TIMESPEC, localtime_r(&rrdTime, &workT));
-	strftime(errTimeBuf3, sizeof(errTimeBuf3), CONST_LOCALE_TIMESPEC, localtime_r(&rrdLast, &workT));
-	traceEvent(CONST_TRACE_WARNING,
-		   "RRD: actTime = %d(%s), rrdTime %d(%s), lastUpd %d(%s)",
-		   myGlobals.actTime,
-		   errTimeBuf1,
-		   rrdTime,
-		   errTimeBuf2,
-		   rrdLast,
-		   rrdLast == -1 ? "rrdlast ERROR" : errTimeBuf3);
-      } else if(strstr(rrdError, "is not an RRD file")) {
-	unlink(path);
-      }
-
-      rrd_clear_error();
-    } else {
-      traceEventRRDebug(0, "rrd_update(%s, %s, %s)=%d", hostPath, key, cmd, rc);
-    }
-  }
-
-  releaseMutex(&rrdMutex);
 }
 
 /* ******************************* */
@@ -1276,6 +1347,7 @@ static void setGlobalPermissions(int permissionsFlag) {
 static void commonRRDinit(void) {
   char value[1024];
 
+  initUdp();
   shownCreate = 0;
 
   if(fetchPrefsValue("rrd.dataDumpInterval", value, sizeof(value)) == -1) {
@@ -1460,6 +1532,7 @@ static void commonRRDinit(void) {
   if (MAX_NUM_ENTRIES > CONST_NUM_BAR_COLORS)
     traceEvent(CONST_TRACE_WARNING, "RRD: Too few colors defined in rrd_colors - graphs could be truncated");
 
+  updateUdpParams();
   initialized = 1;
 }
 
@@ -2513,13 +2586,12 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 
       if((!myGlobals.runningPref.dontTrustMACaddr)
 	 && subnetPseudoLocalHost(el)
-	 && (el->ethAddressString[0] != '\0')) /*
-						 NOTE:
-						 MAC address is empty even
-						 for local hosts if this host has
-						 been learnt on a virtual interface
-						 such as the NetFlow interface
-					       */
+	 && (el->ethAddressString[0] != '\0')) 
+	/*
+	  NOTE:
+	  MAC address is empty even for local hosts if this host has
+	  been learnt on a virtual interface such as the NetFlow interface
+	*/
 	hostKey = el->ethAddressString;
     } else {
       /* For the time being do not save IP-less hosts */
@@ -2783,7 +2855,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   ProtocolsList *protoList;
   struct tm workT;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: RRD: Data collection thread running [p%d, t%lu]...", getpid(), pthread_self());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: RRD: Data collection thread running [p%d, t%lu]...",
+	     getpid(), pthread_self());
 
 #ifdef MAKE_WITH_RRDSIGTRAP
   signal(SIGSEGV, rrdcleanup);
@@ -3012,17 +3085,13 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     if(dumpHosts) {
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
-	for(i=1; i<myGlobals.device[devIdx].actualHashSize; i++) {
-	  HostTraffic *el = myGlobals.device[devIdx].hash_hostTraffic[i];
-
-	  while(el != NULL) {
-	    if (el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH)
-	      rrdUpdateIPHostStats (el, devIdx);
-	    else if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC)
-	      rrdUpdateFcHostStats (el, devIdx);
-
-	    el = el->next;
-          }
+	HostTraffic *el;
+	
+	for (el = getFirstHost(devIdx); el != NULL; el = getNextHost(devIdx, el)) {
+	  if (el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH)
+	    rrdUpdateIPHostStats(el, devIdx);
+	  else if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC)
+	    rrdUpdateFcHostStats(el, devIdx);
         }
       }
     }
@@ -3279,6 +3348,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     }
   }
 
+  termUdp();
   rrdThread = 0;
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: RRD: Data collection thread terminated [p%d, t%lu]...", getpid(), pthread_self());
 
