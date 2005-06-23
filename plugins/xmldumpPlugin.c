@@ -1774,18 +1774,18 @@ static int dumpXML(char * url) {
       gettimeofday(&beforeFork, NULL);
 
       /* To capture a stable point-in-time, grab the mutex and then fork() */
-      accessMutex(&myGlobals.hostsHashMutex, "xmldump fork()");
+      accessMutex(&myGlobals.hostsHashLockMutex, "xmldump fork()");
       errno = 0;
       childpid = fork();
       if(childpid < 0) {
-        releaseMutex(&myGlobals.hostsHashMutex);
+        releaseMutex(&myGlobals.hostsHashLockMutex);
         traceEvent(CONST_TRACE_ERROR, "An error occurred while forking ntop [errno=%d]..", errno);
         return(0);
       }
 
       if(childpid) {
         /* father process */
-        releaseMutex(&myGlobals.hostsHashMutex);
+        releaseMutex(&myGlobals.hostsHashLockMutex);
         myGlobals.numChildren++;
         return(0);
       }
