@@ -2008,21 +2008,24 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	    updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
 	  }
 	} else if(portRange(sport, dport, 6881, 6889)
-		  || (!strncmp((char*)rcStr, "GET /announce?info_hash", 23))
-		  || (!strncmp((char*)rcStr, "GET /torrents/", 14))
-		  || (!strncmp((char*)rcStr, "GET TrackPak", 12))
-		  || (!strncmp((char*)rcStr, "0x13BitTorrent", 14))) {
+		  || portRange(sport, dport, 6969, 6969)
+		  || (strstr(rcStr, "BitTorrent protocolex") != NULL)
+		  || (strstr(rcStr, "BitT") != NULL)
+		  || (strstr(rcStr, "GET /announce?info_hash") != NULL)
+		  || (strstr(rcStr, "GET /torrents/") != NULL)
+		  || (strstr(rcStr, "GET TrackPak") != NULL)
+		  || (strstr(rcStr, "BitTorrent") != NULL)) {
 	  theSession->isP2P = FLAG_P2P_BITTORRENT;
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
 	} else if(portRange(sport, dport, 6346, 6347)
-		  || (!strncmp((char*)rcStr,    "GNUTELLA", 8))
+		  || (!strncmp((char*)rcStr, "GNUTELLA", 8))
 		  || (!strncmp((char*)rcStr, "GIV", 3))
 		  || (!strncmp((char*)rcStr, "GET /uri-res/", 13))) {
 	  theSession->isP2P = FLAG_P2P_GNUTELLA;
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
-	} else if((!strncmp((char*)rcStr,   "GET hash:", 9))
+	} else if((!strncmp((char*)rcStr,    "GET hash:", 9))
 		  || (!strncmp((char*)rcStr, "PUSH", 4))
 		  || (!strncmp((char*)rcStr, "GET /uri-res/", 12))) {
 	  /* Ares */
