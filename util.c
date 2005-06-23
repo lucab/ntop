@@ -6690,11 +6690,59 @@ pcap_t *pcap_open_dead(int linktype, int snaplen)
 }
 #endif
 
+/* * * * * * * * * * * * * * * * * * */
+
+// Use our version instead of the sometimes available GNU extension...
+char *ntop_strsignal(int sig) {
+  return(sig == SIGHUP ? "SIGHUP"
+         : sig == SIGINT ? "SIGINT"
+         : sig == SIGQUIT ? "SIGQUIT"
+         : sig == SIGILL ? "SIGILL"
+         : sig == SIGABRT ? "SIGABRT"
+         : sig == SIGFPE ? "SIGFPE"
+         : sig == SIGKILL ? "SIGKILL"
+         : sig == SIGSEGV ? "SIGSEGV"
+         : sig == SIGPIPE ? "SIGPIPE"
+         : sig == SIGALRM ? "SIGALRM"
+         : sig == SIGTERM ? "SIGTERM"
+         : sig == SIGUSR1 ? "SIGUSR1"
+         : sig == SIGUSR2 ? "SIGUSR2"
+         : sig == SIGCHLD ? "SIGCHLD" 
+#ifdef SIGCONT
+         : sig == SIGCONT ? "SIGCONT"
+#endif
+#ifdef SIGSTOP
+         : sig == SIGSTOP ? "SIGSTOP"
+#endif
+#ifdef SIGBUS
+         : sig == SIGBUS ? "SIGBUS"
+#endif
+#ifdef SIGSYS
+         : sig == SIGSYS ? "SIGSYS"
+#endif
+#ifdef SIGXCPU
+         : sig == SIGXCPU ? "SIGXCPU"
+#endif
+#ifdef SIGXFSZ
+         : sig == SIGXFSZ ? "SIGXFSZ"
+#endif
+          : "unable to determine");
+}
+
+/* *************** */
+
+#if defined(WIN32) && defined(__GNUC__)
+ #warning using ntop work-around for missing gdbm_error ... no worries
+char *gdbm_strerror(gdbm_error errno) {
+  return("no additional information available");
+}
+#endif
+   
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
     Dummies.  Instead of cluttering ntop with a bunch of #ifdef logic,
-              just define the function here and in globals-core.h if we
+              just define the function (or a work-around) here and in globals-core.h if we
               don't have it.
  */
 #ifndef WIN32

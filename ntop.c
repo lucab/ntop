@@ -131,10 +131,6 @@ void* pcapDispatch(void *_i) {
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcapDispatch(%s) thread terminated [p%d, t%lu]...",
 	     myGlobals.device[i].humanFriendlyName, getpid(), pthread_self());
 
-#if 0
-  cleanup(2);
-#endif
-
   return(NULL);
 }
 
@@ -166,18 +162,17 @@ RETSIGTYPE handleDiedChild(int sig _UNUSED_) {
 
 /* **************************************** */
 
-#ifndef WIN32
 
-void daemonize(void) {
+void daemonizeUnderUnix(void) {
+
+#ifndef WIN32
   int childpid;
 
   signal(SIGHUP, SIG_IGN);
-#ifndef WIN32
 #ifdef HANDLE_DIED_CHILD
   signal(SIGCHLD, handleDiedChild);
 #else
   signal(SIGCHLD, SIG_IGN);
-#endif
 #endif
   signal(SIGQUIT, SIG_IGN);
 
@@ -190,26 +185,31 @@ void daemonize(void) {
 #endif
     if(!childpid) { /* child */
       traceEvent(CONST_TRACE_INFO, "INIT: Bye bye: I'm becoming a daemon...");
-      detachFromTerminal(1);
+      detachFromTerminalUnderUnix(1);
     } else { /* father */
       traceEvent(CONST_TRACE_INFO, "INIT: Parent process is exiting (this is normal)");
       exit(0);
     }
   }
+
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Now running as a daemon");
+
+#endif
 }
 
 /* **************************************** */
 
-void detachFromTerminal(int doChdir) {
+void detachFromTerminalUnderUnix(int doChdir) {
 
-#if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
+#ifndef WIN32
+#ifdef MAKE_WITH_SYSLOG
   /* Child processes must log to syslog.
    * If no facility was set through -L | --use-syslog=facility
    * then force the default
    */
   if(myGlobals.runningPref.useSyslog == FLAG_SYSLOG_NONE)
     myGlobals.runningPref.useSyslog = DEFAULT_SYSLOG_FACILITY;
-#endif
+#endif /* MAKE_WITH_SYSLOG */
 
   if(doChdir) chdir("/");
   setsid();  /* detach from the terminal */
@@ -229,8 +229,9 @@ void detachFromTerminal(int doChdir) {
   /* setlinebuf (stdout); */
   setvbuf(stdout, (char *)NULL, _IOLBF, 0);
 
-}
 #endif /* WIN32 */
+
+}
 
 /* **************************************** */
 

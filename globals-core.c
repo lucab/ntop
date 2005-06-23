@@ -570,12 +570,9 @@ void initNtop(char *devices) {
 
   initGdbm(myGlobals.dbPath, myGlobals.spoolPath, 0);
 
-#ifndef WIN32
   if(myGlobals.runningPref.daemonMode) {
-    daemonize();
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Now running as a daemon");
+    daemonizeUnderUnix();
   }
-#endif
 
   /* Handle local addresses (if any) */
   handleLocalAddresses(myGlobals.runningPref.localAddresses);

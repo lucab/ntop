@@ -110,11 +110,26 @@ extern void checkUserIdentity(int userSpecified);
 extern pcap_t *pcap_open_dead(int linktype, int snaplen);
 #endif
 
+// Some systems have strsignal, some don't and it's a GNU extension anyway, so just use our own...
+extern char *ntop_strsignal(int sig);
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
     Dummies.  Instead of cluttering ntop with a bunch of #ifdef logic,
    * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 #ifndef HAVE_PCAP_FREECODE
 extern void pcap_freecode(struct bpf_program *pgm);
+#endif
+
+#ifndef HAVE_PCAP_FINDALLDEVS
+extern int pcap_findalldevs(pcap_if_t **alldevsp, char *errbuf);
+#endif
+
+#ifndef HAVE_PCAP_FREEALLDEVS
+extern pcap_freealldevs(pcap_if_t *alldevs);
+#endif
+
+#if defined(WIN32) && defined(__GNUC__)
+extern char *gdbm_strerror(gdbm_error errno);
 #endif
 
 #ifndef WIN32
@@ -309,10 +324,8 @@ extern void *pcapDispatch(void *_i);
 extern RETSIGTYPE handleDiedChild(int);
 #endif
 #endif
-#ifndef WIN32
-extern void daemonize(void);
-extern void detachFromTerminal(int);
-#endif
+extern void daemonizeUnderUnix(void);
+extern void detachFromTerminalUnderUnix(int);
 extern void createPortHash(void);
 extern void handleProtocols(void);
 extern void addDefaultProtocols(void);

@@ -2453,7 +2453,7 @@ static int returnHTTPPage(char* pageName,
 #endif
 #endif /* MAKE_WITH_HTTPSIGTRAP */
 
-	  detachFromTerminal(0);
+	  detachFromTerminalUnderUnix(0);
 
 	  /* Close inherited sockets */
 #ifdef HAVE_OPENSSL
