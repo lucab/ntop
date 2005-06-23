@@ -2009,12 +2009,12 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	  }
 	} else if(portRange(sport, dport, 6881, 6889)
 		  || portRange(sport, dport, 6969, 6969)
-		  || (strstr(rcStr, "BitTorrent protocolex") != NULL)
-		  || (strstr(rcStr, "BitT") != NULL)
-		  || (strstr(rcStr, "GET /announce?info_hash") != NULL)
-		  || (strstr(rcStr, "GET /torrents/") != NULL)
-		  || (strstr(rcStr, "GET TrackPak") != NULL)
-		  || (strstr(rcStr, "BitTorrent") != NULL)) {
+		  || (strstr((char*)rcStr, "BitTorrent protocolex") != NULL)
+		  || (strstr((char*)rcStr, "BitT") != NULL)
+		  || (strstr((char*)rcStr, "GET /announce?info_hash") != NULL)
+		  || (strstr((char*)rcStr, "GET /torrents/") != NULL)
+		  || (strstr((char*)rcStr, "GET TrackPak") != NULL)
+		  || (strstr((char*)rcStr, "BitTorrent") != NULL)) {
 	  theSession->isP2P = FLAG_P2P_BITTORRENT;
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
