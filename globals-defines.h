@@ -234,8 +234,6 @@
 #endif
 #endif
 
-#undef MAKE_WITH_SEMAPHORES
-
 /*
  * MAKE_WITH_SCHED_YIELD is shorthand
  */
@@ -393,6 +391,11 @@
  */
 /* #define MEMORY_DEBUG */
 
+ /*
+  * MUTEX_DEBUG causes util.c to log information about mutex/condvar operations.
+ */
+/* #define MUTEX_DEBUG */
+
 /* NETFLOW_DEBUG logs the netflow packets as they are sent from
  * sendNetFlow() in netflow.c
  */
@@ -420,11 +423,6 @@
 /* P2P_DEBUG enables debug messages during P2P protocol processing.
  */
 /* #define P2P_DEBUG 1 */
-
- /*
-  * SEMAPHORE_DEBUG causes util.c to log information about semaphore operations.
- */
-/* #define SEMAPHORE_DEBUG */
 
 /* SESSION_TRACE_DEBUG causes sessions.c to log the start and end of
  * tcp sessions.

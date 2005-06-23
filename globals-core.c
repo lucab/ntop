@@ -338,13 +338,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   /*
    * Create two variables (semaphores) used by functions in pbuf.c to queue packets
    */
-#ifdef MAKE_WITH_SEMAPHORES
-
-  createSem(&myGlobals.queueSem, 0);
-  createSem(&myGlobals.queueAddressSem, 0);
-
-#else
-
   createCondvar(&myGlobals.queueCondvar);
   createCondvar(&myGlobals.queueAddressCondvar);
 
@@ -375,7 +368,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.receivedPacketsLostQ = 0;
   myGlobals.packetQueueHead = 0;
   myGlobals.packetQueueTail = 0;
-#endif
 
   /* NB: Log View is allocated in main.c so it's available for the very 1st traceEvent() */
 

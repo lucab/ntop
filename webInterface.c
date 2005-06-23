@@ -1216,6 +1216,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
+  printFeatureConfigInfo(textPrintFlag, "MUTEX_DEBUG",
+#ifdef MUTEX_DEBUG
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
   printFeatureConfigInfo(textPrintFlag, "NETFLOW_DEBUG",
 #ifdef NETFLOW_DEBUG
                          "yes"
@@ -1266,14 +1274,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "RRD_DEBUG",
 #ifdef RRD_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "SEMAPHORE_DEBUG",
-#ifdef SEMAPHORE_DEBUG
                          "yes"
 #else
                          "no"
@@ -2319,14 +2319,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "HAVE_SELECT",
 #ifdef HAVE_SELECT
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SEMAPHORE_H",
-#ifdef HAVE_SEMAPHORE_H
                          "yes"
 #else
                          "no"
@@ -4874,14 +4866,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SEMAPHORES",
-#ifdef MAKE_WITH_SEMAPHORES
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLWATCHDOG",
 #ifdef MAKE_WITH_SSLWATCHDOG
                          "yes"
@@ -5775,247 +5759,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #else
   printFeatureConfigInfo(textPrintFlag, "UNKNOWN_P2P_FILE", "undefined");
 #endif
-
-  /* Move the following lines */
-  printFeatureConfigInfo(textPrintFlag, "ADDRESS_DEBUG",
-#ifdef ADDRESS_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "CHKVER_DEBUG",
-#ifdef CHKVER_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "CMPFCTN_DEBUG",
-#ifdef CMPFCTN_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "DNS_DEBUG",
-#ifdef DNS_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "DNS_SNIFF_DEBUG",
-#ifdef DNS_SNIFF_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "FC_DEBUG",
-#ifdef FC_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "FINGERPRINT_DEBUG",
-#ifdef FINGERPRINT_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "FRAGMENT_DEBUG",
-#ifdef FRAGMENT_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "FTP_DEBUG",
-#ifdef FTP_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "GDBM_DEBUG",
-#ifdef GDBM_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HASH_DEBUG",
-#ifdef HASH_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HOST_FREE_DEBUG",
-#ifdef HOST_FREE_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HTTP_DEBUG",
-#ifdef HTTP_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "I18N_DEBUG",
-#ifdef I18N_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "IDLE_PURGE_DEBUG",
-#ifdef IDLE_PURGE_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "INITWEB_DEBUG",
-#ifdef INITWEB_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "MEMORY_DEBUG",
-#ifdef MEMORY_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "NETFLOW_DEBUG",
-#ifdef NETFLOW_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "P2P_DEBUG",
-#ifdef P2P_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "PACKET_DEBUG",
-#ifdef PACKET_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "PARAM_DEBUG",
-#ifdef PARAM_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "PLUGIN_DEBUG",
-#ifdef PLUGIN_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "PROBLEMREPORTID_DEBUG",
-#ifdef PROBLEMREPORTID_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "SEMAPHORE_DEBUG",
-#ifdef SEMAPHORE_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "SESSION_TRACE_DEBUG",
-#ifdef SESSION_TRACE_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "SSLWATCHDOG_DEBUG",
-#ifdef SSLWATCHDOG_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "STORAGE_DEBUG",
-#ifdef STORAGE_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "UNKNOWN_PACKET_DEBUG",
-#ifdef UNKNOWN_PACKET_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "URL_DEBUG",
-#ifdef URL_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "VENDOR_DEBUG",
-#ifdef VENDOR_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
 
   /*                                                       E N D
    *
@@ -7738,10 +7481,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     defined(HOST_FREE_DEBUG)           || \
     defined(HTTP_DEBUG)                || \
     defined(MEMORY_DEBUG)              || \
+    defined(MUTEX_DEBUG)               || \
     defined(NETFLOW_DEBUG)             || \
     defined(PACKET_DEBUG)              || \
     defined(PLUGIN_DEBUG)              || \
-    defined(SEMAPHORE_DEBUG)           || \
     defined(SESSION_TRACE_DEBUG)       || \
     defined(SSLWATCHDOG_DEBUG)         || \
     defined(STORAGE_DEBUG)             || \

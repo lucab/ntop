@@ -236,10 +236,6 @@ ntop.h
 
 #endif /* MAKE_WITH_SCHED_YIELD */
 
-#if defined(HAVE_SEMAPHORE_H) && !defined(DARWIN) 
- #include <semaphore.h>
-#endif
-
 #ifdef HAVE_PTHREAD_H
  #include <pthread.h>
  #ifndef _THREAD_SAFE
@@ -390,9 +386,6 @@ ntop.h
  */
 # include <pthread.h>
 
-# if defined(HAVE_SEMAPHORE_H)
-#  include <semaphore.h>
-# endif
 #endif /* WIN32 */
 
 /*

@@ -581,11 +581,7 @@ static void queueAddress(HostAddr elem, int forceResolution) {
     }
   }
 
-#ifdef MAKE_WITH_SEMAPHORES
-  incrementSem(&myGlobals.queueAddressSem);
-#else
   signalCondvar(&myGlobals.queueAddressCondvar);
-#endif
 }
 
 /* ************************************ */
@@ -610,11 +606,7 @@ void* dequeueAddress(void *_i) {
     traceEvent(CONST_TRACE_INFO, "DEBUG: Waiting for address to resolve...");
 #endif
 
-#ifdef MAKE_WITH_SEMAPHORES
-    waitSem(&myGlobals.queueAddressSem);
-#else
     waitCondvar(&myGlobals.queueAddressCondvar);
-#endif
 
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Address resolution started...");

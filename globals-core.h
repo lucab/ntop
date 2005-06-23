@@ -521,13 +521,6 @@ extern void deleteCondvar(ConditionalVariable *condvarId);
 extern int waitCondvar(ConditionalVariable *condvarId);
 extern int timedwaitCondvar(ConditionalVariable *condvarId, struct timespec *expiration);
 extern int signalCondvar(ConditionalVariable *condvarId);
-#ifdef HAVE_SEMAPHORE_H
-extern int createSem(sem_t *semId, int initialValue);
-extern void waitSem(sem_t *semId);
-extern int incrementSem(sem_t *semId);
-extern int decrementSem(sem_t *semId);
-extern int deleteSem(sem_t *semId);
-#endif /* HAVE_SEMAPHORE_H */
 extern void setNBnodeNameType(HostTraffic *theHost, char nodeType, char isQuery, char* nbName);
 extern void trimString(char*);
 extern FILE* getNewRandomFile(char* fileName, int len);

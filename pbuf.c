@@ -2373,11 +2373,8 @@ void queuePacket(u_char *_deviceId,
 #endif
   }
 
-#ifdef MAKE_WITH_SEMAPHORES
-  incrementSem(&myGlobals.queueSem);
-#else
   signalCondvar(&myGlobals.queueCondvar);
-#endif
+
   ntop_conditional_sched_yield(); /* Allow other threads (dequeue) to run */
 }
 
@@ -2404,11 +2401,7 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
 
     while((myGlobals.packetQueueLen == 0)
 	  && (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) /* Courtesy of Wies-Software <wies@wiessoft.de> */) {
-#ifdef MAKE_WITH_SEMAPHORES
-      waitSem(&myGlobals.queueSem);
-#else
       waitCondvar(&myGlobals.queueCondvar);
-#endif
     }
 
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;

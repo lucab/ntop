@@ -2064,17 +2064,8 @@ typedef struct ntopGlobals {
   /* Multi-thread related */
   unsigned short numThreads;       /* # of running threads */
 
-#ifdef MAKE_WITH_SEMAPHORES
-
-  sem_t queueSem;
-  sem_t queueAddressSem;
-
-#else /* ! MAKE_WITH_SEMAPHORES */
-
   ConditionalVariable queueCondvar;
   ConditionalVariable queueAddressCondvar;
-
-#endif /* ! MAKE_WITH_SEMAPHORES */
 
   /*
    * NPA - Network Packet Analyzer (main thread)

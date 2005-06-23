@@ -798,13 +798,9 @@ RETSIGTYPE cleanup(int signo) {
 
     #else clause added to force dequeue threads to terminate
   */
-#ifdef MAKE_WITH_SEMAPHORES
-  incrementSem(&myGlobals.queueSem);
-  incrementSem(&myGlobals.queueAddressSem);
-#else
   signalCondvar(&myGlobals.queueCondvar);
   signalCondvar(&myGlobals.queueAddressCondvar);
-#endif
+
 #endif /* #ifndef WIN32 */
 
 
@@ -858,13 +854,8 @@ RETSIGTYPE cleanup(int signo) {
     deleteMutex(&myGlobals.hostsHashMutex[i]);
   }
 
-#ifdef MAKE_WITH_SEMAPHORES
-  deleteSem(&myGlobals.queueSem);
-  deleteSem(&myGlobals.queueAddressSem);
-#else
   deleteCondvar(&myGlobals.queueCondvar);
   deleteCondvar(&myGlobals.queueAddressCondvar);
-#endif
 
   termGdbm();
 

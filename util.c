@@ -1700,8 +1700,8 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
                strerror(rc), rc, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
   } else {
     mutexId->isInitialized = 1;
-#ifdef SEMAPHORE_DEBUG
-    traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: createMutex() succeeded [t%p m%p @%s:%d]",
+#ifdef MUTEX_DEBUG
+    traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: createMutex() succeeded [t%p m%p @%s:%d]",
                pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   }
@@ -1732,23 +1732,23 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   mutexId->isInitialized = 0;
 
   rc = pthread_mutex_unlock(&(mutexId->mutex));
-#ifdef SEMAPHORE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: deleteMutex() unlock (rc=%d) [t%p m%p @%s:%d]",
+#ifdef MUTEX_DEBUG
+  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() unlock (rc=%d) [t%p m%p @%s:%d]",
              rc, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_destroy(&(mutexId->mutex));
-#ifdef SEMAPHORE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: deleteMutex() destroy (rc=%d) [t%p m%p @%s:%d]",
+#ifdef MUTEX_DEBUG
+  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() destroy (rc=%d) [t%p m%p @%s:%d]",
              rc, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_unlock(&(mutexId->statedatamutex));
-#ifdef SEMAPHORE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: deleteMutex() #2 unlock (rc=%d) [t%p m%p @%s:%d]",
+#ifdef MUTEX_DEBUG
+  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() #2 unlock (rc=%d) [t%p m%p @%s:%d]",
              rc, pthread_self(), (void*)&(mutexId->statedatamutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_destroy(&(mutexId->statedatamutex));
-#ifdef SEMAPHORE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: deleteMutex() #2 destroy (rc=%d) [t%p m%p @%s:%d]",
+#ifdef MUTEX_DEBUG
+  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() #2 destroy (rc=%d) [t%p m%p @%s:%d]",
              rc, pthread_self(), (void*)&(mutexId->statedatamutex), fileName, fileLine);
 #endif
 
@@ -1779,8 +1779,8 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
     return(-1);
   }
 
-#ifdef SEMAPHORE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: accessMutex() called '%s' [t%p m%p @%s:%d]",
+#ifdef MUTEX_DEBUG
+  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: accessMutex() called '%s' [t%p m%p @%s:%d]",
              where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
@@ -1810,8 +1810,8 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
                where, rc, (void*)&(mutexId->mutex), fileName, fileLine);
   } else {
 
-#ifdef SEMAPHORE_DEBUG
-    traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: accessMutex() call '%s' succeeded [%p@%s:%d]",
+#ifdef MUTEX_DEBUG
+    traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: accessMutex() call '%s' succeeded [%p@%s:%d]",
 	       where, (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
@@ -1900,8 +1900,8 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLi
     return(-1);
   }
 
-#ifdef SEMAPHORE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: tryLockMutex() called '%s' [t%p m%p @%s:%d]",
+#ifdef MUTEX_DEBUG
+  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: tryLockMutex() called '%s' [t%p m%p @%s:%d]",
              where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
@@ -1975,8 +1975,8 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   }
 
-#ifdef SEMAPHORE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: releaseMutex() releasing [t%p m%p, @%s:%d]",
+#ifdef MUTEX_DEBUG
+  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: releaseMutex() releasing [t%p m%p, @%s:%d]",
              pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_unlock(&(mutexId->mutex));
@@ -2004,12 +2004,12 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   pthread_mutex_unlock(&(mutexId->statedatamutex));
 
-#ifdef SEMAPHORE_DEBUG
+#ifdef MUTEX_DEBUG
   if (rc != 0)
-    traceEvent(CONST_TRACE_WARNING, "SEMAPHORE_DEBUG: releaseMutex() failed (rc=%d) [t%p m%p @%s:%d]",
+    traceEvent(CONST_TRACE_WARNING, "MUTEX_DEBUG: releaseMutex() failed (rc=%d) [t%p m%p @%s:%d]",
                pthread_self(), (void*)&(mutexId->mutex), rc, fileName, fileLine);
   else
-    traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: releaseMutex() succeeded [t%p m%p @%s:%d]",
+    traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: releaseMutex() succeeded [t%p m%p @%s:%d]",
                pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   return(rc);
@@ -2091,46 +2091,6 @@ int signalCondvar(ConditionalVariable *condvarId) {
 }
 
 /* ************************************ */
-
-#ifdef HAVE_SEMAPHORE_H
-
-int createSem(sem_t *semId, int initialValue) {
-  int rc;
-
-  rc = sem_init(semId, 0, initialValue);
-  return(rc);
-}
-
-/* ************************************ */
-
-void waitSem(sem_t *semId) {
-  int rc = sem_wait(semId);
-
-  if((rc != 0) && (errno != 4 /* Interrupted system call */))
-    traceEvent(CONST_TRACE_INFO, "waitSem failed [errno=%d/%s]", errno, strerror(errno));
-}
-
-/* ************************************ */
-
-int incrementSem(sem_t *semId) {
-  return(sem_post(semId));
-}
-
-/* ************************************ */
-/*
- * WARNING: Enabling semaphors will probably cause bugs!
- */
-
-int decrementSem(sem_t *semId) {
-  return(sem_trywait(semId));
-}
-
-/* ************************************ */
-
-int deleteSem(sem_t *semId) {
-  return(sem_destroy(semId));
-}
-#endif
 
 #endif /* WIN32 */
 
