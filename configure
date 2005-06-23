@@ -1552,7 +1552,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v3.1.050-2005-06-23"
+SCRIPTVER="v3.1.050-2005-06-23a"
 
 umask 002
           ac_config_headers="$ac_config_headers config.h"
@@ -2329,6 +2329,8 @@ fi
   test -n "$AWK" && break
 done
 
+unverified=""
+
 if test "x${AWK}" = "x"; then
     echo
     echo "*******************************************************************"
@@ -2363,6 +2365,8 @@ elif test "x${AWK}" = "xawk" ||
     echo "*******************************************************************"
     echo
     HAS_WARNING="yes"
+else
+    unverified="-u"
 fi
 
 DEPDIR="${am__leading_dot}deps"
@@ -5335,7 +5339,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5338 "configure"' > conftest.$ac_ext
+  echo '#line 5342 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -6673,7 +6677,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6676:" \
+echo "$as_me:6680:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7711,11 +7715,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7714: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7718: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7718: \$? = $ac_status" >&5
+   echo "$as_me:7722: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7944,11 +7948,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7947: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7951: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7951: \$? = $ac_status" >&5
+   echo "$as_me:7955: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -8004,11 +8008,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8007: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8011: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8011: \$? = $ac_status" >&5
+   echo "$as_me:8015: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9338,7 +9342,7 @@ linux*)
   libsuff=
   case "$host_cpu" in
   x86_64*|s390x*|powerpc64*)
-    echo '#line 9341 "configure"' > conftest.$ac_ext
+    echo '#line 9345 "configure"' > conftest.$ac_ext
     if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -10209,7 +10213,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10212 "configure"
+#line 10216 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10307,7 +10311,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10310 "configure"
+#line 10314 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12490,11 +12494,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12493: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12497: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12497: \$? = $ac_status" >&5
+   echo "$as_me:12501: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -12550,11 +12554,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12553: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12557: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12557: \$? = $ac_status" >&5
+   echo "$as_me:12561: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13061,7 +13065,7 @@ linux*)
   libsuff=
   case "$host_cpu" in
   x86_64*|s390x*|powerpc64*)
-    echo '#line 13064 "configure"' > conftest.$ac_ext
+    echo '#line 13068 "configure"' > conftest.$ac_ext
     if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -13932,7 +13936,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13935 "configure"
+#line 13939 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -14030,7 +14034,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 14033 "configure"
+#line 14037 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -14857,11 +14861,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14860: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14864: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14864: \$? = $ac_status" >&5
+   echo "$as_me:14868: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -14917,11 +14921,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14920: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14924: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14924: \$? = $ac_status" >&5
+   echo "$as_me:14928: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16231,7 +16235,7 @@ linux*)
   libsuff=
   case "$host_cpu" in
   x86_64*|s390x*|powerpc64*)
-    echo '#line 16234 "configure"' > conftest.$ac_ext
+    echo '#line 16238 "configure"' > conftest.$ac_ext
     if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -16976,11 +16980,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16979: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16983: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16983: \$? = $ac_status" >&5
+   echo "$as_me:16987: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -17209,11 +17213,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17212: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17216: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17216: \$? = $ac_status" >&5
+   echo "$as_me:17220: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -17269,11 +17273,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17272: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17276: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:17276: \$? = $ac_status" >&5
+   echo "$as_me:17280: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -18603,7 +18607,7 @@ linux*)
   libsuff=
   case "$host_cpu" in
   x86_64*|s390x*|powerpc64*)
-    echo '#line 18606 "configure"' > conftest.$ac_ext
+    echo '#line 18610 "configure"' > conftest.$ac_ext
     if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -19474,7 +19478,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19477 "configure"
+#line 19481 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19572,7 +19576,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19575 "configure"
+#line 19579 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -23032,6 +23036,7 @@ case "${target}:${CC}" in
         UNVERIFIED5="3.0pre1:2004-02-24:version.xml:5.0-RELEASE"
         UNVERIFIED6="3.0pre1:2004-02-24:version.xml:5.2.1-RC, 5.2-RELEASE"
         DEFINEOS="FREEBSD";   STATUS="SUPPORTED"
+        RELEASE=`utils/linuxrelease --release | sed -e 's/\.//' -e 's/-.*$//g'`
       ;;
 
     *-*-freebsd*:* )
@@ -23241,30 +23246,30 @@ if test ".${UNVERIFIED1}" != "."; then
     echo "*   From version check log reports, ntop's users are also "
     echo "*   running under:"
     echo "*"
-    echo $UNVERIFIED1 | ${ac_cv_prog_AWK} -f utils/verified.awk -u
+    echo $UNVERIFIED1 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
     if test ".${UNVERIFIED2}" != "."; then
-        echo $UNVERIFIED2 | ${ac_cv_prog_AWK} -f utils/verified.awk -u
+        echo $UNVERIFIED2 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
     fi
     if test ".${UNVERIFIED3}" != "."; then
-        echo $UNVERIFIED3 | ${ac_cv_prog_AWK} -f utils/verified.awk -u
+        echo $UNVERIFIED3 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
     fi
     if test ".${UNVERIFIED4}" != "."; then
-        echo $UNVERIFIED4 | ${ac_cv_prog_AWK} -f utils/verified.awk -u
+        echo $UNVERIFIED4 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
     fi
     if test ".${UNVERIFIED5}" != "."; then
-        echo $UNVERIFIED5 | ${ac_cv_prog_AWK} -f utils/verified.awk -u
+        echo $UNVERIFIED5 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
     fi
     if test ".${UNVERIFIED6}" != "."; then
-        echo $UNVERIFIED6 | ${ac_cv_prog_AWK} -f utils/verified.awk -u
+        echo $UNVERIFIED6 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
     fi
     if test ".${UNVERIFIED7}" != "."; then
-        echo $UNVERIFIED7 | ${ac_cv_prog_AWK} -f utils/verified.awk -u
+        echo $UNVERIFIED7 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
     fi
     if test ".${UNVERIFIED8}" != "."; then
-        echo $UNVERIFIED8 | ${ac_cv_prog_AWK} -f utils/verified.awk -u
+        echo $UNVERIFIED8 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
     fi
     if test ".${UNVERIFIED9}" != "."; then
-        echo $UNVERIFIED9 | ${ac_cv_prog_AWK} -f utils/verified.awk -u
+        echo $UNVERIFIED9 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
     fi
     echo "*"
 fi
