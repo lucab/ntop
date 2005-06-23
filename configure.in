@@ -50,7 +50,7 @@ AC_INIT([ntop],[3.1.50])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v3.1.050-2005-05-31"
+SCRIPTVER="v3.1.050-2005-06-23"
 
 dnl>
 dnl> generate the config header
@@ -1050,6 +1050,7 @@ if test -d ./configureextra; then
         echo ""
         echo "    Executing configureextra/${DEFINEOS}"
         . ./configureextra/${DEFINEOS}
+        CONFIGURE_PARAMETERS="${CONFIGURE_PARAMETERS} + configureextra/${DEFINEOS}"
         echo ""
     fi
     if test ".${DISTRO}" != "."; then
@@ -1057,6 +1058,7 @@ if test -d ./configureextra; then
             echo ""
             echo "    Executing configureextra/${DEFINEOS}${DISTRO}"
             . ./configureextra/${DEFINEOS}${DISTRO}
+            CONFIGURE_PARAMETERS="${CONFIGURE_PARAMETERS} + configureextra/${DEFINEOS}${DISTRO}"
             echo ""
         fi
         if test ".${RELEASE}" != "." &&
@@ -1064,6 +1066,7 @@ if test -d ./configureextra; then
             echo ""
             echo "    Executing configureextra/${DEFINEOS}${DISTRO}${RELEASE}"
             . ./configureextra/${DEFINEOS}${DISTRO}${RELEASE}
+            CONFIGURE_PARAMETERS="${CONFIGURE_PARAMETERS} + configureextra/${DEFINEOS}${DISTRO}${RELEASE}"
             echo ""
         fi
     else
@@ -1072,6 +1075,7 @@ if test -d ./configureextra; then
             echo ""
             echo "    Executing configureextra/${DEFINEOS}${RELEASE}"
             . ./configureextra/${DEFINEOS}${RELEASE}
+            CONFIGURE_PARAMETERS="${CONFIGURE_PARAMETERS} + configureextra/${DEFINEOS}${RELEASE}"
             echo ""
         fi
     fi
@@ -2224,6 +2228,7 @@ AC_CHECK_FUNCS([strcspn])
 AC_CHECK_FUNCS([strdup])
 AC_CHECK_FUNCS([strerror])
 AC_CHECK_FUNCS([strpbrk])
+AC_CHECK_FUNCS([strsignal])
 AC_CHECK_FUNCS([strspn])
 AC_CHECK_FUNCS([strstr])
 AC_CHECK_FUNCS([strtoul])

@@ -1552,7 +1552,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v3.1.050-2005-05-31"
+SCRIPTVER="v3.1.050-2005-06-23"
 
 umask 002
           ac_config_headers="$ac_config_headers config.h"
@@ -23078,6 +23078,7 @@ if test -d ./configureextra; then
         echo ""
         echo "    Executing configureextra/${DEFINEOS}"
         . ./configureextra/${DEFINEOS}
+        CONFIGURE_PARAMETERS="${CONFIGURE_PARAMETERS} + configureextra/${DEFINEOS}"
         echo ""
     fi
     if test ".${DISTRO}" != "."; then
@@ -23085,6 +23086,7 @@ if test -d ./configureextra; then
             echo ""
             echo "    Executing configureextra/${DEFINEOS}${DISTRO}"
             . ./configureextra/${DEFINEOS}${DISTRO}
+            CONFIGURE_PARAMETERS="${CONFIGURE_PARAMETERS} + configureextra/${DEFINEOS}${DISTRO}"
             echo ""
         fi
         if test ".${RELEASE}" != "." &&
@@ -23092,6 +23094,7 @@ if test -d ./configureextra; then
             echo ""
             echo "    Executing configureextra/${DEFINEOS}${DISTRO}${RELEASE}"
             . ./configureextra/${DEFINEOS}${DISTRO}${RELEASE}
+            CONFIGURE_PARAMETERS="${CONFIGURE_PARAMETERS} + configureextra/${DEFINEOS}${DISTRO}${RELEASE}"
             echo ""
         fi
     else
@@ -23100,6 +23103,7 @@ if test -d ./configureextra; then
             echo ""
             echo "    Executing configureextra/${DEFINEOS}${RELEASE}"
             . ./configureextra/${DEFINEOS}${RELEASE}
+            CONFIGURE_PARAMETERS="${CONFIGURE_PARAMETERS} + configureextra/${DEFINEOS}${RELEASE}"
             echo ""
         fi
     fi
