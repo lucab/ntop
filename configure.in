@@ -50,7 +50,7 @@ AC_INIT([ntop],[3.1.50])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v3.1.050-2005-06-23a"
+SCRIPTVER="v3.1.050-2005-07-02"
 
 dnl>
 dnl> generate the config header
@@ -1376,6 +1376,13 @@ if (test ".${PCAP_LIB}" != "."      &&
 else
     NTOP_APPENDS([${PCAP_INCLUDE}], [${PCAP_LIB}], [pcap])
 fi
+
+dnl> Force -pthread for FreeBSD4
+case "${target}" in
+  *-*-freebsd4* ) 
+    LIBS="-pthread ${LIBS}"
+    ;;
+esac
 
 AC_CHECK_HEADERS([pcap.h])
 dnl> libpcap < 0.8
