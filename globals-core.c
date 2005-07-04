@@ -151,8 +151,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   int i, bufLen;
   char *startedAs, *defaultPath;
 
-  memset(&myGlobals, 0, sizeof(myGlobals));
-
   /*
    * Notice the program name
    */
@@ -233,10 +231,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.sslInitialized = 0;
   myGlobals.runningPref.sslPort = 0; /* Disabled by default: enabled via -W */
 #endif
-
-  /* Termination flags */
-  myGlobals.capturePackets = FLAG_NTOPSTATE_NOTINIT;
-  myGlobals.endNtop = 0;
 
   myGlobals.dnsSniffCount = 0;
   myGlobals.dnsSniffRequestCount = 0;
@@ -548,12 +542,9 @@ void initNtop(char *devices) {
     addDefaultProtocols();
 
   /*
-   * initialize memory and data. capturePackets must be set before invoking
-   * this routine.
+   * initialize memory and data.
    */
-  if (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
-      initDevices(devices);
-  }
+  initDevices(devices);
 
   if(myGlobals.runningPref.enableSessionHandling)
     initPassiveSessions();
@@ -572,7 +563,7 @@ void initNtop(char *devices) {
   if((myGlobals.runningPref.rFileName != NULL) &&
      ((myGlobals.runningPref.localAddresses == NULL) &&
       !myGlobals.runningPref.printFcOnly)) {
-      myGlobals.capturePackets = FLAG_NTOPSTATE_NOTINIT;
+      setRunState(FLAG_NTOPSTATE_TERM);
       traceEvent(CONST_TRACE_FATALERROR,
                  "-m | local-subnets must be specified when the -f | --traffic-dump-file option is used"
                  "Capture not started");
@@ -637,7 +628,134 @@ void initNtop(char *devices) {
   }
 }
 
-/* ****************************** */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/* This routine enforces the state change rules
+ *
+ *
+ * Valid state transitions:
+ *   0->1           When ntop first starts up, after memset(myGlobals)
+ *   1->2           After the basic system protective environment is up...
+ *   2->3           When ntop gives up root
+ *   3->4           When ntop finishes initialization
+ *Or 2->4           When ntop finishes initialization on systems w/o root, e.g. Win32
+ *   4->5, 6, 7     Stopcap to keep webserver up after a problem or Shutdown on user request
+ *   5->6, 7        Shutdown requested
+ *   6->7           Shutdown running
+ *   7->8           Shutdown complete
+ *   8->1 (restart) FUTURE...
+ *
+ */
+
+short _setRunState(char *file, int line, short newRunState) {
+
+static short stateTransitionTable[FLAG_NTOPSTATE_TERM+1][FLAG_NTOPSTATE_TERM+1];
+static char *stateTransitionTableNames[FLAG_NTOPSTATE_TERM+1];
+static short stateTransitionTableLoaded=0;
+
+  if(stateTransitionTableLoaded == 0) {
+    /* One time load */
+    int i;
+
+    for(i=0; i<FLAG_NTOPSTATE_TERM; i++) 
+      stateTransitionTable[i][i] = 1;
+
+    stateTransitionTable[FLAG_NTOPSTATE_NOTINIT][FLAG_NTOPSTATE_PREINIT] = 1;
+    stateTransitionTable[FLAG_NTOPSTATE_PREINIT][FLAG_NTOPSTATE_INIT] = 1;
+    stateTransitionTable[FLAG_NTOPSTATE_INIT][FLAG_NTOPSTATE_INITNONROOT] = 1;
+    stateTransitionTable[FLAG_NTOPSTATE_INITNONROOT][FLAG_NTOPSTATE_RUN] = 1;
+    stateTransitionTable[FLAG_NTOPSTATE_INIT][FLAG_NTOPSTATE_RUN] = 1;
+    stateTransitionTable[FLAG_NTOPSTATE_RUN][FLAG_NTOPSTATE_STOPCAP] = 1;
+    stateTransitionTable[FLAG_NTOPSTATE_RUN][FLAG_NTOPSTATE_SHUTDOWNREQ] = 1;
+    stateTransitionTable[FLAG_NTOPSTATE_RUN][FLAG_NTOPSTATE_SHUTDOWN] = 1;
+    stateTransitionTable[FLAG_NTOPSTATE_STOPCAP][FLAG_NTOPSTATE_SHUTDOWNREQ] = 1;
+    stateTransitionTable[FLAG_NTOPSTATE_STOPCAP][FLAG_NTOPSTATE_SHUTDOWN] = 1;
+
+    for(i=FLAG_NTOPSTATE_PREINIT; i<FLAG_NTOPSTATE_SHUTDOWNREQ; i++) 
+      stateTransitionTable[i][FLAG_NTOPSTATE_SHUTDOWNREQ] = 1;
+
+    stateTransitionTable[FLAG_NTOPSTATE_SHUTDOWNREQ][FLAG_NTOPSTATE_SHUTDOWN] = 1;
+    stateTransitionTable[FLAG_NTOPSTATE_SHUTDOWN][FLAG_NTOPSTATE_TERM] = 1;
+
+    stateTransitionTableNames[FLAG_NTOPSTATE_NOTINIT] = "NOTINIT";
+    stateTransitionTableNames[FLAG_NTOPSTATE_PREINIT] = "PREINIT";
+    stateTransitionTableNames[FLAG_NTOPSTATE_INIT] = "INIT";
+    stateTransitionTableNames[FLAG_NTOPSTATE_INITNONROOT] = "INITNONROOT";
+    stateTransitionTableNames[FLAG_NTOPSTATE_RUN] = "RUN";
+    stateTransitionTableNames[FLAG_NTOPSTATE_STOPCAP] = "STOPCAP";
+    stateTransitionTableNames[FLAG_NTOPSTATE_SHUTDOWNREQ] = "SHUTDOWNREQ";
+    stateTransitionTableNames[FLAG_NTOPSTATE_SHUTDOWN] = "SHUTDOWN";
+    stateTransitionTableNames[FLAG_NTOPSTATE_TERM] = "TERM";
+
+    stateTransitionTableLoaded = 1;
+
+  }
+
+  if(stateTransitionTable[myGlobals.ntopRunState][newRunState] == 0) {
+    traceEvent(CONST_FATALERROR_TRACE_LEVEL, file, line,
+               "Invalid runState transition %d to %d",
+               myGlobals.ntopRunState,
+               newRunState);
+    exit(99);
+  }
+
+/* These are largely blueprints for the future */
+
+  /* Take appropriate finishing action(s) for old state... */
+  switch(newRunState) {
+    case FLAG_NTOPSTATE_NOTINIT:
+      break;
+    case FLAG_NTOPSTATE_PREINIT:
+      break;
+    case FLAG_NTOPSTATE_INIT:
+      break;
+    case FLAG_NTOPSTATE_INITNONROOT:
+      break;
+    case FLAG_NTOPSTATE_RUN:
+      break;
+    case FLAG_NTOPSTATE_STOPCAP:
+      break;
+    case FLAG_NTOPSTATE_SHUTDOWNREQ:
+      break;
+    case FLAG_NTOPSTATE_SHUTDOWN:
+      break;
+    case FLAG_NTOPSTATE_TERM:
+      break;
+  }
+
+  /* Take appropriate action(s) for new state... */
+  switch(newRunState) {
+    case FLAG_NTOPSTATE_NOTINIT:
+      break;
+    case FLAG_NTOPSTATE_PREINIT:
+      break;
+    case FLAG_NTOPSTATE_INIT:
+      break;
+    case FLAG_NTOPSTATE_INITNONROOT:
+      break;
+    case FLAG_NTOPSTATE_RUN:
+      break;
+    case FLAG_NTOPSTATE_STOPCAP:
+      break;
+    case FLAG_NTOPSTATE_SHUTDOWNREQ:
+      break;
+    case FLAG_NTOPSTATE_SHUTDOWN:
+      break;
+    case FLAG_NTOPSTATE_TERM:
+      break;
+  }
+  
+  myGlobals.ntopRunState = newRunState;
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "THREADMGMT[t%lu]: ntop RUNSTATE: %s(%d)",
+             pthread_self(),
+             stateTransitionTableNames[newRunState],
+             newRunState);
+
+  return(myGlobals.ntopRunState);
+
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifdef MAKE_WITH_SYSLOG
 /*

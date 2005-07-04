@@ -839,10 +839,10 @@ void storePrefsValue(char *key, char *value) {
   datum key_data;
   datum data_data;
 
-  if((value == NULL) || (myGlobals.capturePackets == FLAG_NTOPSTATE_TERM)) return;
+  if((value == NULL) || (myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN)) return;
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG:DEBUG:  Entering storePrefsValue()");
+  traceEvent(CONST_TRACE_INFO, "DEBUG:  Entering storePrefsValue()");
 #endif
 
   memset(&key_data, 0, sizeof(key_data));
@@ -874,10 +874,10 @@ void storePrefsValue(char *key, char *value) {
 void delPrefsValue (char *key) {
   datum key_data;
 
-  if((key == NULL) || (myGlobals.capturePackets == FLAG_NTOPSTATE_TERM)) return;
+  if((key == NULL) || (myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN)) return;
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG:DEBUG:  Entering storePrefsValue()");
+  traceEvent(CONST_TRACE_INFO, "DEBUG:  Entering storePrefsValue()");
 #endif
 
   memset(&key_data, 0, sizeof(key_data));

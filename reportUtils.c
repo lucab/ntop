@@ -4438,22 +4438,28 @@ void printFlagedWarning(char *text) {
 
 void printPageTitle(char *text) {
   sendString("<p>&nbsp;</p>\n");
-  switch (myGlobals.capturePackets) {
+  switch (myGlobals.ntopRunState) {
       case FLAG_NTOPSTATE_RUN:
           break;
-          ;;
+
       case FLAG_NTOPSTATE_STOPCAP:
           sendString("<center><font face=\"Helvetica, Arial, Sans Serif\" size=\"+1\"><b>"
                      "Packet capture stopped"
                      "</b></font></center>\n");
           break;
-          ;;
+
+      case FLAG_NTOPSTATE_SHUTDOWN:
+          sendString("<center><font face=\"Helvetica, Arial, Sans Serif\" size=\"+1\"><b>"
+                     "ntop shutting down"
+                     "</b></font></center>\n");
+          break;
+
       case FLAG_NTOPSTATE_TERM:
           sendString("<center><font face=\"Helvetica, Arial, Sans Serif\" size=\"+1\"><b>"
                      "ntop stopped"
                      "</b></font></center>\n");
           break;
-          ;;
+
   }
 
   sendString("<center>\n<H1><font face=\"Helvetica, Arial, Sans Serif\">");

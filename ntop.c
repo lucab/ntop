@@ -76,8 +76,8 @@ void* pcapDispatch(void *_i) {
   setNonBlockingSleepCount = 0;
 #endif
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcapDispatch(%s) thread running [p%d, t%lu]...",
-	     myGlobals.device[i].humanFriendlyName, getpid(), pthread_self());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NPS(%d,%s): pcapDispatch thread starting [p%d]",
+	     pthread_self(), i+1, myGlobals.device[i].humanFriendlyName, getpid());
 
   /* Reset stats before to start (needed by modern libpcap versions) */
   if(myGlobals.runningPref.rFileName == NULL) {
@@ -85,14 +85,20 @@ void* pcapDispatch(void *_i) {
     myGlobals.device[i].initialPcapDroppedPkts.value = pcapStats.ps_drop;
   }
 
-  for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
-    /* rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i); */
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NPS(%d,%s): pcapDispatch thread running [p%d]",
+	     pthread_self(), i+1, myGlobals.device[i].humanFriendlyName, getpid());
+
+/* Skip ntopSleepUntilStateRUN(), just start processing packets as soon as this starts */
+
+  for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
 
 #if defined(FREEBSD) && defined(__FreeBSD_cc_version) && (__FreeBSD_cc_version < 500000) && defined(HAVE_PCAP_SETNONBLOCK)
     rc = pcap_dispatch(myGlobals.device[i].pcapPtr, -1, queuePacket, (u_char*)_i);
 #else
     rc = pcap_loop(myGlobals.device[i].pcapPtr, -1, queuePacket, (u_char*)_i);
 #endif
+
+    if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
 
     if(rc == -1) {
       if(myGlobals.device[i].name != NULL) /* This is not a shutdown */
@@ -128,8 +134,8 @@ void* pcapDispatch(void *_i) {
 
   myGlobals.device[i].pcapDispatchThreadId = 0;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcapDispatch(%s) thread terminated [p%d, t%lu]...",
-	     myGlobals.device[i].humanFriendlyName, getpid(), pthread_self());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NPS(%d,%s): pcapDispatch thread terminated [p%d]",
+	     pthread_self(), i+1, myGlobals.device[i].humanFriendlyName, getpid());
 
   return(NULL);
 }
@@ -192,7 +198,8 @@ void daemonizeUnderUnix(void) {
     }
   }
 
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Now running as a daemon");
+  myGlobals.mainThreadId = pthread_self();
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "THREADMGMT[t%lu]: Now running as a daemon", myGlobals.mainThreadId);
 
 #endif
 }
@@ -629,15 +636,20 @@ static void purgeIpPorts(int theDevice) {
 
 void* scanIdleLoop(void* notUsed _UNUSED_) {
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle host scan thread running [p%d, t%lu]...",
-             getpid(), pthread_self());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SIH: Idle host scan thread starting [p%d]",
+             pthread_self(), getpid());
+
+  ntopSleepUntilStateRUN();
+ 
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SIH: Idle host scan thread running [p%d]",
+             pthread_self(), getpid());
 
   for(;;) {
     int i, purged=0;
 
-    sleep(60 /* do not change */);
+    ntopSleepWhileSameState(60 /* do not change */);
+    if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
 
-    if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
     if(myGlobals.runningPref.rFileName == NULL)
         myGlobals.actTime = time(NULL);
 
@@ -654,8 +666,11 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
     updateThpt(1);
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle host scan thread terminated [p%d, t%lu]...",
-             getpid(), pthread_self());
+  myGlobals.scanIdleThreadId = 0;
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SIH: Idle host scan thread terminated [p%d]",
+             pthread_self(), getpid());
+
   return(NULL);
 }
 
@@ -665,10 +680,15 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
   HostTraffic *el;
   int deviceId, countScan, countResolved, countCycle;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: FINGERPRINT: Scan thread running [p%d, t%lu]...",
-             getpid(), pthread_self());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SFP: Fingerprint scan thread starting [p%d]",
+             pthread_self(), getpid());
 
   countCycle=0;
+
+  ntopSleepUntilStateRUN();
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SFP: Fingerprint scan thread running [p%d]",
+             pthread_self(), getpid());
 
   for(;;) {
 
@@ -677,9 +697,9 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
 
     myGlobals.nextFingerprintScan = time(NULL) + CONST_FINGERPRINT_LOOP_INTERVAL;
 
-    sleep(CONST_FINGERPRINT_LOOP_INTERVAL);
+    ntopSleepWhileSameState(CONST_FINGERPRINT_LOOP_INTERVAL);
+    if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
 
-    if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
     if(myGlobals.runningPref.rFileName == NULL)
         myGlobals.actTime = time(NULL);
         countCycle++;
@@ -704,29 +724,140 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
     }
 
     if(countScan > 0)
-      traceEvent(CONST_TRACE_NOISY, "FINGERPRINT: ending cycle %d - checked %d, resolved %d",
+      traceEvent(CONST_TRACE_NOISY, "SFP: Ending fingerprint scan cycle %d - checked %d, resolved %d",
                  countCycle, countScan, countResolved);
 
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: FINGERPRINT: Scan thread terminated [p%d, t%lu]...",
-             getpid(), pthread_self());
   myGlobals.nextFingerprintScan = 0;
+  myGlobals.scanFingerprintsThreadId = 0;
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SFP: Fingerprint scan thread terminated [p%d]",
+             pthread_self(), getpid());
+
   return(NULL);
+}
+
+/* **************************************** */
+
+static void cleanupThreadIs(char *buf, int sizeofbuf) {
+  int i;
+
+  buf[0]='\0';
+
+  if(pthread_self() == myGlobals.mainThreadId)
+    strncpy(buf, "MAIN", sizeofbuf);
+  else if(pthread_self() == myGlobals.dequeueThreadId)
+    strncpy(buf, "NPA", sizeofbuf);
+  else if(pthread_self() == myGlobals.scanFingerprintsThreadId)
+    strncpy(buf, "SFP", sizeofbuf);
+  else if(pthread_self() == myGlobals.scanIdleThreadId)
+    strncpy(buf, "SIH", sizeofbuf);
+  else if(pthread_self() == myGlobals.handleWebConnectionsThreadId)
+    strncpy(buf, "WEB", sizeofbuf);
+  else if(pthread_self() == myGlobals.sslwatchdogChildThreadId)
+    strncpy(buf, "SSL", sizeofbuf);
+  else
+    for(i=0; i<myGlobals.numDequeueThreads; i++) {
+      if(pthread_self() == myGlobals.dequeueAddressThreadId[i]) {
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "DNSAR%d", i+1);
+        break;
+      }
+    }
+
+  if(buf[0] == '\0') {
+    for(i=0; i<myGlobals.numDevices; i++) {
+      if(pthread_self() == myGlobals.device[i].pcapDispatchThreadId) {
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "NPS%d", i+1);
+        break;
+      }
+    }
+  }
+
+  if(buf[0] == '\0') {
+    for(i=0; i<myGlobals.numDevices; i++) {
+      if((myGlobals.device[i].netflowGlobals != NULL) &&
+         (pthread_self() == myGlobals.device[i].netflowGlobals->netFlowThread)) {
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "NF%d", i);
+        break;
+      }
+    }
+  }
+
+  if(buf[0] == '\0') {
+    for(i=0; i<myGlobals.numDevices; i++) {
+      if((myGlobals.device[i].sflowGlobals != NULL) &&
+         (pthread_self() == myGlobals.device[i].sflowGlobals->sflowThread)) {
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "SF%d", i);
+        break;
+      }
+    }
+  }
+
+  if(buf[0] == '\0') {
+    strncpy(buf, "unknown", sizeofbuf);
+  }
+}
+
+void runningThreads(char *buf, int sizeofbuf) {
+  char buf2[LEN_SMALL_WORK_BUFFER];
+  int i;
+
+  memset(&buf2, 0, sizeof(buf2));
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "%s%s%s%s%s", 
+                myGlobals.dequeueThreadId != 0 ? " NPA" : "",
+                myGlobals.scanFingerprintsThreadId != 0 ? " SFP" : "",
+                myGlobals.scanIdleThreadId != 0 ? " SIH" : "",
+                myGlobals.handleWebConnectionsThreadId != 0 ? " WEB" : "",
+                myGlobals.sslwatchdogChildThreadId != 0 ? " SSL" : "");
+
+  for(i=0; i<myGlobals.numDequeueThreads; i++) {
+    if(myGlobals.dequeueAddressThreadId[i] != 0) {
+      safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), " DNSAR%d", i+1);
+      safe_strncat(buf, sizeofbuf, buf2);
+    }
+  }
+
+  if((myGlobals.device != NULL) &&
+    for(i=0; i<myGlobals.numDevices; i++) {
+      if((myGlobals.device[i].pcapDispatchThreadId != 0) &&
+         (!myGlobals.device[i].virtualDevice) &&
+         (!myGlobals.device[i].dummyDevice) &&
+         (myGlobals.device[i].pcapPtr != NULL)) {
+        safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), " NPS%d", i+1);
+        safe_strncat(buf, sizeofbuf, buf2);
+      }
+    }
+
+    for(i=0; i<myGlobals.numDevices; i++) {
+      if((myGlobals.device[i].netflowGlobals != NULL) &&
+         (myGlobals.device[i].netflowGlobals->netFlowThread != 0)) {
+        safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), " NF%d", i);
+        safe_strncat(buf, sizeofbuf, buf2);
+      }
+    }
+
+    for(i=0; i<myGlobals.numDevices; i++) {
+      if((myGlobals.device[i].sflowGlobals != NULL) &&
+         (myGlobals.device[i].sflowGlobals->sflowThread != 0)) {
+        safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), " SF%d", i);
+        safe_strncat(buf, sizeofbuf, buf2);
+      }
+    }
+  }
 }
 
 /* **************************************** */
 
 /* Report statistics and write out the raw packet file */
 RETSIGTYPE cleanup(int signo) {
-  static int unloaded = 0;
-  struct pcap_stat pcapStat;
-  int i;
-  char buf[32];
+  struct pcap_stat pcapStats;
+  int i, j;
+  char buf[128];
 
-  if(myGlobals.endNtop == 0) {
-    traceEvent(CONST_TRACE_INFO, "CLEANUP: ntop caught signal %d", signo);
-    myGlobals.endNtop = 1;
+  if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_SHUTDOWN) {
+    traceEvent(CONST_TRACE_INFO, "CLEANUP[t%lu]: ntop caught signal %d", pthread_self(), signo);
   }
 
 #ifdef HAVE_BACKTRACE
@@ -756,14 +887,25 @@ RETSIGTYPE cleanup(int signo) {
   }
 #endif /* HAVE_BACKTRACE */
 
-  if(unloaded)
+  if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN) {
     return;
-  else
-    unloaded = 1;
+  }
 
-  traceEvent(CONST_TRACE_INFO, "CLEANUP: Cleaning up, set FLAG_NTOPSTATE_TERM");
+  if(myGlobals.ntopRunState != FLAG_NTOPSTATE_SHUTDOWNREQ) {
+    /* TODO
+     * If the web server didn't start this, how do we kill it?
+     * It's sitting there in select() waiting for input!
+     */
+  }
 
-  myGlobals.capturePackets = FLAG_NTOPSTATE_TERM;
+  setRunState(FLAG_NTOPSTATE_SHUTDOWN);
+
+
+  cleanupThreadIs(buf, sizeof(buf));
+  traceEvent(CONST_TRACE_INFO, "CLEANUP[t%lu] is %s", pthread_self(), buf);
+
+  runningThreads(buf, sizeof(buf));
+  traceEvent(CONST_TRACE_INFO, "CLEANUP: Running threads%s", buf);
 
 #ifndef WIN32
 
@@ -790,29 +932,53 @@ RETSIGTYPE cleanup(int signo) {
     }
 #endif
 
-#else /* #ifndef WIN32 */
-
-  /*
-    TW 06.11.2001
-    Wies-Software <wies@wiessoft.de>
-
-    #else clause added to force dequeue threads to terminate
-  */
-  signalCondvar(&myGlobals.queueCondvar);
-  signalCondvar(&myGlobals.queueAddressCondvar);
-
 #endif /* #ifndef WIN32 */
-
-
-#if 0
-  traceEvent(CONST_TRACE_INFO, "CLEANUP: Waiting until threads terminate");
-  sleep(3); /* Just to wait until threads complete */
-#endif
 
   /* Prevents the web interface from running */
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "CLEANUP: Locking purge mutex (may block for a little while)");
   accessMutex(&myGlobals.purgeMutex, "cleanup");
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "CLEANUP: Locked purge mutex, continuing shutdown");
+
+  /* Force the various threads to terminate ...
+      Condvar courtesy of TW 06.11.2001, Wies-Software <wies@wiessoft.de>
+  */
+  signalCondvar(&myGlobals.queueCondvar);
+  signalCondvar(&myGlobals.queueAddressCondvar);
+
+  /* Stop capturing packets... */
+  for(i=0; i<myGlobals.numDevices; i++) {
+
+    if(myGlobals.device[i].pcapPtr != NULL) {
+      if(!myGlobals.device[i].virtualDevice) {
+        if(pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0) {
+          traceEvent(CONST_TRACE_INFO, "STATS: %s packets received by filter on %s",
+                     formatPkts((Counter)pcapStats.ps_recv, buf, sizeof(buf)), myGlobals.device[i].name);
+
+          traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (according to libpcap)",
+                     formatPkts((Counter)pcapStats.ps_drop, buf, sizeof(buf)));
+        }
+        traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (by ntop)",
+                   formatPkts(myGlobals.device[i].droppedPkts.value, buf, sizeof(buf)));
+      }
+
+      pcap_close(myGlobals.device[i].pcapPtr);
+      /*
+	Do not call free(myGlobals.device[i].pcapPtr)
+	as the pointer has been freed already by
+	pcap_close
+      */
+      myGlobals.device[i].pcapPtr = NULL;
+    }
+  }
+
+  traceEvent(CONST_TRACE_INFO, "CLEANUP: Waiting %d seconds to allow threads to terminate", PARM_SLEEP_LIMIT + 2);
+  sleep(PARM_SLEEP_LIMIT + 2); /* Just to wait until threads complete */
+
+  runningThreads(buf, sizeof(buf));
+  traceEvent(CONST_TRACE_INFO, "CLEANUP: Continues%s%s%s", 
+             buf[0] == '\0' ? "" : " (still running",
+             buf,
+             buf[0] == '\0' ? "" : ")");
 
   for(i=0; i<myGlobals.numDevices; i++) {
     freeHostInstances(i);
@@ -865,21 +1031,8 @@ RETSIGTYPE cleanup(int signo) {
   deleteMutex(&myGlobals.purgeMutex);
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    int j;
 
     traceEvent(CONST_TRACE_INFO, "CLEANUP: Freeing device %s (idx=%d)", myGlobals.device[i].name, i);
-
-    if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
-      if(pcap_stats(myGlobals.device[i].pcapPtr, &pcapStat) >= 0) {
-	traceEvent(CONST_TRACE_INFO, "STATS: %s packets received by filter on %s",
-		   formatPkts((Counter)pcapStat.ps_recv, buf, sizeof(buf)), myGlobals.device[i].name);
-
-	traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (according to libpcap)",
-		   formatPkts((Counter)pcapStat.ps_drop, buf, sizeof(buf)));
-      }
-      traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (by ntop)",
-		 formatPkts(myGlobals.device[i].droppedPkts.value, buf, sizeof(buf)));
-    }
 
     if(myGlobals.device[i].ipTrafficMatrix != NULL) {
       /* Courtesy of Wies-Software <wies@wiessoft.de> */
@@ -927,16 +1080,6 @@ RETSIGTYPE cleanup(int signo) {
 
     if(myGlobals.device[i].pcapOtherDumper != NULL)
       pcap_dump_close(myGlobals.device[i].pcapOtherDumper);
-
-    if(myGlobals.device[i].pcapPtr != NULL) {
-      pcap_close(myGlobals.device[i].pcapPtr);
-      /*
-	Do not call free(myGlobals.device[i].pcapPtr)
-	as the pointer has been freed already by
-	pcap_close
-      */
-      myGlobals.device[i].pcapPtr = NULL;
-    }
 
 #ifdef INET6
     {
@@ -1010,8 +1153,6 @@ RETSIGTYPE cleanup(int signo) {
   if(myGlobals.gdVersionGuessValue != NULL)
     free(myGlobals.gdVersionGuessValue);
 
-  myGlobals.endNtop = 2;
-
 #ifdef MEMORY_DEBUG
   traceEvent(CONST_TRACE_INFO, "===================================");
   termLeaks();
@@ -1026,6 +1167,17 @@ RETSIGTYPE cleanup(int signo) {
   removeNtopPid();
 #endif
   free(myGlobals.dbPath);
+
+  traceEvent(CONST_TRACE_INFO, "CLEANUP: Clean up complete");
+  setRunState(FLAG_NTOPSTATE_TERM);
+  /* Above should be enough to let main.c routine finish us off ... but just in case */
+
+  sleep(10);
+
+  memset(&buf, 0, sizeof(buf));
+  runningThreads(buf, sizeof(buf));
+  if(buf[0] != '\0') 
+    traceEvent(CONST_TRACE_INFO, "CLEANUP[t%lu]: Still running threads%s", pthread_self(), buf);
 
   traceEvent(CONST_TRACE_INFO, "===================================");
   traceEvent(CONST_TRACE_INFO, "        ntop is shutdown...        ");

@@ -301,19 +301,20 @@ SSL* getSSLsocket(int fd) {
 
 /* ********************* */
 
-void term_ssl_connection(int fd) {
-  int i;
+int term_ssl_connection(int fd) {
+  int i, rc;
 
   if(!myGlobals.sslInitialized) return;
 
   for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
     if((myGlobals.ssl[i].ctx != NULL)
        && (myGlobals.ssl[i].socketId == fd)) {
-      close(myGlobals.ssl[i].socketId);
+      rc = close(myGlobals.ssl[i].socketId);
       SSL_free(myGlobals.ssl[i].ctx);
       myGlobals.ssl[i].ctx = NULL;
     }
   }
+  return(rc);
 }
 
 /* ********************* */

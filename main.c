@@ -161,8 +161,8 @@ void usage(FILE * fp) {
 
 /* *********************************** */
 
-static int verifyOptions (void)
-{
+static void verifyOptions (void) {
+
 #ifdef HAVE_OPENSSL
     if((myGlobals.runningPref.webPort == 0) && (myGlobals.runningPref.sslPort == 0)) {
         printf("WARNING: both -W and -w are set to 0. The web interface will be disabled.\n");
@@ -185,8 +185,8 @@ static int verifyOptions (void)
      * Verify we're running as root, unless we are reading data from a file
      */
 
-    if (myGlobals.runningPref.rFileName != NULL) {
-        return (FLAG_NTOPSTATE_RUN); /* Start capture immediately */
+    if(myGlobals.runningPref.rFileName != NULL) {
+      return;
     }
 
 #ifndef WIN32    
@@ -236,14 +236,14 @@ static int verifyOptions (void)
                            "root:root"
 #endif
                     );
-                traceEvent(CONST_TRACE_ERROR, "please run ntop as root.");
-                exit (-1);
+                traceEvent(CONST_TRACE_FATALERROR, "please run ntop as root.");
+                exit (18);
             }
         } else {
             traceEvent(CONST_TRACE_ERROR, "The specified root password is not correct.");
             traceEvent(CONST_TRACE_FATALERROR, "Sorry, %s uses network interface(s) in promiscuous mode, "
                        "so it needs root permission to run.\n", myGlobals.program_name);
-            exit(18);
+            exit(19);
         }
     } else if (myGlobals.runningPref.disablePromiscuousMode == 1)
         traceEvent(CONST_TRACE_WARNING,
@@ -251,7 +251,7 @@ static int verifyOptions (void)
                    "(this will probably fail below)");
 #endif /* WIN32 */
 
-    return (FLAG_NTOPSTATE_RUN);
+    return;
 }
 
 /* ************************************ */
@@ -264,13 +264,16 @@ int main(int argc, char *argv[]) {
 #endif
   int i, rc, userSpecified;
   char ifStr[196] = {0};
-  time_t lastTime;
+  time_t lastTime, endTime;
   char *cmdLineBuffer, *readBuffer, *readBufferWork;
   FILE *fd;
   struct stat fileStat;
   int effective_argc;
   char **effective_argv;
-  char main_buf[LEN_GENERAL_WORK_BUFFER], lib[LEN_GENERAL_WORK_BUFFER], env[LEN_GENERAL_WORK_BUFFER];
+  char main_buf[LEN_GENERAL_WORK_BUFFER],
+       lib[LEN_GENERAL_WORK_BUFFER],
+       env[LEN_GENERAL_WORK_BUFFER],
+       buf[LEN_GENERAL_WORK_BUFFER];
 
   /* printf("Wait please: ntop is coming up...\n"); */
 
@@ -282,11 +285,21 @@ int main(int argc, char *argv[]) {
   initLeaks(); /* Don't move this below nor above */
 #endif
 
+  /* VERY FIRST THING is to clear myGlobals, so myGlobals.ntopRunState can be used */
+  memset(&myGlobals, 0, sizeof(myGlobals));
+  setRunState(FLAG_NTOPSTATE_PREINIT);
+
+  myGlobals.mainThreadId = pthread_self();
+
+  initSignals();
+
 #ifdef WIN32
-	initWinsock32(); /* Necessary for initializing globals */
+  initWinsock32(); /* Necessary for initializing globals */
 #endif
 
   /* *********************** */
+
+  setRunState(FLAG_NTOPSTATE_INIT);
 
   cmdLineBuffer = (char*)malloc(LEN_CMDLINE_BUFFER) /* big just to be safe */;
   memset(cmdLineBuffer, 0, LEN_CMDLINE_BUFFER);
@@ -445,7 +458,7 @@ int main(int argc, char *argv[]) {
   loadPrefs(effective_argc, effective_argv);
   userSpecified = parseOptions(effective_argc, effective_argv);
 
-  myGlobals.capturePackets = verifyOptions();
+  verifyOptions();
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s", version);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Configured on %s, built on %s.", configureDate, buildDate);
@@ -530,12 +543,9 @@ int main(int argc, char *argv[]) {
 
   /* ******************************* */
 
-  initSignals();
-
   addDefaultAdminUser();
 
-  if (myGlobals.capturePackets != FLAG_NTOPSTATE_NOTINIT)
-      initReports();
+  initReports();
 
   /* If we can, set the base memory HERE */
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
@@ -565,21 +575,44 @@ int main(int argc, char *argv[]) {
 #endif  
 
   /*
+   * OK, ntop is up... if we have't failed during init, start running with the actual packet capture...
+   *
    * A separate thread handles packet sniffing
    */
   startSniffer();
 
 #ifndef WIN32
 
-  while(!myGlobals.endNtop) {
-    sleep(10);
+  while(myGlobals.ntopRunState == FLAG_NTOPSTATE_RUN) {
+
+    ntopSleepWhileSameState(PARM_SLEEP_LIMIT);
 
     /* Periodic recheck of the version status */
     if((myGlobals.checkVersionStatusAgain > 0) && 
-       (time(NULL) > myGlobals.checkVersionStatusAgain))
+       (time(NULL) > myGlobals.checkVersionStatusAgain) &&
+       (myGlobals.ntopRunState == FLAG_NTOPSTATE_RUN))
       checkVersion(NULL);
 
   }
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: Main thread shutting down", pthread_self());
+  endTime = time(NULL) + PARM_SLEEP_LIMIT + 2;
+
+  while((myGlobals.ntopRunState != FLAG_NTOPSTATE_TERM) &&
+        (time(NULL) < endTime)) {
+    sleep(1);
+  }
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: Main thread terminating", pthread_self());
+
+  memset(&buf, 0, sizeof(buf));
+  runningThreads(buf, sizeof(buf));
+  if(buf[0] != '\0') 
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: Still running threads%s", pthread_self(), buf);
+
+  traceEvent(CONST_TRACE_INFO, "===================================");
+  traceEvent(CONST_TRACE_INFO, "        ntop is shutdown...        ");
+  traceEvent(CONST_TRACE_INFO, "===================================");
+
 #endif
 
   return(0);

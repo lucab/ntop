@@ -45,7 +45,7 @@ static void updateHostNameInfo(HostAddr addr, char* symbolic, int type);
 static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDeviceId, int type) {
   HostTraffic *el;
 
-  if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
+  if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) return;
 
   /* Search the instance and update its name */
 
@@ -124,7 +124,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
   datum data_data;
   static int reportedFreaky = FALSE;
 
-  if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
+  if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) return;
 
   myGlobals.numResolveAddressCalls++;
 
@@ -199,7 +199,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 
   }
 
-  if((!keepAddressNumeric) && (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN)) {
+  if((!keepAddressNumeric) && (myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)) {
     char theAddr[17];
     int family, size;
 
@@ -598,15 +598,17 @@ void* dequeueAddress(void *_i) {
   HostAddr addr;
   datum key_data, data_data;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Address resolution(%d) thread running [p%d, t%lu]...",
-             dqaIndex+1, getpid(), pthread_self());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Address resolution thread running [p%d]",
+             pthread_self(), dqaIndex+1, getpid());
 
-  while(myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
+  while(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Waiting for address to resolve...");
 #endif
 
     waitCondvar(&myGlobals.queueAddressCondvar);
+
+    if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
 
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Address resolution started...");
@@ -616,7 +618,10 @@ void* dequeueAddress(void *_i) {
 
     while(data_data.dptr != NULL) {
       int size = data_data.dsize;
-      if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
+
+      if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN)
+        break;
+
       if (size == sizeof(struct in_addr)) {
 	/*addrput(AF_INET, &addr, data_data.dptr);*/
 	addr.hostFamily = AF_INET;
@@ -651,9 +656,10 @@ void* dequeueAddress(void *_i) {
 
   myGlobals.dequeueAddressThreadId[dqaIndex] = 0;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Address resolution(%d) thread terminated [p%d, t%lu]...",
-             dqaIndex+1, getpid(), pthread_self());
-  return(NULL); /* NOTREACHED */
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Address resolution thread terminated [p%d]",
+             pthread_self(), dqaIndex+1, getpid());
+
+  return(NULL);
 }
 
 #ifdef INET6

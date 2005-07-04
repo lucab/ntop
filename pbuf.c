@@ -2258,7 +2258,7 @@ void queuePacket(u_char *_deviceId,
     return;
 #endif
 
-  if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
+  if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) return;
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Got packet from %s (%d)", myGlobals.device[*_deviceId].name, *_deviceId);
@@ -2391,20 +2391,23 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
   struct pcap_pkthdr h;
   u_char p[MAX_PACKET_LEN];
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet processor thread running [p%d, t%lu]...",
-             getpid(), pthread_self());
+  traceEvent(CONST_TRACE_INFO,
+             "THREADMGMT[t%lu]: NPA: network packet analyzer (packet processor) thread running [p%d]",
+             pthread_self(), getpid());
 
-  while(myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
+  /* Don't bother stalling until RUN, start grabbing packets NOW ... */
+
+  while(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "Waiting for packet...");
 #endif
 
-    while((myGlobals.packetQueueLen == 0)
-	  && (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) /* Courtesy of Wies-Software <wies@wiessoft.de> */) {
+    while((myGlobals.packetQueueLen == 0) &&
+	  (myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) /* Courtesy of Wies-Software <wies@wiessoft.de> */) {
       waitCondvar(&myGlobals.queueCondvar);
     }
 
-    if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
+    if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
 
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "Got packet...");
@@ -2458,8 +2461,9 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
 
   myGlobals.dequeueThreadId = 0;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet processor thread terminated [p%d, t%lu]...",
-             getpid(), pthread_self());
+  traceEvent(CONST_TRACE_INFO,
+             "THREADMGMT[t%lu]: NPA: network packet analyzer (packet processor) thread terminated [p%d]",
+             pthread_self(), getpid());
 
   return(NULL);
 }
@@ -2644,7 +2648,7 @@ void processPacket(u_char *_deviceId,
     /* traceEvent(CONST_TRACE_INFO, "%ld (%ld)", numPkt, length); */
 
     if(numPkt ==  /* 10000 */ 1000) {
-      cleanup(2);
+      cleanup(1);
     } else
       numPkt++;
   } else {
@@ -2654,12 +2658,12 @@ void processPacket(u_char *_deviceId,
       start = time(NULL)+1*60; /* 15 minutes */
     else {
       if(time(NULL) > start)
-	cleanup(2);
+	cleanup(1);
     }
   }
 #endif
 
-  if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN)
+  if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN)
     return;
 
   /*

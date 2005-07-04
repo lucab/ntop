@@ -987,28 +987,23 @@ void reinitMutexes (void) {
 void initThreads(void) {
   int i;
 
-  if (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
-      createThread(&myGlobals.dequeueThreadId, dequeuePacket, NULL);
-      traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for network packet analyser",
-                 (long)myGlobals.dequeueThreadId);
-  }
+  createThread(&myGlobals.dequeueThreadId, dequeuePacket, NULL);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NPA: Started thread for network packet analyzer",
+             (long)myGlobals.dequeueThreadId);
 
   /*
    * Create the thread (3) - SFP - Scan Fingerprints
    */
   createThread(&myGlobals.scanFingerprintsThreadId, scanFingerprintLoop, NULL);
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for fingerprinting",
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SFP: Started thread for fingerprinting",
              (long)myGlobals.scanFingerprintsThreadId);
 
   /*
    * Create the thread (4) - SIH - Scan Idle Hosts - optional
    */
-  if (/* (myGlobals.runningPref.rFileName == NULL) && */
-      (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN)) {
-    createThread(&myGlobals.scanIdleThreadId, scanIdleLoop, NULL);
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for idle hosts detection",
-	       (long)myGlobals.scanIdleThreadId);
-  }
+  createThread(&myGlobals.scanIdleThreadId, scanIdleLoop, NULL);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SIH: Started thread for idle hosts detection",
+             (long)myGlobals.scanIdleThreadId);
 
   if(myGlobals.runningPref.numericFlag == 0) {
     createMutex(&myGlobals.addressResolutionMutex);
@@ -1017,9 +1012,9 @@ void initThreads(void) {
      * Create the thread (6) - DNSAR - DNS Address Resolution - optional
      */
     for(i=0; i<myGlobals.numDequeueThreads; i++) {
-      createThread(&myGlobals.dequeueAddressThreadId[i], dequeueAddress, NULL);
-      traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for DNS address resolution",
-		 (long)myGlobals.dequeueAddressThreadId[i]);
+      createThread(&myGlobals.dequeueAddressThreadId[i], dequeueAddress, (char*)i);
+      traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Started thread for DNS address resolution",
+		 (long)myGlobals.dequeueAddressThreadId[i], i+1);
     }
   }
 
@@ -1153,7 +1148,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	  PacketCloseAdapter((LPTSTR)myGlobals.device[deviceId].name);
 #endif
       }
-#else
+#else /* not WIN32 */
     if(setuid(0) == -1) {
       traceEvent(CONST_TRACE_FATALERROR, "Unable to become root");
       exit(9); /* Just in case */
@@ -1451,8 +1446,6 @@ void addDevice(char* deviceName, char* deviceDescr) {
   if((myGlobals.actualReportDeviceId == 0) && myGlobals.device[0].dummyDevice)
     myGlobals.actualReportDeviceId = deviceId;
 
-  /* We have at least one device; switch the state of the ntop state var */
-  myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;
 }
 
 /* ******************************* */
@@ -1528,8 +1521,6 @@ void initDevices(char* devices) {
     free(myGlobals.device[0].name);
     myGlobals.device[0].name = strdup("pcap-file");
     myGlobals.numDevices = 1;
-    myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;
-
     return;
   }
 
@@ -1830,10 +1821,14 @@ void initSignals(void) {
 void startSniffer(void) {
   int i;
 
-  if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT)
-      return;
+  if((myGlobals.ntopRunState != FLAG_NTOPSTATE_INIT) &&
+     (myGlobals.ntopRunState != FLAG_NTOPSTATE_INITNONROOT)) {
+    traceEvent(CONST_TRACE_ERROR, "Unable to start sniffer - not in INIT state");
+//TODO Should above be FATALERROR???
+    return;
+  }
 
-  myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;
+  setRunState(FLAG_NTOPSTATE_RUN);
 
   for(i=0; i<myGlobals.numDevices; i++)
     if((!myGlobals.device[i].virtualDevice)
@@ -1843,8 +1838,8 @@ void startSniffer(void) {
        * (8) - NPS - Network Packet Sniffer (main thread)
        */
       createThread(&myGlobals.device[i].pcapDispatchThreadId, pcapDispatch, (char*)i);
-      traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for network packet sniffing on %s",
-		 (long)myGlobals.device[i].pcapDispatchThreadId, myGlobals.device[i].name);
+      traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NPS(%d): Started thread for network packet sniffing",
+		 (long)myGlobals.device[i].pcapDispatchThreadId, i+1, myGlobals.device[i].name);
     }
 }
 

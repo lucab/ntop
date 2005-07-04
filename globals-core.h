@@ -28,6 +28,10 @@
 
 /* globals-core.c */
 extern NtopGlobals myGlobals;
+
+extern short _setRunState(char *file, int line, short newRunState);
+#define setRunState(a) _setRunState(__FILE__, __LINE__, a)
+
 #ifdef MAKE_WITH_SYSLOG
 extern MYCODE myFacilityNames[];
 #endif
@@ -332,6 +336,7 @@ extern void addDefaultProtocols(void);
 extern int mapGlobalToLocalIdx(int port);
 extern void *scanIdleLoop(void *notUsed);
 extern void *scanFingerprintLoop(void *notUsed);
+extern void runningThreads(char *buf, int sizeofbuf);
 extern RETSIGTYPE cleanup(int signo);
 
 /* pbuf.c */
@@ -387,7 +392,7 @@ extern void ntop_ssl_error_report(char * whyMe);
 extern int init_ssl(void);
 extern int accept_ssl_connection(int fd);
 extern SSL *getSSLsocket(int fd);
-extern void term_ssl_connection(int fd);
+extern int term_ssl_connection(int fd);
 extern void term_ssl(void);
 #endif
 
@@ -491,7 +496,8 @@ extern int getLocalHostAddress(struct in_addr *hostIpAddress, char* device);
 extern NtopIfaceAddr * getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
 extern void fillDomainName(HostTraffic *el);
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *), char* userParm);
-extern int killThread(pthread_t *threadId);
+extern int _killThread(char *file, int line, pthread_t *threadId);
+#define killThread(a) _killThread(__FILE__, __LINE__, a);
 
 extern int   _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine);
 extern int   _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLine);
@@ -580,7 +586,14 @@ extern int _incrementUsageCounter(UsageCounter *counter,
 extern char *strtolower(char *s);
 extern char *xstrncpy(char *dest, const char *src, size_t n);
 extern int guessHops(HostTraffic *el);
+
+extern unsigned int _ntopSleepWhileSameState(char *file, int line, unsigned int secs);
+extern unsigned long _ntopSleepMSWhileSameState(char *file, int line, unsigned long msecs);
+#define ntopSleepWhileSameState(a) _ntopSleepWhileSameState(__FILE__, __LINE__, a)
+#define ntopSleepMSWhileSameState(a) _ntopSleepMSWhileSameState(__FILE__, __LINE__, a)
+extern void ntopSleepUntilStateRUN(void);
 extern unsigned int ntop_sleep(unsigned int secs);
+
 extern void unescape(char *dest, int destLen, char *url);
 extern void escape(char *dest, int destLen, char *in);
 

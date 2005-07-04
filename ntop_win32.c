@@ -666,7 +666,7 @@ int gettimeofday(struct timeval *tv,
 unsigned long waitForNextEvent(unsigned long ulDelay /* ms */) {
   unsigned long ulSlice = 1000L; /* 1 Second */
 
-  while ((myGlobals.capturePackets != FLAG_NTOPSTATE_TERM) && (ulDelay > 0L)) {
+  while ((myGlobals.ntopRunState < FLAG_NTOPSTATE_SHUTDOWN) && (ulDelay > 0L)) {
     if (ulDelay < ulSlice)
       ulSlice = ulDelay;
     Sleep(ulSlice);

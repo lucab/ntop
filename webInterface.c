@@ -901,11 +901,41 @@ void switchNwInterface(int _interface) {
 /* **************************************** */
 
 void shutdownNtop(void) {
-  printHTMLheader("ntop is shutting down...", NULL, BITFLAG_HTML_NO_REFRESH);
-  closeNwSocket(&myGlobals.newSock);
-  termAccessLog();
+  char buf[LEN_GENERAL_WORK_BUFFER],
+       bufTime[LEN_TIMEFORMAT_BUFFER];
+  time_t theTime = time(NULL);
+  struct tm t;
 
-  cleanup(0);
+  memset(&buf, 0, sizeof(buf));
+  memset(&bufTime, 0, sizeof(bufTime));
+
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: shutdown.html - request has been received - processing");
+
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+  printHTMLheader("ntop is shutting down...", NULL, BITFLAG_HTML_NO_REFRESH);
+
+  strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC, localtime_r(&theTime, &t));
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                "<p>Shutdown request received %s is being processed, and the "
+                "<b>ntop</b> web server is closing down.</p>\n",
+                bufTime);
+  sendString(buf);
+
+  theTime = time(NULL) + 2*PARM_SLEEP_LIMIT + 5;
+  strftime(bufTime, sizeof(bufTime), "%T", localtime_r(&theTime, &t));
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                "<p>Please allow up to %d seconds (until approximately %s) for all threads to terminate "
+                "and the shutdown request to complete.</p>\n"
+                "<p>You will not receive further messages.</p>\n",
+                2*PARM_SLEEP_LIMIT + 5,
+                bufTime);
+  sendString(buf);
+
+  sendString("<!-- trigger actual shutdown after rest of page is retrieved -->\n"
+             "<img src=\"/" CONST_SHUTDOWNNOW_NTOP_IMG "\" width=\"0\" height=\"0\">");
+
+  /* Return and let the web page finish up */
+
 }
 
 /* ******************************** */
@@ -3060,6 +3090,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_BAR_VSAN_TRAF_DIST_SENT", "undefined");
 #endif
 
+#ifdef CONST_BEYONDNOISY_TRACE_LEVEL
+  printFeatureConfigNum(textPrintFlag, "CONST_BEYONDNOISY_TRACE_LEVEL", CONST_BEYONDNOISY_TRACE_LEVEL);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_BEYONDNOISY_TRACE_LEVEL", "undefined");
+#endif
+
 #ifdef CONST_BROADCAST_ENTRY
   printFeatureConfigNum(textPrintFlag, "CONST_BROADCAST_ENTRY", CONST_BROADCAST_ENTRY);
 #else
@@ -4250,10 +4286,10 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_UNKNOWN_MTU", "undefined");
 #endif
 
-#ifdef CONST_VERY_DETAIL_TRACE_LEVEL
-  printFeatureConfigNum(textPrintFlag, "CONST_VERY_DETAIL_TRACE_LEVEL", CONST_VERY_DETAIL_TRACE_LEVEL);
+#ifdef CONST_VERYNOISY_TRACE_LEVEL
+  printFeatureConfigNum(textPrintFlag, "CONST_VERYNOISY_TRACE_LEVEL", CONST_VERYNOISY_TRACE_LEVEL);
 #else
-  printFeatureConfigInfo(textPrintFlag, "CONST_VERY_DETAIL_TRACE_LEVEL", "undefined");
+  printFeatureConfigInfo(textPrintFlag, "CONST_VERYNOISY_TRACE_LEVEL", "undefined");
 #endif
 
 #ifdef CONST_VIEW_LOG_HTML
@@ -6049,6 +6085,7 @@ void printMutexStatusReport(int textPrintFlag) {
   if(myGlobals.runningPref.numericFlag == 0)
     printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
 
+  printMutexStatus(textPrintFlag, &myGlobals.hostsHashLockMutex,   "hostsHashLockMutex");
   printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
   printMutexStatus(textPrintFlag, &myGlobals.purgePortsMutex,  "purgePortsMutex");
   printMutexStatus(textPrintFlag, &myGlobals.securityItemsMutex,  "securityItemsMutex");
@@ -8135,7 +8172,7 @@ void initWeb(void) {
 
   traceEvent(CONST_TRACE_INFO, "INITWEB: Starting web server");
   createThread(&myGlobals.handleWebConnectionsThreadId, handleWebConnections, NULL);
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: Started thread (t%lu) for web server",
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: INITWEB: Started thread for web server",
 	     myGlobals.handleWebConnectionsThreadId);
 
 #ifdef MAKE_WITH_SSLWATCHDOG
@@ -8169,7 +8206,7 @@ void initWeb(void) {
 
       sslwatchdogDebug("CreateThread", FLAG_SSLWATCHDOG_BOTH, "");
       createThread(&myGlobals.sslwatchdogChildThreadId, sslwatchdogChildThread, NULL);
-      traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: Started thread (t%lu) for ssl watchdog",
+      traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: INITWEB: Started thread for ssl watchdog",
 		 myGlobals.sslwatchdogChildThreadId);
 
       signal(SIGUSR1, sslwatchdogSighandler);
@@ -8356,7 +8393,7 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
   int rc;
   struct timespec expiration;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: ssl watchdog thread running [p%d, t%lu]...", getpid(), pthread_self());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: ssl watchdog thread running [p%d]", pthread_self(), getpid());
 
   /* ENTRY: from above, state 0 (FLAG_SSLWATCHDOG_UNINIT) */
   sslwatchdogDebug("BEGINthread", FLAG_SSLWATCHDOG_CHILD, "");
@@ -8366,7 +8403,8 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
 			   0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
 			   0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
 
-  while(myGlobals.sslwatchdogCondvar.predicate != FLAG_SSLWATCHDOG_FINISHED) {
+  while((myGlobals.sslwatchdogCondvar.predicate != FLAG_SSLWATCHDOG_FINISHED) &&
+        (myGlobals.ntopRunState <= FLAG_NTOPSTATE_STOPCAP)) {
 
     sslwatchdogWaitFor(FLAG_SSLWATCHDOG_HTTPREQUEST,
 		       FLAG_SSLWATCHDOG_CHILD,
@@ -8426,6 +8464,8 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
       /* rc != 0 --- error */
       rc = sslwatchdogClearLock(FLAG_SSLWATCHDOG_CHILD);
 
+      if(myGlobals.ntopRunState > FLAG_NTOPSTATE_STOPCAP) break;
+
     } /* while(... == FLAG_SSLWATCHDOG_HTTPREQUEST) */
   } /* while(... != FLAG_SSLWATCHDOG_FINISHED) */
 
@@ -8434,7 +8474,7 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
   sslwatchdogDebug("ENDthread", FLAG_SSLWATCHDOG_CHILD, "");
 
   myGlobals.sslwatchdogChildThreadId = 0;
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: ssl watchdog thread terminated [p%d, t%lu]...", getpid(), pthread_self());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: ssl watchdog thread terminated [p%d]", pthread_self(), getpid());
 
   return(NULL);
 }
@@ -8510,7 +8550,8 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
     int topSock = myGlobals.sock;
 
 #ifndef WIN32
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: Server connection thread running [p%d, t%lu]...", getpid(), pthread_self());
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: Server connection thread starting [p%d]",
+               pthread_self(), getpid());
 #endif
 
 #ifdef MAKE_WITH_HTTPSIGTRAP
@@ -8649,9 +8690,14 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 
     memcpy(&mask_copy, &mask, sizeof(fd_set));
 
+#ifndef WIN32
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: Server connection thread running [p%d]",
+               pthread_self(), getpid());
+#endif
+
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: ntop's web server is now processing requests");
 
-    while(myGlobals.capturePackets != FLAG_NTOPSTATE_TERM) {
+    while(myGlobals.ntopRunState < FLAG_NTOPSTATE_SHUTDOWNREQ) {
 	sslwatchdogDebug("BEGINloop", FLAG_SSLWATCHDOG_BOTH, "");
 #ifdef DEBUG
 	traceEvent(CONST_TRACE_INFO, "DEBUG: Select(ing) %d....", topSock);
@@ -8668,11 +8714,22 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 	  sslwatchdogDebug("hSWC()->", FLAG_SSLWATCHDOG_PARENT, "");
 	}
 	sslwatchdogDebug("ENDloop", FLAG_SSLWATCHDOG_BOTH, "");
-    }
+
+    } /* while myGlobals.ntopRunState < FLAG_NTOPSTATE_SHUTDOWNREQ */
 
     myGlobals.handleWebConnectionsThreadId = 0;
 
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: Server connection thread terminated [p%d, t%lu]...", getpid(), pthread_self());
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: Server connection thread terminated [p%d]", pthread_self(), getpid());
+
+    if(myGlobals.ntopRunState == FLAG_NTOPSTATE_SHUTDOWNREQ) {
+
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Terminating ntop based on user shutdown request");
+
+      sleep(1);
+      raise(SIGINT);
+      /* Returning from above is a bad thing */
+
+    }
 
     return(NULL);
 
@@ -8801,28 +8858,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 	    }
 #endif /* HAVE_OPENSSL */
 
-#ifdef HAVE_LIBWRAP
-	{
-	    struct request_info req;
-	    request_init(&req, RQ_DAEMON, CONST_DAEMONNAME, RQ_FILE, myGlobals.newSock, NULL);
-	    fromhost(&req);
-	    if(!hosts_access(&req)) {
-	      closelog(); /* just in case */
-              if(myGlobals.runningPref.instance != NULL)
-	        openlog(myGlobals.runningPref.instance, LOG_PID, deny_severity);
-              else
-	        openlog(CONST_DAEMONNAME, LOG_PID, deny_severity);
-	      syslog(deny_severity, "refused connect from %s", eval_client(&req));
-	    }
-	    else
-
-	      handleHTTPrequest(remote_ipaddr);
-	}
-#else
 	handleHTTPrequest(remote_ipaddr);
-
-#endif /* HAVE_LIBWRAP */
-
 	closeNwSocket(&myGlobals.newSock);
     } else {
 	traceEvent(CONST_TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d: %s)", errno, strerror(errno));

@@ -135,6 +135,16 @@
  */
 
 /*
+ *  SLEEP LIMIT - this is how long we let a thread actually sleep before 
+ *  waking up and checking myGlobals.ntopRunState...
+ *
+ *  The lower this is, the more responsive ntop is to shutdowns.  But the more time is 'wasted'
+ *  just making threads and putting them back to sleep.
+ *  
+ */
+#define PARM_SLEEP_LIMIT                    10
+
+/*
  *  Max number of hosts a 'non server' host should contact
  */
 #define CONTACTED_PEERS_THRESHOLD 1024
@@ -1145,6 +1155,7 @@
 #define CONST_SHOW_URLS_HTML                "showURLs.html"
 #define CONST_SHOW_USERS_HTML               "showUsers.html"
 #define CONST_SHUTDOWN_NTOP_HTML            "shutdown.html"
+#define CONST_SHUTDOWNNOW_NTOP_IMG          "shutdown.gif"
 #define CONST_SORT_DATA_IP_HTML             "sortDataIP.html"
 #define CONST_SORT_DATA_PROTOS_HTML         "sortDataProtos.html"
 #define CONST_SORT_DATA_THPT_HTML           "sortDataThpt.html"
@@ -1421,7 +1432,8 @@
 #define CONST_NOISY_TRACE_LEVEL             4
     /*   DETAILED is NOISY + EXTRA FILELINE */
 #define CONST_DETAIL_TRACE_LEVEL            5
-#define CONST_BEYONDNOISY_TRACE_LEVEL       6
+#define CONST_VERYNOISY_TRACE_LEVEL         6
+#define CONST_BEYONDNOISY_TRACE_LEVEL       7
     /* CONST_BEYONDNOISY_TRACE_LEVEL is used as the limiting value in prefs.c */
 
 #define CONST_TRACE_ALWAYSDISPLAY           CONST_ALWAYSDISPLAY_TRACE_LEVEL, __FILE__, __LINE__
@@ -1430,6 +1442,7 @@
 #define CONST_TRACE_WARNING                 CONST_WARNING_TRACE_LEVEL, __FILE__, __LINE__
 #define CONST_TRACE_INFO                    CONST_INFO_TRACE_LEVEL, __FILE__, __LINE__
 #define CONST_TRACE_NOISY                   CONST_NOISY_TRACE_LEVEL, __FILE__, __LINE__
+#define CONST_TRACE_VERYNOISY               CONST_VERYNOISY_TRACE_LEVEL, __FILE__, __LINE__
 #define CONST_TRACE_BEYONDNOISY             CONST_BEYONDNOISY_TRACE_LEVEL, __FILE__, __LINE__
 
 
@@ -1606,12 +1619,32 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
- * Flags for myGlobals.capturePackets
+ * Flags for myGlobals.ntopRunState
+ *
+ * State transitions:
+ *   0->1           When ntop first starts up, after memset(myGlobals)
+ *   1->2           After the basic system protective environment is up...
+ *   2->3           When ntop gives up root
+ *   3->4           When ntop finishes initialization
+ *Or 2->4           When ntop finishes initialization on systems w/o root, e.g. Win32
+ *   4->5, 6, 7     Stopcap to keep webserver up after a problem or Shutdown on user request
+ *   5->6, 7        Shutdown requested
+ *   6->7           Shutdown running
+ *   7->8           Shutdown complete
+ *   8->1 (restart) FUTURE...
+ *
+ * *** *** *** Make sure you keep _setRunState() in globals-core.c up to date with this! *** *** ***
+ *
  */
-#define FLAG_NTOPSTATE_RUN                  0
-#define FLAG_NTOPSTATE_STOPCAP              1
-#define FLAG_NTOPSTATE_TERM                 2
-#define FLAG_NTOPSTATE_NOTINIT              3
+#define FLAG_NTOPSTATE_NOTINIT              0
+#define FLAG_NTOPSTATE_PREINIT              1
+#define FLAG_NTOPSTATE_INIT                 2
+#define FLAG_NTOPSTATE_INITNONROOT          3
+#define FLAG_NTOPSTATE_RUN                  4
+#define FLAG_NTOPSTATE_STOPCAP              5
+#define FLAG_NTOPSTATE_SHUTDOWNREQ          6
+#define FLAG_NTOPSTATE_SHUTDOWN             7
+#define FLAG_NTOPSTATE_TERM                 8
 
 /*
  * When myGlobals.useSyslog is set to this, turns off the logging

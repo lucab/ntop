@@ -285,7 +285,7 @@ static int setNetFlowInSocket(int deviceId) {
     /* This plugin works only with threads */
     createThread(&myGlobals.device[deviceId].netflowGlobals->netFlowThread,
 		 netflowMainLoop, (void*)deviceId);
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT: NETFLOW: Started thread (%lu) for receiving flows on port %d",
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: Started thread for receiving flows on port %d",
                  (long)myGlobals.device[deviceId].netflowGlobals->netFlowThread,
                  myGlobals.device[deviceId].netflowGlobals->netFlowInPort);
   }
@@ -1318,7 +1318,8 @@ static void* netflowMainLoop(void* _deviceId) {
 
   if(!(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket > 0)) return(NULL);
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: NETFLOW: thread running [p%d, t%lu]...", getpid(), pthread_self());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread starting [p%d]",
+             pthread_self(), getpid());
 
 #ifdef MAKE_WITH_NETFLOWSIGTRAP
   signal(SIGSEGV, netflowcleanup);
@@ -1352,7 +1353,11 @@ static void* netflowMainLoop(void* _deviceId) {
   myGlobals.device[deviceId].activeDevice = 1;
   myGlobals.device[deviceId].netflowGlobals->threadActive = 1;
 
-  for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
+  ntopSleepUntilStateRUN();
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread running [p%d]",
+             pthread_self(), getpid());
+
+  for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
     int maxSock = myGlobals.device[deviceId].netflowGlobals->netFlowInSocket;
 
     FD_ZERO(&netflowMask);
@@ -1420,7 +1425,7 @@ static void* netflowMainLoop(void* _deviceId) {
 	dissectFlow((char*)buffer, rc, deviceId);
       }
     } else {
-      if((rc < 0) && (!myGlobals.endNtop) && (errno != EINTR /* Interrupted system call */)) {
+      if((rc < 0) && (myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) && (errno != EINTR /* Interrupted system call */)) {
 	traceEvent(CONST_TRACE_ERROR, "NETFLOW: select() failed(%d, %s), terminating netFlow",
 		   errno, strerror(errno));
 	break;
@@ -1432,7 +1437,7 @@ static void* netflowMainLoop(void* _deviceId) {
   myGlobals.device[deviceId].netflowGlobals->netFlowThread = 0;
   myGlobals.device[deviceId].activeDevice = 0;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: NETFLOW: thread terminated [p%d, t%lu]...", getpid(), pthread_self());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread terminated [p%d]", pthread_self(), getpid());
 
   return(NULL);
 }

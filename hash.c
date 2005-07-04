@@ -158,7 +158,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
     for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
       IPSession *prevSession, *nextSession, *theSession;
 
-      if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ )
+      if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ )
 	return;
 
       if(host->numHostSessions == 0) return;
@@ -207,7 +207,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
     for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
       FCSession *prevSession, *nextSession, *theSession;
 
-      if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ )
+      if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ )
 	return;
 
       if(host->numHostSessions == 0) return;

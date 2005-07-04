@@ -110,7 +110,6 @@ static HostAddr *requestFrom;
 /* ************************* */
 
 /* Forward */
-#ifdef MAKE_WITH_I18N
 static int readHTTPheader(char* theRequestedURL,
                           int theRequestedURLLen,
                           char *thePw,
@@ -130,23 +129,6 @@ static int returnHTTPPage(char* pageName,
                           char *referer,
                           char *requestedLanguage[],
                           int numLang, int isPostMethod);
-#else
-static int readHTTPheader(char* theRequestedURL,
-                          int theRequestedURLLen,
-                          char *thePw,
-                          int thePwLen,
-                          char *theAgent,
-                          int theAgentLen,
-                          char *theReferer,
-                          int theRefererLen, int *isPostMethod);
-static int returnHTTPPage(char* pageName,
-                          int postLen,
-                          HostAddr *from,
-			  struct timeval *httpRequestedAt,
-                          int *usedFork,
-                          char *agent,
-                          char *referer, int isPostMethod);
-#endif
 
 static int generateNewInternalPages(char* pageName);
 static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize);
@@ -181,23 +163,13 @@ char* printSSLError(int errorId) {
 
 /* ************************* */
 
-#ifdef MAKE_WITH_I18N
 static int readHTTPheader(char* theRequestedURL,
                           int theRequestedURLLen,
                           char *thePw, int thePwLen,
                           char *theAgent, int theAgentLen,
                           char *theReferer, int theRefererLen,
                           char *theLanguage, int theLanguageLen,
-                          int *isPostMethod)
-#else
-static int readHTTPheader(char* theRequestedURL,
-                          int theRequestedURLLen,
-                          char *thePw, int thePwLen,
-                          char *theAgent, int theAgentLen,
-                          char *theReferer, int theRefererLen,
-                          int *isPostMethod)
-#endif
-{
+                          int *isPostMethod) {
 #ifdef HAVE_OPENSSL
   SSL* ssl = getSSLsocket(-myGlobals.newSock);
 #endif
@@ -1049,25 +1021,27 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
 #endif
 
     if((errno != 0) || (rc < 0)) {
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: Socket write returned %d (errno=%d)", rc, errno);
-#endif
       if((errno == EAGAIN /* Resource temporarily unavailable */) && (retries<3)) {
 	len -= rc;
 	bytesSent += rc;
 	retries++;
 	goto RESEND;
-      } else if(errno == EPIPE /* Broken pipe: the  client has disconnected */) {
-	closeNwSocket(&myGlobals.newSock);
-	return;
+      } 
+
+      if(errno == EPIPE /* Broken pipe: the  client has disconnected */) {
+        traceEvent(CONST_TRACE_ERROR, "EPIPE during sending of page to web client");
+      } else if(errno == ECONNRESET /* Client reset */) {
+        traceEvent(CONST_TRACE_ERROR, "ECONNRESET during sending of page to web client");
       } else if(errno == EBADF /* Bad file descriptor: a
 				   disconnected client is still sending */) {
-	closeNwSocket(&myGlobals.newSock);
-	return;
+        traceEvent(CONST_TRACE_ERROR, "EBADF during sending of page to web client");
       } else {
-	closeNwSocket(&myGlobals.newSock);
-	return;
+        traceEvent(CONST_TRACE_ERROR, "errno %d during sending of page to web client");
       }
+
+      traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes, '%s'", strlen(theString), theString);
+      closeNwSocket(&myGlobals.newSock);
+      return;
     } else {
       len -= rc;
       bytesSent += rc;
@@ -1135,22 +1109,25 @@ void printHTMLtrailer(void) {
   char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32];
   int i, len, numRealDevices = 0;
 
-  switch (myGlobals.capturePackets) {
-      case FLAG_NTOPSTATE_RUN:
-          break;
-          ;
+  switch (myGlobals.ntopRunState) {
       case FLAG_NTOPSTATE_STOPCAP:
 	sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
 		   "Packet capture stopped"
 		   "</B></FONT></CENTER>");
 	break;
-	;
-  case FLAG_NTOPSTATE_TERM:
-    sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
-	       "ntop stopped"
-	       "</B></FONT></CENTER>");
-    break;
-    ;
+
+      case FLAG_NTOPSTATE_SHUTDOWN:
+      case FLAG_NTOPSTATE_SHUTDOWNREQ:
+        sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
+	           "ntop shutting down"
+	           "</B></FONT></CENTER>");
+        break;
+
+      case FLAG_NTOPSTATE_TERM:
+        sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
+	           "ntop stopped"
+	           "</B></FONT></CENTER>");
+        break;
   }
   
   sendString("\n<hr>\n<h5><font face=\"Helvetica, Arial, Sans Serif\" size=\"-1\"><b>\n");
@@ -1256,14 +1233,14 @@ void initAccessLog(void) {
   }
 }
 
-/* ******************************* */
+/* ************************* */
 
 void termAccessLog(void) {
   if(myGlobals.accessLogFd != NULL)
     fclose(myGlobals.accessLogFd);
 }
 
-/* ************************* */
+/* ******************************* */
 
 static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent) {
  char theDate[48], myUser[64], buf[24];
@@ -1897,7 +1874,6 @@ static int generateNewInternalPages(char* pageName) {
 
 /* **************************************** */
 
-#ifdef MAKE_WITH_I18N
 static int returnHTTPPage(char* pageName,
                           int postLen,
                           HostAddr *from,
@@ -1906,17 +1882,7 @@ static int returnHTTPPage(char* pageName,
                           char *agent,
                           char *referer,
                           char *requestedLanguage[],
-                          int numLang, int isPostMethod)
-#else
-static int returnHTTPPage(char* pageName,
-                          int postLen,
-                          HostAddr *from,
-			  struct timeval *httpRequestedAt,
-                          int *usedFork,
-                          char *agent,
-                          char *referer, int isPostMethod)
-#endif
-{
+                          int numLang, int isPostMethod) {
   char *questionMark, *pageURI, *token;
   int sortedColumn = 0, printTrailer=1, idx;
   int errorCode=0, pageNum = 0, found=0, portNr=0;
@@ -2214,16 +2180,12 @@ static int returnHTTPPage(char* pageName,
   /*
     Putting this here (and not on top of this function)
     helps because at least a partial respose
-    has been send back to the user in the meantime
+    has been sent back to the user in the meantime
   */
   if(strncasecmp(pageName, CONST_SHUTDOWN_NTOP_HTML, strlen(CONST_SHUTDOWN_NTOP_HTML)) == 0) {
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Shutdown request has been received");
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    sendString("<P>Your shutdown request is being processed</P>\n");
-    releaseMutex(&myGlobals.purgeMutex);
     shutdownNtop();
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Shutdown request FAILED");
-    sendString("<P>ERROR: Your shutdown seems to have failed...</P>\n");
+  } else if(strncasecmp(pageName, CONST_SHUTDOWNNOW_NTOP_IMG, strlen(CONST_SHUTDOWNNOW_NTOP_IMG)) == 0) {
+    /* Do nothing ... handled later */
     printTrailer=0;
   } else if(strncasecmp(pageName, CONST_CHANGE_FILTER_HTML, strlen(CONST_CHANGE_FILTER_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -2351,7 +2313,7 @@ static int returnHTTPPage(char* pageName,
                              strlen(CONST_LEFTMENU_HTML)) == 0)) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
-    if((myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT)
+    if((myGlobals.ntopRunState < FLAG_NTOPSTATE_RUN)
        || ((myGlobals.numDevices == 1) && (!strcmp(myGlobals.device[0].name, "none")))) {
       printHTMLheader("Configure ntop", NULL, BITFLAG_HTML_NO_REFRESH);
 
@@ -2369,11 +2331,13 @@ static int returnHTTPPage(char* pageName,
     */
     printTrafficStatistics(revertOrder);
   } else {
-#if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
-    int childpid;
-#endif
 
-    if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT) {
+    /* OK, we're doing basic reporting ...
+     *       (1) Are we really running?
+     *       (2) Fork (if we can) to create a read-only, stable copy
+     *       (3) Figure out which page the user wants and give it to him/her
+     */
+    if (myGlobals.ntopRunState < FLAG_NTOPSTATE_RUN) {
       safe_snprintf (__FILE__, __LINE__, tmpStr, sizeof (tmpStr),
 		     "<I><a href=%s>Configure Ntop</a> first. No packet "
 		     "captures analyzed</I>", CONST_CONFIG_NTOP_HTML);
@@ -2408,22 +2372,19 @@ static int returnHTTPPage(char* pageName,
 #endif /* !defined(WIN32) && defined(MAKE_WITH_SYSLOG) */
 
       /* The URLs below are "read-only" hence I can fork a copy of ntop  */
-      if((childpid = fork()) < 0)
+      if((myGlobals.childntoppid = fork()) < 0)
 	traceEvent(CONST_TRACE_ERROR, "An error occurred while forking ntop [errno=%d]..", errno);
       else {
 	*usedFork = 1;
 
-	if(childpid) {
+        /* This is zero in the parent copy of the structure */
+	if(myGlobals.childntoppid) {
 	  /* father process */
 	  myGlobals.numChildren++;
 	  compressFile = 0;
 	  return(0);
 	} else {
 
-          /* This is zero in the parent copy of the structure,
-             make it non-zero here so we can tell later on  (BMS 2003-06)
-	  */
-          myGlobals.childntoppid = getpid();
 
 #ifdef MAKE_WITH_HTTPSIGTRAP
           signal(SIGSEGV, httpcleanup);
@@ -3095,11 +3056,17 @@ static int returnHTTPPage(char* pageName,
     closeNwSocket(&myGlobals.newSock);
     logHTTPaccess(200, httpRequestedAt, gzipBytesSent);
     exit(0);
-  } else
-    return(errorCode);
-#else
+  }
+#endif /* FORK_CHILD */
+
+  if(strncasecmp(pageName, CONST_SHUTDOWNNOW_NTOP_IMG, strlen(CONST_SHUTDOWNNOW_NTOP_IMG)) == 0) {
+    /* Processed the page, it's time to flag this for the web server to shutdown... */
+    termAccessLog();
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Beginning actual shutdown sequence");
+    setRunState(FLAG_NTOPSTATE_SHUTDOWNREQ);
+  }
+
   return(errorCode);
-#endif
 }
 
 /* ************************* */
@@ -3221,9 +3188,9 @@ static int checkHTTPpassword(char *theRequestedURL,
         theRequestedURL[43]='\0';
     }
     traceEvent(CONST_TRACE_NOISY,
-               "SECURITY: %s request for url '%s' disallowed",
-               user == NULL ? "'no user'" :
-                 strcmp(user, "") ? "'unspecified user'" : user,
+               "SECURITY: user '%s' request for url '%s' disallowed",
+               user == NULL ? "none" :
+                 strcmp(user, "") || user[0] == '\0' ? "unspecified" : user,
                &theRequestedURL[1]);
     return 0; /* The specified user is not among those who are
                  allowed to access the URL */
@@ -3292,9 +3259,9 @@ static int checkHTTPpassword(char *theRequestedURL,
       theRequestedURL[43]='\0';
     }
     traceEvent(CONST_TRACE_NOISY,
-               "SECURITY: %s request for url '%s' disallowed",
-               user == NULL ? "'no user'" :
-                 strcmp(user, "") ? "'unspecified user'" : user,
+               "SECURITY: user '%s' request for url '%s' disallowed",
+               user == NULL ? "none" :
+                 strcmp(user, "") || user[0] == '\0' ? "unspecified" : user,
                &theRequestedURL[1]);
   }
 
@@ -3351,20 +3318,32 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 /* ************************* */
 
 void handleHTTPrequest(HostAddr from) {
-  int skipLeading, postLen, usedFork = 0;
-  char requestedURL[MAX_LEN_URL], pw[64], agent[256], referer[256], *requestedURLCopy=NULL;
-  int rc, i;
+  int rc, i, skipLeading, postLen, usedFork = 0, numLang = 0;
+  char requestedURL[MAX_LEN_URL], pw[64], agent[256], referer[256], workLanguage[256], *requestedURLCopy=NULL;
   struct timeval httpRequestedAt;
   u_int gzipBytesSent = 0;
-#ifdef MAKE_WITH_I18N
-  char workLanguage[256];
-  int numLang = 0;
   char *requestedLanguage[MAX_LANGUAGES_REQUESTED];
   char *workSemi;
-#endif
 
   char tmpStr[512];
   int isPostMethod = FALSE;
+
+#ifdef HAVE_LIBWRAP
+  struct request_info req;
+
+  request_init(&req, RQ_DAEMON, CONST_DAEMONNAME, RQ_FILE, myGlobals.newSock, NULL);
+  fromhost(&req);
+  if(!hosts_access(&req)) {
+    closelog(); /* just in case */
+    if(myGlobals.runningPref.instance != NULL)
+      openlog(myGlobals.runningPref.instance, LOG_PID, deny_severity);
+    else 
+      openlog(CONST_DAEMONNAME, LOG_PID, deny_severity);
+    syslog(deny_severity, "refused connect from %s", eval_client(&req));
+    myGlobals.numHandledBadrequests[myGlobals.newSock > 0]++;
+    return;
+  }
+#endif /* HAVE_LIBWRAP */
 
   myGlobals.numHandledRequests[myGlobals.newSock > 0]++;
 
@@ -3411,15 +3390,14 @@ void handleHTTPrequest(HostAddr from) {
 
 #ifdef MAKE_WITH_I18N
   memset(requestedLanguage, 0, sizeof(requestedLanguage));
-  memset(&workLanguage, 0, sizeof(workLanguage));
 #endif
+  memset(&workLanguage, 0, sizeof(workLanguage));
 
   httpBytesSent = 0;
   compressFile = 0;
   compressFileFd = NULL;
   acceptGzEncoding = 0;
 
-#ifdef MAKE_WITH_I18N
  postLen = readHTTPheader(requestedURL,
                           sizeof(requestedURL),
                           pw,
@@ -3431,17 +3409,6 @@ void handleHTTPrequest(HostAddr from) {
                           workLanguage,
                           sizeof(workLanguage),
                           &isPostMethod);
-#else
- postLen = readHTTPheader(requestedURL,
-                          sizeof(requestedURL),
-                          pw,
-                          sizeof(pw),
-                          agent,
-                          sizeof(agent),
-                          referer,
-                          sizeof(referer),
-                          &isPostMethod);
-#endif
 
 #if defined(HTTP_DEBUG) || defined(I18N_DEBUG) || defined(URL_DEBUG)
  traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: Requested URL = '%s', length = %d", requestedURL, postLen);
@@ -3585,14 +3552,13 @@ void handleHTTPrequest(HostAddr from) {
   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() accessMutex(purgeMutex)...locked");
 #endif
 
-#ifdef MAKE_WITH_I18N
- #ifdef I18N_DEBUG
+#if defined(MAKE_WITH_I18N) && defined(I18N_DEBUG)
   for (i=0; i<numLang; i++) {
       traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Requested Language [%d] = '%s'",
                  i,
                  requestedLanguage[i]);
   }
- #endif
+#endif
 
   rc = returnHTTPPage(&requestedURL[1], postLen,
 		      &from, &httpRequestedAt, &usedFork,
@@ -3601,14 +3567,10 @@ void handleHTTPrequest(HostAddr from) {
                       requestedLanguage,
                       numLang, isPostMethod);
 
+#ifdef MAKE_WITH_I18N
   for (i=numLang-1; i>=0; i--) {
       free(requestedLanguage[i]);
   }
-
-#else
-  rc =  returnHTTPPage(&requestedURL[1], postLen,
-		       &from, &httpRequestedAt, &usedFork,
-		       agent, referer, isPostMethod);
 #endif
 
 #ifdef IDLE_PURGE_DEBUG

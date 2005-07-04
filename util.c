@@ -1665,7 +1665,7 @@ int createThread(pthread_t *threadId,
   rc = pthread_create(threadId, NULL, __start_routine, userParm);
 
   if(rc != 0)
-    traceEvent(CONST_TRACE_NOISY, "createThread(%p), rc = %s(%d)",
+    traceEvent(CONST_TRACE_NOISY, "THREADMGMT[t%lu]: pthread_create(), rc = %s(%d)",
 	       threadId, strerror(rc), rc);
   myGlobals.numThreads++;
   return(rc);
@@ -1673,13 +1673,18 @@ int createThread(pthread_t *threadId,
 
 /* ************************************ */
 
-int killThread(pthread_t *threadId) {
+int _killThread(char *file, int line, pthread_t *threadId) {
   int rc;
-  rc = pthread_detach(*threadId);
 
-  if(rc != 0)
-    traceEvent(CONST_TRACE_NOISY, "killThread(%p), rc = %s(%d)",
+  if(*threadId == 0) {
+    traceEvent(CONST_NOISY_TRACE_LEVEL, file, line, "THREADMGMT: killThread(0) call...ignored");
+    return(ESRCH);
+  }
+
+  if((rc = pthread_detach(*threadId)) != 0) {
+    traceEvent(CONST_TRACE_NOISY, "THREADMGMT[t%lu]: pthread_detach(), rc = %s(%d)",
 	       threadId, strerror(rc), rc);
+  }
 
   myGlobals.numThreads--;
   return(rc);
@@ -1693,15 +1698,15 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   memset(mutexId, 0, sizeof(PthreadMutex));
 
   if((rc = pthread_mutex_init(&(mutexId->mutex), NULL)) != 0) {
-    traceEvent(CONST_TRACE_ERROR, "createMutex() call returned %s(%d) [t%p m%p @%s:%d]",
+    traceEvent(CONST_TRACE_ERROR, "createMutex() call returned %s(%d) [t%lu m%p @%s:%d]",
                strerror(rc), rc, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
   } else if((rc = pthread_mutex_init(&(mutexId->statedatamutex), NULL)) != 0) {
-    traceEvent(CONST_TRACE_ERROR, "createMutex() call2 returned %s(%d) [t%p m%p @%s:%d]",
+    traceEvent(CONST_TRACE_ERROR, "createMutex() call2 returned %s(%d) [t%lu m%p @%s:%d]",
                strerror(rc), rc, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
   } else {
     mutexId->isInitialized = 1;
 #ifdef MUTEX_DEBUG
-    traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: createMutex() succeeded [t%p m%p @%s:%d]",
+    traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: createMutex() succeeded [t%lu m%p @%s:%d]",
                pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   }
@@ -1715,16 +1720,16 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   int rc;
 
   if(mutexId == NULL) {
-    if(myGlobals.endNtop == 0)
-      traceEvent(CONST_TRACE_ERROR, "deleteMutex() called with a NULL mutex [t%p mNULL @%s:%d]",
+    if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
+      traceEvent(CONST_TRACE_ERROR, "deleteMutex() called with a NULL mutex [t%lu mNULL @%s:%d]",
                  pthread_self(), fileName, fileLine);
     return;
   }
 
   if(!mutexId->isInitialized) {
-    if(myGlobals.endNtop == 0)
+    if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR,
-                 "deleteMutex() called with an UN-INITIALIZED mutex [t%p m%p @%s:%d]",
+                 "deleteMutex() called with an UN-INITIALIZED mutex [t%lu m%p @%s:%d]",
                  pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
     return;
   }
@@ -1733,22 +1738,22 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   rc = pthread_mutex_unlock(&(mutexId->mutex));
 #ifdef MUTEX_DEBUG
-  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() unlock (rc=%d) [t%p m%p @%s:%d]",
+  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() unlock (rc=%d) [t%lu m%p @%s:%d]",
              rc, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_destroy(&(mutexId->mutex));
 #ifdef MUTEX_DEBUG
-  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() destroy (rc=%d) [t%p m%p @%s:%d]",
+  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() destroy (rc=%d) [t%lu m%p @%s:%d]",
              rc, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_unlock(&(mutexId->statedatamutex));
 #ifdef MUTEX_DEBUG
-  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() #2 unlock (rc=%d) [t%p m%p @%s:%d]",
+  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() #2 unlock (rc=%d) [t%lu m%p @%s:%d]",
              rc, pthread_self(), (void*)&(mutexId->statedatamutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_destroy(&(mutexId->statedatamutex));
 #ifdef MUTEX_DEBUG
-  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() #2 destroy (rc=%d) [t%p m%p @%s:%d]",
+  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() #2 destroy (rc=%d) [t%lu m%p @%s:%d]",
              rc, pthread_self(), (void*)&(mutexId->statedatamutex), fileName, fileLine);
 #endif
 
@@ -1761,9 +1766,9 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
   int rc;
 
   if(mutexId == NULL) {
-    if(myGlobals.endNtop == 0)
+    if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR,
-                 "accessMutex() called '%s' with a NULL mutex [t%p mNULL @%s:%d]",
+                 "accessMutex() called '%s' with a NULL mutex [t%lu mNULL @%s:%d]",
                  where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
@@ -1772,15 +1777,15 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
 
   if(!mutexId->isInitialized) {
     pthread_mutex_unlock(&(mutexId->statedatamutex));
-    if(myGlobals.endNtop == 0)
+    if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR,
-                 "accessMutex() called '%s' with an UN-INITIALIZED mutex [t%p m%p @%s:%d]",
+                 "accessMutex() called '%s' with an UN-INITIALIZED mutex [t%lu m%p @%s:%d]",
                  where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
 
 #ifdef MUTEX_DEBUG
-  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: accessMutex() called '%s' [t%p m%p @%s:%d]",
+  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: accessMutex() called '%s' [t%lu m%p @%s:%d]",
              where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
@@ -1791,7 +1796,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
          && (getpid() == mutexId->lock.pid)
          && (pthread_equal(mutexId->lock.thread, pthread_self()))) {
         traceEvent(CONST_TRACE_WARNING,
-                   "accessMutex() called '%s' with a self-LOCKED mutex [t%p m%p @%s:%d]",
+                   "accessMutex() called '%s' with a self-LOCKED mutex [t%lu m%p @%s:%d]",
                    where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
       }
     }
@@ -1882,9 +1887,9 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLi
   int rc;
 
   if(mutexId == NULL) {
-    if(myGlobals.endNtop == 0)
+    if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR,
-                 "tryLockMutex() called '%s' with a NULL mutex [t%p mNULL @%s:%d]",
+                 "tryLockMutex() called '%s' with a NULL mutex [t%lu mNULL @%s:%d]",
                  where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
@@ -1893,15 +1898,15 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLi
 
   if(!mutexId->isInitialized) {
     pthread_mutex_unlock(&(mutexId->statedatamutex));
-    if(myGlobals.endNtop == 0)
+    if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR,
-                 "tryLockMutex() called '%s' with an UN-INITIALIZED mutex [t%p m%p @%s:%d]",
+                 "tryLockMutex() called '%s' with an UN-INITIALIZED mutex [t%lu m%p @%s:%d]",
                  where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
 
 #ifdef MUTEX_DEBUG
-  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: tryLockMutex() called '%s' [t%p m%p @%s:%d]",
+  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: tryLockMutex() called '%s' [t%lu m%p @%s:%d]",
              where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
@@ -1913,7 +1918,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLi
          && (pthread_equal(mutexId->lock.thread, pthread_self()))
          ) {
         traceEvent(CONST_TRACE_WARNING,
-                   "accessMutex() called '%s' with a self-LOCKED mutex [t%p m%p @%s:%d]",
+                   "accessMutex() called '%s' with a self-LOCKED mutex [t%lu m%p @%s:%d]",
                    where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
       }
     }
@@ -1950,8 +1955,8 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   float lockDuration;
 
   if(mutexId == NULL) {
-    if(myGlobals.endNtop == 0)
-      traceEvent(CONST_TRACE_ERROR, "releaseMutex() called with a NULL mutex [t%p mNULL @%s:%d]]",
+    if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
+      traceEvent(CONST_TRACE_ERROR, "releaseMutex() called with a NULL mutex [t%lu mNULL @%s:%d]]",
                  pthread_self(), fileName, fileLine);
     return(-1);
   }
@@ -1962,27 +1967,27 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
     pthread_mutex_unlock(&(mutexId->statedatamutex));
 
-    if(myGlobals.endNtop == 0)
-      traceEvent(CONST_TRACE_ERROR, "releaseMutex() called with an UN-INITIALIZED mutex [t%p m%p @%s:%d]",
+    if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
+      traceEvent(CONST_TRACE_ERROR, "releaseMutex() called with an UN-INITIALIZED mutex [t%lu m%p @%s:%d]",
                  pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
 
   if(!mutexId->isLocked) {
-    traceEvent(CONST_TRACE_WARNING, "releaseMutex() called with an UN-LOCKED mutex [t%p m%p @%s:%d] last unlock [t%p m%p @%s:%d]",
+    traceEvent(CONST_TRACE_WARNING, "releaseMutex() called with an UN-LOCKED mutex [t%lu m%p @%s:%d] last unlock [t%lu m%p @%s:%d]",
 	       pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine,
                mutexId->unlock.thread, mutexId->unlock.pid, mutexId->unlock.file, mutexId->unlock.line);
 
   }
 
 #ifdef MUTEX_DEBUG
-  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: releaseMutex() releasing [t%p m%p, @%s:%d]",
+  traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: releaseMutex() releasing [t%lu m%p, @%s:%d]",
              pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_unlock(&(mutexId->mutex));
 
   if(rc != 0)
-    traceEvent(CONST_TRACE_ERROR, "releaseMutex() failed (rc=%d) [t%p m%p, @%s:%d]",
+    traceEvent(CONST_TRACE_ERROR, "releaseMutex() failed (rc=%d) [t%lu m%p, @%s:%d]",
                rc, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
   else {
     mutexId->isLocked = 0;
@@ -2006,10 +2011,10 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
 #ifdef MUTEX_DEBUG
   if (rc != 0)
-    traceEvent(CONST_TRACE_WARNING, "MUTEX_DEBUG: releaseMutex() failed (rc=%d) [t%p m%p @%s:%d]",
+    traceEvent(CONST_TRACE_WARNING, "MUTEX_DEBUG: releaseMutex() failed (rc=%d) [t%lu m%p @%s:%d]",
                pthread_self(), (void*)&(mutexId->mutex), rc, fileName, fileLine);
   else
-    traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: releaseMutex() succeeded [t%p m%p @%s:%d]",
+    traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: releaseMutex() succeeded [t%lu m%p @%s:%d]",
                pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   return(rc);
@@ -2514,7 +2519,7 @@ void traceEvent(int eventTraceLevel, char* file,
 	  unsigned int messageid = 0;
 	  int i;
 
-	  safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[%s:%d] ", &mFile[beginFileIdx], line);
+	  safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[t%lu %s:%d] ", pthread_self(), &mFile[beginFileIdx], line);
 
 	  /* Hash the message format into an id */
 	  for (i=0; i<=strlen(format); i++) {
@@ -3848,6 +3853,7 @@ void checkUserIdentity(int userSpecified) {
 	  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "For security reasons you should not run ntop as root (-u)!");
 	}
       } else {
+        setRunState(FLAG_NTOPSTATE_INITNONROOT);
 	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Now running as requested user... continuing with initialization");
       }
     }
@@ -3901,6 +3907,105 @@ int guessHops(HostTraffic *el) {
 }
 
 /* ************************************ */
+
+/* Based on the original Win32 code from  Wies-Software <wies@wiessoft.de> */
+
+unsigned long _ntopSleepMSWhileSameState(char *file, int line, unsigned long ulDelay) {
+  unsigned long ulSlice;
+  short ntopRunStateSave;
+
+  /* This probably isn't necessary - 
+   *  But: It keeps the responsiveness of the Win32 version in that environment
+   *  And: Puts less load on non Win32 systems
+   */
+#ifdef WIN32
+  ulSlice = 1000L; /* 1 Second */
+#else
+  ulSlice = 1000L * PARM_SLEEP_LIMIT;
+#endif
+
+  ntopRunStateSave = myGlobals.ntopRunState;
+
+  traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "ntopSleepMS(%u)", ulDelay);
+
+  while(ulDelay > 0L) {
+
+    if(ulDelay < ulSlice)
+      ulSlice = ulDelay;
+
+#ifdef WIN32
+    Sleep(ulSlice);
+#else
+    {
+      struct timespec sleepAmount, remAmount;
+      memset(&sleepAmount, 0, sizeof(sleepAmount));
+      remAmount.tv_sec = (int)(ulSlice / 1000);
+      remAmount.tv_nsec = (ulSlice - remAmount.tv_sec * 1000) * 1000L;
+      while((remAmount.tv_sec > 0) || (remAmount.tv_nsec > 0)) {
+        memcpy(&sleepAmount, &remAmount, sizeof(sleepAmount));
+        memset(&remAmount, 0, sizeof(remAmount));
+
+        traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "nanosleep({%d, %d}, )", sleepAmount.tv_sec, sleepAmount.tv_nsec);
+
+        if((nanosleep(&sleepAmount, &remAmount) != 0) && (errno == EINTR)) {
+
+          if(ntopRunStateSave != myGlobals.ntopRunState) {
+            ulDelay = ulDelay - ulSlice + remAmount.tv_sec * 1000L + remAmount.tv_nsec / 1000L;
+            traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "ntopSleepMS() terminating due to runstate %ul remained", ulDelay);
+            return(ulDelay);
+          }
+
+          continue;
+        }
+      }
+    }
+#endif /* WIN32 */
+
+    ulDelay -= ulSlice;
+
+    if(ntopRunStateSave != myGlobals.ntopRunState) {
+      traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "ntopSleepMS() terminating due to runstate %ul remained", ulDelay);
+      break;
+    }
+  }
+
+  return(ulDelay);
+}
+
+/* ----- */
+
+unsigned int _ntopSleepWhileSameState(char *file, int line, unsigned int uSeconds) {
+  unsigned int rc;
+  rc = _ntopSleepMSWhileSameState(file, line, 1000L*uSeconds) / 1000L;
+  return(rc);
+}
+
+/* ---------- */
+
+void ntopSleepUntilStateRUN(void) {
+
+  traceEvent(CONST_TRACE_BEYONDNOISY, "WAIT[t%lu]: for ntopState RUN", pthread_self());
+
+  while(myGlobals.ntopRunState < FLAG_NTOPSTATE_RUN) {
+#ifdef WIN32
+    Sleep(250 /* ms */);
+#else
+    {
+      struct timespec sleepAmount;
+      memset(&sleepAmount, 0, sizeof(sleepAmount));
+      sleepAmount.tv_sec = 0;
+      sleepAmount.tv_nsec = 250000 /* ns */;
+      nanosleep(&sleepAmount, NULL);
+    }
+#endif /* WIN32 */
+  }
+
+  traceEvent(CONST_TRACE_BEYONDNOISY, "WAIT[t%lu]: ntopState is RUN", pthread_self());
+
+}
+
+/* ---------- */
+
 
 #ifndef WIN32
 #undef sleep
@@ -4495,6 +4600,10 @@ int setSpecifiedUser(void) {
     traceEvent(CONST_TRACE_FATALERROR, "Unable to change user ID");
     exit(36); /* Just in case */
   }
+
+  if((myGlobals.userId != 0) && (myGlobals.groupId != 0))
+    setRunState(FLAG_NTOPSTATE_INITNONROOT);
+
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Now running as requested user '%s' (%d:%d)",
              myGlobals.effectiveUserName, myGlobals.userId, myGlobals.groupId);
 
@@ -4623,42 +4732,37 @@ void addPortToList(HostTraffic *host, int *thePorts /* 0...MAX_NUM_RECENT_PORTS 
 #ifndef WIN32
 
 void saveNtopPid(void) {
-  char pidFileName[NAME_MAX];
   FILE *fd;
 
+  memset(&myGlobals.pidFileName, 0, sizeof(myGlobals.pidFileName));
   myGlobals.basentoppid = getpid();
-  safe_snprintf(__FILE__, __LINE__, pidFileName, sizeof(pidFileName), "%s/%s",
+  safe_snprintf(__FILE__, __LINE__, myGlobals.pidFileName, sizeof(myGlobals.pidFileName), "%s/%s",
 		getuid() ?
 		/* We're not root */ myGlobals.dbPath :
 		/* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
 		DEFAULT_NTOP_PIDFILE);
-  fd = fopen(pidFileName, "wb");
+  fd = fopen(myGlobals.pidFileName, "wb");
 
   if(fd == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "INIT: Unable to create pid file (%s)", pidFileName);
+    traceEvent(CONST_TRACE_WARNING, "INIT: Unable to create pid file (%s)", myGlobals.pidFileName);
   } else {
     fprintf(fd, "%d\n", myGlobals.basentoppid);
     fclose(fd);
-    traceEvent(CONST_TRACE_INFO, "INIT: Created pid file (%s)", pidFileName);
+    traceEvent(CONST_TRACE_INFO, "INIT: Created pid file (%s)", myGlobals.pidFileName);
   }
 }
 
 /* ********************************** */
 
 void removeNtopPid(void) {
-  char pidFileName[NAME_MAX];
   int rc;
 
-  safe_snprintf(__FILE__, __LINE__, pidFileName, sizeof(pidFileName), "%s/%s",
-		getuid() ?
-		/* We're not root */ myGlobals.dbPath :
-		/* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
-		DEFAULT_NTOP_PIDFILE);
-  rc = unlink(pidFileName);
-  if (rc == 0) {
-    traceEvent(CONST_TRACE_INFO, "TERM: Removed pid file (%s)", pidFileName);
-  } else {
-    traceEvent(CONST_TRACE_WARNING, "TERM: Unable to remove pid file (%s)", pidFileName);
+  if(myGlobals.pidFileName[0] != '\0') {
+    if((rc = unlink(myGlobals.pidFileName)) == 0) {
+      traceEvent(CONST_TRACE_INFO, "TERM: Removed pid file (%s)", myGlobals.pidFileName);
+    } else {
+      traceEvent(CONST_TRACE_WARNING, "TERM: Unable to remove pid file (%s)", myGlobals.pidFileName);
+    }
   }
 }
 

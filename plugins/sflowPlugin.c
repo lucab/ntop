@@ -2967,7 +2967,8 @@ static void* sflowMainLoop(void* _deviceId) {
 
   if(!(myGlobals.device[deviceId].sflowGlobals->sflowInSocket > 0)) return(NULL);
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: SFLOW: thread running [p%d, t%lu]...", getpid(), pthread_self());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: SFLOW: thread starting [p%d, t%lu]...",
+             getpid(), pthread_self());
 
 #ifdef MAKE_WITH_SFLOWSIGTRAP
   signal(SIGSEGV, sflowcleanup);
@@ -3002,7 +3003,12 @@ static void* sflowMainLoop(void* _deviceId) {
   myGlobals.device[deviceId].dummyDevice  = 0;
   myGlobals.device[deviceId].sflowGlobals->threadActive = 1;
 
-  for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
+  ntopSleepUntilStateRUN();
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: SFLOW: thread running [p%d, t%lu]...",
+             getpid(), pthread_self());
+
+  for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
     int maxSock = myGlobals.device[deviceId].sflowGlobals->sflowInSocket;
 
     FD_ZERO(&sflowMask);

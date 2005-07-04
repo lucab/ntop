@@ -2009,6 +2009,10 @@ typedef struct ntopGlobals {
 
   int childntoppid;        /* Zero unless we're in a child */
 
+#ifndef WIN32
+  char pidFileName[NAME_MAX];
+#endif
+
   char *startedAs;         /* ACTUAL starting line, not the resolved one */
 
   int ntop_argc;           /* # of command line arguments */
@@ -2066,6 +2070,8 @@ typedef struct ntopGlobals {
 
   ConditionalVariable queueCondvar;
   ConditionalVariable queueAddressCondvar;
+
+  pthread_t mainThreadId;
 
   /*
    * NPA - Network Packet Analyzer (main thread)
@@ -2134,9 +2140,9 @@ typedef struct ntopGlobals {
 
 #endif /* HAVE_OPENSSL */
 
-  /* Termination/Reset/Heartbeat flags */
-  short capturePackets;      /* tells to ntop if data are to be collected */
-  short endNtop;             /* graceful shutdown ntop 0=run, 1=shutting down, 2=stopped */
+  /* ntop state - see flags in globals-defines.h */
+  short ntopRunState;      
+
   u_char resetHashNow;       /* used for hash reset */
 
   /* Filter Chains */
