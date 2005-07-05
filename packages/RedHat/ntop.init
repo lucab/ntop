@@ -26,7 +26,7 @@
 #
 #  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # 
-#  Copyright (C) 2003 Burton M. Strauss III <burton@ntopsupport.com>
+#  Copyright (C) 2003-2005 Burton M. Strauss III <burton@ntopsupport.com>
 # 
 #  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # 
@@ -549,23 +549,43 @@ start () {
 stop () {
   # stop daemon
 
+  RETVAL=1
   echo -n $"Stopping ${name}${instance}: "
   logger -p ${ntopusesyslog} -t ${name}${instance} -- "INITD - Stopping: ${name}${instance}"
 
   if [ -d "${ntopdbfilepath}" ] && 
      [ -f "${ntopdbfilepath}/ntop.pid" ]; then
-    kill -9 `cat ${ntopdbfilepath}/ntop.pid`
-    RETVAL=$?
-    rm -f ${ntopdbfilepath}/ntop.pid
+    pid=`cat ${ntopdbfilepath}/ntop.pid`
+    ps ${pid} > /dev/null 2> /dev/null
+    rc=$?
+    if [ $rc = 0 ]; then
+      logger -p ${ntopusesyslog} -t ${name}${instance} -- "INITD - Sending SIGTERM to ${pid}"
+      if [ "${debug}" = "y" ]; then echo "Sending SIGTERM to ${pid}"; fi
+      kill -s SIGTERM ${pid}
+      RETVAL=$?
+      rm -f ${ntopdbfilepath}/ntop.pid
+    else 
+      logger -p ${ntopusesyslog} -t ${name}${instance} -- "INITD - Unable to find process ${pid} ... will kill by name"
+      if [ "${debug}" = "y" ]; then echo "Unable to find process ${pid} ... will kill by name"; fi
+    fi
   else
 
-    logger -p ${ntopusesyslog} -t ${name}${instance} -- "INITD - Unable to find ${ntopdbfilepath}/ntop.pid file ... skipping stop"
-    if [ "${debug}" = "y" ]; then echo "Unable to find ${ntopdbfilepath}/ntop.pid file ... skipping stop"; fi
+    logger -p ${ntopusesyslog} -t ${name}${instance} -- "INITD - Unable to find ${ntopdbfilepath}/ntop.pid file ... will kill by name"
+    if [ "${debug}" = "y" ]; then echo "Unable to find ${ntopdbfilepath}/ntop.pid file ... will kill by name"; fi
 
-    RETVAL=1
   fi
 
   echo 
+
+  if [ $RETVAL != 0 ]; then
+    pids=`ps axf | grep '\/devel\/bin\/ntop' | awk '{ printf(" %s", $1) }; END { print "" }'`
+    if [ "${pids}" != " " ]; then
+      logger -p ${ntopusesyslog} -t ${name}${instance} -- "INITD - Sending SIGTERM to ${prog}...${pids}"
+      if [ "${debug}" = "y" ]; then echo "Sending SIGTERM to ${prog}...${pids}"; fi
+      kill -INT ${pids}
+      RETVAL=$?
+    fi
+  fi
 
   if [ $RETVAL = 0 ]; then
 
@@ -639,6 +659,9 @@ valgrind () {
   valgrind="${valgrind} --suppressions=/usr/share/ntop/valgrind.supp"
   valgrind="${valgrind} --logfile=/tmp/valgrind.log"
   valgrind="${valgrind} --leak-check=yes"
+  valgrind="${valgrind} --leak-resolution=high"
+#  valgrind="${valgrind} --show-reachable=yes"
+  valgrind="${valgrind} --track-fds=yes"
   valgrind="${valgrind} --trace-children=yes"
   valgrind="${valgrind} --num-callers=6"
   valgrind="${valgrind} --gen-suppressions=yes"
