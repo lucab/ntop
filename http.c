@@ -511,9 +511,9 @@ static void ssiMenu_Head() {
 
   sendStringWOssi(
              "<link rel=\"stylesheet\" href=\"/theme.css\" TYPE=\"text/css\">\n"
-             "<script language=\"JavaScript\" src=\"/theme.js\"></script>\n"
-             "<script language=\"JavaScript\" SRC=\"/JSCookMenu.js\"></script>\n"
-             "<script language=\"JavaScript\"><!--\n"
+             "<script type=\"text/javascript\" language=\"JavaScript\" src=\"/theme.js\"></script>\n"
+             "<script type=\"text/javascript\" language=\"JavaScript\" SRC=\"/JSCookMenu.js\"></script>\n"
+             "<script type=\"text/javascript\" language=\"JavaScript\"><!--\n"
              "var ntopMenu =\n"
              "[\n"
              "	[null,'About',null,null,null,\n"
@@ -731,7 +731,7 @@ static void ssiMenu_Body() {
     } else {
       sendStringWOssi(CONST_NTOP_LOGO_GIF);
     }
-    sendStringWOssi("\"></td>\n"
+    sendStringWOssi("\" alt=\"ntop logo\"></td>\n"
              "        <td valign=\"top\" align=\"right\" class=\"instance\">Instance:&nbsp;");
     sendStringWOssi(myGlobals.runningPref.instance);
     sendStringWOssi(
@@ -750,7 +750,7 @@ static void ssiMenu_Body() {
              " <tr>\n"
              "  <th class=\"leftmenuitem\">\n"
              "   <div id=\"ntopMenuID\">Rut Row - bad mojo Scooby!</div>\n"
-             "<script language=\"JavaScript\"><!--\n"
+             "<script type=\"text/javascript\" language=\"JavaScript\"><!--\n"
              "        cmDraw ('ntopMenuID', ntopMenu, 'hbr', cmThemeOffice, 'ThemeOffice');\n"
              "-->\n"
              "</script></th>\n"
