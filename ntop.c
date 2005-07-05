@@ -819,7 +819,7 @@ void runningThreads(char *buf, int sizeofbuf) {
     }
   }
 
-  if((myGlobals.device != NULL) &&
+  if(myGlobals.device != NULL) {
     for(i=0; i<myGlobals.numDevices; i++) {
       if((myGlobals.device[i].pcapDispatchThreadId != 0) &&
          (!myGlobals.device[i].virtualDevice) &&
