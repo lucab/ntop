@@ -498,13 +498,9 @@ void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
 static void updateRefCount(HostTraffic *el, int value) {
   if(el->refCount == 0) return;
 
- #ifdef CFG_MULTITHREADED
   lockHostsHashMutex(el, "decrementRefCount");
-#endif
   el->refCount += value;
-#ifdef CFG_MULTITHREADED
   unlockHostsHashMutex(el);
-#endif
 }
 
 /* ********************************** */
@@ -1138,9 +1134,7 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
 
-#ifdef CFG_MULTITHREADED
     lockHostsHashMutex(el, "dumpNtopHashes");
-#endif
 
     if(!broadcastHost(el)) {
       char *hostKey;
@@ -1155,9 +1149,7 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
       numEntries++;
     }
 
-#ifdef CFG_MULTITHREADED
     unlockHostsHashMutex(el);
-#endif
   } /* for */
 
   endWriteArray(fDescr, lang);

@@ -1268,8 +1268,7 @@ typedef struct hostTraffic {
 
 /*XML time_t nextFingerprintScan            Internals           "" */
 
-/*XML n capturePackets                      Internals           "" */
-/*XML n endNtop                             Internals           "" */
+/*XML n ntopRunState                        Internals           "" */
 /*XML n:u resetHashNow                      Internals           "" */
 
 #ifdef PARM_SHOW_NTOP_HEARTBEAT

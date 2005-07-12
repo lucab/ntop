@@ -2729,9 +2729,7 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
       free(adjHostName);
   }
 
-#ifdef MAKE_WITH_SCHED_YIELD
-  sched_yield(); /* Allow other threads to run */
-#endif
+  ntop_conditional_sched_yield(); /* Allow other threads to run */
 
   return;
 }
@@ -2743,9 +2741,7 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
   char *adjHostName;
   char hostKey[128];
 
-#ifdef CFG_MULTITHREADED
   lockHostsHashMutex(el, "rrdUpdateFcHostStats");
-#endif
 
   if((el->bytesSent.value > 0) || (el->bytesRcvd.value > 0)) {
     if(el->fcCounters->hostNumFcAddress[0] != '\0') {
@@ -2754,9 +2750,7 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
 		    el->fcCounters->vsanId);
     } else {
       /* For the time being do not save IP-less hosts */
-#ifdef CFG_MULTITHREADED
       unlockHostsHashMutex(el);
-#endif
     return;
     }
 
@@ -2810,13 +2804,9 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
       free(adjHostName);
   }
 
-#ifdef CFG_MULTITHREADED
       unlockHostsHashMutex(el);
-#endif
 
-#ifdef MAKE_WITH_SCHED_YIELD
-  sched_yield(); /* Allow other threads to run */
-#endif
+  ntop_conditional_sched_yield(); /* Allow other threads to run */
 
   return;
 }

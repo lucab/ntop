@@ -614,9 +614,7 @@ int purgeIdleHosts(int actDevice) {
   hashSanityCheck();
 #endif
 
-#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashLockMutex, "scanIdleLoop");
-#endif
 
   for(idx=0; idx<myGlobals.device[actDevice].actualHashSize; idx++) {
     if((el = myGlobals.device[actDevice].hash_hostTraffic[idx]) != NULL) {
@@ -664,9 +662,7 @@ int purgeIdleHosts(int actDevice) {
     }
   }
 
-#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.hostsHashLockMutex);
-#endif
 
 #ifdef HASH_DEBUG
   hashSanityCheck();

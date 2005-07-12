@@ -2951,24 +2951,18 @@ void processPacket(u_char *_deviceId,
 	  lowMemoryMsgShown = 1;
 	  return;
 	} else {
-#ifdef CFG_MULTITHREADED
 	  lockHostsHashMutex(srcHost, "processPacket-src");
-#endif
 	}
 
 	dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (6) [Low memory?]");
-#ifdef CFG_MULTITHREADED
 	  unlockHostsHashMutex(srcHost);
-#endif
 	  lowMemoryMsgShown = 1;
 	  return;
 	} else {
-#ifdef CFG_MULTITHREADED
 	  lockHostsHashMutex(dstHost, "processPacket-src");
-#endif
 	}
 
 	if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
@@ -3011,18 +3005,14 @@ void processPacket(u_char *_deviceId,
 	  lowMemoryMsgShown = 1;
 	  return;
 	} else {
-#ifdef CFG_MULTITHREADED
 	  lockHostsHashMutex(srcHost, "processPacket-src");
-#endif
 	}
 
 	dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (8) [Low memory?]");
-#ifdef CFG_MULTITHREADED
 	  unlockHostsHashMutex(srcHost);
-#endif
 	  lowMemoryMsgShown = 1;
 	  return;
 	}
@@ -3070,24 +3060,18 @@ void processPacket(u_char *_deviceId,
 	    lowMemoryMsgShown = 1;
 	    return;
 	  } else {
-#ifdef CFG_MULTITHREADED
 	  lockHostsHashMutex(srcHost, "processPacket-src");
-#endif
 	  }
 
 	  dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
 	  if(dstHost == NULL) {
 	    /* Sanity check */
 	    if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (10) [Low memory?]");
-#ifdef CFG_MULTITHREADED
 	    unlockHostsHashMutex(srcHost);
-#endif
 	    lowMemoryMsgShown = 1;
 	    return;
 	  } else {
-#ifdef CFG_MULTITHREADED
 	    lockHostsHashMutex(dstHost, "processPacket-dst");
-#endif
 	  }
 
 	  if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
@@ -3107,10 +3091,8 @@ void processPacket(u_char *_deviceId,
 	    TrafficCounter ctr;
 	    int llcLen;
 
-#ifdef CFG_MULTITHREADED
 	    lockHostsHashMutex(srcHost, "processPacket-src");
 	    lockHostsHashMutex(dstHost, "processPacket-dst");
-#endif	   
 	    if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 	    p1 = (u_char*)(p+hlen);
 
@@ -3563,24 +3545,18 @@ void processPacket(u_char *_deviceId,
 	  lowMemoryMsgShown = 1;
 	  return;
 	} else {
-#ifdef CFG_MULTITHREADED
 	  lockHostsHashMutex(srcHost, "processPacket-src");
-#endif
 	}
 
 	dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (12) [Low memory?]");
-#ifdef CFG_MULTITHREADED
 	  unlockHostsHashMutex(srcHost);
-#endif
 	  lowMemoryMsgShown = 1;
 	  return;
 	} else {
-#ifdef CFG_MULTITHREADED
 	  lockHostsHashMutex(dstHost, "processPacket-src");
-#endif
 	}
 
 	if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
@@ -3714,10 +3690,8 @@ void processPacket(u_char *_deviceId,
       }
     }
 
-#ifdef CFG_MULTITHREADED
     if(srcHost) unlockHostsHashMutex(srcHost);
     if(dstHost) unlockHostsHashMutex(dstHost);
-#endif
   } else {
     /*  count runts somehow? */
   }

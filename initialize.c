@@ -777,9 +777,7 @@ void resetStats(int deviceId) {
   for(j=FIRST_HOSTS_ENTRY; j<myGlobals.device[deviceId].actualHashSize; j++) {
     HostTraffic *el = myGlobals.device[deviceId].hash_hostTraffic[j], *elNext;
 
-#ifdef CFG_MULTITHREADED
     if(el) lockHostsHashMutex(el, "resetStats");
-#endif
 
     while(el != NULL) {
       elNext = el->next;
@@ -787,9 +785,7 @@ void resetStats(int deviceId) {
       if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
 	freeHostInfo(el, deviceId);
 
-#ifdef CFG_MULTITHREADED
       if(!elNext) unlockHostsHashMutex(el);
-#endif
       el = elNext;
     }
 
