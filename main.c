@@ -605,7 +605,7 @@ int main(int argc, char *argv[]) {
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: Main thread terminating", pthread_self());
 
   memset(&buf, 0, sizeof(buf));
-  runningThreads(buf, sizeof(buf));
+  runningThreads(buf, sizeof(buf), 0);
   if(buf[0] != '\0') 
     traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: Still running threads%s", pthread_self(), buf);
 

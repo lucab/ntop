@@ -752,7 +752,6 @@ static short stateTransitionTableLoaded=0;
              newRunState);
 
   return(myGlobals.ntopRunState);
-
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

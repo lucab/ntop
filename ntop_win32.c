@@ -233,6 +233,13 @@ int killThread(pthread_t *threadId) {
 
 /* ************************************ */
 
+int _joinThread(pthread_t *threadId) {
+  WaitForSingleObject((HANDLE)*threadId, INFINITE)
+  return(0);
+}
+
+/* ************************************ */
+
 int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   memset(mutexId, 0, sizeof(PthreadMutex));

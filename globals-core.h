@@ -336,7 +336,7 @@ extern void addDefaultProtocols(void);
 extern int mapGlobalToLocalIdx(int port);
 extern void *scanIdleLoop(void *notUsed);
 extern void *scanFingerprintLoop(void *notUsed);
-extern void runningThreads(char *buf, int sizeofbuf);
+extern void runningThreads(char *buf, int sizeofbuf, int do_join);
 extern RETSIGTYPE cleanup(int signo);
 
 /* pbuf.c */
@@ -498,6 +498,8 @@ extern void fillDomainName(HostTraffic *el);
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *), char* userParm);
 extern int _killThread(char *file, int line, pthread_t *threadId);
 #define killThread(a) _killThread(__FILE__, __LINE__, a);
+extern int _joinThread(char *file, int line, pthread_t *threadId);
+#define joinThread(a) _joinThread(__FILE__, __LINE__, a)
 
 extern int   _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine);
 extern int   _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLine);

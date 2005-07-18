@@ -109,7 +109,6 @@ int execCGI(char* cgiName) {
     int fno = fileno(fd);
 
     for(;;) {
-
       FD_ZERO(&mask);
       FD_SET((unsigned int)fno, &mask);
 
@@ -8698,12 +8697,15 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: ntop's web server is now processing requests");
 
     while(myGlobals.ntopRunState < FLAG_NTOPSTATE_SHUTDOWNREQ) {
+      struct timeval wait_time;
+
 	sslwatchdogDebug("BEGINloop", FLAG_SSLWATCHDOG_BOTH, "");
 #ifdef DEBUG
 	traceEvent(CONST_TRACE_INFO, "DEBUG: Select(ing) %d....", topSock);
 #endif
 	memcpy(&mask, &mask_copy, sizeof(fd_set));
-	rc = select(topSock+1, &mask, 0, 0, NULL /* Infinite */);
+	wait_time.tv_sec = 10; wait_time.tv_usec = 0;
+	rc = select(topSock+1, &mask, 0, 0, &wait_time);
 #ifdef DEBUG
 	traceEvent(CONST_TRACE_INFO, "DEBUG: select returned: %d", rc);
 #endif

@@ -1692,6 +1692,24 @@ int _killThread(char *file, int line, pthread_t *threadId) {
 
 /* ************************************ */
 
+int _joinThread(char *file, int line, pthread_t *threadId) {
+  int rc;
+
+  if(*threadId == 0) {
+    traceEvent(CONST_NOISY_TRACE_LEVEL, file, line, "THREADMGMT: joinThread(0) call...ignored");
+    return(ESRCH);
+  }
+
+  if((rc = pthread_join(*threadId, NULL)) != 0) {
+    traceEvent(CONST_TRACE_NOISY, "THREADMGMT[t%lu]: pthread_join(), rc = %s(%d)",
+	       threadId, strerror(rc), rc);
+  }
+
+  return(rc);
+}
+
+/* ************************************ */
+
 int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   int rc;
 
@@ -3929,7 +3947,6 @@ unsigned long _ntopSleepMSWhileSameState(char *file, int line, unsigned long ulD
   traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "ntopSleepMS(%u)", ulDelay);
 
   while(ulDelay > 0L) {
-
     if(ulDelay < ulSlice)
       ulSlice = ulDelay;
 
