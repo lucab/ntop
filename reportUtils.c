@@ -756,7 +756,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
 
 /* ******************************* */
 
-char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName, char *tmpStr, int tmpStrLen) {
+char* _getOSFlag(HostTraffic *el, char *elOsName, int showOsName, char *tmpStr, int tmpStrLen, char *file, int line) {
   /* Lengthen tmpString buffer - to handle long name given by nmap for Win2k
      Courtesy of Marcel Hauser <marcel_hauser@gmx.ch> */
   char *flagImg = "";
@@ -789,14 +789,14 @@ char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName, char *tmpStr, i
 
   if(!showOsName) {
     if(flagImg != NULL) {
-      safe_snprintf(__FILE__, __LINE__, tmpStr, tmpStrLen, "%s", flagImg);
+      safe_snprintf(file, line, tmpStr, tmpStrLen, "%s", flagImg);
     } else
       tmpStr[0] = '\0';
   } else {
     if(flagImg != NULL) {
-      safe_snprintf(__FILE__, __LINE__, tmpStr, tmpStrLen, "%s&nbsp;[%s]", flagImg, theOsName);
+      safe_snprintf(file, line, tmpStr, tmpStrLen, "%s&nbsp;[%s]", flagImg, theOsName);
     } else {
-      safe_snprintf(__FILE__, __LINE__, tmpStr, tmpStrLen, "%s", theOsName);
+      safe_snprintf(file, line, tmpStr, tmpStrLen, "%s", theOsName);
     }
   }
 
@@ -3407,7 +3407,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   char *dynIp, *multihomed, *multivlaned;
   u_short as=0;
   HostTraffic *theHost, tmpEl;
-  char formatBuf[32], formatBuf1[32], formatBuf2[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char formatBuf[LEN_TIMEFORMAT_BUFFER], formatBuf1[LEN_TIMEFORMAT_BUFFER], formatBuf2[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
 
   accessAddrResMutex("printAllSessionsHTML");
 

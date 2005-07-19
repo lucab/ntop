@@ -88,7 +88,8 @@ extern void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
 extern void printFcDisplayOptions (void);
 extern void printFooterHostLink(void);
 extern void printFooter(int reportType);
-extern char* getOSFlag(HostTraffic *el, char *_osName, int showOsName, char *tmpStr, int tmpStrLen);
+#define getOSFlag(a, b, c, d, e)   _getOSFlag(a, b, c, d, e, __FILE__, __LINE__)
+extern char* _getOSFlag(HostTraffic *el, char *_osName, int showOsName, char *tmpStr, int tmpStrLen, char *file, int line);
 extern int sortHostFctn(const void *_a, const void *_b);
 extern int sortFcHostFctn(const void *_a, const void *_b);
 extern int cmpUsersTraffic(const void *_a, const void *_b);
