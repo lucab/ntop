@@ -72,7 +72,7 @@ struct generic_netflow_record {
   u_int16_t src_as;     /* source peer/origin Autonomous System */
   u_int8_t  dst_mask;   /* destination route's mask bits */
   u_int8_t  src_mask;   /* source route's mask bits */
-  
+
   /* v9 */
   u_int16_t vlanId;
 
@@ -356,7 +356,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   srcAS    = ntohs(record->src_as);
   dstAS    = ntohs(record->dst_as);
 
-#ifdef DEBUG_FLOWS  
+#ifdef DEBUG_FLOWS
   {
     char buf1[256], buf[256];
 
@@ -412,7 +412,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   actualDeviceId = deviceId;
 
   if((actualDeviceId == -1) ||(actualDeviceId >= myGlobals.numDevices)) {
-    traceEvent(CONST_TRACE_ERROR, "NETFLOW: deviceId(%d) is out of range - ignored", 
+    traceEvent(CONST_TRACE_ERROR, "NETFLOW: deviceId(%d) is out of range - ignored",
 	       actualDeviceId);
     return(-1);
   }
@@ -429,7 +429,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 
   if (numPkts > 0) {
     u_int ratio = len/numPkts;
-    
+
     if(ratio <= 64)
       myGlobals.device[actualDeviceId].rcvdPktStats.upTo64.value += numPkts;
     else if(ratio <= 128)
@@ -555,7 +555,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
-	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, 
+	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost,
 		     len, 0, 0, 0, actualDeviceId, 1);
 	  }
 	}
@@ -664,7 +664,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 	incrementTrafficCounter(&srcHost->udpSentLoc, len);
 	incrementTrafficCounter(&dstHost->udpRcvdLoc, len);
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].
-				udpGlobalTrafficStats.local, 
+				udpGlobalTrafficStats.local,
 				len);
       } else {
 	incrementTrafficCounter(&srcHost->udpSentRem, len);
@@ -679,7 +679,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 	incrementTrafficCounter(&srcHost->udpSentLoc, len);
 	incrementTrafficCounter(&dstHost->udpRcvdFromRem, len);
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].
-				udpGlobalTrafficStats.remote2local, 
+				udpGlobalTrafficStats.remote2local,
 				len);
       } else {
 	incrementTrafficCounter(&srcHost->udpSentRem, len);
@@ -693,7 +693,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 #ifdef DEBUG_FLOWS
     traceEvent(CONST_TRACE_INFO, "handleSession(UDP)");
 #endif
-    session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, 
+    session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport,
 			    len, NULL, 0, NULL, actualDeviceId, &newSession);
     break;
 
@@ -711,12 +711,12 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 	 || (!isEmpty(record->sip_calling_party))
 	 || (!isEmpty(record->sip_called_party))) {
 	char tmpStr[256];
-	
+
 	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 		      "Call Id: %s<br>"
 		      "'%s' called '%s",
 		      valueOf(record->sip_call_id),
-		      valueOf(record->sip_calling_party), 
+		      valueOf(record->sip_calling_party),
 		      valueOf(record->sip_called_party));
 
 	/* traceEvent(CONST_TRACE_INFO, "DEBUG: ->>>>>>>> '%s'", tmpStr); */
@@ -779,13 +779,13 @@ static void dumpFlow(char *buffer, int bufferLen, int deviceId) {
 
     if(myGlobals.device[deviceId].netflowGlobals->dumpFd == NULL) {
       /* Create the file */
-      safe_snprintf(__FILE__, __LINE__, nfDumpPath, sizeof(nfDumpPath), 
+      safe_snprintf(__FILE__, __LINE__, nfDumpPath, sizeof(nfDumpPath),
 		    "%s/interfaces/%s/",
 		    myGlobals.device[deviceId].netflowGlobals->dumpPath,
 		    myGlobals.device[deviceId].humanFriendlyName);
       mkdir_p("NETFLOW", nfDumpPath, 0700 /* CONST_RRD_D_PERMISSIONS_PRIVATE */);
 
-      safe_snprintf(__FILE__, __LINE__, nfDumpPath, sizeof(nfDumpPath), 
+      safe_snprintf(__FILE__, __LINE__, nfDumpPath, sizeof(nfDumpPath),
 		    "%s/interfaces/%s/%u.flow",
 		    myGlobals.device[deviceId].netflowGlobals->dumpPath,
 		    myGlobals.device[deviceId].humanFriendlyName, time(NULL));
@@ -858,7 +858,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
     NetFlow7Record the7Record;
 
     if(flowVersion == 1) {
-      memcpy(&the1Record, buffer, bufferLen > sizeof(the1Record) ? 
+      memcpy(&the1Record, buffer, bufferLen > sizeof(the1Record) ?
 	     sizeof(the1Record): bufferLen);
       numFlows = ntohs(the1Record.flowHeader.count);
       if(numFlows > CONST_V1FLOWS_PER_PAK) numFlows = CONST_V1FLOWS_PER_PAK;
@@ -866,7 +866,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
       recordActTime   = the1Record.flowHeader.unix_secs;
       recordSysUpTime = the1Record.flowHeader.sysUptime;
     } else {
-      memcpy(&the7Record, buffer, bufferLen > sizeof(the7Record) ? 
+      memcpy(&the7Record, buffer, bufferLen > sizeof(the7Record) ?
 	     sizeof(the7Record): bufferLen);
       numFlows = ntohs(the7Record.flowHeader.count);
       if(numFlows > CONST_V7FLOWS_PER_PAK) numFlows = CONST_V7FLOWS_PER_PAK;
@@ -941,7 +941,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
   if(the5Record.flowHeader.version == htons(9)) {
     /* NetFlowV9 Record */
     u_char foundRecord = 0, done = 0;
-    u_short numEntries = ntohs(the5Record.flowHeader.count), 
+    u_short numEntries = ntohs(the5Record.flowHeader.count),
       displ = sizeof(V9FlowHeader);
     V9Template template;
     int i;
@@ -1023,7 +1023,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 		free(cursor->fields);
 	      } else {
 #ifdef DEBUG_FLOWS
-		traceEvent(CONST_TRACE_INFO, ">>>>> Found new flow template definition [id=%d]", 
+		traceEvent(CONST_TRACE_INFO, ">>>>> Found new flow template definition [id=%d]",
 			   template.templateId);
 #endif
 
@@ -1037,7 +1037,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	      cursor->templateInfo.templateId = ntohs(cursor->templateInfo.templateId);
 	      cursor->templateInfo.fieldCount = ntohs(cursor->templateInfo.fieldCount);
 	      cursor->fields = (V9TemplateField*)malloc(cursor->templateInfo.flowsetLen-sizeof(V9Template));
-	      memcpy(cursor->fields, &buffer[displ+sizeof(V9Template)], 
+	      memcpy(cursor->fields, &buffer[displ+sizeof(V9Template)],
 		     cursor->templateInfo.flowsetLen-sizeof(V9Template));
 	    }
 	  } else {
@@ -1112,72 +1112,72 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 
 		switch(ntohs(fields[fieldId].fieldType)) {
 		case 1: /* IN_BYTES */
-		  memcpy(&record.rcvdOctets, &buffer[displ], 4); 
+		  memcpy(&record.rcvdOctets, &buffer[displ], 4);
 		  break;
 		case 2: /* IN_PKTS */
-		  memcpy(&record.rcvdPkts, &buffer[displ], 4); 
+		  memcpy(&record.rcvdPkts, &buffer[displ], 4);
 		  break;
 		case 4: /* PROT */
-		  memcpy(&record.prot, &buffer[displ], 1); 
+		  memcpy(&record.prot, &buffer[displ], 1);
 		  break;
 		case 5: /* TOS */
-		  memcpy(&record.tos, &buffer[displ], 1); 
+		  memcpy(&record.tos, &buffer[displ], 1);
 		  break;
 		case 6: /* TCP_FLAGS */
-		  memcpy(&record.tcp_flags, &buffer[displ], 1); 
+		  memcpy(&record.tcp_flags, &buffer[displ], 1);
 		  break;
 		case 7: /* L4_SRC_PORT */
-		  memcpy(&record.srcport, &buffer[displ], 2); 
+		  memcpy(&record.srcport, &buffer[displ], 2);
 		  break;
 		case 8: /* IP_SRC_ADDR */
-		  memcpy(&record.srcaddr, &buffer[displ], 4); 
+		  memcpy(&record.srcaddr, &buffer[displ], 4);
 		  break;
 		case 9: /* SRC_MASK */
-		  memcpy(&record.src_mask, &buffer[displ], 1); 
+		  memcpy(&record.src_mask, &buffer[displ], 1);
 		  break;
 		case 10: /* INPUT SNMP */
-		  memcpy(&record.input, &buffer[displ], 2); 
+		  memcpy(&record.input, &buffer[displ], 2);
 		  break;
 		case 11: /* L4_DST_PORT */
-		  memcpy(&record.dstport, &buffer[displ], 2); 
+		  memcpy(&record.dstport, &buffer[displ], 2);
 		  break;
 		case 12: /* IP_DST_ADDR */
-		  memcpy(&record.dstaddr, &buffer[displ], 4); 
+		  memcpy(&record.dstaddr, &buffer[displ], 4);
 		  break;
 		case 13: /* DST_MASK */
-		  memcpy(&record.dst_mask, &buffer[displ], 1); 
+		  memcpy(&record.dst_mask, &buffer[displ], 1);
 		  break;
 		case 14: /* OUTPUT SNMP */
-		  memcpy(&record.output, &buffer[displ], 2); 
+		  memcpy(&record.output, &buffer[displ], 2);
 		  break;
 		case 15: /* IP_NEXT_HOP */
-		  memcpy(&record.nexthop, &buffer[displ], 4); 
+		  memcpy(&record.nexthop, &buffer[displ], 4);
 		  break;
 		case 17: /* DST_AS */
-		  memcpy(&record.dst_as, &buffer[displ], 2); 
+		  memcpy(&record.dst_as, &buffer[displ], 2);
 		  break;
 		case 21: /* LAST_SWITCHED */
 		  memcpy(&record.Last, &buffer[displ], 4);
 		  break;
 		case 22: /* FIRST SWITCHED */
-		  memcpy(&record.First, &buffer[displ], 4); 
+		  memcpy(&record.First, &buffer[displ], 4);
 		  break;
 		case 23: /* OUT_BYTES */
-		  memcpy(&record.sentOctets, &buffer[displ], 4); 
+		  memcpy(&record.sentOctets, &buffer[displ], 4);
 		  break;
 		case 24: /* OUT_PKTS */
-		  memcpy(&record.sentPkts, &buffer[displ], 4); 
+		  memcpy(&record.sentPkts, &buffer[displ], 4);
 		  break;
 		case 58: /* SRC_VLAN */
 		case 59: /* DST_VLAN */
-		  memcpy(&record.vlanId, &buffer[displ], 2); 
+		  memcpy(&record.vlanId, &buffer[displ], 2);
 		  record.vlanId = ntohs(record.vlanId);
 		  break;
 		case 92: /* NW_LATENCY_SEC */
-		  memcpy(&record.nw_latency_sec, &buffer[displ], 4); 
+		  memcpy(&record.nw_latency_sec, &buffer[displ], 4);
 		  break;
 		case 93: /* NW_LATENCY_USEC */
-		  memcpy(&record.nw_latency_usec, &buffer[displ], 4); 
+		  memcpy(&record.nw_latency_usec, &buffer[displ], 4);
 		  break;
 
 		  /* VoIP Extensions */
@@ -1191,22 +1191,22 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 		  memcpy(&record.sip_called_party, &buffer[displ], 50);
 		  break;
 		}
-		
+
 		displ += ntohs(fields[fieldId].fieldLen);
 	      }
 
 	      /*
 		IMPORTANT NOTE
-		
+
 		handleGenericFlow handles monodirectional flows, whereas
 		v9 flows and bidirectional. This means that if there's some
 		bidirectional traffic, handleGenericFlow is called twice.
 	      */
 	      handleGenericFlow(recordActTime, recordSysUpTime, &record, deviceId);
-	      
+
 	      if(record.rcvdPkts > 0) {
 		u_int32_t tmp;
-		
+
 		record.sentPkts   = record.rcvdPkts;
 		record.sentOctets = record.rcvdOctets;
 
@@ -2334,7 +2334,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
                   "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
-                  i, 
+                  i,
 		    myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][0],
                   ((myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][0] >> 24) & 0xff),
                   ((myGlobals.device[deviceId].netflowGlobals->whiteNetworks[i][0] >> 16) & 0xff),
