@@ -2962,7 +2962,7 @@ void processPacket(u_char *_deviceId,
 	  lowMemoryMsgShown = 1;
 	  return;
 	} else {
-	  lockHostsHashMutex(dstHost, "processPacket-src");
+	  lockHostsHashMutex(dstHost, "processPacket-dst");
 	}
 
 	if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
@@ -3005,7 +3005,7 @@ void processPacket(u_char *_deviceId,
 	  lowMemoryMsgShown = 1;
 	  return;
 	} else {
-	  lockHostsHashMutex(srcHost, "processPacket-src");
+	  lockHostsHashMutex(srcHost, "processPacket-src-2");
 	}
 
 	dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
@@ -3015,6 +3015,8 @@ void processPacket(u_char *_deviceId,
 	  unlockHostsHashMutex(srcHost);
 	  lowMemoryMsgShown = 1;
 	  return;
+	} else {	  
+	  lockHostsHashMutex(dstHost, "processPacket-dst-2");
 	}
 
 	if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
@@ -3060,7 +3062,7 @@ void processPacket(u_char *_deviceId,
 	    lowMemoryMsgShown = 1;
 	    return;
 	  } else {
-	  lockHostsHashMutex(srcHost, "processPacket-src");
+	    lockHostsHashMutex(srcHost, "processPacket-src-3");
 	  }
 
 	  dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
@@ -3071,7 +3073,7 @@ void processPacket(u_char *_deviceId,
 	    lowMemoryMsgShown = 1;
 	    return;
 	  } else {
-	    lockHostsHashMutex(dstHost, "processPacket-dst");
+	    lockHostsHashMutex(dstHost, "processPacket-dst-3");
 	  }
 
 	  if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
@@ -3090,9 +3092,8 @@ void processPacket(u_char *_deviceId,
 	  if((srcHost != NULL) && (dstHost != NULL)) {
 	    TrafficCounter ctr;
 	    int llcLen;
-
-	    lockHostsHashMutex(srcHost, "processPacket-src");
-	    lockHostsHashMutex(dstHost, "processPacket-dst");
+	    lockHostsHashMutex(srcHost, "processPacket-src-4");
+	    lockHostsHashMutex(dstHost, "processPacket-dst-4");
 	    if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 	    p1 = (u_char*)(p+hlen);
 
@@ -3545,7 +3546,12 @@ void processPacket(u_char *_deviceId,
 	  lowMemoryMsgShown = 1;
 	  return;
 	} else {
-	  lockHostsHashMutex(srcHost, "processPacket-src");
+	  /*
+	    traceEvent(CONST_TRACE_INFO, "lockHostsHashMutex(%s)(%s)", 
+	    etheraddr_string(ether_src, ipxBuffer),
+	    srcHost->ethAddressString);
+	  */
+	  lockHostsHashMutex(srcHost, "processPacket-src-5");
 	}
 
 	dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
@@ -3556,7 +3562,8 @@ void processPacket(u_char *_deviceId,
 	  lowMemoryMsgShown = 1;
 	  return;
 	} else {
-	  lockHostsHashMutex(dstHost, "processPacket-src");
+	  /* traceEvent(CONST_TRACE_INFO, "lockHostsHashMutex()"); */
+	  lockHostsHashMutex(dstHost, "processPacket-src-5");
 	}
 
 	if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
@@ -3572,21 +3579,27 @@ void processPacket(u_char *_deviceId,
 	      addr.hostFamily = AF_INET;
 	      memcpy(&addr.Ip4Address.s_addr, &arpHdr.arp_tpa, sizeof(struct in_addr));
 	      addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
+	      unlockHostsHashMutex(dstHost);
 	      dstHost = lookupHost(&addr, (u_char*)&arpHdr.arp_tha, vlanId, 0, 0, actualDeviceId);
 	      memcpy(&addr.Ip4Address.s_addr, &arpHdr.arp_spa, sizeof(struct in_addr));
 	      addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
+	      unlockHostsHashMutex(srcHost);
 	      srcHost = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, vlanId, 0, 0, actualDeviceId);
 	      if(srcHost != NULL) {
+		lockHostsHashMutex(srcHost, "processPacket-src-6");
 		if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 		if(srcHost->nonIPTraffic == NULL) return;
 		incrementTrafficCounter(&srcHost->nonIPTraffic->arpReplyPktsSent, 1);
 	      }
 
 	      if(dstHost != NULL) {
+		lockHostsHashMutex(dstHost, "processPacket-dst-6");
 		if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 		if(dstHost->nonIPTraffic == NULL) return;
 		incrementTrafficCounter(&dstHost->nonIPTraffic->arpReplyPktsRcvd, 1);
 	      }
+		
+
 	      /* DO NOT ADD A break ABOVE ! */
 	    case ARPOP_REQUEST: /* ARP request */
 	      if(srcHost != NULL) {
