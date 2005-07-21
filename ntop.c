@@ -842,13 +842,13 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 
 	  if(pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0) {
 	    traceEvent(CONST_TRACE_INFO, "STATS: %s packets received by filter on %s",
-		       formatPkts((Counter)pcapStats.ps_recv, buf, sizeof(buf)), myGlobals.device[i].name);
+		       formatPkts((Counter)pcapStats.ps_recv, buf2, sizeof(buf2)), myGlobals.device[i].name);
 	    
 	    traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (according to libpcap)",
-		       formatPkts((Counter)pcapStats.ps_drop, buf, sizeof(buf)));
+		       formatPkts((Counter)pcapStats.ps_drop, buf2, sizeof(buf2)));
 	  }
 	  traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (by ntop)",
-		     formatPkts(myGlobals.device[i].droppedPkts.value, buf, sizeof(buf)));	
+		     formatPkts(myGlobals.device[i].droppedPkts.value, buf2, sizeof(buf2)));	
 	  
 	  pcap_close(myGlobals.device[i].pcapPtr);
 	  if(joinThread(&myGlobals.device[i].pcapDispatchThreadId) != 0)
