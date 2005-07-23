@@ -752,8 +752,12 @@ static void cleanupThreadIs(char *buf, int sizeofbuf) {
     strncpy(buf, "SIH", sizeofbuf);
   else if(pthread_self() == myGlobals.handleWebConnectionsThreadId)
     strncpy(buf, "WEB", sizeofbuf);
+
+#if defined(HAVE_OPENSSL) && defined(MAKE_WITH_SSLWATCHDOG)
   else if(pthread_self() == myGlobals.sslwatchdogChildThreadId)
     strncpy(buf, "SSL", sizeofbuf);
+#endif
+
   else
     for(i=0; i<myGlobals.numDequeueThreads; i++) {
       if(pthread_self() == myGlobals.dequeueAddressThreadId[i]) {
@@ -805,12 +809,21 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
   if(!do_join) {
     memset(&buf2, 0, sizeof(buf2));
     
+#if defined(HAVE_OPENSSL) && defined(MAKE_WITH_SSLWATCHDOG)
     safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "%s%s%s%s%s", 
 		  myGlobals.dequeueThreadId != 0 ? " NPA" : "",
 		  myGlobals.scanFingerprintsThreadId != 0 ? " SFP" : "",
 		  myGlobals.scanIdleThreadId != 0 ? " SIH" : "",
 		  myGlobals.handleWebConnectionsThreadId != 0 ? " WEB" : "",
 		  myGlobals.sslwatchdogChildThreadId != 0 ? " SSL" : "");
+#else
+    safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "%s%s%s%s", 
+		  myGlobals.dequeueThreadId != 0 ? " NPA" : "",
+		  myGlobals.scanFingerprintsThreadId != 0 ? " SFP" : "",
+		  myGlobals.scanIdleThreadId != 0 ? " SIH" : "",
+		  myGlobals.handleWebConnectionsThreadId != 0 ? " WEB" : "");
+#endif
+
   }
 
   for(i=0; i<myGlobals.numDequeueThreads; i++) {
@@ -939,7 +952,7 @@ RETSIGTYPE cleanup(int signo) {
 
 
   cleanupThreadIs(buf, sizeof(buf));
-  traceEvent(CONST_TRACE_INFO, "CLEANUP[t%lu] is %s", pthread_self(), buf);
+  traceEvent(CONST_TRACE_INFO, "CLEANUP[t%lu] catching thread is %s", pthread_self(), buf);
 
   runningThreads(buf, sizeof(buf), 0);
   traceEvent(CONST_TRACE_INFO, "CLEANUP: Running threads%s", buf);

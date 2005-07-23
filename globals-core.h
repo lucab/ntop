@@ -512,8 +512,10 @@ extern int  _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine);
 #define tryLockMutex(a, b) _tryLockMutex(a, b, __FILE__, __LINE__)
 #define releaseMutex(a)    _releaseMutex(a, __FILE__, __LINE__)
 
-extern int lockHostsHashMutex(HostTraffic *host, char *where);
-extern int unlockHostsHashMutex(HostTraffic *host);
+#define lockHostsHashMutex(a, b) _lockHostsHashMutex(a, b, __FILE__, __LINE__)
+extern int _lockHostsHashMutex(HostTraffic *host, char *where, char *file, int line);
+#define unlockHostsHashMutex(a) _unlockHostsHashMutex(a, __FILE__, __LINE__)
+extern int _unlockHostsHashMutex(HostTraffic *host, char* file, int line);
 
 #define setHolder(a) { \
                        if(fileName != NULL) { strncpy(a.file, fileName, sizeof(a.file)-1); a.file[sizeof(a.file)-1]='\0'; } else \

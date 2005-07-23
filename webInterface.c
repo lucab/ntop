@@ -8704,7 +8704,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 	traceEvent(CONST_TRACE_INFO, "DEBUG: Select(ing) %d....", topSock);
 #endif
 	memcpy(&mask, &mask_copy, sizeof(fd_set));
-	wait_time.tv_sec = 10; wait_time.tv_usec = 0;
+	wait_time.tv_sec = PARM_SLEEP_LIMIT; wait_time.tv_usec = 0;
 	rc = select(topSock+1, &mask, 0, 0, &wait_time);
 #ifdef DEBUG
 	traceEvent(CONST_TRACE_INFO, "DEBUG: select returned: %d", rc);
