@@ -499,7 +499,7 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
 #endif
 
   if(thePtr == NULL) {
-    traceEvent(CONST_TRACE_ERROR, "malloc(%d) @ %s:%d returned NULL [no more memory?]",
+    traceEvent(CONST_TRACE_ERROR, "malloc(%u) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
     if ((myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) &&
 	(myGlobals.runningPref.disableStopcap != TRUE)) {
@@ -533,8 +533,8 @@ void* ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line) {
 
   if(thePtr == NULL) {
     traceEvent(CONST_TRACE_ERROR, 
-	       "calloc(%d) @ %s:%d returned NULL [no more memory?]",
-	       sz, file, line);
+	       "calloc(%u,%u) @ %s:%d returned NULL [no more memory?]",
+	       c, sz, file, line);
     if ( (myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) &&
          (myGlobals.runningPref.disableStopcap != TRUE) ) {
       stopcap();
@@ -566,7 +566,7 @@ void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
 
   if(thePtr == NULL) {
     traceEvent(CONST_TRACE_ERROR, 
-	       "realloc(%d) @ %s:%d returned NULL [no more memory?]",
+	       "realloc(%u) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
     if ( (myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) &&
          (myGlobals.runningPref.disableStopcap != TRUE) ) {
