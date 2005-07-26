@@ -3463,8 +3463,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   int idx;
   char buf[1500], hostLinkBuf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf1[LEN_GENERAL_WORK_BUFFER];
   int numSessions, printedSessions;
-  char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32],
-    formatBuf4[32], formatBuf5[32], formatBuf6[32];
+  char formatBuf[64], formatBuf1[64], formatBuf2[64], formatBuf3[64],
+    formatBuf4[64], formatBuf5[64], formatBuf6[64];
 
   if(!myGlobals.runningPref.enableSessionHandling) {
     if(el != NULL) return;
