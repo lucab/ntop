@@ -1267,19 +1267,19 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipByt
 
    if((theUser == NULL)
       || (theUser[0] == '\0'))
-     strncpy(myUser, " ", 64);
+     strncpy(myUser, "-", 64);
    else {
      safe_snprintf(__FILE__, __LINE__, myUser, sizeof(myUser), " %s ", theUser);
    }
 
    if(gzipBytesSent > 0)
-     fprintf(myGlobals.accessLogFd, "%s -%s- [%s %s] - \"%s\" %d %u/%u %lu\n",
+     fprintf(myGlobals.accessLogFd, "%s %s - [%s %s] \"%s\" %d %u/%u - - %lu\n",
 	     _addrtostr(requestFrom, buf, sizeof(buf)),
 	     myUser, theDate, theZone,
 	     httpRequestedURL, rc, gzipBytesSent, httpBytesSent,
 	     msSpent);
    else
-     fprintf(myGlobals.accessLogFd, "%s -%s- [%s %s] - \"%s\" %d %u %lu\n",
+     fprintf(myGlobals.accessLogFd, "%s %s - [%s %s] \"%s\" %d %u - - %lu\n",
 	     _addrtostr(requestFrom, buf, sizeof(buf)),
 	     myUser, theDate, theZone,
 	     httpRequestedURL, rc, httpBytesSent,
