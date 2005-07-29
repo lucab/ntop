@@ -361,7 +361,7 @@ void* ntop_malloc(unsigned int sz, char* file, int line) {
 
 #ifdef DEBUG
   char formatBuffer[32];
-  traceEvent(CONST_TRACE_INFO, "DEBUG: malloc(%d) [%s] @ %s:%d", 
+  traceEvent(CONST_TRACE_INFO, "DEBUG: malloc(%u) [%s] @ %s:%d", 
 	     sz, formatBytes(myGlobals.allocatedMemory, 0, 
 			     formatBuffer, sizeof(formatBuffer)), file, line);
 #endif
@@ -374,7 +374,7 @@ void* ntop_malloc(unsigned int sz, char* file, int line) {
 void* ntop_calloc(unsigned int c, unsigned int sz, char* file, int line) {
 #ifdef DEBUG
   char formatBuffer[32];
-  traceEvent(CONST_TRACE_INFO, "DEBUG: calloc(%d) [%s] @ %s:%d", 
+  traceEvent(CONST_TRACE_INFO, "DEBUG: calloc(%u) [%s] @ %s:%d", 
 	     sz, formatBytes(myGlobals.allocatedMemory, 0, 
 			     formatBuffer, sizeof(formatBuffer)), file, line);
 #endif
@@ -386,7 +386,7 @@ void* ntop_calloc(unsigned int c, unsigned int sz, char* file, int line) {
 void* ntop_realloc(void* ptr, unsigned int sz, char* file, int line) {  
 #ifdef DEBUG
   char formatBuffer[32];
-  traceEvent(CONST_TRACE_INFO, "DEBUG: realloc(%d) [%s] @ %s:%d", 
+  traceEvent(CONST_TRACE_INFO, "DEBUG: realloc(%u) [%s] @ %s:%d", 
 	     sz, formatBytes(myGlobals.allocatedMemory, 0, 
 			     formatBuffer, sizeof(formatBuffer)), file, line);
 #endif  
@@ -479,7 +479,7 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   void *thePtr;
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: malloc(%d) @ %s:%d", sz, file, line);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: malloc(%u) @ %s:%d", sz, file, line);
 #endif
 
 #ifdef DEBUG
