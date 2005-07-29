@@ -2025,7 +2025,21 @@ static int returnHTTPPage(char* pageName,
   if(strcmp(pageURI, CONST_NETWORK_IMAGE_MAP) == 0) {
     safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 		  "%s/%s", myGlobals.spoolPath, pageURI);
-    fd = fopen(tmpStr, "rb");
+
+    if(stat(tmpStr, &statbuf) != 0) {
+      sendString("<p>ERROR: Can not locate image map file, request ignored</p>\n");
+      traceEvent(CONST_TRACE_ERROR, "Can not locate image map file '%s', ignored...", tmpStr);
+      free(pageURI);
+      return(0);
+    }
+
+    if((fd = fopen(tmpStr, "rb")) == NULL) {
+      sendString("<p>ERROR: Can not open image map file, request ignored</p>\n");
+      traceEvent(CONST_TRACE_ERROR, "Can not open image map file '%s', ignored...", tmpStr);
+      free(pageURI);
+      return(0);
+    }
+
   } else {
 #ifdef MAKE_WITH_I18N
     for(lang=0; (!found) && lang < numLang + 2; lang++) {
@@ -2140,7 +2154,7 @@ static int returnHTTPPage(char* pageName,
     sendString("\r\n");	/* mark the end of HTTP header */
 
     /* We are copying a file.  Let's use a big (but not absurd) buffer. */
-    sz = min(16384, statbuf.st_size+8);
+    sz = max(4096, min(16384, statbuf.st_size+8));
     buffer = (char*)malloc(sz);
     memset(buffer, 0, sz);
     for(;;) {
