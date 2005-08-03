@@ -226,7 +226,7 @@ int createThread(pthread_t *threadId,
 
 /* ************************************ */
 
-int killThread(pthread_t *threadId) {
+int _killThread(pthread_t *threadId) {
   CloseHandle((HANDLE)*threadId);
   return(0);
 }
@@ -234,7 +234,7 @@ int killThread(pthread_t *threadId) {
 /* ************************************ */
 
 int _joinThread(pthread_t *threadId) {
-  WaitForSingleObject((HANDLE)*threadId, INFINITE)
+  WaitForSingleObject((HANDLE)*threadId, INFINITE);
   return(0);
 }
 

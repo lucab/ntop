@@ -1030,8 +1030,10 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
 
       if(errno == EPIPE /* Broken pipe: the  client has disconnected */) {
         traceEvent(CONST_TRACE_ERROR, "EPIPE during sending of page to web client");
+#ifndef WIN32
       } else if(errno == ECONNRESET /* Client reset */) {
         traceEvent(CONST_TRACE_ERROR, "ECONNRESET during sending of page to web client");
+#endif
       } else if(errno == EBADF /* Bad file descriptor: a
 				   disconnected client is still sending */) {
         traceEvent(CONST_TRACE_ERROR, "EBADF during sending of page to web client");
@@ -3337,7 +3339,6 @@ void handleHTTPrequest(HostAddr from) {
   struct timeval httpRequestedAt;
   u_int gzipBytesSent = 0;
   char *requestedLanguage[MAX_LANGUAGES_REQUESTED];
-  char *workSemi;
 
   char tmpStr[512];
   int isPostMethod = FALSE;

@@ -1673,6 +1673,7 @@ int createThread(pthread_t *threadId,
 
 /* ************************************ */
 
+#undef _killThread
 int _killThread(char *file, int line, pthread_t *threadId) {
   int rc;
 
@@ -1692,6 +1693,7 @@ int _killThread(char *file, int line, pthread_t *threadId) {
 
 /* ************************************ */
 
+#undef _joinThread
 int _joinThread(char *file, int line, pthread_t *threadId) {
   int rc;
 
@@ -1710,6 +1712,7 @@ int _joinThread(char *file, int line, pthread_t *threadId) {
 
 /* ************************************ */
 
+#undef _createMutex
 int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   int rc;
 
@@ -1734,6 +1737,7 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
 /* ************************************ */
 
+#undef _deleteMutex
 void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   int rc;
 
@@ -1780,6 +1784,7 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
 /* ************************************ */
 
+#undef _accessMutex
 int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLine) {
   int rc;
 
@@ -1853,55 +1858,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
 
 /* ************************************ */
 
-int _lockHostsHashMutex(HostTraffic *host, char *where, char *file, int line) {
-  int rc;
-  
-  if(host) {
-    _accessMutex(&myGlobals.hostsHashLockMutex, "lockHostsHashMutex", file, line);
-    if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 0) {
-      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]++;
-      _accessMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], where, file, line);
-    } else {
-      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]++;
-      rc = 0; /* Already locked */
-    }
-    _releaseMutex(&myGlobals.hostsHashLockMutex, file, line);
-  } else {
-    rc = -1;
-  }
-
-  return(rc);
-}
-
-/* ************************************ */
-
-int _unlockHostsHashMutex(HostTraffic *host, char *file, int line) {
-  int rc;
-  
-  if(host) {
-    accessMutex(&myGlobals.hostsHashLockMutex, "unlockHostsHashMutex");
-    if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] > 1) {
-      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]--;
-      rc = 0;
-    } else if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 1) {
-      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]--;
-      rc = releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket]);
-    } else {
-      /* myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 0 */
-      traceEvent(CONST_TRACE_WARNING, "Error: attempting to unlock an unlocked mutex from %s(%d)",
-                 file, line);
-      rc = 0;
-    }
-    releaseMutex(&myGlobals.hostsHashLockMutex);
-  } else {
-    rc = -1;
-  }
-
-  return(rc);
-}
-
-/* ************************************ */
-
+#undef _tryLockMutex
 int _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLine) {
   int rc;
 
@@ -1969,6 +1926,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLi
 
 /* ************************************ */
 
+#undef _releaseMutex
 int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   int rc;
   float lockDuration;
@@ -2117,6 +2075,57 @@ int signalCondvar(ConditionalVariable *condvarId) {
 /* ************************************ */
 
 #endif /* WIN32 */
+
+/* ************************************ */
+
+#undef _lockHostsHashMutex
+int _lockHostsHashMutex(HostTraffic *host, char *where, char *file, int line) {
+  int rc = 0;
+  
+  if(host) {
+    _accessMutex(&myGlobals.hostsHashLockMutex, "lockHostsHashMutex", file, line);
+    if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 0) {
+      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]++;
+      _accessMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], where, file, line);
+    } else {
+	  /* Already locked */
+      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]++; 
+    }
+    _releaseMutex(&myGlobals.hostsHashLockMutex, file, line);
+  } else {
+    rc = -1;
+  }
+
+  return(rc);
+}
+
+/* ************************************ */
+
+#undef _unlockHostsHashMutex
+int _unlockHostsHashMutex(HostTraffic *host, char *file, int line) {
+  int rc;
+
+  if(host) {
+    accessMutex(&myGlobals.hostsHashLockMutex, "unlockHostsHashMutex");
+    if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] > 1) {
+      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]--;
+      rc = 0;
+    } else if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 1) {
+      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]--;
+      rc = releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket]);
+    } else {
+      /* myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 0 */
+      traceEvent(CONST_TRACE_WARNING, "Error: attempting to unlock an unlocked mutex from %s(%d)",
+                 file, line);
+      rc = 0;
+    }
+    releaseMutex(&myGlobals.hostsHashLockMutex);
+  } else {
+    rc = -1;
+  }
+
+  return(rc);
+}
 
 /* ************************************ */
 
@@ -6774,6 +6783,7 @@ pcap_t *pcap_open_dead(int linktype, int snaplen)
 
 /* * * * * * * * * * * * * * * * * * */
 
+#if !defined(WIN32)
 // Use our version instead of the sometimes available GNU extension...
 char *ntop_strsignal(int sig) {
   return(sig == SIGHUP ? "SIGHUP"
@@ -6810,6 +6820,7 @@ char *ntop_strsignal(int sig) {
 #endif
           : "unable to determine");
 }
+#endif
 
 /* *************** */
 
