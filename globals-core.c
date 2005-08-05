@@ -663,6 +663,7 @@ static short stateTransitionTableLoaded=0;
     stateTransitionTable[FLAG_NTOPSTATE_NOTINIT][FLAG_NTOPSTATE_PREINIT] = 1;
     stateTransitionTable[FLAG_NTOPSTATE_PREINIT][FLAG_NTOPSTATE_INIT] = 1;
     stateTransitionTable[FLAG_NTOPSTATE_INIT][FLAG_NTOPSTATE_INITNONROOT] = 1;
+    stateTransitionTable[FLAG_NTOPSTATE_INIT][FLAG_NTOPSTATE_SHUTDOWN] = 1; /* abort */
     stateTransitionTable[FLAG_NTOPSTATE_INITNONROOT][FLAG_NTOPSTATE_RUN] = 1;
     stateTransitionTable[FLAG_NTOPSTATE_INIT][FLAG_NTOPSTATE_RUN] = 1;
     stateTransitionTable[FLAG_NTOPSTATE_RUN][FLAG_NTOPSTATE_STOPCAP] = 1;
