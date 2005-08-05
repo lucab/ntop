@@ -3525,7 +3525,7 @@ void handleHTTPrequest(HostAddr from) {
  */
 #ifdef MAKE_WITH_I18N
   if(workLanguage != NULL) {
-    char *tmpI18Nstr, *strtokState = NULL;
+    char *tmpI18Nstr, *strtokState = NULL, *workSemi;
     tmpI18Nstr = strtok_r(workLanguage, ",", &strtokState);
     while(tmpI18Nstr != NULL) {
         /* Skip leading blanks */
