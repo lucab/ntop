@@ -1,0 +1,903 @@
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+   _   _ _
+  | \ | | |_ ___  _ __
+  |  \| | __/ _ \| '_ \
+  | |\  | || (_) | |_) |
+  |_| \_|\__\___/| .__/
+                 |_|
+
+             Network Top
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+This document contains older, obsolete articles from ntop's docs/FAQ ... 
+which are being kept around because of some historical interest.
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+--------------------------------------------------------------------------------
+----- Running ntop -------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+Q. How can I run ntop without being root?
+A. A very simple way of doing this is:
+   > su
+   > chown root ntop
+   > chgrp root ntop
+   > chmod 6111 ntop
+   > exit
+
+   This makes ntop read-only for everyone and sets the setuid and setguid bits.
+
+   Do not forget to use the -u flag so that ntop changes user as soon as it
+   is started.
+
+   Understand that setting the Setuid and Setguid bits allows ANY user to run
+   ntop and it will run with ROOT privileges.  This is very powerful, and often
+   a source of security exposure - many system hardening scripts and
+   recommendations tell you to look for and remove the setuid and setguid bits.
+
+   DO NOT suid UNLESS YOU UNDERSTAND THE RISKS!
+
+   REPEAT: DO NOT DO THIS, IT IS A BAD IDEA!
+
+   Also, there are unconfirmed reports of this method problems, causing a
+      "socket: operation not permitted"
+   message.  Probably related to something in the OS checking for real root
+   not suid to open the interface in promiscuous mode.
+
+
+Q. What was the -S option?
+A. The -S option was the --store-mode option, or the "Persistent storage mode"
+   Ntop's internal structures are basically an array of devices (network
+   interfaces), which contains an array of hosts (specific machines seen on the
+   device.  The -S option told ntop to store information about hosts in a 
+   database where it could be retrieved on a subsequent run.
+
+   This option was removed from ntop in the 2.1.52 development version.
+
+Q. But what about SQL and mySQL
+A. Removed in 2.1.50+ versions - use rrd
+
+
+Q. But I really, really, need the data in an sql database.
+A. If you are only interested in saving your netflow data in MySQL, use the
+   script ntop/NetFlow/netFlowClient.pl (netflow v5).  With few additional lines
+   you could save your data in flat files, forward the netflow data or whatever.
+
+   What this script does it set itself up as a netflow collector and sql
+   inserter. The main loop just accepts a netflow packet and inserts the flow(s)
+   into sql.
+
+   To use this with a single instance of ntop, just set ntop up as a netflow
+   sender, directed at the script (e.g. 127.0.0.1 on any port you like).
+   Configure the script with the port # and run it.
+
+   The same idea would work with sFlow, you would just have to change the packet
+   decoding part of the script.
+
+
+Q: How does ntop use lsof? nmap?
+A. ntop no longer uses these external tools.
+
+   OS fingerprinting was replaced by ettercap.
+
+   If you need lsof data, you should ssh to the host and run it locally (this
+   allows the sysadmin to put appropriate security on lsof).
+
+
+--------------------------------------------------------------------------------
+----- 3.0 ran under ------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+Q. (3.0) ntop runs under?
+A. ntop is known to work under Linux, Mac OS X, FreeBSD, Solaris and Win32.
+
+   ntop development is done primarily on Fedora Linux.
+
+   Luca also does a port to Win32 (MS Visual C++) and used to work in the Sun
+   Solaris environment.
+
+   I (Burton) usually work under Fedora Linux, but have a multi-boot system
+   for testing that runs various Linux distros, FreeBSD (4.10 and 5.3)
+   and Solaris 10 i86.
+
+   I could do NetBSD and OpenBSD, but those have big problems and ntop
+   probably won't work.
+
+   During the ntop 3.0 development cycle, we did some development and
+   testing on various platforms.  Here's data from the version.xml log
+   showing what people were running while testing 2.2.98 and 2.2.99:
+
+          count OS      Version        
+        ------- ------- -------------- 
+            492 Linux                  
+             90 Windows WinNT/2K/XP    
+             11 FreeBSD 4.9            
+              9 Solaris 9              
+              7 Darwin  7.2.0          
+              6 FreeBSD 5.2            
+              6 FreeBSD 5.1            
+
+        and <5 records for FreeBSD 4.6.2, 4.8, 5.0, 5.2.1; OpenBSD 3.4; 
+        and Solaris 8.
+
+   So:
+
+      Solaris 8 / 9 work, 2.6 and 7 probably would...
+      FreeBSD 4.6.2/4.8/4.9 and 5.1/5.2
+      OpenBSD 3.4
+
+   NetBSD doesn't seem to have been tested.
+
+   Lots of Different Linuxes... of the ones we recognize:
+
+          count Distro    Release
+        ------- --------- --------
+            141 redhat    9
+             42 fedora    1
+             39 slackware 9.1.0
+             38 redhat    7.3
+             26 redhat    8.0
+             15 debian          (probably 3.0)
+             11 mandrake  9.2
+             10 suse      9.0
+             10 slackware 9.0.0
+              9 redhat    7.2
+              8 debian    3.0
+              7 redhat    2.1AS
+              6 mandrake  9.1
+              5 suse      8.2
+              5 redhat    3
+
+   and < 5 records for arch 0.6; aurora 1.0; aurox 9.2; fedora 0.95; 
+   gentoo 1.4.2.9, 1.4.3.10 and 1.4.3.12; immunix 7.0; mandrake 8.1 and 8.2; 
+   pld 1.1; redhat 1, 2.1, 6.2, 7.0, 7.1; slackware 7.1.0, 8.1 and 9.0-beta; 
+   suse 6.3, 7.0, 8.0 and 8.1; and yellowdog 3.0.
+
+--------------------------------------------------------------------------------
+----- .deps --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+Q. Make fails with a message about a missing .deps file
+A. Basically, it's a automake 1.5 bug, related to dependency tracking.
+
+   If you don't have automake installed, you shouldn't see this problem.
+
+   ntop requires automake 1.6+ - that dependency is EXPLICT in the Makefile.am!
+
+   If you do have automake installed, it's possible to hit this problem -
+   especially if it's one of those Linux distributions that have three versions
+   of automake installed and a (broken) script that's supposed to figure out
+   which version to actually run.
+
+   Since we distribute ntop with scripts generated from 1.6.3, you would *think*
+   they should work, regardless of what version of automake is installed.
+
+   That's not the case.  The problem occurs because automake gets invoked by
+   ./configure to copy the missing gnu files such as depcomp.  If you have 1.5
+   installed, it then remakes the plugins/Makefile as a 1.5 version, which
+   fails.
+
+   The problem should be trapped and worked around, however, so report the
+   problem to the list.
+
+Q. Why is the .deps problem mostly happening under FreeBSD?
+A. Because the FreeBSD ports tree only has 1.5, but that's a FreeBSD ports
+   problem, not ntop's.  If you search the FreeBSD lists on Google, there's lots
+   of traffic about a 1.6 version for FreeBSD, but it doesn't seem to be in the
+   tree.  What's there is:
+
+     ./devel/automake
+        -- which is 1.5
+     ./devel/automake14
+     ./devel/automake17
+        -- which does NOT work
+
+
+Q. So how do I work around the problem?
+A. Install 1.6.3.  It's quite easy, does NOT require root.  The steps are listed
+   in the ./configure message, repeated below:
+
+      Download automake 1.6.3 from gnu
+          $ wget http://ftp.gnu.org/gnu/automake/automake-1.6.3.tar.gz
+
+      Untar it
+          $ tar xfvz automake-1.6.3.tar.gz
+
+      Make it
+          $ cd automake-1.6.3
+          $ ./configure --prefix=/home/<whatever>/automake163
+          $ make
+          $ make install
+
+      Add it to your path (this is bash, but other shells, can do it too)
+
+          $ PATH=/home/<whatever>automake163/bin:$PATH
+          $ export PATH
+
+      And then untar, ./configure and make ntop.
+
+
+--------------------------------------------------------------------------------
+----- census -------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+Q. Anything else?
+A. Yes.  Run the "census" - this will send us an email telling us what's 
+   working and what's not working.  The census sends me the basics - uname 
+   information, autotool versions, version.c.  The domain name is blinded, 
+   and the script will show you the file before it's sent (you'll have 10 
+   seconds to press control-c to abort).
+
+   If things work ok, then send the census information via
+
+    make census-ok
+
+   If you have problems, the create the census information via
+
+    make census-fail
+
+   Edit it to describe the problem and send it to census@ntopsupport.com
+
+--------------------------------------------------------------------------------
+----- Dropped packets ----------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+A. Short Answer: You need a faster processor.  Maybe.
+A. Long Answer:  There are four places packets drop "in" ntop.  One in
+   the NIC, one in the OS kernel, one in the libpcap library and one 
+   actually in ntop.
+
+   First off, this is largely NOT controlled by ntop.  It's inside the network
+   card, the network card driver and libpcap.  All ntop does is use the stats
+   provided by libpcap, pcap_stats:
+
+      "int pcap_stats() returns 0 and fills in a pcap_stat struct. The 
+       values represent packet statistics from the start of the run to
+       the time of the call. If there is an error or the under lying 
+       packet capture doesn't support packet statistics, -1 is returned
+       and the error text can be obtained with pcap_perror() or 
+       pcap_geterr()."
+
+   to get the value and reports it in report.con the Stats | Traffic
+   page, some in the configuration report (info.html) and also on
+   the problem report skeleton.
+
+   The information on the Stats | Traffic page is simply the best available.
+   However, this data is not always easy to obtain nor interpret.
+
+   It looks great, but the reality is that the stats provided by libpcap
+   aren't very good!
+
+
+Q. Not good?  Why...
+A. The network card (NIC) reads packets from the wire into a small buffer.
+   That buffer is emptied by the OS into it's own buffers which are then 
+   passed to libpcap.  libpcap filters the packets (if requested) and 
+   passes the packets to ntop.
+
+   Packets may be dropped at any or all of these stages, even on a system 
+   that does not appear to be exceptionally busy.
+
+Q. How can packets be lost in the NIC?
+A. A NIC has a small buffer - modern cards have 8K, 12K, even more buffer 
+   space.  But if traffic comes in off the wire faster than the processes
+   are pulling it out of the NIC, well that buffer gets over-written and
+   packets get dropped.
+
+   Every time a packet comes in (or on some newer cards after a few packets
+   are recevied), the NIC interrupts the processor (CPU) to tell it to do
+   something.  This isn't a problem - some NICs with larger buffers
+   internally queuing a number of packets before interrupting the OS to
+   boost performance.
+
+   Check ifconfig for this:
+
+      eth0      Link encap:Ethernet  HWaddr 00:D0:09:77:85:B9
+                inet addr:192.168.42.6  Bcast:192.168.42.255  Mask:255.255.255.0
+                UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+                RX packets:3892397 errors:30 dropped:0 overruns:0 frame:33
+                                             ^^^^^^^^^
+                TX packets:473009 errors:0 dropped:0 overruns:0 carrier:0
+                                           ^^^^^^^^^
+                collisions:1073 txqueuelen:100
+                RX bytes:2606704447 (2485.9 Mb)  TX bytes:70474880 (67.2 Mb)
+                Interrupt:11 Base address:0xc000
+
+   Now, if it's an occasional burst, losing 1 or 2 packets won't kill 
+   you.  TCP/IP recovers.  And ntop's statistics aren't life-critical.  
+   If, however, it's continuous, on-going and the count is growing - i.e.
+   the NIC/CPU combo can't keep up with the AVERAGE network flow?  
+
+       You're toast...
+
+   Upgrade the Processor or NIC. Maybe.
+
+Q. Can you tell if the NIC is the bottleneck?
+A. Probably not.  Different NIC cards (and NIC card drivers) record different
+   information.  Different tools present pieces and parts of it differently.
+
+   For example, a runt packet - one that is too short to really be a packet
+   is supposed to be discarded according to the tcp/ip standard.  But do you
+   count it as a packet received??
+
+   On many systems, interface level (NIC) statistics are available through 
+   the ifconfig (or similar) command.  But what is available and what they
+   mean can be different - even though they're presented in the same format.
+   Different programs can read the 'same' data and show different things.
+
+   For example - eth1 is an Intel Ethernet Pro/100, eth2 a 3c905...
+
+   # netstat -i --all
+   Kernel Interface table
+   Iface       MTU Met     RX-OK RX-ERR RX-DRP RX-OVR   TX-OK TX-ERR TX-DRP TX-OVR Flg
+   eth1       1500   0  50752227      0      0      0       0      0      0      0 BMPRU
+   eth2       1500   0 145053154      0      0      0       0      0      0      0 BMPRU
+
+   No errors - great, right?  But look at ifconfig, a few seconds earlier:
+
+   # ifconfig
+   eth1      Link encap:Ethernet  HWaddr 00:03:47:B1:62:27  
+             UP BROADCAST RUNNING PROMISC MULTICAST  MTU:1500  Metric:1
+             RX packets:50754251 errors:0 dropped:0 overruns:0 frame:3454146
+             TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+             collisions:0 txqueuelen:100 
+             RX bytes:667103055 (636.1 Mb)  TX bytes:0 (0.0 b)
+             Interrupt:9 Base address:0x1000 
+
+   eth2      Link encap:Ethernet  HWaddr 00:60:97:04:30:33  
+             UP BROADCAST RUNNING PROMISC MULTICAST  MTU:1500  Metric:1
+             RX packets:145056087 errors:0 dropped:0 overruns:0 frame:0
+             TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+             collisions:0 txqueuelen:100 
+             RX bytes:1784472399 (1701.8 Mb)  TX bytes:0 (0.0 b)
+             Interrupt:9 Base address:0xb800 
+
+   If I'm reading the code right, then the frame:nnnn count is set here:
+
+     sp->stats.rx_frame_errors += le32_to_cpu(sp->lstats->rx_align_errs);
+
+   Meaning? No clue - the writer of the driver had to sign an NDA and so
+   couldn't explain a lot of what the driver does.  Besides, that data
+   isn't available to ntop anyway.
+
+
+Q. How can packets can be lost in the kernel?
+A. Each time that interrupt occurs, the kernel processes it by moving
+   the data from the NIC to a kernel buffer, then re-enable interrupts.
+
+   Not really.
+
+   Actually, in Linux (and other OSes), the Kernel interrupt handler is
+   broken in half - called in Linux the top and bottom.  The bottom 
+   interrupt works with processor interrupts off to grab the data and 
+   buffer it and does only minimal processing as fast as possible so 
+   interrupts can be turned back on.  Then the top half is scheduled 
+   and processes as a Kernel process (high priority), but it is less 
+   time critical.
+
+   However, if the kernel can't process the bottom half in time - because
+   there isn't enough memory and/or the processor isn't fast enough to
+   respond to the interrupt, you do have a problem.   The small buffer
+   in the NIC will overflow and packets are dropped (this is the ONE place
+   where a better NIC, with a larger buffer, MIGHT help).
+
+   While there are LOTS of possible causes, if the kernel is *routinely*
+   dropping packets, it's almost certainly an interrupt/processor
+   speed/buffering issue.
+
+   So, I guess what I'm saying is that the dropped: count from ifconfig
+   might not be the NIC's fault - and that's why a faster processor is a
+   better choice than an expensive server class NIC.
+
+
+Q. But at least I can trust the libpcap reported counts, right?
+A. Nope. You need to treat the pcap reported drops with more than a few
+   grains of salt.  See this thread, for example:
+      http://www.tcpdump.org/lists/workers/2001/07/msg00018.html
+   and this msg:
+      http://www.mcabee.org/lists/snort-users/Jan-02/msg00771.html
+
+   There's a lot of other stuff about pcap problems, especially from
+   snort (another package that stresses libpcap) - 
+   STFW for "libpcap ps_drop".
+
+   See, the call to pcap_stats reads internal counters - maybe they come
+   from the NIC and maybe they're just maintained by the kernel.  That's a
+   function of how the low level NIC driver is written to handle certain 
+   calls from higher level drivers.  So it's a function of the specific
+   NIC card, something we try to hide from everyone, ntop included.
+
+   Ultimately, some piece of hardware or software SHOULD be counting packets
+   and dropped packets.
+
+   But, remember also, that - AT THE INSTANT OF THE pcap_stats call -
+   there can be packets queued in any of these buffers (NIC, kernel, libpcap).
+
+   Put the two together and I wouldn't trust 'em.
+
+   Want more fear?  Read the comments through out the libpcap code.  Like 
+   this gem from pcap-linux.c:
+
+    *  Get the statistics for the given packet capture handle.
+    *  Reports the number of dropped packets iff the kernel supports
+    *  the PACKET_STATISTICS "getsockopt()" argument (2.4 and later
+    *  kernels, and 2.2[.x] kernels with Alexey Kuznetzov's turbopacket
+    *  patches); otherwise, that information isn't available, and we lie
+    *  and report 0 as the count of dropped packets.
+
+   And this from pcap-bpf.c:
+
+    /*
+     * "ps_recv" counts packets handed to the filter, not packets
+     * that passed the filter.  This includes packets later dropped
+     * because we ran out of buffer space.
+     *
+     * "ps_drop" counts packets dropped inside the BPF device
+     * because we ran out of buffer space.  It doesn't count
+     * packets dropped by the interface driver.  It counts
+     * only packets that passed the filter.
+     *
+     * Both statistics include packets not yet read from the kernel
+     * by libpcap, and thus not yet seen by the application.
+     */
+
+   As you see from the comments in the code, the interpretation of even
+   those counts differs between operating systems and even between minor versions
+   of the same OS (e.g. Linux 2.4.8 vs. 2.4.9).  For example, some systems 
+   do not maintain a dropped count and will always report zero.  Differences
+   may also occur on the same system for different NIC drivers.  
+ 
+   If a BPF filter (-B option) is in place, the differences between OSes are
+   more significant.
+
+   etc.
+
+   Trust nobody...
+
+
+Q. ntop drops packets?
+A. Sure. ntop runs multiple threads (we call them "NPS - Network Packet Sniffer"
+   or something similar), one to handle each incomming device.  These operate
+   much like the bottom-half interrupt - they accept the packet and queue it
+   to another thread ("NPA - Network Packet Analyzer") for the analysis.
+
+   Ultimately, we're interested in the counter droppedPkts, which is
+   incremented in only one place, pbuf.c around 1398, which this is where 
+   NPS is trying to queue a packet for NPA.
+
+   Now, you can increase PACKET_QUEUE_LENGTH
+
+      ntop.h:   693   #define PACKET_QUEUE_LENGTH     2048
+
+   but if you're routinely dropping packets here it's because ntop can't 
+   keep up with the flow.  Increasing the queue length will ONLY help if
+   it's an occasional huge peak with times where the network is quiet 
+   enough to allow you to work off the queue.  And each packet buffer 
+   in use takes up memory - (about 1.5MB for a queue of size 2048).
+
+   The instantaneous and maximum value for the queue are reported in
+   the configuration report:
+
+      # Queued Pkts to Process 0
+      # Max Queued Pkts 0
+
+   But, again, the best answer for dropped packets is probably a 
+   faster processor... (Upgrading to an expensive faster NIC with a 
+   larger internal buffer is rarely the best "bang for the buck" - if 
+   you were running a server, then a server class NIC is a good idea,
+   but for workstations or network monitors, etc. you just need something 
+   that can keep up with the network flow.)
+
+
+Q. So what do you show?
+A. The kicker is that accurate counts of raw and dropped packets do not exist
+   or are not available without using low-level, system specific logic.
+
+   The counts that ARE available in a system-independent way are what is 
+   reported in the statistics on the Stats | Traffic page.
+
+
+Q. So what is reported?
+A. ntop reports the packet and dropped counts as reported by libpcap and the
+   received, dropped and processed counts it maintains internally.
+
+
+Q. So what does ntop do with what it does receive?
+A. ntop processes or queues all packets received from libpcap but may drop 
+   packets if the processing queue fills up.  Losing a few packets inside 
+   ntop due to a rare burst of traffic is just that - rare, and is not a 
+   'bug'.
+
+   If you consistently see packets dropped by ntop then you probably need
+   to use a faster processor (increasing the buffer size beyond the default
+   of 2K packets will usually not help).  
+
+Q. How do I tell?
+A. You can monitor the queue size on the 'Configuration' (info.html) page.
+
+Q. What about the other dropped items?
+A. If you consistently see packets dropped at either the interface or 
+   libpcap level, there is not much we can offer in the way of help for you.
+
+   The best suggestion is to try another NIC or a faster machine.  
+
+Q. Why?
+A. Some NICs - especially ISA ones - are just too slow at moving packets 
+   off of the card. Measurements I did on an old SMC 10BaseT card in 1993
+   showed that the best it could do - ISA bus, windows overhead, etc. all
+   rolled together was about 1.7Mbps.
+
+   Memory bus speeds (e.g. PC100 vs PC133, DDR333 vs DDR400, etc.) can also
+   affect moving packets from the NIC to main memory.
+
+Q. Won't a faster CPU help?
+A. Maybe.  Some network card drivers are processor intensive - and would
+   benefit - but others offload most of the processing to the NIC, and so a
+   faster CPU wouldn't matter.
+
+   Even a fancy (read as expensive) NIC may not work well - the drivers
+   for the NIC on one OS may take advantage of features the card provides 
+   and be 'faster', while the driver for the same NIC on another OS may 
+   not take advantage of these features and be 'slower'.
+
+   As we say, YMMV...
+
+
+Q. So?
+A. So, remember - ntop drops packets, the kernel drops packets, libpcap drops
+   packets and none of 'em do it the same way.  Don't bet the farm on counting
+   every packet with absolute accuracy and use ntop the way it was meant to
+   be used - showing the overall usage and flows on the network.
+
+   Still it's not all gloom and doom!
+
+   Even if you're only processing 90% of the traffic, since the drops are
+   pretty random, it's a decent bet that if 90% of what you DO see is MP3s,
+   then 90% of the whole traffic flow is probably MP3s.
+
+
+--------------------------------------------------------------------------------
+-----Running - Web Server-------------------------------------------------------
+--------------------------------------------------------------------------------
+
+Q. ntop shows an older, single menu interface
+A. If ntop is unable to find the file index.html it generates the page
+   internally. That page refers to 'leftindex.html' which is the all-in-one menu
+   you see, similar to the v1.3 menu.
+
+   To find the html files, ntop looks in the html subdirectory in two places:
+
+      1. In the current directory (i.e. ./html),
+   and
+      2. In '[prefix]/share/ntop/html'
+         (where [prefix] is set by the --prefix option of your ./configure
+          step).
+
+   Common causes:
+
+      1. Is manually installing ntop in an unusual place, having forgotten to
+         update DATAFILE_DIR in config.h. Or forgetting to copy the html
+         subdirectories, etc.
+
+      2. Forgetting to run './autogen.sh -1' first and 'make install' last when
+         first building ntop from source.
+
+      3. Running ntop with an explicit path from somewhere other that the
+         directory it's installed into. For example, if you install ntop 
+         into /root/ntop, but run it like this:
+
+            cd /usr/bin
+            /root/ntop/ntop
+
+         It will look 1st in /usr/bin/html and then in [prefix]/share/ntop 
+         and not find the html files in /root/ntop/html!
+
+   This often occurs when running ntop as a daemon, because the current
+   working directory of the script is not what you expect it to be!
+
+--------------------------------------------------------------------------------
+-----snapshot, cvs and the Wiki-------------------------------------------------
+--------------------------------------------------------------------------------
+
+Q. What was "snapshot"?
+A. Snapshot was a community FAQ and documentation resource at
+   http://snapshot.ntop.org. It's was also the site of "the snapshots".
+
+   Unfortunately, snapshot seems to have 'Gone to Atlanta' (404), with
+   the web server no longer responding in February 2004.
+
+   Nicolai Petri's efforts were appreciated.  But snapshot was an effort
+   of love by a gentleman who hasn't had time for the effort in quite 
+   some time.
+
+
+Q. Is there a community resource that replaces (enhances) snapshot.
+A. Nope.
+
+   There was a Wiki created after 3.0 release.  But the ratio of defacements
+   to community contributions was 2:1.  So I killed it.
+
+
+Q. What was "a snapshot" or "the snapshots"?
+A. A snapshot was a dump of the ntop cvs structure, automatically generated
+   every day at 5 minutes after midnight (Pisa time).
+
+   Snapshots were named with their creation date, in the form of
+   ntop-yy-mm-dd.tgz.
+
+   Snapshots were neither polished nor even "releases". They contained any
+   update(s) checked into the cvs during the prior day.  No more, no less.
+
+   cvs checkins (commits) are usually tested by the developer, but perhaps only
+   in one (limited) environment.  Occasionally a file is missed or a typo occurs
+   and a snapshot wouldn't compile. Snapshots frequently introduced bugs that aren't
+   apparent on a quick review.  Snapshots were basically a point-in-time capture
+   of the moving development environment.  No more and no less.
+
+   With release 2.2, rapid development occurred after general release and using
+   the latest snapshot was your best bet. With 3.0, after a short period of stability
+   (releases 2.2b and 2.2c), the development again outpaced the stable version and
+   using the cvs again was almost manditory. 
+
+   If the 3.1 release doesn't work, drop by the mailing lists and check the back
+   traffic to see if this is a common problem.  If it's not, try the latest
+   snapshot or ask for a recommendation of which version is the best to use.
+
+
+--------------------------------------------------------------------------------
+-----Old answers, but goodies---------------------------------------------------
+--------------------------------------------------------------------------------
+
+Q. What is "obsolete/"
+A. Obsolete code is code that is no longer being maintained nor part of ntop,
+   but it's stuck off in that directory because 1) storage is cheap and 2) it
+   might have usage someday and 3) somebody might be interested in resurrecting
+   it...
+
+   Code in obsolete/ IS NOT MAINTAINED, even minimally.
+
+
+--------------------------------------------------------------------------------
+-----FreeBSD--------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+Q. I can't compile ntop under FreeBSD 5.0 or 5.1.
+A. In some situations, we produce gcc link lines which expose a conflict 'tween
+   FreeBSD 5.x and libtool.
+
+   You will see the following error messages:
+
+       expr: illegal option -- l
+       usage: expr [-e] expression
+       etc.
+
+   See the release notes for FreeBSD 5.0 and the expr(1) man page:
+
+       http://www.freebsd.org/releases/5.0R/DP2/relnotes-i386.html
+       http://www.freebsd.org/cgi/man.cgi?query=expr&sektion=1&manpath=FreeBSD+5.0-current
+
+   Solve this by setting the compatibility flag before running make.
+
+       $ export EXPR_COMPAT=Y
+
+   configure.in and configure have been updated to do warn you to do this.
+
+
+--------------------------------------------------------------------------------
+-----ntop 3.1, FreeBSD and --set-pcap-nonblocking-------------------------------
+--------------------------------------------------------------------------------
+
+A. With 3.1, we should be automatically setting this under FreeBSD and nowhere
+   else.  So it should be sort of automatic.  If you like to live dangerously,
+   you can try using the web configuration page to DISABLE the option under
+   FreeBSD.
+
+   One of three things will happen:
+
+   1. ntop runs fine.
+   2. The webserver runs slowly at first.
+   3. The web server hangs.
+
+   #1: Congratulations, you are running on a system which doesn't actually have
+   the bug.  We would love to know the precise version of FreeBSD - the best way
+   is to run cpp -dM and tell use the value for 
+
+       #define __FreeBSD_cc_version 
+
+   #2: Expected.  There's some further special case coding in the ntop web
+   server to decrease the pcap_dispatch() timeout.  This lets the web server
+   work throught it's angst faster.
+
+   #3: This is really #2, you just don't have enough patience to way the minutes,
+   hours or days it takes for the first web server page to come up.
+
+   In cases #2 or #3, just go back to using --set-pcap-nonblocking.
+
+--------------------------------------------------------------------------------
+-----ntop 3.1, FreeBSD and bad fds?---------------------------------------------
+--------------------------------------------------------------------------------
+
+Q. Um... something about bad fds?
+A. Oh yes, see bug bin/51535: uthreads bug: new opened files may get stale fcntl flags
+
+   They fixed the code, sort of:
+
+         OS      Version
+         ------- --------------
+         FreeBSD 4.9    FIXED
+         FreeBSD 5.1    BUGGY
+         FreeBSD 5.2    FIXED
+         FreeBSD 4.8    BUGGY
+         FreeBSD 4.6.2  BUGGY
+
+   There's a work-around in ntop, called the HAVE_FILEDESCRIPTORBUG fix.
+   If you even might possibly need it, it should be set in configureextra/ but 
+   go ahead and set it anyway, it can't hurt.
+
+(Since current FreeBSD versions as of 3.2 are 4.11 and 5.4, I've moved this 
+ to the archive)
+
+
+--------------------------------------------------------------------------------
+-----BSD - OpenBSD--------------------------------------------------------------
+                                        During the ntop 3.0 development cycle,
+                                        we tried development/testing under:
+                                           3.1 and 3.4
+--------------------------------------------------------------------------------
+
+Q. So?
+A. 3.1 - I could never make it work.  Problem seems to be that the gnu tools such
+   as ld don't support a.out systems very well.
+
+A. 3.4 - Julien Touche <julien.touche@lycos.com> sweated buckets to make it work
+   with partial success, but ultimately it didn't work.
+
+
+--------------------------------------------------------------------------------
+-----BSD - NetBSD---------------------------------------------------------------
+                                        During the ntop 2.3 development cycle,
+                                        we tried development/testing under:
+                                           1.5.3
+                                           1.6
+                                           1.6.1
+--------------------------------------------------------------------------------
+
+Q. So?
+A. Some testing was done using - ntop works only in SINGLE THREADED mode and so
+   is fragile.
+
+Q. And Multithreaded?
+A. There isn't (yet) a standard POSIX thread package for NetBSD.  Both "proven"
+   and "unproven" threads have issues.  One user was bound and determined to
+   make GNU Pth work, but pth isn't quite POSIX threads and he's didn't get
+   far...
+
+Q. But there IS a POSIX threads...
+A. Yes.  And when NetBSD -current finally incorporates the POSIX threads (its
+   been committed but not yet part of a release) this should be revisited.
+
+
+--------------------------------------------------------------------------------
+-----Linux - RedHat-------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+Q. NPTL?
+A. When RH9 came out with NPTL, we had lots of problems.  NPTL is much closer
+   to POSIX threads, but very different from the old linuxthreads.  At the same
+   time, we had problems with the glibc 2.3.x (vs. 2.2.x) update.
+
+   By the end of the 3.0 development cycle, a couple of memory management fixes
+   seem to have made the NPTL/glibc problems go away.  But if they're still out
+   there, they are quite nasty.  Random unexplained BOMBs and such.
+
+   If you hit these problems, you can try disabling NPTL via this flag.
+   Before both ./configure AND make, set the following:
+
+        export LD_ASSUME_KERNEL=2.4.1"
+
+   This forces the use of the old linuxthreads library.
+
+   This flag may also do something to glibc, but it's undocumented and we
+   never could really figure it out.  For that run time behavior change
+   to happen, you would also have to have the LD_ASSUME_KERNAL flag set
+   at run time too.
+
+Q. The cause?
+A. Unknown.
+
+   A lot of them seemed to go away when we fixed a free() that occurs in
+   a fork()ed child of memory malloc()ed in the parent.  Under Linux, the
+   fork() gets a copy of memory, but a technique called copy-on-write is used
+   to reduce the time the fork() takes.
+
+   We suspected that the free() was corrupting the parent's memory structures,
+   but this isn't supposed to be possible and we couldn't nail it down enough
+   to report it to the glibc people.
+
+Q. What can I do to help?
+A. There is code in leaks.c tagged "DIAGNOSTIC".  Turn it on, collect a set of
+   potential problems and report them.  However, this code isn't that bright.
+   It will report all the free() calls in fork()ed children, even those that
+   are legit (i.e. the malloc() was also in for fork()ed child).
+
+
+--------------------------------------------------------------------------------
+-----Other platforms------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+HP-UX
+=-=-=
+During the 2.2 development cycle, some work was done to make ntop work under
+HP-UX 11 without breaking the HP-UX 10.20 support (limited as it was). During
+the 3.0 development cycle, HP-UX was not considered.
+
+The #ifdef lines in the source were removed prior to ntop 3.2's release.
+
+It will almost certainly fail.
+
+
+IRIX (v1.3 information)
+=-=-=-=-=-=-=-=-=-=-=-=-
+During the ntop 2.2 and 3.0 development cycles, IRIX was not considered.
+
+It will almost certainly fail.
+
+
+Digital UNIX (v1.3)
+===================
+During the ntop 2.2 and 3.0 development cycles, Digital UNIX was not considered.
+
+It will almost certainly fail.
+
+
+AIX (v1.3)
+==========
+During the ntop 2.2 and 3.0 development cycles, AIX was not considered.
+
+It will almost certainly fail.
+
+The #ifdef lines in the source were removed prior to ntop 3.2's release.
+
+
+--------------------------------------------------------------------------------
+-----Old Releases---------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+2.1.3
+=====
+
+The actual flow of ntop development was 
+    2.1 -> 2.1.1 -> 2.1.2 -> 2.1.50 -> 2.1.51...
+
+Version 2.1.3 was provided by Dennis Schoen [ds@teuto.net] as part of the Debian
+project.  Dennis (manually) maintains a bitkeeper tree, based on 2.1.2 with
+various patches which - in HIS opinion - were important enough to be back
+ported.  Releases in this tree are identified as 2.1.2-n.  Dennis reports you
+can obtain his current version via:
+
+bk clone bk://ntop.teuto.net:ntop-debian ntop-stable
+
+Version 2.1.3 is an export from Dennis' tree with the version number changed and
+is equivalent to 2.1.2-1.  Dennis' graciously provided the extract and we
+accepted with thanks!
+
+2.2
+===
+
+The actual flow of ntop development was 2.1 -> 2.1.1 -> 2.1.2 -> 2.1.50
+                                     -> 2.1.51..59 -> 2.1.90..92 -> 2.2
+
+   after 2.2, came 2.2a/2.2b (Win32 only), then 2.2c.  These were branches,
+   containing unique 2.2 fixes and back-ports of some critical items.
+
+3.0
+===
+
+The actual flow of ntop development was 2.2.1..4 ->
+                                    -> 2.2.90..99 -> 3.0pre1 -> 3.0
+
