@@ -1058,14 +1058,14 @@ static void printFeatureConfigInfo3ColFlt6(int textPrintFlag,
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.6f", value1);
     sendString(tmpBuf);
   } else {
-    sendString("-");
+    sendString(texthtml(" ", "&nbsp;"));
   }
   sendString(texthtml(".....", "</td>\n<td "TD_BG" align=\"right\" width=\"" xstr(CONST_INFOHTML_COL3_WIDTH) "\">"));
   if (flag2) {
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.6f", value2);
     sendString(tmpBuf);
   } else {
-    sendString("-");
+    sendString(texthtml(" ", "&nbsp;"));
   }
   sendString(texthtml("\n", "</td></tr>\n"));
 }
@@ -6904,10 +6904,12 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
 #ifdef MAX_PROCESS_BUFFER
 {
+  char tmpBuf[LEN_GENERAL_WORK_BUFFER];
   float qminDelay=99999.0, qmaxDelay=0.0,
         /*stddev:*/ qM, qT, qQ, qR, qSD, qXBAR,
         pminDelay=99999.0, pmaxDelay=0.0,
-        /*stddev:*/ pM, pT, pQ, pR, pSD, pXBAR;
+        /*stddev:*/ pM, pT, pQ, pR, pSD, pXBAR,
+        thpt;
 
   if(myGlobals.queueBufferCount >= MAX_PROCESS_BUFFER) {
 
@@ -6964,18 +6966,35 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                                   TRUE, myGlobals.qmaxDelay, TRUE, myGlobals.pmaxDelay,
                                   TRUE);
 
-   printFeatureConfigInfo3ColFlt6(textPrintFlag,
-                                   "Min Estimated Thpt (pps)",
-                                   TRUE, 0,
-                                   TRUE, 1/qmaxDelay*100,
-                                   TRUE);
+    sendString(texthtml("", "<tr><th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
+    sendString("Throughput (pps) min/avg/max");
 
-    printFeatureConfigInfo3ColFlt6(textPrintFlag,
-                                   "Average Estimated Thpt (pps)",
-                                   TRUE, 0,
-                                   TRUE, (float)((int)(1/pXBAR)*100)/100,
-                                   TRUE);
-    
+    if(textPrintFlag == TRUE) {
+      sendString(".....");
+    } else {
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), 
+                    "</th>\n<td "TD_BG" align=\"center\" width=\"%d\" colspan=\"2\">", 
+                    CONST_INFOHTML_COL2_WIDTH + CONST_INFOHTML_COL3_WIDTH);
+      sendString(tmpBuf);
+    }
+    /* Yes, confusing - maximum RATE is 1/minumum delay) */
+    if(qmaxDelay+pmaxDelay > 0.0) {
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.1f", 1.0/(qmaxDelay+pmaxDelay));
+      sendString(tmpBuf);
+    }
+    sendString(texthtml("/", "&nbsp;/&nbsp;"));
+    if(qXBAR+pXBAR > 0.0) {
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.1f", 1.0/(qXBAR+pXBAR));
+      sendString(tmpBuf);
+    }
+    sendString(texthtml("/", "&nbsp;/&nbsp;"));
+    if(qminDelay+pminDelay > 0.0) {
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.1f", 1.0/(qminDelay+pminDelay));
+      sendString(tmpBuf);
+    }
+
+    sendString(texthtml("\n", "</td></tr>\n"));
+
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "'Queue' time is the elapsed time between the packet arrival (libpcap) "
 		  "and the gettimeofday() value as the packet starts processPacket(). For a queued "
@@ -6983,19 +7002,19 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 		  "<br><br>'Processing' time is the elapsed time between starting and finishing "
 		  "processPacket().  Errors and/or unrecognized packets may cause processing to be "
 		  "abandoned and those packets are not counted in the 'processing' averages. This means "
-		  "that the " xstr(MAX_PROCESS_BUFFER) " packets for the 'queue' and 'processing' "
+		  "that the %d packets for the 'queue' and 'processing' "
 		  "calculations are not necessarily the same physical packets, and may lead to over "
 		  "estimation of the per-packet 'processing' time."
 		  "<br><br>Small averages are good, especially if the standard deviation is small "
 		  "(standard deviation is a measurement of the variability of the actual values "
 		  "around the average). The computations are based only on the most recent "
-		  xstr(MAX_PROCESS_BUFFER) " packets processed."
-		  "<br><br>Maximum ever ignores the first 100 packets for each device - this lets "
+		  "%d packets processed."
+		  "<br><br>\"Maximum ever\" ignores the first 100 packets for each device - this lets "
 		  "<b>ntop</b> get over startup agony."
-		  "<br><br>What does this mean? Not much.  Still, 1/(queue-average+process-average) "
-		  "(i.e. %.1f) gives a very rough indication of the packet per second rate this "
-		  "instance of ntop can handle.",
-		  1.0 / (qXBAR+pXBAR));
+		  "<br><br>What does this mean? Not much.  Still, the 'Throughput' numbers give a very "
+		  "rough indication of the packet per second rate this instance of ntop can handle.",
+                  MAX_PROCESS_BUFFER,
+                  MAX_PROCESS_BUFFER);
     printInfoSectionNote(textPrintFlag, buf);
   }
 }
