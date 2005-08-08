@@ -7723,12 +7723,6 @@ void printNtopProblemReport(void) {
   sendString(buf2);
 #endif
 
-#ifdef PROBLEMREPORTID_DEBUG
-  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Heartbeat",
-	      myGlobals.heartbeatCounter, myGlobals.heartbeatCounter, v);
-  sendString(buf2);
-#endif
-
   v += (unsigned int) t;
 #ifdef PROBLEMREPORTID_DEBUG
   strftime(buf, sizeof(buf)-1, CONST_LOCALE_TIMESPEC, gmtime(&t));
