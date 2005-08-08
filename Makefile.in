@@ -1464,11 +1464,6 @@ dnetter:
 p2ctable:
 	@utils/p2c
 
-# run ./configure with --showoses
-showoses:
-	@echo "Processing request... please wait..."
-	@./configure --no-create --silent --enable-showoses
-
 # ntop census
 census-fail:
         # creates and report for edit and manual send

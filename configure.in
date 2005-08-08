@@ -50,7 +50,7 @@ AC_INIT([ntop],[3.1.50])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v3.1.050-2005-07-02"
+SCRIPTVER="v3.1.050-2005-08-08"
 
 dnl>
 dnl> generate the config header
@@ -163,6 +163,20 @@ AC_ARG_ENABLE(mt,
           echo
           exit 1
 ],[])
+AC_ARG_ENABLE(showoses,
+              [  --enable-showoses           No longer valid],
+[
+          echo
+          echo "*******************************************************************"
+          echo "*"
+          echo "* ERROR: --enable-showoses is no longer valid."
+          echo "*"
+          echo "*>>> Please rerun ./configure without --enable-showoses"
+          echo "*"
+          echo "*******************************************************************"
+          echo
+          exit 1
+],[])
 dnl> Test before we use it, below
 AC_ARG_ENABLE(iknowbetter,
               [  --enable-iknowbetter        Override WILLFAIL],
@@ -203,8 +217,7 @@ elif test "x${AWK}" = "xawk" ||
     echo "*"
     echo "*             ntop requires gawk or at least mawk."
     echo "*"
-    echo "*>>> Continuing, but some options (e.g. --enable-showoses) "
-    echo "*                may not work."
+    echo "*>>> Continuing, but some options may not work."
     echo "*"
     echo "*???     1. Install gawk"
     echo "*"
@@ -799,36 +812,12 @@ AC_ARG_WITH(  localedir,
               LOCALEDIR="$withval",
               LOCALEDIR=)
 
-AC_ARG_ENABLE(showoses,
-              [  --enable-showoses           display OS Support information and exit.],
-              [echo
-               echo  "Showing OS support information... one second"
-               echo
-               if test ".${ac_cv_prog_AWK}" = "."; then
-                   echo "  Sorry, unable to honor your request - no awk appears to be available"
-                   echo
-                   exit 1
-               fi
-               if test ! -r configure.in; then
-                   echo "  Sorry, unable to find the configure.in script in this directory."
-                   exit 1
-               fi
-               if test ! -r utils/showoses.awk; then
-                   echo "  Sorry, unable to find the showoses.awk script in the utils/ directory."
-                   exit 1
-               fi
-               ${ac_cv_prog_AWK} -f utils/showoses.awk configure.in
-               echo
-               exit 0
-])
-
 AC_ARG_ENABLE(void,
               [  +----------------------------------------------------------------------------+])
 AC_ARG_WITH(void,
               [  +----------------------------------------------------------------------------+])
 
 
-AC_MSG_CHECKING([for aclocal.m4])
 AC_CHECK_FILE(aclocal.m4, , [
     echo ""
     echo "Invoking aclocal to create aclocal.m4..."
@@ -890,23 +879,6 @@ fi
 
 NTOPCONFIGDEBUG_SETTINGS([After cc stdc test])
 
-echo
-echo "Checking for support status of ${target}, ${CC}..."
-echo 
-dnl>
-dnl> How does this work?
-dnl>
-dnl> First off, we split up the target:cc stuff and tag each version we know
-dnl> about with a couple of parameters.
-dnl>
-dnl>    DEFINEOS becomes the -DOS_xxxxx value
-dnl>    STATUS   tells us which of the text blocks to print
-dnl>    REMEDIATE1/2 and NOTE1/2 are extra blocks of text we can print
-dnl>
-dnl>    VERIFIED[1-9]="ntop:yyyy-mm-dd:name <email>:osversion";
-dnl>    VNOTES  ="";
-dnl>
-
 dnl> Any common settings required to support a specific OS, distribution or release
 dnl> go here also.
 
@@ -919,126 +891,63 @@ dnl> been grabbed by an earlier target.
 DISTRO=""
 RELEASE=""
 
+echo ""
+echo "*******************************************************************"
+echo "*"
+echo "* Checking for unique options for ${target}, ${CC}..."
+echo "*"
+
 case "${target}:${CC}" in
-    *-*-mingw32*:gcc* )
-        VNOTES  ="Used to (2.1.3) work, but needs somebody to fix lots of problems"
-        DEFINEOS="MINGW";     STATUS="WILLFAIL";
-      ;;
 
-    *-*-cygwin*:* )
-        VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com:any"
-        VNOTES  ="Assumed to fail - ntop has never supported cygwin"
-        REMEDIATE1="Use MinGW and the special makefiles instead."
-        DEFINEOS="CYGWIN";    STATUS="WILLFAIL"
-      ;;
-
-    *-*-linux*:*gcc* )
-        VERIFIED1="2.2.98:2003-12-30:Burton Strauss <burton@ntopsupport.com>:Fedora Core 1"
-        VERIFIED2="3.0pre1:2004-02-24:Burton Strauss <burton@ntopsupport.com>:RedHat 9"
-        VERIFIED3="2.2.98:2003-12-30:Burton Strauss <burton@ntopsupport.com>:SuSE 9.0"
-        VERIFIED4="2.2.98:2003-12-30:Burton Strauss <burton@ntopsupport.com>:Gentoo 1.4"
-        VERIFIED5="2.2.98:2003-12-30:Burton Strauss <burton@ntopsupport.com>:Mandrake 9.2"
-        VERIFIED6="2.2.98:2003-12-30:Burton Strauss <burton@ntopsupport.com>:Debian 3.0"
-        VERIFIED7="2.2.98:2003-12-30:Burton Strauss <burton@ntopsupport.com>:Slackware 9.1.0"
-
-dnl> To be listed, must be in top 10 of www.distrowatch.org's 6 months charts
-        UNVERIFIED1="2.2.99/3.0pre1:2004-02-24:version.xml:Debian 2.4, 2.6"
-        UNVERIFIED2="2.2.99/3.0pre1:2004-02-24:version.xml:Fedora 1.90"
-        UNVERIFIED3="2.2.99/3.0pre1:2004-02-24:version.xml:Mandrake 7.2, 8.2, 9.0, 9.1, 10.0"
-        UNVERIFIED4="2.2.99/3.0pre1:2004-02-24:version.xml:RedHat 2.1AS, 3(EL), 3.5beta(EL), 6.x, 7.x, 8.0"
-        UNVERIFIED5="2.2.99/3.0pre1:2004-02-24:version.xml:Slackware 7.0.0, 7.1.0, 8.0.0, 8.1, 9.0.0"
-        UNVERIFIED6="2.2.99/3.0pre1:2004-02-24:version.xml:SuSE 6.3, 6.4, 7.1, 7.3, 8.0, 8.2, 9.0"
-
-        DEFINEOS="LINUX";     STATUS="SUPPORTED"
+    *-*-linux*:* )
+        DEFINEOS="LINUX"
         DISTRO=`utils/linuxrelease --distro`
         RELEASE=`utils/linuxrelease --release`
-
-        NOTE1="Specific release is ${DISTRO} Linux ${RELEASE}"
-      ;;
-
-    *-*-solaris2.9*:* )
-        NOTE1="Requires various gnu tools from SunFreeware.com"
-        NOTE2="--enable-i18n is disabled"
-        UNVERIFIED1="3.0pre1:2004-02-24:Solaris 9 (sparc)"
-        UNVERIFIED2="3.0pre1:2004-02-24:Solaris 9 (i86)"
-        DEFINEOS="SOLARIS";   STATUS="SUPPORTED"
-        RELEASE="9"
-      ;;
-
-    *-*-solaris2.8*:* )
-        VERIFIED1="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com:Solaris 8 i86"
-        VERIFIED2="2.2:2003-04-23:Mike Tremaine <mgt@stellarcore.net>:Solaris 8 sparc"
-        NOTE1="Requires various gnu tools from SunFreeware.com"
-        NOTE2="--enable-i18n is disabled"
-        UNVERIFIED1="3.0pre1:2004-02-24:Solaris 8 (sparc)"
-        DEFINEOS="SOLARIS";   STATUS="SUPPORTED"
-        RELEASE="8"
+        echo "* This appears to be ${DEFINEOS} ${DISTRO} ${RELEASE}"
       ;;
 
     *-*-solaris*:* )
-        DEFINEOS="SOLARIS";   STATUS="UNTESTED"
+        DEFINEOS="SOLARIS"
+        echo "* This appears to be ${DEFINEOS}"
+        echo "*"
+        echo "* 1) Compilation requires various gnu tools from SunFreeware.com or other sources."
+        echo "* 2) --enable-i18n is disabled"
       ;;
 
     *-*-darwin*:* )
-	VERIFIED1="2.2.98:2003-12-30:Luca Deri:MAC OS X 10.3 (Panther)"
-	VERIFIED2="3.1.1:2005-03-24:Luca Deri:MAC OS X 10.4 (Tiger)"
-        NOTE1="'Darwin 5.5' is the kernel of the os known as MAC OS X 10.1"
-        NOTE2="'Darwin 6.1' is the kernel of the os known as MAC OS X 10.2 (Jaguar)"
-        NOTE3="'Darwin 7.2' is the kernel of the os known as MAC OS X 10.3 (Panther)"
-        NOTE3="'Darwin 8.0' is the kernel of the os known as MAC OS X 10.4 (Tiger)"
-        UNVERIFIED1="3.0pre1:2004-02-24:Darwin 6.8"
-        UNVERIFIED2="3.0pre1:2004-02-24:Darwin 7.2.0"
-        DEFINEOS="DARWIN";    STATUS="SUPPORTED"
-      ;;
-
-    *-*-freebsd[[45]]*:*gcc* )
-        VERIFIED1="3.0pre1:2004-02-21:Stanley Hopcroft <anwsmh@IPAustralia.Gov.AU>:4.7-RELEASE"
-        VERIFIED2="3.0pre1:2004-02-24:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.9-RELEASE"
-        VERIFIED3="3.0pre1:2004-02-21:Stanley Hopcroft <anwsmh@IPAustralia.Gov.AU>:4.9-RELEASE-p1"
-        VERIFIED4="3.0pre1:2004-02-24:Burton Strauss <burton@ntopsupport.com>:FreeBSD-5.1-RELEASE"
-        UNVERIFIED1="3.0pre1:2004-02-24:version.xml:4.5-RELEASE"
-        UNVERIFIED2="3.0pre1:2004-02-24:version.xml:4.7-STABLE"
-        UNVERIFIED3="3.0pre1:2004-02-24:version.xml:4.8-RELEASE, 4.8-RELEASE-p3"
-        UNVERIFIED4="3.0pre1:2004-02-24:version.xml:4.9-STABLE"
-        UNVERIFIED5="3.0pre1:2004-02-24:version.xml:5.0-RELEASE"
-        UNVERIFIED6="3.0pre1:2004-02-24:version.xml:5.2.1-RC, 5.2-RELEASE"
-        DEFINEOS="FREEBSD";   STATUS="SUPPORTED"
-        RELEASE=`utils/linuxrelease --release | sed -e 's/\.//' -e 's/-.*$//g'`
+        DEFINEOS="DARWIN"
+        echo "* This appears to be ${DEFINEOS}"
       ;;
 
     *-*-freebsd*:* )
-        DEFINEOS="FREEBSD";   STATUS="UNTESTED"
+        DEFINEOS="FREEBSD"
+        RELEASE=`utils/linuxrelease --release | sed -e 's/\.//' -e 's/-.*$//g'`
+        echo "* This appears to be ${DEFINEOS} ${RELEASE}"
       ;;
-
-    *-*-openbsd3.4:*gcc* )
-        VERIFIED1="3.0pre1:2004-02-21:Julien Touche <julien.touche@lycos.com>:OpenBSD3.4-STABLE"
-        VERIFIED2="3.0pre1:2004-02-21:Julien Touche <julien.touche@lycos.com>:OpenBSD3.4-CURRENT"
-        DEFINEOS="OPENBSD";   STATUS="SUPPORTED"
-      ;;
-
-    *-*-openbsd*:* )
-        DEFINEOS="OPENBSD";   STATUS="WILLFAIL"
-      ;;
-
-    *-*-netbsd*1.5*:gcc* )
-        VERIFIED1="2.1.90:2003-03-29:Burton Strauss <burton@ntopsupport.com:1.6"
-        VERIFIED2="2.1.51:2002-10-23:Burton Strauss <burton@ntopsupport.com:1.5.3 w/ updated auto* tools"
-        NOTE1="With ANY of the threads packages, you are on your own!"
-        DEFINEOS="NETBSD"
-        STATUS="WILLFAIL"
-      ;;
-
-    *-*-netbsd*:* )
-        DEFINEOS="NETBSD";    STATUS="UNTESTED"
+    *-*-mingw32*:gcc* )
+        DEFINEOS="MINGW"
+        echo "* This appears to be ${DEFINEOS} (release not checked)"
       ;;
 
     * )
-        DEFINEOS="UNKNOWN";   STATUS="UNKNOWN"
+        echo "* ${target} is an unknown/unsupported OS"
+        echo "*"
+        echo "*******************************************************************"
+        if test "x${ac_willfailoverride}" = "xyes"; then
+            echo "*"
+            echo "* --enable-iknowbetter is set, so we will attempt to continue."
+            echo "*"
+            echo "* Fasten your seat belt and good luck!  If you are injured, the"
+            echo "* development team will disavow any knowledge of your intentions."
+            echo "*"
+            echo "*    Please keep the ntop-dev mailing list updated with any"
+            echo "*    successes you have or problems you encounter..."
+            echo "*"
+        else
+            exit 1
+        fi
       ;;
 esac
-
-dnl> Leave this: it causes showoses to print it's footer
-dnl> showoses TERMS
 
 CPPFLAGS="${CPPFLAGS} -D${DEFINEOS}"
 
@@ -1048,222 +957,42 @@ if test -d ./configureextra; then
     dnl> run it. Go from least specific to most specific, running ANY that match.
     dnl> E.g. 'solaris 8' will match solaris 1st then solaris8.
 
-    echo ""
-    echo "Testing for special configuration options for ${DEFINEOS} ${DISTRO} ${RELEASE}"
+    echo "*"
+    echo "*   Testing for extra configuration options for ${DEFINEOS} ${DISTRO} ${RELEASE}"
    
     if test -f ./configureextra/${DEFINEOS}; then
-        echo ""
-        echo "    Executing configureextra/${DEFINEOS}"
+        echo "*"
+        echo "*    Executing configureextra/${DEFINEOS}"
         . ./configureextra/${DEFINEOS}
         CONFIGURE_PARAMETERS="${CONFIGURE_PARAMETERS} + configureextra/${DEFINEOS}"
-        echo ""
     fi
     if test ".${DISTRO}" != "."; then
         if test -f ./configureextra/${DEFINEOS}${DISTRO}; then
-            echo ""
-            echo "    Executing configureextra/${DEFINEOS}${DISTRO}"
+            echo "*"
+            echo "*    Executing configureextra/${DEFINEOS}${DISTRO}"
             . ./configureextra/${DEFINEOS}${DISTRO}
             CONFIGURE_PARAMETERS="${CONFIGURE_PARAMETERS} + configureextra/${DEFINEOS}${DISTRO}"
-            echo ""
         fi
         if test ".${RELEASE}" != "." &&
            test -f ./configureextra/${DEFINEOS}${DISTRO}${RELEASE}; then
-            echo ""
-            echo "    Executing configureextra/${DEFINEOS}${DISTRO}${RELEASE}"
+            echo "*"
+            echo "*    Executing configureextra/${DEFINEOS}${DISTRO}${RELEASE}"
             . ./configureextra/${DEFINEOS}${DISTRO}${RELEASE}
             CONFIGURE_PARAMETERS="${CONFIGURE_PARAMETERS} + configureextra/${DEFINEOS}${DISTRO}${RELEASE}"
-            echo ""
         fi
     else
         if test ".${RELEASE}" != "." &&
            test -f ./configureextra/${DEFINEOS}${RELEASE}; then
-            echo ""
-            echo "    Executing configureextra/${DEFINEOS}${RELEASE}"
+            echo "*"
+            echo "*    Executing configureextra/${DEFINEOS}${RELEASE}"
             . ./configureextra/${DEFINEOS}${RELEASE}
             CONFIGURE_PARAMETERS="${CONFIGURE_PARAMETERS} + configureextra/${DEFINEOS}${RELEASE}"
-            echo ""
         fi
     fi
 fi
 
-echo
+echo "*"
 echo "*******************************************************************"
-echo "*"
-
-case "${STATUS}" in
-
-    SUPPORTED)
-        echo "* NOTE: Building ntop for a supported platform"
-        echo "*       This means we expect ntop to work without major issues"
-        echo "*"
-        echo "*            '${target}'"
-        if test ".${NOTE1}" != "."; then
-            echo "*"
-            echo "*    ${NOTE1}"
-        fi
-        if test ".${NOTE2}" != "."; then
-            echo "*    ${NOTE2}"
-        fi
-        if test ".${NOTE3}" != "."; then
-            echo "*    ${NOTE3}"
-        fi
-        ;;
-
-    UNTESTED)
-        echo "* NOTE: Building ntop for an untested platform"
-        echo "*"
-        echo "*            '${target}'"
-        echo "*"
-        echo "*      Untested means that:"
-        echo "*"
-        echo "*           1. A previous version of this OS is supported."
-        echo "*        or 2. This version of this OS was supported by a"
-        echo "*              previous version of ntop."
-        echo "*"
-        echo "*     ./configure applies the same configuration options,"
-        echo "*     special parameters, etc. as for the prior release."
-        echo "*"
-        echo "*             For OS .0 releases that is probably a bad bet..."
-        echo "*"
-        echo "*  It could just be that you are compiling an older version"
-        echo "*  of ntop on a new OS release - check the http://www.ntop.org"
-        echo "*  site for an update."
-        if test ".${NOTE1}" != "."; then
-            echo "*"
-            echo "*    ${NOTE1}"
-        fi
-        if test ".${NOTE2}" != "."; then
-            echo "*    ${NOTE2}"
-        fi
-        ;;
-
-    WILLFAIL)
-        echo "* ERROR: Attempting to build ntop for an unsupported platform"
-        echo "*"
-        echo "*            '${target}'"
-        echo "*"
-        echo "*>>> This is unsupported."
-        echo "*>>> It will almost certainly fail"
-        echo "*           (that is why it is listed as 'unsupported' - doh!)"
-        if test ".${REMEDIATE1}" != "."; then
-            echo "*"
-            echo "*??? ${REMEDIATE1}"
-        fi
-        if test ".${REMEDIATE2}" != "."; then
-            echo "*??? ${REMEDIATE2}"
-        fi
-        if test ".${ac_willfailoverride}" = ".yes"; then
-            echo "*"
-            echo "*   But... you think you know better (or are testing things)"
-            echo "*          so let us rock and roll..."
-        fi
-        HAS_ERROR="yes"
-        ;;
-
-    *)
-        echo "* ERROR: Attempting to build ntop for an unknown platform"
-        echo "*"
-        echo "*            '${target}'"
-        echo "*"
-        echo "*>>> This is unsupported."
-        echo "*>>> It will probably fail."
-        echo "*"
-        echo "*    Of course, you are certainly welcome to try ntop on this platform..."
-        HAS_ERROR="yes"
-        ;;
-esac
-
-echo "*"
-echo "*    Please keep the ntop-dev mailing list updated with any"
-echo "*    successes you have or problems you encounter..."
-echo "*"
-
-dnl> Leave this: it causes showoses to stop
-dnl> showoses END
-
-if test ".${VERIFIED1}" != "."; then
-    echo "*   Support for this platform was most recently verified for"
-    echo "*"
-    echo $VERIFIED1 | ${ac_cv_prog_AWK} -f utils/verified.awk
-    if test ".${VERIFIED2}" != "."; then
-        echo $VERIFIED2 | ${ac_cv_prog_AWK} -f utils/verified.awk
-    fi
-    if test ".${VERIFIED3}" != "."; then
-        echo $VERIFIED3 | ${ac_cv_prog_AWK} -f utils/verified.awk
-    fi
-    if test ".${VERIFIED4}" != "."; then
-        echo $VERIFIED4 | ${ac_cv_prog_AWK} -f utils/verified.awk
-    fi
-    if test ".${VERIFIED5}" != "."; then
-        echo $VERIFIED5 | ${ac_cv_prog_AWK} -f utils/verified.awk
-    fi
-    if test ".${VERIFIED6}" != "."; then
-        echo $VERIFIED6 | ${ac_cv_prog_AWK} -f utils/verified.awk
-    fi
-    if test ".${VERIFIED7}" != "."; then
-        echo $VERIFIED7 | ${ac_cv_prog_AWK} -f utils/verified.awk
-    fi
-    if test ".${VERIFIED8}" != "."; then
-        echo $VERIFIED8 | ${ac_cv_prog_AWK} -f utils/verified.awk
-    fi
-    if test ".${VERIFIED9}" != "."; then
-        echo $VERIFIED9 | ${ac_cv_prog_AWK} -f utils/verified.awk
-    fi
-    if test ".${VNOTES}" != "."; then
-        echo "*    ${VNOTES}"
-    fi
-else
-    echo "*   Support is unverified..."
-fi
-echo "*"
-if test ".${UNVERIFIED1}" != "."; then
-    echo "*   From version check log reports, ntop's users are also "
-    echo "*   running under:"
-    echo "*"
-    echo $UNVERIFIED1 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
-    if test ".${UNVERIFIED2}" != "."; then
-        echo $UNVERIFIED2 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
-    fi
-    if test ".${UNVERIFIED3}" != "."; then
-        echo $UNVERIFIED3 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
-    fi
-    if test ".${UNVERIFIED4}" != "."; then
-        echo $UNVERIFIED4 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
-    fi
-    if test ".${UNVERIFIED5}" != "."; then
-        echo $UNVERIFIED5 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
-    fi
-    if test ".${UNVERIFIED6}" != "."; then
-        echo $UNVERIFIED6 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
-    fi
-    if test ".${UNVERIFIED7}" != "."; then
-        echo $UNVERIFIED7 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
-    fi
-    if test ".${UNVERIFIED8}" != "."; then
-        echo $UNVERIFIED8 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
-    fi
-    if test ".${UNVERIFIED9}" != "."; then
-        echo $UNVERIFIED9 | ${ac_cv_prog_AWK} -f utils/verified.awk ${unverified}
-    fi
-    echo "*"
-fi
-echo "*******************************************************************"
-echo
-
-case "${STATUS}" in
-    WILLFAIL)
-          if test ".${ac_willfailoverride}" != ".yes"; then
-              exit 1
-          fi
-      ;;
-esac
-
-dnl>
-dnl>  Here so we stop processing ASAP after printing above
-dnl>
-AC_ARG_ENABLE(test,
-              [  --enable-test                Test platform and stop],
-              exit 0)
 
 dnl>
 dnl> Last chance default (if there is an os-specific value, set it above)
