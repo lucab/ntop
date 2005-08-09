@@ -278,7 +278,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   }
 
   if(host->magic != CONST_MAGIC_NUMBER) {
-    traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
+    traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d) freeHostInfo()",
 	       CONST_MAGIC_NUMBER, host->magic);
   }
 
@@ -752,9 +752,9 @@ void setHostSerial(HostTraffic *el) {
   Searches a host and returns it. If the host is not
   present in the hash a new bucket is created
 */
-HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanId,
+HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanId,
 			u_char checkForMultihoming, u_char forceUsingIPaddress,
-			int actualDeviceId) {
+			int actualDeviceId, char *file, int line) {
   u_int idx, isMultihomed = 0;
   HostTraffic *el=NULL;
   char buf[MAX_LEN_SYM_HOST_NAME_HTML];
@@ -766,7 +766,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
   u_int updateIPinfo = 0;
 
   if((hostIpAddress == NULL) && (ether_addr == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "Both Ethernet and IP addresses are NULL");
+    traceEvent(CONST_TRACE_WARNING, "Both Ethernet and IP addresses are NULL in lookupHost()[%s/%d]", file, line);
     return(NULL);
   }
 
@@ -799,14 +799,18 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 
   while (el != NULL) {
     if(el->magic != CONST_MAGIC_NUMBER) {
-      traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d) [deviceId=%d]",
-		 CONST_MAGIC_NUMBER, el->magic, actualDeviceId);
+      traceEvent(CONST_TRACE_WARNING,
+                 "Error: bad magic number (expected=%d/real=%d) [deviceId=%d] lookupHost()[%s/%d]",
+		 CONST_MAGIC_NUMBER, el->magic, actualDeviceId,
+                 file, line);
     }
 
     if(el->hostTrafficBucket != idx) {
-      traceEvent(CONST_TRACE_WARNING, "Error: wrong bucketIdx %s/%s (expected=%d/real=%d) [deviceId=%d]",
+      traceEvent(CONST_TRACE_WARNING,
+                 "Error: wrong bucketIdx %s/%s (expected=%d/real=%d) [deviceId=%d] lookupHost()[%s/%d]",
 		 el->ethAddressString, el->hostNumIpAddress,
-		 idx, el->hostTrafficBucket, actualDeviceId);
+		 idx, el->hostTrafficBucket, actualDeviceId,
+                 file, line);
     }
 
     if(useIPAddressForSearching == 0) {
@@ -1186,7 +1190,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 
   while(el != NULL) {
     if(el->magic != CONST_MAGIC_NUMBER) {
-      traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
+      traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d) lookupFcHost()",
 		 CONST_MAGIC_NUMBER, el->magic);
     }
 

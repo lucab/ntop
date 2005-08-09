@@ -58,18 +58,19 @@ static char *versionSite[]   = {
 
 /* ************************************ */
 
-static HostTraffic* _getFirstHost(u_int actualDeviceId, u_int beginIdx) {
+static HostTraffic* __getFirstHost(u_int actualDeviceId, u_int beginIdx, char *file, int line) {
   u_int idx;
 
-  /* accessMutex(&myGlobals.hostsHashMutex, "_getFirstHost"); */
+  /* accessMutex(&myGlobals.hostsHashMutex, "__getFirstHost"); */
 
   for(idx=beginIdx; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
     HostTraffic *el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
     if(el != NULL) {
       if(el->magic != CONST_MAGIC_NUMBER) {
-	traceEvent(CONST_TRACE_WARNING, "Error: bad magic number [expected=%d/real=%d][deviceId=%d]",
-		   CONST_MAGIC_NUMBER, el->magic, actualDeviceId);
+	traceEvent(CONST_TRACE_WARNING, 
+                   "Error: bad magic number [expected=%d/real=%d][deviceId=%d] getFirstHost()[%s/%d]",
+		   CONST_MAGIC_NUMBER, el->magic, actualDeviceId, file, line);
       }
 
       /* releaseMutex(&myGlobals.hostsHashMutex); */
@@ -83,21 +84,21 @@ static HostTraffic* _getFirstHost(u_int actualDeviceId, u_int beginIdx) {
 
 /* ************************************ */
 
-HostTraffic* getFirstHost(u_int actualDeviceId) {
-  return(_getFirstHost(actualDeviceId, FIRST_HOSTS_ENTRY));
+HostTraffic* _getFirstHost(u_int actualDeviceId, char *file, int line) {
+  return(__getFirstHost(actualDeviceId, FIRST_HOSTS_ENTRY, file, line));
 }
 
 /* ************************************ */
 
-HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {
+HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, int line) {
   if(host == NULL) return(NULL);
 
   /* accessMutex(&myGlobals.hostsHashMutex, "getNextHost"); */
 
   if(host->next != NULL) {
     if(host->next->magic != CONST_MAGIC_NUMBER) {
-      traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
-		 CONST_MAGIC_NUMBER, host->next->magic);
+      traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d) getNextHost()[%s/%d]",
+		 CONST_MAGIC_NUMBER, host->next->magic, file, line);
     }
 
     /* releaseMutex(&myGlobals.hostsHashMutex); */
@@ -107,7 +108,7 @@ HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {
 
     /* releaseMutex(&myGlobals.hostsHashMutex); */
     if(nextIdx < myGlobals.device[actualDeviceId].actualHashSize)
-      return(_getFirstHost(actualDeviceId, nextIdx));
+      return(__getFirstHost(actualDeviceId, nextIdx, file, line));
     else
       return(NULL);
   }

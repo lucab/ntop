@@ -216,8 +216,10 @@ extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern int purgeIdleHosts(int devId);
 extern void setHostSerial(HostTraffic *el);
-extern HostTraffic * lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanId,
-				u_char checkForMultihoming, u_char forceUsingIPaddress, int actualDeviceId);
+extern HostTraffic * _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanId,
+				u_char checkForMultihoming, u_char forceUsingIPaddress, int actualDeviceId,
+                                char *file, int line);
+#define lookupHost(a, b, c, d, e, f) _lookupHost(a, b, c, d, e, f, __FILE__, __LINE__)
 extern HostTraffic * lookupFcHost(FcAddress *fcAddress, u_short vsanId,
 				  int actualDeviceId);
 /* initialize.c */
@@ -439,8 +441,10 @@ extern void initPassiveSessions(void);
 extern void termPassiveSessions(void);
 extern void incrementTrafficCounter(TrafficCounter *ctr, Counter value);
 extern void resetTrafficCounter(TrafficCounter *ctr);
-extern HostTraffic* getFirstHost(u_int actualDeviceId);
-extern HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host);
+extern HostTraffic* _getFirstHost(u_int actualDeviceId, char *file, int line);
+#define getFirstHost(a) _getFirstHost(a, __FILE__, __LINE__)
+extern HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, int line);
+#define getNextHost(a, b) _getNextHost(a, b, __FILE__, __LINE__)
 extern char* serial2str(HostSerial theSerial, char *buf, int buf_len);
 extern void str2serial(HostSerial *theSerial, char *buf, int buf_len);
 extern int ntop_conditional_sched_yield(void);
