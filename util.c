@@ -3472,23 +3472,12 @@ static void addSessionInfo(SessionInfo *ptr, u_short ptr_len, HostAddr *theHost,
 
   if(i == ptr_len) {
     /* Slot Not found */
-    traceEvent(CONST_TRACE_INFO, "Info: ptr[size=%d] is full", ptr_len);
+    static u_char is_hash_full = 0;
 
-    /* Shift table entries */
-    for(i=1; i<ptr_len; i++) {
-      ptr[i-1].sessionHost = ptr[i].sessionHost,
-	ptr[i-1].sessionPort = ptr[i].sessionPort,
-	ptr[i-1].session_info = ptr[i].session_info;
-    }
-
-    addrcpy(&ptr[ptr_len-1].sessionHost,theHost);
-    ptr[ptr_len-1].sessionPort = thePort;
-
-    if(ptr[ptr_len-1].session_info != NULL) free(ptr[ptr_len-1].session_info);
-    if(notes)
-      ptr[ptr_len-1].session_info = strdup(notes);
-    else
-      ptr[ptr_len-1].session_info = NULL;
+    if(!is_hash_full) {
+      traceEvent(CONST_TRACE_INFO, "addSessionInfo: hash full [size=%d]", ptr_len);
+      is_hash_full = 1;
+    }    
   }
 }
 

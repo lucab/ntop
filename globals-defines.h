@@ -819,9 +819,9 @@
 
 /*
  * Used in util.c - the number of entries in the (ftp) passiveSessions
- * tracking structure
+ * and voipSessions tracking structure
  */
-#define MAX_PASSIVE_FTP_SESSION_TRACKER     384
+#define MAX_PASSIVE_FTP_SESSION_TRACKER     2048
 
 /*
  * Sets myGlobals.maxNumLines, which is used to determine how many rows (lines)
