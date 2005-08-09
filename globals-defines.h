@@ -1646,6 +1646,18 @@
 #define FLAG_NTOPSTATE_SHUTDOWN             7
 #define FLAG_NTOPSTATE_TERM                 8
 
+#define ntopstate_text(a) ( \
+   a==FLAG_NTOPSTATE_NOTINIT ? "NotInit" : \
+     a==FLAG_NTOPSTATE_PREINIT ? "PreInit" : \
+     a==FLAG_NTOPSTATE_INIT ? "Init" : \
+     a==FLAG_NTOPSTATE_INITNONROOT ? "InitNonRoot" : \
+     a==FLAG_NTOPSTATE_RUN ? "Run" : \
+     a==FLAG_NTOPSTATE_STOPCAP ? "StopCap" : \
+     a==FLAG_NTOPSTATE_SHUTDOWNREQ ? "ShutDownReq" : \
+     a==FLAG_NTOPSTATE_SHUTDOWN ? "ShutDown" : \
+     a==FLAG_NTOPSTATE_TERM ? "Term" : "UNKNOWN" \
+)
+
 /*
  * When myGlobals.useSyslog is set to this, turns off the logging
  */

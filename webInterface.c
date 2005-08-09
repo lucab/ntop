@@ -6171,6 +6171,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   }
 #endif
 
+  printFeatureConfigInfo(textPrintFlag, "Run State", ntopstate_text(myGlobals.ntopRunState));
+
   /* *************************** */
 
   printInfoSectionTitle(textPrintFlag, "Command line");
