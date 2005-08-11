@@ -4896,6 +4896,16 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
  endPrintThptStats:
   sendString("</CENTER>\n");
+
+
+  if(useRRD) {
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<p align=right>"
+		  "[ <A HREF=\"/" CONST_PLUGINS_HEADER"rrdPlugin\">Change Throughput Granularity</A> ]</p>",
+		  formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
+		  formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));    
+    sendString(tmpBuf);
+  }
+
 }
 
 /* ************************ */

@@ -90,7 +90,7 @@ static u_short dumpPermissions;
 static PthreadMutex rrdMutex;
 static pthread_t rrdThread, rrdTrafficThread;
 
-static unsigned short initialized = 0, active = 0, colorWarn = 0, graphErrCount = 0, dumpInterval, shortDumpInterval = 10, dumpDetail;
+static unsigned short initialized = 0, active = 0, colorWarn = 0, graphErrCount = 0, dumpInterval, dumpShortInterval, dumpDetail;
 static unsigned short dumpDays, dumpHours, dumpMonths, dumpDelay;
 static char *hostsFilter = NULL;
 static Counter numRRDUpdates = 0, numTotalRRDUpdates = 0;
@@ -1050,7 +1050,7 @@ static void updateUdpParams() {
     char buf[512];
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "CFG %d\t%d\t%d\t%d\t%d\t%d",
-		  dumpInterval, shortDumpInterval, dumpHours, dumpDays, dumpMonths, dumpDelay);
+		  dumpInterval, dumpShortInterval, dumpHours, dumpDays, dumpMonths, dumpDelay);
     
     sendto(sd, buf, strlen(buf), 0,
 	   (struct sockaddr *)&remoteServAddr,
@@ -1065,6 +1065,27 @@ static void termUdp() {
   
   close(sd);
   sd = -1;
+}
+
+/* ******************************* */
+
+static void deleteRRD(char *basePath, char *key) {
+    char path[512], *argv[32], cmd[64];
+    struct stat statbuf;
+    int argc = 0, rc, createdCounter = 0, i;
+
+    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s%s.rrd", basePath, key);
+
+    /* Avoid path problems */
+    for(i=strlen(basePath); i<strlen(path); i++)
+      if(path[i] == '/') path[i]='_';
+
+    revertSlashIfWIN32(path, 0);
+
+    if(unlink(path) != 0)
+      traceEvent(CONST_TRACE_WARNING,
+                   "THREADMGMT[t%lu]: RRD: deleteRRD(%s) failed: %s",
+		 pthread_self(), path, strerror(errno));
 }
 
 /* ******************************* */
@@ -1105,7 +1126,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
       int value1, value2, rrdDumpInterval;
       unsigned long topValue;
 
-      rrdDumpInterval = short_step ? (2*shortDumpInterval) : dumpInterval;
+      rrdDumpInterval = short_step ? (2*dumpShortInterval) : dumpInterval;
       step = rrdDumpInterval;
 
       topValue = 1000000000 /* 1 Gbit/s */;
@@ -1364,6 +1385,14 @@ static void commonRRDinit(void) {
     dumpInterval = atoi(value);
   }
 
+  if(fetchPrefsValue("rrd.dumpShortInterval", value, sizeof(value)) == -1) {
+    safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", DEFAULT_RRD_SHORT_INTERVAL);
+    storePrefsValue("rrd.dumpShortInterval", value);
+    dumpShortInterval = DEFAULT_RRD_SHORT_INTERVAL;
+  } else {
+    dumpShortInterval = atoi(value);
+  }
+
   if(fetchPrefsValue("rrd.dataDumpHours", value, sizeof(value)) == -1) {
     safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", DEFAULT_RRD_HOURS);
     storePrefsValue("rrd.dataDumpHours", value);
@@ -1516,6 +1545,7 @@ static void commonRRDinit(void) {
 #ifdef RRD_DEBUG
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Parameters:");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterval %d seconds", dumpInterval);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpShortInterval %d seconds", dumpShortInterval);
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpHours %d hours by %d seconds", dumpHours, dumpInterval);
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpDays %d days by hour", dumpDays);
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpMonths %d months by day", dumpMonths);
@@ -2037,7 +2067,7 @@ static void handleRRDHTTPrequest(char* url) {
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
   int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces,
-    _dumpMatrix, _dumpDetail, _dumpInterval, _dumpHours, _dumpDays, _dumpMonths, graphId;
+    _dumpMatrix, _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId;
   int i, len, rc, idx;
   char * _hostsFilter;
 #ifndef WIN32
@@ -2068,6 +2098,7 @@ static void handleRRDHTTPrequest(char* url) {
   _dumpMatrix=0;
   _dumpDetail=CONST_RRD_DETAIL_DEFAULT;
   _dumpInterval=DEFAULT_RRD_INTERVAL;
+  _dumpShortInterval=DEFAULT_RRD_SHORT_INTERVAL;
   _dumpHours=DEFAULT_RRD_HOURS;
   _dumpDays=DEFAULT_RRD_DAYS;
   _dumpMonths=DEFAULT_RRD_MONTHS;
@@ -2181,6 +2212,9 @@ static void handleRRDHTTPrequest(char* url) {
 	} else if(strcmp(key, "interval") == 0) {
 	  _dumpInterval = atoi(value);
           if(_dumpInterval < 1) _dumpInterval = 1 /* Min 1 second */;
+	} else if(strcmp(key, "shortinterval") == 0) {
+	  _dumpShortInterval = atoi(value);
+          if(_dumpShortInterval < 1) _dumpShortInterval = 1 /* Min 1 second */;
 	} else if(strcmp(key, "days") == 0) {
 	  _dumpDays = atoi(value);
           if(_dumpDays < 0) _dumpDays = 0 /* Min none */;
@@ -2243,6 +2277,26 @@ static void handleRRDHTTPrequest(char* url) {
 
     if(action == FLAG_RRD_ACTION_NONE) {
       dumpInterval = _dumpInterval;
+
+
+      if(dumpShortInterval != _dumpShortInterval) {
+	int devIdx;
+
+	dumpShortInterval = _dumpShortInterval;
+
+	for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
+	  if((myGlobals.device[devIdx].virtualDevice && (!myGlobals.device[devIdx].sflowGlobals))
+	     || (!myGlobals.device[devIdx].activeDevice))
+	    continue;
+	  
+	  safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), 
+			"%s/interfaces/%s/", myGlobals.rrdPath,
+			myGlobals.device[devIdx].humanFriendlyName);
+	  
+	  deleteRRD(rrdPath, "throughput");
+	}
+      }
+
       dumpHours = _dumpHours;
       dumpDays = _dumpDays;
       dumpMonths = _dumpMonths;
@@ -2259,6 +2313,8 @@ static void handleRRDHTTPrequest(char* url) {
 #endif
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpInterval);
       storePrefsValue("rrd.dataDumpInterval", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpShortInterval);
+      storePrefsValue("rrd.dumpShortInterval", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpHours);
       storePrefsValue("rrd.dataDumpHours", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDays);
@@ -2339,6 +2395,14 @@ static void handleRRDHTTPrequest(char* url) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpInterval);
   sendString(buf);
   sendString("> seconds<br>Specifies how often data is stored permanently.</td></tr>\n");
+
+  sendString("<tr><th align=\"left\" "DARK_BG">Throughput Granularity</th><td>"
+	     "<INPUT NAME=shortinterval SIZE=5 VALUE=");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpShortInterval);
+  sendString(buf);
+  sendString("> seconds<br>Specifies how often <A HREF=/"CONST_SORT_DATA_THPT_STATS_HTML">thoughput</A> data is stored permanently.<br>"
+	     "<FONT COLOR=red><b>Note</b></FONT>: if you change this value the throughput stats will be reset<br>"
+	     "and past values will be lost. You've been warned!</td></tr>\n");
 
   sendString("<tr><th align=\"left\" "DARK_BG">Dump Hours</th><td>"
 	     "<INPUT NAME=hours SIZE=5 VALUE=");
@@ -2829,7 +2893,7 @@ static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
     int devIdx;
     char rrdPath[512];
     
-    ntopSleepWhileSameState(shortDumpInterval);
+    ntopSleepWhileSameState(dumpShortInterval);
     if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) {
       traceEvent(CONST_TRACE_INFO, 
                  "THREADMGMT[t%lu]: RRD: Throughput data collection: Thread stopping [p%d] State>RUN",
