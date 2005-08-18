@@ -2244,11 +2244,11 @@ typedef struct ntopGlobals {
   u_int32_t localNetworks[MAX_NUM_NETWORKS][3]; /* [0]=network, [1]=mask, [2]=broadcast */
   u_short numLocalNetworks;
 
-#ifdef MEMORY_DEBUG
+#if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
   size_t allocatedMemory;
 #endif
 
-#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
+#ifdef MAKE_WITH_MALLINFO
   u_int baseMemoryUsage;
 #endif
   u_int ipTrafficMatrixMemoryUsage;

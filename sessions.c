@@ -299,7 +299,8 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   /* Session to purge */
 
   if(sessionToPurge->magic != CONST_MAGIC_NUMBER) {
-    traceEvent(CONST_TRACE_ERROR, "===> Magic assertion failed (5)");
+    traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) freeSession()",
+	       CONST_MAGIC_NUMBER, sessionToPurge->magic);
     return;
   }
 
@@ -309,6 +310,9 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   } else {
     sessionToPurge->initiator->numHostSessions--, sessionToPurge->remotePeer->numHostSessions--;
   }
+
+  /* Flag in delete process */
+  sessionToPurge->magic = CONST_UNMAGIC_NUMBER;
 
   if(((sessionToPurge->bytesProtoSent.value == 0)
       || (sessionToPurge->bytesProtoRcvd.value == 0))
@@ -373,6 +377,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 #ifdef PARM_USE_SESSIONS_CACHE
   /* Memory recycle */
   if(myGlobals.sessionsCacheLen < (MAX_SESSIONS_CACHE_LEN-1)) {
+    sessionToPurge->magic = 0;
     myGlobals.sessionsCache[myGlobals.sessionsCacheLen++] = sessionToPurge;
     if (myGlobals.sessionsCacheLen > myGlobals.sessionsCacheLenMax)
         myGlobals.sessionsCacheLenMax = myGlobals.sessionsCacheLen;
@@ -398,8 +403,9 @@ void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
     /* Session to purge */
 
     if(sessionToPurge->magic != CONST_MAGIC_NUMBER) {
-        traceEvent(CONST_TRACE_ERROR, "===> Magic assertion failed (5)");
-        return;
+      traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) freeFcSession()",
+                 CONST_MAGIC_NUMBER, sessionToPurge->magic);
+      return;
     }
 
     if((sessionToPurge->initiator == NULL) || (sessionToPurge->remotePeer == NULL)) {
@@ -481,7 +487,8 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
       if(theSession->magic != CONST_MAGIC_NUMBER) {
 	theSession = NULL;
 	myGlobals.device[actualDeviceId].numTcpSessions--;
-	traceEvent(CONST_TRACE_ERROR, "===> Magic assertion failed!");
+        traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) scanTimedoutTCPSessions()",
+	           CONST_MAGIC_NUMBER, theSession->magic);
 	continue;
       }
 
@@ -3468,8 +3475,8 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
 
     if ((myGlobals.device[actualDeviceId].fcSession[idx] != NULL) &&
 	(myGlobals.device[actualDeviceId].fcSession[idx]->magic != CONST_MAGIC_NUMBER)) {
-      traceEvent(CONST_TRACE_WARNING, "handleFcSession: Internal Error (4) (idx=%d)",
-		 idx);
+      traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) handleFcSession() (idx=%d)",
+                 CONST_MAGIC_NUMBER, myGlobals.device[actualDeviceId].fcSession[idx]->magic, idx);
       theSession->next = NULL;
     }
     else {

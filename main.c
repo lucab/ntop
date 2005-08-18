@@ -277,12 +277,11 @@ int main(int argc, char *argv[]) {
 
   /* printf("Wait please: ntop is coming up...\n"); */
 
-#ifdef MTRACE
+/* Don't move this below nor above */
+#if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
   mtrace();
-#endif
-
-#ifdef MEMORY_DEBUG
-  initLeaks(); /* Don't move this below nor above */
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
+  initLeaks();
 #endif
 
   /* VERY FIRST THING is to clear myGlobals, so myGlobals.ntopRunState can be used */
@@ -548,7 +547,7 @@ int main(int argc, char *argv[]) {
   initReports();
 
   /* If we can, set the base memory HERE */
-#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
+#ifdef MAKE_WITH_MALLINFO
   {
     struct mallinfo memStats;
 

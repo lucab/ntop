@@ -29,10 +29,6 @@
 #include <assert.h>
 #include "fcUtils.h"
 
-#ifdef MEMORY_DEBUG
-#include "leaks.h"
-#endif
-
 /* **************************************** */
 
 int isFlogiAcc (FcAddress *fcAddress, u_int8_t r_ctl, u_int8_t type, u_int8_t cmd)

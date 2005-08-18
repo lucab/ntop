@@ -28,7 +28,7 @@
 #include <pwd.h>
 #endif
 
-#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
+#ifdef MAKE_WITH_MALLINFO
 #include <malloc.h>
 #ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
@@ -2906,6 +2906,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
+  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_MALLINFO",
+#ifdef MAKE_WITH_MALLINFO
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
   printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SNMP",
 #ifdef MAKE_WITH_SNMP
                          "yes"
@@ -3857,6 +3865,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigNum(textPrintFlag, "CONST_MAGIC_NUMBER", CONST_MAGIC_NUMBER);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_MAGIC_NUMBER", "undefined");
+#endif
+
+#ifdef CONST_UNMAGIC_NUMBER
+  printFeatureConfigNum(textPrintFlag, "CONST_UNMAGIC_NUMBER", CONST_UNMAGIC_NUMBER);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_UNMAGIC_NUMBER", "undefined");
 #endif
 
 #ifdef CONST_MAILTO_ABDELKADER
@@ -6244,7 +6258,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   unsigned int idx, minLen, maxLen;
   unsigned long totBuckets=0, nonEmptyBuckets=0;
 
-#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
+#ifdef MAKE_WITH_MALLINFO
   struct mallinfo memStats;
   int totalHostsMonitored = 0;
 
@@ -6889,7 +6903,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     }
 #endif
 
-#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
+#ifdef MAKE_WITH_MALLINFO
   printInfoSectionTitle(textPrintFlag, "Memory allocation - data segment");
 
   memStats = mallinfo();
@@ -6939,7 +6953,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d (%.1f MB)", myGlobals.asMem, (float)myGlobals.asMem/(1024.0*1024.0));
     printFeatureConfigInfo(textPrintFlag, "IP to AS (Autonomous System) number table (bytes)", buf);
 
-#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
+#ifdef MAKE_WITH_MALLINFO
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.arena + memStats.hblkhd);
     printFeatureConfigInfo(textPrintFlag, "Current memory usage", buf);
@@ -7487,7 +7501,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   /* **** */
 
-#ifdef MEMORY_DEBUG
+#if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
   printFeatureConfigInfo(textPrintFlag, "Allocated Memory",
                          formatBytes(myGlobals.allocatedMemory, 0, buf, sizeof(buf)));
 #endif
@@ -7566,6 +7580,14 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "system libraries", system_libs);
   printFeatureConfigInfo(textPrintFlag, "install path", install_path);
 #endif
+
+#ifdef MEMORY_DEBUG
+  printFeatureConfigInfo(textPrintFlag, "Memory Debug option", memoryDebug);
+ #if (MEMORY_DEBUG == 1)
+  printFeatureConfigInfo(textPrintFlag, "Trace File", getenv("MALLOC_TRACE"));
+ #endif
+#endif
+
 #if defined(__GNUC__)
  #if defined(__GNUC_PATCHLEVEL__)
   #define PATCHLEVEL __GNUC_PATCHLEVEL__

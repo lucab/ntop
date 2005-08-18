@@ -71,6 +71,9 @@ extern char *version, *osName, *author, *buildDate, *configureDate,
             *distro,
             *release,
             *force_runtime;
+#ifdef MEMORY_DEBUG
+extern char *memoryDebug;
+#endif
 
 /* util.c */
 #ifndef HAVE_GETOPT_H
@@ -254,15 +257,35 @@ extern void initGdbm(char *prefDirectory, char *spoolDirectory, int initPrefsOnl
 extern void addDevice(char* deviceName, char* deviceDescr);
 
 /* leaks.c */
+
+#ifdef MAKE_WITH_SAFER_ROUTINES
+
+/* Fix to the free prototype courtesy of Tanner Lovelace <lovelace@opennms.org> */
+#define free(a)       ntop_safefree((void**)&(a), __FILE__, __LINE__)
+extern void           ntop_safefree(void **ptr, char* file, int line);
+#define malloc(sz)    ntop_safemalloc(sz, __FILE__, __LINE__)
+extern void*          ntop_safemalloc(unsigned int sz, char* file, int line);
+#define calloc(c,sz)  ntop_safecalloc(c, sz, __FILE__, __LINE__)
+extern void*          ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line);
+#define realloc(p,sz) ntop_saferealloc(p, sz, __FILE__, __LINE__)
+extern void*          ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line);
+extern char* ntop_safestrdup(char *ptr, char* file, int line);
+
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
+
+  /* mtrace()/muntrace() - use existing routines */
+
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 2)
+
+  /* ElectricFence - use existing routines */
+
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
+
+  /* ntop custom monitor */
+
 extern void initLeaks(void);
 extern void termLeaks(void);
 extern void resetLeaks(void);
-
-#ifndef MTRACE
-#ifdef MEMORY_DEBUG
-#define gdbm_firstkey(a)     ntop_gdbm_firstkey(a, __FILE__, __LINE__)
-#define gdbm_nextkey(a, b)   ntop_gdbm_nextkey(a, b, __FILE__, __LINE__)
-#define gdbm_fetch(a, b)     ntop_gdbm_fetch(a, b, __FILE__, __LINE__)
 
 #define malloc(a)     ntop_malloc((unsigned int)a, __FILE__, __LINE__)
 #define calloc(a, b)  ntop_calloc((unsigned int)a, (unsigned int)b, __FILE__, __LINE__)
@@ -281,7 +304,7 @@ extern void resetLeaks(void);
        __typeof__(&(a)) ptr;      \
        } __x;  \
        __x.ptr = &(a);  \
-       ntop_safefree(__x.voidptr, __FILE__, __LINE__); \
+       ntop_free(__x.voidptr, __FILE__, __LINE__); \
 } while (0)
 
 extern void*          ntop_malloc(unsigned int sz, char* file, int line);
@@ -289,36 +312,26 @@ extern void*          ntop_calloc(unsigned int c, unsigned int sz, char* file, i
 extern void*          ntop_realloc(void* ptr, unsigned int sz, char* file, int line);
 extern char*          ntop_strdup(char *str, char* file, int line);
 extern void           ntop_free(void **ptr, char* file, int line);
-extern datum          ntop_gdbm_firstkey(GDBM_FILE g, char* theFile, int theLine);
-extern datum          ntop_gdbm_nextkey(GDBM_FILE g, datum d, char* theFile, int theLine);
-extern datum          ntop_gdbm_fetch(GDBM_FILE g, datum d, char* theFile, int theLine);
-#else /* MEMORY_DEBUG */
-extern int   ntop_gdbm_delete(GDBM_FILE g, datum d);
-extern datum ntop_gdbm_firstkey(GDBM_FILE g);
-extern datum ntop_gdbm_nextkey(GDBM_FILE g, datum d);
-extern datum ntop_gdbm_fetch(GDBM_FILE g, datum d);
-extern int   ntop_gdbm_store(GDBM_FILE g, datum d, datum v, int r);
-extern void  ntop_gdbm_close(GDBM_FILE g);
 
-#define gdbm_firstkey(a)             ntop_gdbm_firstkey(a)
-#define gdbm_nextkey(a, b)           ntop_gdbm_nextkey(a, b)
-#define gdbm_fetch(a, b)             ntop_gdbm_fetch(a, b)
-#define gdbm_delete(a, b)            ntop_gdbm_delete(a, b)
-#define gdbm_store(a, b, c, d)       ntop_gdbm_store(a, b, c, d)
-#define gdbm_close(a)                ntop_gdbm_close(a)
+#elif defined(MEMORY_DEBUG) 
+#else
+#endif /* MAKE_WITH_SAFER_ROUTINES / MEMORY_DEBUG */
 
-/* Fix to the free prototype courtesy of Tanner Lovelace <lovelace@opennms.org> */
-#define free(a)       ntop_safefree((void**)&(a), __FILE__, __LINE__)
-extern void           ntop_safefree(void **ptr, char* file, int line);
-#define malloc(sz)    ntop_safemalloc(sz, __FILE__, __LINE__)
-extern void*          ntop_safemalloc(unsigned int sz, char* file, int line);
-#define calloc(c,sz)  ntop_safecalloc(c, sz, __FILE__, __LINE__)
-extern void*          ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line);
-#define realloc(p,sz) ntop_saferealloc(p, sz, __FILE__, __LINE__)
-extern void*          ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line);
-#endif
-extern char* ntop_safestrdup(char *ptr, char* file, int line);
-#endif  /* MTRACE */
+/* Serialized replacements for gdbm routines... */
+
+#define gdbm_firstkey(a)             ntop_gdbm_firstkey(a, __FILE__, __LINE__)
+#define gdbm_nextkey(a, b)           ntop_gdbm_nextkey(a, b, __FILE__, __LINE__)
+#define gdbm_fetch(a, b)             ntop_gdbm_fetch(a, b, __FILE__, __LINE__)
+#define gdbm_delete(a, b)            ntop_gdbm_delete(a, b, __FILE__, __LINE__)
+#define gdbm_store(a, b, c, d)       ntop_gdbm_store(a, b, c, d, __FILE__, __LINE__)
+#define gdbm_close(a)                ntop_gdbm_close(a, __FILE__, __LINE__)
+
+extern int   ntop_gdbm_delete(GDBM_FILE g, datum d, char* theFile, int theLine);
+extern datum ntop_gdbm_firstkey(GDBM_FILE g, char* theFile, int theLine);
+extern datum ntop_gdbm_nextkey(GDBM_FILE g, datum d, char* theFile, int theLine);
+extern datum ntop_gdbm_fetch(GDBM_FILE g, datum d, char* theFile, int theLine);
+extern int   ntop_gdbm_store(GDBM_FILE g, datum d, datum v, int r, char* theFile, int theLine);
+extern void  ntop_gdbm_close(GDBM_FILE g, char* theFile, int theLine);
 
 /* ntop.c */
 #ifndef WIN32

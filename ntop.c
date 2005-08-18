@@ -1162,14 +1162,14 @@ RETSIGTYPE cleanup(int signo) {
   if(myGlobals.gdVersionGuessValue != NULL)
     free(myGlobals.gdVersionGuessValue);
 
-#ifdef MEMORY_DEBUG
+#if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
+  traceEvent(CONST_TRACE_INFO, "===================================");
+  muntrace();
+  traceEvent(CONST_TRACE_INFO, "===================================");
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
   traceEvent(CONST_TRACE_INFO, "===================================");
   termLeaks();
   traceEvent(CONST_TRACE_INFO, "===================================");
-#endif
-
-#ifdef MTRACE
-  muntrace();
 #endif
 
 #ifndef WIN32

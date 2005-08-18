@@ -30,10 +30,6 @@
 #include "fcUtils.h"
 #include "globals-report.h"
 
-#ifdef MEMORY_DEBUG
-#include "leaks.h"
-#endif
-
 /* **************************************** */
 
 /* ******************* */

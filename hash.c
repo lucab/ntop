@@ -278,9 +278,13 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   }
 
   if(host->magic != CONST_MAGIC_NUMBER) {
-    traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d) freeHostInfo()",
+    traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) freeHostInfo()",
 	       CONST_MAGIC_NUMBER, host->magic);
+    return;
   }
+
+  /* Flag that this entry is being deleted. */
+  host->magic = CONST_UNMAGIC_NUMBER;
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Entering freeHostInfo(%u)", host->hostTrafficBucket);
@@ -488,6 +492,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
 #if RECYCLE_MEMORY
   if(myGlobals.hostsCacheLen < (MAX_HOSTS_CACHE_LEN-1)) {
+    host->magic = 0;
     myGlobals.hostsCache[myGlobals.hostsCacheLen++] = host;
     if(myGlobals.hostsCacheLen > myGlobals.hostsCacheLenMax)
       myGlobals.hostsCacheLenMax = myGlobals.hostsCacheLen;
@@ -799,10 +804,11 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlan
 
   while (el != NULL) {
     if(el->magic != CONST_MAGIC_NUMBER) {
-      traceEvent(CONST_TRACE_WARNING,
-                 "Error: bad magic number (expected=%d/real=%d) [deviceId=%d] lookupHost()[%s/%d]",
+      traceEvent(CONST_TRACE_ERROR,
+                 "Bad magic number (expected=%d/real=%d) [deviceId=%d] lookupHost()[%s/%d]",
 		 CONST_MAGIC_NUMBER, el->magic, actualDeviceId,
                  file, line);
+      break; /* Can't trust this chain ... */
     }
 
     if(el->hostTrafficBucket != idx) {
@@ -1190,8 +1196,9 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 
   while(el != NULL) {
     if(el->magic != CONST_MAGIC_NUMBER) {
-      traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d) lookupFcHost()",
+      traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) lookupFcHost()",
 		 CONST_MAGIC_NUMBER, el->magic);
+      break; /* Can't trust this chain ... */
     }
 
     if(el->hostTrafficBucket != idx) {

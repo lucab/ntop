@@ -2642,26 +2642,37 @@ void processPacket(u_char *_deviceId,
 #endif
 
 #ifdef MEMORY_DEBUG
-  if(0) {
-    static long numPkt=0;
+ #ifdef MEMORY_DEBUG_UNLIMITED
+  #warning MEMORY_DEBUG defined for UNLIMITED usage!
+ #else
 
-    /* traceEvent(CONST_TRACE_INFO, "%ld (%ld)", numPkt, length); */
-
-    if(numPkt ==  /* 10000 */ 1000) {
-      cleanup(1);
-    } else
-      numPkt++;
-  } else {
-    static time_t start=0;
-
-    if(start == 0)
-      start = time(NULL)+1*60; /* 15 minutes */
-    else {
-      if(time(NULL) > start)
-	cleanup(1);
+  #ifdef MEMORY_DEBUG_PACKETS
+    {
+      static long numPkt=0;
+      if(++numPkt >= MEMORY_DEBUG_PACKETS) {
+        traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                   "NOTE: ntop shutting down - memory debug packet limit (%d) reached",
+                   MEMORY_DEBUG_PACKETS);
+        cleanup(1);
+      }
     }
-  }
-#endif
+  #endif /* MEMORY_DEBUG_PACKETS */
+
+  #ifdef MEMORY_DEBUG_SECONDS
+    {
+      static time_t memoryDebugAbortTime=0;
+      if(memoryDebugAbortTime == 0) {
+        memoryDebugAbortTime = time(NULL) + MEMORY_DEBUG_SECONDS;
+      } else if(time(NULL) > memoryDebugAbortTime) {
+        traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                   "NOTE: ntop shutting down - memory debug abort time reached");
+        cleanup(1);
+      }
+    }
+  #endif /* MEMORY_DEBUG_SECONDS */
+
+ #endif /* MEMORY_DEBUG_UNLIMITED */
+#endif /* MEMORY_DEBUG */
 
   if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN)
     return;

@@ -21,448 +21,32 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* Prevent expansion of leaks.h */
+#define _LEAKS_H_
+
 #include "ntop.h"
 
 /* #define USE_GC */
 
-#ifdef MEMORY_DEBUG 
+/* ****************************************** *
+ * Complexity: We have routines here which    *
+ *  (in coordination with globals-core.h)     *
+ *  override the default glibc routines.      *
+ *                                            *
+ *  We call them 'safer' because the do some  *
+ *  reasonability and error checking.         *
+ *                                            *
+ * If we aren't building the safer set, we    *
+ *  have other choices, depending upon        *
+ *  MEMORY_DEBUG (nothing, i.e. the default   *
+ *  and/or various dropins) and our own       *
+ *  'watching' routines.                      *
+ *                                            *
+ * ****************************************** */
 
-#undef malloc
-#undef free
-#undef strdup
-/* gdbm routines */
-#undef gdbm_firstkey
-#undef gdbm_nextkey
-#undef gdbm_fetch
+#ifdef MAKE_WITH_SAFER_ROUTINES
 
-typedef struct memoryBlock {
-  void*               memoryLocation;       /* Malloc address              */
-  size_t              blockSize;            /* Block size                  */
-  char                programLocation[48];  /* Program address: file, line */
-  struct memoryBlock* nextBlock;            /* Next memory block           */
-  short alreadyTraced;
-} MemoryBlock;
-
-static MemoryBlock *theRoot = NULL;
-static char tmpStr[255];
-static int traceAllocs = 0;
 static int glib23xMessageWritten = 0;
-#ifdef MEMORY_DEBUG
-static PthreadMutex leaksMutex;
-#endif
-
-
-unsigned int PrintMemoryBlocks(); /* Forward declaration */
-
-/* *************************************** */
-
-static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile, int lockMutex) {
-  MemoryBlock *tmpBlock;
-
-  if(lockMutex)
-    accessMutex(&leaksMutex, "storePtr");
-
-  tmpBlock = (MemoryBlock*)malloc(sizeof(MemoryBlock));
-
-  if(tmpBlock == NULL) {
-    if(lockMutex)
-      releaseMutex(&leaksMutex);
-    traceEvent(CONST_TRACE_FATALERROR, "malloc (not enough memory): %s, %d",  theFile, theLine);
-    exit(300); /* Just in case */
-  }
-  
-  tmpBlock->blockSize        = ptrLen;
-  tmpBlock->memoryLocation   = ptr;
-  tmpBlock->alreadyTraced    = 0;
-  myGlobals.allocatedMemory += tmpBlock->blockSize;
-      
-  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%s:%d.", theFile, theLine);
-
-  if(traceAllocs)
-    traceEvent(CONST_TRACE_INFO, "malloc(%d):%s  [tot=%u]", ptrLen, tmpStr, myGlobals.allocatedMemory);
-
-  safe_snprintf(__FILE__, __LINE__, tmpBlock->programLocation, sizeof(tmpBlock->programLocation), 
-		"%s", tmpStr);
-  tmpBlock->nextBlock = theRoot;
-  theRoot = tmpBlock;
-  if(lockMutex)
-    releaseMutex(&leaksMutex);
-}
-
-/* ********************************* */
-
-static void* myMalloc(size_t theSize, int theLine, char* theFile, int lockMutex) {
-  void *theMem;
-
-  theMem = malloc(theSize);
-  memset(theMem, 0xee, theSize); /* Fill it with garbage */
-  storePtr(theMem, theSize, theLine, theFile, lockMutex);
-  return(theMem);
-}
-
-/* *************************************** */
-
-static void* myCalloc(size_t numObj, size_t theSize, int theLine, char* theFile) {
-  int numElems = numObj*theSize;
-  void* thePtr = myMalloc(numElems, theLine, theFile, 1);
-
-  if(thePtr != NULL)
-    memset(thePtr, '\0', numElems);
-
-  return(thePtr);
-}
-
-/* *************************************** */
-
-static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile) {
-  MemoryBlock *theScan, *lastPtr, *theNewPtr;
-  
-  accessMutex(&leaksMutex, "myRealloc");
-
-  theScan = theRoot;
- 
-  while((theScan != NULL) && (theScan->memoryLocation != thePtr)) {
-    lastPtr = theScan;
-    theScan = theScan->nextBlock;
-  }
-
-  if(theScan == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Realloc error (Ptr %p NOT allocated): %s, %d", 
-	       thePtr, theFile, theLine);
-    releaseMutex(&leaksMutex);
-    return(NULL);
-  } else {    
-    theNewPtr = myMalloc(theSize, theLine, theFile, 0);
-      
-    if(theSize > theScan->blockSize)
-      memcpy(theNewPtr, thePtr, theScan->blockSize);
-    else
-      memcpy(theNewPtr, thePtr, theSize);
-	
-    free(theScan->memoryLocation);
-      
-    if(theScan == theRoot)
-      theRoot = theRoot->nextBlock;
-    else
-      lastPtr->nextBlock = theScan->nextBlock;
-
-    free(theScan);     
-
-    releaseMutex(&leaksMutex);
-
-    return(theNewPtr);
-  }
-}
-
-/* *************************************** */
-
-static void myFree(void **thePtr, int theLine, char* theFile) {
-  MemoryBlock *theScan, *lastPtr;
-  
-  accessMutex(&leaksMutex, "myFree");
-
-  theScan = theRoot;
- 
-  while((theScan != NULL) && (theScan->memoryLocation != *thePtr)) {
-    lastPtr = theScan;
-    theScan = theScan->nextBlock;
-  }
-
-  if(theScan == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Free error (Ptr %p NOT allocated): %s, %d", 
-	       *thePtr, theFile, theLine);
-    releaseMutex(&leaksMutex);
-    return;
-  } else {
-    myGlobals.allocatedMemory -= theScan->blockSize;
-
-    if(traceAllocs) traceEvent(CONST_TRACE_INFO, "free(%d):%s  [tot=%u]",
-			       theScan->blockSize, theScan->programLocation, myGlobals.allocatedMemory);
-
-    free(theScan->memoryLocation);
-
-    if(theScan == theRoot)
-      theRoot = theRoot->nextBlock;
-    else
-      lastPtr->nextBlock = theScan->nextBlock;
-
-    free(theScan);
-    *thePtr = NULL;
-  }
-
-  releaseMutex(&leaksMutex);
-}
-
-/* *************************************** */
-
-static char* myStrdup(char* theStr, int theLine, char* theFile) {
-  char* theOut;
-  int len = strlen(theStr);
-  
-  theOut = (char*)myMalloc((len+1), theLine, theFile, 1);
-  strncpy(theOut, theStr, len);
-  theOut[len] = '\0';
-
-  return(theOut);
-}
-
-/* *************************************** */
-
-void resetLeaks(void) {
-  MemoryBlock *theScan;
-
-  theScan = theRoot;
- 
-  while(theScan != NULL) {
-    theScan->alreadyTraced = 1;
-    theScan = theScan->nextBlock;
-  }
-
-  myGlobals.allocatedMemory = 0; /* Reset counter */
-}
-
-/* *************************************** */
-
-unsigned int PrintMemoryBlocks(void) {
-  MemoryBlock *theScan;
-  int i = 0;
-  unsigned int totMem = 0;
-
-  theScan = theRoot;
- 
-  while(theScan != NULL) {
-    MemoryBlock* tmp;
-
-    if(!theScan->alreadyTraced) {
-      traceEvent(CONST_TRACE_INFO,"Block %5d (addr %p, size %4d): %s", i++, 
-		 theScan->memoryLocation, theScan->blockSize, theScan->programLocation);
-      totMem += theScan->blockSize;
-    }
-
-    theScan->alreadyTraced = 1;
-    tmp = theScan->memoryLocation;
-    theScan = theScan->nextBlock;
-  }
-
-  traceEvent(CONST_TRACE_INFO,"Total allocated memory: %u bytes", totMem);
-
-  /* PrintMemoryBlocks(); */
-
-  return(totMem);
-}
-
-/* *************************************** */
-
-size_t GimmePointerSize(void* thePtr) {
-  MemoryBlock *theScan;
-  
-  theScan = theRoot;
- 
-  while((theScan != NULL) && (theScan->memoryLocation != thePtr))
-    theScan = theScan->nextBlock;
-
-  if(theScan == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "GimmePointerSize error: Ptr %p NOT allocated", thePtr);
-    return(-1);
-  } else
-    return(theScan->blockSize);
-}
-
-/* *************************************** */
-
-int GimmePointerInfo(void* thePtr) {
-  MemoryBlock *theScan;
-  
-  theScan = theRoot;
- 
-  while((theScan != NULL) && (theScan->memoryLocation != thePtr))
-    theScan = theScan->nextBlock;
-
-  if(theScan == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "GimmePointerInfo error: Ptr %p NOT allocated", thePtr);
-    return -1;
-  } else {      
-    traceEvent(CONST_TRACE_WARNING, "Block (addr %p, size %d): %s", theScan->memoryLocation, 
-	       theScan->blockSize, theScan->programLocation);
-    return 0;
-  }
-}
-
-/* *************************************** */
-
-void myAddLeak(void* thePtr, int theLine, char* theFile) {
-  MemoryBlock *tmpBlock;
-
-  if(thePtr == NULL) 
-    return;
-
-  tmpBlock = (MemoryBlock*)malloc(sizeof(MemoryBlock));
-
-  if(tmpBlock == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Malloc error (not enough memory): %s, %d", 
-	       theFile, theLine);
-    return;
-  }
-  
-  tmpBlock->blockSize = 0;
-  tmpBlock->memoryLocation = thePtr;
-  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "file %s, line %d.", theFile, theLine);
-  safe_snprintf(__FILE__, __LINE__, tmpBlock->programLocation, sizeof(tmpBlock->programLocation), "%s", tmpStr);
-  tmpBlock->nextBlock = theRoot;
-  theRoot = tmpBlock;
-}
-
-/* *************************************** */
-
-void myRemoveLeak(void* thePtr, int theLine, char* theFile) {
-  MemoryBlock *theScan, *lastPtr;
-  
-  theScan = theRoot;
- 
-  while((theScan != NULL) && (theScan->memoryLocation != thePtr)) {
-    lastPtr = theScan;
-    theScan = theScan->nextBlock;
-  }
-
-  if(theScan == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Free  block error (Ptr %p NOT allocated): %s, %d", 
-	       thePtr, theFile, theLine);
-    return;
-  } else {   
-    if(theScan == theRoot)
-      theRoot = theRoot->nextBlock;
-    else
-      lastPtr->nextBlock = theScan->nextBlock;
-
-    free(theScan);
-  }
-}
-
-/* *************************************** */
-
-void initLeaks(void) {
-  myGlobals.runningPref.useSyslog       = FLAG_SYSLOG_NONE;
-  myGlobals.runningPref.traceLevel      = 999;
-  myGlobals.allocatedMemory = 0;  
-
-  createMutex(&leaksMutex);
-}
-
-/* *************************************** */
-
-void termLeaks(void) {
-  PrintMemoryBlocks();
-  deleteMutex(&leaksMutex);
-}
-
-/* ************************************ */
-
-void* ntop_malloc(unsigned int sz, char* file, int line) {
-
-#ifdef DEBUG
-  char formatBuffer[32];
-  traceEvent(CONST_TRACE_INFO, "DEBUG: malloc(%u) [%s] @ %s:%d", 
-	     sz, formatBytes(myGlobals.allocatedMemory, 0, 
-			     formatBuffer, sizeof(formatBuffer)), file, line);
-#endif
-
-  return(myMalloc(sz, line, file, 1));
-}
-
-/* ************************************ */
-
-void* ntop_calloc(unsigned int c, unsigned int sz, char* file, int line) {
-#ifdef DEBUG
-  char formatBuffer[32];
-  traceEvent(CONST_TRACE_INFO, "DEBUG: calloc(%u) [%s] @ %s:%d", 
-	     sz, formatBytes(myGlobals.allocatedMemory, 0, 
-			     formatBuffer, sizeof(formatBuffer)), file, line);
-#endif
-  return(myCalloc(c, sz, line, file));
-}
-
-/* ************************************ */
-
-void* ntop_realloc(void* ptr, unsigned int sz, char* file, int line) {  
-#ifdef DEBUG
-  char formatBuffer[32];
-  traceEvent(CONST_TRACE_INFO, "DEBUG: realloc(%u) [%s] @ %s:%d", 
-	     sz, formatBytes(myGlobals.allocatedMemory, 0, 
-			     formatBuffer, sizeof(formatBuffer)), file, line);
-#endif  
-  return(myRealloc(ptr, sz, line, file));
-}
-
-/* ************************************ */
-
-char* ntop_strdup(char *str, char* file, int line) {
-#ifdef DEBUG
-  char formatBuffer[32];
-  traceEvent(CONST_TRACE_INFO, "DEBUG: strdup(%s) [%s] @ %s:%d", str, 
-	     formatBytes(myGlobals.allocatedMemory, 0,
-			 formatBuffer, sizeof(formatBuffer)), file, line);
-#endif
-  return(myStrdup(str, line, file));
-}
-
-/* ************************************ */
-
-void ntop_free(void **ptr, char* file, int line) {
-#ifdef DEBUG
-  char formatBuffer[32];
-  traceEvent(CONST_TRACE_INFO, "DEBUG: free(%x) [%s] @ %s:%d", ptr, 
-	     formatBytes(myGlobals.allocatedMemory, 0,
-			 formatBuffer, sizeof(formatBuffer)), file, line);
-#endif
-  myFree(ptr, line, file);
-}
-
-/* ****************************************** */
-
-datum ntop_gdbm_firstkey(GDBM_FILE g, char* theFile, int theLine) {
-  datum theData = gdbm_firstkey(g);
-
-  if(theData.dptr != NULL) {
-    storePtr(theData.dptr, theData.dsize, theLine, theFile, 1);
-    if(traceAllocs) traceEvent(CONST_TRACE_INFO, "gdbm_firstkey(%s:%d)", theFile, theLine);
-  }
-
-  return(theData);
-}
-
-/* ******************************************* */
-
-datum ntop_gdbm_nextkey(GDBM_FILE g, datum d, char* theFile, int theLine) {
-  datum theData = gdbm_nextkey(g, d);
-
-  if(theData.dptr != NULL) {
-    storePtr(theData.dptr, theData.dsize, theLine, theFile, 1);
-    if(traceAllocs) traceEvent(CONST_TRACE_INFO, "gdbm_nextkey(%s)", theData.dptr);
-  }
-
-  return(theData);
-}
-
-/* ******************************************* */
-
-datum ntop_gdbm_fetch(GDBM_FILE g, datum d, char* theFile, int theLine) {
-  datum theData = gdbm_fetch(g, d);
-
-  if(theData.dptr != NULL) {
-    storePtr(theData.dptr, theData.dsize, theLine, theFile, 1);
-    if(traceAllocs) traceEvent(CONST_TRACE_INFO, "gdbm_fetch(%s) %x", theData.dptr, theData.dptr);
-  }
-
-  return(theData);
-}
-
-/* ****************************************** */
-/* ****************************************** */
-
-#else /* MEMORY_DEBUG */
-
-/* ****************************************** */
-/* ****************************************** */
 
 static void stopcap(void) {
   traceEvent(CONST_TRACE_WARNING, "ntop packet capture STOPPED");
@@ -479,16 +63,11 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   void *thePtr;
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: malloc(%u) @ %s:%d", sz, file, line);
-#endif
-
-#ifdef DEBUG
   if((sz == 0) || (sz > 32768)) {
-    traceEvent(CONST_TRACE_INFO, "DEBUG: called malloc(%u) @ %s:%d", sz, file, line);
-    if(sz == 0) sz = 8; /*
-			  8 bytes is the minimal size ntop can allocate
-			  for doing things that make sense
-			*/
+    traceEvent(CONST_TRACE_INFO, "DEBUG: malloc(%u) @ %s:%d", sz, file, line);
+    if(sz == 0) sz = 8; /* 8 bytes is the minimal size ntop can allocate
+                         * for doing things that make sense
+                         */
   }
 #endif
 
@@ -634,4 +213,639 @@ char* ntop_safestrdup(char *ptr, char* file, int line) {
   }
 }
 
-#endif /* MEMORY_DEBUG */
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
+
+  /* mtrace()/muntrace() - use existing routines */
+
+/* ****************************************** */
+/* ****************************************** */
+
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 2)
+
+  /* ElectricFence - use existing routines */
+
+/* ****************************************** */
+/* ****************************************** */
+
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
+
+  /* ntop custom monitor */
+
+#undef malloc
+#undef free
+#undef strdup
+
+/* gdbm routines */
+#undef gdbm_firstkey
+#undef gdbm_nextkey
+#undef gdbm_fetch
+
+typedef struct memoryBlock {
+  void*               memoryLocation;       /* Malloc address              */
+  size_t              blockSize;            /* Block size                  */
+  char                programLocation[48];  /* Program address: file, line */
+  struct memoryBlock* nextBlock;            /* Next memory block           */
+  short alreadyTraced;
+} MemoryBlock;
+
+static MemoryBlock *theRoot = NULL;
+static char tmpStr[255];
+static int traceAllocs = 0;
+static PthreadMutex leaksMutex;
+static int inTraceEventTrapped = 0;
+
+/* Forward declarations */
+static void traceEventLeak(int eventTraceLevel, char* file, int line, char* format, ...);
+unsigned int PrintMemoryBlocks(void);
+size_t GimmePointerSize(void* thePtr);
+int GimmePointerInfo(void* thePtr);
+void myAddLeak(void* thePtr, int theLine, char* theFile);
+void myRemoveLeak(void* thePtr, int theLine, char* theFile);
+
+/* *************************************** */
+
+/* This is a minimalist version of traceEvent() suitable for use in leak detection
+ *
+ *    We can not use the normal traceEvent() call because that might be
+ *    where the fault lies.
+ */
+static void traceEventLeak(int eventTraceLevel, /* Ignored */
+                           char* file, int line,
+                           char * format, ...) {
+
+  va_list va_ap;
+  char bufF[LEN_GENERAL_WORK_BUFFER],
+       bufMsg[LEN_GENERAL_WORK_BUFFER];
+
+#ifdef WIN32
+  /* If ntop is a Win32 service, we're done - we don't (yet) write to the
+   * windows event logs and there's no console...
+   */
+  if(isNtopAservice) return;
+#endif
+
+  /* Our Lame attempt at deadlock prevention */
+  if(inTraceEventTrapped == 1) return;
+
+  inTraceEventTrapped=1;
+
+  memset(bufF, 0, sizeof(bufF));
+  memset(bufMsg, 0, sizeof(bufMsg));
+
+  if(file == NULL)
+    safe_snprintf(file, line, bufF, sizeof(bufF),
+                  "LEAK: %s",
+                  format);
+  else
+    safe_snprintf(file, line, bufF, sizeof(bufF),
+                  "LEAK: %s [@%s:%d]",
+                  format,
+                  file, line);
+
+  va_start (va_ap, format);
+
+  vsnprintf(bufMsg, sizeof(bufMsg), bufF, va_ap);
+
+  /* Strip a trailing return from bufMsg */
+  if(bufMsg[strlen(bufMsg)-1] == '\n')
+    bufMsg[strlen(bufMsg)-1] = 0;
+
+  if(myGlobals.runningPref.instance != NULL)
+    openlog(myGlobals.runningPref.instance, LOG_PID, myGlobals.runningPref.useSyslog);
+  else
+    openlog(CONST_DAEMONNAME, LOG_PID, myGlobals.runningPref.useSyslog);
+
+  syslog(LOG_ERR, "%s", bufMsg);
+  closelog();
+
+  va_end (va_ap);
+
+  inTraceEventTrapped=0;
+
+}
+
+/* *************************************** */
+
+static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile, int lockMutex) {
+  MemoryBlock *tmpBlock;
+
+  if(lockMutex)
+    accessMutex(&leaksMutex, "storePtr");
+
+  tmpBlock = (MemoryBlock*)malloc(sizeof(MemoryBlock));
+
+  if(tmpBlock == NULL) {
+    if(lockMutex)
+      releaseMutex(&leaksMutex);
+    traceEventLeak(CONST_FATALERROR_TRACE_LEVEL, 
+                   theFile, theLine,
+                   "malloc(%d) [tot=%u] not enough memory", ptrLen, myGlobals.allocatedMemory);
+    exit(300);
+  }
+  
+  tmpBlock->blockSize        = ptrLen;
+  tmpBlock->memoryLocation   = ptr;
+  tmpBlock->alreadyTraced    = 0;
+  myGlobals.allocatedMemory += tmpBlock->blockSize;
+      
+  if(traceAllocs)
+    traceEventLeak(CONST_INFO_TRACE_LEVEL,
+                   theFile, theLine,
+                   "malloc(%d) [tot=%u]", ptrLen, myGlobals.allocatedMemory);
+
+  safe_snprintf(__FILE__, __LINE__, tmpBlock->programLocation, sizeof(tmpBlock->programLocation), 
+		"%s@%d", theFile, theLine);
+  tmpBlock->nextBlock = theRoot;
+  theRoot = tmpBlock;
+  if(lockMutex)
+    releaseMutex(&leaksMutex);
+}
+
+/* ********************************* */
+
+static void* myMalloc(size_t theSize, int theLine, char* theFile, int lockMutex) {
+  void *theMem;
+
+  theMem = malloc(theSize);
+  memset(theMem, 0xee, theSize); /* Fill it with garbage */
+  storePtr(theMem, theSize, theLine, theFile, lockMutex);
+  return(theMem);
+}
+
+/* *************************************** */
+
+static void* myCalloc(size_t numObj, size_t theSize, int theLine, char* theFile) {
+  int numElems = numObj*theSize;
+  void* thePtr = myMalloc(numElems, theLine, theFile, 1);
+
+  if(thePtr != NULL)
+    memset(thePtr, '\0', numElems);
+
+  return(thePtr);
+}
+
+/* *************************************** */
+
+static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile) {
+  MemoryBlock *theScan, *lastPtr, *theNewPtr;
+  
+  accessMutex(&leaksMutex, "myRealloc");
+
+  theScan = theRoot;
+ 
+  while((theScan != NULL) && (theScan->memoryLocation != thePtr)) {
+    lastPtr = theScan;
+    theScan = theScan->nextBlock;
+  }
+
+  if(theScan == NULL) {
+    traceEventLeak(CONST_ERROR_TRACE_LEVEL,
+                   theFile, theLine,
+                   "ERROR: realloc() - Ptr %p NOT allocated",
+	           thePtr);
+    releaseMutex(&leaksMutex);
+    return(NULL);
+  } else {    
+    theNewPtr = myMalloc(theSize, theLine, theFile, 0);
+      
+    if(theSize > theScan->blockSize)
+      memcpy(theNewPtr, thePtr, theScan->blockSize);
+    else
+      memcpy(theNewPtr, thePtr, theSize);
+	
+    free(theScan->memoryLocation);
+      
+    if(theScan == theRoot)
+      theRoot = theRoot->nextBlock;
+    else
+      lastPtr->nextBlock = theScan->nextBlock;
+
+    free(theScan);     
+
+    releaseMutex(&leaksMutex);
+
+    return(theNewPtr);
+  }
+}
+
+/* *************************************** */
+
+static void myFree(void **thePtr, int theLine, char* theFile) {
+  MemoryBlock *theScan, *lastPtr;
+  
+  accessMutex(&leaksMutex, "myFree");
+
+  theScan = theRoot;
+
+  if((thePtr == NULL) || (*thePtr == NULL)) {
+    traceEventLeak(CONST_ERROR_TRACE_LEVEL, theFile, theLine, "ERROR: free(NULL)", "");
+    return;
+  }
+ 
+  while((theScan != NULL) && (theScan->memoryLocation != *thePtr)) {
+    lastPtr = theScan;
+    theScan = theScan->nextBlock;
+  }
+
+  if(theScan == NULL) {
+    traceEventLeak(CONST_ERROR_TRACE_LEVEL,
+                   theFile, theLine,
+                   "ERROR: free() - Ptr %p NOT allocated",
+	           *thePtr);
+    releaseMutex(&leaksMutex);
+    return;
+  } else {
+    myGlobals.allocatedMemory -= theScan->blockSize;
+
+    if(traceAllocs) 
+      traceEventLeak(CONST_INFO_TRACE_LEVEL, theFile, theLine,
+                     "free(%d)  [tot=%u]",
+                     theScan->blockSize, myGlobals.allocatedMemory);
+
+    free(theScan->memoryLocation);
+
+    if(theScan == theRoot)
+      theRoot = theRoot->nextBlock;
+    else
+      lastPtr->nextBlock = theScan->nextBlock;
+
+    free(theScan);
+    *thePtr = NULL;
+  }
+
+  releaseMutex(&leaksMutex);
+}
+
+/* *************************************** */
+
+static char* myStrdup(char* theStr, int theLine, char* theFile) {
+  char* theOut;
+  int len = strlen(theStr);
+  
+  theOut = (char*)myMalloc((len+1), theLine, theFile, 1);
+  strncpy(theOut, theStr, len);
+  theOut[len] = '\0';
+
+  return(theOut);
+}
+
+/* *************************************** */
+
+void resetLeaks(void) {
+  MemoryBlock *theScan;
+
+  theScan = theRoot;
+ 
+  while(theScan != NULL) {
+    theScan->alreadyTraced = 1;
+    theScan = theScan->nextBlock;
+  }
+
+  myGlobals.allocatedMemory = 0; /* Reset counter */
+}
+
+/* *************************************** */
+
+unsigned int PrintMemoryBlocks(void) {
+  MemoryBlock *theScan;
+  int i = 0;
+  unsigned int totMem = 0;
+
+  theScan = theRoot;
+ 
+  while(theScan != NULL) {
+    MemoryBlock* tmp;
+
+    if(!theScan->alreadyTraced) {
+      traceEventLeak(CONST_INFO_TRACE_LEVEL, NULL, 0, 
+                     "Block %5d (addr %p, size %4d): %s",
+                     i++, 
+		     theScan->memoryLocation,
+                     theScan->blockSize,
+                     theScan->programLocation);
+      totMem += theScan->blockSize;
+    }
+
+    theScan->alreadyTraced = 1;
+    tmp = theScan->memoryLocation;
+    theScan = theScan->nextBlock;
+  }
+
+  traceEventLeak(CONST_INFO_TRACE_LEVEL, NULL, 0, "Total allocated memory: %u bytes", totMem);
+
+  /* PrintMemoryBlocks(); */
+
+  return(totMem);
+}
+
+/* *************************************** */
+
+size_t GimmePointerSize(void* thePtr) {
+  MemoryBlock *theScan;
+  
+  theScan = theRoot;
+ 
+  while((theScan != NULL) && (theScan->memoryLocation != thePtr))
+    theScan = theScan->nextBlock;
+
+  if(theScan == NULL) {
+    traceEventLeak(CONST_ERROR_TRACE_LEVEL, NULL, 0,
+                   "ERROR: GimmePointerSize() - Ptr %p NOT allocated", thePtr);
+    return(-1);
+  } else
+    return(theScan->blockSize);
+}
+
+/* *************************************** */
+
+int GimmePointerInfo(void* thePtr) {
+  MemoryBlock *theScan;
+  
+  theScan = theRoot;
+ 
+  while((theScan != NULL) && (theScan->memoryLocation != thePtr))
+    theScan = theScan->nextBlock;
+
+  if(theScan == NULL) {
+    traceEventLeak(CONST_ERROR_TRACE_LEVEL, NULL, 0, 
+                   "ERROR: GimmePointerInfo() - Ptr %p NOT allocated", thePtr);
+    return -1;
+  } else {      
+    traceEventLeak(CONST_TRACE_WARNING,
+                   "Block (addr %p, size %d): %s",
+                   theScan->memoryLocation, 
+                   theScan->blockSize,
+                   theScan->programLocation);
+    return 0;
+  }
+}
+
+/* *************************************** */
+
+void myAddLeak(void* thePtr, int theLine, char* theFile) {
+  MemoryBlock *tmpBlock;
+
+  if(thePtr == NULL) 
+    return;
+
+  tmpBlock = (MemoryBlock*)malloc(sizeof(MemoryBlock));
+
+  if(tmpBlock == NULL) {
+    traceEventLeak(CONST_ERROR_TRACE_LEVEL, theFile, theLine,
+                   "ERROR: myAddLeak() malloc() - not enough memory", ""); 
+    return;
+  }
+  
+  tmpBlock->blockSize = 0;
+  tmpBlock->memoryLocation = thePtr;
+  safe_snprintf(__FILE__, __LINE__, tmpBlock->programLocation, sizeof(tmpBlock->programLocation),
+                "%s@%d", theFile, theLine);
+  tmpBlock->nextBlock = theRoot;
+  theRoot = tmpBlock;
+}
+
+/* *************************************** */
+
+void myRemoveLeak(void* thePtr, int theLine, char* theFile) {
+  MemoryBlock *theScan, *lastPtr;
+  
+  theScan = theRoot;
+ 
+  while((theScan != NULL) && (theScan->memoryLocation != thePtr)) {
+    lastPtr = theScan;
+    theScan = theScan->nextBlock;
+  }
+
+  if(theScan == NULL) {
+    traceEventLeak(CONST_ERROR_TRACE_LEVEL, theFile, theLine,
+                   "ERROR: free() block error (Ptr %p NOT allocated)", thePtr); 
+    return;
+  } else {   
+    if(theScan == theRoot)
+      theRoot = theRoot->nextBlock;
+    else
+      lastPtr->nextBlock = theScan->nextBlock;
+
+    free(theScan);
+  }
+}
+
+/* *************************************** */
+
+void initLeaks(void) {
+  myGlobals.runningPref.useSyslog       = FLAG_SYSLOG_NONE;
+  myGlobals.runningPref.traceLevel      = 999;
+  myGlobals.allocatedMemory = 0;  
+
+  createMutex(&leaksMutex);
+}
+
+/* *************************************** */
+
+void termLeaks(void) {
+  PrintMemoryBlocks();
+  deleteMutex(&leaksMutex);
+}
+
+/* ************************************ */
+
+void* ntop_malloc(unsigned int sz, char* file, int line) {
+
+#ifdef DEBUG
+  char formatBuffer[32];
+  traceEvent(CONST_TRACE_INFO, "DEBUG: malloc(%u) [%s] @ %s:%d", 
+	     sz, formatBytes(myGlobals.allocatedMemory, 0, 
+			     formatBuffer, sizeof(formatBuffer)), file, line);
+#endif
+
+  return(myMalloc(sz, line, file, 1));
+}
+
+/* ************************************ */
+
+void* ntop_calloc(unsigned int c, unsigned int sz, char* file, int line) {
+#ifdef DEBUG
+  char formatBuffer[32];
+  traceEvent(CONST_TRACE_INFO, "DEBUG: calloc(%u) [%s] @ %s:%d", 
+	     sz, formatBytes(myGlobals.allocatedMemory, 0, 
+			     formatBuffer, sizeof(formatBuffer)), file, line);
+#endif
+  return(myCalloc(c, sz, line, file));
+}
+
+/* ************************************ */
+
+void* ntop_realloc(void* ptr, unsigned int sz, char* file, int line) {  
+#ifdef DEBUG
+  char formatBuffer[32];
+  traceEvent(CONST_TRACE_INFO, "DEBUG: realloc(%u) [%s] @ %s:%d", 
+	     sz, formatBytes(myGlobals.allocatedMemory, 0, 
+			     formatBuffer, sizeof(formatBuffer)), file, line);
+#endif  
+  return(myRealloc(ptr, sz, line, file));
+}
+
+/* ************************************ */
+
+char* ntop_strdup(char *str, char* file, int line) {
+#ifdef DEBUG
+  char formatBuffer[32];
+  traceEvent(CONST_TRACE_INFO, "DEBUG: strdup(%s) [%s] @ %s:%d", str, 
+	     formatBytes(myGlobals.allocatedMemory, 0,
+			 formatBuffer, sizeof(formatBuffer)), file, line);
+#endif
+  return(myStrdup(str, line, file));
+}
+
+/* ************************************ */
+
+void ntop_free(void **ptr, char* file, int line) {
+#ifdef DEBUG
+  char formatBuffer[32];
+  traceEvent(CONST_TRACE_INFO, "DEBUG: free(%x) [%s] @ %s:%d", ptr, 
+	     formatBytes(myGlobals.allocatedMemory, 0,
+			 formatBuffer, sizeof(formatBuffer)), file, line);
+#endif
+  myFree(ptr, line, file);
+}
+
+#elif defined(MEMORY_DEBUG) 
+#else
+#endif /* MAKE_WITH_SAFER_ROUTINES / MEMORY_DEBUG */
+
+/* ************************************************************************************** */
+/* ************************************************************************************** */
+/* ************************************************************************************** */
+
+/* These replacment routines serialize gdbm access across threads
+ *
+ * They are here, vs. util.c so we can add implicit allocation tracking
+ * when MEMORY_DEBUG is 3...
+ */
+
+#undef gdbm_firstkey
+#undef gdbm_nextkey
+#undef gdbm_fetch
+#undef gdbm_delete
+#undef gdbm_store
+#undef gdbm_close
+
+datum ntop_gdbm_firstkey(GDBM_FILE g, char* theFile, int theLine) {
+  datum theData;
+
+  memset(&theData, 0, sizeof(theData));
+
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_firstkey");
+
+  theData = gdbm_firstkey(g);
+
+#if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
+  if(theData.dptr != NULL) {
+    storePtr(theData.dptr, theData.dsize, theLine, theFile, 1);
+    if(traceAllocs) traceEvent(CONST_TRACE_INFO, "gdbm_firstkey(%s:%d)", theFile, theLine);
+  }
+#endif /* MEMORY_DEBUG 3 */
+
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    releaseMutex(&myGlobals.gdbmMutex);
+
+  return(theData);
+}
+
+/* ******************************************* */
+
+datum ntop_gdbm_nextkey(GDBM_FILE g, datum d, char* theFile, int theLine) {
+  datum theData;
+
+  memset(&theData, 0, sizeof(theData));
+
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_nextkey");
+
+  theData = gdbm_nextkey(g, d);
+
+#if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
+  if(theData.dptr != NULL) {
+    storePtr(theData.dptr, theData.dsize, theLine, theFile, 1);
+    if(traceAllocs) traceEvent(CONST_TRACE_INFO, "gdbm_nextkey(%s)", theData.dptr);
+  }
+#endif /* MEMORY_DEBUG 3 */
+
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    releaseMutex(&myGlobals.gdbmMutex);
+
+  return(theData);
+}
+
+/* ******************************************* */
+
+datum ntop_gdbm_fetch(GDBM_FILE g, datum d, char* theFile, int theLine) {
+  datum theData;
+
+  memset(&theData, 0, sizeof(theData));
+
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_fetch");
+
+  theData = gdbm_fetch(g, d);
+
+#if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
+  if(theData.dptr != NULL) {
+    storePtr(theData.dptr, theData.dsize, theLine, theFile, 1);
+    if(traceAllocs) traceEvent(CONST_TRACE_INFO, "gdbm_fetch(%s) %x", theData.dptr, theData.dptr);
+  }
+#endif /* MEMORY_DEBUG 3 */
+
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    releaseMutex(&myGlobals.gdbmMutex);
+
+  return(theData);
+}
+
+/* ******************************************* */
+
+int ntop_gdbm_delete(GDBM_FILE g, datum d, char* theFile, int theLine) {
+  int rc;
+
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_delete");
+
+  rc = gdbm_delete(g, d);
+
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    releaseMutex(&myGlobals.gdbmMutex);
+
+  return(rc);
+}
+
+/* ******************************************* */
+
+int ntop_gdbm_store(GDBM_FILE g, datum d, datum v, int r, char* theFile, int theLine) {
+  int rc;
+
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_store");
+
+  rc = gdbm_store(g, d, v, r);
+
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    releaseMutex(&myGlobals.gdbmMutex);
+
+  return(rc);
+}
+
+/* ******************************************* */
+
+void ntop_gdbm_close(GDBM_FILE g, char* theFile, int theLine) {
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_close");
+
+  gdbm_close(g);
+
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    releaseMutex(&myGlobals.gdbmMutex);
+}
+
+/* ******************************************* */
+/* ******************************************* */

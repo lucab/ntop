@@ -446,19 +446,20 @@ ntop.h
 #include "getopt.h"
 #endif
 
-#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
- #include <malloc.h>
-#endif
-
 /* **************************************************************************************
  *
  *  Used for debug
  *
  * **************************************************************************************/
 
-#ifdef ELECTRICFENCE
-#include "efence.h"
-#endif
+#ifdef MAKE_WITH_SAFER_ROUTINES
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1) 
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 2) 
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3) 
+ #include "leaks.h"
+#elif defined(MEMORY_DEBUG) 
+#else
+#endif /* MAKE_WITH_SAFER_ROUTINES / MEMORY_DEBUG */
 
 /* **************************************************************************************
  *
@@ -471,6 +472,10 @@ ntop.h
 /* The WIN32 specific stuff */
 #ifdef WIN32
 #include "ntop_win32.h"
+#endif
+
+#ifdef MAKE_WITH_MALLINFO
+ #include <malloc.h>
 #endif
 
 /*

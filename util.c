@@ -27,10 +27,6 @@
 /* #define ADDRESS_DEBUG */
 /* #define FINGERPRINT_DEBUG */
 
-#ifdef MEMORY_DEBUG
-#include "leaks.h"
-#endif
-
 #ifdef DARWIN
 extern void* perl_alloc();
 extern void* perl_parse();
@@ -68,9 +64,11 @@ static HostTraffic* __getFirstHost(u_int actualDeviceId, u_int beginIdx, char *f
 
     if(el != NULL) {
       if(el->magic != CONST_MAGIC_NUMBER) {
-	traceEvent(CONST_TRACE_WARNING, 
-                   "Error: bad magic number [expected=%d/real=%d][deviceId=%d] getFirstHost()[%s/%d]",
+	traceEvent(CONST_TRACE_ERROR, 
+                   "Bad magic number [expected=%d/real=%d][deviceId=%d] getFirstHost()[%s/%d]",
 		   CONST_MAGIC_NUMBER, el->magic, actualDeviceId, file, line);
+        /* releaseMutex(&myGlobals.hostsHashMutex); */
+        return(NULL);
       }
 
       /* releaseMutex(&myGlobals.hostsHashMutex); */
@@ -97,8 +95,10 @@ HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, i
 
   if(host->next != NULL) {
     if(host->next->magic != CONST_MAGIC_NUMBER) {
-      traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d) getNextHost()[%s/%d]",
+      traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) getNextHost()[%s/%d]",
 		 CONST_MAGIC_NUMBER, host->next->magic, file, line);
+      /* releaseMutex(&myGlobals.hostsHashMutex); */
+      return(NULL);
     }
 
     /* releaseMutex(&myGlobals.hostsHashMutex); */
@@ -4439,114 +4439,9 @@ void setHostFingerprint(HostTraffic *srcHost) {
   releaseAddrResMutex();
 }
 
-/* ************************************************ */
-
-#ifndef MEMORY_DEBUG
-#undef gdbm_firstkey
-#undef gdbm_nextkey
-#undef gdbm_fetch
-#undef gdbm_delete
-#undef gdbm_store
-#undef gdbm_close
-
-int ntop_gdbm_delete(GDBM_FILE g, datum d) {
-  int rc;
-
-  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-    accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_delete");
-
-  rc = gdbm_delete(g, d);
-
-  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-    releaseMutex(&myGlobals.gdbmMutex);
-
-  return(rc);
-}
-
+/* ******************************************
+ *        For ntop_gdbm_xxxx see leaks.c
 /* ****************************************** */
-
-datum ntop_gdbm_firstkey(GDBM_FILE g) {
-  datum theData;
-
-  memset(&theData, 0, sizeof(theData));
-
-  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-    accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_firstkey");
-
-  theData = gdbm_firstkey(g);
-
-  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-    releaseMutex(&myGlobals.gdbmMutex);
-
-  return(theData);
-}
-
-/* ****************************************** */
-
-void ntop_gdbm_close(GDBM_FILE g) {
-  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-    accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_close");
-
-  gdbm_close(g);
-
-  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-    releaseMutex(&myGlobals.gdbmMutex);
-}
-
-/* ******************************************* */
-
-datum ntop_gdbm_nextkey(GDBM_FILE g, datum d) {
-  datum theData;
-
-  memset(&theData, 0, sizeof(theData));
-
-  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-    accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_nextkey");
-
-  theData = gdbm_nextkey(g, d);
-
-  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-    releaseMutex(&myGlobals.gdbmMutex);
-
-  return(theData);
-}
-
-/* ******************************************* */
-
-datum ntop_gdbm_fetch(GDBM_FILE g, datum d) {
-  datum theData;
-
-  memset(&theData, 0, sizeof(theData));
-
-  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-    accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_fetch");
-
-  theData = gdbm_fetch(g, d);
-
-  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-    releaseMutex(&myGlobals.gdbmMutex);
-
-  return(theData);
-}
-
-/* ******************************************* */
-
-int ntop_gdbm_store(GDBM_FILE g, datum d, datum v, int r) {
-  int rc;
-
-  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-    accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_store");
-
-  rc = gdbm_store(g, d, v, r);
-
-  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-    releaseMutex(&myGlobals.gdbmMutex);
-
-  return(rc);
-}
-#endif /* MEMORY_DEBUG */
-
-/* ******************************************* */
 
 void handleWhiteBlackListAddresses(char* addresses,
                                    u_int32_t theNetworks[MAX_NUM_NETWORKS][3],

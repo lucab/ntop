@@ -263,6 +263,13 @@
 #endif
 
 /*
+ * MAKE_WITH_MALLINFO is shorthand
+ */
+#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
+ #define MAKE_WITH_MALLINFO
+#endif
+
+/*
  * This flag indicates that fork() is implemented with copy-on-write.
  * This means that the set of tables reported on in fork()ed processes
  * will be complete and unchanged as of the instant of the fork.
@@ -393,13 +400,59 @@
  */
 /* #define I18N_DEBUG */
 
-/* MEMORY_DEBUG turns on the code in leaks.c (ntop_safexxxx) which monitors
- *  memory allocations for leaks.
- *  WARNING: There is code in pbuf.c that will stop ntop after a specified
- *           number of packets.
- *           The size of the hash_list (later in ntop.h) is also restricted.
+/* MEMORY_DEBUG selects among various options for debugging ntop's memory allocations
+ * (look in leaks.c for most of this).
+ *
+ *  You can (and should) set this via --with-memorydebug=VALUE in ./configure!
+ *
+ *  Undefined (or zero) ... no debugging
+ *
+ *  1     gnu mtrace()/muntrace()
+ *          see http://www.gnu.org/software/libc/manual/html_node/Interpreting-the-traces.html
+ *  2     ElectricFence
+ *          see http://directory.fsf.org/devel/debug/ElectricFence.html
+ *  3     leaks.c - ntop custom allocation tracker
+ *
+ *  WARNING: If this is enabled, the size of the hash_list (later in ntop.h) is restricted.
+ *
+ *  Use this construct for coding:
+ *     
+ *     #ifdef MAKE_WITH_SAFER_ROUTINES
+ *      ...here...
+ *     #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
+ *      ...here...
+ *     #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 2)
+ *      ...here...
+ *     #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
+ *      ...here...
+ *     #elif defined(MEMORY_DEBUG)
+ *      <error>
+ *     #else
+ *       <default, usually nothing>
+ *     #endif
+ *
  */
 /* #define MEMORY_DEBUG */
+
+/*
+ *  WARNING: Unless you also define MEMORY_DEBUG_UNLIMITED, there
+ *           There is code in pbuf.c that will automatically stop ntop,
+ *           based upon the limits below...
+ */
+/* #define MEMORY_DEBUG_UNLIMITED */
+#define MEMORY_DEBUG_PACKETS                10000
+#define MEMORY_DEBUG_SECONDS                15*60 /* 15 Minutes */
+
+/* Don't change this (except to add new cases) - it's the default handling for above ... */
+#ifdef MAKE_WITH_SAFER_ROUTINES
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 2)
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
+#elif defined(MEMORY_DEBUG)
+ #error Invalid value for MEMORY_DEBUG - fix --with-memorydebug= ./configure option
+#else
+ #define MAKE_WITH_SAFER_ROUTINES
+#endif /* MAKE_WITH_SAFER_ROUTINES / MEMORY_DEBUG */
 
  /*
   * MUTEX_DEBUG causes util.c to log information about mutex/condvar operations.
@@ -1449,8 +1502,10 @@
 /*
  * Used in sessions to make sure we don't step on the data area.  It doesn't mean
  * anything - just has to be consistent.
+ * We use 'unmagic' to indicate that it's in the process of being deleted
  */
 #define CONST_MAGIC_NUMBER                  1968 /* Magic year actually */
+#define CONST_UNMAGIC_NUMBER                1290
 
 /*
  *   Define the output flag values
@@ -2795,3 +2850,4 @@ struct ip6_hdr
 #define NTOP_PREF_VALUE_AF_INET      AF_INET
 #define NTOP_PREF_VALUE_AF_INET6     AF_INET6
 #define NTOP_PREF_VALUE_AF_BOTH      AF_UNSPEC
+
