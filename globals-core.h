@@ -227,7 +227,7 @@ extern HostTraffic * lookupFcHost(FcAddress *fcAddress, u_short vsanId,
 				  int actualDeviceId);
 /* initialize.c */
 extern void initIPServices(void);
-extern void resetDevice(int devIdx);
+extern void resetDevice(int devIdx, short fullReset);
 extern void createDeviceIpProtosList(int devIdx);
 extern void initCounters(void);
 extern void resetStats(int);

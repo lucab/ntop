@@ -42,8 +42,8 @@ void termIPServices(void) {
     }
   }
 
-  free(myGlobals.udpSvc);
-  free(myGlobals.tcpSvc);
+  if(myGlobals.udpSvc) free(myGlobals.udpSvc);
+  if(myGlobals.tcpSvc) free(myGlobals.tcpSvc);
 
   /* ****************************** */
 

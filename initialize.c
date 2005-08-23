@@ -287,7 +287,7 @@ void createDeviceIpProtosList(int devIdx) {
   Function below courtesy of
   Eric Dumazet <dada1@cosmosbay.com>
 */
-void resetDevice(int devIdx) {
+void resetDevice(int devIdx, short fullReset) {
   int len;
   void *ptr;
 
@@ -379,9 +379,9 @@ void resetDevice(int devIdx) {
   myGlobals.device[devIdx].last30daysThptIdx = 0;
   myGlobals.device[devIdx].hostsno = 0;
 
-  if (myGlobals.runningPref.rFileName == NULL) {
-      myGlobals.device[devIdx].lastThptUpdate = myGlobals.device[devIdx].lastMinThptUpdate =
-          myGlobals.device[devIdx].lastHourThptUpdate = myGlobals.device[devIdx].lastFiveMinsThptUpdate = time(NULL);
+  if(myGlobals.runningPref.rFileName == NULL) {
+    myGlobals.device[devIdx].lastThptUpdate = myGlobals.device[devIdx].lastMinThptUpdate =
+      myGlobals.device[devIdx].lastHourThptUpdate = myGlobals.device[devIdx].lastFiveMinsThptUpdate = time(NULL);
   }
   resetTrafficCounter(&myGlobals.device[devIdx].lastMinEthernetBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastFiveMinsEthernetBytes);
@@ -395,14 +395,16 @@ void resetDevice(int devIdx) {
     myGlobals.device[devIdx].last30daysThptIdx=0;
   myGlobals.device[devIdx].hostsno = 1; /* Broadcast entry */
 
-  if(myGlobals.device[devIdx].netflowGlobals != NULL)
-    free(myGlobals.device[devIdx].netflowGlobals);
-  myGlobals.device[devIdx].netflowGlobals = NULL;
-
-  if(myGlobals.device[devIdx].sflowGlobals != NULL)
-    free(myGlobals.device[devIdx].sflowGlobals);
-  myGlobals.device[devIdx].sflowGlobals = NULL;
-
+  if(fullReset) {
+    if(myGlobals.device[devIdx].netflowGlobals != NULL)
+      free(myGlobals.device[devIdx].netflowGlobals);
+    myGlobals.device[devIdx].netflowGlobals = NULL;
+    
+    if(myGlobals.device[devIdx].sflowGlobals != NULL)
+      free(myGlobals.device[devIdx].sflowGlobals);
+    myGlobals.device[devIdx].sflowGlobals = NULL;
+  }
+  
   len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(SimpleProtoTrafficInfo);
 
   if(myGlobals.device[devIdx].ipProtoStats == NULL)
@@ -782,17 +784,22 @@ void resetStats(int deviceId) {
     while(el != NULL) {
       elNext = el->next;
 
-      if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
+      if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry)) {
+	unlockHostsHashMutex(el);
 	freeHostInfo(el, deviceId);
+	if(elNext) lockHostsHashMutex(elNext, "resetStats");
+      } else {
+	if(!elNext) 
+	  unlockHostsHashMutex(el);
+      }
 
-      if(!elNext) unlockHostsHashMutex(el);
       el = elNext;
     }
 
     myGlobals.device[deviceId].hash_hostTraffic[j] = NULL;
   }
 
-  resetDevice(deviceId);
+  resetDevice(deviceId, 0);
 
   if(myGlobals.device[deviceId].tcpSession != NULL) {
     for(j=0; j<MAX_TOT_NUM_SESSIONS; j++)
@@ -1865,7 +1872,7 @@ u_int createDummyInterface(char *ifName) {
   myGlobals.numDevices++;
   memset(&myGlobals.device[deviceId], 0, sizeof(NtopInterface));
 
-  resetDevice(deviceId);
+  resetDevice(deviceId, 1);
   myGlobals.device[deviceId].network.s_addr = 0xFFFFFFFF;
   myGlobals.device[deviceId].netmask.s_addr = 0xFFFFFFFF;
   myGlobals.device[deviceId].numHosts = myGlobals.device[0].numHosts;

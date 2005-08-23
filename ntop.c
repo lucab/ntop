@@ -827,7 +827,8 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
   }
 
   for(i=0; i<myGlobals.numDequeueThreads; i++) {
-    if(myGlobals.dequeueAddressThreadId[i] != 0) {
+    if((myGlobals.dequeueAddressThreadId[i] != 0) 
+       && (myGlobals.dequeueAddressThreadId[i] != (pthread_t)-1)) {
       if(!do_join) {
 	safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), " DNSAR%d", i+1);
 	safe_strncat(buf, sizeofbuf, buf2);
@@ -1138,8 +1139,8 @@ RETSIGTYPE cleanup(int signo) {
   for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
     free(myGlobals.ipTrafficProtosNames[i]);
 
-  free(myGlobals.ipTrafficProtosNames);
-  free(myGlobals.ipPortMapper.theMapper);
+  if(myGlobals.ipTrafficProtosNames) free(myGlobals.ipTrafficProtosNames);
+  if(myGlobals.ipPortMapper.theMapper) free(myGlobals.ipPortMapper.theMapper);
 
   if(myGlobals.runningPref.currentFilterExpression != NULL)
     free(myGlobals.runningPref.currentFilterExpression);
@@ -1155,13 +1156,13 @@ RETSIGTYPE cleanup(int signo) {
 
   free(myGlobals.runningPref.pcapLogBasePath);
   /* free(myGlobals.dbPath); -- later, need this to remove pid */
-  free(myGlobals.spoolPath);
+  if(myGlobals.spoolPath) free(myGlobals.spoolPath);
   if(myGlobals.rrdPath != NULL)
     free(myGlobals.rrdPath);
-
+  
   if(myGlobals.gdVersionGuessValue != NULL)
     free(myGlobals.gdVersionGuessValue);
-
+  
 #if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
   traceEvent(CONST_TRACE_INFO, "===================================");
   muntrace();

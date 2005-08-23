@@ -2444,31 +2444,40 @@ static int createNetFlowDevice(int netFlowDeviceId) {
 
 /* ****************************** */
 
+/* #define DEBUG_FLOWS */
 static int mapNetFlowDeviceToNtopDevice(int netFlowDeviceId) {
   int i;
 
   for(i=0; i<myGlobals.numDevices; i++)
-    if((myGlobals.device[i].netflowGlobals != NULL)
-       && (myGlobals.device[i].netflowGlobals->netFlowDeviceId == netFlowDeviceId)) {
+    if(myGlobals.device[i].netflowGlobals != NULL) {
+      if(myGlobals.device[i].netflowGlobals->netFlowDeviceId == netFlowDeviceId) {
 #ifdef DEBUG_FLOWS
-      traceEvent(CONST_TRACE_INFO, "NETFLOW: mapNetFlowDeviceToNtopDevice(%d) = %d",
-		 netFlowDeviceId, i);
+	traceEvent(CONST_TRACE_INFO, "NETFLOW: mapNetFlowDeviceToNtopDevice(%d) = %d",
+		   netFlowDeviceId, i);
 #endif
-      return(i);
-    } else if(myGlobals.device[i].netflowGlobals != NULL) {
+	return(i);
+      } else {
 #ifdef DEBUG_FLOWS
-      traceEvent(CONST_TRACE_INFO, "NETFLOW: mapNetFlowDeviceToNtopDevice (id=%d) <=> (netFlowDeviceId=%d)",
-		 i, myGlobals.device[i].netflowGlobals->netFlowDeviceId);
+	traceEvent(CONST_TRACE_INFO, "NETFLOW: mapNetFlowDeviceToNtopDevice (id=%d) <=> (netFlowDeviceId=%d)",
+		   i, myGlobals.device[i].netflowGlobals->netFlowDeviceId);
 #endif
+      }
+    } else {
+#ifdef DEBUG_FLOWS
+      traceEvent(CONST_TRACE_INFO, "NETFLOW: netflowGlobals(%d)  = NULL\n", i);
+#endif
+  
     }
-
+  
 #ifdef DEBUG_FLOWS
   traceEvent(CONST_TRACE_INFO, "NETFLOW: mapNetFlowDeviceToNtopDevice(%d) failed\n",
 	     netFlowDeviceId);
 #endif
-
+  
   return(-1); /* Not found */
 }
+
+/* #undef DEBUG_FLOWS */
 
 /* ****************************** */
 
@@ -2854,8 +2863,8 @@ static void termNetflowDevice(int deviceId) {
       free(myGlobals.device[deviceId].netflowGlobals->templates);
       myGlobals.device[deviceId].netflowGlobals->templates = temp;
     }
-
-    free(myGlobals.device[deviceId].netflowGlobals);
+    
+    free(myGlobals.device[deviceId].netflowGlobals); 
     myGlobals.device[deviceId].activeDevice = 0;
   } else
     traceEvent(CONST_TRACE_WARNING, "NETFLOW: requested invalid termination of deviceId=%d", deviceId);
