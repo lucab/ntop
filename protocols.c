@@ -631,20 +631,22 @@ u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
     /* Symbolic => Numeric */
 
     if(hostPtr.addrList[i] != 0) {
-      StoredAddress storedAddress;
+      StoredAddress addrStore;
+      int len;
 
-      memset(&storedAddress, 0, sizeof(storedAddress));
-      storedAddress.recordCreationTime = myGlobals.actTime;
-      memcpy(&storedAddress.symAddress,
-             hostPtr.queryName,
-             min(MAX_LEN_SYM_HOST_NAME-1, strlen(hostPtr.queryName)));
-      storedAddress.symAddressType=FLAG_HOST_SYM_ADDR_TYPE_NAME;
+      memset(&addrStore, 0, sizeof(addrStore));
+      addrStore.recordCreationTime = myGlobals.actTime;
+      len = min(sizeof(addrStore.symAddress)-1, strlen(hostPtr.queryName));
+      memcpy(&addrStore.symAddress,
+             hostPtr.queryName, len);
+      addrStore.symAddress[len] = '\0';
+      addrStore.symAddressType = FLAG_HOST_SYM_ADDR_TYPE_NAME;
 
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%u", ntohl(hostPtr.addrList[i]));
       key_data.dptr = (void*)&tmpBuf;
       key_data.dsize = strlen(key_data.dptr)+1;
-      data_data.dptr = (void*)&storedAddress;
-      data_data.dsize = sizeof(storedAddress);
+      data_data.dptr = (void*)&addrStore;
+      data_data.dsize = sizeof(addrStore);
 
 #ifdef DNS_SNIFF_DEBUG
       traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: Sniffed DNS response: %s(%d) = %s(t=%d)",

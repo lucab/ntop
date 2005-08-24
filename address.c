@@ -442,6 +442,8 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 #endif
 
   if (addToCacheFlag == 0) {
+    int len;
+
       if(strlen(resolvedAddress) > MAX_LEN_SYM_HOST_NAME) {
         strncpy(symAddr, resolvedAddress, MAX_LEN_SYM_HOST_NAME-4);
         symAddr[MAX_LEN_SYM_HOST_NAME-1] = '\0';
@@ -455,7 +457,9 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
         symAddr[i] = (char)tolower(symAddr[i]);
 
       memset(storedAddress.symAddress, 0, sizeof(storedAddress.symAddress));
-      strcpy(storedAddress.symAddress, symAddr);
+      len = min(sizeof(storedAddress.symAddress)-1, strlen(symAddr));
+      memcpy(storedAddress.symAddress, symAddr, len);
+      storedAddress.symAddress[len] = '\0';
       storedAddress.recordCreationTime = myGlobals.actTime;
       storedAddress.symAddressType = symAddrType;
 
