@@ -569,6 +569,8 @@ void sendGraphFile(char* fileName, int doNotUnlink) {
   char tmpStr[256];
   int bufSize=sizeof(tmpStr)-1, totLen = 0;
 
+  memset(&tmpStr, 0, sizeof(tmpStr);
+
   if((fd = fopen(fileName, "rb")) != NULL) {
 
     for(;;) {
@@ -1618,6 +1620,8 @@ void drawTrafficPie(void) {
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
+
+  if(fd == NULL) return;
 
   if(num == 1) p[0] = 100; /* just to be safe */
   drawPie(400, 250,
