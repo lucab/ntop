@@ -569,7 +569,7 @@ void sendGraphFile(char* fileName, int doNotUnlink) {
   char tmpStr[256];
   int bufSize=sizeof(tmpStr)-1, totLen = 0;
 
-  memset(&tmpStr, 0, sizeof(tmpStr);
+  memset(&tmpStr, 0, sizeof(tmpStr));
 
   if((fd = fopen(fileName, "rb")) != NULL) {
 
