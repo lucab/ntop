@@ -4291,6 +4291,34 @@ A. Also, understand that --set-pcap-nonblocking is going to increase ntop's
 
    Just be aware of it and don't ask on the mailing lists.
 
+   It's not giant lock vs. fine grained, etc., it's really the handling of 
+   signals (user interrupts) that is different. 
+
+   Say you have a process, A running.
+
+   In linux, POSIX thread x is kernel process x' and POSIX thread y is kernel 
+   process y'.  Now the POSIX standard doesn't prevent thread y from receiving 
+   a signal 'intended' for x, so you have to code for that.  But when a thread 
+   'sleeps', the process sleeps, which is something the kernel understands and 
+   so the kernel can do other work.
+
+   In a userland threads model (i.e. xBSD), POSIX thread x and POSIX thread y 
+   are both parts of kernel process A.  To implement the POSIX threading, the
+   thread library code creates a thread manager, thread z'. That thread receives
+   all signals, interupts etc. and parcels the work back out.  
+
+   This too is perfectly within the POSIX model.
+
+   BUT: To implement the thread manager implies that the user task (A+x+y+z) is 
+   active whenever it's waiting for ANYTHING.  How well this works depends upon 
+   the sophistication of kernel processes that recognize when the user task is 
+   'idle', meaning it is spinning waiting for somethings, vs. doing useful work.
+
+   In FreeBSD 4.x, we see that this recognition is not very sophisticated when 
+   it comes to the bpf pseudo driver and so ntop will use 100% of the available CPU.
+   Even so, the scheduler bounces between tasks of equal priority, so productive
+   work does get done, but you see the high CPU usage charged to your task.
+
 
 --------------------------------------------------------------------------------
 -----Linux - all----------------------------------------------------------------
