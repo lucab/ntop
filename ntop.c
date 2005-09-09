@@ -400,6 +400,7 @@ void createPortHash(void) {
   myGlobals.ipPortMapper.numSlots = 2*myGlobals.ipPortMapper.numElements;
   theSize = sizeof(PortProtoMapper)*2*myGlobals.ipPortMapper.numSlots;
   myGlobals.ipPortMapper.theMapper = (PortProtoMapper*)malloc(theSize);
+  memset(myGlobals.ipPortMapper.theMapper, 0, theSize);
   for(i=0; i<myGlobals.ipPortMapper.numSlots; i++) myGlobals.ipPortMapper.theMapper[i].portProto = -1;
 
 #ifdef DEBUG

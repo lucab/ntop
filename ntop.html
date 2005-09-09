@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.18.1 -->
-<!-- CreationDate: Wed May 11 15:31:15 2005 -->
+<!-- CreationDate: Wed Aug 31 11:25:44 2005 -->
 <html>
 <head>
 <meta name="generator" content="groff -Thtml, see www.gnu.org">
@@ -73,6 +73,7 @@
 [<b>-D</b>|<b>--domain</b> <i>&lt;name&gt;</i>]
 [<b>-F</b>|<b>--flow-spec</b> <i>&lt;specs&gt;</i>]
 [<b>-M</b>|<b>--no-interface-merge</b>]
+[<b>-N</b>|<b>--wwn-map]</b>
 [<b>-O</b>|<b>----output-packet-path</b>]
 [<b>-P</b>|<b>--db-file-path</b> <i>&lt;path&gt;</i>]
 [<b>-Q</b>|<b>--spool-file-path</b> <i>&lt;path&gt;</i>]
@@ -80,12 +81,13 @@
 [<b>-V</b>|<b>--version]</b> [<b>-X</b>
 <i>&lt;max_num_TCP_sessions&gt;</i>]
 [<b>--disable-instantsessionpurge</b>]
+[<b>--disable-mutexextrainfo</b>]
 [<b>--disable-schedyield</b>] [<b>--disable-stopcap</b>]
-[<b>--disable-mutexextrainfo</b>] [<b>--fc-only</b>]
-[<b>--instance</b>] [<b>--no-fc</b>]
+[<b>--fc-only</b>] [<b>--instance</b>] [<b>--no-fc</b>]
 [<b>--no-invalid-lun</b>] [<b>--p3p-cp</b>]
 [<b>--p3p-uri</b>] [<b>--skip-version-check</b>]
-[<b>--w3c</b>]</p>
+[<b>--w3c</b>] [<b>-4</b>|<b>--ipv4]</b>
+[<b>-6</b>|<b>--ipv6]</b></p>
 <!-- INDENTATION -->
 <p>Unix options:</p>
 <!-- INDENTATION -->
@@ -445,6 +447,9 @@ instead of the type of interface.</p>
 interfaces is merged together as if the traffic was seen by
 only one interface. Use the -M parameter to keep traffic
 separate by interface.</p>
+<!-- INDENTATION -->
+<p>If you do not want <b>ntop</b> to monitor any interfaces,
+use -i none.</p>
 <!-- INDENTATION -->
 <p>Under Windows, the parameter value is either the number
 of the interface or its name, e.g.
@@ -1301,6 +1306,24 @@ cannot go back.</p>
 <tr valign="top" align="left">
 <td width="10%"></td>
 <td width="89%">
+<p><b>-N | --wwn-map</b></p></td>
+</table>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p>This options names the file providing the map of WWN to
+FCID/VSAN ids.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
 <p><b>-O | --output-packet-path</b></p></td>
 </table>
 <!-- INDENTATION -->
@@ -1802,6 +1825,40 @@ make <b>ntop</b> more compatible, but it will never be 100%.
 If you find any issues, please report them to ntop-dev.</p>
 </td>
 </table>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-4 | --ipv4</b></p></td>
+</table>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p>Use IPv4 connections.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>-6 | --ipv6</b></p></td>
+</table>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p>Use IPv6 connections</p>
+</td>
+</table>
 <a name="WEB VIEWS"></a>
 <h2>WEB VIEWS</h2>
 <!-- INDENTATION -->
@@ -1818,13 +1875,14 @@ shallowly nested tables and makes some use of JavaScript and
 Cascading Style Sheets.</p>
 <!-- INDENTATION -->
 <p>Beginning with release 3.1, the menus are cascading
-dropdowns via JSCookMenu.</p>
+dropdowns via JSCookMenu. With release 3.2, this extends to
+plugins.</p>
 <!-- INDENTATION -->
 <p>We do not expect problems with any current web browser,
 but our ability to test with less common ones is very
-limited. Testing has included most current common browsers
-Gecko (Firefox, Netscape), KHTML (Konqueror), Opera and
-Internet Explorer.</p>
+limited. Testing has included Firefox and Internet Explorer,
+with very limited testing on other current common browsers
+such as Opera.</p>
 <!-- INDENTATION -->
 <p>In documentation and this man page, when we refer to a
 page such as Admin | Switch NIC, we mean the Broad category
@@ -1870,7 +1928,7 @@ information being delivered to <b>ntop</b></p>
 <p>Required libraries include:</p>
 <!-- INDENTATION -->
 <p><b>libpcap</b> from http://www.tcpdump.org/, version
-0.7.2 or newer.</p>
+0.7.2 or newer. 0.8.3 or newer is strongly recommended.</p>
 <!-- INDENTATION -->
 <p>The Windows version makes use of <b>WinPcap</b> (libpcap
 for Windows) which may be downloaded from
@@ -1882,22 +1940,23 @@ support SMP machines.</p>
 <p><b>gdbm</b> from
 http://www.gnu.org/software/gdbm/gdbm.html</p>
 <!-- INDENTATION -->
-<p><b>ntop</b> requires a POSIX threads library. Although a
-single-threaded version of <b>ntop</b> can be built from the
-source if requested during ./configure, it is not
-recommended for more than trivial usage.</p>
+<p><b>ntop</b> requires a POSIX threads library. As of
+<b>ntop</b> 3.2, the single-threaded version of <b>ntop</b>
+is no longer available.</p>
 <!-- INDENTATION -->
-<p>The <b>gd</b> library, for the creation of png files,
-available at http://www.boutell.com/gd/. <b>ntop</b>
-supports both gd 1.X and 2.X</p>
+<p>The <b>gd</b> 2.x library, for the creation of png files,
+available at http://www.boutell.com/gd/.</p>
 <!-- INDENTATION -->
-<p>The <b>libpng</b> library, for the creation of png files,
-available at http://www.libpng.org/pub/png/libpng.html.
-<b>ntop</b> supports both the 1.0.x series and the 1.2.x
-series of libpng, but cautions users that there are
-incompatibilities if you compile with one and run with the
-other. Please read the discussion in docs/FAQ before
-reporting ANY problem with libpng.</p>
+<p>The <b>libpng</b> 1.2.x library, for the creation of png
+files, available at
+http://www.libpng.org/pub/png/libpng.html.</p>
+<!-- INDENTATION -->
+<p><b>ntop</b> should support both gd 1.X and libpng 1.0.x
+libraries but this has not been tested. Note that there are
+incompatibilities if you compile with one version of these
+libraries and then run with the other. Please read the
+discussion in docs/FAQ before reporting ANY problems of this
+nature.</p>
 <!-- INDENTATION -->
 <p>(if an https:// server is desired) <b>openSSL</b> from
 the OpenSSL project available at http://www.openssl.org.</p>
@@ -1910,8 +1969,8 @@ time. The rrdtool home page is
 http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/</p>
 <!-- INDENTATION -->
 <p><b>ntop</b> includes a limited version of rrdtool 1.0.49
-in the myrrd/ directory. Users of <b>ntop</b> v3.1 should
-not need to specifically install rrdtool.</p>
+in the myrrd/ directory. Users of <b>ntop</b> 3.2 should not
+need to specifically install rrdtool.</p>
 <!-- INDENTATION -->
 <p>The <b>sflow</b> Plugin is courtesy of and supported by
 InMon Corporation, http://www.inmon.com/sflowTools.htm.</p>
@@ -1919,7 +1978,7 @@ InMon Corporation, http://www.inmon.com/sflowTools.htm.</p>
 <p>There are other optional libraries. See the output of
 ./configure for a fuller listing.</p>
 <!-- INDENTATION -->
-<p>Tool locations are current as of December 2004 - please
+<p>Tool locations are current as of August 2005 - please
 send email to report new locations or dead links.</p>
 </td>
 </table>

@@ -1346,7 +1346,7 @@ typedef struct hostTraffic {
   u_short numLocalNetworks;
 
 /*XML e MemoryUsage                         Internals:Work      "" */
-#ifdef MEMORY_DEBUG
+#if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
 /*XML n:u allocatedMemory                   Work                "" */
 #endif
 

@@ -457,6 +457,8 @@ ntop.h
 #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 2) 
 #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3) 
  #include "leaks.h"
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 4) 
+ #include <mcheck.h>
 #elif defined(MEMORY_DEBUG) 
 #else
 #endif /* MAKE_WITH_SAFER_ROUTINES / MEMORY_DEBUG */

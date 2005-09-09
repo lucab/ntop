@@ -2147,11 +2147,8 @@ static void handleRRDHTTPrequest(char* url) {
 	  else if(strcmp(value, "netflowSummary") == 0) action = FLAG_RRD_ACTION_NF_SUMMARY;
 	  else if(strcmp(value, "list") == 0) action = FLAG_RRD_ACTION_LIST;
 	} else if(strcmp(key, "key") == 0) {
-	  len = strlen(value);
-
-	  if(len >= sizeof(rrdKey)) len = sizeof(rrdKey)-1;
-	  strncpy(rrdKey, value, len);
-	  rrdKey[len] = '\0';
+	  safe_snprintf(__FILE__, __LINE__, rrdKey, sizeof(rrdKey), "%s", value);
+	  len = strlen(rrdKey);
 	  for(i=0; i<len; i++) if(rrdKey[i] == '+') rrdKey[i] = ' ';
 
           if(strncmp(value, "hosts/", strlen("hosts/")) == 0) {
@@ -2165,50 +2162,27 @@ static void handleRRDHTTPrequest(char* url) {
 	    rrdPrefix[0] = '\0';
           }
 	} else if(strcmp(key, CONST_ARBITRARY_IP) == 0) {
-          len = strlen(value);
-          if(len >= sizeof(rrdIP)) len = sizeof(rrdIP)-1;
-          strncpy(rrdIP, value, len);
-          rrdIP[len] = '\0';
+	  safe_snprintf(__FILE__, __LINE__, rrdIP, sizeof(rrdIP), "%s", value);
 	} else if(strcmp(key, CONST_ARBITRARY_INTERFACE) == 0) {
-          len = strlen(value);
-          if(len >= sizeof(rrdInterface)) len = sizeof(rrdInterface)-1;
-          strncpy(rrdInterface, value, len);
-          rrdInterface[len] = '\0';
+	  safe_snprintf(__FILE__, __LINE__, rrdInterface, sizeof(rrdInterface), "%s", value);
         } else if(strcmp(key, CONST_ARBITRARY_FILE) == 0) {
-          len = strlen(value);
-          if(len >= sizeof(rrdName)) len = sizeof(rrdName)-1;
-          strncpy(rrdName, value, len);
-          rrdName[len] = '\0';
+	  safe_snprintf(__FILE__, __LINE__, rrdName, sizeof(rrdName), "%s", value);
 	} else if(strcmp(key, "graphId") == 0) {
 	  graphId = atoi(value);
 	} else if(strcmp(key, "name") == 0) {
-	  len = strlen(value);
-
-	  if(len >= sizeof(rrdName)) len = sizeof(rrdName)-1;
-	  strncpy(rrdName, value, len);
+	  safe_snprintf(__FILE__, __LINE__, rrdName, sizeof(rrdName), "%s", value);
+	  len = strlen(rrdName);
   	  for(i=0; i<len; i++) if(rrdName[i] == '+') rrdName[i] = ' ';
-
-	  rrdName[len] = '\0';
 	} else if(strcmp(key, "counter") == 0) {
-	  len = strlen(value);
-
-	  if(len >= sizeof(rrdCounter)) len = sizeof(rrdCounter)-1;
-	  strncpy(rrdCounter, value, len);
+	  safe_snprintf(__FILE__, __LINE__, rrdCounter, sizeof(rrdCounter), "%s", value);
+	  len = strlen(rrdCounter);
   	  for(i=0; i<len; i++) if(rrdCounter[i] == '+') rrdCounter[i] = ' ';
-
-	  rrdCounter[len] = '\0';
 	} else if(strcmp(key, "title") == 0) {
           unescape(rrdTitle, sizeof(rrdTitle), value);
 	} else if(strcmp(key, "start") == 0) {
-	  len = strlen(value);
-
-	  if(len >= sizeof(startTime)) len = sizeof(startTime)-1;
-	  strncpy(startTime, value, len); startTime[len] = '\0';
+	  safe_snprintf(__FILE__, __LINE__, startTime, sizeof(startTime), "%s", value);
 	} else if(strcmp(key, "end") == 0) {
-	  len = strlen(value);
-
-	  if(len >= sizeof(endTime)) len = sizeof(endTime)-1;
-	  strncpy(endTime, value, len); endTime[len] = '\0';
+	  safe_snprintf(__FILE__, __LINE__, endTime, sizeof(endTime), "%s", value);
 	} else if(strcmp(key, "interval") == 0) {
 	  _dumpInterval = atoi(value);
           if(_dumpInterval < 1) _dumpInterval = 1 /* Min 1 second */;

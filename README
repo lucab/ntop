@@ -1,12 +1,22 @@
 See files in docs/ for more info.
 
-For instructions on how to build ntop from source, see docs/BUILD-NTOP.txt (*nix) and docs/BUILD-MinGW.txt (Win32)
+For instructions on how to build ntop from source, see docs/BUILD-NTOP.txt (*nix).
 
-For instructions on hwo to run ntop the 1st time, see docs/1STRUN.txt.
+The file docs/BUILD-MinGW.txt (Win32) may assist you in building ntop under MinGW,
+but this configuration is not officially supported.  The prebuilt executable
+distributed - for a convenience fee - through http://shop.ntop.org is built with
+Microsoft's Visual C++ .Net compiler.
 
-Online information is at http://www.ntop.org, including archives of the ntop mailings lists.
+For instructions on how to run ntop the 1st time, see docs/1STRUN.txt.
 
-Contributions of effort towards writing, rewriting and updating ntop's documentation would be heartily welcomed!
+Online information is at http://www.ntop.org.
+
+Archives of the ntop mailings lists are at http://listgateway.unipi.it/pipermail/ntop/
+and http://listgateway.unipi.it/pipermail/ntop-dev/ and are also searchable through
+Google (use site:listgateway.unipi.it ntop <your keywords>.
+
+Contributions of effort towards writing, rewriting and updating ntop's documentation would 
+be heartily welcomed!
 
 ----
-(C) 1998-2004 ntop.org
+(C) 1998-2005 ntop.org

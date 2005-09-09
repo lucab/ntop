@@ -1,4 +1,4 @@
-.\" This file Copyright 1998-2004 Luca Deri <deri@ntop.org>
+.\" This file Copyright 1998-2005 Luca Deri <deri@ntop.org>
 .\"
 .
 .de It
@@ -9,7 +9,7 @@
 .TP 1.2
 .B "\\$1 | \\$2"
 ..
-.TH NTOP 8 "December 2004 (ntop 3.1)"
+.TH NTOP 8 "August 2005 (ntop 3.2)"
 .SH NAME
 ntop \- display top network users
 .SH SYNOPSIS
@@ -55,6 +55,7 @@ ntop \- display top network users
 .RB [ -F | --flow-spec
 .IR <specs> ]
 .RB [ -M | --no-interface-merge ]
+.RB [ -N | --wwn-map]
 .RB [ -O | ----output-packet-path ]
 .RB [ -P | --db-file-path
 .IR <path> ]
@@ -66,9 +67,9 @@ ntop \- display top network users
 .RB [ -X
 .IR <max_num_TCP_sessions> ]
 .RB [ --disable-instantsessionpurge ]
+.RB [ --disable-mutexextrainfo ]
 .RB [ --disable-schedyield ]
 .RB [ --disable-stopcap ]
-.RB [ --disable-mutexextrainfo ]
 .RB [ --fc-only ]
 .RB [ --instance ]
 .RB [ --no-fc ]
@@ -77,6 +78,8 @@ ntop \- display top network users
 .RB [ --p3p-uri ]
 .RB [ --skip-version-check ]
 .RB [ --w3c ]
+.RB [ -4 | --ipv4]
+.RB [ -6 | --ipv6]
 
 Unix options:
 
@@ -150,6 +153,7 @@ Beginning with
 take effect on the next run of
 .b ntop
 and on each subsequent run until changed.
+
 
 .It2 -a --access-log-file
 By default 
@@ -304,6 +308,10 @@ device name reflects the driver name instead of the type of interface.
 By default, traffic information obtained by all the interfaces is merged together as if 
 the traffic was seen by only one interface. 
 Use the -M parameter to keep traffic separate by interface.
+
+If you do not want
+.B ntop
+to monitor any interfaces, use -i none.
 
 Under Windows, the parameter value is either the number of the interface or its name, e.g.
 {6252C14C-44C9-49D9-BF59-B2DC18C7B811}. 
@@ -799,6 +807,9 @@ option on the web server to select which interface to report upon.
 Note that activating either the netFlow and/or sFlow plugins will force the
 setting of -M.  Once enabled, you cannot go back.
 
+.It2 -N --wwn-map
+This options names the file providing the map of WWN to FCID/VSAN ids.
+
 .It2 -O --output-packet-path
 This parameter defines the base path for the ntop-suspicious-pkts.XXX.pcap and 
 normal packet dump files.
@@ -1049,6 +1060,12 @@ to make
 more compatible, but it will never be 100%.  If you find any issues, please report
 them to ntop-dev.
 
+.It2 -4 --ipv4
+Use IPv4 connections.
+
+.It2  -6 --ipv6
+Use IPv6 connections
+
 .SH "WEB VIEWS"
 While
 .B ntop
@@ -1057,11 +1074,12 @@ is running, multiple users can access the traffic information using their web br
 does not generate 'fancy' or 'complex' html, although it does use frames, shallowly nested
 tables and makes some use of JavaScript and Cascading Style Sheets.
 
-Beginning with release 3.1, the menus are cascading dropdowns via JSCookMenu.
+Beginning with release 3.1, the menus are cascading dropdowns via JSCookMenu.  With release
+3.2, this extends to plugins.
 
 We do not expect problems with any current web browser, but our ability to test with less 
-common ones is very limited.  Testing has included most current common browsers
-Gecko (Firefox, Netscape), KHTML (Konqueror), Opera and Internet Explorer.
+common ones is very limited.  Testing has included Firefox and Internet Explorer, with 
+very limited testing on other current common browsers such as Opera.
 
 In documentation and this man page, when we refer to a page such as Admin | Switch NIC, we
 mean the Broad category "Admin" and the detailed item "Switch NIC" on that Admin menu.
@@ -1083,7 +1101,8 @@ Whatever happens, happens at the OS level, without any information being deliver
 Required libraries include:
 
 .B libpcap
-from http://www.tcpdump.org/, version 0.7.2 or newer.
+from http://www.tcpdump.org/, version 0.7.2 or newer. 0.8.3 or newer is strongly 
+recommended.
 
 The Windows version makes use of
 .B WinPcap
@@ -1100,26 +1119,29 @@ from http://www.gnu.org/software/gdbm/gdbm.html
 .
 
 .B ntop
-requires a POSIX threads library. Although a single-threaded version of 
+requires a POSIX threads library. As of 
 .B ntop
-can be built from the source if requested during ./configure, it is not 
-recommended for more than trivial usage.
+3.2, the single-threaded version of 
+.B ntop
+is no longer available.
 .
 
 The
 .B gd
-library, for the creation of png files, available at
+2.x library, for the creation of png files, available at
 http://www.boutell.com/gd/. 
-.B ntop 
-supports both gd 1.X and 2.X
 
 The
 .B libpng
-library, for the creation of png files, available at http://www.libpng.org/pub/png/libpng.html.
-.B ntop
-supports both the 1.0.x series and the 1.2.x series of libpng, but cautions users that there
-are incompatibilities if you compile with one and run with the other.  Please read the
-discussion in docs/FAQ before reporting ANY problem with libpng.
+1.2.x library, for the creation of png files, available at 
+http://www.libpng.org/pub/png/libpng.html.
+
+.B ntop 
+should support both gd 1.X and libpng 1.0.x libraries but this has not been tested.
+Note that there are incompatibilities if you compile with one version of these libraries
+and then run with the other.  Please read the discussion in docs/FAQ before reporting ANY 
+problems of this nature.
+.
 
 (if an https:// server is desired)
 .B openSSL
@@ -1136,7 +1158,7 @@ The rrdtool home page is http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
 .B ntop
 includes a limited version of rrdtool 1.0.49 in the myrrd/ directory.  Users of
 .B ntop 
-v3.1 should not need to specifically install rrdtool.
+3.2 should not need to specifically install rrdtool.
 .
 
 The 
@@ -1147,7 +1169,7 @@ Plugin is courtesy of and supported by InMon Corporation, http://www.inmon.com/s
 There are other optional libraries.  See the output of ./configure for a fuller listing. 
 .
 
-Tool locations are current as of December 2004 - please send email to 
+Tool locations are current as of August 2005 - please send email to 
 report new locations or dead links.
 
 .SH "SEE ALSO"

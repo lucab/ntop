@@ -412,6 +412,8 @@
  *  2     ElectricFence
  *          see http://directory.fsf.org/devel/debug/ElectricFence.html
  *  3     leaks.c - ntop custom allocation tracker
+ *  4     gnu mcheck()
+ *          see http://www.delorie.com/gnu/docs/glibc/libc_33.html
  *
  *  WARNING: If this is enabled, the size of the hash_list (later in ntop.h) is restricted.
  *
@@ -424,6 +426,8 @@
  *     #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 2)
  *      ...here...
  *     #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
+ *      ...here...
+ *     #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 4)
  *      ...here...
  *     #elif defined(MEMORY_DEBUG)
  *      <error>
@@ -448,6 +452,7 @@
 #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
 #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 2)
 #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 4)
 #elif defined(MEMORY_DEBUG)
  #error Invalid value for MEMORY_DEBUG - fix --with-memorydebug= ./configure option
 #else

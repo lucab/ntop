@@ -1032,7 +1032,13 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
         traceEvent(CONST_TRACE_ERROR, "EPIPE during sending of page to web client");
 #ifndef WIN32
       } else if(errno == ECONNRESET /* Client reset */) {
-        traceEvent(CONST_TRACE_ERROR, "ECONNRESET during sending of page to web client");
+        static econnresetcount=0;
+        econnresetcount++;
+        if(econnresetcount < 10)
+          traceEvent(CONST_TRACE_WARNING, "ECONNRESET during sending of page to web client");
+        else if(econnresetcount == 10)
+          traceEvent(CONST_TRACE_WARNING, 
+                     "ECONNRESET during sending of page to web client (skipping further warnings)");
 #endif
       } else if(errno == EBADF /* Bad file descriptor: a
 				   disconnected client is still sending */) {
@@ -2032,6 +2038,9 @@ static int returnHTTPPage(char* pageName,
       sendString("<p>ERROR: Can not locate image map file, request ignored</p>\n");
       traceEvent(CONST_TRACE_ERROR, "Can not locate image map file '%s', ignored...", tmpStr);
       free(pageURI);
+      if(domainNameParm != NULL) free(domainNameParm);
+      if(db_key != NULL) free(db_key);
+      if(db_val != NULL) free(db_val);
       return(0);
     }
 
@@ -2039,6 +2048,9 @@ static int returnHTTPPage(char* pageName,
       sendString("<p>ERROR: Can not open image map file, request ignored</p>\n");
       traceEvent(CONST_TRACE_ERROR, "Can not open image map file '%s', ignored...", tmpStr);
       free(pageURI);
+      if(domainNameParm != NULL) free(domainNameParm);
+      if(db_key != NULL) free(db_key);
+      if(db_val != NULL) free(db_val);
       return(0);
     }
 
@@ -2169,6 +2181,9 @@ static int returnHTTPPage(char* pageName,
     fclose(fd);
     /* closeNwSocket(&myGlobals.newSock); */
     free(pageURI);
+    if(domainNameParm != NULL) free(domainNameParm);
+    if(db_key != NULL) free(db_key);
+    if(db_val != NULL) free(db_val);
     return(0);
   }
 
@@ -2181,6 +2196,9 @@ static int returnHTTPPage(char* pageName,
   free(pageURI);
 
   if(strncasecmp(pageName, CONST_PLUGINS_HEADER, strlen(CONST_PLUGINS_HEADER)) == 0) {
+    if(domainNameParm != NULL) free(domainNameParm);
+    if(db_key != NULL) free(db_key);
+    if(db_val != NULL) free(db_val);
     if(handlePluginHTTPRequest(&pageName[strlen(CONST_PLUGINS_HEADER)])) {
       return(0);
     } else {
@@ -2190,6 +2208,9 @@ static int returnHTTPPage(char* pageName,
 
   if(strncasecmp(pageName, CONST_CONFIG_NTOP_HTML, strlen(CONST_CONFIG_NTOP_HTML)) == 0) {
     handleNtopConfig (pageName, showPrefPage, isPostMethod ? postLen : 0);
+    if(domainNameParm != NULL) free(domainNameParm);
+    if(db_key != NULL) free(db_key);
+    if(db_val != NULL) free(db_val);
     return(0);
   }
 
@@ -2337,6 +2358,9 @@ static int returnHTTPPage(char* pageName,
 		     "No interface has been configured. Please <a href=%s>configure ntop</a> first.",
 		     CONST_CONFIG_NTOP_HTML);
       printFlagedWarning (tmpStr);
+      if(domainNameParm != NULL) free(domainNameParm);
+      if(db_key != NULL) free(db_key);
+      if(db_val != NULL) free(db_val);
       return (0);
     }
 
@@ -2358,6 +2382,9 @@ static int returnHTTPPage(char* pageName,
 		     "<I><a href=%s>Configure Ntop</a> first. No packet "
 		     "captures analyzed</I>", CONST_CONFIG_NTOP_HTML);
       printFlagedWarning (tmpStr);
+      if(domainNameParm != NULL) free(domainNameParm);
+      if(db_key != NULL) free(db_key);
+      if(db_val != NULL) free(db_val);
       return (0);
     }
 
@@ -2398,6 +2425,9 @@ static int returnHTTPPage(char* pageName,
 	  /* father process */
 	  myGlobals.numChildren++;
 	  compressFile = 0;
+          if(domainNameParm != NULL) free(domainNameParm);
+          if(db_key != NULL) free(db_key);
+          if(db_val != NULL) free(db_val);
 	  return(0);
 	} else {
 
@@ -3292,6 +3322,8 @@ static void compressAndSendData(u_int *gzipBytesSent) {
   FILE *fd;
   int len;
   char tmpStr[256];
+
+  memset(&tmpStr, 0, sizeof(tmpStr));
 
   if(gzflush(compressFileFd, Z_FINISH) != Z_OK) {
     int err;

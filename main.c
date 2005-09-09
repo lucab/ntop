@@ -25,6 +25,10 @@
 #include "globals-report.h"
 #include "scsiUtils.h"
 
+#if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 4) && defined(HAVE_BACKTRACE)
+#include <execinfo.h>
+#endif
+
 /*
  * Hello World! This is ntop speaking...
  */
@@ -85,10 +89,10 @@ void usage(FILE * fp) {
   fprintf(fp, "    [-i <number>    | --interface <number|name>]          %sInterface index number (or name) to monitor\n", newLine);
 #endif
   fprintf(fp, "    [-j             | --create-other-packets]	         %sCreate file ntop-other-pkts.XXX.pcap file\n", newLine);
-  fprintf(fp, "    [-o             | --no-mac]                           %sntop will trust just IP addresses (no MACs)\n", newLine);
   fprintf(fp, "    [-l <path>      | --pcap-log <path>]                  %sDump packets captured to a file (debug only!)\n", newLine);
   fprintf(fp, "    [-m <addresses> | --local-subnets <addresses>]        %sLocal subnetwork(s) (see man page)\n", newLine);
   fprintf(fp, "    [-n             | --numeric-ip-addresses]             %sNumeric IP addresses - no DNS resolution\n", newLine);
+  fprintf(fp, "    [-o             | --no-mac]                           %sntop will trust just IP addresses (no MACs)\n", newLine);
   fprintf(fp, "    [-p <list>      | --protocols <list>]                 %sList of IP protocols to monitor (see man page)\n", newLine);
   fprintf(fp, "    [-q             | --create-suspicious-packets]        %sCreate file ntop-suspicious-pkts.XXX.pcap file\n", newLine);
   fprintf(fp, "    [-r <number>    | --refresh-time <number>]            %sRefresh time in seconds, default is %d\n",
@@ -256,6 +260,46 @@ static void verifyOptions (void) {
 
 /* ************************************ */
 
+#if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 4)
+static void abortfn(enum mcheck_status status) {
+
+#ifdef HAVE_BACKTRACE
+  int i;
+  void *array[20];
+  size_t size;
+  char **strings;
+
+  /* Grab the backtrace before we do much else... */
+  size = backtrace(array, 20);
+  strings = (char**)backtrace_symbols(array, size);
+#endif
+
+  switch(status) {
+    case MCHECK_HEAD:
+      traceEvent(CONST_TRACE_ERROR, "MCHECK_HEAD: modified before block");
+      break;
+    case MCHECK_TAIL:
+      traceEvent(CONST_TRACE_ERROR, "MCHECK_TAIL: modified after block");
+      break;
+    case MCHECK_FREE:
+      traceEvent(CONST_TRACE_ERROR, "MCHECK_FREE: already freed");
+      break;
+  }
+
+#ifdef HAVE_BACKTRACE
+  if (size >= 2) {
+    traceEvent(CONST_TRACE_INFO, "MCHECK: backtrace is:");
+    for (i=0; i<size; i++) {
+      traceEvent(CONST_TRACE_ERROR, "MCHECK: %2d. %s", i, strings[i]);
+    }
+  }
+#endif /* HAVE_BACKTRACE */
+
+  traceEvent(CONST_TRACE_FATALERROR, "MCHECK: %d", status);
+
+}
+#endif
+
 /* That's the meat */
 #ifdef WIN32
 int ntop_main(int argc, char *argv[]) {
@@ -275,14 +319,17 @@ int main(int argc, char *argv[]) {
        env[LEN_GENERAL_WORK_BUFFER],
        buf[LEN_GENERAL_WORK_BUFFER];
 
-  /* printf("Wait please: ntop is coming up...\n"); */
-
 /* Don't move this below nor above */
 #if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
   mtrace();
 #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
   initLeaks();
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 4)
+  mcheck(abortfn);
+  printf("MEMORY_DEBUG 4 - mcheck() - remember you need to run at the console, without -d | --daemon\n");
 #endif
+
+  /* printf("Wait please: ntop is coming up...\n"); */
 
   /* VERY FIRST THING is to clear myGlobals, so myGlobals.ntopRunState can be used */
   memset(&myGlobals, 0, sizeof(myGlobals));

@@ -258,6 +258,9 @@ extern void addDevice(char* deviceName, char* deviceDescr);
 
 /* leaks.c */
 
+#define memorycheck(a, b) {}
+#define _memorycheck(a, b, c, d) {}
+
 #ifdef MAKE_WITH_SAFER_ROUTINES
 
 /* Fix to the free prototype courtesy of Tanner Lovelace <lovelace@opennms.org> */
@@ -280,6 +283,25 @@ extern char* ntop_safestrdup(char *ptr, char* file, int line);
   /* ElectricFence - use existing routines */
 
 #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
+
+#define _memorycheck(a,b,c,d) { \
+  enum mcheck_status _status = mprobe((void *)a); \
+  switch(_status) { \
+    case MCHECK_DISABLED: \
+    case MCHECK_OK: \
+      break; \
+    case MCHECK_HEAD: \
+      traceEvent(CONST_TRACE_WARNING, "MCHECK(%s): %p MCHECK_HEAD, modified before block [%s@%d]", b, a, c, d); \
+      break; \
+    case MCHECK_TAIL: \
+      traceEvent(CONST_TRACE_WARNING, "MCHECK(%s): %p MCHECK_TAIL, modified after block [%s@%d]", b, a, c, d); \
+      break; \
+    case MCHECK_FREE: \
+      traceEvent(CONST_TRACE_WARNING, "MCHECK(%s): %p MCHECK_FREE, already freed [%s@%d]", b, a, c, d); \
+      break; \
+  } \
+}
+#define memorycheck(a,b) _memorycheck(a, b, __FILE__, __LINE__)
 
   /* ntop custom monitor */
 
@@ -312,6 +334,10 @@ extern void*          ntop_calloc(unsigned int c, unsigned int sz, char* file, i
 extern void*          ntop_realloc(void* ptr, unsigned int sz, char* file, int line);
 extern char*          ntop_strdup(char *str, char* file, int line);
 extern void           ntop_free(void **ptr, char* file, int line);
+
+#elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 4)
+
+  /* mcheck() - use existing routines */
 
 #elif defined(MEMORY_DEBUG) 
 #else
