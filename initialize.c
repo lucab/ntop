@@ -1456,6 +1456,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 int validInterface(char *name) {
   if(name && 
      (strstr(name, "PPP") /* Avoid to use the PPP interface */
+      || strstr(name, "dialup")  /* Avoid to use the dialup interface */
       || strstr(name, "ICSHARE")  /* Avoid to use the internet sharing interface */
       || strstr(name, "NdisWan"))) { /* Avoid to use the internet sharing interface */
     return(0);
@@ -1639,7 +1640,8 @@ void initDevices(char* devices) {
 	  tmpDescr = intDescr[atoi(tmpDev)];
 	  tmpDev   = intNames[atoi(tmpDev)];
 	} else {
-	  traceEvent(CONST_TRACE_ERROR, "Interface index '%d' is out of range [0..%d]", atoi(tmpDev), ifIdx);
+	  traceEvent(CONST_TRACE_ERROR, "Interface index '%d' is out of range [0..%d]", 
+		  atoi(tmpDev), ifIdx > 0 ? (ifIdx -1) : 0);
 	  return;
 	}
       } else {
