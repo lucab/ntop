@@ -3968,7 +3968,7 @@ unsigned long _ntopSleepMSWhileSameState(char *file, int line, unsigned long ulD
 
           if(ntopRunStateSave != myGlobals.ntopRunState) {
             ulDelay = ulDelay - ulSlice + remAmount.tv_sec * 1000L + remAmount.tv_nsec / 1000L;
-            traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "ntopSleepMS() terminating due to runstate %ul remained", ulDelay);
+            traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "ntopSleepMS() terminating due to runstate %lu remained", ulDelay);
             return(ulDelay);
           }
 
@@ -3981,7 +3981,7 @@ unsigned long _ntopSleepMSWhileSameState(char *file, int line, unsigned long ulD
     ulDelay -= ulSlice;
 
     if(ntopRunStateSave != myGlobals.ntopRunState) {
-      traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "ntopSleepMS() terminating due to runstate %ul remained", ulDelay);
+      traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "ntopSleepMS() terminating due to runstate %lu remained", ulDelay);
       break;
     }
   }

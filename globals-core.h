@@ -272,6 +272,7 @@ extern void*          ntop_safemalloc(unsigned int sz, char* file, int line);
 extern void*          ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line);
 #define realloc(p,sz) ntop_saferealloc(p, sz, __FILE__, __LINE__)
 extern void*          ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line);
+#define strdup(p,sz)  ntop_safestrdup(p, sz, __FILE__, __LINE__)
 extern char* ntop_safestrdup(char *ptr, char* file, int line);
 
 #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)

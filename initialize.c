@@ -97,9 +97,9 @@ static void setDomainName(void) {
     len--;
 
   if(len == 0)
-    myGlobals.shortDomainName = myGlobals.runningPref.domainName;
+    myGlobals.shortDomainName = strdup(myGlobals.runningPref.domainName);
   else
-    myGlobals.shortDomainName = &myGlobals.runningPref.domainName[len+1];
+    myGlobals.shortDomainName = strdup(&myGlobals.runningPref.domainName[len+1]);
 }
 
 /* ------------------------------------------------------------ */

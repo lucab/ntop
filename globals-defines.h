@@ -413,7 +413,7 @@
  *          see http://directory.fsf.org/devel/debug/ElectricFence.html
  *  3     leaks.c - ntop custom allocation tracker
  *  4     gnu mcheck()
- *          see http://www.delorie.com/gnu/docs/glibc/libc_33.html
+ *          see http://www.gnu.org/software/libc/manual/html_node/Heap-Consistency-Checking.html
  *
  *  WARNING: If this is enabled, the size of the hash_list (later in ntop.h) is restricted.
  *

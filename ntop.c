@@ -762,7 +762,7 @@ static void cleanupThreadIs(char *buf, int sizeofbuf) {
   else
     for(i=0; i<myGlobals.numDequeueThreads; i++) {
       if(pthread_self() == myGlobals.dequeueAddressThreadId[i]) {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "DNSAR%d", i+1);
+        safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "DNSAR%d", i+1);
         break;
       }
     }
@@ -770,7 +770,7 @@ static void cleanupThreadIs(char *buf, int sizeofbuf) {
   if(buf[0] == '\0') {
     for(i=0; i<myGlobals.numDevices; i++) {
       if(pthread_self() == myGlobals.device[i].pcapDispatchThreadId) {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "NPS%d", i+1);
+        safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "NPS%d", i+1);
         break;
       }
     }
@@ -780,7 +780,7 @@ static void cleanupThreadIs(char *buf, int sizeofbuf) {
     for(i=0; i<myGlobals.numDevices; i++) {
       if((myGlobals.device[i].netflowGlobals != NULL) &&
          (pthread_self() == myGlobals.device[i].netflowGlobals->netFlowThread)) {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "NF%d", i);
+        safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "NF%d", i);
         break;
       }
     }
@@ -790,7 +790,7 @@ static void cleanupThreadIs(char *buf, int sizeofbuf) {
     for(i=0; i<myGlobals.numDevices; i++) {
       if((myGlobals.device[i].sflowGlobals != NULL) &&
          (pthread_self() == myGlobals.device[i].sflowGlobals->sflowThread)) {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "SF%d", i);
+        safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "SF%d", i);
         break;
       }
     }
@@ -1136,6 +1136,8 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef WIN32
   termWinsock32();
 #endif
+
+  if(myGlobals.shortDomainName) free(myGlobals.shortDomainName);
 
   for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
     free(myGlobals.ipTrafficProtosNames[i]);
