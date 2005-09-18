@@ -28,6 +28,14 @@
 #              SuSE 8.0ES, 9.0, 9.2
 #              Ubuntu 5.04
 #
+# 2005/09 Tested:
+#              CentOS 4.1
+#              Fedora Core 3
+#              FreeBSD 5.4
+#              Knoppix
+#              RedHat 9
+#              SuSE 9.3
+#
 
 #  Released under GPL...
 
@@ -272,6 +280,23 @@ function processDebianDerivatives() {
     fi
 }
 
+function processRedhatDerivatives() {    
+    # Redhat derivatives...
+    if test "${distro}x" = "redhatx"; then
+      if test "x${debug}" = "xY"; then
+        echo "DEBUG25: Redhat derivatives... distro ${distro} release ${release} full ${fullrelease}..."
+      fi
+      baserelease=" (base: ${distro} ${release})"
+      case "${fullrelease}" in
+        [Cc]ent[Oo][Ss]*)
+          distro="Centos"
+          fullrelease="${distro} ${release}${baserelease}"
+          return
+          ;;
+      esac
+    fi
+}
+
 debug="N"
 if test "x${1}" = "x--debug"; then
     debug="Y"
@@ -329,18 +354,39 @@ case `uname -s` in
         processReleaseFile
     fi
 
-    processDebianDerivatives
-
+    case $distro in
+      [Rr]ed[Hh]at) 
+        processRedhatDerivatives
+        ;;
+      [Dd]ebian)
+        processDebianDerivatives
+        ;;
+    esac
     ;;
 
   [Ff][Rr][Ee][Ee][Bb][Ss][Dd])
     # FreeBSD
+    if test "x${debug}" = "xY"; then
+      echo "DEBUGF1: Limited tests for FreeBSD..."
+    fi
     distro=`uname -s`
+    if test "x${debug}" = "xY"; then
+      echo "DEBUGF2: uname -s: ${distro}"
+    fi
     release=`uname -r`
+    if test "x${debug}" = "xY"; then
+      echo "DEBUGF3: uname -r: ${release}"
+    fi
     kernel=`uname -i 2> /dev/null`
     rc=$?
+    if test "x${debug}" = "xY"; then
+      echo "DEBUGF4: uname -i: ${kernel}"
+    fi
     if test "x${rc}" != "x0"; then
         fullkernel=`uname -v | awk '{ print $NF }'`
+        if test "x${debug}" = "xY"; then
+          echo "DEBUGF5: Full kernel: ${fullkernel}"
+        fi
         kernel=`echo ${fullkernel} | \
                 awk '{ i=index($0, "/"); \
                        while(i>0) { \
@@ -348,6 +394,9 @@ case `uname -s` in
                            i=index($0, "/"); \
                        }; \
                        print $0 }'`
+        if test "x${debug}" = "xY"; then
+          echo "DEBUGF6: gives kernel: ${kernel}"
+        fi
     fi
 
     fullrelease="${distro} ${release}"
@@ -361,7 +410,13 @@ case `uname -s` in
         echo "WARNING: This routine only works under Linux/FreeBSD.  We'll fake it as best we can!"
     fi
     distro=`uname -s`
+    if test "x${debug}" = "xY"; then
+      echo "DEBUGX1: uname -s gives 'distro': ${distro}"
+    fi
     release=`uname -r`
+    if test "x${debug}" = "xY"; then
+      echo "DEBUGX1: uname -r gives 'release': ${release}"
+    fi
     kernel="unknown"
     fullrelease="unknown"
     lsbrelease="Not Linux - not LSB compliant"
