@@ -1477,8 +1477,10 @@ static void* netflowMainLoop(void* _deviceId) {
     }
   }
 
-  myGlobals.device[deviceId].netflowGlobals->threadActive = 0;
-  myGlobals.device[deviceId].netflowGlobals->netFlowThread = 0;
+  if(myGlobals.device[deviceId].netflowGlobals != NULL) {
+    myGlobals.device[deviceId].netflowGlobals->threadActive = 0;
+    myGlobals.device[deviceId].netflowGlobals->netFlowThread = 0;
+  }
   myGlobals.device[deviceId].activeDevice = 0;
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread terminated [p%d]", pthread_self(), getpid());
