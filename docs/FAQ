@@ -1512,6 +1512,21 @@ A. Anything you want, of 5 or more characters.  If ntop can't find the value
    time you start ntop, check the permissions on the ntop_pw.db file.
 
 
+Q. Characters after the 8th are being ignored in my password.
+A. Probably.  ntop uses the standard crypt() function provided by the OS.
+
+   While crypt() is required part of the single unix specification, the 
+   details are implementation dependent.  Whatever the limitations of crypt() 
+   are, that what ntop's limits are.  
+
+   Unfortunately, there's no way to tell programatically what these limits are, 
+   you have to refer to the man page for crypt(3).
+
+   There is a "GNU EXTENSION" to crypt() which implies that changing the 'salt'
+   ntop uses would allow longer passwords.  That's set via CONST_CRYPT_SALT in 
+   globals-defines.h, but AFAIK this hasn't been tested.
+
+
 Q. How does the @filename option work e.g. /usr/bin/ntop ... @filename ...
 A. The text of 'filename', is copied - ignoring line breaks and
    comments (anything following a #) - into the command line.
