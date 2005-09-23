@@ -5365,6 +5365,30 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "MAX_PROCESS_BUFFER", "undefined");
 #endif
 
+#ifdef MAX_NETFLOW_FLOW_BUFFER
+  printFeatureConfigNum(textPrintFlag, "MAX_NETFLOW_FLOW_BUFFER", MAX_NETFLOW_FLOW_BUFFER);
+#else
+  printFeatureConfigInfo(textPrintFlag, "MAX_NETFLOW_FLOW_BUFFER", "undefined");
+#endif
+
+#ifdef MAX_NETFLOW_RECORD_BUFFER
+  printFeatureConfigNum(textPrintFlag, "MAX_NETFLOW_RECORD_BUFFER", MAX_NETFLOW_RECORD_BUFFER);
+#else
+  printFeatureConfigInfo(textPrintFlag, "MAX_NETFLOW_RECORD_BUFFER", "undefined");
+#endif
+
+#ifdef MAX_RRD_CYCLE_BUFFER
+  printFeatureConfigNum(textPrintFlag, "MAX_RRD_CYCLE_BUFFER", MAX_RRD_CYCLE_BUFFER);
+#else
+  printFeatureConfigInfo(textPrintFlag, "MAX_RRD_CYCLE_BUFFER", "undefined");
+#endif
+
+#ifdef MAX_RRD_PROCESS_BUFFER
+  printFeatureConfigNum(textPrintFlag, "MAX_RRD_PROCESS_BUFFER", MAX_RRD_PROCESS_BUFFER);
+#else
+  printFeatureConfigInfo(textPrintFlag, "MAX_RRD_PROCESS_BUFFER", "undefined");
+#endif
+
 #ifdef MAX_SESSIONS_CACHE_LEN
   printFeatureConfigNum(textPrintFlag, "MAX_SESSIONS_CACHE_LEN", MAX_SESSIONS_CACHE_LEN);
 #else

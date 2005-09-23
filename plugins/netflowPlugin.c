@@ -27,6 +27,8 @@ static void* netflowMainLoop(void* _deviceId);
 
 /* #define DEBUG_FLOWS */
 
+#define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
+
 #define valueOf(a) (a == NULL ? "" : a)
 #define isEmpty(a) ((a == NULL) || (a[0] == '\0') ? 1 : 0)
 
@@ -87,6 +89,11 @@ struct generic_netflow_record {
 
 u_char static pluginActive = 0;
 
+static ExtraPage netflowExtraPages[] = {
+  { NULL, CONST_NETFLOW_STATISTICS_HTML, "Statistics" },
+  { NULL, NULL, NULL }
+};
+
 static PluginInfo netflowPluginInfo[] = {
   {
     VERSION, /* current ntop version */
@@ -118,9 +125,20 @@ static PluginInfo netflowPluginInfo[] = {
     NULL, /* no capture */
 #endif
     NULL, /* no status */
-    NULL  /* no extra pages */
+    netflowExtraPages
   }
 };
+
+#ifdef MAX_NETFLOW_FLOW_BUFFER
+  static float netflowflowBuffer[MAX_NETFLOW_FLOW_BUFFER];
+  static int netflowflowBufferCount;
+  static float netflowfmaxTime;
+#endif
+#ifdef MAX_NETFLOW_PACKET_BUFFER
+  static float netflowpacketBuffer[MAX_NETFLOW_PACKET_BUFFER];
+  static int netflowpacketBufferCount;
+  static float netflowpmaxTime;
+#endif
 
 /* ****************************** */
 
@@ -309,6 +327,14 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   struct tcphdr tp;
   IPSession *session = NULL;
   time_t firstSeen, lastSeen, initTime;
+
+#ifdef MAX_NETFLOW_FLOW_BUFFER
+  float elapsed;
+  struct timeval netflowStartOfFlowProcessing,
+                 netflowEndOfFlowProcessing;
+
+  gettimeofday(&netflowStartOfFlowProcessing, NULL);
+#endif
 
   myGlobals.device[deviceId].netflowGlobals->numNetFlowsRcvd++;
 
@@ -754,6 +780,14 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   }
 
   /* releaseMutex(&myGlobals.hostsHashMutex); */
+
+#ifdef MAX_NETFLOW_FLOW_BUFFER
+  gettimeofday(&netflowEndOfFlowProcessing, NULL);
+  elapsed = timeval_subtract(netflowEndOfFlowProcessing, netflowStartOfFlowProcessing);
+  netflowflowBuffer[++netflowflowBufferCount & (MAX_NETFLOW_FLOW_BUFFER - 1)] = elapsed;
+  if(elapsed > netflowfmaxTime)
+    netflowfmaxTime = elapsed;
+#endif
 
   return(0);
 }
@@ -1358,6 +1392,12 @@ static void* netflowMainLoop(void* _deviceId) {
   u_char buffer[2048];
   struct sockaddr_in fromHost;
 
+#ifdef MAX_NETFLOW_PACKET_BUFFER
+  struct timeval netflowStartOfRecordProcessing,
+                 netflowEndOfRecordProcessing;
+  float elapsed;
+#endif
+
   deviceId = (int)_deviceId;
 
   if(!(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket > 0)) return(NULL);
@@ -1452,6 +1492,10 @@ static void* netflowMainLoop(void* _deviceId) {
       if(rc > 0) {
 	int i;
 
+#ifdef MAX_NETFLOW_PACKET_BUFFER
+        gettimeofday(&netflowStartOfRecordProcessing, NULL);
+#endif
+
 	myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd++;
 	NTOHL(fromHost.sin_addr.s_addr);
 
@@ -1467,6 +1511,15 @@ static void* netflowMainLoop(void* _deviceId) {
 	}
 
 	dissectFlow((char*)buffer, rc, deviceId);
+
+#ifdef MAX_NETFLOW_PACKET_BUFFER
+        gettimeofday(&netflowEndOfRecordProcessing, NULL);
+        elapsed = timeval_subtract(netflowEndOfRecordProcessing, netflowStartOfRecordProcessing);
+        netflowpacketBuffer[++netflowpacketBufferCount & (MAX_NETFLOW_PACKET_BUFFER - 1)] = elapsed;
+        if(elapsed > netflowpmaxTime)
+          netflowpmaxTime = elapsed;
+#endif
+
       }
     } else {
       if((rc < 0) && (myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) && (errno != EINTR /* Interrupted system call */)) {
@@ -1624,8 +1677,22 @@ static void initNetFlowDevice(int deviceId) {
 static int initNetFlowFunct(void) {
   char value[128];
 
+  traceEvent(CONST_TRACE_INFO, "NETFLOW: Welcome to the netFlow plugin");
+
   pluginActive = 1;
   myGlobals.runningPref.mergeInterfaces = 0; /* Use different devices */
+
+#ifdef MAX_NETFLOW_FLOW_BUFFER
+  memset(&netflowflowBuffer, 0, sizeof(netflowflowBuffer));
+  netflowflowBufferCount = 0;
+  netflowfmaxTime = 0.0;
+#endif
+
+#ifdef MAX_NETFLOW_PACKET_BUFFER
+  memset(&netflowpacketBuffer, 0, sizeof(netflowpacketBuffer));
+  netflowpacketBufferCount = 0;
+  netflowpmaxTime = 0.0;
+#endif
 
   if((fetchPrefsValue(nfValue(0, "knownDevices", 0), value, sizeof(value)) != -1)
      && (strlen(value) > 0)) {
@@ -1713,6 +1780,192 @@ static void printNetFlowDeviceConfiguration(void) {
   sendString("</td></TR></TABLE></center>");
 
   printHTMLtrailer();
+}
+
+    
+/* ****************************** */
+
+static void printNetFlowStatistics(void) {
+
+  char buf[1024];
+  int i, printedStatistics=0;
+
+#ifdef MAX_NETFLOW_PACKET_BUFFER
+  float rminTime=99999.0, rmaxTime=0.0,
+        /*stddev:*/ rM, rT, rQ, rR, rSD, rXBAR;
+#endif
+#ifdef MAX_NETFLOW_FLOW_BUFFER
+  float fminTime=99999.0, fmaxTime=0.0,
+        /*stddev:*/ fM, fT, fQ, fR, fSD, fXBAR;
+#endif
+
+  memset(&buf, 0, sizeof(buf));
+
+  printHTMLheader("NetFlow Statistics", NULL, 0);
+
+  for(i = 0; i<myGlobals.numDevices; i++) {
+    if((myGlobals.device[i].netflowGlobals != NULL) &&
+       (myGlobals.device[i].netflowGlobals->numNetFlowsPktsRcvd > 0)) {
+      if(printedStatistics == 0) {
+        sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
+        printedStatistics = 1;
+      }
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                    "<tr><th colspan=\"2\">Device %d - %s</th></tr>\n",
+                    i,
+	                myGlobals.device[i].humanFriendlyName);
+      sendString(buf);
+      printNetFlowStatisticsRcvd(i);
+    }
+  }
+  if(printedStatistics == 1) {
+    sendString("</table>\n</center>\n");
+  } else {
+    printNoDataYet();
+  }
+
+#if defined(MAX_NETFLOW_FLOW_BUFFER) || defined(MAX_NETFLOW_PACKET_BUFFER)
+  printSectionTitle("netFlow Processing times");
+  sendString("<center><table border=\"0\""TABLE_DEFAULTS">\n<tr><td width=\"500\">"
+             "<p>These numbers are the elapsed time (in seconds) to process each netFlow "
+             "packet and each individual flow.  The computations are based only on the most "
+             "recent");
+
+ #ifdef MAX_NETFLOW_FLOW_BUFFER
+  sendString(" " xstr(MAX_NETFLOW_FLOW_BUFFER) " flows");
+  #ifdef MAX_NETFLOW_PACKET_BUFFER
+  sendString(" and");
+  #endif
+ #endif
+
+ #ifdef MAX_NETFLOW_PACKET_BUFFER
+  sendString(" " xstr(MAX_NETFLOW_PACKET_BUFFER) " flow packets");
+ #endif
+
+  sendString(" processed.</p>\n"
+             "<p>Errors may cause processing to be abandoned and those flows (flow packets) "
+             "are not counted in these values.</p>\n"
+             "<p>Small averages are good, especially if the standard deviation is small "
+             "(standard deviation is a measurement of the variability of the actual values "
+             "around the average).</p>\n"
+             "<p>&nbsp;</p>\n"
+             "</td></tr></table></center>\n");
+#endif /* MAX_NETFLOW_FLOW_BUFFER || MAX_NETFLOW_PACKET_BUFFER */
+
+#ifdef MAX_NETFLOW_FLOW_BUFFER
+  printSectionTitle("Individual Flows");
+
+  if(netflowflowBufferCount >= MAX_NETFLOW_FLOW_BUFFER) {
+
+    sendString("<center><table border=\"1\""TABLE_DEFAULTS">\n"
+               "<tr><th align=\"center\" "DARK_BG">Item</th>"
+               "<th align=\"center\" width=\"75\" "DARK_BG">Time</th></tr>\n");
+
+    for(i=0; i<MAX_NETFLOW_FLOW_BUFFER; i++) {
+      if(netflowflowBuffer[i] > fmaxTime) fmaxTime = netflowflowBuffer[i];
+      if(netflowflowBuffer[i] < fminTime) fminTime = netflowflowBuffer[i];
+
+      if(i==0) {
+        fM = netflowflowBuffer[0];
+        fT = 0.0;
+      } else {
+        fQ = netflowflowBuffer[i] - fM;
+        fR = fQ / (float)(i+1);
+        fM += fR;
+        fT = fT + i * fQ * fR;
+      }
+    }
+    fSD = sqrtf(fT / (MAX_NETFLOW_FLOW_BUFFER - 1));
+    fXBAR /*average*/ = fM;
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Minimum</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", fminTime);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Average</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", fXBAR);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Maximum</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", fmaxTime);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Standard Deviation</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", fSD);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Maximum ever</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", netflowfmaxTime);
+    sendString(buf);
+
+    sendString("</table>\n</center>\n");
+
+  } else {
+    printNoDataYet();
+  }
+ #ifdef MAX_NETFLOW_PACKET_BUFFER
+  sendString("<p>&nbsp;</p>\n");
+ #endif
+#endif /* MAX_NETFLOW_FLOW_BUFFER */
+
+#ifdef MAX_NETFLOW_PACKET_BUFFER
+  printSectionTitle("Flow Packets");
+
+  if(netflowpacketBufferCount >= MAX_NETFLOW_PACKET_BUFFER) {
+
+    sendString("<center><table border=\"1\""TABLE_DEFAULTS">\n"
+               "<tr><th align=\"center\" "DARK_BG">Item</th>"
+               "<th align=\"center\" width=\"75\" "DARK_BG">Time</th></tr>\n");
+
+    for(i=0; i<MAX_NETFLOW_PACKET_BUFFER; i++) {
+      if(netflowpacketBuffer[i] > rmaxTime) rmaxTime = netflowpacketBuffer[i];
+      if(netflowpacketBuffer[i] < rminTime) rminTime = netflowpacketBuffer[i];
+
+      if(i==0) {
+        rM = netflowpacketBuffer[0];
+        rT = 0.0;
+      } else {
+        rQ = netflowpacketBuffer[i] - rM;
+        rR = rQ / (float)(i+1);
+        rM += rR;
+        rT = rT + i * rQ * rR;
+      }
+    }
+    rSD = sqrtf(rT / (MAX_NETFLOW_PACKET_BUFFER - 1));
+    rXBAR /*average*/ = rM;
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Minimum</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", rminTime);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Average</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", rXBAR);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Maximum</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", rmaxTime);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Standard Deviation</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", rSD);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Maximum ever</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", netflowpmaxTime);
+    sendString(buf);
+
+    sendString("</table>\n</center>\n");
+
+  } else {
+    printNoDataYet();
+  }
+
+#endif /* MAX_NETFLOW_PACKET_BUFFER */
+
+  printPluginTrailer(NULL,
+                     "NetFlow is a trademark of <a href=\"http://www.cisco.com/\" "
+                     "title=\"Cisco home page\">Cisco Systems</a>");
+
 }
 
 /* ****************************** */
@@ -2495,6 +2748,12 @@ static void handleNetflowHTTPrequest(char* _url) {
 
   if((_url != NULL) && pluginActive) {
     char *strtokState;
+
+    if(strncasecmp(url, CONST_NETFLOW_STATISTICS_HTML, strlen(CONST_NETFLOW_STATISTICS_HTML)) == 0) {
+      printNetFlowStatistics();
+      printHTMLtrailer();
+      return;
+    }
 
     url = strtok_r(_url, "&", &strtokState);
 

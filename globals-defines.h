@@ -1067,12 +1067,23 @@
 #define MAX_MULTIPLE_VLAN_WARNINGS         10
 
 /*
- * How many packets to track for the delay stats - undef means don't do it...
+ * How many packets/flows/cycles/records to track for the processing time stats -
+ *    undef means don't do it...
  *
- *   Value MUST BE a power of 2!
- *   undef this to disable feature
+ *   Values MUST BE a power of 2!
  */
 #define MAX_PROCESS_BUFFER                  1024
+
+/* For compatibility w/ 3.2rc1, these are undef. But it's a good idea to enable them... */
+#undef MAX_RRD_PROCESS_BUFFER
+#undef MAX_RRD_CYCLE_BUFFER
+#undef MAX_NETFLOW_FLOW_BUFFER
+#undef MAX_NETFLOW_PACKET_BUFFER
+
+/* #define MAX_RRD_PROCESS_BUFFER              512 */
+/* #define MAX_RRD_CYCLE_BUFFER                4   */
+/* #define MAX_NETFLOW_FLOW_BUFFER             128 */
+/* #define MAX_NETFLOW_PACKET_BUFFER           16  */
 
 /*
  * FibreChannel/SCSI constants

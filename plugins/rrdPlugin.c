@@ -1105,8 +1105,17 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
     char path[512], *argv[32], cmd[64];
     struct stat statbuf;
     int argc = 0, rc, createdCounter = 0, i;
+#ifdef MAX_RRD_PROCESS_BUFFER
+    struct timeval rrdStartOfProcessing,
+                   rrdEndOfProcessing;
+    float elapsed;
+#endif
 
     if(value == 0) return;
+
+#ifdef MAX_RRD_PROCESS_BUFFER
+    gettimeofday(&rrdStartOfProcessing, NULL);
+#endif
 
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s%s.rrd", hostPath, key);
 
@@ -1322,6 +1331,15 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
     }
 
     releaseMutex(&rrdMutex);
+
+#ifdef MAX_RRD_PROCESS_BUFFER
+    gettimeofday(&rrdEndOfProcessing, NULL);
+    elapsed = timeval_subtract(rrdEndOfProcessing, rrdStartOfProcessing);
+    rrdprocessBuffer[++rrdprocessBufferCount & (MAX_RRD_PROCESS_BUFFER - 1)] = elapsed;
+    if(elapsed > rrdpmaxDelay)
+      rrdpmaxDelay = elapsed;
+#endif
+
   }
 }
 
@@ -1376,6 +1394,21 @@ static void commonRRDinit(void) {
 
   initUdp();
   shownCreate = 0;
+
+#ifdef MAX_RRD_CYCLE_BUFFER
+  if(rrdcycleBufferInit == 0) {
+    rrdcycleBufferCount = 0;
+    rrdcycleBufferInit = 1;
+    memset(&rrdcycleBuffer, 0, sizeof(rrdcycleBuffer));
+  }
+#endif
+#ifdef MAX_RRD_PROCESS_BUFFER
+  if(rrdprocessBufferInit == 0) {
+    rrdprocessBufferCount = 0;
+    rrdprocessBufferInit = 1;
+    memset(&rrdprocessBuffer, 0, sizeof(rrdprocessBuffer));
+  }
+#endif
 
   if(fetchPrefsValue("rrd.dataDumpInterval", value, sizeof(value)) == -1) {
     safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", DEFAULT_RRD_INTERVAL);
@@ -1863,6 +1896,10 @@ static void arbitraryAction(char *rrdName,
 
 static void statisticsPage(void) {
   char buf[1024];
+  int i;
+  float pminDelay=99999.0, pmaxDelay=0.0,
+        /*stddev:*/ pM, pT, pQ, pR, pSD, pXBAR;
+
   memset(&buf, 0, sizeof(buf));
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -1887,10 +1924,148 @@ static void statisticsPage(void) {
   sendString("<tr><th align=\"left\" "DARK_BG">Graphic Requests</th><td align=\"right\">");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)rrdGraphicRequests);
   sendString(buf);
-
   sendString("</table>\n</center>\n");
-}
 
+#ifdef MAX_RRD_PROCESS_BUFFER
+
+  printSectionTitle("Per-RRD Processing times");
+  sendString("<center><table border=\"0\""TABLE_DEFAULTS">\n<tr><td width=\"500\">"
+             "<p>These numbers are the elapsed time (in seconds) per RRD update. "
+             "The computations are based only on the most recent "
+             xstr(MAX_RRD_PROCESS_BUFFER) " RRDs processed.</p>\n"
+             "<p>'Processing' time is the elapsed time between starting and finishing "
+             "updateRRD().  Errors may cause processing to be abandoned and those RRD "
+             "updates are not counted in the 'processing' averages.</p>\n"
+             "<p>If the RRD does not already exist, it will be created (along with any "
+             "necessary directories), so the reported values may include a mix of "
+             "short and long duration calls.</p>\n"
+             "<p>Small averages are good, especially if the standard deviation is small "
+             "(standard deviation is a measurement of the variability of the actual values "
+             "around the average).</p>\n"
+             "<p>&nbsp;</p>\n"
+             "</td></tr></table></center>\n");
+ 
+
+  if(rrdprocessBufferCount >= MAX_RRD_PROCESS_BUFFER) {
+
+    sendString("<center><table border=\"1\""TABLE_DEFAULTS">\n"
+               "<tr><th align=\"center\" "DARK_BG">Item</th>"
+               "<th align=\"center\" width=\"75\" "DARK_BG">Time</th></tr>\n");
+
+    for(i=0; i<MAX_RRD_PROCESS_BUFFER; i++) {
+      if(rrdprocessBuffer[i] > pmaxDelay) pmaxDelay = rrdprocessBuffer[i];
+      if(rrdprocessBuffer[i] < pminDelay) pminDelay = rrdprocessBuffer[i];
+
+      if(i==0) {
+        pM = rrdprocessBuffer[0];
+        pT = 0.0;
+      } else {
+        pQ = rrdprocessBuffer[i] - pM;
+        pR = pQ / (float)(i+1);
+        pM += pR;
+        pT = pT + i * pQ * pR;
+      }
+    }
+    pSD = sqrtf(pT / (MAX_RRD_PROCESS_BUFFER - 1));
+    pXBAR /*average*/ = pM;
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Minimum</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", pminDelay);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Average</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", pXBAR);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Maximum</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", pmaxDelay);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Standard Deviation</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", pSD);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Maximum ever</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", rrdpmaxDelay);
+    sendString(buf);
+
+    sendString("</table>\n</center>\n");
+
+  } else {
+
+    printNoDataYet();
+
+  }
+
+#endif /* MAX_RRD_PROCESS_BUFFER */
+
+#ifdef MAX_RRD_CYCLE_BUFFER
+
+  printSectionTitle("Per-Cycle Processing times");
+  sendString("<center><table border=\"0\""TABLE_DEFAULTS">\n<tr><td width=\"500\">"
+             "<p>These numbers are the elapsed time (in seconds) per RRD update cycle. "
+             "The computations are based only on the most recent "
+             xstr(MAX_RRD_CYCLE_BUFFER) " cycles executed.</p>\n"
+             "<p>'Processing' time is the elapsed time between waking and returning to "
+             "sleep in rrdMainLoop().  The currently executing cycle (if one) is not "
+             "included.</p>"
+             "<p>&nbsp;</p>\n"
+             "</td></tr></table></center>\n");
+
+  if(rrdcycleBufferCount >= MAX_RRD_CYCLE_BUFFER) {
+
+    sendString("<center><table border=\"1\""TABLE_DEFAULTS">\n"
+               "<tr><th align=\"center\" "DARK_BG">Item</th>"
+               "<th align=\"center\" width=\"75\" "DARK_BG">Time</th></tr>\n");
+
+    for(i=0; i<MAX_RRD_CYCLE_BUFFER; i++) {
+      if(rrdcycleBuffer[i] > pmaxDelay) pmaxDelay = rrdcycleBuffer[i];
+      if(rrdcycleBuffer[i] < pminDelay) pminDelay = rrdcycleBuffer[i];
+
+      if(i==0) {
+        pM = rrdcycleBuffer[0];
+        pT = 0.0;
+      } else {
+        pQ = rrdcycleBuffer[i] - pM;
+        pR = pQ / (float)(i+1);
+        pM += pR;
+        pT = pT + i * pQ * pR;
+      }
+    }
+    pSD = sqrtf(pT / (MAX_RRD_CYCLE_BUFFER - 1));
+    pXBAR /*average*/ = pM;
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Minimum</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", pminDelay);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Average</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", pXBAR);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Maximum</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", pmaxDelay);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Standard Deviation</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", pSD);
+    sendString(buf);
+
+    sendString("<tr><th align=\"left\" "DARK_BG">Maximum ever</th><td align=\"right\">");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", rrdcmaxLength);
+    sendString(buf);
+
+    sendString("</table>\n</center>\n");
+
+  } else {
+
+    printNoDataYet();
+
+  }
+
+#endif /* MAX_RRD_CYCLE_BUFFER */
+
+}
 
 /* ****************************** */
 
@@ -2910,6 +3085,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   u_short numLocalNets;
   ProtocolsList *protoList;
   struct tm workT;
+  struct timeval rrdStartOfCycle,
+                 rrdEndOfCycle;
+  float elapsed;
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: RRD: Data collection thread starting [p%d]",
 	     pthread_self(), getpid());
@@ -3017,6 +3195,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
       break;
     }
     /* Note, if this is stopcap, we run 1 more cycle and break out at the end so we don't lose data! */
+
+    gettimeofday(&rrdStartOfCycle, NULL);
 
     numRRDUpdates = 0;
     numRuns++;
@@ -3405,8 +3585,16 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  }
     }
 
-    traceEvent(CONST_TRACE_NOISY, "RRD: Cycle %lu ended, %llu RRDs updated",
-               numRRDCycles, numRRDUpdates);
+    gettimeofday(&rrdEndOfCycle, NULL);
+    elapsed = timeval_subtract(rrdEndOfCycle, rrdStartOfCycle);
+#ifdef MAX_RRD_CYCLE_BUFFER
+    rrdcycleBuffer[++rrdcycleBufferCount & (MAX_RRD_CYCLE_BUFFER - 1)] = elapsed;
+    if(elapsed > rrdcmaxLength)
+      rrdcmaxLength = elapsed;
+#endif
+
+    traceEvent(CONST_TRACE_NOISY, "RRD: Cycle %lu ended, %llu RRDs updated, %.3f seconds",
+               numRRDCycles, numRRDUpdates, elapsed);
 
     /*
      * If it's FLAG_NTOPSTATE_STOPCAP, and we're still running, then this

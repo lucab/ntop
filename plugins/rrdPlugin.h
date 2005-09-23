@@ -317,3 +317,17 @@ static const char *rrd_summary_host_sentRcvd_bytes[] = {
   "bytesRcvd",
   NULL
 };
+
+#ifdef MAX_RRD_PROCESS_BUFFER
+static float rrdprocessBuffer[MAX_RRD_PROCESS_BUFFER];
+static int rrdprocessBufferInit,
+           rrdprocessBufferCount;
+static float rrdpmaxDelay;
+#endif
+
+#ifdef MAX_RRD_CYCLE_BUFFER
+static float rrdcycleBuffer[MAX_RRD_CYCLE_BUFFER];
+static int rrdcycleBufferInit,
+           rrdcycleBufferCount;
+static float rrdcmaxLength;
+#endif
