@@ -4393,7 +4393,7 @@ A. ntop has special parameters under Win32
 
          ntop /i <parameters> installs ntop as a service to run with the specified parameters
 
-         ntop /d deletes the ntop service
+         ntop /r removes the ntop service
 
    Remember, ntop /i and ntop /d don't actually run the service - you need to
    start it.
