@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2003-2004 Burton M. Strausss III <burton@ntopsupport.com>
+ *  Copyright (C) 2003-2005 Burton M. Strausss III <burton@ntopsupport.com>
  *                          Luca Deri <deri@ntop.org>
  *
  *  			    http://www.ntop.org/

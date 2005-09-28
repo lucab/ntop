@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- * Copyright (C) 1998-2004 Luca Deri <deri@ntop.org>
+ * Copyright (C) 1998-2005 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -563,7 +563,7 @@ void initNtop(char *devices) {
   if((myGlobals.runningPref.rFileName != NULL) &&
      ((myGlobals.runningPref.localAddresses == NULL) &&
       !myGlobals.runningPref.printFcOnly)) {
-      setRunState(FLAG_NTOPSTATE_TERM);
+      setRunState(FLAG_NTOPSTATE_SHUTDOWN);
       traceEvent(CONST_TRACE_FATALERROR,
                  "-m | local-subnets must be specified when the -f | --traffic-dump-file option is used"
                  "Capture not started");

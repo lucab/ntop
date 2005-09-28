@@ -62,7 +62,7 @@ PluginInfo* wapPluginEntryFctn(void)
   PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PDA: Welcome to %s. (C) 2001-2004 by L.Deri and W.Brock",  
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PDA: Welcome to %s. (C) 2001-2005 by L.Deri and W.Brock",  
 	     PDAPluginInfo->pluginName);
   
   return(PDAPluginInfo);

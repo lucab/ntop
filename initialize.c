@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- * Copyright (C) 1998-2004 Luca Deri <deri@ntop.org>
+ * Copyright (C) 1998-2005 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -239,12 +239,12 @@ static void initIPCountryTable(void) {
                               "IP2CC",
                               FALSE,
                               compressedFormat,
-                          10000,
+			      10000,
                               buf, sizeof(buf),
                               &numRead) == 0) {
-              if((cc=strtok_r(buf, ":", &strtokState))==NULL)       continue;
-              if((ip=strtok_r(NULL, "/", &strtokState))==NULL)      continue;
-              if((prefix=strtok_r(NULL, "\n", &strtokState))==NULL) continue;
+              if((cc=strtok_r(buf, ":", &strtokState))       == NULL) continue;
+              if((ip=strtok_r(NULL, "/", &strtokState))      == NULL) continue;
+              if((prefix=strtok_r(NULL, "\n", &strtokState)) == NULL) continue;
 
               strtolower(cc);
 

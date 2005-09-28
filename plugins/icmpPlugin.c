@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2004 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2005 Luca Deri <deri@ntop.org>
  *
  *  			    http://www.ntop.org/
  *
@@ -790,7 +790,7 @@ PluginInfo* icmpPluginEntryFctn(void) {
 #else
   PluginInfo* PluginEntryFctn(void) {
 #endif
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ICMP: Welcome to %s. (C) 1999-2004 by Luca Deri",
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ICMP: Welcome to %s. (C) 1999-2005 by Luca Deri",
 	       icmpPluginInfo->pluginName);
 
     return(icmpPluginInfo);
