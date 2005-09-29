@@ -3128,25 +3128,29 @@ void processPacket(u_char *_deviceId,
 
 	      if(cdp[cdp_idx] == 0x02) {
 		/* CDP v2 */
-		
 		struct cdp_element {
 		  u_int16_t cdp_type;
 		  u_int16_t cdp_len;
-		  u_char cdp_content[255];
+		  // u_char cdp_content[255];
 		};
 				
 		cdp_idx = 4;
-		while(cdp_idx < length) {
-		  struct cdp_element *element = (struct cdp_element*)&cdp[cdp_idx];
-		  u_short len = ntohs(element->cdp_len);
+		while((cdp_idx+sizeof(struct cdp_element)) < (length-(hlen+llcLen))) {
+		  struct cdp_element element;
+		  u_short len;
 
-		  if(len == 0) break; /* Sanity check */
+  		  memcpy(&element, &cdp[cdp_idx], sizeof(struct cdp_element));
+
+		  cdp_idx += sizeof(struct cdp_element);
+		  element.cdp_len  = ntohs(element.cdp_len);
+		  element.cdp_type  = ntohs(element.cdp_type);
+		  if(element.cdp_len == 0) break; /* Sanity check */
 		  
-		  switch(ntohs(element->cdp_type)) {
+		  switch(element.cdp_type) {
 		  case 0x0001: /* Device Id */
 		    if((srcHost->hostResolvedName[0] == '\0') || (strcmp(srcHost->hostResolvedName, srcHost->hostNumIpAddress))) {
-		      u_short tmpStrLen = min(ntohs(element->cdp_len)-4, MAX_LEN_SYM_HOST_NAME-1);
-		      strncpy(srcHost->hostResolvedName, (char*)element->cdp_content, tmpStrLen);
+		      u_short tmpStrLen = min(element.cdp_len-4, MAX_LEN_SYM_HOST_NAME-1);
+		      strncpy(srcHost->hostResolvedName, &cdp[cdp_idx], tmpStrLen);
 		      srcHost->hostResolvedName[tmpStrLen] = '\0';
 		    }
 		    break;
@@ -3159,10 +3163,10 @@ void processPacket(u_char *_deviceId,
 		  case 0x0005: /* Sw Version */
 		    if(srcHost->description == NULL) {
 		      char *tmpStr;
-		      u_short tmpStrLen = min(ntohs(element->cdp_len)-4, 255)+1;
+		      u_short tmpStrLen = min(element.cdp_len-4, 255)+1;
 
 		      tmpStr = (char*)malloc(tmpStrLen);
-		      memcpy(tmpStr, element->cdp_content, tmpStrLen-2);
+		      memcpy(tmpStr, &cdp[cdp_idx], tmpStrLen-2);
 		      tmpStr[tmpStrLen-1] = '\0';
 		      srcHost->description = tmpStr;
 		    }
@@ -3170,11 +3174,11 @@ void processPacket(u_char *_deviceId,
 		  case 0x0006: /* Platform */
 		    if(srcHost->fingerprint == NULL) {
 		      char *tmpStr;
-		      u_short tmpStrLen = min(ntohs(element->cdp_len)-4, 64)+2;
+		      u_short tmpStrLen = min(element.cdp_len-4, 64)+2;
 
 		      tmpStr = (char*)malloc(tmpStrLen);
 		      tmpStr[0] = ':';
-		      memcpy(&tmpStr[1], element->cdp_content, tmpStrLen-2);
+		      memcpy(&tmpStr[1], &cdp[cdp_idx], tmpStrLen-2);
 		      tmpStr[tmpStrLen-1] = '\0';
 		      srcHost->fingerprint = tmpStr;
 		      srcHost->hwModel = strdup(&tmpStr[1]);
@@ -3186,13 +3190,12 @@ void processPacket(u_char *_deviceId,
 		    break;
 		  }
 
-		     cdp_idx += len;
+		  cdp_idx += (element.cdp_len-sizeof(struct cdp_element));
 		}
 
 
 		if(srcHost->fingerprint == NULL)
 		  srcHost->fingerprint = strdup(":Cisco"); /* Default */
-
 	      }	      
 	    }
 
