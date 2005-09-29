@@ -22963,6 +22963,7 @@ case "${target}:${CC}" in
 
     *-*-solaris*:* )
         DEFINEOS="SOLARIS"
+	RELEASE=`uname -r | cut -c 3-`
         echo "* This appears to be ${DEFINEOS}"
         echo "*"
         echo "* 1) Compilation requires various gnu tools from SunFreeware.com or other sources."
