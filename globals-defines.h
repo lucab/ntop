@@ -2686,6 +2686,10 @@
 /* Other, OS specific stuff                                                        */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef HAVE_SQRTF
+#define sqrtf(a) sqrt(a)
+#endif
+
 /*
  * On FreeBSD gethostbyaddr() sometimes loops and uses all the available memory.
  * Hence this patch is needed.

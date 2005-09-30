@@ -418,8 +418,8 @@
 /* Define to 1 if you have the `socket' function. */
 #undef HAVE_SOCKET
 
-/* Define to 1 if you have the `sqrt' function. */
-#undef HAVE_SQRT
+/* Define to 1 if you have the `sqrtf' function. */
+#undef HAVE_SQRTF
 
 /* Define to 1 if `stat' has the bug that it succeeds when given the
    zero-length file name argument. */
