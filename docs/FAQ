@@ -11,7 +11,7 @@
 
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
                         Fully revised for ntop 3.0
-                           Updated for ntop 3.1 and 3.2
+                        Updated for ntop 3.1 and 3.2
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 Compiled by Burton M. Strauss III <Burton@ntopsupport.com> - comments to him!
@@ -1454,6 +1454,10 @@ A. Yeah.  Most people don't care :-(... it's enough to see various pretty
    If such a file exists, it would be posted @ SourceForge in the user
    contributed area.
 
+Q. I have installed ntop for OSX but I cannot start it as I have installed 
+   some libraries using fink and ntop cannot find them.
+A. The easiest thing to do is to do: ln -s /sw/lib/myfinklibrary /usr/local/lib
+   Courtesy of Matthew Scholz <matts@discovery.org>
 
 --------------------------------------------------------------------------------
 -----Running - Startup----------------------------------------------------------
@@ -3209,6 +3213,58 @@ A: (Toby Johnson [public@tobiasly.com], Sun 10Nov2002)
    Now, you should be able to simply connect to
    https://secure.tobiasly.com/ntop/ , and you're ready to go!
 
+   NOTE courtesy of Bruno Lebayle <lebayle@esrf.fr>
+
+   I had many problems with the "Rewrite" stuff described in the FAQ. After
+   some Google search, it appears that HTTP_REFERER is sometimes not
+   reliable, and the browser I am using (Firefox/Solaris) does not seem to
+   present this header properly.
+   So I've found an other way to do it, and this proves to work with many
+   different browsers:
+
+   within mod_proxy.c:
+    ProxyPass /ntop/ http://localhost:3000/
+    ProxyPassReverse /ntop/ http://localhost:3000/
+
+   <IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteLogLevel 0
+    RewriteLog logs/rewrite_log
+    RewriteCond %{REQUEST_URI} !^/$
+    RewriteCond %{REQUEST_URI} !^/home.html$
+    RewriteCond %{REQUEST_URI} !^/ntop/
+    RewriteRule ^/([^/]+\.[a-z]+)$ http://nms.my.domain:my_port/ntop/$1[L,P]
+   </IfModule>
+
+   Where http://nms.my.domain:my_port is:
+   - the host where the network management tools are located with the
+   proper authentication
+   - the host where the above Apache config has to be set
+   - the host where ntop is installed on port 3000 in this example
+   Where the Web site on this host has no URL in the form of /xxx.xxx aprt
+   from / and /home.html (additions can be made in the RewriteCond)
+
+   Especially, the trailing "/" after /ntop in the RewriteCond is
+   mandatory, since e.g. the Ntop logo is /ntop_logo.gif and would match
+   /ntop
+
+   # Rewrite help summary:
+   # HTTP_REFERER = pattern in the name of the page from which the request comes
+   #    THIS IS NOT RELIABLE AND DIFFERS AMONG BROWSERS !!!
+   # REQUEST_URI = contents of the request (^ = start of line, $ = end of line,
+   #    ! = not the text which follows
+   # All conditions preceding a rule are evaluated
+   # All rules are processed in sequence
+   # Rewrite: () = group of text used for the substitution,
+   #    . = any char, * = repeated 0-N times,
+   #    + = repeated 1-N times, ^ = not this char, [chars] = one of chars
+   #    special characters escaped by \ e.g. the dot as \.
+   #    $1 means the 1st group of text between ()
+   #    Flags L = last (i.e. exit from the rewriting process)
+   #          P = proxy (i.e. use the proxy module for this URL)
+   #
+   # Full doc in http://httpd.apache.org/docs/1.3/mod/mod_rewrite.html
+   # Useful help in http://rewrite.drbacchus.com/rewritewiki/
 
 --------------------------------------------------------------------------------
 -----Running - Web Server - i18n------------------------------------------------
