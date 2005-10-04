@@ -1,21 +1,47 @@
+## Constants...
+##
+## Change version and suffix as necessary.
+## release 0 is the first release from the same base sion.suffix,
+## 1 would be the second, etc.
+#
+%define rpmversion 3.2
+%define rpmsuffix rc1
+%define rpmrelease 1
+%define rpmdistro fc2
+##
+## Pick ONE of these sets as appropriate
+#
+%define releasetype TEST
+%define releasetext from the ntop cvs tree at cvs.ntop.org.
+%define releaseintent Our intention is to release this or something much like it as ntop 3.2 in a short period of time.
+#
+# % d e f i n e releasetype STABLE PRODUCTION
+# % d e f i n e releasetext 
+# % d e f i n e releaseintent 
+##
+##  Others shouldn't require changes.
+#
 %define ntoproot	/usr
+#
 
 Summary: ntop shows the network usage
 Name: ntop
-Version: 3.1
-Release: 0
-Source: ntop-3.1.tgz
+Version: %{rpmversion}%{rpmsuffix}_%{rpmdistro}
+Release: %{rpmrelease}
+
+Vendor:          ntop project
+Distribution:    SourceForge RPM
+Packager:        Burton Strauss <Burton@ntopSupport.com>
+
+Source: %{name}-%{rpmversion}%{rpmsuffix}.tgz
 Source1: ntop.init
 Source2: ntop.logrotate
 Source3: ntop.conf.sample
-Source4: 1STRUN.txt
-Source5: FAQ
 Patch1: version.patch
-Patch2: cfgdbfile.patch
-#Patch3: makefile_am.patch
+
 Copyright: GPL
 Group: Applications/System
-BuildPrereq: glibc, glibc-devel, gcc, cpp, gawk, autoconf, automake, binutils, openssl, openssl-devel, gdbm, gdbm-devel, libpcap, zlib-devel, glib-devel
+BuildPrereq: glibc, glibc-devel, gcc, cpp, gawk, autoconf, automake, binutils, openssl, openssl-devel, gdbm, gdbm-devel, libpcap, zlib-devel
 Requires: glibc, openssl, gdbm, libpcap, chkconfig
 
 Buildroot: %{_tmppath}/%{name}-root
@@ -29,7 +55,8 @@ extracted from the web server in formats suitable for manipulation in perl or ph
 
 See 1STRUN.txt for the 1st time startup procedure!  See FAQ for answers to questions.
 
-ntop 3.1 is a STABLE, PRODUCTION release.
+ntop %{rpmversion}%{rpmsuffix} is a %{releasetype} release %{releasetext}.
+%{releaseintent}
 
 This version is compiled WITH SSLv3.
 
@@ -39,27 +66,24 @@ This version is compiled WITH --enable-i18n.
 
 SSLWATCHDOG is not compiled but may be selected at run time.
 
-This version is compiled on a Pentium 4, under Fedora Core 2.
-
 YOU MUST SETUP A PASSWORD BEFORE RUNNING NTOP - see 1STRUN.txt in /usr/share/doc/ntop-<release>
 
 Please send problem reports (using the automatically generated form if at all possible)
 (Click on the 'bug' icon in the About menu) to the ntop mailing list.
 
 %prep
-%setup -q -c ${NAME}${VERSION}
+echo Unpacked directory will be %{name}-%{rpmversion}%{rpmsuffix}
+%setup -q -n %{name}-%{rpmversion}%{rpmsuffix}
+
+# Patches
+%patch1 -p1
 
 %build
 unset RPM_OPT_FLAGS
 %undefine optflags 
-# Patches
-patch -p0 < ../../SOURCES/version.patch
-patch -p0 < ../../SOURCES/cfgdbfile.patch
-#patch -p0 < ../../SOURCES/makefile_am.patch
-cd ntop
+
+
 # Now, configure and build ntop
-# %automake
-# %autoconf
 %configure --enable-optimize  --bindir=%{_bindir} --datadir=%{ntoproot}/share \
      --enable-sslv3 \
      --enable-i18n
@@ -69,7 +93,6 @@ make ntop.html
 make
 
 %install
-cd ntop
 mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d \
          $RPM_BUILD_ROOT/%{_bindir} \
          $RPM_BUILD_ROOT/etc/logrotate.d \
@@ -161,22 +184,22 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc ntop/AUTHORS
-%doc ntop/CONTENTS
-%doc ntop/MANIFESTO
-%doc ntop/COPYING
-%doc ntop/ChangeLog
-%doc ntop/docs/BUILD-NTOP.txt
-%doc ntop/docs/FAQ
-%doc ntop/docs/HACKING
-%doc ntop/docs/KNOWN_BUGS
-%doc ntop/docs/TODO
-%doc ntop/docs/1STRUN.txt
-%doc ntop/NEWS
-%doc ntop/PORTING
-%doc ntop/README
-%doc ntop/SUPPORT_NTOP.txt
-%doc ntop/THANKS
+%doc AUTHORS
+%doc CONTENTS
+%doc MANIFESTO
+%doc COPYING
+%doc ChangeLog
+%doc docs/BUILD-NTOP.txt
+%doc docs/FAQ
+%doc docs/HACKING
+%doc docs/KNOWN_BUGS
+%doc docs/TODO
+%doc docs/1STRUN.txt
+%doc NEWS
+%doc PORTING
+%doc README
+%doc SUPPORT_NTOP.txt
+%doc THANKS
 %config %{_sysconfdir}/rc.d/init.d/ntop
 %config %{_sysconfdir}/logrotate.d/ntop
 %config %{_sysconfdir}/ntop.conf.sample
@@ -193,8 +216,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libmyrrd*
 
 %changelog
-* Mon Dec 20 2004 Burton M. Strauss III <burton@ntopsupport.com>
-- v3.1 - Production Release
+* Sat Oct 01 2005 Burton M. Strauss III <burton@ntopsupport.com>
+- Update spec for 3.2 rc2
+- Incorporate some cleanups and ideas from Kenneth Porter <shiva+ntoprpm@sewingwitch.com>
+
+* Thu Sep 08 2005 Burton M. Strauss III <burton@ntopsupport.com>
+- v3.2rc1 - TEST release for 3.2
 
 * Mon Dec 13 2004 Burton M. Strauss III <burton@ntopsupport.com>
 - v3.1rc1 - TEST release for 3.1
