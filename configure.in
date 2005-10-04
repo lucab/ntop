@@ -45,12 +45,12 @@ dnl>   Edit the version # in the AC_INIT line to roll the version.
 dnl>   Edit NTOP_VERSION_EXTRA to put something extra (e.g. SourceForge rpm version"
 dnl>       into the stamp.
 dnl>
-AC_INIT([ntop],[3.2rc1])
+AC_INIT([ntop],[3.2rc2])
 
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v3.2.RC1-2005-09-08"
+SCRIPTVER="v3.2.RC2-2005-10-03"
 
 dnl>
 dnl> generate the config header
