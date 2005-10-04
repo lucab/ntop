@@ -78,11 +78,13 @@ extern ULONG GetHostIPAddr();
 #define HAVE_DIRENT_H
 #define HAVE_PCAP_FREEALLDEVS
 
+#if !defined(__GNUC__)
 #define INET6
 #define in6_addr in_addr6
+#endif
 
 #define pthread_self GetCurrentThreadId
-#define sqrtf(x) ((float)(sqrt((double)x)))
+
 
 /* *************************************************************** */
 

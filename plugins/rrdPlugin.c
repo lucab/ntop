@@ -2093,6 +2093,7 @@ static void arbitraryActionPage(void) {
   printHTMLheader("Arbitrary RRD Actions", NULL, 0);
 
   safe_snprintf(__FILE__, __LINE__, dirPath, sizeof(dirPath), "%s/interfaces", myGlobals.rrdPath);
+  revertSlashIfWIN32(dirPath, 0); 
   directoryPointer = opendir(dirPath);
   if(directoryPointer == NULL) {
     sendString("<p>No rrds found - check configuration.</p>\n");
@@ -2155,7 +2156,8 @@ static void arbitraryActionPage(void) {
   count = 0;
   while((dp = readdir(directoryPointer)) != NULL) {
 
-    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts", myGlobals.rrdPath, dp->d_name);
+	  if(dp->d_name[0] != '.') {
+    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s", myGlobals.rrdPath, dp->d_name);
     rc = stat(rrdPath, &statBuf);
     if((rc == 0) && ((statBuf.st_mode & S_IFDIR) == S_IFDIR)) {
       count++;
@@ -2167,6 +2169,9 @@ static void arbitraryActionPage(void) {
       sendString(buf);
     }
   }
+  }
+
+ if(count == 0) sendString("<b><font color=red>No RRD interface files available.</font></b>");
 
   closedir(directoryPointer);
 
@@ -2216,9 +2221,12 @@ static void arbitraryActionPage(void) {
              "It appears at the bottom left as the legend for the colored bars</td></tr>\n"
              "<tr><th align=\"left\" "DARK_BG">(optional) Title to appear above the graph</th>\n"
              "<td align=\"left\"><input name=\"title\" size=\"128\" value=\"\"></td></tr>\n"
-             "<tr><td colspan=\"2\" align=\"center\">&nbsp;<br>"
-             "<input type=submit value=\"Make Request\"><br>&nbsp;</td></tr>\n"
-             "</table>\n</form>\n</center>\n");
+             "<tr><td colspan=\"2\" align=\"center\">&nbsp;<br>");
+
+	if(count > 0)
+	  sendString("<input type=submit value=\"Make Request\">");
+	
+   sendString("<br>&nbsp;</td></tr>\n</table>\n</form>\n</center>\n");
 }
 
 /* ****************************** */
@@ -2238,18 +2246,16 @@ static void printRRDPluginTrailer(void) {
 static void handleRRDHTTPrequest(char* url) {
   char buf[1024], *strtokState, *mainState, *urlPiece,
     rrdKey[64], rrdName[64], rrdTitle[128], rrdCounter[64], startTime[32], endTime[32],
-    rrdPrefix[32], rrdIP[32], rrdInterface[32], rrdPath[512];
+    rrdPrefix[32], rrdIP[32], rrdInterface[64], rrdPath[512];
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
   int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces,
     _dumpMatrix, _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId;
-  int i, len, rc, idx;
+  int i, len, idx;
   char * _hostsFilter;
 #ifndef WIN32
   int _dumpPermissions;
 #endif
-  ProtocolsList *protoList;
-
 
   if(initialized == 0)
     commonRRDinit();
@@ -2392,6 +2398,7 @@ static void handleRRDHTTPrequest(char* url) {
 	  if(myGlobals.rrdPath != NULL) free(myGlobals.rrdPath);
 	  myGlobals.rrdPath  = (char*)malloc(vlen);
 	  unescape(myGlobals.rrdPath, vlen, &value[idx]);
+	  revertSlashIfWIN32(myGlobals.rrdPath, 0);
 	  storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
 	} else if(strcmp(key, "dumpDomains") == 0) {
 	  _dumpDomains = 1;
@@ -2549,7 +2556,7 @@ static void handleRRDHTTPrequest(char* url) {
 	     "<INPUT NAME=shortinterval SIZE=5 VALUE=");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpShortInterval);
   sendString(buf);
-  sendString("> seconds<br>Specifies how often <A HREF=/"CONST_SORT_DATA_THPT_STATS_HTML">thoughput</A> data is stored permanently.<br>"
+  sendString("> seconds<br>Specifies how often <A HREF=/"CONST_SORT_DATA_THPT_STATS_HTML">throughput</A> data is stored permanently.<br>"
 	     "<FONT COLOR=red><b>Note</b></FONT>: if you change this value the throughput stats will be reset<br>"
 	     "and past values will be lost. You've been warned!</td></tr>\n");
 
@@ -3133,7 +3140,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		 errno, dname);
       setPluginStatus("Disabled - unable to create rrd base directory.");
       /* Return w/o creating the rrd thread ... disabled */
-      return;
+      return(NULL);
     }
   } else {
     traceEvent(CONST_TRACE_INFO, "RRD: Created base directory (%s)", dname);
@@ -3617,8 +3624,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 /* ****************************** */
 
 static int initRRDfunct(void) {
-  int i;
-
   createMutex(&rrdMutex);
 
   setPluginStatus(NULL);

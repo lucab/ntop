@@ -3795,11 +3795,11 @@ static void processFcPkt(const u_char *bp,
     HostTraffic *srcHost=NULL, *dstHost=NULL;
     TrafficCounter ctr;
     u_int32_t offset = 14;      /* start past the ethernet header */
-    uint16_t vsanId = 0,
+    u_int16_t vsanId = 0,
              fcFrameLen = 0;
-    uint8_t sof = 0, eof = 0, error = 0;
+    u_int8_t sof = 0, eof = 0, error = 0;
 #if CFG_LITTLE_ENDIAN
-    uint16_t didx;        /* source & dest port indices on MDS */
+    u_int16_t didx;        /* source & dest port indices on MDS */
 #endif
     u_char isFirstFrame = FALSE,
            isLastFrame = FALSE,

@@ -108,7 +108,7 @@ typedef struct _SFLSampled_ipv4 {
 } SFLSampled_ipv4;
 
 /* decoded IP version 6 data */
-
+#ifdef INET6
 typedef struct _SFLSampled_ipv6 {
   u_int32_t length;       /* The length of the IP packet
 			     excluding lower layer encapsulations */
@@ -120,6 +120,7 @@ typedef struct _SFLSampled_ipv6 {
   u_int32_t tcp_flags;    /* TCP flags */
   u_int32_t priority;     /* IP priority */
 } SFLSampled_ipv6;
+#endif
 
 /* Extended data types */
 
@@ -302,7 +303,9 @@ typedef union _SFLFlow_type {
   SFLSampled_header header;
   SFLSampled_ethernet ethernet;
   SFLSampled_ipv4 ipv4;
+#ifdef INET6
   SFLSampled_ipv6 ipv6;
+#endif
   SFLExtended_switch sw;
   SFLExtended_router router;
   SFLExtended_gateway gateway;
@@ -579,7 +582,9 @@ enum INMAddress_type {
 
 typedef union _INMAddress_value {
   struct in_addr ip_v4;
+#ifdef INET6
   struct in6_addr ip_v6;
+#endif
 } INMAddress_value;
 
 typedef struct _INMAddress {
@@ -632,7 +637,7 @@ typedef struct _INMSampled_ipv4 {
 } INMSampled_ipv4;
 
 /* Packet IP version 6 data */
-
+#ifdef INET6
 typedef struct _INMSampled_ipv6 {
   u_int32_t length;       /* The length of the IP packet
 			     excluding lower layer encapsulations */
@@ -644,7 +649,7 @@ typedef struct _INMSampled_ipv6 {
   u_int32_t tcp_flags;    /* TCP flags */
   u_int32_t tos;          /* IP type of service */
 } INMSampled_ipv6;
-
+#endif
 
 /* Packet data */
 
@@ -657,7 +662,9 @@ enum INMPacket_information_type {
 typedef union _INMPacket_data_type {
   INMSampled_header header;
   INMSampled_ipv4 ipv4;
+#ifdef INET6
   INMSampled_ipv6 ipv6;
+#endif
 } INMPacket_data_type;
 
 /* Extended data types */
@@ -1818,22 +1825,26 @@ static u_int32_t getAddress(SFSample *sample, SFLAddress *address, int deviceId)
   address->type = getData32(sample, deviceId);
   if(address->type == SFLADDRESSTYPE_IP_V4)
     address->address.ip_v4.s_addr = getData32_nobswap(sample, deviceId);
+#ifdef INET6
   else {
     memcpy(&address->address.ip_v6.s6_addr, sample->datap, 16);
     skipBytes(sample, 16, deviceId);
   }
+#endif
   return address->type;
 }
 
 static char *printAddress(SFLAddress *address, char *buf, int bufLen, int deviceId) {
   if(address->type == SFLADDRESSTYPE_IP_V4)
     IP_to_a(address->address.ip_v4.s_addr, buf);
+#ifdef INET6
   else {
     u_char *b = address->address.ip_v6.s6_addr;
     // should really be: snprintf(buf, buflen,...) but snprintf() is not always available
     sprintf(buf, "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
 	    b[0],b[1],b[2],b[3],b[4],b[5],b[6],b[7],b[8],b[9],b[10],b[11],b[12],b[13],b[14],b[15],b[16]);
   }
+#endif
   return buf;
 }
 
@@ -2373,6 +2384,7 @@ static void readFlowSample_IPv4(SFSample *sample, int deviceId)
   -----------------___________________________------------------
 */
 
+#ifdef INET6
 static void readFlowSample_IPv6(SFSample *sample, int deviceId)
 {
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "flowSampleType IPV6\n");
@@ -2387,6 +2399,7 @@ static void readFlowSample_IPv6(SFSample *sample, int deviceId)
   }
   /* bug: more decode to do here */
 }
+#endif
 
 /*_________________---------------------------__________________
   _________________    readFlowSample_v2v4    __________________
@@ -2428,7 +2441,9 @@ static void readFlowSample_v2v4(SFSample *sample, int deviceId)
 
   case INMPACKETTYPE_HEADER: readFlowSample_header(sample, deviceId); break;
   case INMPACKETTYPE_IPV4: readFlowSample_IPv4(sample, deviceId); break;
+#ifdef INET6
   case INMPACKETTYPE_IPV6: readFlowSample_IPv6(sample, deviceId); break;
+#endif
   default: receiveError(sample, "unexpected packet_data_tag", YES); break;
   }
 
@@ -2526,7 +2541,9 @@ static void readFlowSample(SFSample *sample, int expanded, int deviceId)
       case SFLFLOW_HEADER:     readFlowSample_header(sample, deviceId); break;
       case SFLFLOW_ETHERNET:   readFlowSample_ethernet(sample, deviceId); break;
       case SFLFLOW_IPV4:       readFlowSample_IPv4(sample, deviceId); break;
+#ifdef INET6
       case SFLFLOW_IPV6:       readFlowSample_IPv6(sample, deviceId); break;
+#endif
       case SFLFLOW_EX_SWITCH:  readExtendedSwitch(sample, deviceId); break;
       case SFLFLOW_EX_ROUTER:  readExtendedRouter(sample, deviceId); break;
       case SFLFLOW_EX_GATEWAY: readExtendedGateway(sample, deviceId); break;

@@ -327,6 +327,7 @@ ntop.h
  */
 #if defined(WIN32) && defined(__GNUC__)
  #include "bpf.h"
+ #include "pcap.h"
 #else
 #if !defined(WIN32)
  #ifdef HAVE_NET_BPF_H

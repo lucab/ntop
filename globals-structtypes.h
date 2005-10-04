@@ -65,9 +65,6 @@ typedef u_int   uint32_t;
 #endif /* WIN32 */
 
 #if !defined(HAVE_U_INT64_T)
-#if defined(WIN32) && defined(__GNUC__)
-typedef unsigned long long u_int64_t; /* on mingw unsigned long is 32 bits */
-#else
 #if defined(WIN32)
 typedef _int64 u_int64_t;
 #else
@@ -75,7 +72,6 @@ typedef _int64 u_int64_t;
 #define u_int64_t uint64_t
 #else
 #error "Sorry, I'm unable to define u_int64_t on your platform"
-#endif
 #endif
 #endif
 #endif
@@ -621,7 +617,7 @@ typedef struct protoTrafficInfo {
 #define MAX_NUM_NON_IP_PROTO_TRAFFIC_INFO   8
 
 typedef struct nonIpProtoTrafficInfo {
-  uint16_t protocolId;
+  u_int16_t protocolId;
   TrafficCounter sentBytes, rcvdBytes;
   TrafficCounter sentPkts, rcvdPkts;
   struct nonIpProtoTrafficInfo *next;
@@ -999,17 +995,21 @@ typedef struct ntopIfaceAddrInet {
   struct in_addr netmask;
 } NtopIfaceAddrInet;
 
+#ifdef INET6
 typedef struct ntopIfaceAddrInet6 {
   struct in6_addr ifAddr;
   int             prefixlen;
 } NtopIfaceAddrInet6;
+#endif
 
 typedef struct ntopIfaceaddr{
   int family;
   struct ntopIfaceaddr *next;
   union {
     NtopIfaceAddrInet  inet;
+#ifdef INET6
     NtopIfaceAddrInet6 inet6;
+#endif
   }af;
 } NtopIfaceAddr;
 

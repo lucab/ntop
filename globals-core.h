@@ -135,10 +135,6 @@ extern int pcap_findalldevs(pcap_if_t **alldevsp, char *errbuf);
 extern pcap_freealldevs(pcap_if_t *alldevs);
 #endif
 
-#if defined(WIN32) && defined(__GNUC__)
-extern char *gdbm_strerror(gdbm_error errno);
-#endif
-
 #ifndef WIN32
 /* utildl.c */
 extern int getDynamicLoadPaths(char *main, int mainLen, char *lib, int libLen, char *env, int envLen);
@@ -541,10 +537,16 @@ extern int getLocalHostAddress(struct in_addr *hostIpAddress, char* device);
 extern NtopIfaceAddr * getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
 extern void fillDomainName(HostTraffic *el);
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *), char* userParm);
+
+#if defined(WIN32) && defined(__GNUC__)
+#define killThread(a) _killThread(a)
+#define joinThread(a) _joinThread(a)
+#else
 extern int _killThread(char *file, int line, pthread_t *threadId);
 #define killThread(a) _killThread(__FILE__, __LINE__, a);
 extern int _joinThread(char *file, int line, pthread_t *threadId);
 #define joinThread(a) _joinThread(__FILE__, __LINE__, a)
+#endif /* WIN32 && __GNUC__ */
 
 extern int   _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine);
 extern int   _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLine);

@@ -2687,7 +2687,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifndef HAVE_SQRTF
-#define sqrtf(a) sqrt(a)
+#define sqrtf(x) ((float)(sqrt((double)x)))
 #endif
 
 /*
@@ -2701,7 +2701,10 @@
 #endif
 
 #ifdef WIN32
+
+#ifndef __GNUC__
 #define INET6
+#endif /* __GNUC__ */
 
 #ifndef s6_addr
 //

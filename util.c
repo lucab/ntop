@@ -3078,6 +3078,7 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
 
   k=0;
 
+  if(strlen(string) > 0) {
 #ifdef WIN32
   /* Strip "ed string for test */
   if((string[0] != '"') || (string[strlen(string)-1] != '"') )
@@ -3097,6 +3098,8 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
       j = 0;
     }
   }
+  } else
+	  j = 0;
 
   if(j == 0) {
     if(strlen(string) > 40) string[40] = '\0';
@@ -6704,15 +6707,6 @@ char *ntop_strsignal(int sig) {
          : sig == SIGXFSZ ? "SIGXFSZ"
 #endif
           : "unable to determine");
-}
-#endif
-
-/* *************** */
-
-#if defined(WIN32) && defined(__GNUC__)
- #warning using ntop work-around for missing gdbm_error ... no worries
-char *gdbm_strerror(gdbm_error errno) {
-  return("no additional information available");
 }
 #endif
    
