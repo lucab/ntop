@@ -1,11 +1,11 @@
 ## Constants...
 ##
 ## Change version and suffix as necessary.
-## release 0 is the first release from the same base sion.suffix,
+## release 0 is the first release from the same base version,
 ## 1 would be the second, etc.
 #
 %define rpmversion 3.2
-%define rpmsuffix rc1
+%define rpmsuffix rc2
 %define rpmrelease 1
 %define rpmdistro fc2
 ##
@@ -39,7 +39,7 @@ Source2: ntop.logrotate
 Source3: ntop.conf.sample
 Patch1: version.patch
 
-Copyright: GPL
+License: GPL
 Group: Applications/System
 BuildPrereq: glibc, glibc-devel, gcc, cpp, gawk, autoconf, automake, binutils, openssl, openssl-devel, gdbm, gdbm-devel, libpcap, zlib-devel
 Requires: glibc, openssl, gdbm, libpcap, chkconfig
