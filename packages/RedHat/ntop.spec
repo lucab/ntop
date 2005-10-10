@@ -6,7 +6,7 @@
 #
 %define rpmversion 3.2
 %define rpmsuffix rc2
-%define rpmrelease 1
+%define rpmrelease 2
 %define rpmdistro fc2
 ##
 ## Pick ONE of these sets as appropriate
@@ -26,8 +26,8 @@
 
 Summary: ntop shows the network usage
 Name: ntop
-Version: %{rpmversion}%{rpmsuffix}_%{rpmdistro}
-Release: %{rpmrelease}
+Version: %{rpmversion}%{rpmsuffix}
+Release: %{rpmrelease}.%{rpmdistro}
 
 Vendor:          ntop project
 Distribution:    SourceForge RPM
