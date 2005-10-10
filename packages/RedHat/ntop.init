@@ -578,7 +578,7 @@ stop () {
   echo 
 
   if [ $RETVAL != 0 ]; then
-    pids=`ps axf | grep '\/devel\/bin\/ntop' | awk '{ printf(" %s", $1) }; END { print "" }'`
+    pids=`ps axf | grep '\/usr\/bin\/ntop' | awk '{ printf(" %s", $1) }; END { print "" }'`
     if [ "${pids}" != " " ]; then
       logger -p ${ntopusesyslog} -t ${name}${instance} -- "INITD - Sending SIGTERM to ${prog}...${pids}"
       if [ "${debug}" = "y" ]; then echo "Sending SIGTERM to ${prog}...${pids}"; fi
