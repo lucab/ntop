@@ -5,19 +5,19 @@
 ## 1 would be the second, etc.
 #
 %define rpmversion 3.2
-%define rpmsuffix rc2
+%define rpmsuffix 
 %define rpmrelease 2
 %define rpmdistro fc2
 ##
 ## Pick ONE of these sets as appropriate
 #
-%define releasetype TEST
-%define releasetext from the ntop cvs tree at cvs.ntop.org.
-%define releaseintent Our intention is to release this or something much like it as ntop 3.2 in a short period of time.
+# % d e f i n e releasetype TEST
+# % d e f i n e releasetext from the ntop cvs tree at cvs.ntop.org.
+# % d e f i n e releaseintent Our intention is to release this or something much like it as ntop 3.2 in a short period of time.
 #
-# % d e f i n e releasetype STABLE PRODUCTION
-# % d e f i n e releasetext 
-# % d e f i n e releaseintent 
+%define releasetype STABLE PRODUCTION
+%define releasetext 
+%define releaseintent 
 ##
 ##  Others shouldn't require changes.
 #
@@ -216,6 +216,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libmyrrd*
 
 %changelog
+* Thu Oct 20 2005 Burton M. Strauss III <burton@ntopsupport.com>
+- 3.2
+
 * Sat Oct 01 2005 Burton M. Strauss III <burton@ntopsupport.com>
 - Update spec for 3.2 rc2
 - Incorporate some cleanups and ideas from Kenneth Porter <shiva+ntoprpm@sewingwitch.com>
