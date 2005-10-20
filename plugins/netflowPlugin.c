@@ -2749,7 +2749,7 @@ static void handleNetflowHTTPrequest(char* _url) {
   if((_url != NULL) && pluginActive) {
     char *strtokState;
 
-    if(strncasecmp(url, CONST_NETFLOW_STATISTICS_HTML, strlen(CONST_NETFLOW_STATISTICS_HTML)) == 0) {
+    if(strncasecmp(_url, CONST_NETFLOW_STATISTICS_HTML, strlen(CONST_NETFLOW_STATISTICS_HTML)) == 0) {
       printNetFlowStatistics();
       printHTMLtrailer();
       return;
