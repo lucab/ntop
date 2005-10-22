@@ -168,7 +168,10 @@ void handleBootp(HostTraffic *srcHost,
 		strncpy(realDstHost->hostNumIpAddress,
 			_intoa(realDstHost->hostIp4Address, buf, sizeof(buf)),
 			sizeof(realDstHost->hostNumIpAddress));
-		if(myGlobals.runningPref.numericFlag == 0) ipaddr2str(realDstHost->hostIpAddress, 1);
+		if(myGlobals.runningPref.numericFlag == 0) {
+			realDstHost->hostIpAddress.hostFamily = AF_INET;
+			ipaddr2str(realDstHost->hostIpAddress, 1);
+		}
                 if (realDstHost->dnsDomainValue != NULL) free(realDstHost->dnsDomainValue);
 		realDstHost->dnsDomainValue = NULL;
                 if (realDstHost->dnsTLDValue != NULL) free(realDstHost->dnsTLDValue);

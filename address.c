@@ -554,6 +554,11 @@ static void queueAddress(HostAddr elem, int forceResolution) {
     key_data.dsize = 16;
   }
 #endif
+  else {
+	traceEvent(CONST_TRACE_WARNING, "Invalid address family (%d) found!",
+			elem.hostFamily);
+	return;
+  }
 
   safe_snprintf(__FILE__, __LINE__, dataBuf, sizeof(dataBuf), "%s", addrtostr(&elem));
   data_data.dptr = dataBuf;

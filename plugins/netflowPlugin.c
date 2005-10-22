@@ -1286,6 +1286,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
       Reset the record so that fields that are not contained
       into v5 records are set to zero
     */
+	memset(&record, 0, sizeof(record));
     record.nw_latency_sec = record.nw_latency_usec = htonl(0);
 
     for(i=0; i<numFlows; i++) {
@@ -1772,7 +1773,7 @@ static void printNetFlowDeviceConfiguration(void) {
     sendString("<FORM ACTION=\"/plugins/");
     sendString(netflowPluginInfo->pluginURLname);
     sendString("\" METHOD=GET>\n<input type=hidden name=device size=5 value=0>");
-    sendString("<p><INPUT TYPE=submit VALUE=\"Add NetFlow Device\">&nbsp;\n</FORM><p>\n");
+    sendString("<p align=center><INPUT TYPE=submit VALUE=\"Add NetFlow Device\">&nbsp;\n</FORM><p>\n");
   } else {
     sendString("<p>Please enable the plugin for configuring devices<br>\n");
   }

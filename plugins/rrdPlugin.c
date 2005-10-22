@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-04 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 2002-05 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -1239,12 +1239,12 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
       rc = rrd_create(argc, argv);
 
       if(rrd_test_error()) {
-	traceEventRRDebugARGV(3);
+		traceEventRRDebugARGV(3);
 
-	traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s",
-		   path, rrd_get_error());
-	rrd_clear_error();
-	numRRDerrors++;
+		traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s",
+			path, rrd_get_error());
+		rrd_clear_error();
+		numRRDerrors++;
       }
 
       releaseMutex(&rrdMutex);
@@ -1324,9 +1324,9 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	  unlink(path);
 	}
 
-	rrd_clear_error();
+		rrd_clear_error();
       } else {
-	traceEventRRDebug(0, "rrd_update(%s, %s, %s)=%d", hostPath, key, cmd, rc);
+		traceEventRRDebug(0, "rrd_update(%s, %s, %s)=%d", hostPath, key, cmd, rc);
       }
     }
 
@@ -1898,7 +1898,7 @@ static void statisticsPage(void) {
   char buf[1024];
   int i;
   float pminDelay=99999.0, pmaxDelay=0.0,
-        /*stddev:*/ pM, pT, pQ, pR, pSD, pXBAR;
+        /*stddev:*/ pM, pT, pQ, pR, pSD;
 
   memset(&buf, 0, sizeof(buf));
 
@@ -2557,7 +2557,7 @@ static void handleRRDHTTPrequest(char* url) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpShortInterval);
   sendString(buf);
   sendString("> seconds<br>Specifies how often <A HREF=/"CONST_SORT_DATA_THPT_STATS_HTML">throughput</A> data is stored permanently.<br>"
-	     "<FONT COLOR=red><b>Note</b></FONT>: if you change this value the throughput stats will be reset<br>"
+	     "<FONT COLOR=red><b>Note</b></FONT>: if you change this value the throughput stats will be reset "
 	     "and past values will be lost. You've been warned!</td></tr>\n");
 
   sendString("<tr><th align=\"left\" "DARK_BG">Dump Hours</th><td>"
@@ -3153,7 +3153,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)", errno, dname);
         setPluginStatus("Disabled - unable to create rrd subdirectory.");
 	/* Return w/o creating the rrd thread ... disabled */
-	return;
+	return(NULL);
       }
     } else {
       traceEvent(CONST_TRACE_INFO, "RRD: Created directory (%s)", dname);
