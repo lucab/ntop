@@ -487,7 +487,9 @@ static void handleXmldumpHTTPrequest(char* url) {
     }
 
     /* Process it */
+#ifdef MAKE_WITH_XMLDUMP
     dumpXML(url);
+#endif
 
 #if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
     if(myGlobals.childntoppid != 0)
