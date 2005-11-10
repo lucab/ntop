@@ -3400,7 +3400,7 @@ void checkHostProvidedServices(HostTraffic *el) {
 /* ************************************ */
 
 void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
-  char buf[LEN_GENERAL_WORK_BUFFER], buf1[64], buf2[128], sniffedName[MAXDNAME], osBuf[128];
+  char buf[2*LEN_GENERAL_WORK_BUFFER], buf1[64], buf2[128], sniffedName[MAXDNAME], osBuf[512];
   float percentage;
   Counter total;
   int printedHeader, i;
