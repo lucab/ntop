@@ -215,9 +215,10 @@ extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern int purgeIdleHosts(int devId);
 extern void setHostSerial(HostTraffic *el);
-extern HostTraffic * _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanId,
-				u_char checkForMultihoming, u_char forceUsingIPaddress, int actualDeviceId,
-                                char *file, int line);
+extern HostTraffic * _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, 
+				 u_int16_t vlanId, u_char checkForMultihoming, 
+				 u_char forceUsingIPaddress, int actualDeviceId,
+				 char *file, int line);
 #define lookupHost(a, b, c, d, e, f) _lookupHost(a, b, c, d, e, f, __FILE__, __LINE__)
 extern HostTraffic * lookupFcHost(FcAddress *fcAddress, u_short vsanId,
 				  int actualDeviceId);
@@ -737,7 +738,7 @@ extern unsigned short isOKtoSave(u_int32_t addr,
 extern float timeval_subtract(struct timeval x, struct timeval y);
 extern void freePortsUsage(HostTraffic *el);
 extern PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary);
-extern char* vlan2name(int vlanId, char *buf, int buf_len);
+extern char* vlan2name(u_int16_t vlanId, char *buf, int buf_len);
 extern void mkdir_p(char *tag, char *path, int permission);
 
 /* Formatting for %.2f ... */

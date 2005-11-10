@@ -1735,8 +1735,6 @@
 #define FLAG_SYSLOG_NONE                    -1
 
 
-#define MAX_VLAN 4096
-
 /*
  * Define for address resolution missing on Win32
  */
@@ -2650,6 +2648,14 @@
 #ifndef TRUE
  #define TRUE                               1
 #endif
+
+/* ******************************** */
+
+#define NO_VLAN       (u_int16_t)-1
+#define MAX_VLAN      4096
+
+#define NO_INTERFACE  (u_int16_t)-1
+#define MAX_INTERFACE (u_int16_t)-1
 
 /* ******************************** */
 

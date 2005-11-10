@@ -2331,7 +2331,8 @@ void resetHostsVariables(HostTraffic* el) {
   resetUsageCounter(&el->contactedRcvdPeers);
   resetUsageCounter(&el->contactedRouters);
 
-  el->vlanId = -1;
+  el->vlanId = NO_VLAN;
+  el->ifId = NO_INTERFACE;
   el->hostAS = 0;
   if (el->dnsDomainValue != NULL)      free(el->dnsDomainValue);
   el->dnsDomainValue = NULL;
@@ -6526,7 +6527,7 @@ PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary) 
 
 /* *************************************************** */
 
-char* vlan2name(int vlanId, char *buf, int buf_len) {
+char* vlan2name(u_int16_t vlanId, char *buf, int buf_len) {
   char key[64];
 
   snprintf(key, sizeof(key), "vlan.%d", vlanId);

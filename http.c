@@ -1898,7 +1898,7 @@ static int returnHTTPPage(char* pageName,
   FILE *fd = NULL;
   char tmpStr[512], *domainNameParm = NULL, *minus;
   char *db_key = NULL, *db_val = NULL;
-  int revertOrder=0, vlanId=0;
+  int revertOrder=0, vlanId=NO_VLAN, ifId=NO_INTERFACE;
   struct tm t;
   HostsDisplayPolicy showHostsMode = myGlobals.hostsDisplayPolicy;
   LocalityDisplayPolicy showLocalityMode = myGlobals.localityDisplayPolicy;
@@ -1949,6 +1949,8 @@ static int returnHTTPPage(char* pageName,
 	showBytes = atoi(&tkn[5]);
       } else if(strncmp(tkn, "vlan=", 5) == 0) {
 	vlanId = atoi(&tkn[5]);
+      } else if(strncmp(tkn, "if=", 3) == 0) {
+	ifId = atoi(&tkn[3]);
       } else if(strncmp(tkn, "vsan=", 5) == 0) {
 	vsanId = atoi(&tkn[5]);
       } else if(strncmp(tkn, "showH=", 6) == 0) {
@@ -2507,7 +2509,7 @@ static int returnHTTPPage(char* pageName,
 	printThptStatsMatrix(sortedColumn);
       } else if(strncasecmp(pageName, CONST_HOSTS_INFO_HTML, strlen(CONST_HOSTS_INFO_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vlanId);
+	printHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vlanId, ifId);
       } else if(strncasecmp(pageName, CONST_FC_HOSTS_INFO_HTML,
 			    strlen(CONST_FC_HOSTS_INFO_HTML)) == 0) {
         printFcHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vsanId);
@@ -2782,7 +2784,7 @@ static int returnHTTPPage(char* pageName,
 	  if(!isFcHost(el)) {
 	    if((el != myGlobals.broadcastEntry)
 	       && (el->hostNumIpAddress != NULL)
-	       && ((vlanId == -1) || ((el->vlanId <= 0) || (el->vlanId == vlanId)))
+	       && ((vlanId == NO_VLAN) || ((el->vlanId <= 0) || (el->vlanId == vlanId)))
 	       && ((el->vlanId <= 0) || (el->vlanId == vlanId))
 	       && ((strcmp(el->hostNumIpAddress, hostName) == 0)
 		   || (strcmp(el->ethAddressString, hostName) == 0))) {

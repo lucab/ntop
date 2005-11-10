@@ -519,6 +519,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 
   addrput(AF_INET,&addr1,&b);
   addrput(AF_INET,&addr2,&a);
+
   if(!skipDST)
     dstHost = lookupHost(&addr1, NULL, record->vlanId, 0, 1, deviceId);
   else
@@ -556,6 +557,9 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 
   if(srcAS != 0) srcHost->hostAS = srcAS;
   if(dstAS != 0) dstHost->hostAS = dstAS;
+
+  srcHost->ifId = ntohs(record->input);
+  dstHost->ifId = ntohs(record->output);
 
 #ifdef DEBUG_FLOWS
   /* traceEvent(CONST_TRACE_INFO, "%d/%d", srcHost->hostAS, dstHost->hostAS); */
@@ -1123,7 +1127,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 
             /* initialize to zero */
 	    memset(&record, 0, sizeof(record));
-	    record.vlanId = -1; /* No VLAN */
+	    record.vlanId = NO_VLAN; /* No VLAN */
 
 #ifdef DEBUG_FLOWS
 	    traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d", fs.templateId);
@@ -1286,7 +1290,8 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
       Reset the record so that fields that are not contained
       into v5 records are set to zero
     */
-	memset(&record, 0, sizeof(record));
+    memset(&record, 0, sizeof(record));
+    record.vlanId = NO_VLAN; /* No VLAN */
     record.nw_latency_sec = record.nw_latency_usec = htonl(0);
 
     for(i=0; i<numFlows; i++) {

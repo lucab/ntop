@@ -757,9 +757,9 @@ void setHostSerial(HostTraffic *el) {
   Searches a host and returns it. If the host is not
   present in the hash a new bucket is created
 */
-HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanId,
-			u_char checkForMultihoming, u_char forceUsingIPaddress,
-			int actualDeviceId, char *file, int line) {
+HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t vlanId,
+			 u_char checkForMultihoming, u_char forceUsingIPaddress,
+			 int actualDeviceId, char *file, int line) {
   u_int idx, isMultihomed = 0;
   HostTraffic *el=NULL;
   char buf[MAX_LEN_SYM_HOST_NAME_HTML];
@@ -883,7 +883,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlan
     numRuns++;
   } /* while */
 
-  if((hostFound == 1) && (vlanId > 0) && (vlanId != el->vlanId) && (!isMultivlaned(el))) {
+  if((hostFound == 1) && (vlanId != NO_VLAN) && (vlanId != el->vlanId) && (!isMultivlaned(el))) {
     FD_SET(FLAG_HOST_TYPE_MULTIVLANED, &el->flags);
     if(myGlobals.multipleVLANedHostCount == 0) {
       traceEvent(CONST_TRACE_ERROR, "mVLAN: Host (identical IP/MAC) found on multiple VLANs");

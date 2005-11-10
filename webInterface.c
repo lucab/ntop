@@ -619,11 +619,12 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   vlanStr[0] = '\0';
-  if(el->vlanId > 0) {
+  if(el->vlanId != NO_VLAN) {
     if(!isMultivlaned(el)) {
       char tmp[256], tmpBuf[64];
       safe_snprintf(__FILE__, __LINE__, vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
-      safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "%s (vlan %s)", symIp, vlan2name(el->vlanId, tmpBuf, sizeof(tmpBuf)));
+      safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "%s (vlan %s)", 
+		    symIp, vlan2name(el->vlanId, tmpBuf, sizeof(tmpBuf)));
       safe_snprintf(__FILE__, __LINE__, symIp, sizeof(symIp), "%s", tmp);
     }
   }

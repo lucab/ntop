@@ -2362,7 +2362,7 @@ void makeDot() {
 
 /* ******************************* */
 
-void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, int vlanId) {
+void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, int vlanId, int ifId) {
   u_int idx, numEntries=0, maxHosts;
   int printedEntries=0;
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
@@ -2371,12 +2371,22 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[11], *theAnchor[11], osBuf[160];
   char htmlAnchor[64], htmlAnchor1[64];
   char formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-  u_char *vlanList, foundVlan = 0, vlanStr[16];
+  u_char *vlanList, foundVlan = 0, vlanStr[16], ifStr[16], foundIf = 0, *ifList;
 
   vlanList = calloc(1, MAX_VLAN);
-  if(vlanList == NULL) return;
+  if(vlanList == NULL) {
+    traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for vlan list");
+    return;
+  }
   vlanId = abs(vlanId);
 
+  ifList = calloc(1, MAX_INTERFACE);
+  if(ifList == NULL) {
+    traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for if list");
+    return;
+  }
+  ifId = abs(ifId);
+  
   printHTMLheader("Host Information", NULL, 0);
 
   memset(buf, 0, sizeof(buf));
@@ -2384,7 +2394,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
   tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "printHostsInfo");
   if(tmpTable == NULL) {
-    free(vlanList);
+    free(vlanList); free(ifList);
     return;
   }
 
@@ -2401,9 +2411,11 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
     if(isFcHost (el) || broadcastHost(el)) continue;
 
-    if((el->vlanId > 0) && (el->vlanId < MAX_VLAN)) { vlanList[el->vlanId] = 1, foundVlan = 1; }
+    if((el->vlanId != NO_VLAN) && (el->vlanId < MAX_VLAN))       { vlanList[el->vlanId] = 1, foundVlan = 1; }
+    if((vlanId != NO_VLAN) && (el->vlanId != vlanId)) continue;
 
-    if((vlanId > 0) && (el->vlanId != vlanId)) continue;
+    if((el->ifId != NO_INTERFACE) && (el->ifId < MAX_INTERFACE)) { ifList[el->ifId] = 1, foundIf = 1; }
+    if((ifId != NO_INTERFACE) && (el->ifId != ifId)) continue;
 
     if(showBytes) {
       actUsage  = (unsigned short)(0.5+100.0*(((float)el->bytesSent.value+(float)el->bytesRcvd.value)/
@@ -2439,8 +2451,10 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
     qsort(tmpTable, numEntries, sizeof(HostTraffic*), sortHostFctn);
 
-    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=\"/%s?col=%s", CONST_HOSTS_INFO_HTML, sign);
-    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=\"/%s?col=", CONST_HOSTS_INFO_HTML);
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), 
+		  "<A HREF=\"/%s?col=%s", CONST_HOSTS_INFO_HTML, sign);
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1),
+		  "<A HREF=\"/%s?col=", CONST_HOSTS_INFO_HTML);
 
     for(i=1; i<=10; i++) {
       if(abs(myGlobals.columnSort) == i)
@@ -2461,16 +2475,21 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     else
       vlanStr[0] = '\0';
 
+    if(ifId > 0)
+      safe_snprintf(__FILE__, __LINE__, (char*)ifStr, sizeof(ifStr), "&if=%d", ifId);
+    else
+      ifStr[0] = '\0';
+
     if(showBytes)
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<b>Traffic Unit:</b> [ <B>Bytes</B> ]&nbsp;"
-		    "[ <A HREF=\"/%s?col=%d&unit=0%s\">Packets</A> ]&nbsp;</TD>",
-		    CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr);
+		    "[ <A HREF=\"/%s?col=%d&unit=0%s%s\">Packets</A> ]&nbsp;</TD>",
+		    CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr);
     else
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<b>Traffic Unit:</b> [ <A HREF=\"/%s?col=%d&unit=1%s\">Bytes</A> ]&nbsp;"
+		    "<b>Traffic Unit:</b> [ <A HREF=\"/%s?col=%d&unit=1%s%s\">Bytes</A> ]&nbsp;"
 		    "[ <B>Packets</B> ]&nbsp;</TD>",
-		    CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr);
+		    CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr);
 
     sendString(buf);
     sendString("</P>\n");
@@ -2486,9 +2505,28 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>%s</b> ] ", 
 			  vlan2name(i, (char*)tmpBuf, sizeof(tmpBuf))), found = 1;
 	  else
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"/%s?unit=%d&vlan=%d\">%s</A> ] ",
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+			  "[ <A HREF=\"/%s?unit=%d&vlan=%d\">%s</A> ] ",
 			  CONST_HOSTS_INFO_HTML, showBytes, i, 
 			  vlan2name(i, (char*)tmpBuf, sizeof(tmpBuf)));
+
+	  sendString(buf);
+	}
+
+    }
+
+    if(foundIf) {
+      u_char found = 0, tmpBuf[64];
+
+      sendString("<p><b>Interface Id</b>: ");
+
+      for(i=0; i<MAX_INTERFACE; i++)
+	if(ifList[i] == 1) {
+	  if(i == ifId)
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>%d</b> ] ", i), found = 1;
+	  else
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"/%s?unit=%d&if=%d\">%d</A> ] ",
+			  CONST_HOSTS_INFO_HTML, showBytes, i, i);
 
 	  sendString(buf);
 	}
@@ -2804,6 +2842,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
   free(tmpTable);
   free(vlanList);
+  free(ifList);
 }
 
 /* ************************************ */
@@ -2811,7 +2850,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 			  int revertOrder, int pageNum, char *url,
 			  int hostInfoPage) {
-  u_int idx, i, vlanId = -1;
+  u_int idx, i;
+  u_int16_t vlanId = NO_VLAN;
   HostTraffic *el=NULL;
   char buf[LEN_GENERAL_WORK_BUFFER];
   char formatBuf[32], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
@@ -2828,7 +2868,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
     if(((strcmp(el->hostNumIpAddress, host) == 0) || (strcmp(el->ethAddressString, host) == 0))
-       && ((vlanId == -1) || ((el->vlanId <= 0) || (el->vlanId == vlanId)))) {
+       && ((vlanId == NO_VLAN) || ((el->vlanId <= 0) || (el->vlanId == vlanId)))) {
       found = 1;
       break;
     } else if((el->fcCounters != NULL)
@@ -4502,7 +4542,7 @@ void printThptStatsMatrix(int sortedColumn) {
 
   memset (&tmpEl, 0, sizeof(HostTraffic));
   if(allocFcScsiCounters(&tmpEl) == NULL) {
-    traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for FC counters\n");
+    traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for FC counters");
     return;
   }
 

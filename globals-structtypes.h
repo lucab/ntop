@@ -214,12 +214,12 @@ typedef struct hostAddr {
 
 typedef struct _ethSerial {
   u_char  ethAddress[LEN_ETHERNET_ADDRESS];
-  u_short vlanId;
+  u_int16_t vlanId;
 } EthSerial;
 
 typedef struct _ipSerial {
   HostAddr ipAddress;
-  u_short  vlanId;
+  u_int16_t  vlanId;
 } IpSerial;
 
 typedef struct hostSerial {
@@ -782,7 +782,8 @@ typedef struct hostTraffic {
   u_short          refCount;         /* Reference counter */
   HostSerial       hostSerial;
   HostAddr         hostIpAddress;
-  short            vlanId;           /* VLAN Id (-1 if not set) */
+  u_int16_t        vlanId;           /* VLAN Id (-1 if not set) */
+  u_int16_t        ifId;            /* Interface Id [e.g. for NetFlow] (-1 if not set) */
   u_int16_t        hostAS;           /* AS to which the host belongs to */
   time_t           firstSeen, lastSeen; /* time when this host has sent/rcvd some data  */
   u_char           ethAddress[LEN_ETHERNET_ADDRESS];

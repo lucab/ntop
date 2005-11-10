@@ -1064,7 +1064,7 @@ static void processIpPkt(const u_char *bp,
 
       srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
       if(srcHost != NULL) {
-	if(vlanId != -1) srcHost->vlanId = vlanId;
+	if(vlanId != NO_VLAN) srcHost->vlanId = vlanId;
 	if(myGlobals.runningPref.enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {
 	  /* Dump the first packet only */
 	  char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
@@ -1109,7 +1109,7 @@ static void processIpPkt(const u_char *bp,
 	       srcHost to be freed */
   }
 
-  if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
+  if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
 #ifdef DEBUG
   if(myGlobals.runningPref.rFileName != NULL) {
@@ -2631,7 +2631,8 @@ void processPacket(u_char *_deviceId,
   /* Token-Ring Strings */
   struct tokenRing_llc *trllc;
   unsigned char ipxBuffer[128];
-  int deviceId, actualDeviceId, vlanId=-1;
+  int deviceId, actualDeviceId;
+  u_int16_t vlanId=NO_VLAN;
   static time_t lastUpdateThptTime = 0;
 #ifdef LINUX
   AnyHeader *anyHeader;
@@ -2976,7 +2977,7 @@ void processPacket(u_char *_deviceId,
 	  lockHostsHashMutex(dstHost, "processPacket-dst");
 	}
 
-	if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
+	if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
 	memcpy((char *)&ipxPkt, (char *)p+sizeof(struct ether_header), sizeof(IPXpacket));
 
@@ -3030,7 +3031,7 @@ void processPacket(u_char *_deviceId,
 	  lockHostsHashMutex(dstHost, "processPacket-dst-2");
 	}
 
-	if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
+	if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
 	if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
@@ -3087,7 +3088,7 @@ void processPacket(u_char *_deviceId,
 	    lockHostsHashMutex(dstHost, "processPacket-dst-3");
 	  }
 
-	  if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
+	  if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
 	  if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	  if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
@@ -3105,7 +3106,7 @@ void processPacket(u_char *_deviceId,
 	    int llcLen;
 	    lockHostsHashMutex(srcHost, "processPacket-src-4");
 	    lockHostsHashMutex(dstHost, "processPacket-dst-4");
-	    if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
+	    if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 	    p1 = (u_char*)(p+hlen);
 
 	    /* Watch out for possible alignment problems */
@@ -3150,7 +3151,7 @@ void processPacket(u_char *_deviceId,
 		  case 0x0001: /* Device Id */
 		    if((srcHost->hostResolvedName[0] == '\0') || (strcmp(srcHost->hostResolvedName, srcHost->hostNumIpAddress))) {
 		      u_short tmpStrLen = min(element.cdp_len-4, MAX_LEN_SYM_HOST_NAME-1);
-		      strncpy(srcHost->hostResolvedName, &cdp[cdp_idx], tmpStrLen);
+		      strncpy(srcHost->hostResolvedName, (char*)&cdp[cdp_idx], tmpStrLen);
 		      srcHost->hostResolvedName[tmpStrLen] = '\0';
 		    }
 		    break;
@@ -3580,7 +3581,7 @@ void processPacket(u_char *_deviceId,
 	  lockHostsHashMutex(dstHost, "processPacket-src-5");
 	}
 
-	if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
+	if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
 	switch(eth_type) {
 	case ETHERTYPE_ARP: /* ARP - Address resolution Protocol */
