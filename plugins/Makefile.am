@@ -27,7 +27,7 @@
 SUBDIRS = . # pep
 
 PLUGIN_DIST_COMMON = Makefile.am Makefile.in
-CLEANFILES  =
+CLEANFILES  = xml_*.inc
 EXTRA_DIST  =
 
 SUFFIXES    = .so
