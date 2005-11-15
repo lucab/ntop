@@ -42,7 +42,7 @@ CCLD      = @CCLD@
 AM_CFLAGS = @CFLAGS@
 AM_LDFLAGS= @LDFLAGS@
 
-DISTCLEANFILES = *.db #* *~ *.log version.h trivialcompilemessage
+DISTCLEANFILES = version.h trivialcompilemessage *.db #* *~ *.log
 CLEANFILES     = $(DISTCLEANFILES) stamp-h1 config.log config.status
 INSTALLCLEANFILES = addressQueue.db dnsCache.db
 
