@@ -19,6 +19,8 @@
  */
 #include <stdio.h>
 #include <gdbm.h>
+#include <stdlib.h>
+#include <string.h>
 
 void usage(char *progName) {
   printf("Usage: %s <MAC ADDRESS [17 chars]> "
