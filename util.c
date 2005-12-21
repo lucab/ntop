@@ -977,7 +977,8 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
              flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
 	     flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
 	     flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
-	     flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" : "unknown",
+	     flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" : 
+	     flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
              addresses);
 
   memset(localAddresses, 0, localAddressesLen);
@@ -1003,7 +1004,8 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 		   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" : "unknown",
+		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  : 
+		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
 		   address);
 	address = strtok_r(NULL, ",", &strtokState);
 	continue;
@@ -1015,7 +1017,8 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 		   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" : "unknown",
+		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  : 
+		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
 		   mask);
 	address = strtok_r(NULL, ",", &strtokState);
 	continue;
@@ -1045,7 +1048,8 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
                    flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" : "unknown",
+		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  : 
+		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
                    a, b, c, d, bits);
 
 	/* correcting network numbers as specified in the netmask */
@@ -1109,7 +1113,8 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
           c = (int) ((network >>  8) & 0xff);
           d = (int) ((network >>  0) & 0xff);
 
-          laBufferUsed = safe_snprintf(__FILE__, __LINE__, &localAddresses[laBufferPosition],
+          laBufferUsed = safe_snprintf(__FILE__, __LINE__, 
+				       &localAddresses[laBufferPosition],
                                        localAddressesLen,
                                        "%s%d.%d.%d.%d/%d",
                                        (*numNetworks) == 0 ? "" : ", ",
@@ -1129,11 +1134,13 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
         c = (int) ((network >>  8) & 0xff);
         d = (int) ((network >>  0) & 0xff);
 
-        traceEvent(CONST_TRACE_ERROR, "%s: %d.%d.%d.%d/%d - Too many networks (limit %d) - discarded",
+        traceEvent(CONST_TRACE_ERROR, 
+		   "%s: %d.%d.%d.%d/%d - Too many networks (limit %d) - discarded",
                    flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" : "unknown",
+		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  : 
+		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
                    a, b, c, d, bits,
                    MAX_NUM_NETWORKS);
       }

@@ -34,6 +34,8 @@ static void ignoreSignal(int signalId) {
 
 void printBandwidthFooter(void) {
   sendString("<p><b>NOTE</b>:</p>\n<ul>"
+	     "<li>You can <a href=\"" CONST_EDIT_PREFS "\">define</a> "
+	     "new communities.</li>\n"
 	     "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> "
 	     "for more information about host and domain sorting.</li>\n"
 	     "<li>Bandwidth values are the percentage of the total bytes that "
@@ -2368,7 +2370,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
   HostTraffic *el;
   HostTraffic** tmpTable;
-  char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[11], *theAnchor[11], osBuf[160];
+  char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[12], *theAnchor[12], osBuf[160];
   char htmlAnchor[64], htmlAnchor1[64];
   char formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   u_char *vlanList, foundVlan = 0, vlanStr[16], ifStr[16], foundIf = 0, *ifList;
@@ -2456,7 +2458,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1),
 		  "<A HREF=\"/%s?col=", CONST_HOSTS_INFO_HTML);
 
-    for(i=1; i<=10; i++) {
+    for(i=1; i< (sizeof(arrow)/sizeof(char*)); i++) {
       if(abs(myGlobals.columnSort) == i)
 	arrow[i] = arrowGif, theAnchor[i] = htmlAnchor;
       else
@@ -2546,18 +2548,21 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 		    "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
 		    "<TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
 		    "<TH "TH_BG">%s3\">MAC&nbsp;Address%s</A></TH>\n"
+		    "<TH "TH_BG">%s11\">Community%s</A></TH>\n"
 		    "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
 		    "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
 		    "<TH "TH_BG">%s5\">Nw&nbsp;Board&nbsp;Vendor%s</A></TH>\n"
 		    "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
 		    "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
 		    "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
-		    "<TH "TH_BG">%s10\">AS%s</A></TH>"
+		    "<TH "TH_BG">%s10\">AS%s</A></TH>\n"
+
 		    "</TR>\n",
 		    theAnchor[1], arrow[1],
 		    theAnchor[0], arrow[0],
 		    theAnchor[2], arrow[2],
 		    theAnchor[3], arrow[3],
+		    theAnchor[11], arrow[11],
 		    theAnchor[6], arrow[6],
 		    theAnchor[4], arrow[4],
 		    theAnchor[5], arrow[5],
@@ -2571,17 +2576,19 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 		    "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
 		    "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
 		    "</TH><TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
+		    "<TH "TH_BG">%s11\">Community%s</A></TH>"
 		    "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
 		    "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
 		    "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
 		    "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
 		    "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
-		    "<TH "TH_BG">%s10\">AS%s</A></TH>"
+		    "<TH "TH_BG">%s10\">AS%s</A></TH>\n"
 		    "</TR>\n",
 		    theAnchor[1], arrow[1],
 		    theAnchor[0], arrow[0],
 		    theAnchor[2], arrow[2],
 		    theAnchor[6], arrow[6],
+		    theAnchor[11], arrow[11],
 		    theAnchor[4], arrow[4],
 		    theAnchor[7], arrow[7],
 		    theAnchor[8], arrow[8],
@@ -2656,6 +2663,12 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 			tmpName1);
 	}
 	sendString(buf);
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>", 
+		      (el->community == NULL) ? "&nbsp;" : el->community);
+	sendString(buf);
+	
 
 	sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
 
@@ -2816,10 +2829,10 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 			el->hostAS, el->hostAS);
           sendString(buf);
         }
-
+	
 	sendString("</TR>\n");
-	printedEntries++;
 
+	printedEntries++;
 
 	/* Avoid huge tables */
 	if(printedEntries > myGlobals.runningPref.maxNumLines)
@@ -5590,7 +5603,7 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
     myGlobals.columnSort = 10;
     break;
   case 1: /* VLAN */
-    myGlobals.columnSort = 11;
+    myGlobals.columnSort = CONST_VLAN_COLUMN_SORT;
     break;
   }
 

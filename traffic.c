@@ -727,3 +727,46 @@ int isInitialFtpData(char* packetData) {
   else
     return(0);
 }
+
+/* ********************************** */
+
+void setHostCommunity(HostTraffic *el) {
+  datum key, nextkey;
+  int len = strlen(COMMUNITY_PREFIX);
+
+  if((el == NULL) || (el->hostIpAddress.hostFamily != AF_INET))
+    return; /* Only IPv4 is supported */
+  else if(el->community != NULL)
+    return; /* Already set */
+
+  key = gdbm_firstkey(myGlobals.prefsFile);
+  while (key.dptr) {
+    char val[256], localAddresses[1024], *communityName;
+    u_int32_t localNetworks[MAX_NUM_NETWORKS][3]; /* [0]=network, [1]=mask, [2]=broadcast */
+    u_short numLocalNetworks = 0, i;
+    
+    if((fetchPrefsValue(key.dptr, val, sizeof(val)) == 0)
+       && (!strncmp(key.dptr, COMMUNITY_PREFIX, len))) {
+      localAddresses[0] = '\0';
+      communityName = (char*)&key.dptr[len];
+
+      handleAddressLists(val, localNetworks, &numLocalNetworks,
+			 localAddresses, sizeof(localAddresses),
+			 CONST_HANDLEADDRESSLISTS_COMMUNITY);
+
+      // traceEvent(CONST_TRACE_WARNING, "--> Community %s has %d entries", communityName, numLocalNetworks);
+      for(i=0; i<numLocalNetworks; i++) {
+	if((el->hostIpAddress.addr._hostIp4Address.s_addr & localNetworks[i][1]) == localNetworks[i][0]) {
+	  //traceEvent(CONST_TRACE_WARNING, "--> Found community %s [%d]", communityName, numLocalNetworks);
+
+	  el->community = strdup(communityName);
+	  return;
+	}
+      }
+    }
+
+    nextkey = gdbm_nextkey (myGlobals.prefsFile, key);
+    free (key.dptr);
+    key = nextkey;
+  }
+}

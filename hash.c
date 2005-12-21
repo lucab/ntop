@@ -473,6 +473,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   host->dnsTLDValue = NULL;
   if(host->description != NULL) free(host->description);
   if(host->hwModel != NULL) free(host->hwModel);
+  if(host->community != NULL) free(host->community);
   if(host->ip2ccValue != NULL) free(host->ip2ccValue);
   host->ip2ccValue = NULL;
 
@@ -1150,6 +1151,8 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       }
     }
 #endif
+
+    setHostCommunity(el);
   }
 
 #ifdef DEBUG

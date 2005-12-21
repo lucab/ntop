@@ -680,6 +680,8 @@
  */
 #define CONST_LEGEND_BOX_SIZE               7
 
+#define CONST_VLAN_COLUMN_SORT             20
+
 /*
  * Max number of OS entries in the report
  */
@@ -1360,6 +1362,7 @@
 #define CONST_HANDLEADDRESSLISTS_RRD        1
 #define CONST_HANDLEADDRESSLISTS_NETFLOW    2
 #define CONST_HANDLEADDRESSLISTS_CLUSTERS   3
+#define CONST_HANDLEADDRESSLISTS_COMMUNITY  4
 
 /*
  * Protocol types
@@ -2880,3 +2883,4 @@ struct ip6_hdr
 #define NTOP_PREF_VALUE_AF_INET6     AF_INET6
 #define NTOP_PREF_VALUE_AF_BOTH      AF_UNSPEC
 
+#define COMMUNITY_PREFIX             "community."

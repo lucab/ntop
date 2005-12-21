@@ -952,6 +952,11 @@ int sortHostFctn(const void *_a, const void *_b) {
       return(0);
     break;
   case 11:
+   return(strcasecmp((*a)->community ? (*a)->community : "",
+		      (*b)->community ? (*b)->community : ""));
+    break;
+
+  case CONST_VLAN_COLUMN_SORT:
     n_a = (*a)->vlanId, n_b = (*b)->vlanId;
 
     if(n_a < n_b)
@@ -3400,7 +3405,7 @@ void checkHostProvidedServices(HostTraffic *el) {
 /* ************************************ */
 
 void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
-  char buf[2*LEN_GENERAL_WORK_BUFFER], buf1[64], buf2[128], sniffedName[MAXDNAME], osBuf[512];
+  char buf[3*LEN_GENERAL_WORK_BUFFER], buf1[64], buf2[128], sniffedName[MAXDNAME], osBuf[512];
   float percentage;
   Counter total;
   int printedHeader, i;
@@ -3848,6 +3853,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  "Host&nbsp;Location",
 		  "Remote (outside specified/local subnet)");
     }
+    sendString(buf);
+  }
+
+  if(el->community) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "%s</TD></TR>\n", getRowColor(), "Community", el->community);
     sendString(buf);
   }
 

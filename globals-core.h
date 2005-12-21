@@ -455,6 +455,7 @@ extern void updateDbHostsTraffic(int deviceToUpdate);
 extern int isInitialHttpData(char* packetData);
 extern int isInitialSshData(char* packetData);
 extern int isInitialFtpData(char* packetData);
+extern void setHostCommunity(HostTraffic *el);
 extern void updateDeviceThpt(int deviceToUpdate, int quickUpdate);
 
 /* prefs.c */
