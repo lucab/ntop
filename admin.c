@@ -127,7 +127,10 @@ void addUser(char* user) {
   } else {
     sendString("<CENTER>\n");
 
-    sendString("<script Language=\"JavaScript\">\nfunction CheckForm(theForm) {\nif (theForm.pw.value != theForm.pw1.value) {\n    alert(\"Passwords do not match. Please try again.\");\n    theForm.pw1.focus();\n    return(false);\n  }\n  return (true);\n}\n</script>\n");
+    sendString("<script Language=\"JavaScript\">\nfunction CheckForm(theForm) "
+	       "{\nif (theForm.pw.value != theForm.pw1.value) {\n    alert(\"Passwords do not match. "
+	       "Please try again.\");\n    theForm.pw1.focus();\n    return(false);\n  }\n  return(true);"
+	       "\n}\n</script>\n");
 
     sendString("<FORM METHOD=POST ACTION=/doAddUser onsubmit=\"return CheckForm(this)\">\n");
 
@@ -143,10 +146,78 @@ void addUser(char* user) {
       sendString("<INPUT TYPE=text NAME=user SIZE=20>\n");
 
     sendString("</TD>\n</TR>\n");
-    sendString("<TR>\n<TH ALIGN=right>Password:&nbsp;</TH>"
+    sendString("<TR><TH ALIGN=right>Password:&nbsp;</TH>"
 	       "<TD ALIGN=left><INPUT TYPE=password NAME=pw SIZE=20></TD></TR>\n");
-    sendString("<TR>\n<TH ALIGN=right>Verify Password:&nbsp;</TH>"
+    sendString("<TR><TH ALIGN=right>Verify Password:&nbsp;</TH>"
 	       "<TD ALIGN=left><INPUT TYPE=password NAME=pw1 SIZE=20></TD></TR>\n");
+
+    /*********** Communities **********/
+    
+    {
+      int i, numUsers=0, len = strlen(COMMUNITY_PREFIX);
+      datum key_data, return_data;
+      char *aubuf=NULL, *userCommunities[20], communities[128], key[256];
+      
+      sendString("<TR><TH ALIGN=right VALIGN=top>Authorised Communities:&nbsp;</TH>"
+		 "<TD ALIGN=left>\n<SELECT NAME=communities MULTIPLE>\n");
+      
+      memset(userCommunities, 0, sizeof(userCommunities));
+
+      if(user != NULL) {
+	snprintf(key, sizeof(key), "%s%s", COMMUNITY_PREFIX, &user[1]);
+	
+	if(fetchPwValue(key, communities, sizeof(communities)) == 0) {
+	  char *strtokState, *item;
+	  
+	  item = strtok_r(communities, "&", &strtokState);
+	  for(i=0; (item != NULL) && (i < sizeof(userCommunities)-1); i++) {
+	    userCommunities[i] = item;
+	    item = strtok_r(NULL, "&", &strtokState);
+	  }
+	  
+	  if(item != NULL)
+	    traceEvent(CONST_TRACE_ERROR, "Too many communities for user='%s'", &user[1]);
+	  
+	  userCommunities[i] = NULL;
+	}
+      }
+      
+      return_data = gdbm_firstkey(myGlobals.prefsFile);
+
+      while(return_data.dptr != NULL) {
+	key_data = return_data;
+
+	if(!strncmp(key_data.dptr, COMMUNITY_PREFIX, len)) {
+	  int found = 0;
+	  char *communityName = &key_data.dptr[len];
+
+	  for(i=0; userCommunities[i] != NULL; i++)
+	    if(strcmp(userCommunities[i], communityName) == 0) {
+	      found = 1;
+	  }
+
+	  /* Make sure that at least a user is selected */
+	  if((numUsers == 0) && (userCommunities[0] == NULL)) found = 1;
+
+	  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
+			"<option value=%s %s>%s</option>\n",
+			communityName,
+			found ? "SELECTED" : "", 
+			communityName);
+	  sendString(tmpStr);
+	  numUsers++;
+	}
+
+	return_data = gdbm_nextkey(myGlobals.prefsFile, key_data);
+	free(key_data.dptr);
+      }
+
+      if(aubuf != NULL) free(aubuf); /* (**) */
+
+      sendString("</SELECT>\n</TD></TR>\n");
+    }
+
+
     sendString("</TABLE>"TABLE_OFF"\n");
 
     safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
@@ -157,6 +228,7 @@ void addUser(char* user) {
     sendString("</FORM>\n");
     sendString("</CENTER>\n");
   }
+
   sendMenuFooter(0, 2);
 }
 
@@ -200,14 +272,17 @@ void deleteUser(char* user) {
 }
 /* *******************************/
 
-void doAddUser(int len) {
-  char *err=NULL;
+#define MAX_NUM_COMMUNITIES     32
 
+void doAddUser(int len) {
+  char *err=NULL, key_str[64], value_str[256];
+  int j;
+  
   if(len <= 0) {
     err = "ERROR: both user and password must be non empty fields.";
   } else {
-    char postData[256], *key, *user=NULL, *pw=NULL;
-    int i, idx, badChar=0;
+    char postData[256], *key, *user=NULL, *pw=NULL, *communities[MAX_NUM_COMMUNITIES];
+    int i, idx, badChar=0, num_communities = 0;
 
     if((idx = readHTTPpostData(len, postData, sizeof(postData))) < 0)
       return; /* FIXME (DL): an HTTP error code should be sent here */
@@ -222,6 +297,19 @@ void doAddUser(int len) {
 	  user = &postData[i+1];
 	else if(strcmp(key, "pw") == 0)
 	  pw = &postData[i+1];
+	else if(strcmp(key, "communities") == 0) {
+	  if(num_communities+1 < MAX_NUM_COMMUNITIES) {
+	    communities[num_communities] = strdup(&postData[i+1]);
+	    
+	    for(j=0; j<strlen(communities[num_communities]); j++)
+	      if(communities[num_communities][j] == '&') {
+		communities[num_communities][j] = '\0';
+		break;
+	      }
+
+	    num_communities++;
+	  }
+	}
 	key = NULL;
       }
     }
@@ -273,9 +361,24 @@ void doAddUser(int len) {
       traceEvent(CONST_TRACE_INFO, "User='%s' - Pw='%s [%s]'", user, pw, data_data.dptr);
 #endif
 
+      snprintf(key_str, sizeof(key_str), "%s%s", COMMUNITY_PREFIX, user);
+      value_str[0] = '\0';
+      
+      if(num_communities > 0) {
+	strcat(value_str, communities[0]);
+	
+	for(j=1; j<num_communities; j++) {
+	  strcat(value_str, "&");
+	  strcat(value_str, communities[j]);
+	}
+	
+	//traceEvent(CONST_TRACE_INFO, "========-----> [%s][%s]", key_str, value_str);
+	storePwValue(key_str, value_str);
+      }
+      
       if(gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE) != 0)
 	err = "FATAL ERROR: unable to add the new user.";
-
+      
       /* Added user, clear the list */
       clearUserUrlList();
 
@@ -299,7 +402,7 @@ void doAddUser(int len) {
 
 if(err != NULL) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("ntop user add", NULL, BITFLAG_HTML_NO_REFRESH);
+    printHTMLheader("ntop: Add/Modify User", NULL, BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR><P>\n");
     printFlagedWarning(err);
     sendMenuFooter(1, 2);
@@ -363,6 +466,7 @@ void addURL(char* url) {
   char tmpStr[128];
 
   printHTMLheader("Manage ntop URLs", NULL, BITFLAG_HTML_NO_REFRESH);
+
   sendString("<P><HR><P>\n");
 
   if((url != NULL) && ((strlen(url) < 1) || (url[0] != '2'))) {
@@ -390,6 +494,8 @@ void addURL(char* url) {
       sendString("<INPUT TYPE=text NAME=url SIZE=20>&nbsp;*");
     }
     sendString("</TD>\n</TR>\n");
+
+    /*********** Users **********/
     sendString("<TR>\n<TH ALIGN=right VALIGN=top>Authorised Users:&nbsp;</TH>"
 	       "<TD ALIGN=left><SELECT NAME=users MULTIPLE>\n");
 
@@ -442,10 +548,10 @@ void addURL(char* url) {
       free(key_data.dptr);
     }
 
-    if(aubuf != NULL)
-      free(aubuf); /* (**) */
+    if(aubuf != NULL) free(aubuf); /* (**) */
 
     sendString("</SELECT>\n</TD></TR>\n");
+
     sendString("</TABLE>"TABLE_OFF"\n");
 
     if(url == NULL)

@@ -795,28 +795,28 @@ int parseOptions(int argc, char* argv[]) {
 
 /* ******************************** */
 
-int fetchPrefsValue(char *key, char *value, int valueLen) {
+static int fetchGdbmValue(GDBM_FILE gdbmfile, char *key, char *value, int valueLen) {
   datum key_data;
   datum data_data;
 
   if(value == NULL) return(-1);
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: Entering fetchPrefValue()");
+  traceEvent(CONST_TRACE_INFO, "DEBUG: Entering fetchGdbmValue()");
 #endif
   value[0] = '\0';
 
   key_data.dptr  = key;
   key_data.dsize = strlen(key_data.dptr)+1;
 
-  if(myGlobals.prefsFile == NULL) {
+  if(gdbmfile == NULL) {
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Leaving fetchPrefValue()");
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Leaving fetchGdbmValue()");
 #endif
     return(-1); /* ntop is quitting... */
   }
 
-  data_data = gdbm_fetch(myGlobals.prefsFile, key_data);
+  data_data = gdbm_fetch(gdbmfile, key_data);
 
   memset(value, 0, valueLen);
 
@@ -835,7 +835,19 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
 
 /* ******************************** */
 
-void storePrefsValue(char *key, char *value) {
+int fetchPrefsValue(char *key, char *value, int valueLen) {
+  return(fetchGdbmValue(myGlobals.prefsFile, key, value, valueLen));
+}
+
+/* ******************************** */
+
+int fetchPwValue(char *key, char *value, int valueLen) {
+  return(fetchGdbmValue(myGlobals.pwFile, key, value, valueLen));
+}
+
+/* ******************************** */
+
+static void storeGdbmValue(GDBM_FILE gdbmfile, char *key, char *value) {
   datum key_data;
   datum data_data;
 
@@ -853,14 +865,14 @@ void storePrefsValue(char *key, char *value) {
   data_data.dptr  = value;
   data_data.dsize = strlen(value)+1;
 
-  if(myGlobals.prefsFile == NULL) {
+  if(gdbmfile == NULL) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Leaving storePrefsValue()");
 #endif
     ; /* ntop is quitting... */
   }
 
-  if(gdbm_store(myGlobals.prefsFile, key_data, data_data, GDBM_REPLACE) != 0)
+  if(gdbm_store(gdbmfile, key_data, data_data, GDBM_REPLACE) != 0)
     traceEvent(CONST_TRACE_ERROR, "While adding %s=%s.", key, value);
   else {
 #ifdef DEBUG
@@ -871,7 +883,19 @@ void storePrefsValue(char *key, char *value) {
 
 /* ******************************** */
 
-void delPrefsValue (char *key) {
+void storePrefsValue(char *key, char *value) {
+  storeGdbmValue(myGlobals.prefsFile, key, value);
+}
+
+/* ******************************** */
+
+void storePwValue(char *key, char *value) {
+  storeGdbmValue(myGlobals.pwFile, key, value);
+}
+
+/* ******************************** */
+
+static void delGdbmValue(GDBM_FILE gdbmfile, char *key) {
   datum key_data;
 
   if((key == NULL) || (myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN)) return;
@@ -884,20 +908,32 @@ void delPrefsValue (char *key) {
   key_data.dptr   = key;
   key_data.dsize  = strlen(key_data.dptr)+1;
 
-  if(myGlobals.prefsFile == NULL) {
+  if(gdbmfile == NULL) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Leaving storePrefsValue()");
 #endif
     ; /* ntop is quitting... */
   }
 
-  if(gdbm_delete (myGlobals.prefsFile, key_data) != 0)
+  if(gdbm_delete (gdbmfile, key_data) != 0)
     traceEvent(CONST_TRACE_ERROR, "While deleting %s", key);
   else {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "Deleted %s", key);
 #endif
   }
+}
+
+/* ******************************** */
+
+void delPrefsValue(char *key) {
+  delGdbmValue(myGlobals.prefsFile, key);
+}
+
+/* ******************************** */
+
+void delPwValue(char *key) {
+  delGdbmValue(myGlobals.pwFile, key);
 }
 
 /* ******************************** */

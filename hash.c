@@ -1115,7 +1115,8 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       /* This is a new entry and hostIpAddress was NOT set.  Fill in MAC address, if we have it */
       if(symEthName[0] != '\0') {
         /* This is a local address so we have the MAC address */
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%s", symEthName, &el->ethAddressString[8]);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%s", 
+		      symEthName, &el->ethAddressString[8]);
 
 	buf[MAX_LEN_SYM_HOST_NAME-1] = '\0';
         setResolvedName(el, buf, FLAG_HOST_SYM_ADDR_TYPE_MAC);
@@ -1123,9 +1124,11 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     }
 
 #ifdef HASH_DEBUG
-      traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d][actualHashSize=%d][#hosts=%d]",
+      traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d]"
+		 "[actualHashSize=%d][#hosts=%d]",
 		 el->ethAddressString, el->hostNumIpAddress, idx, actualDeviceId,
-		 myGlobals.device[actualDeviceId].actualHashSize, myGlobals.device[actualDeviceId].hostsno);
+		 myGlobals.device[actualDeviceId].actualHashSize, 
+		 myGlobals.device[actualDeviceId].hostsno);
 #endif
 
     setHostSerial(el);
@@ -1151,8 +1154,6 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       }
     }
 #endif
-
-    setHostCommunity(el);
   }
 
 #ifdef DEBUG

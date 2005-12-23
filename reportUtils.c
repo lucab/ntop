@@ -4514,6 +4514,8 @@ void printHostsCharacterization(void) {
        && subnetPseudoLocalHost(el)) {
       totHosts++;
 
+      if(el->community && (!isAllowedCommunity(el->community))) continue;
+
       if(isPrinter(el)
 	 || isBridgeHost(el)
 	 || nameServerHost(el) || isNtpServer(el)
@@ -4786,6 +4788,9 @@ void printHostsStats(int fingerprintRemote) {
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     countScanned++;
+
+    if(el->community && (!isAllowedCommunity(el->community))) continue;
+
     if(el->fingerprint == NULL) {
       countWithoutFP++;
       continue;

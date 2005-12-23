@@ -186,6 +186,23 @@ static void fillupArgv(int argc, int maxArgc, char *argv[]) {
 
 /* ******************************************* */
 
+/* FIX: we need to handle MAC addresses/symbolic IP too */
+
+static int validHostCommunity(char *host_ip /* 1.2.3.4 */) {
+  char buf[64], *community;
+
+  //traceEvent(CONST_TRACE_INFO, "RRD: validHostCommunity(%s)", host_ip);
+  
+  community = findHostCommunity(inet_addr(host_ip), buf, sizeof(buf));
+  
+  if(community && (!isAllowedCommunity(community))) 
+    return(0);   
+   
+  return(1);
+}
+
+/* ******************************************* */
+
 static void addRrdDelay() {
   static struct timeval lastSleep;
   struct timeval thisSleep;
@@ -278,6 +295,11 @@ static void listResource(char *rrdPath, char *rrdTitle,
   DIR* directoryPointer=NULL;
   struct dirent* dp;
   int numEntries = 0, i, min, max;
+
+  if(!validHostCommunity(rrdTitle)) {
+    returnHTTPpageBadCommunity();
+    return;
+  }
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
@@ -1675,10 +1697,17 @@ static void arbitraryAction(char *rrdName,
       traceEvent(CONST_TRACE_ERROR, "SECURITY: Invalid arbitrary rrd request(ip)... ignored (sanitized: %s)", rrdIP);
       return;
     }
+
     len=strlen(rrdIP);
     for(i=0; i<len; i++) if(rrdIP[i] == '.') rrdIP[i] = CONST_PATH_SEP;
     safe_snprintf(__FILE__, __LINE__, rrdKey, sizeof(rrdKey), "interfaces/%s/hosts/%s/", rrdInterface, rrdIP);
   }
+
+  if(!validHostCommunity(rrdIP)) {
+    returnHTTPpageBadCommunity();
+    return;
+  }
+
   if(rrdCounter[0] == '\0')
     strcpy(rrdCounter, rrdName);
 

@@ -158,6 +158,7 @@ extern void printPluginTrailer(char *left, char *middle);
 /* http.c */
 extern char* encodeString(char* in, char* out, u_int out_len);
 extern void printHTMLtrailer(void);
+extern void returnHTTPpageBadCommunity(void);
 extern void returnHTTPredirect(char* destination);
 void returnHTTPpageNotFound(char* additionalText);
 
@@ -178,6 +179,7 @@ extern void printHTMLheader(char *title, char *htmlTitle, int headerFlags);
 #ifdef HAVE_OPENSSL
 extern char* printSSLError(int errorId);
 #endif /* HAVE_OPENSSL */
+extern int isAllowedCommunity(char *community_name);
 extern void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable);
 extern int readHTTPpostData(int len, char *buf, int buflen);
 

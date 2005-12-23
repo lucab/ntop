@@ -1500,6 +1500,7 @@ void printHostsTraffic(int reportTypeReq,
       u_char addHost;
 
       if((vlanId > 0) && (el->vlanId != vlanId)) continue;
+      if(el->community && (!isAllowedCommunity(el->community))) continue;
 
       if(((showLocalityMode == showOnlySent) && (el->bytesSent.value > 0))
 	 || ((showLocalityMode == showOnlyReceived) && (el->bytesRcvd.value > 0))
@@ -2088,8 +2089,10 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if(((el->pktMulticastSent.value > 0) || (el->pktMulticastRcvd.value > 0))
-       && (!broadcastHost(el)))
+       && (!broadcastHost(el))) {
+      if(el->community && (!isAllowedCommunity(el->community))) continue;      
       tmpTable[numEntries++] = el;
+    }
 
     if(numEntries >= maxHosts)
       break;
@@ -2237,6 +2240,8 @@ void makeDot() {
     for(el=getFirstHost(myGlobals.actualReportDeviceId);
 	el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
       int numEntries, i, urlSent = 0;
+
+      if(el->community && (!isAllowedCommunity(el->community))) continue;
 
       if(subnetLocalHost(el)) {
 	makeHostName(el, buf, sizeof(buf));
@@ -2412,6 +2417,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     unsigned short actUsage, actUsageS, actUsageR;
 
     if(isFcHost (el) || broadcastHost(el)) continue;
+    if(el->community && (!isAllowedCommunity(el->community))) continue;
 
     if((el->vlanId != NO_VLAN) && (el->vlanId < MAX_VLAN))       { vlanList[el->vlanId] = 1, foundVlan = 1; }
     if((vlanId != NO_VLAN) && (el->vlanId != vlanId)) continue;
@@ -2880,6 +2886,8 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
+    if(el->community && (!isAllowedCommunity(el->community))) continue;
+
     if(((strcmp(el->hostNumIpAddress, host) == 0) || (strcmp(el->ethAddressString, host) == 0))
        && ((vlanId == NO_VLAN) || ((el->vlanId <= 0) || (el->vlanId == vlanId)))) {
       found = 1;
@@ -2917,8 +2925,14 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 		  host, whois);
     returnHTTPpageNotFound(errorAdditionalText);
     return;
-  } else
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+  }
+  
+  if(el->community && (!isAllowedCommunity(el->community))) {
+    returnHTTPpageBadCommunity();
+    return;
+  }
+
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
   /* ************************************ */
 
@@ -3211,8 +3225,10 @@ void printLocalRoutersList(int actualDeviceId) {
 
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
-    if(subnetLocalHost(el)) {
 
+    if(el->community && (!isAllowedCommunity(el->community))) continue;
+
+    if(subnetLocalHost(el)) {
       for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
 	if(!emptySerial(&el->contactedRouters.peersSerials[j])) {
 	  short found = 0;
@@ -3251,8 +3267,8 @@ void printLocalRoutersList(int actualDeviceId) {
 	sendString(buf);
 
 
-	for(el=getFirstHost(actualDeviceId);
-	    el != NULL; el = getNextHost(actualDeviceId, el)) {
+	for(el=getFirstHost(actualDeviceId); el != NULL; el = getNextHost(actualDeviceId, el)) {
+	  if(el->community && (!isAllowedCommunity(el->community))) continue;
 	  if(subnetLocalHost(el)) {
 	    for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
 	      if(cmpSerial(&el->contactedRouters.peersSerials[j], &routerList[i])) {
@@ -3336,6 +3352,9 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
        && ((el->hostNumIpAddress[0] != '\0')
 	   && (!addrnull(&el->hostIpAddress))
 	   /* This host speaks IP */)) {
+
+      if(el->community && (!isAllowedCommunity(el->community))) continue;
+
       switch(remoteToLocal) {
       case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
 	if(!subnetPseudoLocalHost(el)) {
@@ -3701,6 +3720,8 @@ void printIpProtocolUsage(void) {
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+
+    if(el->community && (!isAllowedCommunity(el->community))) continue;
     if(subnetPseudoLocalHost(el) && (el->hostNumIpAddress[0] != '\0')) {
       hosts[hostsNum++] = el;
 
@@ -5125,9 +5146,11 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     fillDomainName(el);
 
-    if(broadcastHost(el)) {
+    if(el->community && (!isAllowedCommunity(el->community))) 
       continue;
-    } else if(!clusterMode) {
+    else if(broadcastHost(el))
+      continue;
+    else if(!clusterMode) {
       if(domainName 
 	 && el->dnsDomainValue
 	 && (strcmp(el->dnsDomainValue, domainName) != 0))
@@ -5609,6 +5632,7 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+    if(el->community && (!isAllowedCommunity(el->community))) continue;
     switch(criteria) {
     case 0: /* AS */
       getHostAS(el);
@@ -5792,6 +5816,9 @@ void showPortTraffic(u_short portNr) {
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+
+    if(el->community && (!isAllowedCommunity(el->community))) continue;
+
   recentlyUsedPortSent:
     if(recentlyUsedPort(el, portNr, 0)) {
       if(numRecords == 0) {
@@ -5821,6 +5848,8 @@ void showPortTraffic(u_short portNr) {
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+    if(el->community && (!isAllowedCommunity(el->community))) continue;
+
   recentlyUsedPortRcvd:
     if(recentlyUsedPort(el, portNr, 1)) {
       if(numRecords == 0) {
@@ -5921,6 +5950,8 @@ void printFcHostsTraffic(int reportType,
 
   for (el = getFirstHost (myGlobals.actualReportDeviceId);
        el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+
+    if(el->community && (!isAllowedCommunity(el->community))) continue;
     if (isFcHost (el)) {
       /* Skip Control VSAN traffic */
       if (el->fcCounters->vsanId > MAX_USER_VSAN) continue;

@@ -6008,6 +6008,8 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
 
     el->hostResolvedNameType = updateType;
   }
+
+  setHostCommunity(el);
 }
 
 /* ********************************************* */

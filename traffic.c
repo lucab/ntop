@@ -730,14 +730,10 @@ int isInitialFtpData(char* packetData) {
 
 /* ********************************** */
 
-void setHostCommunity(HostTraffic *el) {
+char* findHostCommunity(u_int32_t host_ip, char *buf, u_short buf_len) {
   datum key, nextkey;
   int len = strlen(COMMUNITY_PREFIX);
 
-  if((el == NULL) || (el->hostIpAddress.hostFamily != AF_INET))
-    return; /* Only IPv4 is supported */
-  else if(el->community != NULL)
-    return; /* Already set */
 
   key = gdbm_firstkey(myGlobals.prefsFile);
   while (key.dptr) {
@@ -756,17 +752,36 @@ void setHostCommunity(HostTraffic *el) {
 
       // traceEvent(CONST_TRACE_WARNING, "--> Community %s has %d entries", communityName, numLocalNetworks);
       for(i=0; i<numLocalNetworks; i++) {
-	if((el->hostIpAddress.addr._hostIp4Address.s_addr & localNetworks[i][1]) == localNetworks[i][0]) {
+	if((host_ip & localNetworks[i][1]) == localNetworks[i][0]) {
 	  //traceEvent(CONST_TRACE_WARNING, "--> Found community %s [%d]", communityName, numLocalNetworks);
-
-	  el->community = strdup(communityName);
-	  return;
+	  snprintf(buf, buf_len, "%s", communityName);
+	  return(buf);
 	}
       }
     }
 
-    nextkey = gdbm_nextkey (myGlobals.prefsFile, key);
+    nextkey = gdbm_nextkey(myGlobals.prefsFile, key);
     free (key.dptr);
     key = nextkey;
   }
+
+  return(NULL);
 }
+
+/* ********************************** */
+
+void setHostCommunity(HostTraffic *el) {
+  char *community, buf[64];
+
+  if((el == NULL) || (el->hostIpAddress.hostFamily != AF_INET))
+    return; /* Only IPv4 is supported */
+  else if(el->community != NULL)
+    return; /* Already set */
+
+  community = findHostCommunity(el->hostIpAddress.addr._hostIp4Address.s_addr,
+				buf, sizeof(buf));
+
+  if(community)
+    el->community = strdup(community);
+}
+
