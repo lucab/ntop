@@ -55,7 +55,7 @@ A. ntop used to optionally store some data in a SQL database.  The code was
    broken, difficult to maintain, etc. and was removed.  A LONG TIME AGO.
    If you are reading about this in 'some' documentation - update.
 
-   Current ntop is 3.1, which is the only version we support.
+   Current ntop is 3.2, which is the only version we support.
 
    There are scripts that various users have offered to take the data dump
    and insert it into a SQL database.  Search the back traffic on the mailing
