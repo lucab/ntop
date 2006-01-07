@@ -55,7 +55,7 @@ A. ntop used to optionally store some data in a SQL database.  The code was
    broken, difficult to maintain, etc. and was removed.  A LONG TIME AGO.
    If you are reading about this in 'some' documentation - update.
 
-   Current ntop is 3.2, which is the only version we support.
+   Current ntop is 3.1, which is the only version we support.
 
    There are scripts that various users have offered to take the data dump
    and insert it into a SQL database.  Search the back traffic on the mailing
@@ -4835,11 +4835,10 @@ RESPONSES
 =========
 
 Despite any individual's frequent postings, nobody is "responsible" for
-answering your question. It's all on a "best efforts" basis. This is equally
-true of the entries in ntop's Wiki. Our responses may be incomplete, inaccurate,
-even dead wrong. Caveat Emptor! The only "guarantee" is that free support will 
-be worth what you've paid for it.  It may be worth MORE, it won't be worth
-LESS.
+answering your question. It's all on a "best efforts" basis. Our responses may 
+be incomplete, inaccurate, even dead wrong. Caveat Emptor! The only "guarantee" 
+is that free support will be worth what you've paid for it.  It may be worth MORE, 
+it won't be worth LESS.
 
 Just because you post a question does NOT mean that you are OWED an answer.
 
