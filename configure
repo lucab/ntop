@@ -2292,7 +2292,7 @@ fi;
 # Check whether --enable-iknowbetter or --disable-iknowbetter was given.
 if test "${enable_iknowbetter+set}" = set; then
   enableval="$enable_iknowbetter"
-  ac_willfailoverride="yes"
+  ac_willfailoverride="$enableval"
 else
   ac_willfailoverride="no"
 fi;
@@ -21492,7 +21492,7 @@ fi;
 # Check whether --with-ssl or --without-ssl was given.
 if test "${with_ssl+set}" = set; then
   withval="$with_ssl"
-  ac_disable_openssl="yes"
+  ac_disable_openssl="$withval"
 else
   ac_disable_openssl="no"
 fi;
@@ -21501,7 +21501,7 @@ fi;
 # Check whether --with-zlib or --without-zlib was given.
 if test "${with_zlib+set}" = set; then
   withval="$with_zlib"
-  ac_disable_zlib="yes"
+  ac_disable_zlib="$withval"
 else
   ac_disable_zlib="no"
 fi;
@@ -21509,7 +21509,7 @@ fi;
 # Check whether --enable-sslv3 or --disable-sslv3 was given.
 if test "${enable_sslv3+set}" = set; then
   enableval="$enable_sslv3"
-  ac_enable_sslv3="yes"
+  ac_enable_sslv3="$enableval"
 else
   ac_enable_sslv3="no"
 fi;
@@ -21517,7 +21517,7 @@ fi;
 # Check whether --enable-sslwatchdog or --disable-sslwatchdog was given.
 if test "${enable_sslwatchdog+set}" = set; then
   enableval="$enable_sslwatchdog"
-  ac_enable_sslwatchdog="yes"
+  ac_enable_sslwatchdog="$enableval"
 else
   ac_enable_sslwatchdog="no"
 fi;
@@ -21526,7 +21526,7 @@ fi;
 # Check whether --with-tcpwrap or --without-tcpwrap was given.
 if test "${with_tcpwrap+set}" = set; then
   withval="$with_tcpwrap"
-  ac_enable_tcpwrap="yes"
+  ac_enable_tcpwrap="$withval"
 else
   ac_enable_tcpwrap="no"
 fi;
@@ -21534,7 +21534,7 @@ fi;
 # Check whether --enable-plugins or --disable-plugins was given.
 if test "${enable_plugins+set}" = set; then
   enableval="$enable_plugins"
-  ac_disable_plugins="yes"
+  ac_disable_plugins="$enableval"
 else
   ac_disable_plugins="no"
 fi;
@@ -21542,7 +21542,7 @@ fi;
 # Check whether --enable-static-plugins or --disable-static-plugins was given.
 if test "${enable_static_plugins+set}" = set; then
   enableval="$enable_static_plugins"
-  ac_enable_static_plugins="yes"
+  ac_enable_static_plugins="$enableval"
 else
   ac_enable_static_plugins="no"
 fi;
@@ -21550,7 +21550,7 @@ fi;
 # Check whether --enable-ignoresigpipe or --disable-ignoresigpipe was given.
 if test "${enable_ignoresigpipe+set}" = set; then
   enableval="$enable_ignoresigpipe"
-  ac_enable_ignoresigpipe="yes"
+  ac_enable_ignoresigpipe="$enableval"
 else
   ac_enable_ignoresigpipe="no"
 fi;
@@ -21558,7 +21558,7 @@ fi;
 # Check whether --enable-snmp or --disable-snmp was given.
 if test "${enable_snmp+set}" = set; then
   enableval="$enable_snmp"
-  ac_disable_snmp="no"
+  ac_disable_snmp="$enableval"
 else
   ac_disable_snmp="yes"
 fi;
@@ -21566,7 +21566,7 @@ fi;
 # Check whether --enable-i18n or --disable-i18n was given.
 if test "${enable_i18n+set}" = set; then
   enableval="$enable_i18n"
-  ac_enable_i18n="yes"
+  ac_enable_i18n="$enableval"
 else
   ac_enable_i18n="no"
 fi;
@@ -21574,7 +21574,7 @@ fi;
 # Check whether --enable-jumbo-frames or --disable-jumbo-frames was given.
 if test "${enable_jumbo_frames+set}" = set; then
   enableval="$enable_jumbo_frames"
-  ac_enable_jumbo_frames="yes"
+  ac_enable_jumbo_frames="$enableval"
 else
   ac_enable_jumbo_frames="no"
 fi;
@@ -21582,7 +21582,7 @@ fi;
 # Check whether --enable-ipv6 or --disable-ipv6 was given.
 if test "${enable_ipv6+set}" = set; then
   enableval="$enable_ipv6"
-  ac_disable_ipv6="yes"
+  ac_disable_ipv6="$enableval"
 else
   ac_disable_ipv6="no"
 fi;
@@ -37716,18 +37716,24 @@ else
   ac_cv_func_fork_works=cross
 else
   cat >conftest.$ac_ext <<_ACEOF
-/* By Ruediger Kuhlmann. */
-      #include <sys/types.h>
-      #if HAVE_UNISTD_H
-      # include <unistd.h>
-      #endif
-      /* Some systems only have a dummy stub for fork() */
-      int main ()
-      {
-	if (fork() < 0)
-	  exit (1);
-	exit (0);
-      }
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$ac_includes_default
+int
+main ()
+{
+
+	  /* By Ruediger Kuhlmann. */
+	  if (fork() < 0)
+	    exit (1);
+	  exit (0);
+
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest$ac_exeext
 if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
