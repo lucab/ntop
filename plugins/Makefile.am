@@ -101,96 +101,31 @@ libxmldumpPlugin_la_CFLAGS = $(AM_CFLAGS)
 # by default ntop looks for plugins in the plugins/ subdirectory
 #
 
+%Plugin.so$(EXEEXT): .libs/lib%Plugin.so
+	$(LN_S) $< $@
 
-.libs/libicmpPlugin.so@SO_VERSION_PATCH@:
-	@if test -f libicmpPlugin_la-icmpPlugin.o; then \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libicmpPlugin.so@SO_VERSION_PATCH@ libicmpPlugin_la-icmpPlugin.o; \
-	else \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libicmpPlugin.so@SO_VERSION_PATCH@ icmpPlugin.o; \
-	fi
+# Need to make sure autotools doesn't insert rules for us
+icmpPlugin.so$(EXEEXT):     .libs/libicmpPlugin.so
+lastSeenPlugin.so$(EXEEXT): .libs/liblastSeenPlugin.so
+netflowPlugin.so$(EXEEXT):  .libs/libnetflowPlugin.so
+pdaPlugin.so$(EXEEXT):      .libs/libpdaPlugin.so
+rrdPlugin.so$(EXEEXT):      .libs/librrdPlugin.so
+snmpPlugin.so$(EXEEXT):     .libs/libsnmpPlugin.so
+sflowPlugin.so$(EXEEXT):    .libs/libsflowPlugin.so
+xmldumpPlugin.so$(EXEEXT):  .libs/libxmldumpPlugin.so
 
-icmpPlugin.so$(EXEEXT): .libs/libicmpPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/libicmpPlugin.so icmpPlugin.so
-
-.libs/liblastSeenPlugin.so@SO_VERSION_PATCH@:
-	@if test -f liblastSeenPlugin_la-lastSeenPlugin.o; then \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ liblastSeenPlugin_la-lastSeenPlugin.o; \
-	else \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ lastSeenPlugin.o; \
-	fi
-
-lastSeenPlugin.so$(EXEEXT): .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/liblastSeenPlugin.so lastSeenPlugin.so
-
-.libs/libnetflowPlugin.so@SO_VERSION_PATCH@:
-	@if test -f libnetflowPlugin_la-netflowPlugin.o; then \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libnetflowPlugin.so@SO_VERSION_PATCH@ libnetflowPlugin_la-netflowPlugin.o; \
-	else \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libnetflowPlugin.so@SO_VERSION_PATCH@ netflowPlugin.o; \
-	fi
-
-netflowPlugin.so$(EXEEXT): .libs/libnetflowPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/libnetflowPlugin.so netflowPlugin.so
-
-.libs/libpdaPlugin.so@SO_VERSION_PATCH@:
-	@if test -f libpdaPlugin_la-pdaPlugin.o; then \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ libpdaPlugin_la-pdaPlugin.o; \
-	else \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ pdaPlugin.o; \
-	fi
-
-pdaPlugin.so$(EXEEXT): .libs/libpdaPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/libpdaPlugin.so pdaPlugin.so
-
-.libs/librrdPlugin.so@SO_VERSION_PATCH@:
-	@if test -f librrdPlugin_la-rrdPlugin.o; then \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/librrdPlugin.so@SO_VERSION_PATCH@ librrdPlugin_la-rrdPlugin.o; \
-	else \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/librrdPlugin.so@SO_VERSION_PATCH@ rrdPlugin.o; \
-	fi
-
-rrdPlugin.so$(EXEEXT): .libs/librrdPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/librrdPlugin.so rrdPlugin.so
-
-.libs/libsnmpPlugin.so@SO_VERSION_PATCH@:
-	@if test -f libsnmpPlugin_la-snmpPlugin.o; then \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libsnmpPlugin.so@SO_VERSION_PATCH@ libsnmpPlugin_la-snmpPlugin.o; \
-	else \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libsnmpPlugin.so@SO_VERSION_PATCH@ snmpPlugin.o; \
-	fi
-
-snmpPlugin.so$(EXEEXT): .libs/libsnmpPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/libsnmpPlugin.so snmpPlugin.so
-
-.libs/libsflowPlugin.so@SO_VERSION_PATCH@:
-	@if test -f libsflowPlugin_la-sflowPlugin.o; then \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ libsflowPlugin_la-sflowPlugin.o; \
-	else \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o; \
-	fi
-
-sflowPlugin.so$(EXEEXT): .libs/libsflowPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/libsflowPlugin.so sflowPlugin.so
-
-.libs/libxmldumpPlugin.so@SO_VERSION_PATCH@:
-	@if test -f libxmldumpPlugin_la-xmldumpPlugin.o; then \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libxmldumpPlugin.so@SO_VERSION_PATCH@ libxmldumpPlugin_la-xmldumpPlugin.o; \
-	else \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libxmldumpPlugin.so@SO_VERSION_PATCH@ xmldumpPlugin.o; \
-	fi
-
-xmldumpPlugin.so$(EXEEXT): .libs/libxmldumpPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/libxmldumpPlugin.so xmldumpPlugin.so
+#
+# Create symlinks for the plugins
+#
 
 install-data-local:
-	@$(top_srcdir)/mkinstalldirs $(DESTDIR)$(plugindir);
-	@for file in $(noinst_PROGRAMS); do \
-             cp -p $$file $(DESTDIR)$(plugindir)/$$file; \
-         done
-# remove installed libraries
-	@for file in $(lib_LTLIBRARIES); do \
-             rm -f $(DESTDIR)$(libdir)/$$file; \
-         done
+	for file in $(lib_LTLIBRARIES); do \
+		rm -f $(DESTDIR)$(libdir)/$$file; \
+	done
+	$(top_srcdir)/mkinstalldirs $(DESTDIR)$(plugindir)
+	for file in $(noinst_PROGRAMS) ; do \
+		$(LN_S) $(libdir)/lib$$file $(DESTDIR)$(plugindir)/$$file ; \
+	done
 
 #
 # Special stuff for xml auto-generation of code from the "doc":
