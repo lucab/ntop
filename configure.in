@@ -2495,7 +2495,7 @@ if test ".${CCLD}" = "."; then
 fi
 
 dnl> Append RRD finally
-dnl> NTOP_APPENDS([${MYRRD}], [${MYRRD}], [myrrd])
+NTOP_APPENDS([${MYRRD}], [${MYRRD}], [myrrd])
 
 dnl> Anything required for the memory debug options?
 if test ".${MEMORYDEBUG}" != "."; then
