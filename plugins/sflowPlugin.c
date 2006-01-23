@@ -31,7 +31,7 @@
 
 static void* sflowMainLoop(void* _deviceId);
 
-/* #define DEBUG_FLOWS */
+#define DEBUG_FLOWS
 
 /* ********************************* */
 

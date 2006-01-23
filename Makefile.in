@@ -95,9 +95,9 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am_libntop_la_OBJECTS = address.lo argv.lo dataFormat.lo fcUtils.lo \
 	getopt.lo getopt1.lo globals-core.lo hash.lo iface.lo \
-	initialize.lo leaks.lo ntop.lo pbuf.lo plugin.lo prefs.lo \
-	protocols.lo sessions.lo term.lo util.lo utildl.lo traffic.lo \
-	vendor.lo version.lo ntop_darwin.lo
+	initialize.lo l7.lo leaks.lo ntop.lo pbuf.lo plugin.lo \
+	prefs.lo protocols.lo sessions.lo term.lo util.lo utildl.lo \
+	traffic.lo vendor.lo version.lo ntop_darwin.lo
 libntop_la_OBJECTS = $(am_libntop_la_OBJECTS)
 am_libntopreport_la_OBJECTS = emitter.lo globals-report.lo graph.lo \
 	fcReport.lo http.lo report.lo reportUtils.lo ssl.lo \
@@ -353,7 +353,7 @@ lib_LTLIBRARIES = libntop.la libntopreport.la
 # core Archive, or the 'engine'
 libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
                      getopt.c     getopt1.c     globals-core.c \
-                     hash.c       iface.c       initialize.c  leaks.c        \
+                     hash.c       iface.c       initialize.c  l7.c leaks.c \
                      ntop.c       pbuf.c         \
                      plugin.c     prefs.c       protocols.c   \
                      sessions.c   term.c        util.c        utildl.c \
@@ -549,6 +549,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/icmpPlugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iface.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/initialize.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/l7.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lastSeenPlugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/leaks.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@

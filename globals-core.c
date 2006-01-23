@@ -535,11 +535,12 @@ void initNtop(char *devices) {
   char value[32];
 
   initIPServices();
-
   handleProtocols();
 
   if(myGlobals.numIpProtosToMonitor == 0)
     addDefaultProtocols();
+
+  initl7();
 
   /*
    * initialize memory and data.

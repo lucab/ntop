@@ -756,6 +756,12 @@ extern char* getSAPInfo(u_int16_t sapInfo, short encodeString);
 extern char* getSpecialMacInfo(HostTraffic* el, short encodeString);
 extern void createVendorTable(struct stat *statbuf);
 
+/* l7.c */
+extern void initl7();
+extern void l7SessionProtoDetection(IPSession *theSession, 
+				    u_int packetDataLength, 
+				    u_char* packetData);
+
 /* sessions.c */
 #define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)
 extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);

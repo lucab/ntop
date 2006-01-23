@@ -371,6 +371,9 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   if(sessionToPurge->session_info != NULL)
     free(sessionToPurge->session_info);
 
+  if(sessionToPurge->guessed_protocol != NULL)
+    free(sessionToPurge->guessed_protocol);
+
   myGlobals.numTerminatedSessions++;
   myGlobals.device[actualDeviceId].numTcpSessions--;
 
@@ -1454,17 +1457,17 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
  * This routine performs all sorts of security checks on the TCP packet and
  * dumps suspicious packets, if dumpSuspiciousPacket is set.
  */
-static void tcpSessionSecurityChecks (const struct pcap_pkthdr *h,
-                                      HostTraffic *srcHost,
-                                      u_short sport,
-                                      HostTraffic *dstHost,
-                                      u_short dport,
-                                      struct tcphdr *tp,
-                                      u_int packetDataLength,
-                                      u_char* packetData,
-                                      u_short addedNewEntry,
-                                      IPSession *theSession,
-                                      int actualDeviceId) {
+static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
+				     HostTraffic *srcHost,
+				     u_short sport,
+				     HostTraffic *dstHost,
+				     u_short dport,
+				     struct tcphdr *tp,
+				     u_int packetDataLength,
+				     u_char* packetData,
+				     u_short addedNewEntry,
+				     IPSession *theSession,
+				     int actualDeviceId) {
   int len;
   char tmpStr[256];
 
@@ -1900,6 +1903,11 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     len = sizeof(tmpStr);
   else
     len = packetDataLength;
+  
+#ifdef HAVE_LIBPCRE
+  if(myGlobals.runningPref.enablePacketDecoding)
+    l7SessionProtoDetection(theSession, packetDataLength, packetData);
+#endif
 
   if(myGlobals.runningPref.enablePacketDecoding
      && ((theSession->bytesProtoSent.value > 0) && (theSession->bytesProtoSent.value < 128))

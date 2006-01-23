@@ -201,6 +201,9 @@
 /* Define to 1 if you have the `pcap' library (-lpcap). */
 #undef HAVE_LIBPCAP
 
+/* Define to 1 if you have the `pcre' library (-lpcre). */
+#undef HAVE_LIBPCRE
+
 /* Define to 1 if you have the `png' library (-lpng). */
 #undef HAVE_LIBPNG
 

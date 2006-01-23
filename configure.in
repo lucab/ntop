@@ -1326,6 +1326,11 @@ fi
 	
 NTOPCONFIGDEBUG_SETTINGS([After criticals])
 
+dnl> Pattern matching
+dnl>
+AC_CHECK_LIB(pcre, pcre_compile)
+
+				
 dnl> Define the arguments we accept...
 dnl>
 dnl>   In this version of the configure file, we use AC_ARG_WITH for whole external

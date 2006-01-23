@@ -439,6 +439,10 @@ ntop.h
 #include <shadow.h>
 #endif
 
+#ifdef HAVE_LIBPCRE
+#include <pcre.h>
+#endif
+
 #ifndef EMBEDDED
 #include "rrd.h"
 #endif
