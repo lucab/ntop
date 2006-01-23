@@ -1393,11 +1393,15 @@ static void processIpPkt(const u_char *bp,
 	      }
 	    }
 
-	    if(WS == -1) { safe_snprintf(__FILE__, __LINE__, WSS, sizeof(WSS), "WS"); }
-	    else { safe_snprintf(__FILE__, __LINE__, WSS, sizeof(WSS), "%02d", WS); }
-
-	    if(MSS == -1) { safe_snprintf(__FILE__, __LINE__, _MSS, sizeof(_MSS), "_MSS"); }
-	    else { safe_snprintf(__FILE__, __LINE__, _MSS, sizeof(_MSS), "%04X", MSS); }
+	    if(WS == -1)
+	      safe_snprintf(__FILE__, __LINE__, WSS, sizeof(WSS), "WS"); 	    
+	    else
+	      safe_snprintf(__FILE__, __LINE__, WSS, sizeof(WSS), "%02d", WS & 0xFFFF);
+	    
+	    if(MSS == -1) 
+	      safe_snprintf(__FILE__, __LINE__, _MSS, sizeof(_MSS), "_MSS");
+	    else
+	      safe_snprintf(__FILE__, __LINE__, _MSS, sizeof(_MSS), "%04X", MSS & 0xFFFFFFFF);
 
 	    safe_snprintf(__FILE__, __LINE__, fingerprint, sizeof(fingerprint),
 			  "%04X:%s:%02X:%s:%d:%d:%d:%d:%c:%02X",
