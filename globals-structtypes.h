@@ -1301,7 +1301,7 @@ typedef struct sFlowGlobals {
   char *sflowWhiteList, *sflowBlackList;
   u_long numsFlowsPktsRcvd;
   u_long numsFlowsV2Rcvd, numsFlowsV4Rcvd, numsFlowsV5Rcvd, numsFlowsProcessed;
-  u_long numsFlowsRcvd, lastNumsFlowsRcvd;
+  u_long numsFlowsSamples, numsFlowCounterUpdates;
   u_long numBadsFlowsVersionsRcvd, numBadFlowReality;
   u_long numSrcsFlowsEntryFailedBlackList, numSrcsFlowsEntryFailedWhiteList,
     numSrcsFlowsEntryAccepted,

@@ -1381,6 +1381,8 @@ static void updateSflowInterfaceCounters(int deviceId, IfCounters *ifName) {
     memcpy(myGlobals.device[deviceId].sflowGlobals->ifCounters[ifName->ifIndex],
 	   ifName, sizeof(IfCounters));
   }
+
+  myGlobals.device[deviceId].sflowGlobals->numsFlowCounterUpdates++;
 }
 
 /* =============================================================== */
@@ -1399,6 +1401,7 @@ static void handleSflowSample(SFSample *sample, int deviceId) {
   queuePacket((u_char*)deviceId, &pkthdr, sample->header); /* Pass the packet to ntop */
   myGlobals.runningPref.disableMutexExtraInfo = oldVal;
   myGlobals.device[deviceId].samplingRate = sample->meanSkipCount;
+  myGlobals.device[deviceId].sflowGlobals->numsFlowsSamples++;
 
   /* Save flows on disk (debug) */
 #ifdef DEBUG_FLOWS
@@ -3542,7 +3545,7 @@ static void printsFlowStatisticsRcvd(int deviceId) {
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets Received</th>\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Packets Rcvd</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
               formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd, formatBuf, sizeof(formatBuf)));
@@ -3550,7 +3553,7 @@ static void printsFlowStatisticsRcvd(int deviceId) {
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets with Bad Version</th>\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Packets with Bad Version</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
               formatPkts(myGlobals.device[deviceId].sflowGlobals->numBadsFlowsVersionsRcvd, formatBuf, sizeof(formatBuf)));
@@ -3558,44 +3561,41 @@ static void printsFlowStatisticsRcvd(int deviceId) {
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets Processed</th>\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Packets Processed</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
               formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd -
-                         myGlobals.device[deviceId].sflowGlobals->numBadsFlowsVersionsRcvd, formatBuf, sizeof(formatBuf)));
+                         myGlobals.device[deviceId].sflowGlobals->numBadsFlowsVersionsRcvd,
+			 formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Valid Flows Received</th>\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of v2 Flows Rcvd</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsRcvd, formatBuf, sizeof(formatBuf)));
+              formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsV2Rcvd,
+			 formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of v2 Flows Received</th>\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of v4 Flows Rcvd</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsV2Rcvd, formatBuf, sizeof(formatBuf)));
+		formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsV4Rcvd, 
+			   formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of v4 Flows Received</th>\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of v5 Flows Rcvd</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-		formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsV4Rcvd, formatBuf, sizeof(formatBuf)));
+		formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsV5Rcvd,
+			   formatBuf, sizeof(formatBuf)));
   sendString(buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of v5 Flows Received</th>\n"
-              "<td " TD_BG " align=\"right\">%s</td>\n"
-              "</tr>\n",
-		formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsV5Rcvd, formatBuf, sizeof(formatBuf)));
-  sendString(buf);
+  
 
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
              "<tr " TR_ON ">\n"
@@ -3682,6 +3682,30 @@ static void printsFlowStatisticsRcvd(int deviceId) {
                            formatBuf2, sizeof(formatBuf2)));
     sendString(buf);
   }
+
+  sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
+             "<tr " TR_ON ">\n"
+             "<th colspan=\"2\" "DARK_BG">Flow Analisys</th>\n"
+             "</tr>\n");
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+              "<tr " TR_ON ">\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Samples Rcvd</th>\n"
+              "<td " TD_BG " align=\"right\">%s</td>\n"
+              "</tr>\n",
+              formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsSamples, 
+			 formatBuf, sizeof(formatBuf)));
+  sendString(buf);
+
+   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+              "<tr " TR_ON ">\n"
+              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Counter Updates Rcvd</th>\n"
+              "<td " TD_BG " align=\"right\">%s</td>\n"
+              "</tr>\n",
+		 formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowCounterUpdates, 
+			    formatBuf, sizeof(formatBuf)));
+  sendString(buf);
+
 
 #ifdef DEBUG
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
@@ -4525,7 +4549,7 @@ static void handlesFlowPacket(u_char *_deviceId,
 	if(ip.ip_p == IPPROTO_UDP) {
 	  if(plen >(hlen+sizeof(struct udphdr))) {
 	    SFSample sample;
-	    char* rawSample    =(void*)(p+sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
+	    char* rawSample    =(char*)(p+sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
 	    int   rawSampleLen = h->caplen-(sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
 
 #ifdef DEBUG_FLOWS
@@ -4537,11 +4561,11 @@ static void handlesFlowPacket(u_char *_deviceId,
 	    myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd++;
 
 	    memset(&sample, 0, sizeof(sample));
-	    sample.rawSample = rawSample;
+	    sample.rawSample    = (u_char*)rawSample;
 	    sample.rawSampleLen = rawSampleLen;
-	    sample.sourceIP = ip.ip_src;
-	    sample.datap = (u_int32_t *)sample.rawSample;
-	    sample.endp = (u_char *)sample.rawSample + sample.rawSampleLen;
+	    sample.sourceIP     = ip.ip_src;
+	    sample.datap        = (u_int32_t *)sample.rawSample;
+	    sample.endp         = (u_char *)sample.rawSample + sample.rawSampleLen;
 
 	    dissectFlow(&sample, deviceId);
 	  }

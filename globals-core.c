@@ -354,14 +354,14 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   for (i = 0; i <= CONST_PACKET_QUEUE_LENGTH; i ++)
     memset(&myGlobals.packetQueue[i], 0, sizeof(PacketInformation));
 
-  myGlobals.receivedPackets = 0;
+  myGlobals.receivedPackets          = 0;
   myGlobals.receivedPacketsProcessed = 0;
-  myGlobals.receivedPacketsQueued = 0;
-  myGlobals.packetQueueLen = 0;
-  myGlobals.maxPacketQueueLen = 0;
-  myGlobals.receivedPacketsLostQ = 0;
-  myGlobals.packetQueueHead = 0;
-  myGlobals.packetQueueTail = 0;
+  myGlobals.receivedPacketsQueued    = 0;
+  myGlobals.packetQueueLen           = 0;
+  myGlobals.maxPacketQueueLen        = 0;
+  myGlobals.receivedPacketsLostQ     = 0;
+  myGlobals.packetQueueHead          = 0;
+  myGlobals.packetQueueTail          = 0;
 
   /* NB: Log View is allocated in main.c so it's available for the very 1st traceEvent() */
 
