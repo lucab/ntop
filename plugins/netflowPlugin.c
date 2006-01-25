@@ -1449,6 +1449,7 @@ static void* netflowMainLoop(void* _deviceId) {
 
   for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
     int maxSock = myGlobals.device[deviceId].netflowGlobals->netFlowInSocket;
+    struct timeval wait_time;
 
     FD_ZERO(&netflowMask);
     FD_SET(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, &netflowMask);
@@ -1461,7 +1462,8 @@ static void* netflowMainLoop(void* _deviceId) {
     }
 #endif
 
-    if((rc = select(maxSock+1, &netflowMask, NULL, NULL, NULL)) > 0) {
+    wait_time.tv_sec = 3, wait_time.tv_usec = 0;
+    if((rc = select(maxSock+1, &netflowMask, NULL, NULL, &wait_time)) > 0) {
       if(FD_ISSET(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, &netflowMask)){
 	len = sizeof(fromHost);
 	rc = recvfrom(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket,
@@ -1676,6 +1678,7 @@ static void initNetFlowDevice(int deviceId) {
   myGlobals.device[deviceId].samplingRate = 1;
   myGlobals.device[deviceId].mtuSize    = myGlobals.mtuSize[myGlobals.device[deviceId].datalink];
   myGlobals.device[deviceId].headerSize = myGlobals.headerSize[myGlobals.device[deviceId].datalink];
+  initDeviceSemaphores(deviceId);
 }
 
 /* ****************************** */

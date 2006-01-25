@@ -6240,6 +6240,8 @@ void printHostColorCode(int textPrintFlag, int isInfo) {
 /* ******************************** */
 
 void printMutexStatusReport(int textPrintFlag) {
+  int i;
+  
   sendString(texthtml("\nMutexes:\n\n",
                       "<p>"TABLE_ON"<table border=\"1\" "TABLE_DEFAULTS">\n"
                       "<tr><th "TH_BG" "DARK_BG">Mutex Name</th>\n"
@@ -6254,8 +6256,17 @@ void printMutexStatusReport(int textPrintFlag) {
   sendString(texthtml("", "<th "TH_BG" "DARK_BG"># Locks/Releases</th>"));
 
   printMutexStatus(textPrintFlag, &myGlobals.gdbmMutex, "gdbmMutex");
-  printMutexStatus(textPrintFlag, &myGlobals.packetProcessMutex, "packetProcessMutex");
-  printMutexStatus(textPrintFlag, &myGlobals.packetQueueMutex, "packetQueueMutex");
+
+  for(i=0; i<myGlobals.numDevices; i++) {  
+    char buf[256];
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "packetProcessMutex (%s)", myGlobals.device[i].name);
+    printMutexStatus(textPrintFlag, &myGlobals.device[i].packetProcessMutex, buf);
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "packetQueueMutex (%s)", myGlobals.device[i].name);
+    printMutexStatus(textPrintFlag, &myGlobals.device[i].packetQueueMutex, buf);
+  }
+
   printMutexStatus(textPrintFlag, &myGlobals.purgeMutex, "purgeMutex");
 
   if(myGlobals.runningPref.numericFlag == 0)
@@ -7074,12 +7085,18 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     printFeatureConfigInfo(textPrintFlag, "Lost in ntop queue", buf);
   }
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.packetQueueLen);
-  printFeatureConfigInfo(textPrintFlag, "Current Queue", buf);
+  for(i=0; i<myGlobals.numDevices; i++) { 
+    char label[256];
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d (Limit " xstr(CONST_PACKET_QUEUE_LENGTH) ")",
-                myGlobals.maxPacketQueueLen);
-  printFeatureConfigInfo(textPrintFlag, "Maximum Queue", buf);
+    safe_snprintf(__FILE__, __LINE__, label, sizeof(label), "Current Queue (%s)", myGlobals.device[i].name);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.device[i].packetQueueLen);
+    printFeatureConfigInfo(textPrintFlag, label, buf);
+    
+    safe_snprintf(__FILE__, __LINE__, label, sizeof(label), "Maximum Queue (%s)", myGlobals.device[i].name);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d (Limit " xstr(CONST_PACKET_QUEUE_LENGTH) ")",
+		  myGlobals.device[i].maxPacketQueueLen);
+    printFeatureConfigInfo(textPrintFlag, label, buf);
+  }
 
 #ifdef MAX_PROCESS_BUFFER
 {
@@ -7453,8 +7470,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numThreads);
   printFeatureConfigInfo(textPrintFlag, "Active", buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numDequeueThreads);
-  printFeatureConfigInfo(textPrintFlag, "Dequeue", buf);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numChildren);
   printFeatureConfigInfo(textPrintFlag, "Children (active)", buf);
 
@@ -8007,6 +8022,7 @@ void printNtopProblemReport(void) {
 #if defined(HAVE_SYS_UTSNAME_H) && defined(HAVE_UNAME)
   }
 #endif
+
   sendString("ntop from: ______________________________ (rpm, source, ports, etc.)\n\n");
   sendString("Hardware:  CPU:           _____ (i86, SPARC, etc.)\n");
   sendString("           # Processors:  _____\n");
@@ -8025,10 +8041,14 @@ void printNtopProblemReport(void) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Lost:      %10u (queue full)\n",
               myGlobals.receivedPacketsLostQ);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Queue:     Current: %u Maximum: %u\n",
-              myGlobals.packetQueueLen,
-              myGlobals.maxPacketQueueLen);
-  sendString(buf);
+
+  for(i=0; i<myGlobals.numDevices; i++) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[s] Queue:     Current: %u Maximum: %u\n",
+		  myGlobals.device[i].name,
+		  myGlobals.device[i].packetQueueLen,
+		  myGlobals.device[i].maxPacketQueueLen);
+    sendString(buf);
+  }
 
   sendString("\nNetwork:\n");
 

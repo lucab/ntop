@@ -49,11 +49,15 @@
 static int glib23xMessageWritten = 0;
 
 static void stopcap(void) {
+  int i;
+
   traceEvent(CONST_TRACE_WARNING, "ntop packet capture STOPPED");
   traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up");
   traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory");
   setRunState(FLAG_NTOPSTATE_STOPCAP);
-  signalCondvar(&myGlobals.queueCondvar);
+
+  for(i=0; i<myGlobals.numDevices; i++) signalCondvar(&myGlobals.device[i].queueCondvar);
+
   signalCondvar(&myGlobals.queueAddressCondvar);
 }
 

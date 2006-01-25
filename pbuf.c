@@ -1396,7 +1396,7 @@ static void processIpPkt(const u_char *bp,
 	    if(WS == -1)
 	      safe_snprintf(__FILE__, __LINE__, WSS, sizeof(WSS), "WS"); 	    
 	    else
-	      safe_snprintf(__FILE__, __LINE__, WSS, sizeof(WSS), "%02d", WS & 0xFFFF);
+	      safe_snprintf(__FILE__, __LINE__, WSS, sizeof(WSS), "%02X", WS & 0xFFFF);	    
 	    
 	    if(MSS == -1) 
 	      safe_snprintf(__FILE__, __LINE__, _MSS, sizeof(_MSS), "_MSS");
@@ -2231,6 +2231,8 @@ static void processIpPkt(const u_char *bp,
 
 /* ************************************ */
 
+#undef DEBUG
+
 void queuePacket(u_char *_deviceId,
 		 const struct pcap_pkthdr *h,
 		 const u_char *p) {
@@ -2264,20 +2266,28 @@ void queuePacket(u_char *_deviceId,
 
   if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) return;
 
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "Got packet from %s (%d)", myGlobals.device[*_deviceId].name, *_deviceId);
-#endif
-
   deviceId = (int)_deviceId;
   actDeviceId = getActualInterface(deviceId);
   incrementTrafficCounter(&myGlobals.device[actDeviceId].receivedPkts, 1);
   
-  if(myGlobals.device[actDeviceId].samplingRate > 1) {
-    if(myGlobals.device[actDeviceId].droppedSamples < myGlobals.device[actDeviceId].samplingRate) {
-      myGlobals.device[actDeviceId].droppedSamples++;      
-      return; /* Not enough samples received */
-    } else 
-      myGlobals.device[actDeviceId].droppedSamples = 0;
+  /* We assume that if there's a packet to queue for the sFlow interface
+     then this has been queued by the sFlow plugins, while it was 
+     probably handling a queued packet */
+
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "queuePacket: got packet from %s (%d)",
+	     myGlobals.device[deviceId].name, deviceId);
+#endif
+
+  /* We don't sample on sFlow sampled interfaces */
+  if(myGlobals.device[deviceId].sflowGlobals == NULL) {
+    if(myGlobals.device[actDeviceId].samplingRate > 1) {
+      if(myGlobals.device[actDeviceId].droppedSamples < myGlobals.device[actDeviceId].samplingRate) {
+	myGlobals.device[actDeviceId].droppedSamples++;      
+	return; /* Not enough samples received */
+      } else 
+	myGlobals.device[actDeviceId].droppedSamples = 0;
+    }
   }
 
   if(myGlobals.runningPref.dontTrustMACaddr && (h->len <= 64)) {
@@ -2286,7 +2296,7 @@ void queuePacket(u_char *_deviceId,
     return;
   }
 
-  if(tryLockMutex(&myGlobals.packetProcessMutex, "queuePacket") == 0) {
+  if(tryLockMutex(&myGlobals.device[deviceId].packetProcessMutex, "queuePacket") == 0) {
     /* Locked so we can process the packet now */
     u_char p1[MAX_PACKET_LEN];
 
@@ -2301,7 +2311,8 @@ void queuePacket(u_char *_deviceId,
     }
 
     if(h->len >= MAX_PACKET_LEN) {
-      traceEvent(CONST_TRACE_WARNING, "packet truncated (%d->%d)", h->len, MAX_PACKET_LEN);
+      traceEvent(CONST_TRACE_WARNING, "packet truncated (%d->%d)", 
+		 h->len, MAX_PACKET_LEN);
       ((struct pcap_pkthdr*)h)->len = MAX_PACKET_LEN-1;
     }
 
@@ -2319,65 +2330,64 @@ void queuePacket(u_char *_deviceId,
     memcpy(p1, p, len);
 
     processPacket(_deviceId, h, p1);
-    releaseMutex(&myGlobals.packetProcessMutex);
+    releaseMutex(&myGlobals.device[deviceId].packetProcessMutex);
     return;
   }
 
   /*
-    If we reach this point it means that somebody was already processing
-    a packet so we need to queue it
+    If we reach this point it means that somebody was already 
+    processing a packet so we need to queue it.
   */
-  if(myGlobals.packetQueueLen >= CONST_PACKET_QUEUE_LENGTH) {
+  if(myGlobals.device[deviceId].packetQueueLen >= CONST_PACKET_QUEUE_LENGTH) {
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Dropping packet!!! [packet queue=%d/max=%d]",
-	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
+    traceEvent(CONST_TRACE_INFO, "Dropping packet [packet queue=%d/max=%d][id=%d]",
+	       myGlobals.device[deviceId].packetQueueLen, myGlobals.maxPacketQueueLen, deviceId);
 #endif
 
     myGlobals.receivedPacketsLostQ++;
-
     incrementTrafficCounter(&myGlobals.device[getActualInterface(deviceId)].droppedPkts, 1);
-
     ntop_conditional_sched_yield(); /* Allow other threads (dequeue) to run */
     sleep(1);
   } else {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "About to queue packet... ");
 #endif
-    accessMutex(&myGlobals.packetQueueMutex, "queuePacket");
+    accessMutex(&myGlobals.device[deviceId].packetQueueMutex, "queuePacket");
     myGlobals.receivedPacketsQueued++;
-    memcpy(&myGlobals.packetQueue[myGlobals.packetQueueHead].h, h, sizeof(struct pcap_pkthdr));
-    memset(myGlobals.packetQueue[myGlobals.packetQueueHead].p, 0,
-	   sizeof(myGlobals.packetQueue[myGlobals.packetQueueHead].p));
+    memcpy(&myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].h, 
+	   h, sizeof(struct pcap_pkthdr));
+    memset(myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].p, 0,
+	   sizeof(myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].p));
     /* Just to be safe */
     len = h->caplen;
-    if (myGlobals.runningPref.printIpOnly) {
-        if(len >= DEFAULT_SNAPLEN) len = DEFAULT_SNAPLEN-1;
-        memcpy(myGlobals.packetQueue[myGlobals.packetQueueHead].p, p, len);
-        myGlobals.packetQueue[myGlobals.packetQueueHead].h.caplen = len;
-    }
-    else {
-        memcpy(myGlobals.packetQueue[myGlobals.packetQueueHead].p, p, len);
-        myGlobals.packetQueue[myGlobals.packetQueueHead].h.caplen = len;
+    if(myGlobals.runningPref.printIpOnly) {
+      if(len >= DEFAULT_SNAPLEN) len = DEFAULT_SNAPLEN-1;
+      memcpy(myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].p, p, len);
+      myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].h.caplen = len;
+    } else {
+      memcpy(myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].p, p, len);
+      myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].h.caplen = len;
     }
 
-    myGlobals.packetQueue[myGlobals.packetQueueHead].deviceId = (int)((void*)_deviceId);
-    myGlobals.packetQueueHead = (myGlobals.packetQueueHead+1) % CONST_PACKET_QUEUE_LENGTH;
-    myGlobals.packetQueueLen++;
-    if(myGlobals.packetQueueLen > myGlobals.maxPacketQueueLen)
-      myGlobals.maxPacketQueueLen = myGlobals.packetQueueLen;
-    releaseMutex(&myGlobals.packetQueueMutex);
+    myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].deviceId = (int)((void*)_deviceId);
+    myGlobals.device[deviceId].packetQueueHead = (myGlobals.device[deviceId].packetQueueHead+1) 
+      % CONST_PACKET_QUEUE_LENGTH;
+    myGlobals.device[deviceId].packetQueueLen++;
+    if(myGlobals.device[deviceId].packetQueueLen > myGlobals.device[deviceId].maxPacketQueueLen)
+      myGlobals.device[deviceId].maxPacketQueueLen = myGlobals.device[deviceId].packetQueueLen;
+    releaseMutex(&myGlobals.device[deviceId].packetQueueMutex);
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "Queued packet... [packet queue=%d/max=%d]",
-	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
+	       myGlobals.device[deviceId].packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
 
 #ifdef DEBUG_THREADS
     traceEvent(CONST_TRACE_INFO, "+ [packet queue=%d/max=%d]",
-	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
+	       myGlobals.device[deviceId].packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
   }
 
-  signalCondvar(&myGlobals.queueCondvar);
+  signalCondvar(&myGlobals.device[deviceId].queueCondvar);
 
   ntop_conditional_sched_yield(); /* Allow other threads (dequeue) to run */
 }
@@ -2390,8 +2400,8 @@ void cleanupPacketQueue(void) {
 
 /* ************************************ */
 
-void* dequeuePacket(void* notUsed _UNUSED_) {
-  u_short deviceId;
+void* dequeuePacket(void* _deviceId) {
+  u_int deviceId = (u_int)_deviceId;
   struct pcap_pkthdr h;
   u_char p[MAX_PACKET_LEN];
 
@@ -2406,9 +2416,9 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
     traceEvent(CONST_TRACE_INFO, "Waiting for packet...");
 #endif
 
-    while((myGlobals.packetQueueLen == 0) &&
+    while((myGlobals.device[deviceId].packetQueueLen == 0) &&
 	  (myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) /* Courtesy of Wies-Software <wies@wiessoft.de> */) {
-      waitCondvar(&myGlobals.queueCondvar);
+      waitCondvar(&myGlobals.device[deviceId].queueCondvar);
     }
 
     if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
@@ -2416,11 +2426,11 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "Got packet...");
 #endif
-    accessMutex(&myGlobals.packetQueueMutex, "dequeuePacket");
-    memcpy(&h, &myGlobals.packetQueue[myGlobals.packetQueueTail].h,
+    accessMutex(&myGlobals.device[deviceId].packetQueueMutex, "dequeuePacket");
+    memcpy(&h, &myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueTail].h,
 	   sizeof(struct pcap_pkthdr));
 
-    deviceId = myGlobals.packetQueue[myGlobals.packetQueueTail].deviceId;
+    deviceId = myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueTail].deviceId;
 
     /* This code should be changed ASAP. It is a bad trick that avoids ntop to
        go beyond packet boundaries (L.Deri 17/03/2003)
@@ -2435,9 +2445,9 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
       traceEvent (CONST_TRACE_WARNING, "dequeuePacket: caplen %d != len %d\n", h.caplen, h.len);
 
     if (myGlobals.runningPref.printIpOnly) {
-        memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, DEFAULT_SNAPLEN);
+        memcpy(p, myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueTail].p, DEFAULT_SNAPLEN);
     } else {
-      memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, MAX_PACKET_LEN);
+      memcpy(p, myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueTail].p, MAX_PACKET_LEN);
     }
 
     if(h.len > MAX_PACKET_LEN) {
@@ -2445,29 +2455,29 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
       h.len = MAX_PACKET_LEN;
     }
 
-    myGlobals.packetQueueTail = (myGlobals.packetQueueTail+1) % CONST_PACKET_QUEUE_LENGTH;
-    myGlobals.packetQueueLen--;
-    releaseMutex(&myGlobals.packetQueueMutex);
+    myGlobals.device[deviceId].packetQueueTail = (myGlobals.device[deviceId].packetQueueTail+1) % CONST_PACKET_QUEUE_LENGTH;
+    myGlobals.device[deviceId].packetQueueLen--;
+    releaseMutex(&myGlobals.device[deviceId].packetQueueMutex);
 #ifdef DEBUG_THREADS
-    traceEvent(CONST_TRACE_INFO, "- [packet queue=%d/max=%d]", myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
+    traceEvent(CONST_TRACE_INFO, "- [packet queue=%d/max=%d]", myGlobals.device[deviceId].packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Processing packet... [packet queue=%d/max=%d]",
-	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
+    traceEvent(CONST_TRACE_INFO, "Processing packet... [packet queue=%d/max=%d][id=%d]",
+	       myGlobals.device[deviceId].packetQueueLen, myGlobals.maxPacketQueueLen, deviceId);
 #endif
 
     myGlobals.actTime = time(NULL);
-    accessMutex(&myGlobals.packetProcessMutex, "dequeuePacket");
+    accessMutex(&myGlobals.device[deviceId].packetProcessMutex, "dequeuePacket");
     processPacket((u_char*)((long)deviceId), &h, p);
-    releaseMutex(&myGlobals.packetProcessMutex);
+    releaseMutex(&myGlobals.device[deviceId].packetProcessMutex);
   }
 
-  myGlobals.dequeueThreadId = 0;
+  myGlobals.device[deviceId].dequeuePacketThreadId = 0;
 
   traceEvent(CONST_TRACE_INFO,
-             "THREADMGMT[t%lu]: NPA: network packet analyzer (packet processor) thread terminated [p%d]",
-             pthread_self(), getpid());
+             "THREADMGMT[t%lu]: NPA: network packet analyzer (%s) thread terminated [p%d]",
+             pthread_self(), myGlobals.device[deviceId].humanFriendlyName, getpid());
 
   return(NULL);
 }
@@ -2998,7 +3008,8 @@ void processPacket(u_char *_deviceId,
 	  if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 
 	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-	  incrementTrafficCounter(&srcHost->nonIPTraffic->ipxSent, length), incrementTrafficCounter(&dstHost->nonIPTraffic->ipxRcvd, length);
+	  incrementTrafficCounter(&srcHost->nonIPTraffic->ipxSent, length), 
+	    incrementTrafficCounter(&dstHost->nonIPTraffic->ipxRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 
 	  ctr.value = length;

@@ -962,9 +962,6 @@ void reinitMutexes (void) {
                                              * access */
   createMutex(&myGlobals.fcSessionsMutex);
   createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
-  createMutex(&myGlobals.packetQueueMutex);
-  createMutex(&myGlobals.packetProcessMutex);
-
   createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
 
   for(i=0; i<CONST_HASH_INITIAL_SIZE; i++) {
@@ -990,9 +987,12 @@ void reinitMutexes (void) {
 void initThreads(void) {
   int i;
 
-  createThread(&myGlobals.dequeueThreadId, dequeuePacket, NULL);
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NPA: Started thread for network packet analyzer",
-             (long)myGlobals.dequeueThreadId);
+  for(i=0; i<myGlobals.numDevices; i++) {
+    createThread(&myGlobals.device[i].dequeuePacketThreadId, dequeuePacket, (void*)i);
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NPA: Started thread for network packet analyzer (%s)",
+	       (long)myGlobals.device[i].dequeuePacketThreadId,
+	       myGlobals.device[i].humanFriendlyName);
+  }
 
   /*
    * Create the thread (3) - SFP - Scan Fingerprints
@@ -1011,10 +1011,12 @@ void initThreads(void) {
   if(myGlobals.runningPref.numericFlag == 0) {
     createMutex(&myGlobals.addressResolutionMutex);
 
+    myGlobals. numDequeueAddressThreads = MAX_NUM_DEQUEUE_ADDRESS_THREADS;
+
     /*
      * Create the thread (6) - DNSAR - DNS Address Resolution - optional
      */
-    for(i=0; i<myGlobals.numDequeueThreads; i++) {
+    for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
       createThread(&myGlobals.dequeueAddressThreadId[i], dequeueAddress, (char*)i);
       traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Started thread for DNS address resolution",
 		 (long)myGlobals.dequeueAddressThreadId[i], i+1);
@@ -1033,7 +1035,6 @@ void initThreads(void) {
 #endif
 }
 
-
 /*
  * Initialize helper applications
  */
@@ -1042,6 +1043,24 @@ void initApps(void) {
   /* Nothing to do at the moment */
 }
 
+/* ******************************* */
+
+void initDeviceSemaphores(int deviceId) {
+  traceEvent(CONST_TRACE_INFO, "Initializing device %s (%d)",
+	     myGlobals.device[deviceId].name, deviceId);
+    
+  createMutex(&myGlobals.device[deviceId].packetProcessMutex);
+  createMutex(&myGlobals.device[deviceId].packetQueueMutex);
+  memset(&myGlobals.device[deviceId].packetQueue, 0, sizeof(PacketInformation));
+  myGlobals.device[deviceId].packetQueueLen           = 0;
+  myGlobals.device[deviceId].maxPacketQueueLen        = 0;
+  myGlobals.device[deviceId].packetQueueHead          = 0;
+  myGlobals.device[deviceId].packetQueueTail          = 0;
+
+  createCondvar(&myGlobals.device[deviceId].queueCondvar);
+}
+
+/* ******************************* */
 
 /*
  * Initialize the table of NICs enabled for packet sniffing
@@ -1448,7 +1467,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
   if((myGlobals.actualReportDeviceId == 0) && myGlobals.device[0].dummyDevice)
     myGlobals.actualReportDeviceId = deviceId;
-
+  
 }
 
 /* ******************************* */
@@ -1745,6 +1764,7 @@ void initDeviceDatalink(int deviceId) {
 	       myGlobals.device[deviceId].mtuSize,
 	       myGlobals.device[deviceId].headerSize);
 
+  initDeviceSemaphores(deviceId);
 }
 
 /* ******************************* */

@@ -31,7 +31,7 @@
 
 static void* sflowMainLoop(void* _deviceId);
 
-#define DEBUG_FLOWS
+/* #define DEBUG_FLOWS */
 
 /* ********************************* */
 
@@ -3030,12 +3030,13 @@ static void* sflowMainLoop(void* _deviceId) {
 
   for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
     int maxSock = myGlobals.device[deviceId].sflowGlobals->sflowInSocket;
+    struct timeval wait_time;
 
     FD_ZERO(&sflowMask);
     FD_SET(myGlobals.device[deviceId].sflowGlobals->sflowInSocket, &sflowMask);
 
-    if((rc = select(maxSock+1, &sflowMask, NULL, NULL, NULL)) > 0) {
-
+    wait_time.tv_sec = 3, wait_time.tv_usec = 0;
+    if((rc = select(maxSock+1, &sflowMask, NULL, NULL, &wait_time)) > 0) {
       if(FD_ISSET(myGlobals.device[deviceId].sflowGlobals->sflowInSocket, &sflowMask)){
 	len = sizeof(fromHost);
 	rc = recvfrom(myGlobals.device[deviceId].sflowGlobals->sflowInSocket,(char*)&buffer, sizeof(buffer),
@@ -3215,6 +3216,7 @@ static void initsFlowDevice(int deviceId) {
   myGlobals.device[deviceId].samplingRate = 1;
   myGlobals.device[deviceId].mtuSize    = myGlobals.mtuSize[myGlobals.device[deviceId].datalink];
   myGlobals.device[deviceId].headerSize = myGlobals.headerSize[myGlobals.device[deviceId].datalink];
+  initDeviceSemaphores(deviceId);
 }
 
 /* ****************************** */

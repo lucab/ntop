@@ -222,9 +222,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
   myGlobals.numThreads = 0;            /* # of running threads */
 
-  myGlobals.numDequeueThreads = 1;
-
-  for (i = 0; i < MAX_NUM_DEQUEUE_THREADS; i ++)
+  for (i = 0; i < MAX_NUM_DEQUEUE_ADDRESS_THREADS; i ++)
     myGlobals.dequeueAddressThreadId[i] = (pthread_t)-1;
 
 #ifdef HAVE_OPENSSL
@@ -292,7 +290,8 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.ipPortMapper.theMapper = NULL;
   myGlobals.ipPortMapper.numSlots = 0;
   myGlobals.numHandledSIGPIPEerrors = 0;
-  for (i=0; i<=1; i++) {
+
+  for(i=0; i<=1; i++) {
     myGlobals.numHandledRequests[i] = 0;
     myGlobals.numHandledBadrequests[i] = 0;
     myGlobals.numSuccessfulRequests[i] = 0;
@@ -304,6 +303,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
     myGlobals.numUnsuccessfulDenied[i] = 0;
     myGlobals.numUnsuccessfulForbidden[i] = 0;
   }
+
   myGlobals.numSSIRequests = 0;
   myGlobals.numBadSSIRequests = 0;
   myGlobals.numHandledSSIRequests = 0;
@@ -332,7 +332,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   /*
    * Create two variables (semaphores) used by functions in pbuf.c to queue packets
    */
-  createCondvar(&myGlobals.queueCondvar);
   createCondvar(&myGlobals.queueAddressCondvar);
 
   createMutex(&myGlobals.gdbmMutex);        /* data to synchronize thread access to db files */
@@ -341,27 +340,17 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
   createMutex(&myGlobals.purgeMutex);       /* synchronize purging */
   createMutex(&myGlobals.securityItemsMutex);
-  createMutex(&myGlobals.packetProcessMutex);
-  createMutex(&myGlobals.packetQueueMutex);
   createMutex(&myGlobals.hostsHashLockMutex);
 
   for(i=0; i<CONST_HASH_INITIAL_SIZE; i++) {
     createMutex(&myGlobals.hostsHashMutex[i]);
     myGlobals.hostsHashMutexNumLocks[i] = 0;
   }
-
-  /* Packet Capture */
-  for (i = 0; i <= CONST_PACKET_QUEUE_LENGTH; i ++)
-    memset(&myGlobals.packetQueue[i], 0, sizeof(PacketInformation));
-
+  
   myGlobals.receivedPackets          = 0;
   myGlobals.receivedPacketsProcessed = 0;
   myGlobals.receivedPacketsQueued    = 0;
-  myGlobals.packetQueueLen           = 0;
-  myGlobals.maxPacketQueueLen        = 0;
   myGlobals.receivedPacketsLostQ     = 0;
-  myGlobals.packetQueueHead          = 0;
-  myGlobals.packetQueueTail          = 0;
 
   /* NB: Log View is allocated in main.c so it's available for the very 1st traceEvent() */
 
@@ -460,7 +449,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
   myGlobals.mtuSize        = _mtuSize;
   myGlobals.headerSize     = _headerSize;
-  myGlobals.numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
 
   /* ********************************** */
 
@@ -533,6 +521,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
 void initNtop(char *devices) {
   char value[32];
+  int i;
 
   initIPServices();
   handleProtocols();

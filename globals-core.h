@@ -230,6 +230,7 @@ extern void initCounters(void);
 extern void resetStats(int);
 extern void reinitMutexes(void);
 extern void initThreads(void);
+extern void initDeviceSemaphores(int deviceId);
 extern void initApps(void);
 extern int validInterface(char *name);
 extern void initDevices(char* devices);

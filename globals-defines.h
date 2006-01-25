@@ -616,7 +616,7 @@
  *  You might increase this if you have really slow dns resolution and are running
  *  asyncronously.
  */
-#define MAX_NUM_DEQUEUE_THREADS             1
+#define MAX_NUM_DEQUEUE_ADDRESS_THREADS             1
 
 /* Hash size */
 #define CONST_HASH_INITIAL_SIZE             32*1024

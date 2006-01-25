@@ -1370,6 +1370,16 @@ typedef struct ntopInterface {
   int fd;                        /* unique identifier (Unix file descriptor) */
 
   /*
+   * NPA - Network Packet Analyzer (main thread)
+   */
+  PthreadMutex packetQueueMutex;
+  PthreadMutex packetProcessMutex;
+  PacketInformation packetQueue[CONST_PACKET_QUEUE_LENGTH+1];
+  u_int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;  
+  ConditionalVariable queueCondvar;
+  pthread_t dequeuePacketThreadId;
+
+  /*
    * The packets section
    */
   TrafficCounter receivedPkts;    /* # of pkts recevied by the application */
@@ -2070,17 +2080,10 @@ typedef struct ntopGlobals {
   /* Multi-thread related */
   unsigned short numThreads;       /* # of running threads */
 
-  ConditionalVariable queueCondvar;
   ConditionalVariable queueAddressCondvar;
 
   pthread_t mainThreadId;
 
-  /*
-   * NPA - Network Packet Analyzer (main thread)
-   */
-  PthreadMutex packetQueueMutex;
-  PthreadMutex packetProcessMutex;
-  pthread_t dequeueThreadId;
 
   /*
    * HTS - Hash Purge
@@ -2105,12 +2108,13 @@ typedef struct ntopGlobals {
   pthread_t scanFingerprintsThreadId;
   time_t nextFingerprintScan;
 
+
   /*
    * DNSAR - DNS Address Resolution - optional
    */
-  unsigned short numDequeueThreads;
   PthreadMutex addressResolutionMutex;
-  pthread_t dequeueAddressThreadId[MAX_NUM_DEQUEUE_THREADS];
+  u_int numDequeueAddressThreads;
+  pthread_t dequeueAddressThreadId[MAX_NUM_DEQUEUE_ADDRESS_THREADS];
 
   /*
    * Control mutexes
@@ -2233,8 +2237,6 @@ typedef struct ntopGlobals {
   PortProtoMapperHandler ipPortMapper;
 
   /* Packet Capture */
-  PacketInformation packetQueue[CONST_PACKET_QUEUE_LENGTH+1];
-  u_int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;
   Counter receivedPackets, receivedPacketsProcessed, receivedPacketsQueued, receivedPacketsLostQ;
 
   TransactionTime transTimeHash[CONST_NUM_TRANSACTION_ENTRIES];
