@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- * Copyright (C) 1998-2005 Luca Deri <deri@ntop.org>
+ * Copyright (C) 1998-2006 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -521,7 +521,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
 void initNtop(char *devices) {
   char value[32];
-  int i;
 
   initIPServices();
   handleProtocols();
@@ -529,7 +528,9 @@ void initNtop(char *devices) {
   if(myGlobals.numIpProtosToMonitor == 0)
     addDefaultProtocols();
 
+#ifdef HAVE_LIBPCRE
   initl7();
+#endif
 
   /*
    * initialize memory and data.

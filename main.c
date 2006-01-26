@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- * Copyright (C) 1998-2005 Luca Deri <deri@ntop.org>
+ * Copyright (C) 1998-2006 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -36,7 +36,7 @@ void welcome (FILE * fp) {
   fprintf (fp, "Welcome to %s v.%s\n[Configured on %s, built on %s]\n",
 	   myGlobals.program_name, version, configureDate, buildDate);
   
-  fprintf (fp, "Copyright 1998-2005 by %s.\n", author);
+  fprintf (fp, "Copyright 1998-2006 by %s.\n", author);
   fprintf (fp, "Get the freshest ntop from http://www.ntop.org/\n");
 }
 
@@ -508,7 +508,7 @@ int main(int argc, char *argv[]) {
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s", version);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Configured on %s, built on %s.", configureDate, buildDate);
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2005 by %s", author);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2006 by %s", author);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Get the freshest ntop from http://www.ntop.org/");
  
 #ifndef WIN32
