@@ -1348,7 +1348,7 @@ NTOPCONFIGDEBUG_SETTINGS([After criticals])
 
 dnl> Pattern matching
 dnl>
-AC_CHECK_LIB(pcre, pcre_compile)
+AC_CHECK_LIB(pcre, pcre_refcount)
 
 				
 dnl> Define the arguments we accept...
