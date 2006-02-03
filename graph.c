@@ -190,6 +190,13 @@ void drawPie(short width,
   float radiant;
   struct bar_elements *elems = NULL;
 
+  if(num_points == 0) {
+    /* Workaround to the case where there are not point */
+    num_points = 1;
+    labels[0] = "no data";
+    data[0] = 0;
+  }
+
   if(sorted) {
     elems = (struct bar_elements*)malloc(sizeof(struct bar_elements)*num_points);
 
@@ -221,6 +228,8 @@ void drawPie(short width,
 
   for(i=0, total=0; i<num_points; i++)
     total += data[i];
+
+  if(total == 0) total = 1;
 
   center_x = width/3, center_y = height/2;
   radius = height/3;
