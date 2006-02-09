@@ -188,7 +188,9 @@ static int  getCounter64(Counter c, struct counter64 *c64);
 
 static oid* encodeEth(HostTraffic* el);
 static oid* encodeIpv4(HostTraffic* el);
+#ifdef INET6
 static oid* encodeIpv6(HostTraffic* el);
+#endif
 static oid* encodeFc(HostTraffic* el);
 #endif /* HAVE_SNMP */
 
@@ -454,7 +456,8 @@ getHostSerialFromIndex (netsnmp_table_request_info * table_info,
       addrput (AF_INET, &(serial->value.ipSerial.ipAddress), &mod_value);
 
       break;
-
+      
+#ifdef INET6
     case SERIAL_IPV6:
       if (octet_data_length != 16)
 	return -1;
@@ -471,6 +474,7 @@ getHostSerialFromIndex (netsnmp_table_request_info * table_info,
       addrput (AF_INET, &(serial->value.ipSerial.ipAddress), &mod_value);
 
       break;
+#endif
 
     case SERIAL_FC:
       return -1;
@@ -588,9 +592,11 @@ static oid* create_oid(HostTraffic* el){
   case SERIAL_IPV4:
     tmp = encodeIpv4(el);
     break;
+#ifdef INET6
   case SERIAL_IPV6:
     tmp = encodeIpv6(el);
     break;
+#endif
   case SERIAL_FC:
     tmp = encodeFc(el);
     break;
@@ -680,6 +686,7 @@ static oid* encodeIpv4(HostTraffic* el){
   return tmpoid;
 }
 
+#ifdef INET6
 static oid* encodeIpv6(HostTraffic* el){
   oid* tmpoid = malloc(sizeof(oid)*17);
   int i,j;
@@ -695,6 +702,7 @@ static oid* encodeIpv6(HostTraffic* el){
   }
   return tmpoid;
 }
+#endif
 
 static oid* encodeEth(HostTraffic* el){
   oid* tmpoid = malloc(sizeof(oid)*7);
@@ -837,10 +845,12 @@ processRequest (netsnmp_table_request_info * table_info,
 	      cp = (char *)&traffic->hostSerial.value.ipSerial.ipAddress.Ip4Address.s_addr;
 	      size = 4;
 	      break;
+#ifdef INET6
 	    case SERIAL_IPV6:
 	      cp =(char *)&traffic->hostSerial.value.ipSerial.ipAddress.Ip6Address.s6_addr;
 	      size = 16;
 	      break;
+#endif
 	    case SERIAL_FC:
 	      /*TODO*/
 	      size = LEN_FC_ADDRESS_DISPLAY;
