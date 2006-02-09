@@ -127,8 +127,6 @@ to the prior versions:
          Christoph Zens <chris at topfen.homeip.net>
          elmer at linking.ee
          Ethernet-codes at Cavebear.com
-	 Mike Frysinger <vapier at gentoo.org>
-	 Peter Volkov <pva at gentoo.org>
 
 Contributors for ntop 3.0:
 
@@ -219,6 +217,17 @@ Contributors for ntop 3.2:
          Ross West <westr@connection.ca>
 
          And an international organization which wishes to remain anonymous.
+
+
+Contributors for ntop 3.3:
+
+         (First off the usual suspects)
+                   Luca
+                   Burton/Dinesh/Robbert
+
+	 Ola Lundqvist <opal at debian.org>
+	 Mike Frysinger <vapier at gentoo.org>
+	 Peter Volkov <pva at gentoo.org>
 
 
 If you've been left off the list, it's not intentional.  Please let us know!
