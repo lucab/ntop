@@ -3198,6 +3198,7 @@ A: (Toby Johnson [public@tobiasly.com], Sun 10Nov2002)
       RewriteEngine On
       RewriteCond %{HTTP_REFERER} tobiasly.com/ntop
       RewriteCond %{REQUEST_URI} !^/ntop
+      RewriteCond %{REQUEST_URI} !^/error
       RewriteRule ^/(.*)$ http://secure.tobiasly.com/ntop/$1 [L,P]
 
    In English, this basically says "If I get a URL request that comes from a
