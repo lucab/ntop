@@ -131,7 +131,7 @@ lib_LTLIBRARIES    = libntop.la libntopreport.la
 libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
                      getopt.c     getopt1.c     globals-core.c \
                      hash.c       iface.c       initialize.c  l7.c leaks.c \
-                     ntop.c       pbuf.c         \
+                     ntop.c       pbuf.c        database.c \
                      plugin.c     prefs.c       protocols.c   \
                      sessions.c   term.c        util.c        utildl.c \
                      traffic.c    vendor.c      version.c      \

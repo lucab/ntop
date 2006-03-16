@@ -298,6 +298,8 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 		 u_char lockMutex /* unused so far */) {
   /* Session to purge */
 
+  dump_session_to_db(sessionToPurge);
+
   if(sessionToPurge->magic != CONST_MAGIC_NUMBER) {
     traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) freeSession()",
 	       CONST_MAGIC_NUMBER, sessionToPurge->magic);
@@ -392,8 +394,6 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   free(sessionToPurge);
 #endif
 }
-
-/* ************************************ */
 
 /* ************************************ */
 

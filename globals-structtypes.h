@@ -907,10 +907,10 @@ typedef struct ipSession {
   u_short magic;
   u_char isP2P;                     /* Set to 1 if this is a P2P session          */
   HostTraffic* initiator;           /* initiator address                          */
-  HostAddr initiatorRealIp;   /* Real IP address (if masqueraded and known) */
+  HostAddr initiatorRealIp;         /* Real IP address (if masqueraded and known) */
   u_short sport;                    /* initiator address (port)                   */
   HostTraffic *remotePeer;          /* remote peer address                        */
-  HostAddr remotePeerRealIp;  /* Real IP address (if masqueraded and known) */
+  HostAddr remotePeerRealIp;        /* Real IP address (if masqueraded and known) */
   char *virtualPeerName;            /* Name of a virtual host (e.g. HTTP virtual host) */
   u_short dport;                    /* remote peer address (port)                       */
   time_t firstSeen;                 /* time when the session has been initiated         */

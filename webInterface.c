@@ -7840,7 +7840,7 @@ void printNtopProblemReport(void) {
 #endif
   static char xvert[] = "JB6XF3PRQHNA7W5ECM8S9GLVY4TDKUZ2"; /* Scrambled just 'cause */
   time_t t;
-  unsigned int v, scramble, raw;
+  unsigned int v, scr, raw;
   int i, j;
 
 #ifdef HAVE_SYS_UTSNAME_H
@@ -7970,7 +7970,7 @@ void printNtopProblemReport(void) {
 #endif
   /* Scramble the nibbles so we have some data high and some low.
      Arbitrary: abcdefgh -> fhgdaecb */
-  scramble = (raw & 0xf0000000) >> 16 |
+  scr = (raw & 0xf0000000) >> 16 |
     (raw & 0x0f000000) >> 24 |
     (raw & 0x00f00000) >> 16 |
     (raw & 0x000f0000)       |
@@ -7978,10 +7978,10 @@ void printNtopProblemReport(void) {
     (raw & 0x00000f00) << 20 |
     (raw & 0x000000f0) << 16 |
     (raw & 0x0000000f) << 24;
-  v ^= scramble;
+  v ^= scr;
 #ifdef PROBLEMREPORTID_DEBUG
   safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Bytes(scramble)",
-	   scramble, scramble, v);
+	   scr, scr, v);
   sendString(buf2);
 #endif
 

@@ -3465,31 +3465,33 @@ static void addSessionInfo(SessionInfo *ptr, u_short ptr_len, HostAddr *theHost,
   traceEvent(CONST_TRACE_INFO, "DEBUG: Adding %ld:%d", theHost, thePort);
 #endif
 
-  for(i=0; i<ptr_len; i++) {
-    if((ptr[i].sessionPort == 0)
-       || (ptr[i].creationTime < timeoutTime)) {
-      /* Autopurge */
-      addrcpy(&ptr[i].sessionHost,theHost),
-	ptr[i].sessionPort = thePort,
-	ptr[i].creationTime = myGlobals.actTime;
+  if(ptr != NULL) {
+    for(i=0; i<ptr_len; i++) {
+      if((ptr[i].sessionPort == 0)
+	 || (ptr[i].creationTime < timeoutTime)) {
+	/* Autopurge */
+	addrcpy(&ptr[i].sessionHost,theHost),
+	  ptr[i].sessionPort = thePort,
+	  ptr[i].creationTime = myGlobals.actTime;
 
-      if(ptr[i].session_info != NULL) free(ptr[i].session_info);
-      if(notes)
-	ptr[i].session_info = strdup(notes);
-      else
-	ptr[i].session_info = NULL;
-      break;
+	if(ptr[i].session_info != NULL) free(ptr[i].session_info);
+	if(notes)
+	  ptr[i].session_info = strdup(notes);
+	else
+	  ptr[i].session_info = NULL;
+	break;
+      }
     }
-  }
 
-  if(i == ptr_len) {
-    /* Slot Not found */
-    static u_char is_hash_full = 0;
+    if(i == ptr_len) {
+      /* Slot Not found */
+      static u_char is_hash_full = 0;
 
-    if(!is_hash_full) {
-      traceEvent(CONST_TRACE_INFO, "addSessionInfo: hash full [size=%d]", ptr_len);
-      is_hash_full = 1;
-    }    
+      if(!is_hash_full) {
+	traceEvent(CONST_TRACE_INFO, "addSessionInfo: hash full [size=%d]", ptr_len);
+	is_hash_full = 1;
+      }    
+    }
   }
 }
 
@@ -3521,20 +3523,22 @@ static int isKnownSession(SessionInfo *ptr, u_short ptr_len,
 
   (*notes) = NULL;
 
-  for(i=0; i<ptr_len; i++) {
-    if((addrcmp(&ptr[i].sessionHost,theHost) == 0)
-       && (ptr[i].sessionPort == thePort)) {
-      addrinit(&ptr[i].sessionHost);
-      ptr[i].sessionPort = 0, ptr[i].creationTime = 0;
-      (*notes) = ptr[i].session_info;
-
-      /* NOTE: this memory will be freed by freeSessionInfo */
-      ptr[i].session_info = NULL;
-
+  if(ptr != NULL) {
+    for(i=0; i<ptr_len; i++) {
+      if((addrcmp(&ptr[i].sessionHost,theHost) == 0)
+	 && (ptr[i].sessionPort == thePort)) {
+	addrinit(&ptr[i].sessionHost);
+	ptr[i].sessionPort = 0, ptr[i].creationTime = 0;
+	(*notes) = ptr[i].session_info;
+	
+	/* NOTE: this memory will be freed by freeSessionInfo */
+	ptr[i].session_info = NULL;
+	
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: Found session");
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Found session");
 #endif
-      return(1);
+	return(1);
+      }
     }
   }
 

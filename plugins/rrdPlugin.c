@@ -1751,7 +1751,7 @@ static void arbitraryAction(char *rrdName,
       startWorkTime[32],
       path[128],
       **ds_namv;
-    time_t start=0,end=time(NULL)+1, startTimeFound;
+    time_t start=0,end=time(NULL)+1, startTimeFound = 0;
     unsigned long step=0, ds_cnt, ii;
     rrd_value_t   *data,*datai, _val;
     struct tm workT;

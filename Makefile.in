@@ -95,9 +95,9 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am_libntop_la_OBJECTS = address.lo argv.lo dataFormat.lo fcUtils.lo \
 	getopt.lo getopt1.lo globals-core.lo hash.lo iface.lo \
-	initialize.lo l7.lo leaks.lo ntop.lo pbuf.lo plugin.lo \
-	prefs.lo protocols.lo sessions.lo term.lo util.lo utildl.lo \
-	traffic.lo vendor.lo version.lo ntop_darwin.lo
+	initialize.lo l7.lo leaks.lo ntop.lo pbuf.lo database.lo \
+	plugin.lo prefs.lo protocols.lo sessions.lo term.lo util.lo \
+	utildl.lo traffic.lo vendor.lo version.lo ntop_darwin.lo
 libntop_la_OBJECTS = $(am_libntop_la_OBJECTS)
 am_libntopreport_la_OBJECTS = emitter.lo globals-report.lo graph.lo \
 	fcReport.lo http.lo report.lo reportUtils.lo ssl.lo \
@@ -212,6 +212,7 @@ LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MAKE_SHARED_LIBRARY_PARM = @MAKE_SHARED_LIBRARY_PARM@
+MYSQL = @MYSQL@
 NTOP_VERSION_EXTRA = @NTOP_VERSION_EXTRA@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
@@ -240,6 +241,7 @@ ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
 ac_ct_LIBTOOL = @ac_ct_LIBTOOL@
+ac_ct_MYSQL = @ac_ct_MYSQL@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
@@ -354,7 +356,7 @@ lib_LTLIBRARIES = libntop.la libntopreport.la
 libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
                      getopt.c     getopt1.c     globals-core.c \
                      hash.c       iface.c       initialize.c  l7.c leaks.c \
-                     ntop.c       pbuf.c         \
+                     ntop.c       pbuf.c        database.c \
                      plugin.c     prefs.c       protocols.c   \
                      sessions.c   term.c        util.c        utildl.c \
                      traffic.c    vendor.c      version.c      \
@@ -536,6 +538,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/admin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/argv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dataFormat.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/database.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emitter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fcReport.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fcUtils.Plo@am__quote@

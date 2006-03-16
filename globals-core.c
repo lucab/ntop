@@ -571,6 +571,7 @@ void initNtop(char *devices) {
 
   createPortHash();
   initCounters();
+  initDB();
   initApps();
   initThreads();
 

@@ -1074,6 +1074,7 @@ RETSIGTYPE cleanup(int signo) {
   deleteCondvar(&myGlobals.queueAddressCondvar);
 
   termGdbm();
+  termDB();
 
   tryLockMutex(&myGlobals.gdbmMutex, "cleanup");
   deleteMutex(&myGlobals.gdbmMutex);
@@ -1093,9 +1094,10 @@ RETSIGTYPE cleanup(int signo) {
       free(myGlobals.device[i].ipTrafficMatrix);
     }
 
+    /* FIX 
     if(myGlobals.device[i].ipTrafficMatrixHosts != NULL)
       free(myGlobals.device[i].ipTrafficMatrixHosts);
-
+    */
     if(myGlobals.device[i].ipProtoStats != NULL)
       free(myGlobals.device[i].ipProtoStats);
 

@@ -186,6 +186,10 @@ ntop.h
 #include <dlfcn.h>
 #endif
 
+#ifdef HAVE_MYSQL_H
+#include <mysql.h> /* Headers for MySQL usage */
+#endif
+
 /* 
    Additions below courtesy of 
    Abdelkader Lahmadi <Abdelkader.Lahmadi@loria.fr> 

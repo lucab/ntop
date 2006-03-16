@@ -809,7 +809,17 @@ extern int updateFcFabricElementHash(FcFabricElementHash **theHash, u_short vsan
                                       u_int32_t pktlen);
 extern void processFcNSCacheFile(char *filename);
 
-
+extern void initDB();
+extern void termDB();
+extern int dump_session_to_db(IPSession *sess);
+extern int insert_flow_record(u_int16_t probeId,
+			      u_int32_t srcAddr, u_int32_t dstAddr,
+			      u_int16_t input, u_int16_t output,
+			      u_int32_t sentPkts, u_int32_t sentOctets,
+			      u_int32_t rcvdPkts, u_int32_t rcvdOctets,
+			      u_int32_t first, u_int32_t last,
+			      u_int16_t srcPort, u_int16_t dstPort, u_int8_t tcpFlags,
+			      u_int8_t proto, u_int8_t tos, u_int16_t vlanId);
 #ifdef HAVE_NETDB_H
 extern int h_errno; /* netdb.h */
 #endif

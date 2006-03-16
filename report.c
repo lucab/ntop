@@ -2265,8 +2265,10 @@ void makeDot() {
 	  if(!emptySerial(&el->contactedRcvdPeers.peersSerials[i])
 	     && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))) {
 	    if((el2 = quickHostLink(el->contactedRcvdPeers.peersSerials[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-
 	      makeHostName(el2, buf1, sizeof(buf1));
+	      
+	      for(i=0; i<strlen(buf1); i++) if(buf1[i] == '\"') buf1[i] = ' ';
+	      
 	      if(addNodeInfo(fd, el2)) {
 		fprintf(fd, "\"%s\" -> \"%s\";\n", buf1, buf);
 		if(!urlSent) urlSent = addNodeInfo(fd, el);

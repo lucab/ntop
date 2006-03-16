@@ -224,6 +224,7 @@ LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MAKE_SHARED_LIBRARY_PARM = @MAKE_SHARED_LIBRARY_PARM@
+MYSQL = @MYSQL@
 NTOP_VERSION_EXTRA = @NTOP_VERSION_EXTRA@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
@@ -252,6 +253,7 @@ ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
 ac_ct_LIBTOOL = @ac_ct_LIBTOOL@
+ac_ct_MYSQL = @ac_ct_MYSQL@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
@@ -355,9 +357,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(ACLOCAL); $(ACLOCAL); $(AUTOMAKE) --gnu  plugins/Makefile'; \
+	echo ' cd $(top_srcdir) && $(ACLOCAL); $(ACLOCAL); $(ACLOCAL); $(ACLOCAL); $(AUTOMAKE) --gnu  plugins/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(ACLOCAL); $(ACLOCAL); $(AUTOMAKE) --gnu  plugins/Makefile
+	  $(ACLOCAL); $(ACLOCAL); $(ACLOCAL); $(ACLOCAL); $(AUTOMAKE) --gnu  plugins/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
