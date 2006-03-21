@@ -22992,7 +22992,7 @@ case "${target}:${CC}" in
 
     *-*-darwin*:* )
         DEFINEOS="DARWIN"
-        echo "* This appears to be ${DEFINEOS}"
+        echo "* This appears to be ${DEFINEOS} (MacOSX)"
       ;;
 
     *-*-freebsd*:* )

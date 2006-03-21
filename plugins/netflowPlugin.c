@@ -1551,6 +1551,15 @@ static void* netflowMainLoop(void* _deviceId) {
 
 /* ****************************** */
 
+#if 0
+void initDb() {
+  if(fetchPrefsValue(nfValue(deviceId, "netFlowInPort", 1), value, sizeof(value)) == -1)
+    storePrefsValue(nfValue(deviceId, "netFlowInPort", 1), "0");
+  else
+    myGlobals.device[deviceId].netflowGlobals->netFlowInPort = atoi(value);
+}
+#endif
+
 static void initNetFlowDevice(int deviceId) {
   int a, b, c, d, a1, b1, c1, d1, rc;
   char value[1024], workList[1024];
