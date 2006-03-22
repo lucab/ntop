@@ -2593,31 +2593,33 @@ void traceEvent(int eventTraceLevel, char* file,
 
     /* Finished preparing message fields */
 
-    /* So, (INFO & above only) - post it to logView buffer. */
-    if ((eventTraceLevel <= CONST_INFO_TRACE_LEVEL) &&
-        (myGlobals.logView != NULL)) {
+    if(myGlobals.ntopRunState < FLAG_NTOPSTATE_SHUTDOWN) {
+      /* So, (INFO & above only) - post it to logView buffer. */
+      if ((eventTraceLevel <= CONST_INFO_TRACE_LEVEL) &&
+	  (myGlobals.logView != NULL)) {
 
-      if(myGlobals.logViewMutex.isInitialized) {
+	if(myGlobals.logViewMutex.isInitialized) {
 #ifdef WIN32
-	WaitForSingleObject(myGlobals.logViewMutex.mutex, INFINITE);
+	  WaitForSingleObject(myGlobals.logViewMutex.mutex, INFINITE);
 #else
-	pthread_mutex_lock(&myGlobals.logViewMutex.mutex);
+	  pthread_mutex_lock(&myGlobals.logViewMutex.mutex);
 #endif
-      }
+	}
 
-      if (myGlobals.logView[myGlobals.logViewNext] != NULL)
-	free(myGlobals.logView[myGlobals.logViewNext]);
+	if (myGlobals.logView[myGlobals.logViewNext] != NULL)
+	  free(myGlobals.logView[myGlobals.logViewNext]);
 
-      myGlobals.logView[myGlobals.logViewNext] = strdup(buf);
+	myGlobals.logView[myGlobals.logViewNext] = strdup(buf);
 
-      myGlobals.logViewNext = (myGlobals.logViewNext + 1) % CONST_LOG_VIEW_BUFFER_SIZE;
+	myGlobals.logViewNext = (myGlobals.logViewNext + 1) % CONST_LOG_VIEW_BUFFER_SIZE;
 
-      if(myGlobals.logViewMutex.isInitialized) {
+	if(myGlobals.logViewMutex.isInitialized) {
 #ifdef WIN32
-	ReleaseMutex(myGlobals.logViewMutex.mutex);
+	  ReleaseMutex(myGlobals.logViewMutex.mutex);
 #else
-	pthread_mutex_unlock(&myGlobals.logViewMutex.mutex);
+	  pthread_mutex_unlock(&myGlobals.logViewMutex.mutex);
 #endif
+	}
       }
     }
 

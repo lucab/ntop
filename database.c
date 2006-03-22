@@ -62,11 +62,12 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
   }
 
   if(!mysql_real_connect(&mysql, db_host, user, pw, NULL, 0, NULL, 0)){
-    traceEvent(CONST_TRACE_ERROR, "Failed to connect to MySQL: %s\n",
-	       mysql_error(&mysql));
+    traceEvent(CONST_TRACE_ERROR, "Failed to connect to MySQL: %s [%s:%s:%s:%s]\n",
+	       mysql_error(&mysql), db_host, user, pw, db_name);
     return(-2);
   } else
-    traceEvent(CONST_TRACE_INFO, "Succesfully connected to MySQL");
+    traceEvent(CONST_TRACE_INFO, "Succesfully connected to MySQL [%s:%s:%s:%s]",
+	       db_host, user, pw, db_name);
   
   /* *************************************** */
   
@@ -89,8 +90,8 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
 	   "`proto` smallint(3) NOT NULL default '0',"
 	   "`src` varchar(32) NOT NULL default '',"
 	   "`dst` varchar(32) NOT NULL default '',"
-	   "`sport` smallint(6) NOT NULL default '0',"
-	   "`dport` smallint(6) NOT NULL default '0',"
+	   "`sport` mediumint(6) NOT NULL default '0',"
+	   "`dport` mediumint(6) NOT NULL default '0',"
 	   "`pktSent` int(11) NOT NULL default '0',"
 	   "`pktRcvd` int(11) NOT NULL default '0',"
 	   "`bytesSent` int(11) NOT NULL default '0',"
@@ -117,26 +118,26 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
   snprintf(sql, sizeof(sql), "CREATE TABLE IF NOT EXISTS `flows` ("
 	   "`idx` int(11) NOT NULL auto_increment,"
 	   "`probeId` smallint(6) NOT NULL default '0',"
-	   "`srcAddr` int(11) NOT NULL default '0',"
-	   "`dstAddr` int(11) NOT NULL default '0',"
+	   "`src` varchar(32) NOT NULL default '',"
+	   "`dst` varchar(32) NOT NULL default '',"
 	   "`nextHop` int(11) NOT NULL default '0',"
-	   "`input` smallint(6) NOT NULL default '0',"
-	   "`output` smallint(6) NOT NULL default '0',"
-	   "`sentPkts` int(11) NOT NULL default '0',"
-	   "`rcvdPkts` int(11) NOT NULL default '0',"
-	   "`sentOctets` int(11) NOT NULL default '0',"
-	   "`rcvdOctets` int(11) NOT NULL default '0',"
+	   "`input` mediumint(6) NOT NULL default '0',"
+	   "`output` mediumint(6) NOT NULL default '0',"
+	   "`pktSent` int(11) NOT NULL default '0',"
+	   "`pktRcvd` int(11) NOT NULL default '0',"
+	   "`bytesSent` int(11) NOT NULL default '0',"
+	   "`bytesRcvd` int(11) NOT NULL default '0',"
 	   "`first` int(11) NOT NULL default '0',"
 	   "`last` int(11) NOT NULL default '0',"
-	   "`srcPort` smallint(6) NOT NULL default '0',"
-	   "`dstPort` smallint(6) NOT NULL default '0',"
+	   "`sport` mediumint(6) NOT NULL default '0',"
+	   "`dport` mediumint(6) NOT NULL default '0',"
 	   "`tcpFlags` smallint(3) NOT NULL default '0',"
 	   "`proto` smallint(3) NOT NULL default '0',"
-	   "`tos` smallint(3) NOT NULL default '0',"
-	   "`dstAS` smallint(6) NOT NULL default '0',"
-	   "`srcAS` smallint(6) NOT NULL default '0',"
-	   "`srcMask` smallint(3) NOT NULL default '0',"
-	   "`dstMask` smallint(3) NOT NULL default '0',"
+	   "`tos` tinyint(4) NOT NULL default '0',"
+	   "`dstAS` mediumint(6) NOT NULL default '0',"
+	   "`srcAS` mediumint(6) NOT NULL default '0',"
+	   "`srcMask` tinyint(4) NOT NULL default '0',"
+	   "`dstMask` tinyint(4) NOT NULL default '0',"
 	   "`vlanId` smallint(6) NOT NULL default '0',"
 	   "`processed` tinyint(1) NOT NULL default '0',"
 	   "UNIQUE KEY `idx` (`idx`)"
@@ -157,7 +158,7 @@ int dump_session_to_db(IPSession *sess) {
   if((!mysql_initialized) || (sess == NULL)) {
     return(-2);
   } else {
-    char sql[1024], tmp[32];
+    char sql[1024], tmp[32] = { 0 };
 
     if((sess->lastFlags == 0) || (sess->nwLatency.tv_sec > 100))
       tmp[0] = '\0';
@@ -187,7 +188,7 @@ int dump_session_to_db(IPSession *sess) {
 	     (sess->session_info == NULL) ? "" : sess->session_info,
 	     (sess->guessed_protocol == NULL) ? "" : sess->guessed_protocol);
 
-    //traceEvent(CONST_TRACE_ERROR, "-> %s", sql);
+    // traceEvent(CONST_TRACE_ERROR, "-> %s", sql);
 
     if(mysql_query(&mysql, sql)) {
       traceEvent(CONST_TRACE_WARNING, "%s", mysql_error(&mysql));
@@ -215,19 +216,26 @@ int insert_flow_record(u_int16_t probeId,
   if(!mysql_initialized) {
     return(-2);
   } else {
-    char sql[1024];
+    char sql[1024], buf1[32], buf2[32];
 
+    struct in_addr a, b;
+    
+    a.s_addr = srcAddr, b.s_addr = dstAddr;
+    
     snprintf(sql, sizeof(sql),
-	     "INSERT INTO flows (probeId, srcAddr, dstAddr, input, output, "
-	     "sentPkts, rcvdPkts, sentOctets, rcvdOctets, first, last,"
-	     "srcPort, dstPort, tcpFlags, proto, tos, vlanId) VALUES "
-	     "('%d', '%d', '%d',  '%d', '%d',  '%d',  '%d',  '%d', "
-	     " '%d',  '%d',  '%d',  '%d',  '%d',  '%d', '%d', '%d', '%d')",
-	     probeId, srcAddr, dstAddr, input, output, sentPkts,
-	     rcvdPkts, sentOctets, rcvdOctets, first, last,
-	     srcPort, dstPort, tcpFlags, proto, tos, vlanId);
+	     "INSERT INTO flows (probeId, src, dst, input, output, "
+	     "pktSent, pktRcvd, bytesSent, bytesRcvd, first, last, "
+	     "sport, dport, tcpFlags, proto, tos, vlanId) VALUES "
+	     "('%d', '%s', '%s',  '%u', '%u',  '%lu',  '%lu',  '%lu', "
+	     "'%lu',  '%lu',  '%lu',  '%u',  '%u',  '%u', '%d', '%d', '%d')",
+	     probeId, _intoa(a, buf1, sizeof(buf1)),
+	     _intoa(b, buf2, sizeof(buf2)),
+	     input, output, sentPkts, rcvdPkts, 
+	     sentOctets, rcvdOctets, 
+	     first, last, srcPort, dstPort,
+	     tcpFlags, proto, tos, vlanId);
 
-    traceEvent(CONST_TRACE_INFO, "%s", sql);
+    // traceEvent(CONST_TRACE_INFO, "%s", sql);
 
     if(mysql_query(&mysql, sql)) {
       traceEvent(CONST_TRACE_WARNING, "%s", mysql_error(&mysql));
@@ -254,7 +262,41 @@ static void term_database() {
 /* ***************************************************** */
 
 void initDB() {
-  init_database("localhost", "root", "", "ntop");
+  char host[64], user[64], pw[64], db[64], *key;
+
+  key = "database.host";
+  if(fetchPrefsValue(key, host, sizeof(host)) == -1) {
+    snprintf(host, sizeof(host), "localhost");
+    storePrefsValue(key, host);
+  }
+
+  /* ************************************************** */
+
+  key = "database.user";
+  if(fetchPrefsValue(key, user, sizeof(user)) == -1) {
+    snprintf(user, sizeof(user), "root");
+    storePrefsValue(key, user);
+  }
+
+  /* ************************************************** */
+
+  key = "database.pw";
+  if(fetchPrefsValue(key, pw, sizeof(pw)) == -1) {
+    snprintf(pw, sizeof(pw), "");
+    storePrefsValue(key, pw);
+  }
+
+  /* ************************************************** */
+
+  key = "database.db";
+  if(fetchPrefsValue(key, db, sizeof(db)) == -1) {
+    snprintf(db, sizeof(db), "ntop");
+    storePrefsValue(key, db);
+  }
+
+  /* ************************************************** */
+
+  init_database(host, user, pw, db);
 }
 
 /* ***************************************************** */

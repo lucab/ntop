@@ -1068,12 +1068,12 @@ struct flow_ver1_rec {
   u_int16_t output;     /* Output interface index */
   u_int32_t dPkts;      /* Packets sent in Duration */
   u_int32_t dOctets;    /* Octets sent in Duration */
-  u_int32_t First;      /* SysUptime at start of flow */
-  u_int32_t Last;       /* and of last packet of the flow */
+  u_int32_t first;      /* SysUptime at start of flow */
+  u_int32_t last;       /* and of last packet of the flow */
   u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
   u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
   u_int16_t pad;        /* pad to word boundary */
-  u_int8_t  prot;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t  proto;      /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
   u_int8_t  tos;        /* IP Type-of-Service */
   u_int8_t  pad2[7];    /* pad to word boundary */
 };
@@ -1106,13 +1106,13 @@ struct flow_ver5_rec {
 			   & last packet in this flow)*/
   u_int32_t dOctets;    /* Octets sent in Duration (milliseconds between 1st
 			   & last packet in  this flow)*/
-  u_int32_t First;      /* SysUptime at start of flow */
-  u_int32_t Last;       /* and of last packet of the flow */
+  u_int32_t first;      /* SysUptime at start of flow */
+  u_int32_t last;       /* and of last packet of the flow */
   u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
   u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
   u_int8_t  pad1;       /* pad to word boundary */
   u_int8_t  tcp_flags;  /* Cumulative OR of tcp flags */
-  u_int8_t  prot;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t  proto;      /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
   u_int8_t  tos;        /* IP Type-of-Service */
   u_int16_t src_as;     /* source peer/origin Autonomous System */
   u_int16_t dst_as;     /* dst peer/origin Autonomous System */
@@ -1146,13 +1146,13 @@ struct flow_ver7_rec {
   u_int16_t output;     /* Output interface index */
   u_int32_t dPkts;      /* Packets sent in Duration */
   u_int32_t dOctets;    /* Octets sent in Duration */
-  u_int32_t First;      /* SysUptime at start of flow */
-  u_int32_t Last;       /* and of last packet of the flow */
+  u_int32_t first;      /* SysUptime at start of flow */
+  u_int32_t last;       /* and of last packet of the flow */
   u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
   u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
   u_int8_t  flags;      /* Shortcut mode(dest only,src only,full flows*/
   u_int8_t  tcp_flags;  /* Cumulative OR of tcp flags */
-  u_int8_t  prot;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t  proto;      /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
   u_int8_t  tos;        /* IP Type-of-Service */
   u_int16_t dst_as;     /* dst peer/origin Autonomous System */
   u_int16_t src_as;     /* source peer/origin Autonomous System */
