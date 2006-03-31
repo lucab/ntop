@@ -314,7 +314,7 @@ static void wrtLlongItm(FILE *fDescr, int lang, char* indent, char* name,
 			TrafficCounter value, char last, int numEntriesSent) {
   char buf[80];
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),  "%lu", (long unsigned int)value.value);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),  "%llu", value.value);
   wrtStrItm(fDescr, lang, indent, name, buf, last, numEntriesSent);
 }
 
