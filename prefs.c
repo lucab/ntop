@@ -1208,6 +1208,28 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
     }
     processIntPref(NTOP_PREF_MAXHASH, value,
 		   (int*)&pref->maxNumHashEntries, savePref);
+  } else if(strcmp (key, NTOP_PREF_SQL_DB_CONFIG) == 0) {
+    processStrPref (NTOP_PREF_SQL_DB_CONFIG, value, &tmpStr, savePref);
+    if (tmpStr != NULL) {
+      strncpy(pref->sqlDbConfig, tmpStr, sizeof (pref->sqlDbConfig));
+      free(tmpStr);      /* alloc'd in processStrPref() */
+    }
+  } else if(strcmp (key, NTOP_PREF_SQL_REC_LIFETIME) == 0) {
+    if (value == NULL) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf), "%d",
+		    -1);
+      value = buf;
+    }
+    processIntPref(NTOP_PREF_SQL_REC_LIFETIME, value,
+		   (int*)&pref->sqlRecDaysLifetime, savePref);
+  } else if(strcmp (key, NTOP_PREF_SAVE_REC_INTO_DB) == 0) {
+    if (value == NULL) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf), "%d",
+		    -1);
+      value = buf;
+    }
+    processIntPref(NTOP_PREF_SAVE_REC_INTO_DB, value,
+		   (int*)&pref->saveRecordsIntoDb, savePref);
   } else if(strcmp (key, NTOP_PREF_MAXSESSIONS) == 0) {
     if (value == NULL) {
       safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
@@ -1321,8 +1343,11 @@ void initUserPrefs(UserPref *pref) {
   pref->refreshRate = DEFAULT_NTOP_AUTOREFRESH_INTERVAL;
   pref->disablePromiscuousMode = DEFAULT_NTOP_DISABLE_PROMISCUOUS;
   pref->traceLevel = DEFAULT_TRACE_LEVEL;
-  pref->maxNumHashEntries = DEFAULT_NTOP_MAX_HASH_ENTRIES;
-  pref->maxNumSessions    = DEFAULT_NTOP_MAX_NUM_SESSIONS;
+  pref->maxNumHashEntries  = DEFAULT_NTOP_MAX_HASH_ENTRIES;
+  pref->maxNumSessions     = DEFAULT_NTOP_MAX_NUM_SESSIONS;
+  strncpy(pref->sqlDbConfig, DEFAULT_NTOP_SQL_DB_CONFIG, sizeof(pref->sqlDbConfig));
+  pref->sqlRecDaysLifetime = DEFAULT_NTOP_SQL_REC_DAYS_LIFETIME;
+  pref->saveRecordsIntoDb  = DEFAULT_NTOP_SAVE_REC_INTO_DB;
   pref->webAddr = DEFAULT_NTOP_WEB_ADDR;
   pref->webPort = DEFAULT_NTOP_WEB_PORT;
   pref->ipv4or6 = DEFAULT_NTOP_FAMILY;

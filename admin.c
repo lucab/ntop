@@ -1676,8 +1676,26 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 		      50, pref->fcNSCacheFile,
 		      "Location of file mapping VSAN/FC_ID to WWN/Alias");
     break;
-
+    
   case showPrefAdvPref:
+    CONFIG_RADIO_ENTRY (DARK_BG, "Save Data into DB",
+			NTOP_PREF_SAVE_REC_INTO_DB,
+			pref->saveRecordsIntoDb,
+			"Enable/disable ntop to save data into the SQL (MySQL) database");
+
+    CONFIG_STR_ENTRY (DARK_BG, "DB Configuration", 
+		      NTOP_PREF_SQL_DB_CONFIG, 20, pref->sqlDbConfig,
+		      "Database (MySQL) database configuration: format &lt;Db host&gt;:&lt;DB user&gt;:&lt;DB User Pw&gt;.<br>"
+		      "Note that the credentials must allow this user to create tables,<br>"
+		      " hence make sure that the user privileges are properly specified.<p>"
+		      "<b>Note</b>: changes will have effect at the next ntop restart");
+
+    CONFIG_INT_ENTRY (DARK_BG, "DB Max record lifetime [days]", 
+		      NTOP_PREF_SQL_REC_LIFETIME, 5,
+		      pref->sqlRecDaysLifetime,
+		      "Maximum database (MySQL) records (flows and netflows) persistence in the database after which <br>"
+		      "will be automatically removed. Set this parameter to 0 (zero) to disable record purge.");
+
     CONFIG_INT_ENTRY (DARK_BG, "Max Hashes (-x)", NTOP_PREF_MAXHASH, 5,
 		      pref->maxNumHashEntries,
 		      "Limit number of host hash entries created in order"

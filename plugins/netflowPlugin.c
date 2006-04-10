@@ -1,5 +1,5 @@
 /*
- *  Copyright(C) 2002-05 Luca Deri <deri@ntop.org>
+ *  Copyright(C) 2002-06 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -104,7 +104,7 @@ static PluginInfo netflowPluginInfo[] = {
     "V1/V5/V7/V9 and <A HREF=http://ipfix.doit.wisc.edu/>IPFIX</A> (draft) data.<br>"
     "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
     "reports.<br><em>Remember to <A HREF=/switch.html>switch</A> the reporting NIC.</em>",
-    "4.0", /* version */
+    "4.1", /* version */
     "<a href=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     0, /* Active by default */
@@ -1256,21 +1256,23 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 				deviceId, &firstSeen, &lastSeen);
 
 #ifdef DEBUG_FLOWS
-	      traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d]", accum_len);
+	      traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d]", 
+			 accum_len);
 #endif
 
 	      if((accum_len % 2) == 1)
 		displ++; /* Handle padding */
 
-	      insert_flow_record(deviceId,
-				 ntohl(record.srcaddr), ntohl(record.dstaddr),
-				 ntohs(record.input), ntohs(record.output),
-				 ntohl(record.sentPkts), ntohl(record.sentOctets),
-				 ntohl(record.rcvdPkts), ntohl(record.rcvdOctets),
-				 firstSeen, lastSeen,
-				 ntohs(record.srcport), ntohs(record.dstport),
-				 record.tcp_flags,
-				 record.proto, record.tos, record.vlanId);
+	      if(myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB)
+		insert_flow_record(deviceId,
+				   ntohl(record.srcaddr),  ntohl(record.dstaddr),
+				   ntohs(record.input),    ntohs(record.output),
+				   ntohl(record.sentPkts), ntohl(record.sentOctets),
+				   ntohl(record.rcvdPkts), ntohl(record.rcvdOctets),
+				   firstSeen, lastSeen,
+				   ntohs(record.srcport),  ntohs(record.dstport),
+				   record.tcp_flags,
+				   record.proto, record.tos, record.vlanId);
 
 	      if(record.rcvdPkts > 0) {
 		u_int32_t tmp;
@@ -1672,6 +1674,12 @@ static void initNetFlowDevice(int deviceId) {
     myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = 0;
   } else
     myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = atoi(value);
+
+  if(fetchPrefsValue(nfValue(deviceId, "saveFlowsIntoDB", 1), value, sizeof(value)) == -1) {
+    storePrefsValue(nfValue(deviceId, "saveFlowsIntoDB", 1), "0" /* no */);
+    myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB = 0;
+  } else
+    myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB = atoi(value);
 
   if(fetchPrefsValue(nfValue(deviceId, "netFlowDumpInterval", 1), value, sizeof(value)) == -1) {
     storePrefsValue(nfValue(deviceId, "netFlowDumpInterval", 1), "0" /* no */);
@@ -2244,6 +2252,34 @@ static void printNetFlowConfiguration(int deviceId) {
 
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
              "<tr><th colspan=\"4\" "DARK_BG">General Options</th></tr>\n");
+
+  /* ****************************************************** */
+
+  sendString("<tr><th colspan=\"2\" "DARK_BG">Save Flows<br>into SQL DB</th>\n");
+
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString(netflowPluginInfo->pluginURLname);
+  sendString("\" method=GET>\n<p>");
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+  sendString(buf);
+
+  if(myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB) {
+    sendString("<input type=\"radio\" name=\"saveFlowsIntoDB\" value=\"1\" checked>Yes\n"
+               "<input type=\"radio\" name=\"saveFlowsIntoDB\" value=\"0\">No\n");
+  } else {
+    sendString("<input type=\"radio\" name=\"saveFlowsIntoDB\" value=\"1\">Yes\n"
+               "<input type=\"radio\" name=\"saveFlowsIntoDB\" value=\"0\" checked>No\n");
+  }
+
+  sendString("<input type=\"submit\" value=\"Change Flow Save Policy\"></p>\n</form>\n"
+	     "<p>This options instruments <b>ntop</b> to save flows into the configured "
+	     "SQL database. Note that you can also <A HREF=\"/"CONST_CONFIG_NTOP_HTML"?&showD=5\">configure</A> "
+	     "DB options and records persistency.</p>\n"
+	     "</td>\n</tr>\n");
+
+/* ****************************************************** */
 
   sendString("<tr><th colspan=\"2\" "DARK_BG">Assume FTP</th>\n");
 
@@ -2848,6 +2884,11 @@ static void handleNetflowHTTPrequest(char* _url) {
 	    myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = atoi(value);
 	    storePrefsValue(nfValue(deviceId, "netFlowAssumeFTP", 1), value);
 	  }
+	} else if(strcmp(device, "saveFlowsIntoDB") == 0) {
+	  if(deviceId > 0) {
+	    myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB = atoi(value);
+	    storePrefsValue(nfValue(deviceId, "saveFlowsIntoDB", 1), value);
+	  }
 	} else if(strcmp(device, "ifNetMask") == 0) {
 	  int a, b, c, d, a1, b1, c1, d1;
 
@@ -3250,7 +3291,8 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 
 #ifdef DEBUG_FLOWS
 	if(0)
-	  traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect [deviceId=%d][sender=%s][proto=%d][len=%d][hlen=%d]",
+	  traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect "
+		     "[deviceId=%d][sender=%s][proto=%d][len=%d][hlen=%d]",
 		     deviceId, intoa(ip.ip_src), ip.ip_p, plen, hlen);
 #endif
 
@@ -3290,7 +3332,7 @@ PluginInfo* netflowPluginEntryFctn(void)
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Welcome to %s.(C) 2002-05 by Luca Deri",
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Welcome to %s.(C) 2002-06 by Luca Deri",
 	     netflowPluginInfo->pluginName);
 
   return(netflowPluginInfo);

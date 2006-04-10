@@ -3638,7 +3638,18 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s%s%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s</TD>",
+		      getRowColor(),
+		      makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT, 
+				   0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
+		      sport, session->isP2P == 1 ? "&nbsp&lt;P2P&gt;" : "",
+		      session->voipSession == 1 ? "&nbsp&lt;VoIP&gt;" : "",
+		      makeHostLink(session->remotePeer, FLAG_HOSTLINK_TEXT_FORMAT, 
+				   0, 0, hostLinkBuf1, sizeof(hostLinkBuf1)),
+		      dport);
+	sendString(buf);
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
@@ -3648,13 +3659,6 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=CENTER NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=LEFT NOWRAP>%s</TD>",
-		      getRowColor(),
-		      makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-		      sport,
-		      session->isP2P == 1 ? "&nbsp&lt;P2P&gt;" : "",
-		      session->voipSession == 1 ? "&nbsp&lt;VoIP&gt;" : "",
-		      makeHostLink(session->remotePeer, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf1, sizeof(hostLinkBuf1)),
-		      dport,
 		      formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),
 		      formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1)),
 		      formatTime(&(session->firstSeen), formatBuf2, sizeof(formatBuf2)),

@@ -1228,7 +1228,7 @@ typedef struct netFlowGlobals {
 #ifdef HAVE_SCTP
   int netFlowInSctpSocket;
 #endif
-  u_char netFlowAssumeFTP;
+  u_char netFlowAssumeFTP, saveFlowsIntoDB;
   u_short netFlowInPort;
   struct in_addr netFlowIfAddress, netFlowIfMask;
   char *netFlowWhiteList, *netFlowBlackList;
@@ -1953,6 +1953,10 @@ typedef struct _userPref {
 
   u_int     maxNumHashEntries;  /* -x */
   u_int     maxNumSessions;     /* -X */
+
+  /* SQL Database */
+  char    sqlDbConfig[64], saveRecordsIntoDb;
+  u_short sqlRecDaysLifetime;  
 
   u_int16_t defaultVsan;        /* -v | --default-vsan */
   char      *webAddr;           /* -w | --http-serveraddress[:port] */

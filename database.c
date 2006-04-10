@@ -155,6 +155,9 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
 /* ***************************************************** */
 
 int dump_session_to_db(IPSession *sess) {
+
+  if(myGlobals.runningPref.saveRecordsIntoDb == 0) return(0);
+
   if((!mysql_initialized) || (sess == NULL)) {
     return(-2);
   } else {
@@ -213,6 +216,9 @@ int insert_flow_record(u_int16_t probeId,
 		       u_int32_t first, u_int32_t last,
 		       u_int16_t srcPort, u_int16_t dstPort, u_int8_t tcpFlags,
 		       u_int8_t proto, u_int8_t tos, u_int16_t vlanId) {
+
+  if(myGlobals.runningPref.saveRecordsIntoDb == 0) return(0);
+
   if(!mysql_initialized) {
     return(-2);
   } else {
@@ -262,41 +268,26 @@ static void term_database() {
 /* ***************************************************** */
 
 void initDB() {
-  char host[64], user[64], pw[64], db[64], *key;
+  char *host = NULL, *user = NULL, *pw = NULL,
+    tmpBuf[256] = { 0 }, *key, *strtokState;
 
-  key = "database.host";
-  if(fetchPrefsValue(key, host, sizeof(host)) == -1) {
-    snprintf(host, sizeof(host), "localhost");
-    storePrefsValue(key, host);
-  }
+  if(myGlobals.runningPref.sqlDbConfig != NULL)
+    snprintf(tmpBuf, sizeof(tmpBuf), "%s :", myGlobals.runningPref.sqlDbConfig);
 
-  /* ************************************************** */
+  host = strtok_r(tmpBuf, ":", &strtokState);
+  if(host) user = strtok_r(NULL, ":", &strtokState);
+  if(user) pw = strtok_r(NULL, ":", &strtokState);
 
-  key = "database.user";
-  if(fetchPrefsValue(key, user, sizeof(user)) == -1) {
-    snprintf(user, sizeof(user), "root");
-    storePrefsValue(key, user);
-  }
+  if(pw && (strlen(pw) == 1 /* it's the space we added */)) 
+    pw = "";
 
-  /* ************************************************** */
-
-  key = "database.pw";
-  if(fetchPrefsValue(key, pw, sizeof(pw)) == -1) {
-    snprintf(pw, sizeof(pw), "");
-    storePrefsValue(key, pw);
-  }
-
-  /* ************************************************** */
-
-  key = "database.db";
-  if(fetchPrefsValue(key, db, sizeof(db)) == -1) {
-    snprintf(db, sizeof(db), "ntop");
-    storePrefsValue(key, db);
-  }
-
-  /* ************************************************** */
-
-  init_database(host, user, pw, db);
+  if(host && user && pw)
+    init_database(host, user, pw, "ntop");
+  else
+    traceEvent(CONST_TRACE_ERROR, "Unable to initialize DB: please configure the DB prefs [%s][%s][%s]",
+	       host != NULL ? host : "<NULL>", 
+	       user != NULL ? user : "<NULL>", 
+	       pw != NULL ? pw : "<NULL>");
 }
 
 /* ***************************************************** */

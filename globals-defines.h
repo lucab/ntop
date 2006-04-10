@@ -2120,6 +2120,10 @@
 #define DEFAULT_NTOP_MAX_HASH_ENTRIES       (u_int)8192  /* -x */
 #define DEFAULT_NTOP_MAX_NUM_SESSIONS       (u_int)32768 /* -X */
 
+#define DEFAULT_NTOP_SQL_DB_CONFIG          "localhost:root:" /* MySQL */
+#define DEFAULT_NTOP_SQL_REC_DAYS_LIFETIME  7 /* days */
+#define DEFAULT_NTOP_SAVE_REC_INTO_DB       0 /* don't save data */
+
 /*
  * What should we set tracing to unless we have a parameter?
  */
@@ -2856,6 +2860,9 @@ struct ip6_hdr
 #define NTOP_PREF_MAPPERURL        "ntop.mapperURL"
 #define NTOP_PREF_WWN_MAP          "ntop.fcNSCacheFile"
 #define NTOP_PREF_MAXHASH          "ntop.maxNumHashEntries"
+#define NTOP_PREF_SQL_DB_CONFIG    "ntop.sqlDbConfig"
+#define NTOP_PREF_SQL_REC_LIFETIME "ntop.sqlRecDaysLifetime"
+#define NTOP_PREF_SAVE_REC_INTO_DB "ntop.saveRecordsIntoDb"
 #define NTOP_PREF_MAXSESSIONS      "ntop.maxNumSessions"
 #define NTOP_PREF_MERGEIF          "ntop.mergeInterfaces"
 #define NTOP_PREF_NO_ISESS_PURGE   "ntop.disableInstantSessionPurge"
