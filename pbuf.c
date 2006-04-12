@@ -3544,8 +3544,62 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
 	}
+      } else if(eth_type == 0xDEAD) /* Agilent */ {
+	typedef struct {
+	  u_int8_t  version;        /* Protocol Version */
+	  u_int8_t  response_pdu;   /* 0=Request, 1=Response */
+	  u_int8_t  fragment_id;    /* Fragment Id (Only for
+				       fragmented FORWARD responses) */
+	  u_int8_t  pdu_type;       /* See sgbic_pdu_type */
+	  u_int16_t pdu_id;         /* Unique (serial) PDU identifier */
+	  u_int16_t pdu_len;        /* length (bytes) of the PDU (not
+				       including this header) */
+	  u_char    digest[16];     /* MD5 digest */
+	} sgbic_header_v1;
+
+	sgbic_header_v1 *pdu;
+
+	if(length > hlen+sizeof(sgbic_header_v1)) {
+	  pdu = (sgbic_header_v1*)(p+hlen);
+	  
+	  if((pdu->version == 1) && (pdu->pdu_type == 2 /* forward */)) {
+	    static u_short last_pdu_len, last_pdu_id;
+	    u_short size_shift = hlen+sizeof(sgbic_header_v1);
+	    
+	    if(pdu->fragment_id == 0) {
+	      struct pcap_pkthdr h1;
+
+	      h1.caplen     = h->caplen-size_shift;
+	      h1.len        = h->len-size_shift;
+	      h1.ts.tv_sec  = h->ts.tv_sec;
+	      h1.ts.tv_usec = h->ts.tv_usec;
+
+
+	      if(last_pdu_id == pdu->pdu_id) {
+		if(0)
+		  traceEvent(CONST_TRACE_ERROR, "[vers=%d][pdu_type=%d][pdu_id=%d][len=%d][fragment_id=%d]",
+			     pdu->version, pdu->pdu_type, pdu->pdu_id, ntohs(pdu->pdu_len), pdu->fragment_id);
+		
+		h1.len += last_pdu_len;
+		if(0)
+		  traceEvent(CONST_TRACE_ERROR, "[caplen=%d][len=%d][last_pdu_len=%d]",
+			     h1.caplen, h1.len, last_pdu_len);
+	      }
+
+	      processPacket(_deviceId, &h1, p+size_shift);
+	    } else {
+	      last_pdu_len = h->len-size_shift, last_pdu_id = pdu->pdu_id;
+
+	      if(0)
+		traceEvent(CONST_TRACE_ERROR, "[vers=%d][pdu_type=%d][pdu_id=%d][len=%d][fragment_id=%d]",
+			   pdu->version, pdu->pdu_type, pdu->pdu_id, ntohs(pdu->pdu_len), pdu->fragment_id);
+	      
+	    }
+	  }
+	}
+
       } else if(eth_type == 0x8864) /* PPPOE */ {
-        /* PPPoE - Courtesy of Andreas Pfaller Feb2003
+        /* PPPoE - Courtesy of Andreas Pfaller Feb20032
          *   This strips the PPPoE encapsulation for traffic transiting the network.
          */
         struct pppoe_hdr *pppoe_hdr=(struct pppoe_hdr *) (p+hlen);
