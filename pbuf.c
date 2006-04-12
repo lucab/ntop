@@ -2444,11 +2444,10 @@ void* dequeuePacket(void* _deviceId) {
        && (myGlobals.runningPref.enablePacketDecoding /* Courtesy of Ken Beaty <ken@ait.com> */))
       traceEvent (CONST_TRACE_WARNING, "dequeuePacket: caplen %d != len %d\n", h.caplen, h.len);
 
-    if (myGlobals.runningPref.printIpOnly) {
-        memcpy(p, myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueTail].p, DEFAULT_SNAPLEN);
-    } else {
+    if (myGlobals.runningPref.printIpOnly) 
+      memcpy(p, myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueTail].p, DEFAULT_SNAPLEN);
+    else 
       memcpy(p, myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueTail].p, MAX_PACKET_LEN);
-    }
 
     if(h.len > MAX_PACKET_LEN) {
       traceEvent(CONST_TRACE_WARNING, "packet truncated (%d->%d)", h.len, MAX_PACKET_LEN);

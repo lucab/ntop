@@ -812,6 +812,11 @@ datum ntop_gdbm_fetch(GDBM_FILE g, datum d, char* theFile, int theLine) {
 int ntop_gdbm_delete(GDBM_FILE g, datum d, char* theFile, int theLine) {
   int rc;
 
+  if((d.dptr == NULL) || (d.dsize == 0)) {
+    traceEvent(CONST_TRACE_WARNING, "Wrong data to delete passed to gdbm_delete()");
+    return(-1);
+  }
+
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_delete");
 

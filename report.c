@@ -3535,7 +3535,8 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 
 void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   int idx;
-  char buf[1500], hostLinkBuf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf1[LEN_GENERAL_WORK_BUFFER];
+  char buf[1500], hostLinkBuf[LEN_GENERAL_WORK_BUFFER],
+    hostLinkBuf1[LEN_GENERAL_WORK_BUFFER], *voipStr;
   int numSessions, printedSessions;
   char formatBuf[64], formatBuf1[64], formatBuf2[64], formatBuf3[64],
     formatBuf4[64], formatBuf5[64], formatBuf6[64];
@@ -3636,6 +3637,15 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	   || (session->lastSeen == 0))
 	  session->lastSeen = myGlobals.actTime;
 
+	if((session->guessed_protocol != NULL)
+	   && session->voipSession
+	   && strstr(session->guessed_protocol, "skype"))
+	  voipStr = "/skype.gif";
+	else if(session->voipSession)
+	  voipStr = "&nbsp&lt;VoIP&gt;";
+	else
+	  voipStr = "";       
+
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s%s%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s</TD>",
@@ -3643,9 +3653,10 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT, 
 				   0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 		      sport, session->isP2P == 1 ? "&nbsp&lt;P2P&gt;" : "",
-		      session->voipSession == 1 ? "&nbsp&lt;VoIP&gt;" : "",
-		      makeHostLink(session->remotePeer, FLAG_HOSTLINK_TEXT_FORMAT, 
-				   0, 0, hostLinkBuf1, sizeof(hostLinkBuf1)),
+		      voipStr, makeHostLink(session->remotePeer, 
+					    FLAG_HOSTLINK_TEXT_FORMAT, 
+					    0, 0, hostLinkBuf1, 
+					    sizeof(hostLinkBuf1)),
 		      dport);
 	sendString(buf);
 

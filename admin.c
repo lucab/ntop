@@ -1279,96 +1279,107 @@ int processNtopConfigData (char *buf, int savePref)
 
 void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 {
-    char buf[1024];
-    char theLink[32];
+  char buf[1024];
+  char theLink[32];
 
-    safe_snprintf (__FILE__, __LINE__, theLink, sizeof(theLink),
-                   "/configNtop.html?&showD=");
+  safe_snprintf (__FILE__, __LINE__, theLink, sizeof(theLink),
+		 "/configNtop.html?&showD=");
 
-    switch (configScr) {
-    case showPrefBasicPref:
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
-                      "[ <B>Basic Preferences</B> ]&nbsp;"
-                      "[ <A HREF=%s2>Display Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s3>IP Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s4>FC Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s5>Advanced Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s6>Debugging Preferences</A> ]&nbsp;</p>",
-                      theLink, theLink, theLink, theLink, theLink, theLink);
-        break;
+  switch (configScr) {
+  case showPrefBasicPref:
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
+		  "[ <B>Basic Prefs</B> ]&nbsp;"
+		  "[ <A HREF=%s2>Display Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s3>IP Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;</p>",
+		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+    break;
 
-    case showPrefDisplayPref:
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
-                      "[ <A HREF=%s1>Basic Preferences</A> ]&nbsp;"
-                      "[ <B>Display Preferences</B> ]&nbsp;"
-                      "[ <A HREF=%s3>IP Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s4>FC Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s5>Advanced Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s6>Debugging Preferences</A> ]&nbsp;</p>",
-                      theLink, theLink, theLink, theLink, theLink, theLink);
-        break;
-    case showPrefIPPref:
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
-                      "[ <A HREF=%s1>Basic Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s2>Display Preferences</A> ]&nbsp;"
-                      "[ <B>IP Preferences</B> ]&nbsp;"
-                      "[ <A HREF=%s4>FC Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s5>Advanced Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s6>Debugging Preferences</A> ]&nbsp;</p>",
-                      theLink, theLink, theLink, theLink, theLink, theLink);
-        break;
-    case showPrefFCPref:
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
-                      "[ <A HREF=%s1>Basic Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s2>Display Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s3>IP Preferences</A> ]&nbsp;"
-                      "[ <B>FC Preferences</B> ]&nbsp;"
-                      "[ <A HREF=%s5>Advanced Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s6>Debugging Preferences</A> ]&nbsp;</p>",
-                      theLink, theLink, theLink, theLink, theLink, theLink);
-        break;
-    case showPrefAdvPref:
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
-                      "[ <A HREF=%s1>Basic Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s2>Display Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s3>IP Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s4>FC Preferences</A> ]&nbsp;"
-                      "[ <B>Advanced Preferences</B> ]&nbsp;"
-                      "[ <A HREF=%s6>Debugging Preferences</A> ]&nbsp;</p>",
-                      theLink, theLink, theLink, theLink, theLink, theLink);
-        break;
-    case showPrefDbgPref:
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
-                      "[ <A HREF=%s1>Basic Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s2>Display Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s3>IP Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s4>FC Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s5>Advanced Preferences</A> ]&nbsp;"
-                      "[ <B>Debugging Preferences</B> ]&nbsp;</p>",
-                      theLink, theLink, theLink, theLink, theLink, theLink);
-        break;
-    case showPrefPluginPref:
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
-                      "[ <A HREF=%s1>Basic Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s2>Display Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s3>IP Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s4>FC Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s5>Advanced Preferences</A> ]&nbsp;"
-                      "[ <A HREF=%s6>Debugging Preferences</A> ]&nbsp;</p>"
-                      "[ <B>Plugin Preferences</B> ]&nbsp;</p>",
-                      theLink, theLink, theLink, theLink, theLink, theLink);
-        break;
-    }
+  case showPrefDisplayPref:
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
+		  "[ <A HREF=%s1>Basic Prefs</A> ]&nbsp;"
+		  "[ <B>Display Prefs</B> ]&nbsp;"
+		  "[ <A HREF=%s3>IP Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;</p>",
+		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+    break;
 
-    sendString (buf);
+  case showPrefIPPref:
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
+		  "[ <A HREF=%s1>Basic Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s2>Display Prefs</A> ]&nbsp;"
+		  "[ <B>IP Prefs</B> ]&nbsp;"
+		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;</p>",
+		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+    break;
 
-    safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf),
-                   "<FORM ACTION=%s%d method=POST>"
-                   " <TABLE BORDER=1 "TABLE_DEFAULTS">\n"
-                   "<TR><TH ALIGN=CENTER "DARK_BG">Preference</TH>"
-                   "<TH ALIGN=CENTER "DARK_BG">Configured Value</TH></TR>\n",
-                   theLink, configScr);
-    sendString (buf);
+  case showPrefFCPref:
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
+		  "[ <A HREF=%s1>Basic Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s2>Display Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s3>IP Prefs</A> ]&nbsp;"
+		  "[ <B>FC Prefs</B> ]&nbsp;"
+		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;</p>",
+		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+    break;
+
+  case showPrefAdvPref:
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
+		  "[ <A HREF=%s1>Basic Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s2>Display Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s3>IP Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
+		  "[ <B>Advanced Prefs</B> ]&nbsp;"
+		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;</p>",
+		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+    break;
+
+  case showPrefDbgPref:
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
+		  "[ <A HREF=%s1>Basic Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s2>Display Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s3>IP Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
+		  "[ <B>Debugging Prefs</B> ]&nbsp;"
+		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;</p>",
+		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+    break;
+
+  case showPrefDBPref:
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
+		  "[ <A HREF=%s1>Basic Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s2>Display Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s3>IP Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
+		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
+		  "[ <B>DB Prefs</B> ]&nbsp;</p>",
+		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+    break;
+  }
+
+  sendString (buf);
+
+  safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf),
+		 "<FORM ACTION=%s%d method=POST>"
+		 " <TABLE BORDER=1 "TABLE_DEFAULTS">\n"
+		 "<TR><TH ALIGN=CENTER "DARK_BG">Preference</TH>"
+		 "<TH ALIGN=CENTER "DARK_BG">Configured Value</TH></TR>\n",
+		 theLink, configScr);
+  sendString (buf);
 }
 
 /* ***************************************************** */
@@ -1396,8 +1407,8 @@ char * rindex(const char *p, int ch) {
 
 /* ***************************************************** */
 
-void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
-{
+void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
+		      int postLen) {
   char buf[1024], hostStr[MAXHOSTNAMELEN+16];
   bool startCap = FALSE;
   int len;
@@ -1407,12 +1418,11 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
    * Configuration is dealt with via POST method. So read the data first.
    */
   if (postLen) {
-    if ((len = readHTTPpostData (postLen, buf, 1024)) != postLen) {
+    if((len = readHTTPpostData (postLen, buf, 1024)) != postLen) {
       traceEvent (CONST_TRACE_WARNING, "handleNtopConfig: Unable to retrieve "
 		  "all POST data (%d, expecting %d). Aborting processing\n",
 		  len, postLen);
-    }
-    else {
+    } else {
       /* =============================================
        * Parse input URI & store specified preferences
        * =============================================
@@ -1436,8 +1446,7 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 	  if (strncmp (token, NTOP_SAVE_PREFS,
 		       strlen (NTOP_SAVE_PREFS)) == 0) {
 	    savePref = TRUE;
-	  }
-	  else if (strncmp (token, NTOP_RESTORE_DEF,
+	  } else if (strncmp (token, NTOP_RESTORE_DEF,
 			    strlen (NTOP_RESTORE_DEF)) == 0) {
 	    restoreDef = TRUE;
 	  }
@@ -1447,8 +1456,7 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 	  initUserPrefs (&defaults);
           defaults.samplingRate =  myGlobals.savedPref.samplingRate;
 	  pref = &defaults;
-	}
-	else {
+	} else {
 	  /* process preferences and start capture if necessary */
 	  processNtopConfigData (buf, savePref);
 	  if (startCap) {
@@ -1464,11 +1472,11 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
    * =========================================
    */
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-  printHTMLheader("Configure NTOP", NULL, 0);
+  printHTMLheader("Configure ntop", NULL, 0);
 
   sendString ("<CENTER>\n");
 
-  printNtopConfigHeader (url, configScr);
+  printNtopConfigHeader(url, configScr);
 
   switch (configScr) {
   case showPrefBasicPref:
@@ -1507,90 +1515,88 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
     }
 
   default:
-    CONFIG_STR_ENTRY (DARK_BG, "Capture File Path (-f)", NTOP_PREF_CAPFILE, 50,
-		      pref->rFileName,
-		      "Capture file to read from (takes precedence over "
-		      "interface specification)");
+    CONFIG_STR_ENTRY(DARK_BG, "Capture File Path (-f)", NTOP_PREF_CAPFILE, 50,
+		     pref->rFileName,
+		     "Capture file to read from (takes precedence over "
+		     "interface specification)");
 
-    CONFIG_STR_ENTRY (DARK_BG, "Capture Filter Expression (-B)",
-		      NTOP_PREF_FILTER,
-		      50, pref->currentFilterExpression,
-		      "Restrict the traffic seen by ntop. BPF syntax.");
+    CONFIG_STR_ENTRY(DARK_BG, "Capture Filter Expression (-B)",
+		     NTOP_PREF_FILTER,
+		     50, pref->currentFilterExpression,
+		     "Restrict the traffic seen by ntop. BPF syntax.");
 
-    CONFIG_INT_ENTRY (DARK_BG, "Packet sampling rate (-C)", NTOP_PREF_SAMPLING,
-		      50, pref->samplingRate, "Sampling rate [1 = no sampling]");
+    CONFIG_INT_ENTRY(DARK_BG, "Packet sampling rate (-C)", NTOP_PREF_SAMPLING,
+		     50, pref->samplingRate, "Sampling rate [1 = no sampling]");
 
     if (pref->webAddr == NULL) {
       safe_snprintf (__FILE__, __LINE__, hostStr, sizeof (hostStr),
 		     "%d", pref->webPort);
-    }
-    else {
+    } else {
       safe_snprintf (__FILE__, __LINE__, hostStr, sizeof (hostStr),
 		     "%s:%d", pref->webAddr, pref->webPort);
     }
-    CONFIG_STR_ENTRY (DARK_BG, "HTTP Server (-w)", NTOP_PREF_WEBPORT,
-		      50, hostStr,
-		      "HTTP Server [Address:]Port of ntop's web interface");
+    CONFIG_STR_ENTRY(DARK_BG, "HTTP Server (-w)", NTOP_PREF_WEBPORT,
+		     50, hostStr,
+		     "HTTP Server [Address:]Port of ntop's web interface");
 
 #ifdef HAVE_OPENSSL
     if (pref->sslAddr == NULL) {
       safe_snprintf (__FILE__, __LINE__, hostStr, sizeof (hostStr),
 		     "%d", pref->sslPort);
-    }
-    else {
+    } else {
       safe_snprintf (__FILE__, __LINE__, hostStr, sizeof (hostStr),
 		     "%s:%d", pref->sslAddr, pref->sslPort);
     }
-    CONFIG_STR_ENTRY (DARK_BG, "HTTPS Server (-W)", NTOP_PREF_SSLPORT, 50,
-		      hostStr, "HTTPS Server [Address:]Port of ntop's web "
-		      "interface");
+    CONFIG_STR_ENTRY(DARK_BG, "HTTPS Server (-W)", NTOP_PREF_SSLPORT, 50,
+		     hostStr, "HTTPS Server [Address:]Port of ntop's web "
+		     "interface");
 #endif
 
-    CONFIG_RADIO_ENTRY (DARK_BG, "Enable Session Handling (-z)",
-			 NTOP_PREF_EN_SESSION,
-			 pref->enableSessionHandling, "");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Enable Session Handling (-z)",
+		       NTOP_PREF_EN_SESSION,
+		       pref->enableSessionHandling, "");
 
-    CONFIG_RADIO_ENTRY (DARK_BG, "Enable Protocol Decoders (-b)",
-			 NTOP_PREF_EN_PROTO_DECODE,
-			 pref->enablePacketDecoding, "");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Enable Protocol Decoders (-b)",
+		       NTOP_PREF_EN_PROTO_DECODE,
+		       pref->enablePacketDecoding, "");
 
-    CONFIG_STR_ENTRY (DARK_BG, "Flow Spec (-F)", NTOP_PREF_FLOWSPECS, 50,
-		      pref->flowSpecs,
-		      "Flow is a stream of captured packets that match a specified rule");
+    CONFIG_STR_ENTRY(DARK_BG, "Flow Spec (-F)", NTOP_PREF_FLOWSPECS, 50,
+		     pref->flowSpecs,
+		     "Flow is a stream of captured packets that match a specified rule");
 
-    CONFIG_STR_ENTRY (DARK_BG, "Local Subnet Address (-m)",
-		      NTOP_PREF_LOCALADDR, 50,
-		      pref->localAddresses,
-		      "Local subnets in ntop reports (use , to separate them). Mandatory for packet capture files");
+    CONFIG_STR_ENTRY(DARK_BG, "Local Subnet Address (-m)",
+		     NTOP_PREF_LOCALADDR, 50,
+		     pref->localAddresses,
+		     "Local subnets in ntop reports (use , to separate them). Mandatory for packet capture files");
 
-    CONFIG_RADIO_ENTRY (DARK_BG, "Sticky Hosts (-c)",
-			 NTOP_PREF_STICKY_HOSTS, pref->stickyHosts,
-			 "Don't purge idle hosts from memory");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Sticky Hosts (-c)",
+		       NTOP_PREF_STICKY_HOSTS, pref->stickyHosts,
+		       "Don't purge idle hosts from memory");
 
-    CONFIG_RADIO_ENTRY (DARK_BG, "Track Local Hosts (-g)",
-			 NTOP_PREF_TRACK_LOCAL,
-			 pref->trackOnlyLocalHosts,
-			 "Capture data only about local hosts");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Track Local Hosts (-g)",
+		       NTOP_PREF_TRACK_LOCAL,
+		       pref->trackOnlyLocalHosts,
+		       "Capture data only about local hosts");
 
-    CONFIG_RADIO_ENTRY (DARK_BG, "Disable Promiscuous Mode (-s)",
-			 NTOP_PREF_NO_PROMISC,
-			 pref->disablePromiscuousMode,
-			 "Don't set the interface(s) into promiscuous mode");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Disable Promiscuous Mode (-s)",
+		       NTOP_PREF_NO_PROMISC,
+		       pref->disablePromiscuousMode,
+		       "Don't set the interface(s) into promiscuous mode");
 
-    CONFIG_RADIO_ENTRY (DARK_BG, "Run as daemon (-d)", NTOP_PREF_DAEMON,
-			 pref->daemonMode, "Run Ntop as a daemon");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Run as daemon (-d)", NTOP_PREF_DAEMON,
+		       pref->daemonMode, "Run Ntop as a daemon");
     break;
 
   case showPrefDisplayPref:
-    CONFIG_INT_ENTRY (DARK_BG, "Refresh Time (-r)", NTOP_PREF_REFRESH_RATE,
-		      5, pref->refreshRate,
-		      "Delay (in secs) between automatic screen updates for "
-		      "supported HTML pages");
+    CONFIG_INT_ENTRY(DARK_BG, "Refresh Time (-r)", NTOP_PREF_REFRESH_RATE,
+		     5, pref->refreshRate,
+		     "Delay (in secs) between automatic screen updates for "
+		     "supported HTML pages");
 
-    CONFIG_INT_ENTRY (DARK_BG, "Max Table Rows (-e)", NTOP_PREF_MAXLINES, 5,
-		      pref->maxNumLines,
-		      "Max number of lines that ntop will display on each "
-		      " generated HTML page");
+    CONFIG_INT_ENTRY(DARK_BG, "Max Table Rows (-e)", NTOP_PREF_MAXLINES, 5,
+		     pref->maxNumLines,
+		     "Max number of lines that ntop will display on each "
+		     " generated HTML page");
 
     sendString("<TR><TD ALIGN=LEFT "DARK_BG">Show Menus For</TD><TD ALIGN=LEFT>");
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
@@ -1612,15 +1618,15 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
     sendString(buf);
     sendString("</TD></TR>");
 
-    CONFIG_RADIO_ENTRY (DARK_BG, "No Info On Invalid LUNs",
-			 NTOP_PREF_NO_INVLUN,
-			 pref->noInvalidLunDisplay,
-			 "Don't display info about non-existent LUNs");
+    CONFIG_RADIO_ENTRY(DARK_BG, "No Info On Invalid LUNs",
+		       NTOP_PREF_NO_INVLUN,
+		       pref->noInvalidLunDisplay,
+		       "Don't display info about non-existent LUNs");
 
-    CONFIG_RADIO_ENTRY (DARK_BG, "Use W3C", NTOP_PREF_W3C,
-			 pref->w3c,
-			 "Generate 'BETTER' (but not perfect) w3c "
-			 "compliant html 4.01 output");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Use W3C", NTOP_PREF_W3C,
+		       pref->w3c,
+		       "Generate 'BETTER' (but not perfect) w3c "
+		       "compliant html 4.01 output");
     break;
 
   case showPrefIPPref:
@@ -1643,169 +1649,170 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 		  (pref->ipv4or6 == AF_UNSPEC) ? "CHECKED" : "");
     sendString(buf);
 
-    CONFIG_STR_ENTRY (DARK_BG, "Local Domain Name (-D)",
-		      NTOP_PREF_DOMAINNAME, 10, pref->domainName,
-		      "Only if ntop is having difficulty determining it "
-		      "from the interface or in case of capture files");
+    CONFIG_STR_ENTRY(DARK_BG, "Local Domain Name (-D)",
+		     NTOP_PREF_DOMAINNAME, 10, pref->domainName,
+		     "Only if ntop is having difficulty determining it "
+		     "from the interface or in case of capture files");
 
-    CONFIG_RADIO_ENTRY (DARK_BG, "No DNS (-n)", NTOP_PREF_NUMERIC_IP,
-			 pref->numericFlag, "Skip DNS resolution, showing "
-			 "only numeric IP addresses");
+    CONFIG_RADIO_ENTRY(DARK_BG, "No DNS (-n)", NTOP_PREF_NUMERIC_IP,
+		       pref->numericFlag, "Skip DNS resolution, showing "
+		       "only numeric IP addresses");
 
-    CONFIG_STR_ENTRY (DARK_BG, "TCP/UDP Protocols To Monitor (-p)",
-		      NTOP_PREF_PROTOSPECS, 50, pref->protoSpecs,
-		      "format is &lt;label&gt;=&lt;protocol list&gt; [, &lt;"
-		      "label&gt;=&lt;protocol list&gt;] OR a filename"
-		      "of a file containing such a format");
-    CONFIG_STR_ENTRY (DARK_BG, "P3P-CP", NTOP_PREF_P3PCP, 50,
-		      pref->P3Pcp,
-		      "Return value for p3p compact policy header");
+    CONFIG_STR_ENTRY(DARK_BG, "TCP/UDP Protocols To Monitor (-p)",
+		     NTOP_PREF_PROTOSPECS, 50, pref->protoSpecs,
+		     "format is &lt;label&gt;=&lt;protocol list&gt; [, &lt;"
+		     "label&gt;=&lt;protocol list&gt;] OR a filename"
+		     "of a file containing such a format");
+    CONFIG_STR_ENTRY(DARK_BG, "P3P-CP", NTOP_PREF_P3PCP, 50,
+		     pref->P3Pcp,
+		     "Return value for p3p compact policy header");
 
-    CONFIG_STR_ENTRY (DARK_BG, "P3P-URI", NTOP_PREF_P3PURI, 50,
-		      pref->P3Puri,
-		      "Return value for p3p policyref header");
+    CONFIG_STR_ENTRY(DARK_BG, "P3P-URI", NTOP_PREF_P3PURI, 50,
+		     pref->P3Puri,
+		     "Return value for p3p policyref header");
 
-    CONFIG_STR_ENTRY (DARK_BG, "Host Mapper URL (-U)", NTOP_PREF_MAPPERURL,
-		      50, pref->mapperURL,
-		      "URL of the mapper.pl utility, for looking up geographical "
-		      "location of the host");
+    CONFIG_STR_ENTRY(DARK_BG, "Host Mapper URL (-U)", NTOP_PREF_MAPPERURL,
+		     50, pref->mapperURL,
+		     "URL of the mapper.pl utility, for looking up geographical "
+		     "location of the host");
     break;
 
   case showPrefFCPref:
-    CONFIG_STR_ENTRY (DARK_BG, "WWN Mapper File (-N)", NTOP_PREF_WWN_MAP,
-		      50, pref->fcNSCacheFile,
-		      "Location of file mapping VSAN/FC_ID to WWN/Alias");
+    CONFIG_STR_ENTRY(DARK_BG, "WWN Mapper File (-N)", NTOP_PREF_WWN_MAP,
+		     50, pref->fcNSCacheFile,
+		     "Location of file mapping VSAN/FC_ID to WWN/Alias");
     break;
     
   case showPrefAdvPref:
-    CONFIG_RADIO_ENTRY (DARK_BG, "Save Data into DB",
-			NTOP_PREF_SAVE_REC_INTO_DB,
-			pref->saveRecordsIntoDb,
-			"Enable/disable ntop to save data into the SQL (MySQL) database");
+    CONFIG_INT_ENTRY(DARK_BG, "Max Hashes (-x)", NTOP_PREF_MAXHASH, 5,
+		     pref->maxNumHashEntries,
+		     "Limit number of host hash entries created in order"
+		     " to limit memory used by ntop");
 
-    CONFIG_STR_ENTRY (DARK_BG, "DB Configuration", 
-		      NTOP_PREF_SQL_DB_CONFIG, 20, pref->sqlDbConfig,
-		      "Database (MySQL) database configuration: format &lt;Db host&gt;:&lt;DB user&gt;:&lt;DB User Pw&gt;.<br>"
-		      "Note that the credentials must allow this user to create tables,<br>"
-		      " hence make sure that the user privileges are properly specified.<p>"
-		      "<b>Note</b>: changes will have effect at the next ntop restart");
+    CONFIG_INT_ENTRY(DARK_BG, "Max Sessions (-X)", NTOP_PREF_MAXSESSIONS, 5,
+		     pref->maxNumSessions,
+		     "Limit number of IP sessions entries created in order"
+		     " to limit memory used by ntop");
 
-    CONFIG_INT_ENTRY (DARK_BG, "DB Max record lifetime [days]", 
-		      NTOP_PREF_SQL_REC_LIFETIME, 5,
-		      pref->sqlRecDaysLifetime,
-		      "Maximum database (MySQL) records (flows and netflows) persistence in the database after which <br>"
-		      "will be automatically removed. Set this parameter to 0 (zero) to disable record purge.");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Don't Merge Interfaces (-M)",
+		       NTOP_PREF_MERGEIF, pref->mergeInterfaces,
+		       "Yes = merge data from all interfaces (if possible), No = do not merge data from all interfaces");
 
-    CONFIG_INT_ENTRY (DARK_BG, "Max Hashes (-x)", NTOP_PREF_MAXHASH, 5,
-		      pref->maxNumHashEntries,
-		      "Limit number of host hash entries created in order"
-		      " to limit memory used by ntop");
-
-    CONFIG_INT_ENTRY (DARK_BG, "Max Sessions (-X)", NTOP_PREF_MAXSESSIONS, 5,
-		      pref->maxNumSessions,
-		      "Limit number of IP sessions entries created in order"
-		      " to limit memory used by ntop");
-
-    CONFIG_RADIO_ENTRY (DARK_BG, "Don't Merge Interfaces (-M)",
-			 NTOP_PREF_MERGEIF, pref->mergeInterfaces,
-			 "Yes = merge data from all interfaces (if possible), No = do not merge data from all interfaces");
-
-    CONFIG_RADIO_ENTRY (DARK_BG, "No Instant Session Purge",
-			 NTOP_PREF_NO_ISESS_PURGE,
-			 pref->disableInstantSessionPurge,
-			 "Makes ntop respect the timeouts for completed "
-			 "sessions");
+    CONFIG_RADIO_ENTRY(DARK_BG, "No Instant Session Purge",
+		       NTOP_PREF_NO_ISESS_PURGE,
+		       pref->disableInstantSessionPurge,
+		       "Makes ntop respect the timeouts for completed "
+		       "sessions");
 
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-    CONFIG_RADIO_ENTRY (DARK_BG, "Set Pcap to Nonblocking",
-			 NTOP_PREF_NOBLOCK, pref->setNonBlocking,
-			 "On platforms without independent select().<br>"
-                         "<B>WARNING</B>: Selecting this option will increase "
-                         "CPU usage significantly - see the man page and FAQ.");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Set Pcap to Nonblocking",
+		       NTOP_PREF_NOBLOCK, pref->setNonBlocking,
+		       "On platforms without independent select().<br>"
+		       "<B>WARNING</B>: Selecting this option will increase "
+		       "CPU usage significantly - see the man page and FAQ.");
 #endif
-    CONFIG_RADIO_ENTRY (DARK_BG, "No web on memory error",
-			 NTOP_PREF_NO_STOPCAP, pref->disableStopcap,
-			 "Change default of having the web interface available "
-			 "albeit with static content until ntop is shutdown");
+    CONFIG_RADIO_ENTRY(DARK_BG, "No web on memory error",
+		       NTOP_PREF_NO_STOPCAP, pref->disableStopcap,
+		       "Change default of having the web interface available "
+		       "albeit with static content until ntop is shutdown");
 
-    CONFIG_RADIO_ENTRY (DARK_BG, "Don't Trust MAC Address (-o)",
-			 NTOP_PREF_NO_TRUST_MAC, pref->dontTrustMACaddr,
-			 "Situations which may require this option include "
-			 "port/VLAN mirror");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Don't Trust MAC Address (-o)",
+		       NTOP_PREF_NO_TRUST_MAC, pref->dontTrustMACaddr,
+		       "Situations which may require this option include "
+		       "port/VLAN mirror");
 
-    CONFIG_STR_ENTRY (DARK_BG, "Pcap Log Base Path (-O)",
-		      NTOP_PREF_PCAP_LOGBASE, 50, pref->pcapLogBasePath,
-		      "Directory where packet dump files are created");
+    CONFIG_STR_ENTRY(DARK_BG, "Pcap Log Base Path (-O)",
+		     NTOP_PREF_PCAP_LOGBASE, 50, pref->pcapLogBasePath,
+		     "Directory where packet dump files are created");
 
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-    CONFIG_RADIO_ENTRY (DARK_BG, "Use SSL Watchdog",
-			 NTOP_PREF_USE_SSLWATCH, pref->useSSLwatchdog,
-			 "");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Use SSL Watchdog",
+		       NTOP_PREF_USE_SSLWATCH, pref->useSSLwatchdog,
+		       "");
 #endif
 
 #ifdef MAKE_WITH_SCHED_YIELD
-    CONFIG_RADIO_ENTRY (DARK_BG, "Disable SchedYield",
-			 NTOP_PREF_NO_SCHEDYLD, pref->disableSchedYield,
-			 "");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Disable SchedYield",
+		       NTOP_PREF_NO_SCHEDYLD, pref->disableSchedYield,
+		       "");
 #endif
     break;
 
   case showPrefDbgPref:
-    CONFIG_RADIO_ENTRY (DARK_BG, "Run in debug mode (-K)",
-			 NTOP_PREF_DBG_MODE, pref->debugMode,
-			 "Simplifies debugging Ntop");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Run in debug mode (-K)",
+		       NTOP_PREF_DBG_MODE, pref->debugMode,
+		       "Simplifies debugging Ntop");
 
-    CONFIG_INT_ENTRY (DARK_BG, "Trace Level (-t)", NTOP_PREF_TRACE_LVL, 5,
-		      pref->traceLevel,
-		      "Level of detailed messages ntop will display");
+    CONFIG_INT_ENTRY(DARK_BG, "Trace Level (-t)", NTOP_PREF_TRACE_LVL, 5,
+		     pref->traceLevel,
+		     "Level of detailed messages ntop will display");
 
-    CONFIG_RADIO_ENTRY (DARK_BG, "Save Other Packets (-j)",
-			 NTOP_PREF_DUMP_OTHER, pref->enableOtherPacketDump,
-			 "Useful for understanding packets unclassified by "
-			 "Ntop");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Save Other Packets (-j)",
+		       NTOP_PREF_DUMP_OTHER, pref->enableOtherPacketDump,
+		       "Useful for understanding packets unclassified by "
+		       "Ntop");
 
-    CONFIG_RADIO_ENTRY (DARK_BG, "Save Suspicious Packets (-q)",
-			 NTOP_PREF_DUMP_SUSP,
-			 pref->enableSuspiciousPacketDump,
-			 "Create a dump file (pcap) of suspicious packets");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Save Suspicious Packets (-q)",
+		       NTOP_PREF_DUMP_SUSP,
+		       pref->enableSuspiciousPacketDump,
+		       "Create a dump file (pcap) of suspicious packets");
 
-    CONFIG_STR_ENTRY (DARK_BG, "Log HTTP Requests (-a)",
-		      NTOP_PREF_ACCESS_LOG, 50, pref->accessLogFile,
-		      "Request HTTP logging and specify the location of the "
-		      "log file");
+    CONFIG_STR_ENTRY(DARK_BG, "Log HTTP Requests (-a)",
+		     NTOP_PREF_ACCESS_LOG, 50, pref->accessLogFile,
+		     "Request HTTP logging and specify the location of the "
+		     "log file");
 
 #ifndef WIN32
-    CONFIG_INT_ENTRY (DARK_BG, "Use Syslog (-L)", NTOP_PREF_USE_SYSLOG, 5,
-		      pref->useSyslog,
-		      "Send log messages to the system log instead of stdout");
+    CONFIG_INT_ENTRY(DARK_BG, "Use Syslog (-L)", NTOP_PREF_USE_SYSLOG, 5,
+		     pref->useSyslog,
+		     "Send log messages to the system log instead of stdout");
 #endif
 
-    CONFIG_STR_ENTRY (DARK_BG, "Write captured frames to (-l)",
-		      NTOP_PREF_PCAP_LOG, 50, pref->pcapLog,
-		      "Causes a dump file to be created of the captured by "
-		      "ntop in libpcap format");
+    CONFIG_STR_ENTRY(DARK_BG, "Write captured frames to (-l)",
+		     NTOP_PREF_PCAP_LOG, 50, pref->pcapLog,
+		     "Causes a dump file to be created of the captured by "
+		     "ntop in libpcap format");
 
-    CONFIG_RADIO_ENTRY (DARK_BG, "Disable Extra Mutex Info",
-			 NTOP_PREF_NO_MUTEX_EXTRA,
-			 pref->disableMutexExtraInfo,
-			 "Disables storing of extra information about the locks"
-			 " and unlocks of the protective mutexes Ntop uses");
+    CONFIG_RADIO_ENTRY(DARK_BG, "Disable Extra Mutex Info",
+		       NTOP_PREF_NO_MUTEX_EXTRA,
+		       pref->disableMutexExtraInfo,
+		       "Disables storing of extra information about the locks"
+		       " and unlocks of the protective mutexes Ntop uses");
+    break;
+
+  case showPrefDBPref:
+    CONFIG_RADIO_ENTRY(DARK_BG, "Save Data into DB",
+		       NTOP_PREF_SAVE_REC_INTO_DB,
+		       pref->saveRecordsIntoDb,
+		       "Enable/disable ntop to save data into the SQL (MySQL) database");
+
+    CONFIG_STR_ENTRY(DARK_BG, "DB Configuration", 
+		     NTOP_PREF_SQL_DB_CONFIG, 20, pref->sqlDbConfig,
+		     "Database (MySQL) database configuration: format &lt;Db host&gt;:&lt;DB user&gt;:&lt;DB User Pw&gt;.<br>"
+		     "Note that the credentials must allow this user to create tables,<br>"
+		     " hence make sure that the user privileges are properly specified.<p>"
+		     "<b>Note</b>: changes will have effect at the next ntop restart");
+
+    CONFIG_INT_ENTRY(DARK_BG, "DB Max record lifetime", 
+		     NTOP_PREF_SQL_REC_LIFETIME, 5,
+		     pref->sqlRecDaysLifetime,
+		     "Maximum database (MySQL) records (flows and netflows) persistence [days] in the database after which <br>"
+		     "will be automatically removed. Set this parameter to 0 (zero) to disable record purge.");
     break;
   }
 
   sendString ("</TABLE>");
-  /* Save Preferences */
+  /* Save Prefs */
   if (configScr == showPrefDisplayPref) {
     sendString("<tr><td colspan=\"2\" align=\"center\">&nbsp;<p>"
-	       "<input type=submit name=SP value=\"Save&nbsp;Preferences\">&nbsp;"
-	       "<input type=submit name=AP value=\"Apply&nbsp;Preferences\">&nbsp;"
+	       "<input type=submit name=SP value=\"Save&nbsp;Prefs\">&nbsp;"
+	       "<input type=submit name=AP value=\"Apply&nbsp;Prefs\">&nbsp;"
 	       "<input type=submit name=RD value=\"Restore&nbsp;Defaults\">"
 	       "</td></tr></table>\n"
 	       "</form>\n<p></center>\n");
-  }
-  else {
+  } else {
     sendString("<tr><td colspan=\"2\" align=\"center\">&nbsp;<p>"
-	       "<input type=submit name=SP value=\"Save&nbsp;Preferences\">&nbsp;"
+	       "<input type=submit name=SP value=\"Save&nbsp;Prefs\">&nbsp;"
 	       "<input type=submit name=RD value=\"Restore&nbsp;Defaults\">"
 	       "</td></tr></table>\n"
 	       "</form>\n<p></center>\n");

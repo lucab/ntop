@@ -2275,7 +2275,7 @@ static void printNetFlowConfiguration(int deviceId) {
 
   sendString("<input type=\"submit\" value=\"Change Flow Save Policy\"></p>\n</form>\n"
 	     "<p>This options instruments <b>ntop</b> to save flows into the configured "
-	     "SQL database. Note that you can also <A HREF=\"/"CONST_CONFIG_NTOP_HTML"?&showD=5\">configure</A> "
+	     "SQL database. Note that you can also <A HREF=\"/"CONST_CONFIG_NTOP_HTML"?&showD=7\">configure</A> "
 	     "DB options and records persistency.</p>\n"
 	     "</td>\n</tr>\n");
 

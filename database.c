@@ -51,10 +51,50 @@ static char *get_last_db_error() {
 
 /* ***************************************************** */
 
+static void* scanDbLoop(void* notUsed _UNUSED_) {
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DB: Database purge loop",
+             pthread_self());
+
+  for(;;) {
+    ntopSleepWhileSameState(86400); /* 1 day */
+
+    if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
+    
+    if(myGlobals.runningPref.sqlRecDaysLifetime > 0) {
+      char sql[256];
+
+      snprintf(sql, sizeof(sql),
+	       "DELETE FROM sessions WHERE lastSeen < (NOW()-%d*86400)",
+	       myGlobals.runningPref.sqlRecDaysLifetime);
+
+      if(exec_sql_query(sql) != 0)
+	traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error());
+
+      /* ************************************ */
+
+      snprintf(sql, sizeof(sql),
+	       "DELETE FROM flows WHERE last < (NOW()-%d*86400)",
+	       myGlobals.runningPref.sqlRecDaysLifetime);
+
+      if(exec_sql_query(sql) != 0)
+	traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error());
+    }
+  }
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DB: Database purge loop terminated",
+             pthread_self());
+
+  return(NULL);
+}
+
+/* ***************************************************** */
+
 static int init_database(char *db_host, char* user, char *pw, char *db_name) {
   char sql[2048];
 
   mysql_initialized = 0;
+  myGlobals.purgeDbThreadId = -1;
 
   if(mysql_init(&mysql) == NULL) {
     traceEvent(CONST_TRACE_ERROR, "Failed to initate MySQL connection");
@@ -66,7 +106,7 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
 	       mysql_error(&mysql), db_host, user, pw, db_name);
     return(-2);
   } else
-    traceEvent(CONST_TRACE_INFO, "Succesfully connected to MySQL [%s:%s:%s:%s]",
+    traceEvent(CONST_TRACE_INFO, "Successfully connected to MySQL [%s:%s:%s:%s]",
 	       db_host, user, pw, db_name);
   
   /* *************************************** */
@@ -82,38 +122,8 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
     return(-4);
   }
 
-  /* *************************************** */
-  
-  /* Sessions */
-  snprintf(sql, sizeof(sql), "CREATE TABLE IF NOT EXISTS `sessions` ("
-	   "`idx` int(11) NOT NULL auto_increment,"
-	   "`proto` smallint(3) NOT NULL default '0',"
-	   "`src` varchar(32) NOT NULL default '',"
-	   "`dst` varchar(32) NOT NULL default '',"
-	   "`sport` mediumint(6) NOT NULL default '0',"
-	   "`dport` mediumint(6) NOT NULL default '0',"
-	   "`pktSent` int(11) NOT NULL default '0',"
-	   "`pktRcvd` int(11) NOT NULL default '0',"
-	   "`bytesSent` int(11) NOT NULL default '0',"
-	   "`bytesRcvd` int(11) NOT NULL default '0',"
-	   "`firstSeen` int(11) NOT NULL default '0',"
-	   "`lastSeen` int(11) NOT NULL default '0',"
-	   "`nwLatency` float(6,2) NOT NULL default '0',"
-	   "`isP2P` smallint(1) NOT NULL default '0',"
-	   "`isVoIP` smallint(1) NOT NULL default '0',"
-	   "`isPassiveFtp` smallint(1) NOT NULL default '0',"
-	   "`info`   varchar(64) NOT NULL default '',"
-	   "`guessedProto`   varchar(16) NOT NULL default '',"
-	   "UNIQUE KEY `idx` (`idx`)"
-	   ") ENGINE=MyISAM DEFAULT CHARSET=latin1");
+  /* ************************************************ */
 
-  if(exec_sql_query(sql) != 0) {
-    traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error());
-    return(-5);
-  }
-
-  /* *************************************** */
-  
   /* NetFlow */
   snprintf(sql, sizeof(sql), "CREATE TABLE IF NOT EXISTS `flows` ("
 	   "`idx` int(11) NOT NULL auto_increment,"
@@ -147,6 +157,12 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
     traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error());
     return(-5);
   }
+
+  /* ************************************************ */
+
+  createThread(&myGlobals.purgeDbThreadId, scanDbLoop, NULL);
+  
+  /* ************************************************ */
 
   mysql_initialized = 1;
   return(0);

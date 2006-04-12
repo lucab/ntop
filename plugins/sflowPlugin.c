@@ -3864,10 +3864,10 @@ static int mapsFlowDeviceToNtopDevice(int sflowDeviceId) {
 
 /* ****************************** */
 
-static char *ifType(u_int32_t ifType) {
+static char *ifType(u_int32_t interface_type) {
   static char buf[8];
 
-  switch(ifType) {
+  switch(interface_type) {
   case 1: return("other");
   case 2: return("regular1822");
   case 3: return("hdh1822");
@@ -4012,15 +4012,15 @@ static char *ifType(u_int32_t ifType) {
   case 142: return("IP Forwarding Interface");
   case 162: return("Cisco Express Forwarding Interface");
   default: 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", ifType);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", interface_type);
     return(buf);
   }
 }
 
 /* ****************************** */
 
-static char *ifDirection(u_int32_t ifDirection) {
-  switch(ifDirection) {
+static char *ifDirection(u_int32_t interface_direction) {
+  switch(interface_direction) {
   case 0: return("unknown");
   case 1: return("full-duplex");
   case 2: return("half-duplex");
@@ -4032,8 +4032,8 @@ static char *ifDirection(u_int32_t ifDirection) {
 
 /* ****************************** */
 
-static char *ifStatus(u_int32_t ifStatus) {
-  switch(ifStatus) {
+static char *ifStatus(u_int32_t interface_status) {
+  switch(interface_status) {
   case 0: return("<FONT COLOR=red>Administrative</FONT><br><FONT COLOR=red>Operational</FONT>");
   case 1: return("<FONT COLOR=green>Administrative</FONT><br><FONT COLOR=red>Operational</FONT>");
   case 2: return("<FONT COLOR=red>Administrative</FONT><br><FONT COLOR=green>Operational</FONT>");

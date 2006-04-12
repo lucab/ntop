@@ -57,10 +57,10 @@ void handleSigHup(int signalId _UNUSED_) {
   for(i=0; i<myGlobals.numDevices; i++) {
     char tmp[64];
 
-    safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "myGlobals.packetProcessMutex[%s]", 
+    safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "myGlobals.packetProcessMutex[%s]",
 		  myGlobals.device[i].name);
     printMutexInfo(&myGlobals.device[i].packetProcessMutex, tmp);
-    safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "myGlobals.packetQueueMutex[%s]", 
+    safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "myGlobals.packetQueueMutex[%s]",
 		  myGlobals.device[i].name);
     printMutexInfo(&myGlobals.device[i].packetQueueMutex, tmp);
   }
@@ -648,7 +648,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
              pthread_self(), getpid());
 
   ntopSleepUntilStateRUN();
- 
+
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SIH: Idle host scan thread running [p%d]",
              pthread_self(), getpid());
 
@@ -706,7 +706,7 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
 
     ntopSleepWhileSameState(CONST_FINGERPRINT_LOOP_INTERVAL);
     if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
-    
+
     if(myGlobals.runningPref.rFileName == NULL)
       myGlobals.actTime = time(NULL);
     countCycle++;
@@ -760,7 +760,7 @@ static void cleanupThreadIs(char *buf, int sizeofbuf) {
       strncpy(buf, "SIH", sizeofbuf);
     else if(pthread_self() == myGlobals.handleWebConnectionsThreadId)
       strncpy(buf, "WEB", sizeofbuf);
-    
+
 #if defined(HAVE_OPENSSL) && defined(MAKE_WITH_SSLWATCHDOG)
     else if(pthread_self() == myGlobals.sslwatchdogChildThreadId)
       strncpy(buf, "SSL", sizeofbuf);
@@ -786,7 +786,7 @@ static void cleanupThreadIs(char *buf, int sizeofbuf) {
   if(buf[0] == '\0') {
     for(i=0; i<myGlobals.numDevices; i++) {
       if(pthread_self() == myGlobals.device[i].dequeuePacketThreadId) {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "NPS(%s)", 
+        safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "NPS(%s)",
 		      myGlobals.device[i].humanFriendlyName);
         break;
       }
@@ -821,20 +821,20 @@ static void cleanupThreadIs(char *buf, int sizeofbuf) {
 /* *************************** */
 
 void runningThreads(char *buf, int sizeofbuf, int do_join) {
-  char buf2[LEN_SMALL_WORK_BUFFER];
+  char buf2[LEN_MEDIUM_WORK_BUFFER];
   int i;
 
   if(!do_join) {
     memset(&buf2, 0, sizeof(buf2));
-    
+
 #if defined(HAVE_OPENSSL) && defined(MAKE_WITH_SSLWATCHDOG)
-    safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "%s%s%s%s", 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "%s%s%s%s",
 		  myGlobals.scanFingerprintsThreadId != 0 ? " SFP" : "",
 		  myGlobals.scanIdleThreadId != 0 ? " SIH" : "",
 		  myGlobals.handleWebConnectionsThreadId != 0 ? " WEB" : "",
 		  myGlobals.sslwatchdogChildThreadId != 0 ? " SSL" : "");
 #else
-    safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "%s%s%s", 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "%s%s%s",
 		  myGlobals.scanFingerprintsThreadId != 0 ? " SFP" : "",
 		  myGlobals.scanIdleThreadId != 0 ? " SIH" : "",
 		  myGlobals.handleWebConnectionsThreadId != 0 ? " WEB" : "");
@@ -843,7 +843,7 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
   }
 
   for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
-    if((myGlobals.dequeueAddressThreadId[i] != 0) 
+    if((myGlobals.dequeueAddressThreadId[i] != 0)
        && (myGlobals.dequeueAddressThreadId[i] != (pthread_t)-1)) {
       if(!do_join) {
 	safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), " DNSAR%d", i+1);
@@ -851,6 +851,7 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
       } else {
 	/* Wake up thread */
 	signalCondvar(&myGlobals.queueAddressCondvar);
+	traceEvent(CONST_TRACE_INFO, "Joining thread DNSAR%d", i+1);
 	if(joinThread(&myGlobals.dequeueAddressThreadId[i]) != 0)
 	  traceEvent(CONST_TRACE_INFO, "joinThread() returned %s", strerror(errno));
       }
@@ -873,16 +874,19 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 	  if(pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0) {
 	    traceEvent(CONST_TRACE_INFO, "STATS: %s packets received by filter on %s",
 		       formatPkts((Counter)pcapStats.ps_recv, buf2, sizeof(buf2)), myGlobals.device[i].name);
-	    
+
 	    traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (according to libpcap)",
 		       formatPkts((Counter)pcapStats.ps_drop, buf2, sizeof(buf2)));
 	  }
 	  traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (by ntop)",
-		     formatPkts(myGlobals.device[i].droppedPkts.value, buf2, sizeof(buf2)));	
-	  
+		     formatPkts(myGlobals.device[i].droppedPkts.value, buf2, sizeof(buf2)));
+
 
 	  signalCondvar(&myGlobals.device[i].queueCondvar);
 	  pcap_close(myGlobals.device[i].pcapPtr);
+
+	  traceEvent(CONST_TRACE_INFO, "Joining thread  NPS(%s)",
+		     myGlobals.device[i].humanFriendlyName);
 	  if(joinThread(&myGlobals.device[i].pcapDispatchThreadId) != 0)
 	    traceEvent(CONST_TRACE_INFO, "joinThread() returned %s", strerror(errno));
 	}
@@ -896,6 +900,7 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), " NF%d", i);
 	  safe_strncat(buf, sizeofbuf, buf2);
 	} else {
+	  traceEvent(CONST_TRACE_INFO, "Joining thread NF%d", i);
 	  if(joinThread(&myGlobals.device[i].netflowGlobals->netFlowThread) != 0)
 	    traceEvent(CONST_TRACE_INFO, "joinThread() returned %s", strerror(errno));
 	}
@@ -909,6 +914,7 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), " SF%d", i);
 	  safe_strncat(buf, sizeofbuf, buf2);
 	} else {
+	  traceEvent(CONST_TRACE_INFO, "Joining thread SF%d", i);
 	  if(joinThread(&myGlobals.device[i].sflowGlobals->sflowThread) != 0)
 	    traceEvent(CONST_TRACE_INFO, "joinThread() returned %s", strerror(errno));
 	}
@@ -918,16 +924,18 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
     for(i=0; i<myGlobals.numDevices; i++) {
       if(myGlobals.device[i].dequeuePacketThreadId != 0) {
 	if(!do_join) {
-	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), " NPA(%s)", 
+	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), " NPA(%s)",
 			myGlobals.device[i].humanFriendlyName);
 	  safe_strncat(buf, sizeofbuf, buf2);
 	} else {
+	  traceEvent(CONST_TRACE_INFO, "Joining thread NPA(%s)",
+		     myGlobals.device[i].humanFriendlyName);
 	  signalCondvar(&myGlobals.device[i].queueCondvar);
 	  if(joinThread(&myGlobals.device[i].dequeuePacketThreadId) != 0)
 	    traceEvent(CONST_TRACE_INFO, "joinThread() returned %s", strerror(errno));
 	}
       }
-    }    
+    }
   }
 }
 
@@ -941,7 +949,14 @@ RETSIGTYPE cleanup(int signo) {
   static int cleanup_called = 0;
 
   if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_SHUTDOWN) {
+    static u_char caught_signal = 0;
     traceEvent(CONST_TRACE_INFO, "CLEANUP[t%lu]: ntop caught signal %d", pthread_self(), signo);
+
+    if(caught_signal){
+      traceEvent(CONST_TRACE_INFO, "Forcing application termination");
+      exit(0);
+    } else
+      caught_signal = 1;
   }
 
 #ifdef HAVE_BACKTRACE
@@ -1023,7 +1038,7 @@ RETSIGTYPE cleanup(int signo) {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "CLEANUP: Locked purge mutex, continuing shutdown");
 
   runningThreads(buf, sizeof(buf), 0);
-  traceEvent(CONST_TRACE_INFO, "CLEANUP: Continues%s%s%s", 
+  traceEvent(CONST_TRACE_INFO, "CLEANUP: Continues%s%s%s",
              buf[0] == '\0' ? "" : " (still running",
              buf,
              buf[0] == '\0' ? "" : ")");
@@ -1065,7 +1080,7 @@ RETSIGTYPE cleanup(int signo) {
     tryLockMutex(&myGlobals.addressResolutionMutex, "cleanup");
     deleteMutex(&myGlobals.addressResolutionMutex);
   }
-  
+
   for(i=0; i<CONST_HASH_INITIAL_SIZE; i++) {
     tryLockMutex(&myGlobals.hostsHashMutex[i], "cleanup");
     deleteMutex(&myGlobals.hostsHashMutex[i]);
@@ -1082,7 +1097,7 @@ RETSIGTYPE cleanup(int signo) {
   deleteMutex(&myGlobals.purgeMutex);
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    traceEvent(CONST_TRACE_INFO, "CLEANUP: Freeing device %s", 
+    traceEvent(CONST_TRACE_INFO, "CLEANUP: Freeing device %s",
 	       myGlobals.device[i].humanFriendlyName);
 
     if(myGlobals.device[i].ipTrafficMatrix != NULL) {
@@ -1094,7 +1109,7 @@ RETSIGTYPE cleanup(int signo) {
       free(myGlobals.device[i].ipTrafficMatrix);
     }
 
-    /* FIX 
+    /* FIX
     if(myGlobals.device[i].ipTrafficMatrixHosts != NULL)
       free(myGlobals.device[i].ipTrafficMatrixHosts);
     */
@@ -1149,7 +1164,7 @@ RETSIGTYPE cleanup(int signo) {
 
   if(myGlobals.broadcastEntry != NULL) free(myGlobals.broadcastEntry);
   if(myGlobals.otherHostEntry != NULL) {
-    if(myGlobals.otherHostEntry->portsUsage != NULL) 
+    if(myGlobals.otherHostEntry->portsUsage != NULL)
       freePortsUsage(myGlobals.otherHostEntry);
     myGlobals.otherHostEntry->portsUsage = NULL;
     free(myGlobals.otherHostEntry);
@@ -1201,10 +1216,10 @@ RETSIGTYPE cleanup(int signo) {
   if(myGlobals.spoolPath) free(myGlobals.spoolPath);
   if(myGlobals.rrdPath != NULL)
     free(myGlobals.rrdPath);
-  
+
   if(myGlobals.gdVersionGuessValue != NULL)
     free(myGlobals.gdVersionGuessValue);
-  
+
 #if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
   traceEvent(CONST_TRACE_INFO, "===================================");
   muntrace();
@@ -1226,7 +1241,7 @@ RETSIGTYPE cleanup(int signo) {
 
   memset(&buf, 0, sizeof(buf));
   runningThreads(buf, sizeof(buf), 0);
-  if(buf[0] != '\0') 
+  if(buf[0] != '\0')
     traceEvent(CONST_TRACE_INFO, "CLEANUP[t%lu]: Still running threads%s", pthread_self(), buf);
 
   traceEvent(CONST_TRACE_INFO, "===================================");

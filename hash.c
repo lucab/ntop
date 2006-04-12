@@ -313,7 +313,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     else
       key_data.dsize = 0;
 
-    if(key_data.dsize) {
+    if(key_data.dsize && (key_data.dptr != NULL)) {
       gdbm_delete(myGlobals.addressQueueFile, key_data);
 
 #ifdef DNS_DEBUG

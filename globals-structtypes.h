@@ -1117,7 +1117,7 @@ struct flow_ver5_rec {
   u_int16_t src_as;     /* source peer/origin Autonomous System */
   u_int16_t dst_as;     /* dst peer/origin Autonomous System */
   u_int8_t  src_mask;   /* source route's mask bits */
-  u_int8_t  dst_mask;   /* destination route's mask bits */  
+  u_int8_t  dst_mask;   /* destination route's mask bits */
   u_int16_t pad2;       /* pad to word boundary */
 };
 
@@ -1375,7 +1375,7 @@ typedef struct ntopInterface {
   PthreadMutex packetQueueMutex;
   PthreadMutex packetProcessMutex;
   PacketInformation packetQueue[CONST_PACKET_QUEUE_LENGTH+1];
-  u_int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;  
+  u_int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;
   ConditionalVariable queueCondvar;
   pthread_t dequeuePacketThreadId;
 
@@ -1906,7 +1906,7 @@ typedef enum {
   showPrefFCPref,
   showPrefAdvPref,
   showPrefDbgPref,
-  showPrefPluginPref,
+  showPrefDBPref
 } UserPrefDisplayPage;
 
 /* *********************************** */
@@ -1955,8 +1955,8 @@ typedef struct _userPref {
   u_int     maxNumSessions;     /* -X */
 
   /* SQL Database */
-  char    sqlDbConfig[64], saveRecordsIntoDb;
-  u_short sqlRecDaysLifetime;  
+  char    sqlDbConfig[64];
+  u_int    sqlRecDaysLifetime, saveRecordsIntoDb;
 
   u_int16_t defaultVsan;        /* -v | --default-vsan */
   char      *webAddr;           /* -w | --http-serveraddress[:port] */
@@ -2088,6 +2088,10 @@ typedef struct ntopGlobals {
 
   pthread_t mainThreadId;
 
+  /*
+   * Purge database
+   */
+  pthread_t purgeDbThreadId;
 
   /*
    * HTS - Hash Purge
@@ -2151,7 +2155,7 @@ typedef struct ntopGlobals {
 #endif /* HAVE_OPENSSL */
 
   /* ntop state - see flags in globals-defines.h */
-  short ntopRunState;      
+  short ntopRunState;
 
   u_char resetHashNow;       /* used for hash reset */
 

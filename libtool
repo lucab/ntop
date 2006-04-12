@@ -319,7 +319,7 @@ link_all_deplibs=unknown
 sys_lib_search_path_spec=" /usr/lib/gcc/i386-redhat-linux/4.1.0/ /usr/lib/gcc/i386-redhat-linux/4.1.0/ /usr/lib/gcc/i386-redhat-linux/4.1.0/../../../../i386-redhat-linux/lib/i386-redhat-linux/4.1.0/ /usr/lib/gcc/i386-redhat-linux/4.1.0/../../../../i386-redhat-linux/lib/ /usr/lib/gcc/i386-redhat-linux/4.1.0/../../../i386-redhat-linux/4.1.0/ /usr/lib/gcc/i386-redhat-linux/4.1.0/../../../ /lib/i386-redhat-linux/4.1.0/ /lib/ /usr/lib/i386-redhat-linux/4.1.0/ /usr/lib/"
 
 # Run-time system search path for libraries
-sys_lib_dlsearch_path_spec="/lib /usr/lib include ld.so.conf.d/*.conf /usr/lib/mysql /usr/local/lib/mysql /usr/X11R6/lib /usr/lib/qt-3.3/lib "
+sys_lib_dlsearch_path_spec="/lib /usr/lib include ld.so.conf.d/*.conf /usr/lib/mysql /usr/local/lib/mysql /usr/X11R6/lib /usr/lib/qt-3.3/lib /usr/local/lib/ "
 
 # Fix the shell variable $srcfile for the compiler.
 fix_srcfile_path=""
@@ -7478,7 +7478,7 @@ link_all_deplibs=unknown
 sys_lib_search_path_spec=" /usr/lib/gcc/i386-redhat-linux/4.1.0/ /usr/lib/gcc/i386-redhat-linux/4.1.0/ /usr/lib/gcc/i386-redhat-linux/4.1.0/../../../../i386-redhat-linux/lib/i386-redhat-linux/4.1.0/ /usr/lib/gcc/i386-redhat-linux/4.1.0/../../../../i386-redhat-linux/lib/ /usr/lib/gcc/i386-redhat-linux/4.1.0/../../../i386-redhat-linux/4.1.0/ /usr/lib/gcc/i386-redhat-linux/4.1.0/../../../ /lib/i386-redhat-linux/4.1.0/ /lib/ /usr/lib/i386-redhat-linux/4.1.0/ /usr/lib/"
 
 # Run-time system search path for libraries
-sys_lib_dlsearch_path_spec="/lib /usr/lib include ld.so.conf.d/*.conf /usr/lib/mysql /usr/local/lib/mysql /usr/X11R6/lib /usr/lib/qt-3.3/lib "
+sys_lib_dlsearch_path_spec="/lib /usr/lib include ld.so.conf.d/*.conf /usr/lib/mysql /usr/local/lib/mysql /usr/X11R6/lib /usr/lib/qt-3.3/lib /usr/local/lib/ "
 
 # Fix the shell variable $srcfile for the compiler.
 fix_srcfile_path=""
