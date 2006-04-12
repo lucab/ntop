@@ -1558,19 +1558,24 @@ void handleFlowsSpecs(void) {
 	    newFlow->fcode = (struct bpf_program*)calloc(myGlobals.numDevices, sizeof(struct bpf_program));
 
             for(i=0; i<myGlobals.numDevices; i++) {
-              rc = pcap_compile(myGlobals.device[i].pcapPtr, &newFlow->fcode[i],
-                                flowSpec, 1, myGlobals.device[i].netmask.s_addr);
-
-              if(rc < 0) {
-                traceEvent(CONST_TRACE_WARNING, "Wrong flow specification \"%s\" (syntax error). "
-			   "It has been ignored.", flowSpec);
-                free(newFlow);
-
-		/* Not used anymore */
-		free(myGlobals.runningPref.flowSpecs);
-		myGlobals.runningPref.flowSpecs = strdup("Error, wrong flow specification");
-                return;
-              }
+              if(myGlobals.device[i].pcapPtr 
+		 && (!myGlobals.device[i].virtualDevice)
+		 /* Fix courtesy of David Fabel <david.fabel@sudop.cz> */
+		 ) {
+		rc = pcap_compile(myGlobals.device[i].pcapPtr, &newFlow->fcode[i],
+				  flowSpec, 1, myGlobals.device[i].netmask.s_addr);
+		
+		if(rc < 0) {
+		  traceEvent(CONST_TRACE_WARNING, "Wrong flow specification \"%s\" (syntax error). "
+			     "It has been ignored.", flowSpec);
+		  free(newFlow);
+		  
+		  /* Not used anymore */
+		  free(myGlobals.runningPref.flowSpecs);
+		  myGlobals.runningPref.flowSpecs = strdup("Error, wrong flow specification");
+		  return;
+		}
+	      }
             }
 
             newFlow->flowName = strdup(flowName);
