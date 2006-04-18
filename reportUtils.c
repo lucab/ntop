@@ -3425,7 +3425,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if((el->hostResolvedName[0] != '\0') && (strcmp(el->hostResolvedName, el->hostNumIpAddress))) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
-		  "TITLE=\"Link to web server on host, IF available\" class=tooltip>%s %s</A>\n",
+		  "TITLE=\"Link to web server on host, if available\" class=external>%s %s</A>\n",
                 el->hostResolvedName,
 		el->hostResolvedName, buf1);
 
@@ -3631,7 +3631,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(el->hostAS != 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"<A HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%d\">%d</A></TD></TR>\n",
+		"<A class=external HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%d\">%d</A></TD></TR>\n",
 		getRowColor(), "Autonomous System", el->hostAS, el->hostAS);
     sendString(buf);
   }
@@ -4048,7 +4048,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
      && (!multicastHost(el))
      && (!privateIPAddress(el))) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"[ <A HREF=\"http://www.radb.net/cgi-bin/radb/whois.cgi?obj=%s\">Whois</A> ]</TD></TR>\n",
+		"[ <A class=external HREF=\"http://www.radb.net/cgi-bin/radb/whois.cgi?obj=%s\">Whois</A> ]</TD></TR>\n",
 		getRowColor(), "Further Host Information", el->hostNumIpAddress);
     sendString(buf);
 

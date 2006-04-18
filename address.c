@@ -1369,6 +1369,8 @@ static void setHostName(HostTraffic *srcHost, char *name) {
 
 /* ************************************ */
 
+//#define MDNS_DEBUG
+
 static void handleMdnsName(HostTraffic *srcHost, u_short sport, u_char *mdns_name) {
   char *mdnsStrtokState, *name = NULL, *appl = NULL, *proto = NULL, *domain = NULL;
   char *tmpStr = strdup((char*)mdns_name);
@@ -1420,6 +1422,8 @@ static void handleMdnsName(HostTraffic *srcHost, u_short sport, u_char *mdns_nam
 	/* Digital Audio Access Protocol (daap.sourceforge.net) */
 	updateHostUsers(name, BITFLAG_DAAP_USER, srcHost);
       }
+    } else if(name && appl && (!strcmp(appl, "local"))) {
+      setHostName(srcHost, name);
     }
 
      free(tmpStr);

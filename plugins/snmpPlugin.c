@@ -216,7 +216,7 @@ static PluginInfo snmpPluginInfo[] = {
    "SNMP",
    "This plugin is used to monitor host traffic using the SNMP protocol.",
    "0.1a",			/* version */
-   "<a href=mailto:fuscof@cli.di.unipi.it>F.Fusco</a><br><a href=mailto:giardina@cli.di.unipi.it>G.Giardina</a>",
+   "<a class=mailto href=mailto:fuscof@cli.di.unipi.it>F.Fusco</a><br><a class=mailto href=mailto:giardina@cli.di.unipi.it>G.Giardina</a>",
    "snmpPlugin",
    0,				/* Not active by default */
    ConfigureOnly,

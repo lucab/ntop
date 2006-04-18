@@ -3151,7 +3151,7 @@ static void handleNetflowHTTPrequest(char* _url) {
 	       "should look into "
 	       "<a href=\"http://www.ntop.org/nBox86/\" "
 	       "title=\"nBox86 page\"><b>nBox<sup>86</sup></b></a> "
-	       "<img src=\"/nboxLogo.gif\" alt=\"nBox logo\">.</p>\n"
+	       "<img class=tooltip src=\"/nboxLogo.gif\" alt=\"nBox logo\">.</p>\n"
 	       "</td>\n"
 	       "<td width=\"10%\">&nbsp;</td>\n</tr>\n</table>\n");
   }

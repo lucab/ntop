@@ -6680,7 +6680,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                      "and markup issues.  We would like to make <b>ntop</b> more compatible, "
                      "but some basic issues of looking decent on real-world browsers mean it "
                      "will never be 100%.  If you find any issues, please report them to "
-                     "<a href=\"http://lists.ntop.org/mailman/listinfo/ntop-dev\" "
+                     "<a class=external href=\"http://lists.ntop.org/mailman/listinfo/ntop-dev\" "
                      "title=\"ntop-dev list home page\">ntop-dev</a>.\n");
   }
 

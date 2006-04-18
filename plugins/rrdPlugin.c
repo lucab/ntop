@@ -437,7 +437,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 	if(strstr(rsrcName, "Sent")) {
 	  sendString("<TR><TD>\n");
 
-	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "<img src=\"/" CONST_PLUGINS_HEADER "%s?"
+	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "<img class=tooltip src=\"/" CONST_PLUGINS_HEADER "%s?"
 			"action=graphSummary&graphId=99&key=%s/&name=%s&title=%s&start=%s&end=%s\"><p>\n",
                         rrdPluginInfo->pluginURLname,
 			rrdPath, rsrcName, rsrcName, startTime, endTime);

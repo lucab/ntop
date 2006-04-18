@@ -101,6 +101,11 @@ A.age15min { color:#FF7F00 }
 A.age30min { color:#007FFF }
 A.age60min { color:#0000FF }
 
+A.external {background: url(/external.png) center right no-repeat; padding-right: 13px; }
+A.lock     {background: url(/lock.png) center right no-repeat; padding-right: 16px; }
+A.mailto   {background: url(/mail.gif) center right no-repeat; padding-right: 18px; }
+
+
 /* For the color code table */
 A:visited.age0min { color:#FF0000 }
 A:visited.age5min { color:#FF00FF }

@@ -44,7 +44,7 @@ static PluginInfo LsPluginInfo[] = {
     "each specific host.<br>A note card database is available for recording "
     "additional information.",
     "2.3a", /* version */
-    "<a href=\"mailto:&#109;&#097;&#114;&#097;&#110;&#103;&#111;&#110;&#105;&#064;&#117;&#110;&#105;&#109;&#099;&#046;&#105;&#116;\" alt=\"Mail to A. Marangoni\">A.Marangoni</a>", 
+    "<a class=mailto href=\"mailto:&#109;&#097;&#114;&#097;&#110;&#103;&#111;&#110;&#105;&#064;&#117;&#110;&#105;&#109;&#099;&#046;&#105;&#116;\" alt=\"Mail to A. Marangoni\">A.Marangoni</a>", 
     "LastSeen", /* http://<host>:<port>/plugins/Ls */
     0, /* Active by default */
     ViewOnly,
