@@ -1305,7 +1305,8 @@ void addDevice(char* deviceName, char* deviceDescr) {
     }
 
     if((myGlobals.device[deviceId].network.s_addr == 0) &&
-       (myGlobals.device[deviceId].netmask.s_addr == 0xFFFFFFFF) ) { /* Unnumbered interface... */
+       (myGlobals.device[deviceId].netmask.s_addr == 0xFFFFFFFF) ) {
+      /* Unnumbered interface... */
       myGlobals.device[deviceId].numHosts = MAX_SUBNET_HOSTS;
     } else {
       myGlobals.device[deviceId].numHosts = 0xFFFFFFFF - myGlobals.device[deviceId].netmask.s_addr + 1;

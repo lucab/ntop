@@ -1869,7 +1869,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
                           "[ <a href=\"/" CONST_PLUGINS_HEADER 
                           "rrdPlugin?action=list&amp;key=interfaces/%s/hosts/%s&amp;title=host%%20%s\">"
                           "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
-                          " alt=\"view rrd graphs of historical data for this host\"></a> ]"
+                          " class=tooltip alt=\"view rrd graphs of historical data for this host\"></a> ]"
                           "</TD></TR>\n",
 		  getRowColor(),
                           myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
@@ -4415,7 +4415,7 @@ void printFcProtocolDistribution(int mode, int revertOrder, int printGraph)
         if ((numProtosFound > 0) && printGraph)
             sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
                        "<IMG SRC=\"" CONST_BAR_FC_PROTO_DIST CHART_FORMAT "\" "
-                       "alt=\"Global FC protocol distribution chart\"></TD></TR>\n");
+                       " class=tooltip alt=\"Global FC protocol distribution chart\"></TD></TR>\n");
         sendString("</TABLE>"TABLE_OFF"<P>\n");
 
         /* *********************** */

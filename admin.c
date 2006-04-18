@@ -55,7 +55,7 @@ void showUsers(void) {
 	safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
                       "<tr><th "TH_BG" align=\"left\"><img src=\"/user.gif\">"
 		      "&nbsp;%s</th><td "TD_BG"><a href=\"/%s?%s\">"
-                      "<img alt=\"Modify User\" src=\"/modifyUser.gif\" "
+                      "<img class=tooltip alt=\"Modify User\" src=\"/modifyUser.gif\" "
                         "border=\"0\" align=\"absmiddle\"></a>"
                       "&nbsp;</td></tr></th></tr>\n",
                       &key_data.dptr[1], CONST_MODIFY_USERS, key_data.dptr);
@@ -66,10 +66,10 @@ void showUsers(void) {
 	safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
                       "<tr><th "TH_BG" align=\"left\"><img src=\"/user.gif\">"
                       "&nbsp;%s</tg><td "TD_BG"><a href=\"/%s?%s\">"
-                      "<img alt=\"Modify User\" src=\"/modifyUser.gif\" border=\"0\" "
+                      "<img class=tooltip alt=\"Modify User\" src=\"/modifyUser.gif\" border=\"0\" "
                           "align=\"absmiddle\"></a>"
                       "&nbsp;<A HREF=/%s?%s>"
-                      "<img alt=\"Delete User\" src=\"/deleteUser.gif\" border=\"0\" "
+                      "<img class=tooltip alt=\"Delete User\" src=\"/deleteUser.gif\" border=\"0\" "
                           "align=\"absmiddle\">"
                       "</a></td></tr></th></tr>\n",
                       &key_data.dptr[1], CONST_MODIFY_USERS, ebuf, CONST_DELETE_USER, ebuf);
@@ -439,8 +439,8 @@ void showURLs(void) {
       encodeWebFormURL(key_data.dptr, ebuf, sizeof(ebuf));
       safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
 	      "&nbsp;'%s*'</TH><TD "TD_BG"><A HREF=/%s?%s>"
-		  "<IMG ALT=\"Modify URL\" SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
-		  "&nbsp;<A HREF=/%s?%s><IMG ALT=\"Delete URL\" SRC=/deleteUser.gif BORDER=0 align=absmiddle>"
+		  "<IMG CLASS=TOOLTIP ALT=\"Modify URL\" SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
+		  "&nbsp;<A HREF=/%s?%s><IMG CLASS=TOOLTIP ALT=\"Delete URL\" SRC=/deleteUser.gif BORDER=0 align=absmiddle>"
 		  "</A></TD></TR></TH></TR>\n", &key_data.dptr[1], CONST_MODIFY_URL, ebuf, CONST_DELETE_URL, ebuf);
       sendString(buf);
       numUsers++;

@@ -3425,7 +3425,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if((el->hostResolvedName[0] != '\0') && (strcmp(el->hostResolvedName, el->hostNumIpAddress))) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
-                "TITLE=\"Link to web server on host, IF available\">%s %s</A>\n",
+		  "TITLE=\"Link to web server on host, IF available\" class=tooltip>%s %s</A>\n",
                 el->hostResolvedName,
 		el->hostResolvedName, buf1);
 
@@ -3433,7 +3433,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   } else if(el->hostNumIpAddress[0] != '\0') {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s%s%s/\" TARGET=\"_blank\" "
-                "TITLE=\"Link to web server on host, if available\">%s %s</A>\n",
+		  "TITLE=\"Link to web server on host, if available\" class=tooltip>%s %s</A>\n",
                 el->hostIpAddress.hostFamily == AF_INET6 ? "[" : "",
 		el->hostNumIpAddress,
                 el->hostIpAddress.hostFamily == AF_INET6 ? "]" : "",
@@ -3485,7 +3485,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     sendString(buf);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		  "&nbsp;[ <A HREF=\"/"CONST_PURGE_HOST"?key=%s\">Purge Asset</A> <IMG SRC=/lock.png> ]",
+		  "&nbsp;[ <A title=\"Purge this host from ntop's memory\" class=tooltip "
+		  "HREF=\"/"CONST_PURGE_HOST"?key=%s\">Purge Asset</A> <IMG SRC=/lock.png> ]",
 		  serial2str(el->hostSerial, tmpBuf, sizeof(tmpBuf)));
     sendString(buf);
     
@@ -4053,10 +4054,9 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
     if(myGlobals.runningPref.mapperURL) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		  "<IMG SRC=\"%s?host=%s\" alt=\"map of host location\" WIDTH=320 HEIGHT=200></TD></TR>\n",
-		  getRowColor(),
-		  "Host Physical Location",
-		  myGlobals.runningPref.mapperURL, el->hostNumIpAddress);
+		    "<IMG SRC=\"%s?host=%s\" class=tooltip alt=\"map of host location\" WIDTH=320 HEIGHT=200></TD></TR>\n",
+		    getRowColor(), "Host Physical Location",
+		    myGlobals.runningPref.mapperURL, el->hostNumIpAddress);
       sendString(buf);
     }
   }
@@ -4087,7 +4087,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
                   "[ <a href=\"/" CONST_PLUGINS_HEADER 
 		  "rrdPlugin?action=list&amp;key=interfaces/%s/hosts/%s&amp;title=host%%20%s\">"
                   "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
-		  " alt=\"view rrd graphs of historical data for this host\"></a> ]"
+		    " class=tooltip alt=\"view rrd graphs of historical data for this host\"></a> ]"
                   "</TD></TR>\n",
 		  getRowColor(),
                   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
@@ -4450,7 +4450,7 @@ void printFlagedWarning(char *text) {
 
   safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
  	   "<center>\n"
- 	   "<p><img alt=\"Warning\" src=\"/warning.gif\"></p>\n"
+		"<p><img class=tooltip alt=\"Warning\" src=\"/warning.gif\"></p>\n"
  	   "<p><font color=\"#FF0000\" size=\"+1\">%s</font></p>\n"
  	   "</center>\n", text);
   sendString(buf);
@@ -4720,10 +4720,10 @@ static void printFingerprintCounts(int countScanned, int countWithoutFP, int cou
 #ifdef CONST_ETTERCAP_HOMEPAGE
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
              "<li><p>Click "
-             "<a href=\"%s\" alt=\"Ettercap page at SourceForge\">here</a> "
+		"<a href=\"%s\" class=tooltip alt=\"Ettercap page at SourceForge\">here</a> "
              "to visit Ettercap's home page at SourceForge. "
              "And, click "
-             "<a href=\"%s%s\" alt=\"Ettercap fingerprint upload page\">here</a> "
+		"<a href=\"%s%s\" class=tooltip alt=\"Ettercap fingerprint upload page\">here</a> "
              " to upload new fingerprints, or download additional (unverified) ones.</li>\n",
              CONST_ETTERCAP_HOMEPAGE,
              CONST_ETTERCAP_HOMEPAGE, CONST_ETTERCAP_FINGERPRINT);
@@ -4741,7 +4741,7 @@ static void printFingerprintCounts(int countScanned, int countWithoutFP, int cou
                "and there's no way to tell."
                "\n<br>That said, if you would like to see a page with ALL host fingerprints, "
                "local and remote, click <a href=\"" CONST_HOSTS_REMOTE_FINGERPRINT_HTML 
-               "\" title=\"All host fingerprints page\">here</a></td></tr>\n");
+               "\"  class=tooltip title=\"All host fingerprints page\">here</a></td></tr>\n");
 
   sendString("</table></center>\n");
 }

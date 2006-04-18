@@ -734,7 +734,7 @@ static void ssiMenu_Body() {
     } else {
       sendStringWOssi(CONST_NTOP_LOGO_GIF);
     }
-    sendStringWOssi("\" alt=\"ntop logo\"></td>\n"
+    sendStringWOssi("\" class=tooltip alt=\"ntop logo\"></td>\n"
              "        <td valign=\"top\" align=\"right\" class=\"instance\">Instance:&nbsp;");
     sendStringWOssi(myGlobals.runningPref.instance);
     sendStringWOssi(
@@ -1032,7 +1032,7 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
       } 
 
       if(errno == EPIPE /* Broken pipe: the  client has disconnected */) {
-        traceEvent(CONST_TRACE_ERROR, "EPIPE during sending of page to web client");
+        traceEvent(CONST_TRACE_INFO, "EPIPE during sending of page to web client");
 #ifndef WIN32
       } else if(errno == ECONNRESET /* Client reset */) {
         static econnresetcount=0;
@@ -1045,9 +1045,9 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
 #endif
       } else if(errno == EBADF /* Bad file descriptor: a
 				   disconnected client is still sending */) {
-        traceEvent(CONST_TRACE_ERROR, "EBADF during sending of page to web client");
+        traceEvent(CONST_TRACE_INFO, "EBADF during sending of page to web client");
       } else {
-        traceEvent(CONST_TRACE_ERROR, "errno %d during sending of page to web client");
+        traceEvent(CONST_TRACE_INFO, "errno %d during sending of page to web client");
       }
 
       traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes, '%s'", strlen(theString), theString);
@@ -1095,6 +1095,9 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   }
 
   sendString("<SCRIPT SRC=\"/functions.js\" TYPE=\"text/javascript\" LANGUAGE=\"javascript\"></SCRIPT>\n");
+  sendString("<script type=\"text/javascript\" language=\"javascript\" src=\"/domLib.js\"></script>\n");
+  sendString("<script type=\"text/javascript\" language=\"javascript\" src=\"/domTT.js\"></script>\n");
+  sendString("<script type=\"text/javascript\" language=\"javascript\">var domTT_styleClass = 'niceTitle';</script>\n");
 
   /* ******************************************************* */
 
@@ -1169,6 +1172,10 @@ void printHTMLtrailer(void) {
                 "<br>&copy; 1998-2006 by " CONST_MAILTO_LUCA ", built: %s.<br>\n",
 		version, osName, buildDate);
   sendString(buf);
+
+
+  sendString("<script type=\"text/javascript\">function nicetitleDecorator(el) {\nvar result = el.title;\nif(el.href){\nresult += '<p>' + el.href + '</p>';\n	}\nreturn result;\n}\ndomTT_replaceTitles(nicetitleDecorator);\n</script>\n");
+
 
   if(myGlobals.checkVersionStatus != FLAG_CHECKVERSION_NOTCHECKED) {
     u_char useRed;
@@ -3035,7 +3042,7 @@ static int returnHTTPPage(char* pageName,
 	printHTMLheader("Credits", NULL, BITFLAG_HTML_NO_REFRESH);
 	sendString("<hr><br>");
 	sendString("<p><b>ntop</b> was been created by ");
-	sendString("<a href=\"http://luca.ntop.org/\" title=\"Luca's home page\">");
+	sendString("<a href=\"http://luca.ntop.org/\" class=tooltip title=\"Luca's home page\">");
 	sendString("Luca Deri</a> while studying how to model network traffic. He was unsatisfied");
 	sendString("by the many network traffic analysis tools he had access to, and decided to ");
 	sendString("write a new application able to report network traffic information in a way");
@@ -3054,9 +3061,9 @@ static int returnHTTPPage(char* pageName,
 	sendString("<li>" CONST_MAILTO_BURTON " the ntop factotum (user support, bug fixing, testing, packaging).</li></ul>");
 	sendString("<p>In addition, many other people downloaded this program, tested it,");
 	sendString("joined the <a href=\"http://lists.ntop.org/mailman/listinfo/ntop\"");
-	sendString(" title=\"ntop mailing list signup page\">ntop</a> ");
+	sendString(" class=tooltip title=\"ntop mailing list signup page\">ntop</a> ");
 	sendString("and <a href=\"http://lists.ntop.org/mailman/listinfo/ntop-dev\"");
-	sendString(" title=\"ntop-dev mailing list signup page\">ntop-dev</a> mailing lists,");
+	sendString(" class=tooltip title=\"ntop-dev mailing list signup page\">ntop-dev</a> mailing lists,");
 	sendString("reported problems, changed it and improved significantly. This is because");
 	sendString("they have realised that <b>ntop</b> doesn't belong uniquely to its author,");
 	sendString("but to the whole Internet community. Their names are throught the <b>ntop</b> code.</p>");

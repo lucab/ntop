@@ -205,7 +205,7 @@ void showPluginsList(char* pluginName) {
         doPrintHeader = 1;
       }
 
-      safe_snprintf(__FILE__, __LINE__, tmpBuf1, sizeof(tmpBuf1), "<A HREF=\"/plugins/%s\" title=\"Invoke plugin\">%s</A>",
+      safe_snprintf(__FILE__, __LINE__, tmpBuf1, sizeof(tmpBuf1), "<A HREF=\"/plugins/%s\"  class=tooltip title=\"Invoke plugin\">%s</A>",
 		  flows->pluginStatus.pluginPtr->pluginURLname, flows->pluginStatus.pluginPtr->pluginURLname);
 
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TR "TR_ON" %s><TH "TH_BG" align=\"left\" %s>",
@@ -315,7 +315,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag,
                    char *buf, int bufLen) {
   char symIp[256], linkName[256], flag[256], colorSpec[64], vlanStr[8];
-  char osBuf[128], titleBuf[256], noteBuf[256], noteBufAppend[64];
+  char osBuf[128], titleBuf[256], noteBuf[256], noteBufAppend[64], tooltip[256];
   char *dhcpBootpStr, *p2pStr, *multihomedStr, *multivlanedStr, *gwStr, *brStr, *dnsStr, *printStr,
        *smtpStr, *healthStr, *userStr, *httpStr, *ntpStr, *voipHostStr;
   short usedEthAddress=0;
@@ -629,26 +629,35 @@ char* makeHostLink(HostTraffic *el, short mode,
     }
   }
 
+  if(el->hwModel)
+    snprintf(tooltip, sizeof(tooltip), "title=\"%s\" class=tooltip", el->hwModel);
+  else if(el->description)
+    snprintf(tooltip, sizeof(tooltip), "title=\"%s\" class=tooltip", el->description);
+  else if(el->fingerprint)
+    snprintf(tooltip, sizeof(tooltip), "title=\"%s\" class=tooltip", &el->fingerprint[1]);
+  else
+    snprintf(tooltip, sizeof(tooltip), " class=tooltip");
+
   /* Make the hostlink */
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<th "TH_BG" align=\"left\" nowrap width=\"250\">\n"
-		"<a href=\"/%s%s.html\" %s%s%s>%s%s</a>\n"
-                "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s</th>%s\n",
-                linkName, vlanStr,
-                titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
-                symIp,
-		noteBuf,
-		getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)),
-                dhcpBootpStr, multihomedStr, multivlanedStr,
-		usedEthAddress ? CONST_IMG_NIC_CARD : "",
-		gwStr, voipHostStr, brStr, dnsStr,
-                printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr, flag);
+		  "<a %s href=\"/%s%s.html\" %s%s%s>%s%s</a>\n"
+		  "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s</th>%s\n",
+		  tooltip, linkName, vlanStr,
+		  titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
+		  symIp,
+		  noteBuf,
+		  getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)),
+		  dhcpBootpStr, multihomedStr, multivlanedStr,
+		  usedEthAddress ? CONST_IMG_NIC_CARD : "",
+		  gwStr, voipHostStr, brStr, dnsStr,
+		  printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr, flag);
   } else if(mode == FLAG_HOSTLINK_TEXT_LITE_FORMAT) {
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "/%s%s.html", linkName, vlanStr);
   } else {
-    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<a href=\"/%s%s.html\" %s nowrap width=\"250\" %s%s%s>%s%s</a>\n"
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<a %s href=\"/%s%s.html\" %s nowrap width=\"250\" %s%s%s>%s%s</a>\n"
                 "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
-                linkName, vlanStr,
+		  tooltip, linkName, vlanStr,
 		makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)),
                 titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
                 symIp,
@@ -737,7 +746,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
   if((el->ip2ccValue != NULL) && (strcasecmp(el->ip2ccValue, "loc") == 0)) {
     safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf),
-		  "<img alt=\"Local Host\" title=\"Local Host\" "
+		  "<img class=tooltip alt=\"Local Host\" title=\"Local Host\" "
 		  "align=\"middle\" src=\"/statsicons/flags/local.gif\" border=\"0\">");
   } else {
     /* Try all the possible combos of name and path */
@@ -789,7 +798,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
 		    el->dnsTLDValue != NULL ? el->dnsTLDValue : "null");
     } else {
       safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf),
-		    "<img alt=\"Flag for %s code %s %s\" title=\"Flag for %s code %s %s\" align=\"middle\" "
+		    "<img class=tooltip alt=\"Flag for %s code %s %s\" title=\"Flag for %s code %s %s\" align=\"middle\" "
 		    "src=\"/statsicons/flags/%s.gif\" border=\"0\">",
 		    strlen(img) == 2 ? "ISO 3166" : "gTLD", img, source,
 		    strlen(img) == 2 ? "ISO 3166" : "gTLD", img, source,
@@ -7764,7 +7773,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     printMutexStatusReport(textPrintFlag);
 
   if(textPrintFlag != TRUE) {
-    sendString("<p>[ Click <a href=\"" CONST_TEXT_INFO_NTOP_HTML "\" title=\"Text version of this page\">"
+    sendString("<p>[ Click <a  class=tooltip href=\"" CONST_TEXT_INFO_NTOP_HTML "\" title=\"Text version of this page\">"
 	       "here</a> for a more extensive, text version of this page, suitable for "
 	       "inclusion into a bug report ]</p>\n");
   }

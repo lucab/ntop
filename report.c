@@ -44,9 +44,9 @@ void printBandwidthFooter(void) {
 	     "values will NOT be 100% as local traffic will be counted TWICE (once as "
 	     "sent and again as received).</i></li>\n"
 	     "<li>The SENT bandwidth is shown as "
-	     "<img align=\"absmiddle\" src=\"/gaugeS.jpg\" alt=\"Sent\" WIDTH=\"25\" HEIGHT=\"12\">"
+	     "<img class=tooltip  align=\"absmiddle\" src=\"/gaugeS.jpg\" alt=\"Sent\" title=\"Sent\" WIDTH=\"25\" HEIGHT=\"12\">"
 	     " and the RECEIVED bandwidth is shown as "
-	     "<img align=\"absmiddle\" src=\"/gaugeR.jpg\" alt=\"Received\" WIDTH=\"25\" HEIGHT=\"12\"></li>\n"
+	     "<img class=tooltip align=\"absmiddle\" src=\"/gaugeR.jpg\" alt=\"Received\" title=\"Received\" WIDTH=\"25\" HEIGHT=\"12\"></li>\n"
 	     "</ul></p>");
 }
 
@@ -329,7 +329,7 @@ void printTrafficSummary (int revertOrder) {
     if(found) {
       sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
 		 "<IMG SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" "
-		 "alt=\"interface traffic chart\"></TD></TR>\n");
+		 " class=tooltip alt=\"interface traffic chart\"></TD></TR>\n");
     }
   }
 #endif
@@ -681,7 +681,7 @@ void printTrafficStatistics(int revertOrder) {
     if(found) {
       sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
 		 "<IMG SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" "
-		 "alt=\"interface traffic chart\"></TD></TR>\n");
+		 " class=tooltip alt=\"interface traffic chart\"></TD></TR>\n");
     }
   }
 #endif
@@ -783,7 +783,7 @@ void printTrafficStatistics(int revertOrder) {
     if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
       sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
 		 "<IMG SRC=\"" CONST_PIE_PKT_CAST_DIST CHART_FORMAT "\" "
-		 "alt=\"pktCast distribution chart\"></TH></TR>\n");
+		 " class=tooltip alt=\"pktCast distribution chart\"></TH></TR>\n");
 #endif
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
@@ -898,7 +898,7 @@ void printTrafficStatistics(int revertOrder) {
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
 		   "<IMG SRC=\"" CONST_PIE_PKT_SIZE_DIST CHART_FORMAT "\" "
-		   "alt=\"pktSize distribution chart\"></TH></TR>\n");
+		   "class=tooltip  alt=\"pktSize distribution chart\"></TH></TR>\n");
 #endif
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Packets&nbsp;too&nbsp;long [> %d]</th>"
@@ -1063,7 +1063,7 @@ void printTrafficStatistics(int revertOrder) {
       sendString(buf);
 
       sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" "DARK_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		 "<IMG SRC=\"" CONST_PIE_FC_PKT_SZ_DIST CHART_FORMAT"\" alt=\"FC pktSize distribution chart\"></TH></TR>\n");
+		 "<IMG class=tooltip SRC=\"" CONST_PIE_FC_PKT_SZ_DIST CHART_FORMAT"\" alt=\"FC pktSize distribution chart\"></TH></TR>\n");
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>Packets&nbsp;too&nbsp;long [> %d]</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
@@ -1126,7 +1126,7 @@ void printTrafficStatistics(int revertOrder) {
 #ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value > 0)
       sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-		 "<IMG SRC=\"" CONST_PIE_IP_TRAFFIC CHART_FORMAT "\" alt=\"ipTraffic chart\"></TH></TR>\n");
+		 "<IMG class=tooltip SRC=\"" CONST_PIE_IP_TRAFFIC CHART_FORMAT "\" alt=\"ipTraffic chart\"></TH></TR>\n");
 #endif
 
     /* ********************* */
@@ -1217,7 +1217,7 @@ void printTrafficStatistics(int revertOrder) {
 #ifndef EMBEDDED
 	sendString("<TR "TR_ON"><TH BGCOLOR=white COLSPAN=3>"
 		   "<IMG SRC=\"" CONST_PIE_TTL_DIST CHART_FORMAT "\" "
-		   "alt=\"pktTTD distribution chart\"></TH></TR>\n");
+		   " class=tooltip alt=\"pktTTD distribution chart\"></TH></TR>\n");
 #endif
       }
     }
@@ -1231,7 +1231,7 @@ void printTrafficStatistics(int revertOrder) {
       sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Remote Hosts Distance</TH>"
                  "<TD BGCOLOR=white ALIGN=CENTER>"
 		 "<IMG SRC=\"" CONST_BAR_HOST_DISTANCE CHART_FORMAT "\" "
-                 "alt=\"hosts distance chart\"></TD></TR>\n");
+                 "class=tooltip alt=\"hosts distance chart\"></TD></TR>\n");
 #endif
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
@@ -1301,7 +1301,7 @@ void printTrafficStatistics(int revertOrder) {
 		  "<TD "TD_BG" align=\"right\">"
 		  "[ <a href=\"/" CONST_PLUGINS_HEADER
 		  "rrdPlugin?action=list&amp;key=interfaces/%s&amp;title=interface%%20%s\">"
-		  "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
+		  "<img class=tooltip valign=\"top\" border=\"0\" src=\"/graph.gif\""
 		  " alt=\"View rrd charts of historical data for this interface\"></a> ]"
 		  "</TD></TR>\n",
 		  getRowColor(), myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
@@ -2916,7 +2916,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 		  host);
 
     safe_snprintf(__FILE__, __LINE__, errorAdditionalText, sizeof(errorAdditionalText),
-		  "<p align=\"center\"><img alt=\"Warning\" src=\"/warning.gif\"></p>\n"
+		  "<p align=\"center\"><img class=tooltip alt=\"Warning\" src=\"/warning.gif\"></p>\n"
 		  "<p align=\"center\"><font color=\"#FF0000\" size=\"+1\">"
 		  "<b>ntop</b> does not currently have any information about host %s %s.</font></p>"
 		  "<p>&nbsp;</p>"
@@ -3923,7 +3923,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 
 #ifndef EMBEDDED
     sendString("<CENTER><IMG SRC=\"" CONST_PIE_IPPROTO_RL_DIST CHART_FORMAT "\" "
-	       "alt=\"ipProtocol distribution chart\"><p>\n</CENTER>\n");
+	       "class=tooltip alt=\"ipProtocol distribution chart\"><p>\n</CENTER>\n");
 #endif
 
     printSectionTitle("Local Traffic");
@@ -4223,7 +4223,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 
 	sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
 		   "<IMG SRC=\"" CONST_BAR_IPPROTO_DIST CHART_FORMAT "\" "
-		   "alt=\"Global ipProtocol distribution chart\"></TD></TR>");
+		   "class=tooltip alt=\"Global ipProtocol distribution chart\"></TD></TR>");
 	
 	/* RRD */
 	/* Do NOT add a '/' at the end of the path because Win32 will complain about it */
@@ -4432,7 +4432,7 @@ void printProtoTraffic(int printGraph) {
   if (printGraph) {
     sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
 	       "<IMG SRC=\"" CONST_BAR_ALLPROTO_DIST CHART_FORMAT "\" "
-	       "alt=\"global protocol distribution chart\"></TD></TR>\n");
+	       "class=tooltip alt=\"global protocol distribution chart\"></TD></TR>\n");
   }
 #endif
 
@@ -4885,7 +4885,7 @@ void printThptStatsMatrix(int sortedColumn) {
 
 /* ************************ */
 
-#define RRD_THPT_STR "<A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=%d\" BORDER=0 BGCOLOR=white><IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=throughput&arbiface=%s&arbip=&start=%s&end=now&counter=&title=%s\" border=\"0\" alt=\"Domain-wide Historical Data\"></A>"
+#define RRD_THPT_STR "<A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=%d\" BORDER=0 BGCOLOR=white><IMG class=tooltip SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=throughput&arbiface=%s&arbip=&start=%s&end=now&counter=&title=%s\" border=\"0\" alt=\"Domain-wide Historical Data\"></A>"
 
 void printThptStats(int sortedColumn _UNUSED_) {
   char tmpBuf[512], formatBuf[32], formatBuf1[32];
@@ -4939,7 +4939,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
     
     sendString("<CENTER>\n");
     sendString("<A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=1\" BORDER=0 BGCOLOR=white>"
-	       "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=1\" alt=\"Current Hour throughput chart\"></A><BR>\n");
+	       "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=1\" class=tooltip alt=\"Current Hour throughput chart\"></A><BR>\n");
   }
 
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
@@ -4957,7 +4957,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
       goto endPrintThptStats;   
     else
       sendString("<P><A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=2\" BORDER=0 BGCOLOR=white>"
-		 "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=2\" alt=\"Current Day throughput chart\"></A><BR>\n");
+		 "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=2\" class=tooltip alt=\"Current Day throughput chart\"></A><BR>\n");
   }
   
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
@@ -4976,7 +4976,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 1440 /* 60 * 24 */)
       goto endPrintThptStats;   
 
-    sendString("<P><IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=3\" alt=\"Current 30day throughput chart\"><BR>\n");
+    sendString("<P><IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=3\" class=tooltip alt=\"Current 30day throughput chart\"><BR>\n");
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
 		  formatTimeStamp(30, 0, 0, formatBuf, sizeof(formatBuf)),
 		  formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1)));
@@ -5442,7 +5442,7 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
 		    "&nbsp;&nbsp;"
 		    "[ <a href=\"/" CONST_PLUGINS_HEADER
 		    "rrdPlugin?action=list&key=interfaces/%s/domains/%s&title=Domain%%20%s\">"
-		    "<img border=\"0\" src=\"/graph.gif\" alt=\"Domain-wide Historical Data\"></a> ]"
+		    "<img border=\"0\" src=\"/graph.gif\" class=tooltip alt=\"Domain-wide Historical Data\"></a> ]"
 		    "&nbsp;&nbsp;"
 		    "</td>\n"
 		    "</tr></table>\n</center>\n"
@@ -5605,7 +5605,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<TD ALIGN=CENTER COLSPAN=2 "TD_BG" BGCOLOR=white>"
 		  "<IMG SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"?1\""
-		  " alt=\"hostTraffic sent distribution chart\">"
+		  " class=tooltip alt=\"hostTraffic sent distribution chart\">"
 		  "</TD>\n",
 		  targetStr, vlanStr);
     sendString(buf);
@@ -5615,7 +5615,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
   if(tcRcvd > 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG" BGCOLOR=white>"
 		  "<IMG SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"\""
-		  " alt=\"hostTraffic rcvd distribution chart\">"
+		  "class=tooltip  alt=\"hostTraffic rcvd distribution chart\">"
 		  "</TD>\n",
 		  targetStr, vlanStr);
     sendString(buf);
@@ -5718,7 +5718,7 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
           lastId = el->hostAS;
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 			"<TH "TH_BG" ALIGN=RIGHT "DARK_BG">"
-			"<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\" title=\"Lookup ASN (offsite)\">%d</a>"
+			"<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\"  class=tooltip title=\"Lookup ASN (offsite)\">%d</a>"
 			"</TH>\n",
 			el->hostAS, el->hostAS);
 	} else {
