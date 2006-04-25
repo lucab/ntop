@@ -578,8 +578,15 @@ static void queueAddress(HostAddr elem, int forceResolution) {
   } else {
     /* rc = 1 is duplicate key, which is fine.  Other codes are problems... */
     if (rc != 1) {
-      traceEvent(CONST_TRACE_ERROR, "Queue of address '%s' failed, code %d [addr queue=%d/max=%d]",
-		 dataBuf, rc, myGlobals.addressQueuedCurrent, myGlobals.addressQueuedMax);
+      traceEvent(CONST_TRACE_ERROR, "Queue of address '%s' failed (%s) [addr queue=%d/max=%d]",
+		 dataBuf, 
+#if defined(WIN32) && defined(__GNUC__)
+                 "no additional information available",
+#else
+                 gdbm_strerror(gdbm_errno),
+#endif
+                 myGlobals.addressQueuedCurrent,
+                 myGlobals.addressQueuedMax);
       traceEvent(CONST_TRACE_INFO, "ntop processing continues, address will not be resolved");
     } else {
       myGlobals.addressQueuedDup++;
