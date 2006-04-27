@@ -186,10 +186,6 @@ ntop.h
 #include <dlfcn.h>
 #endif
 
-#ifdef HAVE_MYSQL_H
-#include <mysql.h> /* Headers for MySQL usage */
-#endif
-
 /* 
    Additions below courtesy of 
    Abdelkader Lahmadi <Abdelkader.Lahmadi@loria.fr> 
@@ -374,6 +370,14 @@ ntop.h
  *  Feature specific stuff
  *
  * **************************************************************************************/
+
+#if defined(HAVE_MYSQL_H) || defined(WIN32)
+#if defined(WIN32)
+#define my_socket_defined
+#define my_socket int
+#endif
+#include <mysql.h> /* Headers for MySQL usage */
+#endif
 
 #ifndef WIN32
 # if defined(HAVE_SYS_SCHED_H) && !defined(FREEBSD)

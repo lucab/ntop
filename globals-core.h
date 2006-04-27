@@ -809,6 +809,8 @@ extern int updateFcFabricElementHash(FcFabricElementHash **theHash, u_short vsan
                                       u_int32_t pktlen);
 extern void processFcNSCacheFile(char *filename);
 
+extern u_int32_t num_db_insert, num_db_insert_failed;
+extern int is_db_enabled();
 extern void initDB();
 extern void termDB();
 extern int dump_session_to_db(IPSession *sess);

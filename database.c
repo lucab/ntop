@@ -25,8 +25,14 @@
 
 #ifdef HAVE_MYSQL_H
 
-static u_char mysql_initialized;
+static u_char mysql_initialized = 0;
 static MYSQL mysql;
+
+u_int32_t num_db_insert = 0, num_db_insert_failed = 0;
+
+/* ***************************************************** */
+
+int is_db_enabled() { return(mysql_initialized); }
 
 /* ***************************************************** */
 
@@ -160,6 +166,36 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
 
   /* ************************************************ */
 
+  /* NetFlow */
+  snprintf(sql, sizeof(sql), "CREATE TABLE IF NOT EXISTS `sessions` ("
+	   "`idx` int(11) NOT NULL auto_increment,"
+	   "`proto` smallint(3) NOT NULL default '0',"
+	   "`src` varchar(32) NOT NULL default '',"
+	   "`dst` varchar(32) NOT NULL default '',"
+	   "`sport` mediumint(6) NOT NULL default '0',"
+	   "`dport` mediumint(6) NOT NULL default '0',"
+	   "`pktSent` int(11) NOT NULL default '0',"
+	   "`pktRcvd` int(11) NOT NULL default '0',"
+	   "`bytesSent` int(11) NOT NULL default '0',"
+	   "`bytesRcvd` int(11) NOT NULL default '0',"
+	   "`firstSeen` int(11) NOT NULL default '0',"
+	   "`lastSeen` int(11) NOT NULL default '0',"
+	   "`nwLatency` float(6,2) NOT NULL default '0.00',"
+	   "`isP2P` smallint(1) NOT NULL default '0',"
+	   "`isVoIP` smallint(1) NOT NULL default '0',"
+	   "`isPassiveFtp` smallint(1) NOT NULL default '0',"
+	   "`info` varchar(64) NOT NULL default '',"
+	   "`guessedProto` varchar(16) NOT NULL default '',"
+	   " UNIQUE KEY `idx` (`idx`)"
+	   ") ENGINE=MyISAM DEFAULT CHARSET=latin1");
+
+  if(exec_sql_query(sql) != 0) {
+    traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error());
+    return(-5);
+  }
+
+  /* ************************************************ */
+
   createThread(&myGlobals.purgeDbThreadId, scanDbLoop, NULL);
   
   /* ************************************************ */
@@ -210,6 +246,7 @@ int dump_session_to_db(IPSession *sess) {
     // traceEvent(CONST_TRACE_ERROR, "-> %s", sql);
 
     if(mysql_query(&mysql, sql)) {
+      num_db_insert_failed++;
       traceEvent(CONST_TRACE_WARNING, "%s", mysql_error(&mysql));
       return(-1);
     } else {
@@ -217,6 +254,7 @@ int dump_session_to_db(IPSession *sess) {
 	insert_id = mysql_insert_id(&mysql);
 	printf("You inserted \"%d\".\n", insert_id);
       */
+      num_db_insert++;
       return(0);
     }
   }
@@ -255,18 +293,20 @@ int insert_flow_record(u_int16_t probeId,
 	     input, output, sentPkts, rcvdPkts, 
 	     sentOctets, rcvdOctets, 
 	     first, last, srcPort, dstPort,
-	     tcpFlags, proto, tos, vlanId);
+	     tcpFlags, proto, tos, vlanId > 4096 ? 0 : vlanId );
 
     // traceEvent(CONST_TRACE_INFO, "%s", sql);
 
     if(mysql_query(&mysql, sql)) {
       traceEvent(CONST_TRACE_WARNING, "%s", mysql_error(&mysql));
+      num_db_insert_failed++;
       return(-1);
     } else {
       /*
 	insert_id=mysql_insert_id(&mysql);
 	printf("You inserted \"%d\".\n", insert_id);
       */
+      num_db_insert++;
       return(0);
     }
   }
@@ -288,7 +328,7 @@ void initDB() {
     tmpBuf[256] = { 0 }, *key, *strtokState;
 
   if(myGlobals.runningPref.sqlDbConfig != NULL)
-    snprintf(tmpBuf, sizeof(tmpBuf), "%s :", myGlobals.runningPref.sqlDbConfig);
+    snprintf(tmpBuf, sizeof(tmpBuf), "%s:", myGlobals.runningPref.sqlDbConfig);
 
   host = strtok_r(tmpBuf, ":", &strtokState);
   if(host) user = strtok_r(NULL, ":", &strtokState);
@@ -316,6 +356,7 @@ void termDB() {
 
 #else
 
+int is_db_enabled() { return(0); }
 void initDB() { traceEvent(CONST_TRACE_INFO, "Database support not compiled into ntop"); }
 void termDB() { ; }
 int dump_session_to_db(IPSession *sess) { return(0); }

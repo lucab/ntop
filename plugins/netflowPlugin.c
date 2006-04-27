@@ -793,6 +793,16 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
     netflowfmaxTime = elapsed;
 #endif
 
+  if(myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB)
+    insert_flow_record(deviceId,
+		       ntohl(record->srcaddr),  ntohl(record->dstaddr),
+		       ntohs(record->input),    ntohs(record->output),
+		       ntohl(record->sentPkts), ntohl(record->sentOctets),
+		       ntohl(record->rcvdPkts), ntohl(record->rcvdOctets),
+		       *firstSeen, *lastSeen,
+		       ntohs(record->srcport),  ntohs(record->dstport),
+		       record->tcp_flags,
+		       record->proto, record->tos, record->vlanId);
   return(0);
 }
 
@@ -976,13 +986,26 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
     }
   }  /* DON'T ADD a else here ! */
 
-  if(the5Record.flowHeader.version == htons(9)) {
-    /* NetFlowV9 Record */
+  if((the5Record.flowHeader.version == htons(9))
+     || (the5Record.flowHeader.version == htons(10))) {
+    /* NetFlowV9/IPFIX Record */
     u_char foundRecord = 0, done = 0;
-    u_short numEntries = ntohs(the5Record.flowHeader.count),
-      displ = sizeof(V9FlowHeader);
+    u_short numEntries, displ, record_len;
     V9Template template;
     int i;
+    u_char handle_ipfix;
+
+    if(the5Record.flowHeader.version == htons(9)) handle_ipfix = 0; else handle_ipfix = 1;
+    
+    if(handle_ipfix) {
+      numEntries = ntohs(the5Record.flowHeader.count), displ = sizeof(V9FlowHeader);
+#ifdef DEBUG_FLOWS
+	traceEvent(CONST_TRACE_INFO, "Num IPFIX Entries: %d", numEntries);
+#endif
+
+    } else {
+      record_len = ntohs(the5Record.flowHeader.count), displ = sizeof(V9FlowHeader);
+    }
 
     recordActTime = the5Record.flowHeader.unix_secs;
     recordSysUpTime = the5Record.flowHeader.sysUptime;
@@ -1255,24 +1278,13 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	      handleGenericFlow(recordActTime, recordSysUpTime, &record,
 				deviceId, &firstSeen, &lastSeen);
 
-#ifdef DEBUG_FLOWS
-	      traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d]", 
-			 accum_len);
+#ifndef DEBUG_FLOWS
+	      traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d][save=%d]", 
+			 accum_len, myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB);
 #endif
 
 	      if((accum_len % 2) == 1)
 		displ++; /* Handle padding */
-
-	      if(myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB)
-		insert_flow_record(deviceId,
-				   ntohl(record.srcaddr),  ntohl(record.dstaddr),
-				   ntohs(record.input),    ntohs(record.output),
-				   ntohl(record.sentPkts), ntohl(record.sentOctets),
-				   ntohl(record.rcvdPkts), ntohl(record.rcvdOctets),
-				   firstSeen, lastSeen,
-				   ntohs(record.srcport),  ntohs(record.dstport),
-				   record.tcp_flags,
-				   record.proto, record.tos, record.vlanId);
 
 	      if(record.rcvdPkts > 0) {
 		u_int32_t tmp;
