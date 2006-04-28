@@ -23,12 +23,12 @@
 
 #include "ntop.h"
 
+u_int32_t num_db_insert = 0, num_db_insert_failed = 0;
+
 #ifdef HAVE_MYSQL_H
 
 static u_char mysql_initialized = 0;
 static MYSQL mysql;
-
-u_int32_t num_db_insert = 0, num_db_insert_failed = 0;
 
 /* ***************************************************** */
 
