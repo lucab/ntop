@@ -1347,9 +1347,9 @@ fi
 NTOPCONFIGDEBUG_SETTINGS([After criticals])
 
 
-CFLAGS="${CFLAGS} -I/usr/include/mysql"
-CPPFLAGS="${CPPFLAGS} -I/usr/include/mysql"
-LDFLAGS="${LDFLAGS} -L/usr/lib/mysql"
+CFLAGS="${CFLAGS} -I/usr/include/mysql -I/usr/local/mysql/include"
+CPPFLAGS="${CPPFLAGS} -I/usr/include/mysql -I/usr/local/mysql/include"
+LDFLAGS="${LDFLAGS} -L/usr/lib/mysql -L/usr/local/mysql/lib"
 
 AC_CHECK_HEADERS([mysql.h])
 if test ".${ac_cv_header_mysql_h}" != ".yes"; then

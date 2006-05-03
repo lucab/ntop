@@ -3721,13 +3721,14 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
                    pthread_self(), strerror(rc), rc);
     }
 
+    /*
     if((rrdThread != 0) || (rrdTrafficThread != 0)) {
       traceEvent(CONST_TRACE_INFO,
                  "THREADMGMT[t%lu]: RRD: Waiting %d seconds for threads to stop", 
                  pthread_self(), (PARM_SLEEP_LIMIT + 2));
       sleep(PARM_SLEEP_LIMIT + 2);
     }
-
+    */
     traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: RRD: Plugin shutdown continuing", pthread_self());
   }
 

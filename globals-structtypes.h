@@ -1950,7 +1950,7 @@ typedef struct _userPref {
   int  refreshRate;             /* -r | --refresh-time */
   bool disablePromiscuousMode;  /* -s | --no-promiscuous */
   int  traceLevel;              /* -t | --trace-level */
-
+  char *mapperURL;              /* -U | --disable-mapper */
   u_int     maxNumHashEntries;  /* -x */
   u_int     maxNumSessions;     /* -X */
 
@@ -1977,7 +1977,6 @@ typedef struct _userPref {
   bool mergeInterfaces;         /* -M | --no-interface-merge */
   char *pcapLogBasePath;        /* -O | --pcap-file-path */ /* Added by Ola Lundqvist <opal@debian.org>. */
   char *fcNSCacheFile;          /* -N | --wwn-map */
-  char *mapperURL;              /* -U | --mapper */
 
 #ifdef HAVE_OPENSSL
   char *sslAddr;                /* -W | --https-serveraddress[:port] */

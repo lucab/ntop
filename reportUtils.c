@@ -4053,10 +4053,11 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     sendString(buf);
 
     if(myGlobals.runningPref.mapperURL) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		    "<IMG SRC=\"%s?host=%s\" class=tooltip alt=\"map of host location\" WIDTH=320 HEIGHT=200></TD></TR>\n",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD ALIGN=RIGHT>"
+		    "<iframe src=\"%s?host=%s@%s\" WIDTH=320 HEIGHT=210  scrolling=no frameborder=0></iframe></TD></TR>\n",
 		    getRowColor(), "Host Physical Location",
-		    myGlobals.runningPref.mapperURL, el->hostNumIpAddress);
+		    myGlobals.runningPref.mapperURL,
+		    el->hostNumIpAddress, el->hostNumIpAddress);
       sendString(buf);
     }
   }

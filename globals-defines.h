@@ -2115,8 +2115,6 @@
 
 /* -O and -P are special, see globals-core.h */
 
-#define DEFAULT_NTOP_MAPPER_URL             NULL     /* -U */
-
 #define DEFAULT_NTOP_MAX_HASH_ENTRIES       (u_int)8192  /* -x */
 #define DEFAULT_NTOP_MAX_NUM_SESSIONS       (u_int)32768 /* -X */
 
@@ -2128,6 +2126,8 @@
  * What should we set tracing to unless we have a parameter?
  */
 #define DEFAULT_TRACE_LEVEL                 3
+
+#define DEFAULT_NTOP_MAPPER_URL             "http://www.ntop.org/cgi-bin/mapper.pl" /* -U -*/
 
 #ifdef MAKE_WITH_SCHED_YIELD
 #define DEFAULT_NTOP_SCHED_YIELD            TRUE
@@ -2857,7 +2857,6 @@ struct ip6_hdr
 #define NTOP_PREF_PROTOSPECS       "ntop.protoSpecs"
 #define NTOP_PREF_P3PCP            "ntop.P3Pcp"
 #define NTOP_PREF_P3PURI           "ntop.P3Puri"
-#define NTOP_PREF_MAPPERURL        "ntop.mapperURL"
 #define NTOP_PREF_WWN_MAP          "ntop.fcNSCacheFile"
 #define NTOP_PREF_MAXHASH          "ntop.maxNumHashEntries"
 #define NTOP_PREF_SQL_DB_CONFIG    "ntop.sqlDbConfig"

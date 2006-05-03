@@ -1592,7 +1592,8 @@ static void* netflowMainLoop(void* _deviceId) {
   }
   myGlobals.device[deviceId].activeDevice = 0;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread terminated [p%d]", pthread_self(), getpid());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread terminated [p%d]", 
+	     pthread_self(), getpid());
 
   return(NULL);
 }
@@ -3188,7 +3189,7 @@ static void termNetflowDevice(int deviceId) {
   if(!pluginActive) return;
 
   if(myGlobals.device[deviceId].activeDevice == 0) {
-    traceEvent(CONST_TRACE_WARNING, "NETFLOW: deviceId=%d terminated already", deviceId);
+    /* traceEvent(CONST_TRACE_WARNING, "NETFLOW: deviceId=%d terminated already", deviceId); */
     return;
   }
 

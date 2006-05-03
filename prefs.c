@@ -1192,8 +1192,6 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
     processStrPref (NTOP_PREF_P3PCP, value, &pref->P3Pcp, savePref);
   } else if(strcmp(key, NTOP_PREF_P3PURI) == 0) {
     processStrPref (NTOP_PREF_P3PURI, value, &pref->P3Puri, savePref);
-  } else if(strcmp(key, NTOP_PREF_MAPPERURL) == 0) {
-    processStrPref (NTOP_PREF_MAPPERURL, value, &pref->mapperURL, savePref);
   } else if(strcmp(key, NTOP_PREF_WWN_MAP) == 0) {
     processStrPref (NTOP_PREF_WWN_MAP, value, &pref->fcNSCacheFile,
 		    savePref);

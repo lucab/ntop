@@ -99,11 +99,16 @@ void* pcapDispatch(void *_i) {
   /* Skip ntopSleepUntilStateRUN(), just start processing packets as soon as this starts */
 
   for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
+    /*
 #if defined(FREEBSD) && defined(__FreeBSD_cc_version) && (__FreeBSD_cc_version < 500000) && defined(HAVE_PCAP_SETNONBLOCK)
+    */
+
     rc = pcap_dispatch(myGlobals.device[i].pcapPtr, -1, queuePacket, (u_char*)_i);
+    /*
 #else
     rc = pcap_loop(myGlobals.device[i].pcapPtr, -1, queuePacket, (u_char*)_i);
 #endif
+    */
 
     if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
 
@@ -878,17 +883,17 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 	    traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (according to libpcap)",
 		       formatPkts((Counter)pcapStats.ps_drop, buf2, sizeof(buf2)));
 	  }
+
 	  traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (by ntop)",
 		     formatPkts(myGlobals.device[i].droppedPkts.value, buf2, sizeof(buf2)));
 
-
-	  signalCondvar(&myGlobals.device[i].queueCondvar);
+	  /* signalCondvar(&myGlobals.device[i].queueCondvar); */
 	  pcap_close(myGlobals.device[i].pcapPtr);
 
 	  traceEvent(CONST_TRACE_INFO, "Joining thread  NPS(%s)",
 		     myGlobals.device[i].humanFriendlyName);
 	  if(joinThread(&myGlobals.device[i].pcapDispatchThreadId) != 0)
-	    traceEvent(CONST_TRACE_INFO, "joinThread() returned %s", strerror(errno));
+	    traceEvent(CONST_TRACE_INFO, "joinThread() returned: %s", strerror(errno));
 	}
       }
     }
@@ -900,7 +905,10 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), " NF%d", i);
 	  safe_strncat(buf, sizeofbuf, buf2);
 	} else {
-	  traceEvent(CONST_TRACE_INFO, "Joining thread NF%d", i);
+	  traceEvent(CONST_TRACE_INFO, "Joining thread NF%d [%u]", i,
+		     myGlobals.device[i].netflowGlobals->netFlowThread);
+	  close(myGlobals.device[i].netflowGlobals->netFlowInSocket);
+
 	  if(joinThread(&myGlobals.device[i].netflowGlobals->netFlowThread) != 0)
 	    traceEvent(CONST_TRACE_INFO, "joinThread() returned %s", strerror(errno));
 	}
@@ -928,11 +936,17 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 			myGlobals.device[i].humanFriendlyName);
 	  safe_strncat(buf, sizeofbuf, buf2);
 	} else {
-	  traceEvent(CONST_TRACE_INFO, "Joining thread NPA(%s)",
-		     myGlobals.device[i].humanFriendlyName);
+	  traceEvent(CONST_TRACE_INFO, "Signaling thread NPA(%s)",
+		     myGlobals.device[i].humanFriendlyName);	 
 	  signalCondvar(&myGlobals.device[i].queueCondvar);
+	  /*
+	  traceEvent(CONST_TRACE_INFO, "Joining thread NPA(%s)",
+		     myGlobals.device[i].humanFriendlyName);	  
 	  if(joinThread(&myGlobals.device[i].dequeuePacketThreadId) != 0)
 	    traceEvent(CONST_TRACE_INFO, "joinThread() returned %s", strerror(errno));
+	  else
+	    traceEvent(CONST_TRACE_INFO, "Join completed succesfully");
+	  */
 	}
       }
     }

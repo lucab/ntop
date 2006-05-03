@@ -314,7 +314,7 @@ char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
 char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag,
                    char *buf, int bufLen) {
-  char symIp[256], linkName[256], flag[256], colorSpec[64], vlanStr[8];
+  char symIp[256], linkName[256], flag[256], colorSpec[64], vlanStr[8], mapStr[768];
   char osBuf[128], titleBuf[256], noteBuf[256], noteBufAppend[64], tooltip[256];
   char *dhcpBootpStr, *p2pStr, *multihomedStr, *multivlanedStr, *gwStr, *brStr, *dnsStr, *printStr,
        *smtpStr, *healthStr, *userStr, *httpStr, *ntpStr, *voipHostStr;
@@ -546,6 +546,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(isSMTPhost(el))       smtpStr = "&nbsp;" CONST_IMG_SMTP_SERVER ; else smtpStr = "";
   if(isHTTPhost(el))       httpStr = "&nbsp;" CONST_IMG_HTTP_SERVER ; else httpStr = "";
   if(isNtpServer(el))      ntpStr = "&nbsp;" CONST_IMG_NTP_SERVER ; else ntpStr = "";
+
   if(el->protocolInfo != NULL) {
     if(el->protocolInfo->userList != NULL) userStr = "&nbsp;" CONST_IMG_HAS_USERS ; else userStr = "";
     if(isP2P(el)) p2pStr = "&nbsp;" CONST_IMG_HAS_P2P ; else p2pStr = "";
@@ -629,6 +630,20 @@ char* makeHostLink(HostTraffic *el, short mode,
     }
   }
 
+  if((el->hostNumIpAddress[0] != '\0')
+     && (!subnetPseudoLocalHost(el))
+     && (!multicastHost(el))
+     && (!privateIPAddress(el))
+     && myGlobals.runningPref.mapperURL) {
+    safe_snprintf(__FILE__, __LINE__, mapStr, sizeof(mapStr),
+		  "<A href=\"#\" onclick=\"window.open(\'%s?host=%s@%s\', "
+		  "\'Host Map\', \'height=210, width=320,toolbar=nodirectories=no,status=no,"
+		  "menubar=no,scrollbars=no,resizable=no\'); return false;\"><IMG SRC=/marker.png border=0></A>\n",
+		  myGlobals.runningPref.mapperURL,
+		  el->hostResolvedName, el->hostNumIpAddress);
+  } else
+    mapStr[0] = '\0';
+
   if(el->hwModel)
     snprintf(tooltip, sizeof(tooltip), "title=\"%s\" class=tooltip", el->hwModel);
   else if(el->description)
@@ -642,7 +657,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<th "TH_BG" align=\"left\" nowrap width=\"250\">\n"
 		  "<a %s href=\"/%s%s.html\" %s%s%s>%s%s</a>\n"
-		  "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s</th>%s\n",
+		  "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s</th>%s\n",
 		  tooltip, linkName, vlanStr,
 		  titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
 		  symIp,
@@ -651,12 +666,13 @@ char* makeHostLink(HostTraffic *el, short mode,
 		  dhcpBootpStr, multihomedStr, multivlanedStr,
 		  usedEthAddress ? CONST_IMG_NIC_CARD : "",
 		  gwStr, voipHostStr, brStr, dnsStr,
-		  printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr, flag);
+		  printStr, smtpStr, httpStr, ntpStr, 
+		  healthStr, userStr, p2pStr, mapStr, flag);
   } else if(mode == FLAG_HOSTLINK_TEXT_LITE_FORMAT) {
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "/%s%s.html", linkName, vlanStr);
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<a %s href=\"/%s%s.html\" %s nowrap width=\"250\" %s%s%s>%s%s</a>\n"
-                "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+                "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
 		  tooltip, linkName, vlanStr,
 		makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)),
                 titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
@@ -665,7 +681,8 @@ char* makeHostLink(HostTraffic *el, short mode,
 		dhcpBootpStr, multihomedStr, multivlanedStr,
 		usedEthAddress ? CONST_IMG_NIC_CARD : "",
 		gwStr, voipHostStr, brStr, dnsStr,
-		printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr, flag);
+		printStr, smtpStr, httpStr, ntpStr, healthStr, 
+		  userStr, p2pStr, mapStr, flag);
   }
 
   return(buf);

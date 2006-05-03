@@ -1671,10 +1671,6 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		     pref->P3Puri,
 		     "Return value for p3p policyref header");
 
-    CONFIG_STR_ENTRY(DARK_BG, "Host Mapper URL (-U)", NTOP_PREF_MAPPERURL,
-		     50, pref->mapperURL,
-		     "URL of the mapper.pl utility, for looking up geographical "
-		     "location of the host");
     break;
 
   case showPrefFCPref:
