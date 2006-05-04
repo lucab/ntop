@@ -5273,7 +5273,7 @@ void buildMapLink(HostTraffic *el, char *buf, int buf_len) {
     buf[0] = '\0';
   else
     safe_snprintf(__FILE__, __LINE__, buf, buf_len,
-		" <A class=external href=\"#\" onclick=\"window.open(\'%s?host=%s@%s\', "
+		" <A class=external href=\"#\" title=\"Physical Host Location\"onclick=\"window.open(\'%s?host=%s@%s\', "
 		  "\'Host Map\', \'height=210, width=320,toolbar=nodirectories=no,status=no,"
 		  "menubar=no,scrollbars=no,resizable=no\'); return false;\">"
 		  "<IMG SRC=/marker.png border=0></A>\n",
