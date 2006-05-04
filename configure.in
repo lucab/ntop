@@ -122,7 +122,7 @@ AC_CONFIG_AUX_DIR(.)
 
 AM_INIT_AUTOMAKE()
 
-NTOPCONFIGDEBUG_SETTINGS([init automake])
+dnl> NTOPCONFIGDEBUG_SETTINGS([init automake])
 
 dnl> make NTOPDIR the default for the installation
 AC_PREFIX_DEFAULT(${NTOPDIR:-/usr/local})
@@ -143,7 +143,7 @@ LIBS=
 OBJDUMP=
 OBJEXT=o
 
-NTOPCONFIGDEBUG_SETTINGS([ntop defaults])
+dnl> NTOPCONFIGDEBUG_SETTINGS([ntop defaults])
 
 AC_ARG_ENABLE(void,
               [  +--ntop:---------------------------------------------------------------------+])
@@ -234,9 +234,9 @@ dnl> AC_PROG_CXX no c++ code (yet?)
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-AC_PROG_RANLIB
+AC_PROG_LIBTOOL
 
-NTOPCONFIGDEBUG_SETTINGS([After ac stuff])
+dnl> NTOPCONFIGDEBUG_SETTINGS([After ac stuff])
 
 dnl> These blocks of code check to see if the various gnu auto* tools are installed.
 
@@ -301,7 +301,7 @@ case "${libtoolversion}" in
         echo "*"
         echo "*>>>   Unable to proceed with your request, aborting ./configure!"
         echo "*"
-        NTOP_SUGGESTION([libtool], [1.4.3], [143])
+        dnl> NTOP_SUGGESTION([libtool], [1.4.3], [143])
         echo "*******************************************************************"
         exit 1
         ;;
@@ -326,7 +326,7 @@ case "${libtoolversion}" in
             echo "*  There have been SOME reports of success, so you could TRY"
             echo "*  --enable-iknowbetter.  I don't recommend it, however."
             echo "*"
-            NTOP_SUGGESTION([libtool], [1.4.3], [143])
+            dnl> NTOP_SUGGESTION([libtool], [1.4.3], [143])
             echo "*******************************************************************"
             exit 1
         else
@@ -464,7 +464,7 @@ if test ".${NTOPAUTOREBUILD}" = ".yes"; then
         echo "*"
         echo "*>>>   Unable to proceed with your request, aborting ./configure!"
         echo "*"
-        NTOP_SUGGESTION([automake], [1.6.3], [163])
+        dnl> NTOP_SUGGESTION([automake], [1.6.3], [163])
         echo "*******************************************************************"
         exit 1
         ;;
@@ -486,7 +486,7 @@ if test ".${NTOPAUTOREBUILD}" = ".yes"; then
         echo "*"
         echo "*>>>   Unable to proceed with your request, aborting ./configure!"
         echo "*"
-        NTOP_SUGGESTION([autoconf], [2,57], [257])
+        dnl> NTOP_SUGGESTION([autoconf], [2,57], [257])
         echo "*******************************************************************"
         exit 1
       ;;
@@ -873,7 +873,7 @@ fi
 
 dnl> From here on out, we only use the _INCLUDE and _LIB except for locale and glibconfig
 
-NTOPCONFIGDEBUG_SETTINGS([After set libinc])
+dnl> NTOPCONFIGDEBUG_SETTINGS([After set libinc])
 
 dnl>
 dnl> Yes, we want to minimize the amount of work before we tell
@@ -902,7 +902,7 @@ if test ".${ac_cv_prog_cc_stdc}" = ".no"; then
     HAS_WARNING="yes"
 fi
 
-NTOPCONFIGDEBUG_SETTINGS([After cc stdc test])
+dnl> NTOPCONFIGDEBUG_SETTINGS([After cc stdc test])
 
 dnl> Any common settings required to support a specific OS, distribution or release
 dnl> go here also.
@@ -1097,7 +1097,7 @@ CFLAGS="${CFLAGS}"
 CPPFLAGS="${CPPFLAGS}"
 LDFLAGS="${LDFLAGS}"
 
-NTOPCONFIGDEBUG_SETTINGS([After presets])
+dnl> NTOPCONFIGDEBUG_SETTINGS([After presets])
 
 echo
 echo "Critical library/include tests..."
@@ -1344,7 +1344,7 @@ if test ".${ac_cv_header_png_h}" != ".yes" ||
     exit 1 
 fi
 	
-NTOPCONFIGDEBUG_SETTINGS([After criticals])
+dnl> NTOPCONFIGDEBUG_SETTINGS([After criticals])
 
 
 CFLAGS="${CFLAGS} -I/usr/include/mysql -I/usr/local/mysql/include"
@@ -1671,7 +1671,7 @@ if test ".${LOCALEDIR}" != "." &&
     HAS_WARNING="yes"
 fi
 
-NTOPCONFIGDEBUG_SETTINGS([After libraries])
+dnl> NTOPCONFIGDEBUG_SETTINGS([After libraries])
 
 echo
 echo "Testing headers and functions..."
@@ -2040,7 +2040,7 @@ AC_CHECK_FUNCS([strtok_r])
         AC_MSG_RESULT(no)
     fi
 
-NTOPCONFIGDEBUG_SETTINGS([After all tests])
+dnl> NTOPCONFIGDEBUG_SETTINGS([After all tests])
 
 echo
 echo "Now, let's check for problems with what we've found..."
@@ -2605,7 +2605,7 @@ INCS=`echo ${INCS} | ${ac_cv_prog_AWK} '{ \
     print "" \
 }'`
 
-NTOPCONFIGDEBUG_SETTINGS([precet])
+dnl> NTOPCONFIGDEBUG_SETTINGS([precet])
 
 if test -d ./configureextra; then
 
@@ -2647,7 +2647,7 @@ if test -d ./configureextra; then
     fi
 fi
 
-NTOPCONFIGDEBUG_SETTINGS([final])
+dnl> NTOPCONFIGDEBUG_SETTINGS([final])
 
 echo
 echo "==================================================================="
