@@ -635,12 +635,7 @@ char* makeHostLink(HostTraffic *el, short mode,
      && (!multicastHost(el))
      && (!privateIPAddress(el))
      && myGlobals.runningPref.mapperURL) {
-    safe_snprintf(__FILE__, __LINE__, mapStr, sizeof(mapStr),
-		  "<A href=\"#\" onclick=\"window.open(\'%s?host=%s@%s\', "
-		  "\'Host Map\', \'height=210, width=320,toolbar=nodirectories=no,status=no,"
-		  "menubar=no,scrollbars=no,resizable=no\'); return false;\"><IMG SRC=/marker.png border=0></A>\n",
-		  myGlobals.runningPref.mapperURL,
-		  el->hostResolvedName, el->hostNumIpAddress);
+    buildMapLink(el, mapStr, sizeof(mapStr));
   } else
     mapStr[0] = '\0';
 
@@ -657,7 +652,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<th "TH_BG" align=\"left\" nowrap width=\"250\">\n"
 		  "<a %s href=\"/%s%s.html\" %s%s%s>%s%s</a>\n"
-		  "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s</th>%s\n",
+		  "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s&nbsp;&nbsp;&nbsp;</th>%s\n",
 		  tooltip, linkName, vlanStr,
 		  titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
 		  symIp,
@@ -674,14 +669,15 @@ char* makeHostLink(HostTraffic *el, short mode,
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<a %s href=\"/%s%s.html\" %s nowrap width=\"250\" %s%s%s>%s%s</a>\n"
                 "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
 		  tooltip, linkName, vlanStr,
-		makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)),
-                titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
-                symIp,
-		noteBuf,
-		dhcpBootpStr, multihomedStr, multivlanedStr,
-		usedEthAddress ? CONST_IMG_NIC_CARD : "",
-		gwStr, voipHostStr, brStr, dnsStr,
-		printStr, smtpStr, httpStr, ntpStr, healthStr, 
+		  makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)),
+		  titleBuf[0] != '\0' ? "title=\"" : "", 
+		  titleBuf, titleBuf[0] != '\0' ? "\"" : "",
+		  symIp,
+		  noteBuf,
+		  dhcpBootpStr, multihomedStr, multivlanedStr,
+		  usedEthAddress ? CONST_IMG_NIC_CARD : "",
+		  gwStr, voipHostStr, brStr, dnsStr,
+		  printStr, smtpStr, httpStr, ntpStr, healthStr, 
 		  userStr, p2pStr, mapStr, flag);
   }
 

@@ -4047,19 +4047,22 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
      && (!subnetPseudoLocalHost(el))
      && (!multicastHost(el))
      && (!privateIPAddress(el))) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"[ <A class=external HREF=\"http://www.radb.net/cgi-bin/radb/whois.cgi?obj=%s\">Whois</A> ]</TD></TR>\n",
-		getRowColor(), "Further Host Information", el->hostNumIpAddress);
-    sendString(buf);
 
-    if(myGlobals.runningPref.mapperURL) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD ALIGN=RIGHT>"
-		    "<iframe src=\"%s?host=%s@%s\" WIDTH=320 HEIGHT=210  scrolling=no frameborder=0></iframe></TD></TR>\n",
-		    getRowColor(), "Host Physical Location",
-		    myGlobals.runningPref.mapperURL,
-		    el->hostNumIpAddress, el->hostNumIpAddress);
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">"
+		  "%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "[ <A class=external HREF=\"http://www.radb.net/cgi-bin/radb/whois.cgi?obj=%s\">Whois</A> ]\n",
+		  getRowColor(), "Further Host Information", el->hostNumIpAddress);
+    sendString(buf);
+    
+    if(myGlobals.runningPref.mapperURL) {      
+      sendString(" [");
+      buildMapLink(el, buf, sizeof(buf));
       sendString(buf);
+      sendString(" ]");
     }
+    
+    sendString("</TD></TR>\n");
   }
 
   /* RRD */
@@ -5261,6 +5264,21 @@ void printPluginTrailer(char *left, char *middle) {
   sendString("</td>\n<td align=\"right\">"
              "&nbsp;[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]"
              "</td></tr></table>\n<br>\n");
+}
+
+/* ************************************ */
+
+void buildMapLink(HostTraffic *el, char *buf, int buf_len) {
+  if(privateIPAddress(el))
+    buf[0] = '\0';
+  else
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len,
+		" <A class=external href=\"#\" onclick=\"window.open(\'%s?host=%s@%s\', "
+		  "\'Host Map\', \'height=210, width=320,toolbar=nodirectories=no,status=no,"
+		  "menubar=no,scrollbars=no,resizable=no\'); return false;\">"
+		  "<IMG SRC=/marker.png border=0></A>\n",
+		  myGlobals.runningPref.mapperURL,
+		  el->hostResolvedName, el->hostNumIpAddress);
 }
 
 /* ************************************ */
