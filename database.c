@@ -49,14 +49,15 @@ static int exec_sql_query(char *sql) {
   //traceEvent(CONST_TRACE_ERROR, "====> %s", sql);
 
   if(mysql_query(&mysql, sql)) {
-	  int err_id = mysql_errno(&mysql);
-	
-	  traceEvent(CONST_TRACE_ERROR, "MySQL error: %s [%d]", 
-			mysql_error(&mysql), err_id);
+    int err_id = mysql_errno(&mysql);
+    
+    traceEvent(CONST_TRACE_ERROR, "MySQL error: %s [%d]", 
+	       mysql_error(&mysql), err_id);
+    
+    if(err_id == CR_SERVER_GONE_ERROR) {
+      reconnect_to_db();
+    }
 
-	  if(err_id == CR_SERVER_GONE_ERROR) {
-		reconnect_to_db();
-	  }
     return(-1);
   } else
     return(0);
@@ -117,6 +118,10 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
 
   mysql_initialized = 0;
   myGlobals.purgeDbThreadId = -1;
+
+  if(db_host == NULL)  db_host = "localhost";
+  if(pw == NULL)       pw = "";
+  if(user == NULL)     user = "";
 
   if(mysql_init(&mysql) == NULL) {
     traceEvent(CONST_TRACE_ERROR, "Failed to initate MySQL connection");
@@ -355,16 +360,15 @@ void initDB() {
   if(host) user = strtok_r(NULL, ":", &strtokState);
   if(user) pw = strtok_r(NULL, ":", &strtokState);
 
-  if(pw && (strlen(pw) == 1 /* it's the space we added */)) 
+  if((pw && (strlen(pw) == 1 /* it's the space we added */)) 
+     || (!pw))
     pw = "";
 
   if(host && user && pw)
     init_database(host, user, pw, "ntop");
   else
     traceEvent(CONST_TRACE_ERROR, "Unable to initialize DB: please configure the DB prefs [%s][%s][%s]",
-	       host != NULL ? host : "<NULL>", 
-	       user != NULL ? user : "<NULL>", 
-	       pw != NULL ? pw : "<NULL>");
+	       host, user, pw);
 }
 
 /* ***************************************************** */
