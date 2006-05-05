@@ -31,6 +31,8 @@ static u_char mysql_initialized = 0;
 static MYSQL mysql;
 static char mysql_db_host[32], mysql_db_user[32], mysql_db_pw[32], mysql_db_name[32];
 
+static int init_database(char *db_host, char* user, char *pw, char *db_name);
+
 /* ***************************************************** */
 
 int is_db_enabled() { return(mysql_initialized); }
@@ -38,7 +40,7 @@ int is_db_enabled() { return(mysql_initialized); }
 /* ***************************************************** */
 
 static void reconnect_to_db() {
-	init_database(mysql_db_host, mysql_db_user, mysql_db_pw, mysql_db_name);
+  init_database(mysql_db_host, mysql_db_user, mysql_db_pw, mysql_db_name);
 }
 
 /* ***************************************************** */
