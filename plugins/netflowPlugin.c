@@ -2458,7 +2458,7 @@ static void printNetFlowConfiguration(int deviceId) {
 /* ****************************** */
 
 static void printNetFlowStatisticsRcvd(int deviceId) {
-  char buf[512], buf1[32], buf2[32], formatBuf[32], formatBuf2[32];
+  char buf[512], formatBuf[32], formatBuf2[32];
   u_int i, totFlows;
 
   sendString("<tr " TR_ON ">\n"

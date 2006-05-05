@@ -3525,8 +3525,8 @@ static void printsFlowConfiguration(int deviceId) {
 /* ****************************** */
 
 static void printsFlowStatisticsRcvd(int deviceId) {
-  char buf[512], buf1[32], buf2[32], formatBuf[32], formatBuf2[32];
-  u_int32_t i, totFlows;
+  char buf[512], formatBuf[32], formatBuf2[32];
+  u_int32_t i;
 
   sendString("<tr " TR_ON ">\n"
              "<th colspan=\"2\" "DARK_BG">Received Flows</th>\n"

@@ -29,6 +29,7 @@ u_int32_t num_db_insert = 0, num_db_insert_failed = 0;
 
 static u_char mysql_initialized = 0;
 static MYSQL mysql;
+static char mysql_db_host[32], mysql_db_user[32], mysql_db_pw[32], mysql_db_name[32];
 
 /* ***************************************************** */
 
@@ -36,11 +37,24 @@ int is_db_enabled() { return(mysql_initialized); }
 
 /* ***************************************************** */
 
+static void reconnect_to_db() {
+	init_database(mysql_db_host, mysql_db_user, mysql_db_pw, mysql_db_name);
+}
+
+/* ***************************************************** */
+
 static int exec_sql_query(char *sql) {
   //traceEvent(CONST_TRACE_ERROR, "====> %s", sql);
 
   if(mysql_query(&mysql, sql)) {
-    traceEvent(CONST_TRACE_ERROR, "MySQL error: %s", mysql_error(&mysql));
+	  int err_id = mysql_errno(&mysql);
+	
+	  traceEvent(CONST_TRACE_ERROR, "MySQL error: %s [%d]", 
+			mysql_error(&mysql), err_id);
+
+	  if(err_id == CR_SERVER_GONE_ERROR) {
+		reconnect_to_db();
+	  }
     return(-1);
   } else
     return(0);
@@ -111,10 +125,15 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
     traceEvent(CONST_TRACE_ERROR, "Failed to connect to MySQL: %s [%s:%s:%s:%s]\n",
 	       mysql_error(&mysql), db_host, user, pw, db_name);
     return(-2);
-  } else
+  } else {
     traceEvent(CONST_TRACE_INFO, "Successfully connected to MySQL [%s:%s:%s:%s]",
 	       db_host, user, pw, db_name);
-  
+	snprintf(mysql_db_host, sizeof(mysql_db_host), db_host);
+	snprintf(mysql_db_user, sizeof(mysql_db_user), user);
+	snprintf(mysql_db_pw, sizeof(mysql_db_pw), pw);
+	snprintf(mysql_db_name, sizeof(mysql_db_name), db_name);
+  }
+
   /* *************************************** */
   
   snprintf(sql, sizeof(sql), "CREATE DATABASE IF NOT EXISTS %s", db_name);
@@ -325,7 +344,7 @@ static void term_database() {
 
 void initDB() {
   char *host = NULL, *user = NULL, *pw = NULL,
-    tmpBuf[256] = { 0 }, *key, *strtokState;
+    tmpBuf[256] = { 0 }, *strtokState;
 
   if(myGlobals.runningPref.sqlDbConfig != NULL)
     snprintf(tmpBuf, sizeof(tmpBuf), "%s:", myGlobals.runningPref.sqlDbConfig);

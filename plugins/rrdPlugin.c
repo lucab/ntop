@@ -291,7 +291,7 @@ static int sumCounter(char *rrdPath, char *rrdFilePath,
 
 static void listResource(char *rrdPath, char *rrdTitle,
 			 char *startTime, char* endTime) {
-  char path[512], url[512], formatBuf[32], hasNetFlow, buf[512];
+  char path[512], url[512], hasNetFlow, buf[512];
   DIR* directoryPointer=NULL;
   struct dirent* dp;
   int numEntries = 0, i, min, max;
@@ -1092,9 +1092,8 @@ static void termUdp() {
 /* ******************************* */
 
 static void deleteRRD(char *basePath, char *key) {
-    char path[512], *argv[32], cmd[64];
-    struct stat statbuf;
-    int argc = 0, rc, createdCounter = 0, i;
+    char path[512];
+    int argc = 0,  createdCounter = 0, i;
 
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s%s.rrd", basePath, key);
 
@@ -1926,8 +1925,10 @@ static void arbitraryAction(char *rrdName,
 static void statisticsPage(void) {
   char buf[1024];
   int i;
-  float pminDelay=99999.0, pmaxDelay=0.0,
-        /*stddev:*/ pM, pT, pQ, pR, pSD;
+  float pminDelay=99999.0, pmaxDelay=0.0;
+#ifdef MAX_RRD_PROCESS_BUFFER 
+  float  /*stddev:*/ pM, pT, pQ, pR, pSD;
+#endif
 
   memset(&buf, 0, sizeof(buf));
 
@@ -3107,6 +3108,7 @@ static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
   traceEvent(CONST_TRACE_INFO, 
              "THREADMGMT[t%lu]: RRD: Throughput data collection: Thread terminated [p%d]",
              pthread_self(), getpid());
+  return(NULL);
 }
 
 /* ****************************** */

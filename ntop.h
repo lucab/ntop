@@ -377,6 +377,7 @@ ntop.h
 #define my_socket int
 #endif
 #include <mysql.h> /* Headers for MySQL usage */
+#include <errmsg.h>
 #endif
 
 #ifndef WIN32

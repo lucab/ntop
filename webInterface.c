@@ -6312,7 +6312,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   char main[LEN_GENERAL_WORK_BUFFER], lib[LEN_GENERAL_WORK_BUFFER], env[LEN_GENERAL_WORK_BUFFER];
   char formatBuf[48];
   const char *_env = NULL;
-  int i, rc, bufLength, bufPosition, bufUsed;
+  int i, bufLength, bufPosition, bufUsed;
   unsigned int idx, minLen, maxLen;
   unsigned long totBuckets=0, nonEmptyBuckets=0;
 
