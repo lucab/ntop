@@ -556,9 +556,9 @@ void createVendorTable(struct stat *dbStat) {
   } /* for macInputFiles */
 
   if (!myGlobals.runningPref.printFcOnly) {
-      traceEvent(CONST_TRACE_INFO, "Fingeprint: Loading signature file.");
+      traceEvent(CONST_TRACE_INFO, "Fingerprint: Loading signature file");
       
-      fd = checkForInputFile(NULL, NULL, CONST_OSFINGERPRINT_FILE, NULL, &compressedFormat);
+      fd = checkForInputFile("Fingerprint", NULL, CONST_OSFINGERPRINT_FILE, NULL, &compressedFormat);
 
       if(fd != NULL) {
           char line[384], lineKey[8];
@@ -581,7 +581,7 @@ void createVendorTable(struct stat *dbStat) {
                   traceEvent(CONST_TRACE_ERROR, "While adding %s=%s.", lineKey, line);       
           }
           
-          traceEvent(CONST_TRACE_INFO, "Fingeprint: ...loaded %d records", numEntries);
+          traceEvent(CONST_TRACE_INFO, "Fingerprint: ...loaded %d records", numEntries);
       } else
           traceEvent(CONST_TRACE_NOISY, "Unable to find fingeprint signature file.");
   }
