@@ -1272,6 +1272,9 @@ int processNtopConfigData (char *buf, int savePref)
     /* Copy over the preferences now */
     myGlobals.savedPref = tmpPrefs;
 
+    /* Handle immediates */
+    myGlobals.runningPref.traceLevel = myGlobals.savedPref.traceLevel;
+
     return (startCap);
 }
 
@@ -1739,7 +1742,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		       NTOP_PREF_DBG_MODE, pref->debugMode,
 		       "Simplifies debugging Ntop");
 
-    CONFIG_INT_ENTRY(DARK_BG, "Trace Level (-t)", NTOP_PREF_TRACE_LVL, 5,
+    CONFIG_INT_ENTRY(DARK_BG, "Trace Level (-t)<br><i>&nbsp;&nbsp;&nbsp;(takes effect immediately)</i>", NTOP_PREF_TRACE_LVL, 5,
 		     pref->traceLevel,
 		     "Level of detailed messages ntop will display");
 
@@ -1801,20 +1804,20 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
   /* Save Prefs */
   if (configScr == showPrefDisplayPref) {
     sendString("<tr><td colspan=\"2\" align=\"center\">&nbsp;<p>"
-	       "<input type=submit name=SP value=\"Save&nbsp;Prefs\">&nbsp;"
+	       "<input type=submit name=" NTOP_SAVE_PREFS " value=\"Save&nbsp;Prefs\">&nbsp;"
 	       "<input type=submit name=AP value=\"Apply&nbsp;Prefs\">&nbsp;"
-	       "<input type=submit name=RD value=\"Restore&nbsp;Defaults\">"
+	       "<input type=submit name=" NTOP_RESTORE_DEF " value=\"Restore&nbsp;Defaults\">"
 	       "</td></tr></table>\n"
 	       "</form>\n<p></center>\n");
   } else {
     sendString("<tr><td colspan=\"2\" align=\"center\">&nbsp;<p>"
-	       "<input type=submit name=SP value=\"Save&nbsp;Prefs\">&nbsp;"
-	       "<input type=submit name=RD value=\"Restore&nbsp;Defaults\">"
+	       "<input type=submit name=" NTOP_SAVE_PREFS " value=\"Save&nbsp;Prefs\">&nbsp;"
+	       "<input type=submit name=" NTOP_RESTORE_DEF " value=\"Restore&nbsp;Defaults\">"
 	       "</td></tr></table>\n"
 	       "</form>\n<p></center>\n");
   }
 
-  sendString ("<P Align=CENTER><FONT COLOR = \"FF00FF\">Settings take effect at next startup</FONT></CENTER><P>");
+  sendString ("<P Align=CENTER><FONT COLOR = \"FF00FF\">Except as indicated, settings take effect at next startup</FONT></CENTER><P>");
   sendString ("<P Align=CENTER><FONT COLOR = \"FF00FF\">See <a href = \"info.html\">Show Configuration</A>"
 	      " for runtime values</FONT></CENTER><P>");
 
