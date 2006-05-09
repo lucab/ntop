@@ -2361,14 +2361,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SEMAPHORE_H",
-#ifdef HAVE_SEMAPHORE_H
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "HAVE_SETJMP_H",
 #ifdef HAVE_SETJMP_H
                          "yes"

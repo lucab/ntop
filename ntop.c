@@ -246,7 +246,11 @@ void detachFromTerminalUnderUnix(int doChdir) {
    * Use line buffered stdout
    */
   /* setlinebuf (stdout); */
+#if SETVBUF_REVERSED
+  setvbuf(stdout, _IOLBF, (char *)NULL, 0);
+#else
   setvbuf(stdout, (char *)NULL, _IOLBF, 0);
+#endif
 
 #endif /* WIN32 */
 
