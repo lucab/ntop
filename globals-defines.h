@@ -400,6 +400,10 @@
  */
 /* #define I18N_DEBUG */
 
+/* LATENCY_DEBUG logs the acquisition of latency figures.
+ */
+/* #define LATENCY_DEBUG */
+
 /* MEMORY_DEBUG selects among various options for debugging ntop's memory allocations
  * (look in leaks.c for most of this).
  *

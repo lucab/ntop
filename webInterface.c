@@ -1260,6 +1260,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
+  printFeatureConfigInfo(textPrintFlag, "LATENCY_DEBUG",
+#ifdef LATENCY_DEBUG
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
   printFeatureConfigInfo(textPrintFlag, "MEMORY_DEBUG",
 #ifdef MEMORY_DEBUG
                          "yes"
@@ -6437,10 +6445,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                            pref->trackOnlyLocalHosts == 1 ? "Track local hosts only" : "Track all hosts",
                            DEFAULT_NTOP_TRACK_ONLY_LOCAL == 1 ? "Track local hosts only" : "Track all hosts");
 
-  printParameterConfigInfo(textPrintFlag, "-o | --no-mac",
-			   pref->dontTrustMACaddr == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses",
-                           DEFAULT_NTOP_DONT_TRUST_MAC_ADDR == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses");
-
   printParameterConfigInfo(textPrintFlag, "-i | --interface" CONST_REPORT_ITS_EFFECTIVE,
                            pref->devices,
                            DEFAULT_NTOP_DEVICES);
@@ -6469,6 +6473,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printParameterConfigInfo(textPrintFlag, "-n | --numeric-ip-addresses",
                            pref->numericFlag > 0 ? "Yes" : "No",
                            DEFAULT_NTOP_NUMERIC_IP_ADDRESSES > 0 ? "Yes" : "No");
+
+  printParameterConfigInfo(textPrintFlag, "-o | --no-mac",
+			   pref->dontTrustMACaddr == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses",
+                           DEFAULT_NTOP_DONT_TRUST_MAC_ADDR == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses");
 
   if(pref->protoSpecs == NULL) {
     printFeatureConfigInfo(textPrintFlag, "-p | --protocols", CONST_REPORT_ITS_DEFAULT "internal list");

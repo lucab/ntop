@@ -2168,6 +2168,10 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 #endif
 
   /* Latency measurement */
+  char buf[32], buf1[32];
+  memset(&buf, 0, sizeof(buf));
+  memset(&buf1, 0, sizeof(buf1));
+
   if((tp->th_flags == (TH_SYN|TH_ACK)) && (theSession->sessionState == FLAG_STATE_SYN))  {
     theSession->sessionState = FLAG_FLAG_STATE_SYN_ACK;
   } else if((tp->th_flags == TH_ACK) && (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK)) {
@@ -2191,12 +2195,33 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	  rather than showing a false/wrong/dummy value
 	*/
 	theSession->nwLatency.tv_usec = theSession->nwLatency.tv_sec = 0;
+#ifdef LATENCY_DEBUG
+        traceEvent(CONST_TRACE_NOISY, "LATENCY: %s:%d->%s:%d invalid (too big), ignored",
+                   _addrtostr(&theSession->initiatorRealIp, buf, sizeof(buf)),
+                   theSession->sport,
+                   _addrtostr(&theSession->remotePeerRealIp, buf1, sizeof(buf1)),
+                   theSession->dport);
+#endif
+      } else {
+        traceEvent(CONST_TRACE_NOISY, "LATENCY: %s:%d->%s:%d is %d us",
+                   _addrtostr(&theSession->initiatorRealIp, buf, sizeof(buf)),
+                   theSession->sport,
+                   _addrtostr(&theSession->remotePeerRealIp, buf1, sizeof(buf1)),
+                   theSession->dport,
+                   theSession->nwLatency.tv_sec * 1000000 + theSession->nwLatency.tv_usec);
       }
 
       theSession->sessionState = FLAG_STATE_ACTIVE;
     } else {
       /* The latency value is negative. There's something wrong so let's drop it */
       theSession->nwLatency.tv_usec = theSession->nwLatency.tv_sec = 0;
+#ifdef LATENCY_DEBUG
+      traceEvent(CONST_TRACE_NOISY, "LATENCY: %s:%d->%s:%d invalid (negative), ignored",
+                 _addrtostr(&theSession->initiatorRealIp, buf, sizeof(buf)),
+                 theSession->sport,
+                 _addrtostr(&theSession->remotePeerRealIp, buf1, sizeof(buf1)),
+                 theSession->dport);
+#endif
     }
 
     if(subnetLocalHost(srcHost)) {
@@ -2234,7 +2259,21 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
       - we don't set the state to initialized
     */
 
-    theSession->nwLatency.tv_sec = theSession->nwLatency.tv_usec = 0;
+    theSession->nwLatency.tv_usec = theSession->nwLatency.tv_sec = 0;
+#ifdef LATENCY_DEBUG
+    traceEvent(CONST_TRACE_NOISY, "LATENCY: (%s ->0x%x%s%s%s%s%s) %s:%d->%s:%d invalid (lost packet?), ignored",
+               (theSession->sessionState == FLAG_STATE_SYN) ? "SYN" : "SYN_ACK",
+               tp->th_flags,
+               (tp->th_flags & TH_SYN) ? " SYN" : "",
+               (tp->th_flags & TH_ACK) ? " ACK" : "",
+               (tp->th_flags & TH_FIN) ? " FIN" : "",
+               (tp->th_flags & TH_RST) ? " RST" : "",
+               (tp->th_flags & TH_PUSH) ? " PUSH" : "",
+               _addrtostr(&theSession->initiatorRealIp, buf, sizeof(buf)),
+               theSession->sport,
+               _addrtostr(&theSession->remotePeerRealIp, buf1, sizeof(buf1)),
+               theSession->dport);
+#endif
     theSession->sessionState = FLAG_STATE_ACTIVE;
 
     /*
