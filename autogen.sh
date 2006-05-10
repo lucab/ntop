@@ -4,10 +4,15 @@
 # Run this to generate all the initial makefiles for ntop
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
-# Copyright (C) 2004 Rocco Carbone <rocco@ntop.org>
+# Copyright (C) 2004-06 Rocco Carbone <rocco@ntop.org>
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
+# $Log$
+# Revision 2.8  2006/05/10 08:35:16  deri
+# Changed date
+#
+
 version="0.2.0"
 
 echo ""
