@@ -1282,7 +1282,7 @@ static void msdns_filter_name(char *msg) {
 	if(id == 128)
 	  msg[j++] = '\'';
 	else if(id < 128) {
-	  snprintf(tmpStr2, sizeof(tmpStr2), "%c", id);
+	  safe_snprintf(__FILE__, __LINE__, tmpStr2, sizeof(tmpStr2), "%c", id);
 	  msg[j++] = tmpStr2[0];
 	}
 

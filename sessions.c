@@ -828,7 +828,7 @@ static void handleSIPSession(const struct pcap_pkthdr *h,
 	if(theSession->session_info == NULL) {
 	  char tmpStr[256];
 	  
-	  snprintf(tmpStr, sizeof(tmpStr), "%s called %s", from, to);
+	  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%s called %s", from, to);
 	  theSession->session_info = strdup(tmpStr);
 	}	
       }
@@ -909,19 +909,19 @@ static void handleSCCPSession(const struct pcap_pkthdr *h,
 #endif
 
       if(calling_party_name[0] != '\0')
-	snprintf(caller, sizeof(caller), "%s <%s>", calling_party_name, calling_party);
+	safe_snprintf(__FILE__, __LINE__, caller, sizeof(caller), "%s <%s>", calling_party_name, calling_party);
       else
-	snprintf(caller, sizeof(caller), "%s", calling_party);
+	safe_snprintf(__FILE__, __LINE__, caller, sizeof(caller), "%s", calling_party);
       
       if(called_party_name[0] != '\0')
-	snprintf(called, sizeof(called), "%s <%s>", called_party_name, called_party);
+	safe_snprintf(__FILE__, __LINE__, called, sizeof(called), "%s <%s>", called_party_name, called_party);
       else
-	snprintf(called, sizeof(called), "%s", called_party);
+	safe_snprintf(__FILE__, __LINE__, called, sizeof(called), "%s", called_party);
 
       if(theSession->session_info == NULL) {
 	char tmpStr[256];
 
-	snprintf(tmpStr, sizeof(tmpStr), "%s called %s", caller, called);
+	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%s called %s", caller, called);
 	theSession->session_info = strdup(tmpStr);
       }
 

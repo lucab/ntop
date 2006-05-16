@@ -55,6 +55,7 @@ static int exec_sql_query(char *sql) {
 	       mysql_error(&mysql), err_id);
     
     if(err_id == CR_SERVER_GONE_ERROR) {
+      mysql_close(&mysql);
       reconnect_to_db();
     }
 
@@ -67,9 +68,9 @@ static int exec_sql_query(char *sql) {
 
 static char *get_last_db_error() {
   /*  if(!mysql_initialized)
-    return("");
-    else*/
-    return((char*)mysql_error(&mysql));
+      return("");
+      else*/
+  return((char*)mysql_error(&mysql));
 }
 
 /* ***************************************************** */
@@ -87,7 +88,7 @@ static void* scanDbLoop(void* notUsed _UNUSED_) {
     if(myGlobals.runningPref.sqlRecDaysLifetime > 0) {
       char sql[256];
 
-      snprintf(sql, sizeof(sql),
+      safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql),
 	       "DELETE FROM sessions WHERE lastSeen < (NOW()-%d*86400)",
 	       myGlobals.runningPref.sqlRecDaysLifetime);
 
@@ -96,7 +97,7 @@ static void* scanDbLoop(void* notUsed _UNUSED_) {
 
       /* ************************************ */
 
-      snprintf(sql, sizeof(sql),
+      safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql),
 	       "DELETE FROM flows WHERE last < (NOW()-%d*86400)",
 	       myGlobals.runningPref.sqlRecDaysLifetime);
 
@@ -135,15 +136,15 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
   } else {
     traceEvent(CONST_TRACE_INFO, "Successfully connected to MySQL [%s:%s:%s:%s]",
 	       db_host, user, pw, db_name);
-	snprintf(mysql_db_host, sizeof(mysql_db_host), db_host);
-	snprintf(mysql_db_user, sizeof(mysql_db_user), user);
-	snprintf(mysql_db_pw, sizeof(mysql_db_pw), pw);
-	snprintf(mysql_db_name, sizeof(mysql_db_name), db_name);
+    safe_snprintf(__FILE__, __LINE__, mysql_db_host, sizeof(mysql_db_host), db_host);
+    safe_snprintf(__FILE__, __LINE__, mysql_db_user, sizeof(mysql_db_user), user);
+    safe_snprintf(__FILE__, __LINE__, mysql_db_pw, sizeof(mysql_db_pw), pw);
+    safe_snprintf(__FILE__, __LINE__, mysql_db_name, sizeof(mysql_db_name), db_name);
   }
 
   /* *************************************** */
   
-  snprintf(sql, sizeof(sql), "CREATE DATABASE IF NOT EXISTS %s", db_name);
+  safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql), "CREATE DATABASE IF NOT EXISTS %s", db_name);
   if(exec_sql_query(sql) != 0) {
     traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error());
     return(-3);
@@ -157,7 +158,7 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
   /* ************************************************ */
 
   /* NetFlow */
-  snprintf(sql, sizeof(sql), "CREATE TABLE IF NOT EXISTS `flows` ("
+  safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql), "CREATE TABLE IF NOT EXISTS `flows` ("
 	   "`idx` int(11) NOT NULL auto_increment,"
 	   "`probeId` smallint(6) NOT NULL default '0',"
 	   "`src` varchar(32) NOT NULL default '',"
@@ -193,7 +194,7 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
   /* ************************************************ */
 
   /* NetFlow */
-  snprintf(sql, sizeof(sql), "CREATE TABLE IF NOT EXISTS `sessions` ("
+  safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql), "CREATE TABLE IF NOT EXISTS `sessions` ("
 	   "`idx` int(11) NOT NULL auto_increment,"
 	   "`proto` smallint(3) NOT NULL default '0',"
 	   "`src` varchar(32) NOT NULL default '',"
@@ -253,7 +254,7 @@ int dump_session_to_db(IPSession *sess) {
       if(len > 8) tmp[len-8] = '\0';
     }
 
-    snprintf(sql, sizeof(sql),
+    safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql),
 	     "INSERT INTO sessions (proto, src, dst, sport, dport,"
 	     "pktSent, pktRcvd, bytesSent, bytesRcvd, firstSeen, lastSeen, "
 	     "nwLatency, isP2P, isVoIP, isPassiveFtp, info, guessedProto) VALUES "
@@ -308,7 +309,7 @@ int insert_flow_record(u_int16_t probeId,
     
     a.s_addr = srcAddr, b.s_addr = dstAddr;
     
-    snprintf(sql, sizeof(sql),
+    safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql),
 	     "INSERT INTO flows (probeId, src, dst, input, output, "
 	     "pktSent, pktRcvd, bytesSent, bytesRcvd, first, last, "
 	     "sport, dport, tcpFlags, proto, tos, vlanId) VALUES "
@@ -354,7 +355,8 @@ void initDB() {
     tmpBuf[256] = { 0 }, *strtokState;
 
   if(myGlobals.runningPref.sqlDbConfig != NULL)
-    snprintf(tmpBuf, sizeof(tmpBuf), "%s:", myGlobals.runningPref.sqlDbConfig);
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), 
+		  "%s:", myGlobals.runningPref.sqlDbConfig);
 
   host = strtok_r(tmpBuf, ":", &strtokState);
   if(host) user = strtok_r(NULL, ":", &strtokState);

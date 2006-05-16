@@ -88,7 +88,8 @@ void formatUsageCounter(UsageCounter usageCtr,
 
     if(pctg > 100) pctg = 100; /* This should not happen ! */
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;[%.0f&nbsp;%%]</TD>",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;[%.0f&nbsp;%%]</TD>",
 		formatPkts(usageCtr.value.value, formatBuf, sizeof(formatBuf)), pctg);
     sendString(buf);
   }
@@ -97,7 +98,8 @@ void formatUsageCounter(UsageCounter usageCtr,
       HostTraffic tmpEl;
 
       if(!emptySerial(&usageCtr.peersSerials[i])) {
-	  if((el = quickHostLink(usageCtr.peersSerials[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
+	  if((el = quickHostLink(usageCtr.peersSerials[i],
+				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
  	if(!sendHeader) {
 	  sendString("<TD "TD_BG" ALIGN=LEFT><ul>");
 	  sendHeader = 1;
@@ -4047,7 +4049,6 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
      && (!subnetPseudoLocalHost(el))
      && (!multicastHost(el))
      && (!privateIPAddress(el))) {
-
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">"
 		  "%s</TH><TD "TD_BG" ALIGN=RIGHT>"
