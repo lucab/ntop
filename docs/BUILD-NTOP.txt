@@ -11,12 +11,13 @@ Quick Instructions
       Using their RedHat package names, these are:
 
          - glibc, glibc-devel, gcc, cpp
-         - gawk
-               Note that mawk is also ok.
-               If all you have is nawk or original awk, you will get a warning
-               message from ./configure and some options will not work.
+         - Some version of awk
          - libtool (1.4+)
-               Note that there are reports of success with libtool 1.3.x
+               Note that there are reports of success with libtool 1.3.x under
+               FreeBSD so the script allows this.
+         - m4
+         - autoconf (2.53+)
+         - automake (1.6+)
 
          - gdbm, gdbm-devel
          - libpcap (http://www.tcpdump.org)
@@ -28,15 +29,10 @@ Quick Instructions
          - openssl, openssl-devel (http://www.openssl.org)
          - zlib, zlib-devel
 
-      Sometimes having these help because they allow ./configure to
-      rebuild the scripts to better match your system:
-
-         - autoconf (2.53+), automake (1.6+)
-
 2. Build ntop
 
    - cd ntop
-   - ./configure
+   - ./autogen.sh
    - make
    - make install
 
@@ -98,7 +94,7 @@ Quick Instructions
     to:
 
     - cd ntop
-    - ./configure --enable-static-plugins
+    - ./autogen.sh --enable-static-plugins
     - make sntop
 
     The final binary is called sntop (static ntop).
@@ -118,7 +114,7 @@ Quick Instructions
 Compile problems
 ================
 
-      First off, READ the output from ./configure - many issues and
+      First off, READ the output from ./autogen.sh - many issues and
       problems are reported there.  If you ignore this and blythly try
       to run make, well, things might be broken.
 
@@ -143,9 +139,8 @@ Compile problems
 
       You have two choices...
 
-      1. explicitly tell ./configure where to find them via a series of
-      --with-xxxx-root=dir parameters (./configure --help will show you
-      the available parameters)
+      1. explicitly tell ./autogen.sh where to find them via a series of
+      --with-xxxx-root=dir parameters.
 
           Note that if you give both --with-xxxx-lib and --with-xxxx-include,
           the --with-xxxx-root is ignored.  If you give --with-xxxx-root=xyzzy,
@@ -156,7 +151,7 @@ Compile problems
 
           $ export CPPFLAGS="-lm"
           $ export LDFLAGS="-L/opt/lib"
-          $ ./configure ...
+          $ ./autogen.sh ...
           $ make
 
          which adds /opt/lib to the loader path and libm (math library
@@ -178,6 +173,39 @@ Notes
       (gd, libpng and libz).  Instead we use the installed versions,
       hence the 'increase' in the # of required packages.  
 
+   ntop 3.3 (3.2.2+ development)
+
+      Any parameters specified on ./autogen.sh which are not recognized
+      are passed to the generated ./configure:
+
+          $ ./autogen.sh --help
+
+          Starting ntop automatic configuration system v0.2.0
+
+            Please be patient, there is a lot to do...
+
+          This script should help you to configure 'ntop'
+
+          Usage: autogen.sh [OPTION]...
+
+          -h, --help            display this message and exit
+          -v, --version         print version information and exit
+          -d, --debug           enable verbose shell tracing
+          -p, --purge           purge all files which are not part of the source package
+              --noconfig        skip the ./configure execution
+
+          Any unrecognized options will be passed to ./configure, e.g.:
+
+           ./autogen.sh --prefix=/usr
+
+          becomes
+
+           ./configure --prefix=/usr
+
+     To see the parameters which are available on ./configure, you must first
+     create it, by running  ./autogen.sh with the --noconfig option, then run
+     ./configure --help.
+
 ----------------------------------------
 Luca Deri <deri@ntop.org> - January 2001
 Updated - June 2002
@@ -185,3 +213,4 @@ Updated - October 2002 (new ./configure scripts)
 Updated - January 2003 (automake 1.6+ vs. 1.5+)
 Updated - July 2003 (2.2.1+ changes)
 Updated - March 2004 (3.0 final changes)
+Updated - May 2006 (replace ./configure with ./autogen.sh)

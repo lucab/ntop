@@ -47,6 +47,28 @@ based on messages to the ntop and ntop-dev mailing lists.
 --------------------------------------------------------------------------------
 TOP 10 - the questions everyone asks...
 
+Q0. I downloaded the source and ./configure doesn't work.
+A. Yup.
+
+   There is a long history of warfare between the versions of the GNU
+   autotools we use to build the distribution files and the ones installed
+   on your host. So during the 3.3 development cycle, Luca finally gave in
+   and stopped distributing a generated configure file.
+
+   Instead there is a script, autogen.sh, which uses the version(s) of the
+   tools installed on your system to create configure and then run it.
+
+   Yes, this means you MUST have the following tools installed:
+
+      libtool
+      automake
+      m4
+      autoconf
+
+   We are talking only about people who are compiling from source.  Those 
+   tools are pretty much required for ANY source.  Live with it.
+
+
 Q1(a). Can I store data in a SQL database?
 Q1(b). When ntop stops I lose all my data.  Why?
 Q1(c). Why doesn't the -S option work?

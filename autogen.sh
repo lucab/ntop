@@ -9,11 +9,15 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # $Log$
-# Revision 2.8  2006/05/10 08:35:16  deri
-# Changed date
+# Revision 2.9  2006/05/17 13:04:00  burton
+# (1) Add test for v2.50-2.52 of autoconf to autogen.sh
+# (2) Begin to update docs and FAQ with change to autogen.sh
+#
+# -----Burton
+#
 #
 
-version="0.2.0"
+version="0.2.1"
 
 echo ""
 echo "Starting ntop automatic configuration system v$version"
@@ -254,10 +258,21 @@ echo "    autoconf .... ${autoconfversion}"
 
 case "${autoconfversion}" in
   *2\.[[0-4]]*)
-        echo ""
+    echo ""
     echo "******************************************************************"
     echo "*"
-    echo "*ERROR: ntop requires autoconf version 2.50 or newer..."
+    echo "*ERROR: ntop requires autoconf version 2.53 or newer..."
+    echo "*"
+    echo "*>>>   Unable to proceed with your request, aborting!"
+    echo "*"
+    echo "*******************************************************************"
+    exit 1
+    ;;
+  *2\.5\[[0-2]]*)
+    echo ""
+    echo "******************************************************************"
+    echo "*"
+    echo "*ERROR: ntop requires autoconf version 2.53 or newer..."
     echo "*"
     echo "*>>>   Unable to proceed with your request, aborting!"
     echo "*"

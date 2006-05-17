@@ -19,6 +19,14 @@
 
   The file NEWS contains a chronology of releases and major milestone versions.
 
+3.3
+=-=
+  Removed ./configure in favor of ./autogen.sh - see docs/BUILD-NTOP.txt
+
+3.2
+=-=
+  No info here, sorry
+
 3.1
 =-=
 

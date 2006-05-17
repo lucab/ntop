@@ -1,6 +1,13 @@
 Basic Installation
 ==================
 
+  (3.2.2+)
+   Unique to ntop, we use the script, ./autogen.sh to create a
+   ./configure script which matches the host it's being run on.
+   Substitute ./autogen.sh for ./configure below.
+
+
+
    These are generic installation instructions.
 
    The `configure' shell script attempts to guess correct values for
