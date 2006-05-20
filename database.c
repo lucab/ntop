@@ -118,7 +118,7 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
   char sql[2048];
 
   mysql_initialized = 0;
-  myGlobals.purgeDbThreadId = -1;
+  myGlobals.purgeDbThreadId = (pthread_t)-1;
 
   if(db_host == NULL)  db_host = "localhost";
   if(pw == NULL)       pw = "";

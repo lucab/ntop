@@ -529,7 +529,10 @@ void initNtop(char *devices) {
     addDefaultProtocols();
 
 #ifdef HAVE_LIBPCRE
-  initl7();
+  if(myGlobals.runningPref.enableL7) 
+    initl7();
+  else
+    traceEvent(CONST_TRACE_INFO, "No patterns to load: protocol guessing disabled.");
 #endif
 
   /*

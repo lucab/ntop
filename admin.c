@@ -1117,7 +1117,7 @@ int processNtopConfigData (char *buf, int savePref)
     tmpPrefs.disablePromiscuousMode = tmpPrefs.disableMutexExtraInfo = 0;
     tmpPrefs.disableInstantSessionPurge = tmpPrefs.disableStopcap = 0;
     tmpPrefs.debugMode = tmpPrefs.daemonMode = tmpPrefs.w3c = 0;
-    tmpPrefs.numericFlag = tmpPrefs.mergeInterfaces = 0;
+    tmpPrefs.numericFlag = tmpPrefs.mergeInterfaces = tmpPrefs.enableL7 = 0;
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
     tmpPrefs.setNonBlocking = 0;
 #endif
@@ -1144,7 +1144,7 @@ int processNtopConfigData (char *buf, int savePref)
         /* traceEvent(CONST_TRACE_INFO, "RRD: key(%s)=%s", key, value);   */
 
         if(key) {
-            action = processNtopPref (key, value, savePref, &tmpPrefs);
+            action = processNtopPref(key, value, savePref, &tmpPrefs);
 
             if (action) {
                 startCap = TRUE;
@@ -1175,98 +1175,102 @@ int processNtopConfigData (char *buf, int savePref)
     if (myGlobals.savedPref.enableSessionHandling &&
         !tmpPrefs.enableSessionHandling) {
         /* default for enableSessionHandling is TRUE */
-        processNtopPref (NTOP_PREF_EN_SESSION, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_EN_SESSION, FALSE, savePref, &tmpPrefs);
 
     }
 
     if (myGlobals.savedPref.enablePacketDecoding &&
         !tmpPrefs.enablePacketDecoding) {
-        processNtopPref (NTOP_PREF_EN_PROTO_DECODE, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_EN_PROTO_DECODE, FALSE, savePref, &tmpPrefs);
     }
 
     if (myGlobals.savedPref.stickyHosts && !tmpPrefs.stickyHosts) {
-        processNtopPref (NTOP_PREF_STICKY_HOSTS, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_STICKY_HOSTS, FALSE, savePref, &tmpPrefs);
     }
 
     if (myGlobals.savedPref.trackOnlyLocalHosts &&
         !tmpPrefs.trackOnlyLocalHosts) {
-        processNtopPref (NTOP_PREF_TRACK_LOCAL, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_TRACK_LOCAL, FALSE, savePref, &tmpPrefs);
     }
 
     if (myGlobals.savedPref.disablePromiscuousMode &&
         !tmpPrefs.disablePromiscuousMode) {
-        processNtopPref (NTOP_PREF_NO_PROMISC, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_NO_PROMISC, FALSE, savePref, &tmpPrefs);
     }
 
     if (myGlobals.savedPref.daemonMode && !tmpPrefs.daemonMode) {
-        processNtopPref (NTOP_PREF_DAEMON, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_DAEMON, FALSE, savePref, &tmpPrefs);
     }
 
     if (myGlobals.savedPref.noInvalidLunDisplay &&
         !tmpPrefs.noInvalidLunDisplay) {
-        processNtopPref (NTOP_PREF_NO_INVLUN, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_NO_INVLUN, FALSE, savePref, &tmpPrefs);
     }
 
     if (myGlobals.savedPref.w3c && !tmpPrefs.w3c) {
-        processNtopPref (NTOP_PREF_W3C, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_W3C, FALSE, savePref, &tmpPrefs);
     }
 
     if (myGlobals.savedPref.numericFlag && !tmpPrefs.numericFlag) {
-        processNtopPref (NTOP_PREF_NUMERIC_IP, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_NUMERIC_IP, FALSE, savePref, &tmpPrefs);
     }
 
     if (myGlobals.savedPref.mergeInterfaces && !tmpPrefs.mergeInterfaces) {
-        processNtopPref (NTOP_PREF_MERGEIF, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_MERGEIF, FALSE, savePref, &tmpPrefs);
+    }
+
+    if (myGlobals.savedPref.enableL7 && !tmpPrefs.enableL7) {
+      processNtopPref(NTOP_PREF_ENABLE_L7PROTO, FALSE, savePref, &tmpPrefs);
     }
 
     if (myGlobals.savedPref.disableInstantSessionPurge &&
         !tmpPrefs.disableInstantSessionPurge) {
-        processNtopPref (NTOP_PREF_NO_ISESS_PURGE, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_NO_ISESS_PURGE, FALSE, savePref, &tmpPrefs);
     }
 
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
     if (myGlobals.savedPref.setNonBlocking && !tmpPrefs.setNonBlocking) {
-        processNtopPref (NTOP_PREF_NOBLOCK, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_NOBLOCK, FALSE, savePref, &tmpPrefs);
     }
 #endif
 
     if (myGlobals.savedPref.disableStopcap && !tmpPrefs.disableStopcap) {
-        processNtopPref (NTOP_PREF_NO_STOPCAP, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_NO_STOPCAP, FALSE, savePref, &tmpPrefs);
     }
 
     if (myGlobals.savedPref.dontTrustMACaddr && !tmpPrefs.dontTrustMACaddr) {
-        processNtopPref (NTOP_PREF_NO_TRUST_MAC, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_NO_TRUST_MAC, FALSE, savePref, &tmpPrefs);
     }
 
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
     if (myGlobals.savedPref.useSSLwatchdog && !tmpPrefs.useSSLwatchdog) {
-        processNtopPref (NTOP_PREF_USE_SSLWATCH, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_USE_SSLWATCH, FALSE, savePref, &tmpPrefs);
     }
 #endif
 
 #ifdef MAKE_WITH_SCHED_YIELD
     if (myGlobals.savedPref.disableSchedYield && !tmpPrefs.disableSchedYield) {
-        processNtopPref (NTOP_PREF_NO_SCHEDYLD, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_NO_SCHEDYLD, FALSE, savePref, &tmpPrefs);
     }
 #endif
 
     if (myGlobals.savedPref.debugMode && !tmpPrefs.debugMode) {
-        processNtopPref (NTOP_PREF_DBG_MODE, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_DBG_MODE, FALSE, savePref, &tmpPrefs);
     }
 
     if (myGlobals.savedPref.enableOtherPacketDump &&
         !tmpPrefs.enableOtherPacketDump) {
-        processNtopPref (NTOP_PREF_DUMP_OTHER, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_DUMP_OTHER, FALSE, savePref, &tmpPrefs);
     }
 
     if (myGlobals.savedPref.enableSuspiciousPacketDump &&
         !tmpPrefs.enableSuspiciousPacketDump) {
-        processNtopPref (NTOP_PREF_DUMP_SUSP, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_DUMP_SUSP, FALSE, savePref, &tmpPrefs);
     }
 
     if (myGlobals.savedPref.disableMutexExtraInfo &&
         !tmpPrefs.disableMutexExtraInfo) {
-        processNtopPref (NTOP_PREF_NO_MUTEX_EXTRA, FALSE, savePref, &tmpPrefs);
+        processNtopPref(NTOP_PREF_NO_MUTEX_EXTRA, FALSE, savePref, &tmpPrefs);
     }
 
     /* Copy over the preferences now */
@@ -1696,6 +1700,13 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
     CONFIG_RADIO_ENTRY(DARK_BG, "Don't Merge Interfaces (-M)",
 		       NTOP_PREF_MERGEIF, pref->mergeInterfaces,
 		       "Yes = merge data from all interfaces (if possible), No = do not merge data from all interfaces");
+
+#ifdef HAVE_LIBPCRE
+    CONFIG_RADIO_ENTRY(DARK_BG, "Enable Protocol Guessing",
+		       NTOP_PREF_ENABLE_L7PROTO, pref->enableL7,
+		       "Enabling patterm matching, ntop will be able to guess the protocol being used. "
+		       "Neverthelss this practice has a little performance penalty.");
+#endif
 
     CONFIG_RADIO_ENTRY(DARK_BG, "No Instant Session Purge",
 		       NTOP_PREF_NO_ISESS_PURGE,

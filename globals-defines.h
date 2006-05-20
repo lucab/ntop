@@ -2868,6 +2868,7 @@ struct ip6_hdr
 #define NTOP_PREF_SAVE_REC_INTO_DB "ntop.saveRecordsIntoDb"
 #define NTOP_PREF_MAXSESSIONS      "ntop.maxNumSessions"
 #define NTOP_PREF_MERGEIF          "ntop.mergeInterfaces"
+#define NTOP_PREF_ENABLE_L7PROTO   "ntop.enableL7Proto"
 #define NTOP_PREF_NO_ISESS_PURGE   "ntop.disableInstantSessionPurge"
 #define NTOP_PREF_NOBLOCK          "ntop.setNonBlocking"
 #define NTOP_PREF_NO_STOPCAP       "ntop.disableStopcap"

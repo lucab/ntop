@@ -1975,6 +1975,7 @@ typedef struct _userPref {
 #endif
 
   bool mergeInterfaces;         /* -M | --no-interface-merge */
+  bool enableL7;                /* Enable/disable l7 protocol pattern matching */
   char *pcapLogBasePath;        /* -O | --pcap-file-path */ /* Added by Ola Lundqvist <opal@debian.org>. */
   char *fcNSCacheFile;          /* -N | --wwn-map */
 
