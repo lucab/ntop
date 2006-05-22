@@ -226,11 +226,11 @@ static void initIPCountryTable(void) {
   myGlobals.countryFlagHead->b[1]=NULL;
 
   if (!myGlobals.runningPref.printFcOnly) {
-      fd=checkForInputFile("IP2CC",
-                           "IP address <-> Country Code mapping",
-                           CONST_P2C_FILE,
-                           NULL,
-                           &compressedFormat);
+    fd=checkForInputFile("IP2CC",
+			 "IP address <-> Country Code mapping",
+			 CONST_P2C_FILE,
+			 NULL,
+			 &compressedFormat);
       if(fd != NULL) {
           char *strtokState, *cc, *ip, *prefix;
           int numRead=0;

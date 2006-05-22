@@ -915,9 +915,11 @@ static void delGdbmValue(GDBM_FILE gdbmfile, char *key) {
     ; /* ntop is quitting... */
   }
 
-  if(gdbm_delete (gdbmfile, key_data) != 0)
-    traceEvent(CONST_TRACE_ERROR, "While deleting %s", key);
-  else {
+  if(gdbm_delete(gdbmfile, key_data) != 0) {
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_ERROR, "While deleting %s: key not found", key);
+#endif
+  } else {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "Deleted %s", key);
 #endif
@@ -1035,9 +1037,10 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
 
   if(value == NULL) value = ""; /* Safer */
 
+  /* traceEvent(CONST_TRACE_ERROR, "==>> processNtopPref [%s][%s]", key, value); */
+  
   if(strcmp(key, NTOP_PREF_DEVICES) == 0) {
-    if((pref->devices != NULL) &&
-	(strcmp(pref->devices, value))) {
+    if((pref->devices != NULL) && (strcmp(pref->devices, value))) {
       startCap = TRUE;
     }
 
@@ -1219,14 +1222,13 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
     processIntPref(NTOP_PREF_SQL_REC_LIFETIME, value,
 		   (int*)&pref->sqlRecDaysLifetime, savePref);
   } else if(strcmp(key, NTOP_PREF_SAVE_REC_INTO_DB) == 0) {
-    if(value == NULL) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		    "%d", -1);
-      value = buf;
-    }
-
-    processIntPref(NTOP_PREF_SAVE_REC_INTO_DB, value,
-		   (int*)&pref->saveRecordsIntoDb, savePref);
+    processBoolPref(NTOP_PREF_SAVE_REC_INTO_DB, value2bool(value),
+		    &pref->saveRecordsIntoDb, savePref);
+    myGlobals.runningPref.saveRecordsIntoDb = pref->saveRecordsIntoDb; /* activate immediately */
+  } else if(strcmp(key, NTOP_PREF_SAVE_SESSIONS_INTO_DB) == 0) {
+    processBoolPref(NTOP_PREF_SAVE_SESSIONS_INTO_DB, value2bool(value),
+		    &pref->saveSessionsIntoDb, savePref);   
+    myGlobals.runningPref.saveSessionsIntoDb = pref->saveSessionsIntoDb; /* activate immediately */
   } else if(strcmp(key, NTOP_PREF_MAXSESSIONS) == 0) {
     if(value == NULL) {
       safe_snprintf (__FILE__, __LINE__, buf, sizeof(buf), "%d",
@@ -1351,6 +1353,7 @@ void initUserPrefs(UserPref *pref) {
   strncpy(pref->sqlDbConfig, DEFAULT_NTOP_SQL_DB_CONFIG, sizeof(pref->sqlDbConfig));
   pref->sqlRecDaysLifetime = DEFAULT_NTOP_SQL_REC_DAYS_LIFETIME;
   pref->saveRecordsIntoDb  = DEFAULT_NTOP_SAVE_REC_INTO_DB;
+  pref->saveSessionsIntoDb = DEFAULT_NTOP_SAVE_SESSIONS_INTO_DB;
   pref->webAddr = DEFAULT_NTOP_WEB_ADDR;
   pref->webPort = DEFAULT_NTOP_WEB_PORT;
   pref->ipv4or6 = DEFAULT_NTOP_FAMILY;

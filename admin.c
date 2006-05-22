@@ -1096,191 +1096,208 @@ void addDefaultAdminUser(void) {
 
 /* ************************************************* */
 
-int processNtopConfigData (char *buf, int savePref)
-{
-    char *strtokState, *mainState;
-    int startCap = FALSE, action;
-    UserPref tmpPrefs;
-    char *devices = NULL, *foundDevices = NULL, *token;
+ int processNtopConfigData (char *buf, int savePref) {
+   char *strtokState, *mainState;
+   int startCap = FALSE, action;
+   UserPref tmpPrefs;
+   char *devices = NULL, *foundDevices = NULL, *token;
+   char basic_prefs = 0, display_prefs = 0, ip_prefs = 0, advanced_prefs = 0, debug_prefs = 0, db_prefs = 0;
 
-    /* traceEvent(CONST_TRACE_INFO, "RRD: buf='%s'", buf);   */
+   /* traceEvent(CONST_TRACE_INFO, "RRD: buf='%s'", buf); */
 
-    token = strtok_r(buf, "&", &mainState);
-    tmpPrefs = myGlobals.savedPref;
+   token = strtok_r(buf, "&", &mainState);
+   tmpPrefs = myGlobals.savedPref;
 
-    /* however, switch off all chkbox fields. If they've been set, they'll get
-     * processed. If they stay turned off, it is a sign that they've been
-     * unchecked and we need to handle this.
-     */
-    tmpPrefs.enableSessionHandling = tmpPrefs.enablePacketDecoding = 0;
-    tmpPrefs.stickyHosts = tmpPrefs.trackOnlyLocalHosts = 0;
-    tmpPrefs.disablePromiscuousMode = tmpPrefs.disableMutexExtraInfo = 0;
-    tmpPrefs.disableInstantSessionPurge = tmpPrefs.disableStopcap = 0;
-    tmpPrefs.debugMode = tmpPrefs.daemonMode = tmpPrefs.w3c = 0;
-    tmpPrefs.numericFlag = tmpPrefs.mergeInterfaces = tmpPrefs.enableL7 = 0;
+   /* however, switch off all chkbox fields. If they've been set, they'll get
+    * processed. If they stay turned off, it is a sign that they've been
+    * unchecked and we need to handle this.
+    */
+   tmpPrefs.enableSessionHandling = tmpPrefs.enablePacketDecoding = 0;
+   tmpPrefs.stickyHosts = tmpPrefs.trackOnlyLocalHosts = 0;
+   tmpPrefs.disablePromiscuousMode = tmpPrefs.disableMutexExtraInfo = 0;
+   tmpPrefs.disableInstantSessionPurge = tmpPrefs.disableStopcap = 0;
+   tmpPrefs.debugMode = tmpPrefs.daemonMode = tmpPrefs.w3c = 0;
+   tmpPrefs.numericFlag = tmpPrefs.mergeInterfaces = tmpPrefs.enableL7 = 0;
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-    tmpPrefs.setNonBlocking = 0;
+   tmpPrefs.setNonBlocking = 0;
 #endif
-    tmpPrefs.dontTrustMACaddr = 0;
-    tmpPrefs.enableOtherPacketDump = tmpPrefs.enableSuspiciousPacketDump = 0;
-    tmpPrefs.enableSessionHandling = 0;
+   tmpPrefs.dontTrustMACaddr = 0;
+   tmpPrefs.enableOtherPacketDump = tmpPrefs.enableSuspiciousPacketDump = 0;
+   tmpPrefs.enableSessionHandling = 0;
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-    tmpPrefs.useSSLwatchdog = 0;
+   tmpPrefs.useSSLwatchdog = 0;
 #endif
 
 #ifdef MAKE_WITH_SCHED_YIELD
-    tmpPrefs.disableSchedYield = 0;
+   tmpPrefs.disableSchedYield = 0;
 #endif
 
-    devices = tmpPrefs.devices;
-	tmpPrefs.devices = NULL;
+   devices = tmpPrefs.devices;
+   tmpPrefs.devices = NULL;
 
-	while(token != NULL) {
-        char *key, *value;
+   while(token != NULL) {
+     char *key, *value;
 
-        key = strtok_r(token, "=", &strtokState);
-        if(key != NULL) value = strtok_r(NULL, "=", &strtokState); else value = NULL;
+     key = strtok_r(token, "=", &strtokState);
+     if(key != NULL) value = strtok_r(NULL, "=", &strtokState); else value = NULL;
 
-        /* traceEvent(CONST_TRACE_INFO, "RRD: key(%s)=%s", key, value);   */
+     /* traceEvent(CONST_TRACE_INFO, "RRD: key(%s)=%s", key, value); */
 
-        if(key) {
-            action = processNtopPref(key, value, savePref, &tmpPrefs);
+     if(key) {
+       action = processNtopPref(key, value, savePref, &tmpPrefs);
 
-            if (action) {
-                startCap = TRUE;
-            }
+       if (action) {
+	 startCap = TRUE;
+       }
 
-	    if(!strcmp(key, NTOP_PREF_DEVICES))
-	      foundDevices = value;
-        }
-        token = strtok_r(NULL, "&", &mainState);
-    }
+       if(!strcmp(key, "BASIC_PREFS")) basic_prefs = 1;
+       else if(!strcmp(key, "DISPLAY_PREFS")) display_prefs = 1;
+       else if(!strcmp(key, "IP_PREFS")) ip_prefs = 1;
+       else if(!strcmp(key, "ADVANCED_PREFS")) advanced_prefs = 1;
+       else if(!strcmp(key, "DEBUG_PREFS")) debug_prefs = 1;
+       else if(!strcmp(key, "DB_PREFS")) db_prefs = 1;
 
-	if(!foundDevices) {
-       delPrefsValue(NTOP_PREF_DEVICES);
-	   if(tmpPrefs.devices) free(tmpPrefs.devices);
-	   tmpPrefs.devices = NULL;
-	}
+       if(!strcmp(key, NTOP_PREF_DEVICES))
+	 foundDevices = value;
+     }
+     
+     token = strtok_r(NULL, "&", &mainState);
+   }
 
-	if(devices) {
-	 free(devices);
-    }
+   if((!foundDevices) && basic_prefs) {
+     delPrefsValue(NTOP_PREF_DEVICES);
+     if(tmpPrefs.devices) free(tmpPrefs.devices);
+     tmpPrefs.devices = NULL;
+   }
 
-    /* Now we need to delete all the preferences that were unchecked.
-     * Radio box & checkbox preferences that were set in a previous instance
-     * but cleared in this instance will not appear in the POST data. So, if
-     * the value has changed from what existed before, we need to remove them
-     * from the saved preferences file.
-     */
-    if (myGlobals.savedPref.enableSessionHandling &&
-        !tmpPrefs.enableSessionHandling) {
-        /* default for enableSessionHandling is TRUE */
-        processNtopPref(NTOP_PREF_EN_SESSION, FALSE, savePref, &tmpPrefs);
+   if(devices) {
+     free(devices);
+   }
 
-    }
+   /* Now we need to delete all the preferences that were unchecked.
+    * Radio box & checkbox preferences that were set in a previous instance
+    * but cleared in this instance will not appear in the POST data. So, if
+    * the value has changed from what existed before, we need to remove them
+    * from the saved preferences file.
+    */
 
-    if (myGlobals.savedPref.enablePacketDecoding &&
-        !tmpPrefs.enablePacketDecoding) {
-        processNtopPref(NTOP_PREF_EN_PROTO_DECODE, FALSE, savePref, &tmpPrefs);
-    }
+     if (basic_prefs && myGlobals.savedPref.enableSessionHandling &&
+	 !tmpPrefs.enableSessionHandling) {
+       /* default for enableSessionHandling is TRUE */
+       processNtopPref(NTOP_PREF_EN_SESSION, FALSE, savePref, &tmpPrefs);
+     }
 
-    if (myGlobals.savedPref.stickyHosts && !tmpPrefs.stickyHosts) {
-        processNtopPref(NTOP_PREF_STICKY_HOSTS, FALSE, savePref, &tmpPrefs);
-    }
+     if (basic_prefs && myGlobals.savedPref.enablePacketDecoding &&
+	 !tmpPrefs.enablePacketDecoding) {
+       processNtopPref(NTOP_PREF_EN_PROTO_DECODE, FALSE, savePref, &tmpPrefs);
+     }
 
-    if (myGlobals.savedPref.trackOnlyLocalHosts &&
-        !tmpPrefs.trackOnlyLocalHosts) {
-        processNtopPref(NTOP_PREF_TRACK_LOCAL, FALSE, savePref, &tmpPrefs);
-    }
+     if (basic_prefs && myGlobals.savedPref.stickyHosts && !tmpPrefs.stickyHosts) {
+       processNtopPref(NTOP_PREF_STICKY_HOSTS, FALSE, savePref, &tmpPrefs);
+     }
 
-    if (myGlobals.savedPref.disablePromiscuousMode &&
-        !tmpPrefs.disablePromiscuousMode) {
-        processNtopPref(NTOP_PREF_NO_PROMISC, FALSE, savePref, &tmpPrefs);
-    }
+     if (basic_prefs && myGlobals.savedPref.trackOnlyLocalHosts &&
+	 !tmpPrefs.trackOnlyLocalHosts) {
+       processNtopPref(NTOP_PREF_TRACK_LOCAL, FALSE, savePref, &tmpPrefs);
+     }
 
-    if (myGlobals.savedPref.daemonMode && !tmpPrefs.daemonMode) {
-        processNtopPref(NTOP_PREF_DAEMON, FALSE, savePref, &tmpPrefs);
-    }
+     if (basic_prefs && myGlobals.savedPref.disablePromiscuousMode &&
+	 !tmpPrefs.disablePromiscuousMode) {
+       processNtopPref(NTOP_PREF_NO_PROMISC, FALSE, savePref, &tmpPrefs);
+     }
 
-    if (myGlobals.savedPref.noInvalidLunDisplay &&
-        !tmpPrefs.noInvalidLunDisplay) {
-        processNtopPref(NTOP_PREF_NO_INVLUN, FALSE, savePref, &tmpPrefs);
-    }
+     if (basic_prefs && myGlobals.savedPref.daemonMode && !tmpPrefs.daemonMode) {
+       processNtopPref(NTOP_PREF_DAEMON, FALSE, savePref, &tmpPrefs);
+     }
+   
 
-    if (myGlobals.savedPref.w3c && !tmpPrefs.w3c) {
-        processNtopPref(NTOP_PREF_W3C, FALSE, savePref, &tmpPrefs);
-    }
+     if (display_prefs && myGlobals.savedPref.noInvalidLunDisplay &&
+	 !tmpPrefs.noInvalidLunDisplay) {
+       processNtopPref(NTOP_PREF_NO_INVLUN, FALSE, savePref, &tmpPrefs);
+     }
 
-    if (myGlobals.savedPref.numericFlag && !tmpPrefs.numericFlag) {
-        processNtopPref(NTOP_PREF_NUMERIC_IP, FALSE, savePref, &tmpPrefs);
-    }
+   if (display_prefs && myGlobals.savedPref.w3c && !tmpPrefs.w3c) {
+     processNtopPref(NTOP_PREF_W3C, FALSE, savePref, &tmpPrefs);
+   }
 
-    if (myGlobals.savedPref.mergeInterfaces && !tmpPrefs.mergeInterfaces) {
-        processNtopPref(NTOP_PREF_MERGEIF, FALSE, savePref, &tmpPrefs);
-    }
+   if (ip_prefs && myGlobals.savedPref.numericFlag && !tmpPrefs.numericFlag) {
+     processNtopPref(NTOP_PREF_NUMERIC_IP, FALSE, savePref, &tmpPrefs);
+   }
 
-    if (myGlobals.savedPref.enableL7 && !tmpPrefs.enableL7) {
-      processNtopPref(NTOP_PREF_ENABLE_L7PROTO, FALSE, savePref, &tmpPrefs);
-    }
+   if (advanced_prefs && myGlobals.savedPref.mergeInterfaces && !tmpPrefs.mergeInterfaces) {
+     processNtopPref(NTOP_PREF_MERGEIF, FALSE, savePref, &tmpPrefs);
+   }
 
-    if (myGlobals.savedPref.disableInstantSessionPurge &&
-        !tmpPrefs.disableInstantSessionPurge) {
-        processNtopPref(NTOP_PREF_NO_ISESS_PURGE, FALSE, savePref, &tmpPrefs);
-    }
+   if (advanced_prefs && myGlobals.savedPref.enableL7 && !tmpPrefs.enableL7) {
+     processNtopPref(NTOP_PREF_ENABLE_L7PROTO, FALSE, savePref, &tmpPrefs);
+   }
+
+   if (advanced_prefs && myGlobals.savedPref.disableInstantSessionPurge &&
+       !tmpPrefs.disableInstantSessionPurge) {
+     processNtopPref(NTOP_PREF_NO_ISESS_PURGE, FALSE, savePref, &tmpPrefs);
+   }
 
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-    if (myGlobals.savedPref.setNonBlocking && !tmpPrefs.setNonBlocking) {
-        processNtopPref(NTOP_PREF_NOBLOCK, FALSE, savePref, &tmpPrefs);
-    }
+   if (advanced_prefs && myGlobals.savedPref.setNonBlocking && !tmpPrefs.setNonBlocking) {
+     processNtopPref(NTOP_PREF_NOBLOCK, FALSE, savePref, &tmpPrefs);
+   }
 #endif
 
-    if (myGlobals.savedPref.disableStopcap && !tmpPrefs.disableStopcap) {
-        processNtopPref(NTOP_PREF_NO_STOPCAP, FALSE, savePref, &tmpPrefs);
-    }
+   if (advanced_prefs && myGlobals.savedPref.disableStopcap && !tmpPrefs.disableStopcap) {
+     processNtopPref(NTOP_PREF_NO_STOPCAP, FALSE, savePref, &tmpPrefs);
+   }
 
-    if (myGlobals.savedPref.dontTrustMACaddr && !tmpPrefs.dontTrustMACaddr) {
-        processNtopPref(NTOP_PREF_NO_TRUST_MAC, FALSE, savePref, &tmpPrefs);
-    }
+   if (advanced_prefs && myGlobals.savedPref.dontTrustMACaddr && !tmpPrefs.dontTrustMACaddr) {
+     processNtopPref(NTOP_PREF_NO_TRUST_MAC, FALSE, savePref, &tmpPrefs);
+   }
 
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-    if (myGlobals.savedPref.useSSLwatchdog && !tmpPrefs.useSSLwatchdog) {
-        processNtopPref(NTOP_PREF_USE_SSLWATCH, FALSE, savePref, &tmpPrefs);
-    }
+   if (advanced_prefs && myGlobals.savedPref.useSSLwatchdog && !tmpPrefs.useSSLwatchdog) {
+     processNtopPref(NTOP_PREF_USE_SSLWATCH, FALSE, savePref, &tmpPrefs);
+   }
 #endif
 
 #ifdef MAKE_WITH_SCHED_YIELD
-    if (myGlobals.savedPref.disableSchedYield && !tmpPrefs.disableSchedYield) {
-        processNtopPref(NTOP_PREF_NO_SCHEDYLD, FALSE, savePref, &tmpPrefs);
-    }
+   if (advanced_prefs && myGlobals.savedPref.disableSchedYield && !tmpPrefs.disableSchedYield) {
+     processNtopPref(NTOP_PREF_NO_SCHEDYLD, FALSE, savePref, &tmpPrefs);
+   }
 #endif
 
-    if (myGlobals.savedPref.debugMode && !tmpPrefs.debugMode) {
-        processNtopPref(NTOP_PREF_DBG_MODE, FALSE, savePref, &tmpPrefs);
-    }
+   if (debug_prefs && myGlobals.savedPref.debugMode && !tmpPrefs.debugMode) {
+     processNtopPref(NTOP_PREF_DBG_MODE, FALSE, savePref, &tmpPrefs);
+   }
 
-    if (myGlobals.savedPref.enableOtherPacketDump &&
-        !tmpPrefs.enableOtherPacketDump) {
-        processNtopPref(NTOP_PREF_DUMP_OTHER, FALSE, savePref, &tmpPrefs);
-    }
+   if (debug_prefs && myGlobals.savedPref.enableOtherPacketDump &&
+       !tmpPrefs.enableOtherPacketDump) {
+     processNtopPref(NTOP_PREF_DUMP_OTHER, FALSE, savePref, &tmpPrefs);
+   }
 
-    if (myGlobals.savedPref.enableSuspiciousPacketDump &&
-        !tmpPrefs.enableSuspiciousPacketDump) {
-        processNtopPref(NTOP_PREF_DUMP_SUSP, FALSE, savePref, &tmpPrefs);
-    }
+   if (debug_prefs && myGlobals.savedPref.enableSuspiciousPacketDump &&
+       !tmpPrefs.enableSuspiciousPacketDump) {
+     processNtopPref(NTOP_PREF_DUMP_SUSP, FALSE, savePref, &tmpPrefs);
+   }
 
-    if (myGlobals.savedPref.disableMutexExtraInfo &&
-        !tmpPrefs.disableMutexExtraInfo) {
-        processNtopPref(NTOP_PREF_NO_MUTEX_EXTRA, FALSE, savePref, &tmpPrefs);
-    }
+   if (debug_prefs && myGlobals.savedPref.disableMutexExtraInfo &&
+       !tmpPrefs.disableMutexExtraInfo) {
+     processNtopPref(NTOP_PREF_NO_MUTEX_EXTRA, FALSE, savePref, &tmpPrefs);
+   }
 
-    /* Copy over the preferences now */
-    myGlobals.savedPref = tmpPrefs;
+   if (db_prefs && myGlobals.savedPref.saveRecordsIntoDb && !tmpPrefs.saveRecordsIntoDb) {
+     processNtopPref(NTOP_PREF_SAVE_REC_INTO_DB, FALSE, savePref, &tmpPrefs);
+   }
 
-    /* Handle immediates */
-    myGlobals.runningPref.traceLevel = myGlobals.savedPref.traceLevel;
+   if (db_prefs && myGlobals.savedPref.saveSessionsIntoDb && !tmpPrefs.saveSessionsIntoDb) {
+     processNtopPref(NTOP_PREF_SAVE_SESSIONS_INTO_DB, FALSE, savePref, &tmpPrefs);
+   }
 
-    return (startCap);
-}
+   /* Copy over the preferences now */
+   myGlobals.savedPref = tmpPrefs;
+
+   /* Handle immediates */
+   myGlobals.runningPref.traceLevel = myGlobals.savedPref.traceLevel;
+
+   return (startCap);
+ }
 
 /* ************************************************* */
 
@@ -1512,13 +1529,17 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 
 	pcap_freealldevs(devpointer);
 
-      } else {
-	/*
-	  traceEvent(CONST_TRACE_INFO, "pcap_findalldevs failed [rc=%d][%s]\n",
-	  rc, ebuf);
-	*/
+      } else {	
+	sendString("<INPUT TYPE=hidden name=\""NTOP_PREF_DEVICES"\" value=\"\">");
+#ifndef WIN32
+	if(myGlobals.userId == 0)
+	  traceEvent(CONST_TRACE_INFO, "pcap_findalldevs failed [rc=%d][%s]\n", rc, ebuf);
+	else
+	  sendString("<font color=red>You cannot set the capture interface: missing privileges.</font><br>"
+		     "You need to start ntop with super-user privileges [-u]");
+#endif
       }
-      sendString("</TD></TR>");
+      sendString("</TD></TR>\n");
     }
 
   default:
@@ -1595,6 +1616,8 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
     break;
 
   case showPrefDisplayPref:
+    sendString("<INPUT TYPE=HIDDEN NAME=DISPLAY_PREFS VALUE=1>");
+
     CONFIG_INT_ENTRY(DARK_BG, "Refresh Time (-r)", NTOP_PREF_REFRESH_RATE,
 		     5, pref->refreshRate,
 		     "Delay (in secs) between automatic screen updates for "
@@ -1637,6 +1660,8 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
     break;
 
   case showPrefIPPref:
+    sendString("<INPUT TYPE=HIDDEN NAME=IP_PREFS VALUE=1>");
+
     sendString("<TR><TD ALIGN=LEFT "DARK_BG">Use IPv4 or IPv6 (-4/-6)</TD><TD ALIGN=LEFT>");
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<INPUT TYPE=radio NAME=%s VALUE=%d %s>v4<br>\n",
@@ -1681,12 +1706,16 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
     break;
 
   case showPrefFCPref:
+    sendString("<INPUT TYPE=HIDDEN NAME=FC_PREFS VALUE=1>");
+
     CONFIG_STR_ENTRY(DARK_BG, "WWN Mapper File (-N)", NTOP_PREF_WWN_MAP,
 		     50, pref->fcNSCacheFile,
 		     "Location of file mapping VSAN/FC_ID to WWN/Alias");
     break;
     
   case showPrefAdvPref:
+    sendString("<INPUT TYPE=HIDDEN NAME=ADVANCED_PREFS VALUE=1>");
+
     CONFIG_INT_ENTRY(DARK_BG, "Max Hashes (-x)", NTOP_PREF_MAXHASH, 5,
 		     pref->maxNumHashEntries,
 		     "Limit number of host hash entries created in order"
@@ -1749,6 +1778,8 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
     break;
 
   case showPrefDbgPref:
+    sendString("<INPUT TYPE=HIDDEN NAME=DEBUG_PREFS VALUE=1>");
+
     CONFIG_RADIO_ENTRY(DARK_BG, "Run in debug mode (-K)",
 		       NTOP_PREF_DBG_MODE, pref->debugMode,
 		       "Simplifies debugging Ntop");
@@ -1791,10 +1822,20 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
     break;
 
   case showPrefDBPref:
+    sendString("<INPUT TYPE=HIDDEN NAME=DB_PREFS VALUE=1>");
+
     CONFIG_RADIO_ENTRY(DARK_BG, "Save Data into DB",
 		       NTOP_PREF_SAVE_REC_INTO_DB,
 		       pref->saveRecordsIntoDb,
-		       "Enable/disable ntop to save data into the SQL (MySQL) database");
+		       "Enable/disable ntop to save data (sessions and NetFlow flows) into the SQL (MySQL) database.");
+
+    if(pref->saveRecordsIntoDb) {
+      CONFIG_RADIO_ENTRY(DARK_BG, "Save Sessions into DB",
+			 NTOP_PREF_SAVE_SESSIONS_INTO_DB,
+			 pref->saveSessionsIntoDb,
+			 "Enable/disable ntop to save TCP/UDP sessiond into the SQL (MySQL) database.");      
+    } else
+      pref->saveSessionsIntoDb = 0;
 
     CONFIG_STR_ENTRY(DARK_BG, "DB Configuration", 
 		     NTOP_PREF_SQL_DB_CONFIG, 20, pref->sqlDbConfig,

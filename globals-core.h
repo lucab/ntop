@@ -436,6 +436,7 @@ extern void term_ssl(void);
 #endif
 
 /* main.c */
+extern char static_ntop;
 extern void usage(FILE * fp);
 extern void welcome(FILE * fp);
 

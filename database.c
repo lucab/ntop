@@ -46,14 +46,16 @@ static void reconnect_to_db() {
 /* ***************************************************** */
 
 static int exec_sql_query(char *sql) {
-  //traceEvent(CONST_TRACE_ERROR, "====> %s", sql);
+  /* traceEvent(CONST_TRACE_ERROR, "====> %s", sql); */
+
+  if(!mysql_initialized) return(-2);
 
   if(mysql_query(&mysql, sql)) {
     int err_id = mysql_errno(&mysql);
-    
-    traceEvent(CONST_TRACE_ERROR, "MySQL error: %s [%d]", 
+
+    traceEvent(CONST_TRACE_ERROR, "MySQL error: %s [%d]",
 	       mysql_error(&mysql), err_id);
-    
+
     if(err_id == CR_SERVER_GONE_ERROR) {
       mysql_close(&mysql);
       reconnect_to_db();
@@ -67,10 +69,10 @@ static int exec_sql_query(char *sql) {
 /* ***************************************************** */
 
 static char *get_last_db_error() {
-  /*  if(!mysql_initialized)
-      return("");
-      else*/
-  return((char*)mysql_error(&mysql));
+  if(!mysql_initialized)
+    return("");
+  else
+    return((char*)mysql_error(&mysql));
 }
 
 /* ***************************************************** */
@@ -80,17 +82,21 @@ static void* scanDbLoop(void* notUsed _UNUSED_) {
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DB: Database purge loop",
              pthread_self());
 
-  for(;;) {
+  for(;;) {    
     ntopSleepWhileSameState(86400); /* 1 day */
 
-    if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
-    
+    if((myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN)
+       ||  (!mysql_initialized))
+      break;
+
     if(myGlobals.runningPref.sqlRecDaysLifetime > 0) {
       char sql[256];
+      time_t now = time(NULL);
 
+      now -=  myGlobals.runningPref.sqlRecDaysLifetime*86400;
+      
       safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql),
-	       "DELETE FROM sessions WHERE lastSeen < (NOW()-%d*86400)",
-	       myGlobals.runningPref.sqlRecDaysLifetime);
+		    "DELETE FROM sessions WHERE lastSeen < %u", now);
 
       if(exec_sql_query(sql) != 0)
 	traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error());
@@ -98,11 +104,10 @@ static void* scanDbLoop(void* notUsed _UNUSED_) {
       /* ************************************ */
 
       safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql),
-	       "DELETE FROM flows WHERE last < (NOW()-%d*86400)",
-	       myGlobals.runningPref.sqlRecDaysLifetime);
+		    "DELETE FROM flows WHERE last < %u", now);
 
       if(exec_sql_query(sql) != 0)
-	traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error());
+	traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error());      
     }
   }
 
@@ -142,16 +147,18 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
     safe_snprintf(__FILE__, __LINE__, mysql_db_name, sizeof(mysql_db_name), db_name);
   }
 
+  mysql_initialized = 1;
+
   /* *************************************** */
-  
+
   safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql), "CREATE DATABASE IF NOT EXISTS %s", db_name);
   if(exec_sql_query(sql) != 0) {
-    traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error());
+    /* traceEvent(CONST_TRACE_ERROR, "MySQL error: %s", get_last_db_error()); */
     return(-3);
   }
 
   if(mysql_select_db(&mysql, db_name)) {
-    traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error());
+    /* traceEvent(CONST_TRACE_ERROR, "MySQL error: %s", get_last_db_error()); */
     return(-4);
   }
 
@@ -159,35 +166,35 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
 
   /* NetFlow */
   safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql), "CREATE TABLE IF NOT EXISTS `flows` ("
-	   "`idx` int(11) NOT NULL auto_increment,"
-	   "`probeId` smallint(6) NOT NULL default '0',"
-	   "`src` varchar(32) NOT NULL default '',"
-	   "`dst` varchar(32) NOT NULL default '',"
-	   "`nextHop` int(11) NOT NULL default '0',"
-	   "`input` mediumint(6) NOT NULL default '0',"
-	   "`output` mediumint(6) NOT NULL default '0',"
-	   "`pktSent` int(11) NOT NULL default '0',"
-	   "`pktRcvd` int(11) NOT NULL default '0',"
-	   "`bytesSent` int(11) NOT NULL default '0',"
-	   "`bytesRcvd` int(11) NOT NULL default '0',"
-	   "`first` int(11) NOT NULL default '0',"
-	   "`last` int(11) NOT NULL default '0',"
-	   "`sport` mediumint(6) NOT NULL default '0',"
-	   "`dport` mediumint(6) NOT NULL default '0',"
-	   "`tcpFlags` smallint(3) NOT NULL default '0',"
-	   "`proto` smallint(3) NOT NULL default '0',"
-	   "`tos` tinyint(4) NOT NULL default '0',"
-	   "`dstAS` mediumint(6) NOT NULL default '0',"
-	   "`srcAS` mediumint(6) NOT NULL default '0',"
-	   "`srcMask` tinyint(4) NOT NULL default '0',"
-	   "`dstMask` tinyint(4) NOT NULL default '0',"
-	   "`vlanId` smallint(6) NOT NULL default '0',"
-	   "`processed` tinyint(1) NOT NULL default '0',"
-	   "UNIQUE KEY `idx` (`idx`)"
-	   ") ENGINE=MyISAM DEFAULT CHARSET=latin1");
+		"`idx` int(11) NOT NULL auto_increment,"
+		"`probeId` smallint(6) NOT NULL default '0',"
+		"`src` varchar(32) NOT NULL default '',"
+		"`dst` varchar(32) NOT NULL default '',"
+		"`nextHop` int(11) NOT NULL default '0',"
+		"`input` mediumint(6) NOT NULL default '0',"
+		"`output` mediumint(6) NOT NULL default '0',"
+		"`pktSent` int(11) NOT NULL default '0',"
+		"`pktRcvd` int(11) NOT NULL default '0',"
+		"`bytesSent` int(11) NOT NULL default '0',"
+		"`bytesRcvd` int(11) NOT NULL default '0',"
+		"`first` int(11) NOT NULL default '0',"
+		"`last` int(11) NOT NULL default '0',"
+		"`sport` mediumint(6) NOT NULL default '0',"
+		"`dport` mediumint(6) NOT NULL default '0',"
+		"`tcpFlags` smallint(3) NOT NULL default '0',"
+		"`proto` smallint(3) NOT NULL default '0',"
+		"`tos` tinyint(4) NOT NULL default '0',"
+		"`dstAS` mediumint(6) NOT NULL default '0',"
+		"`srcAS` mediumint(6) NOT NULL default '0',"
+		"`srcMask` tinyint(4) NOT NULL default '0',"
+		"`dstMask` tinyint(4) NOT NULL default '0',"
+		"`vlanId` smallint(6) NOT NULL default '0',"
+		"`processed` tinyint(1) NOT NULL default '0',"
+		"UNIQUE KEY `idx` (`idx`)"
+		") ENGINE=MyISAM DEFAULT CHARSET=latin1");
 
   if(exec_sql_query(sql) != 0) {
-    traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error());
+    /* traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error()); */
     return(-5);
   }
 
@@ -195,47 +202,50 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
 
   /* NetFlow */
   safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql), "CREATE TABLE IF NOT EXISTS `sessions` ("
-	   "`idx` int(11) NOT NULL auto_increment,"
-	   "`proto` smallint(3) NOT NULL default '0',"
-	   "`src` varchar(32) NOT NULL default '',"
-	   "`dst` varchar(32) NOT NULL default '',"
-	   "`sport` mediumint(6) NOT NULL default '0',"
-	   "`dport` mediumint(6) NOT NULL default '0',"
-	   "`pktSent` int(11) NOT NULL default '0',"
-	   "`pktRcvd` int(11) NOT NULL default '0',"
-	   "`bytesSent` int(11) NOT NULL default '0',"
-	   "`bytesRcvd` int(11) NOT NULL default '0',"
-	   "`firstSeen` int(11) NOT NULL default '0',"
-	   "`lastSeen` int(11) NOT NULL default '0',"
-	   "`nwLatency` float(6,2) NOT NULL default '0.00',"
-	   "`isP2P` smallint(1) NOT NULL default '0',"
-	   "`isVoIP` smallint(1) NOT NULL default '0',"
-	   "`isPassiveFtp` smallint(1) NOT NULL default '0',"
-	   "`info` varchar(64) NOT NULL default '',"
-	   "`guessedProto` varchar(16) NOT NULL default '',"
-	   " UNIQUE KEY `idx` (`idx`)"
-	   ") ENGINE=MyISAM DEFAULT CHARSET=latin1");
+		"`idx` int(11) NOT NULL auto_increment,"
+		"`proto` smallint(3) NOT NULL default '0',"
+		"`src` varchar(32) NOT NULL default '',"
+		"`dst` varchar(32) NOT NULL default '',"
+		"`sport` mediumint(6) NOT NULL default '0',"
+		"`dport` mediumint(6) NOT NULL default '0',"
+		"`pktSent` int(11) NOT NULL default '0',"
+		"`pktRcvd` int(11) NOT NULL default '0',"
+		"`bytesSent` int(11) NOT NULL default '0',"
+		"`bytesRcvd` int(11) NOT NULL default '0',"
+		"`firstSeen` int(11) NOT NULL default '0',"
+		"`lastSeen` int(11) NOT NULL default '0',"
+		"`nwLatency` float(6,2) NOT NULL default '0.00',"
+		"`isP2P` smallint(1) NOT NULL default '0',"
+		"`isVoIP` smallint(1) NOT NULL default '0',"
+		"`isPassiveFtp` smallint(1) NOT NULL default '0',"
+		"`info` varchar(64) NOT NULL default '',"
+		"`guessedProto` varchar(16) NOT NULL default '',"
+		" UNIQUE KEY `idx` (`idx`)"
+		") ENGINE=MyISAM DEFAULT CHARSET=latin1");
 
   if(exec_sql_query(sql) != 0) {
-    traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error());
+    /* traceEvent(CONST_TRACE_ERROR, "MySQL error: %s\n", get_last_db_error()); */
     return(-5);
   }
 
   /* ************************************************ */
 
   createThread(&myGlobals.purgeDbThreadId, scanDbLoop, NULL);
-  
+
   /* ************************************************ */
 
-  mysql_initialized = 1;
   return(0);
 }
 
 /* ***************************************************** */
 
 int dump_session_to_db(IPSession *sess) {
+  
+  traceEvent(CONST_TRACE_INFO, "dump_session_to_db(saveRecordsIntoDb=%d)(saveSessionsIntoDb=%d)",
+    myGlobals.runningPref.saveRecordsIntoDb, myGlobals.runningPref.saveSessionsIntoDb);
 
-  if(myGlobals.runningPref.saveRecordsIntoDb == 0) return(0);
+
+  if(myGlobals.runningPref.saveSessionsIntoDb == 0) return(0);
 
   if((!mysql_initialized) || (sess == NULL)) {
     return(-2);
@@ -248,27 +258,27 @@ int dump_session_to_db(IPSession *sess) {
       int len;
 
       formatLatency(sess->nwLatency, sess->sessionState, tmp, sizeof(tmp));
-      
+
       len = strlen(tmp);
 
       if(len > 8) tmp[len-8] = '\0';
     }
 
     safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql),
-	     "INSERT INTO sessions (proto, src, dst, sport, dport,"
-	     "pktSent, pktRcvd, bytesSent, bytesRcvd, firstSeen, lastSeen, "
-	     "nwLatency, isP2P, isVoIP, isPassiveFtp, info, guessedProto) VALUES "
-	     "('%d', '%s', '%s',  '%d', '%d', "
-	     " '%lu', '%lu', '%lu', '%lu', '%lu', '%lu', "
-	     " '%s',  '%d',  '%d',  '%d',  '%s',  '%s')",
-	     (sess->lastFlags == 0) ? 17 /* udp */ : 6 /* tcp */, 
-	     sess->initiator->hostNumIpAddress, 
-	     sess->remotePeer->hostNumIpAddress, sess->sport, sess->dport, 
-	     sess->pktSent, sess->pktRcvd, (unsigned long)sess->bytesSent.value, 
-	     (unsigned long)sess->bytesRcvd.value, (unsigned long)sess->firstSeen, (unsigned long)sess->lastSeen, 
-	     tmp, sess->isP2P, sess->voipSession, sess->passiveFtpSession, 
-	     (sess->session_info == NULL) ? "" : sess->session_info,
-	     (sess->guessed_protocol == NULL) ? "" : sess->guessed_protocol);
+		  "INSERT INTO sessions (proto, src, dst, sport, dport,"
+		  "pktSent, pktRcvd, bytesSent, bytesRcvd, firstSeen, lastSeen, "
+		  "nwLatency, isP2P, isVoIP, isPassiveFtp, info, guessedProto) VALUES "
+		  "('%d', '%s', '%s',  '%d', '%d', "
+		  " '%lu', '%lu', '%lu', '%lu', '%lu', '%lu', "
+		  " '%s',  '%d',  '%d',  '%d',  '%s',  '%s')",
+		  (sess->lastFlags == 0) ? 17 /* udp */ : 6 /* tcp */,
+		  sess->initiator->hostNumIpAddress,
+		  sess->remotePeer->hostNumIpAddress, sess->sport, sess->dport,
+		  sess->pktSent, sess->pktRcvd, (unsigned long)sess->bytesSent.value,
+		  (unsigned long)sess->bytesRcvd.value, (unsigned long)sess->firstSeen, (unsigned long)sess->lastSeen,
+		  tmp, sess->isP2P, sess->voipSession, sess->passiveFtpSession,
+		  (sess->session_info == NULL) ? "" : sess->session_info,
+		  (sess->guessed_protocol == NULL) ? "" : sess->guessed_protocol);
 
     // traceEvent(CONST_TRACE_ERROR, "-> %s", sql);
 
@@ -306,21 +316,21 @@ int insert_flow_record(u_int16_t probeId,
     char sql[1024], buf1[32], buf2[32];
 
     struct in_addr a, b;
-    
+
     a.s_addr = srcAddr, b.s_addr = dstAddr;
-    
+
     safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql),
-	     "INSERT INTO flows (probeId, src, dst, input, output, "
-	     "pktSent, pktRcvd, bytesSent, bytesRcvd, first, last, "
-	     "sport, dport, tcpFlags, proto, tos, vlanId) VALUES "
-	     "('%d', '%s', '%s',  '%u', '%u',  '%lu',  '%lu',  '%lu', "
-	     "'%lu',  '%lu',  '%lu',  '%u',  '%u',  '%u', '%d', '%d', '%d')",
-	     probeId, _intoa(a, buf1, sizeof(buf1)),
-	     _intoa(b, buf2, sizeof(buf2)),
-	     input, output, sentPkts, rcvdPkts, 
-	     sentOctets, rcvdOctets, 
-	     first, last, srcPort, dstPort,
-	     tcpFlags, proto, tos, vlanId > 4096 ? 0 : vlanId );
+		  "INSERT INTO flows (probeId, src, dst, input, output, "
+		  "pktSent, pktRcvd, bytesSent, bytesRcvd, first, last, "
+		  "sport, dport, tcpFlags, proto, tos, vlanId) VALUES "
+		  "('%d', '%s', '%s',  '%u', '%u',  '%lu',  '%lu',  '%lu', "
+		  "'%lu',  '%lu',  '%lu',  '%u',  '%u',  '%u', '%d', '%d', '%d')",
+		  probeId, _intoa(a, buf1, sizeof(buf1)),
+		  _intoa(b, buf2, sizeof(buf2)),
+		  input, output, sentPkts, rcvdPkts,
+		  sentOctets, rcvdOctets,
+		  first, last, srcPort, dstPort,
+		  tcpFlags, proto, tos, vlanId > 4096 ? 0 : vlanId );
 
     // traceEvent(CONST_TRACE_INFO, "%s", sql);
 
@@ -355,21 +365,22 @@ void initDB() {
     tmpBuf[256] = { 0 }, *strtokState;
 
   if(myGlobals.runningPref.sqlDbConfig != NULL)
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), 
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf),
 		  "%s:", myGlobals.runningPref.sqlDbConfig);
 
   host = strtok_r(tmpBuf, ":", &strtokState);
   if(host) user = strtok_r(NULL, ":", &strtokState);
   if(user) pw = strtok_r(NULL, ":", &strtokState);
 
-  if((pw && (strlen(pw) == 1 /* it's the space we added */)) 
+  if((pw && (strlen(pw) == 1 /* it's the space we added */))
      || (!pw))
     pw = "";
 
   if(host && user && pw)
     init_database(host, user, pw, "ntop");
   else
-    traceEvent(CONST_TRACE_ERROR, "Unable to initialize DB: please configure the DB prefs [%s][%s][%s]",
+    traceEvent(CONST_TRACE_ERROR, "Unable to initialize DB: "
+	       "please configure the DB prefs [%s][%s][%s]",
 	       host, user, pw);
 }
 

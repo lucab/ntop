@@ -558,7 +558,8 @@ void createVendorTable(struct stat *dbStat) {
   if (!myGlobals.runningPref.printFcOnly) {
       traceEvent(CONST_TRACE_INFO, "Fingerprint: Loading signature file");
       
-      fd = checkForInputFile("Fingerprint", NULL, CONST_OSFINGERPRINT_FILE, NULL, &compressedFormat);
+      fd = checkForInputFile("Fingerprint", "Fingerprint file...",
+			     CONST_OSFINGERPRINT_FILE, NULL, &compressedFormat);
 
       if(fd != NULL) {
           char line[384], lineKey[8];

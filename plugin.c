@@ -214,6 +214,8 @@ void loadPlugins(void) {
   int idx;
   DIR* directoryPointer=NULL;
 #endif
+
+  if(static_ntop) return;
   
 #ifndef MAKE_STATIC_PLUGIN
   for(idx=0; myGlobals.pluginDirs[idx] != NULL; idx++) {
@@ -260,6 +262,8 @@ void loadPlugins(void) {
 void unloadPlugins(void) {
   FlowFilterList *flows = myGlobals.flowsList;
 
+  if(static_ntop) return;
+
   traceEvent(CONST_TRACE_INFO, "PLUGIN_TERM: Unloading plugins (if any)");
 
   while(flows != NULL) {
@@ -295,6 +299,8 @@ void unloadPlugins(void) {
 
 void startPlugins(void) {
   FlowFilterList *flows = myGlobals.flowsList;
+
+  if(static_ntop) return;
 
   traceEvent(CONST_TRACE_INFO, "Calling plugin start functions (if any)");
 

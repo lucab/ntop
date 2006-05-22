@@ -542,6 +542,8 @@ void freeHostInstances(int actualDeviceId) {
     for(idx=FIRST_HOSTS_ENTRY; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
       HostTraffic *el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
+    if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN) break;
+
       while(el != NULL) {
 	HostTraffic *nextEl = el->next;
 	el->next = NULL;
@@ -623,8 +625,10 @@ int purgeIdleHosts(int actDevice) {
   accessMutex(&myGlobals.hostsHashLockMutex, "scanIdleLoop");
 
   for(idx=0; idx<myGlobals.device[actDevice].actualHashSize; idx++) {
+    if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN) break;
+
     if((el = myGlobals.device[actDevice].hash_hostTraffic[idx]) != NULL) {
-      prev = NULL;
+      prev = NULL;     
 
       while(el) {
 	if((el->refCount == 0)

@@ -6795,6 +6795,11 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     printFeatureConfigInfo(textPrintFlag, "Database Configuration", myGlobals.runningPref.sqlDbConfig);
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u [%u failures]", num_db_insert, num_db_insert_failed);
     printFeatureConfigInfo(textPrintFlag, "Database Record Insert", buf);
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[Save Data into DB: %s] [Save Sessions into DB: %s]",
+ 		  myGlobals.runningPref.saveRecordsIntoDb ? "Yes" : "No",
+		  myGlobals.runningPref.saveSessionsIntoDb ? "Yes" : "No");
+    printFeatureConfigInfo(textPrintFlag, "Database Record Save Policy", buf);
   }
 
 
@@ -8395,10 +8400,11 @@ void initWeb(void) {
   addDefaultAdminUser();
   initAccessLog();
 
-  traceEvent(CONST_TRACE_INFO, "INITWEB: Initializing tcp/ip socket connections for web server");
+  traceEvent(CONST_TRACE_INFO, "INITWEB: Initializing TCP/IP socket connections for web server");
 
   if(myGlobals.runningPref.webPort > 0) {
-    initSocket(FALSE, myGlobals.runningPref.ipv4or6, &myGlobals.runningPref.webPort, &myGlobals.sock, myGlobals.runningPref.webAddr);
+    initSocket(FALSE, myGlobals.runningPref.ipv4or6, &myGlobals.runningPref.webPort, 
+	       &myGlobals.sock, myGlobals.runningPref.webAddr);
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
     if(myGlobals.runningPref.webAddr)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "INITWEB: Waiting for HTTP connections on %s port %d",

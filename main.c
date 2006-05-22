@@ -29,6 +29,8 @@
 #include <execinfo.h>
 #endif
 
+char static_ntop;
+
 /*
  * Hello World! This is ntop speaking...
  */
@@ -329,6 +331,11 @@ int main(int argc, char *argv[]) {
   printf("MEMORY_DEBUG 4 - mcheck() - remember you need to run at the console, without -d | --daemon\n");
 #endif
 
+  if(strstr(argv[0], "ntops"))
+    static_ntop = 1;
+  else
+    static_ntop = 0;
+
   /* printf("Wait please: ntop is coming up...\n"); */
 
   /* VERY FIRST THING is to clear myGlobals, so myGlobals.ntopRunState can be used */
@@ -573,11 +580,13 @@ int main(int argc, char *argv[]) {
   } else
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Listening on [%s]", ifStr);
 
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Loading Plugins");
-  loadPlugins();
-  traceEvent(CONST_TRACE_NOISY, "Starting Plugins");
-  startPlugins();
-  traceEvent(CONST_TRACE_NOISY, "Plugins started... continuing with initialization");
+  if(!static_ntop) {
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Loading Plugins");
+    loadPlugins();
+    traceEvent(CONST_TRACE_NOISY, "Starting Plugins");
+    startPlugins();
+    traceEvent(CONST_TRACE_NOISY, "Plugins started... continuing with initialization");
+  }
 
   /* ******************************* */
   

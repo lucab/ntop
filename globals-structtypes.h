@@ -1956,7 +1956,8 @@ typedef struct _userPref {
 
   /* SQL Database */
   char    sqlDbConfig[64];
-  u_int    sqlRecDaysLifetime, saveRecordsIntoDb;
+  u_int   sqlRecDaysLifetime;
+  bool    saveRecordsIntoDb, saveSessionsIntoDb;
 
   u_int16_t defaultVsan;        /* -v | --default-vsan */
   char      *webAddr;           /* -w | --http-serveraddress[:port] */
