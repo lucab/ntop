@@ -27,11 +27,14 @@ u_int32_t num_db_insert = 0, num_db_insert_failed = 0;
 
 #ifdef HAVE_MYSQL_H
 
-static u_char mysql_initialized = 0;
+static PthreadMutex mysql_mutex;
+static u_char mysql_initialized = 0, mysql_mutex_initialized = 0;
 static MYSQL mysql;
 static char mysql_db_host[32], mysql_db_user[32], mysql_db_pw[32], mysql_db_name[32];
 
 static int init_database(char *db_host, char* user, char *pw, char *db_name);
+
+
 
 /* ***************************************************** */
 
@@ -50,6 +53,8 @@ static int exec_sql_query(char *sql) {
 
   if(!mysql_initialized) return(-2);
 
+  accessMutex(&mysql_mutex, "exec_sql_query");
+
   if(mysql_query(&mysql, sql)) {
     int err_id = mysql_errno(&mysql);
 
@@ -61,9 +66,12 @@ static int exec_sql_query(char *sql) {
       reconnect_to_db();
     }
 
+    releaseMutex(&mysql_mutex);
     return(-1);
-  } else
+  } else {
+    releaseMutex(&mysql_mutex);
     return(0);
+  }
 }
 
 /* ***************************************************** */
@@ -124,6 +132,9 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
 
   mysql_initialized = 0;
   myGlobals.purgeDbThreadId = (pthread_t)-1;
+
+  if(!mysql_mutex_initialized) createMutex(&mysql_mutex);
+  mysql_mutex_initialized = 1;
 
   if(db_host == NULL)  db_host = "localhost";
   if(pw == NULL)       pw = "";
@@ -283,7 +294,7 @@ int dump_session_to_db(IPSession *sess) {
 
     // traceEvent(CONST_TRACE_ERROR, "-> %s", sql);
 
-    if(mysql_query(&mysql, sql)) {
+    if(exec_sql_query(sql)) {
       num_db_insert_failed++;
       traceEvent(CONST_TRACE_WARNING, "%s", mysql_error(&mysql));
       return(-1);
@@ -335,7 +346,7 @@ int insert_flow_record(u_int16_t probeId,
 
     // traceEvent(CONST_TRACE_INFO, "%s", sql);
 
-    if(mysql_query(&mysql, sql)) {
+    if(exec_sql_query(sql)) {
       traceEvent(CONST_TRACE_WARNING, "%s", mysql_error(&mysql));
       num_db_insert_failed++;
       return(-1);
