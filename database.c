@@ -241,9 +241,10 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
 
 int dump_session_to_db(IPSession *sess) {
   
+  /*
   traceEvent(CONST_TRACE_INFO, "dump_session_to_db(saveRecordsIntoDb=%d)(saveSessionsIntoDb=%d)",
     myGlobals.runningPref.saveRecordsIntoDb, myGlobals.runningPref.saveSessionsIntoDb);
-
+  */
 
   if(myGlobals.runningPref.saveSessionsIntoDb == 0) return(0);
 

@@ -482,11 +482,13 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 
     if(freeSessionCount > purgeLimit) break;
 
-    prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
+    prevSession = NULL, theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
 
     accessMutex(&myGlobals.tcpSessionsMutex, "purgeIdleHosts");
 
     while(theSession != NULL) {
+      u_char free_session;
+      
       if(theSession->magic != CONST_MAGIC_NUMBER) {
 	theSession = NULL;
 	myGlobals.device[actualDeviceId].numTcpSessions--;
@@ -496,6 +498,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
       }
 
       nextSession = theSession->next;
+      free_session = 0;
 
       if(((theSession->sessionState == FLAG_STATE_TIMEOUT)
 	  && ((theSession->lastSeen+CONST_TWO_MSL_TIMEOUT) < myGlobals.actTime))
@@ -519,17 +522,25 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	     && ((theSession->bytesSent.value == 0) || (theSession->bytesRcvd.value == 0))
 	     && ((theSession->lastSeen+120) < myGlobals.actTime))
 	 ) {
+	free_session = 1;
+      } else /* This session will NOT be freed */ {
+	free_session = 0;	
+      }
 
+      if(free_session) {
 	if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
-	  myGlobals.device[actualDeviceId].tcpSession[idx] = nextSession;
-	  prevSession = myGlobals.device[actualDeviceId].tcpSession[idx];
-	} else
-	  prevSession->next = nextSession;
+          myGlobals.device[actualDeviceId].tcpSession[idx] = nextSession, prevSession = NULL;
+        } else {
+          if(prevSession)
+	    prevSession->next = nextSession;
+	  else
+	    traceEvent(CONST_TRACE_ERROR, "Internal error: pointer inconsistency");
+        }     
 
 	freeSessionCount++;
-	freeSession(theSession, actualDeviceId, 1, 0 /* locked by the purge thread */);
+        freeSession(theSession, actualDeviceId, 1, 0 /* locked by the purge thread */);
 	theSession = prevSession;
-      } else /* This session will NOT be freed */ {
+      } else {
 	prevSession = theSession;
 	theSession = nextSession;
       }
