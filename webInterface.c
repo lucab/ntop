@@ -6794,7 +6794,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   if(is_db_enabled()) {
     printFeatureConfigInfo(textPrintFlag, "Database Configuration", myGlobals.runningPref.sqlDbConfig);
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s [%u failures]",
-		  formatPkts(num_db_insert, formatBuf, sizeof(formatBuf)), num_db_insert_failed);
+		  formatPkts(num_db_insert, formatBuf, sizeof(formatBuf)) , num_db_insert_failed);
     printFeatureConfigInfo(textPrintFlag, "Database Record Insert", buf);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[Save Data into DB: %s] [Save Sessions into DB: %s]",

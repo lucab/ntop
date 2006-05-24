@@ -201,7 +201,14 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
 		"`dstMask` tinyint(4) NOT NULL default '0',"
 		"`vlanId` smallint(6) NOT NULL default '0',"
 		"`processed` tinyint(1) NOT NULL default '0',"
-		"UNIQUE KEY `idx` (`idx`)"
+		"UNIQUE KEY `idx` (`idx`),"
+		" KEY `src` (`src`),"
+		" KEY `dst` (`dst`),"
+		" KEY `first` (`first`),"
+		" KEY `last` (`last`),"
+		" KEY `sport` (`sport`),"
+		" KEY `dport` (`dport`),"
+		" KEY `probeId` (`probeId`)"
 		") ENGINE=MyISAM DEFAULT CHARSET=latin1");
 
   if(exec_sql_query(sql) != 0) {
@@ -231,7 +238,13 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
 		"`isPassiveFtp` smallint(1) NOT NULL default '0',"
 		"`info` varchar(64) NOT NULL default '',"
 		"`guessedProto` varchar(16) NOT NULL default '',"
-		" UNIQUE KEY `idx` (`idx`)"
+		" UNIQUE KEY `idx` (`idx`),"
+		" KEY `src` (`src`),"
+		" KEY `dst` (`dst`),"
+		" KEY `firstSeen` (`firstSeen`),"
+		" KEY `lastSeen` (`lastSeen`),"
+		" KEY `sport` (`sport`),"
+		" KEY `dport` (`dport`)"	     
 		") ENGINE=MyISAM DEFAULT CHARSET=latin1");
 
   if(exec_sql_query(sql) != 0) {
