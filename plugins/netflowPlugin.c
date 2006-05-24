@@ -2922,6 +2922,17 @@ static void handleNetflowHTTPrequest(char* _url) {
 	    }
 	  }
 	} else if(strcmp(device, "name") == 0) {
+	  int i;
+
+	  /* Sanitize name for RRD */
+	  for(i=0; i<strlen(value); i++) {
+	    switch(value[i]) {
+	    case ' ':
+	    case ':':
+	      value[i] = '_';
+	    }
+	  }
+
 	  free(myGlobals.device[deviceId].humanFriendlyName);
 	  myGlobals.device[deviceId].humanFriendlyName = strdup(value);
 	  storePrefsValue(nfValue(deviceId, "humanFriendlyName", 1), value);
