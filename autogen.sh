@@ -9,6 +9,9 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # $Log$
+# Revision 2.10  2006/05/26 13:39:44  deri
+# Added (open)solaris fixes
+#
 # Revision 2.9  2006/05/17 13:04:00  burton
 # (1) Add test for v2.50-2.52 of autoconf to autogen.sh
 # (2) Begin to update docs and FAQ with change to autogen.sh
@@ -172,15 +175,15 @@ echo "1. Testing gnu tools...."
   GNU_OR_DIE=0
 }
 
-(m4 --version) < /dev/null > /dev/null 2>&1 ||
-{
-  echo
-  echo "You must have GNU m4 installed to compile $#NAME#."
-  echo "Download the appropriate package for your distribution, or get the"
-  echo "source tarball from ftp://ftp.gnu.org/pub/gnu/m4"
-  echo "     We recommend version 1.4 or higher"
-  GNU_OR_DIE=0
-}
+#(m4 --version) < /dev/null > /dev/null 2>&1 ||
+#{
+#  echo
+#  echo "You must have GNU m4 installed to compile $#NAME#."
+#  echo "Download the appropriate package for your distribution, or get the"
+#  echo "source tarball from ftp://ftp.gnu.org/pub/gnu/m4"
+#  echo "     We recommend version 1.4 or higher"
+#  GNU_OR_DIE=0
+#}
 
 (autoconf --version) < /dev/null > /dev/null 2>&1 ||
 {

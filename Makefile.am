@@ -34,7 +34,8 @@ DEFS      = @DEFS@
 INCS      = @INCS@
 
 INCLUDES  = -I. $(INCS) -Imyrrd
-LIBS      = @LIBS@
+LIBS      = 
+BASE_LIBS = @LIBS@
 AS        = @AS@
 AWK       = @AWK@
 CC        = @CC@
@@ -103,7 +104,7 @@ bin_SCRIPTS    =
 
 ntop_SOURCES       = main.c admin.c
 ntop_DEPENDENCIES  = libntopreport.la libntop.la myrrd/libmyrrd.la
-ntop_LDADD         = libntopreport.la libntop.la myrrd/libmyrrd.la
+ntop_LDADD         = libntopreport.la libntop.la myrrd/libmyrrd.la $(BASE_LIBS)
 ntop_LDFLAGS       = $(AM_LDFLAGS)
 ntop_CFLAGS        = 
 
@@ -137,7 +138,7 @@ libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
                      traffic.c    vendor.c      version.c      \
                      ntop_darwin.c
 
-libntop_la_DEPENDENCIES =  myrrd/libmyrrd.la config.h
+libntop_la_DEPENDENCIES =  config.h
 libntop_la_LIBADD       = 
 libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 
@@ -148,7 +149,7 @@ libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
                            webInterface.c
 
 
-libntopreport_la_DEPENDENCIES =  myrrd/libmyrrd.la config.h
+libntopreport_la_DEPENDENCIES = config.h
 libntopreport_la_LIBADD       = 
 libntopreport_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 

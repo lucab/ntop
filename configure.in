@@ -373,6 +373,12 @@ AC_CHECK_FILE(depcomp, , [
     echo ""
 ])
 
+dnl> Networking libraries
+AC_CHECK_LIB([nsl],    [main])
+AC_CHECK_LIB([xnet],   [main])
+AC_CHECK_LIB([socket], [main])
+AC_CHECK_LIB([resolv], [main])
+
 dnl> Handle the root -> lib/include settings
 NTOP_SET_LIBINC(PCAP)
 NTOP_SET_LIBINC(GDBM)
@@ -1472,12 +1478,6 @@ fi
 dnl> Check for both sin and ceil - some implementations split them
 AC_CHECK_LIB([c], [sin], , [AC_CHECK_LIB([m], [sin])])
 AC_CHECK_LIB([c], [ceil], , [AC_CHECK_LIB([m], [ceil])])
-
-dnl> Networking libraries
-AC_CHECK_LIB([nsl],    [main])
-AC_CHECK_LIB([xnet],   [main])
-AC_CHECK_LIB([socket], [main])
-AC_CHECK_LIB([resolv], [main])
 
 dnl> Multithreading libraries
 AC_CHECK_LIB(pthread, pthread_create, , [
