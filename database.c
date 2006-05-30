@@ -35,16 +35,17 @@ static char mysql_db_host[32], mysql_db_user[32], mysql_db_pw[32], mysql_db_name
 static int init_database(char *db_host, char* user, char *pw, char *db_name);
 
 
-
 /* ***************************************************** */
 
 int is_db_enabled() { return(mysql_initialized); }
 
 /* ***************************************************** */
 
+#if 0
 static void reconnect_to_db() {
-  init_database(mysql_db_host, mysql_db_user, mysql_db_pw, mysql_db_name);
+ init_database(mysql_db_host, mysql_db_user, mysql_db_pw, mysql_db_name);
 }
+#endif
 
 /* ***************************************************** */
 
@@ -63,7 +64,8 @@ static int exec_sql_query(char *sql) {
 
     if(err_id == CR_SERVER_GONE_ERROR) {
       mysql_close(&mysql);
-      reconnect_to_db();
+      mysql_initialized = 0;
+      return(-1);
     }
 
     releaseMutex(&mysql_mutex);
@@ -129,6 +131,7 @@ static void* scanDbLoop(void* notUsed _UNUSED_) {
 
 static int init_database(char *db_host, char* user, char *pw, char *db_name) {
   char sql[2048];
+  my_bool autoreconnect = 1;
 
   mysql_initialized = 0;
   myGlobals.purgeDbThreadId = (pthread_t)-1;
@@ -158,6 +161,7 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
     safe_snprintf(__FILE__, __LINE__, mysql_db_name, sizeof(mysql_db_name), db_name);
   }
 
+  mysql_options(&mysql, MYSQL_OPT_RECONNECT, &autoreconnect);
   mysql_initialized = 1;
 
   /* *************************************** */
