@@ -1774,6 +1774,10 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   u_char *rcStr, tmpStr[256];
   int len = 0;
   char *pnotes, *snotes, *dnotes;
+  /* Latency measurement */
+  char buf[32], buf1[32];
+  memset(&buf, 0, sizeof(buf));
+  memset(&buf1, 0, sizeof(buf1));
 
   accessMutex(&myGlobals.tcpSessionsMutex, "handleTCPSession");
 
@@ -2177,11 +2181,6 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 #ifdef DEBUG
   printf("DEBUG: sessionsState=%d\n", theSession->sessionState);
 #endif
-
-  /* Latency measurement */
-  char buf[32], buf1[32];
-  memset(&buf, 0, sizeof(buf));
-  memset(&buf1, 0, sizeof(buf1));
 
   if((tp->th_flags == (TH_SYN|TH_ACK)) && (theSession->sessionState == FLAG_STATE_SYN))  {
     theSession->sessionState = FLAG_FLAG_STATE_SYN_ACK;
