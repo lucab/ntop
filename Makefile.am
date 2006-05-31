@@ -473,14 +473,10 @@ p2ctable:
 
 # ntop census
 census-fail:
-        # creates and report for edit and manual send
-	@echo "Processing ntop census... please wait..."
-	@./utils/census.sh "fail"
+	@echo "This option is no longer available... thanks for trying"
 
 census-ok:
-        # creates and sends report to census@ntopsupport.com
-	@echo "Processing ntop census... please wait..."
-	@./utils/census.sh "OK"
+	@echo "This option is no longer available... thanks for trying"
 
 # Create ntop's package for Debian GNU/Linux using Official scripts
 # Please keep silent the building process.

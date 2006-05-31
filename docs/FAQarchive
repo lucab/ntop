@@ -242,6 +242,8 @@ A. Yes.  Run the "census" - this will send us an email telling us what's
 
    Edit it to describe the problem and send it to census@ntopsupport.com
 
+   These options were dropped during the 3.3 deveopment cycle...
+
 --------------------------------------------------------------------------------
 ----- Dropped packets ----------------------------------------------------------
 --------------------------------------------------------------------------------
