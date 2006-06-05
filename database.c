@@ -63,7 +63,7 @@ static int exec_sql_query(char *sql) {
 	       mysql_error(&mysql), err_id);
 
     if(err_id == CR_SERVER_GONE_ERROR) {
-      mysql_close(&mysql);
+      // mysql_close(&mysql);
       mysql_initialized = 0;
       return(-1);
     }

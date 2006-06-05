@@ -381,13 +381,13 @@ ntop.h
 #endif
 
 #ifndef WIN32
-# if defined(HAVE_SYS_SCHED_H) && !defined(FREEBSD)
-#  include <sys/sched.h>
-# endif
+#if defined(HAVE_SYS_SCHED_H) && !defined(FREEBSD)
+#include <sys/sched.h>
+#endif
 
-# if defined(HAVE_SCHED_H)
-#  include <sched.h>
-# endif
+#if defined(HAVE_SCHED_H)
+#include <sched.h>
+#endif
 
 /*
  * Switched pthread with semaphore.
