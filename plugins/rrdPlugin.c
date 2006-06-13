@@ -173,7 +173,17 @@ static void calfree (void) {
 
 /* ******************************************* */
 
-static inline char* upperInitial(char *str) { str[0] = toupper(str[0]); return(str); }
+static char* upperInitial(char *_str) { 
+  static char str[256];
+  char c = toupper(_str[0]);
+
+  // traceEvent(CONST_TRACE_INFO, "RRD: (%s)", str);
+
+  safe_snprintf(__FILE__, __LINE__, str, sizeof(str), "%s", _str);
+  str[0] = c;
+
+  return(str);
+}
 
 /* ******************************************* */
 
@@ -572,7 +582,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 
     argv[argc++] = "GPRINT:ctr:MAX:Max\\: %3.1lf%s";
     argv[argc++] = "GPRINT:ctr:AVERAGE:Avg\\: %3.1lf%s";
-    argv[argc++] = "GPRINT:ctr:LAST:Current\\: %3.1lf%s\\n";
+    argv[argc++] = "GPRINT:ctr:LAST:Last\\: %3.1lf%s\\n";
     safe_snprintf(__FILE__, __LINE__, bufa1, sizeof(bufa1), "DEF:pred=%s:counter:HWPREDICT", path);
     argv[argc++] = bufa1;
     safe_snprintf(__FILE__, __LINE__, bufa2, sizeof(bufa2), "DEF:dev=%s:counter:DEVPREDICT", path);
@@ -715,7 +725,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
       safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %3.1lf%s");
       argv[argc++] = buf2[entryId];
 
-      safe_snprintf(__FILE__, __LINE__, buf3[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Current\\: %3.1lf%s\\n");
+      safe_snprintf(__FILE__, __LINE__, buf3[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Last\\: %3.1lf%s\\n");
       argv[argc++] = buf3[entryId];
 
 
@@ -797,8 +807,6 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
 
   revertSlashIfWIN32(fname, 0);
 
-  /* traceEvent(CONST_TRACE_ERROR, "RRD: %s [%s][%s]", fname); */
-
   if(rrds == NULL) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     printHTMLheader("RRD Graph Summary", NULL, 0);
@@ -828,6 +836,11 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
   argv[argc++] = "--end";
   argv[argc++] = endTime;
   argv[argc++] = "--slope-mode"; 
+  argv[argc++] = "--width";
+  argv[argc++] = "500";
+  argv[argc++] = "--height";
+  argv[argc++] = "120";
+  argv[argc++] = "--alt-autoscale-max";
 
 #ifdef CONST_RRD_DEFAULT_FONT_NAME
   argv[argc++] = "--font";
@@ -838,7 +851,6 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
   argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" CONST_RRD_DEFAULT_FONT_NAME;
 #endif
 #endif
-  revertDoubleColumnIfWIN32(path);
 
   for(i=0, entryId=0; rrds[i] != NULL; i++) {
     struct stat statbuf;
@@ -848,18 +860,15 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
 
     revertSlashIfWIN32(path, 0);
 
-
     if(stat(path, &statbuf) == 0) {
       safe_snprintf(__FILE__, __LINE__, buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path);
       argv[argc++] = buf[entryId];
-
-      /* traceEvent(CONST_TRACE_ERROR, "RRD: --> [%s]", &rrds[i][2]); */
 
       safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
 		    entryId, rrd_colors[entryId], spacer(&rrds[i][2], tmpStr, sizeof(tmpStr)));
       argv[argc++] = buf1[entryId];
  
-      safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Current\\: %8.2lf %s");
+      safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Last\\: %8.2lf %s");
       argv[argc++] = buf2[entryId];
       safe_snprintf(__FILE__, __LINE__, buf3[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %8.2lf %s");
       argv[argc++] = buf3[entryId];
@@ -880,7 +889,7 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
     }
   }
 
-  /* traceEventRRDebugARGV(0); */
+  /* traceEventRRDebugARGV(0);  */
 
   accessMutex(&rrdMutex, "rrd_graph");
   optind=0; /* reset gnu getopt */
@@ -943,8 +952,9 @@ static char* spacer(char* _str, char *tmpStr, int tmpStrLen) {
 
   if(len > 15) len = 15;
   snprintf(tmpStr, len+1, "%s", str);
+  
   for(i=len; i<15; i++) tmpStr[i] = ' ';
-  tmpStr[16] = '\0';
+  tmpStr[16] = '\0';  
 
   return(tmpStr);
 }
@@ -1130,7 +1140,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
       safe_snprintf(__FILE__, __LINE__, buf4[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %3.1lf%s");
       argv[argc++] = buf4[entryId];
 
-      safe_snprintf(__FILE__, __LINE__, buf5[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Current\\: %3.1lf%s\\n");
+      safe_snprintf(__FILE__, __LINE__, buf5[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Last\\: %3.1lf%s\\n");
       argv[argc++] = buf5[entryId];
 
       entryId++;
