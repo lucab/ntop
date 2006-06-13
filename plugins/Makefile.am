@@ -32,12 +32,16 @@ EXTRA_DIST  =
 
 SUFFIXES    = .so
 
+RRD_HOME=@RRD_HOME@
+RRD_INC=-I${RRD_HOME}/include
+RRD_LIB=-L${RRD_HOME}/lib -lrrd_th
+
 # 
 # Where to install the plugin 
 # 
 plugindir = $(libdir)/ntop/plugins
 
-INCLUDES = -I.. @INCS@ -I../myrrd
+INCLUDES = -I.. @INCS@ ${RRD_INC}
 
 #
 # The meat for ntop
@@ -80,7 +84,7 @@ libpdaPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 librrdPlugin_la_SOURCES = rrdPlugin.c
 librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-librrdPlugin_la_LIBADD = -L../myrrd/ -lmyrrd
+librrdPlugin_la_LIBADD = ${RRD_LIB}
 librrdPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 libsnmpPlugin_la_SOURCES = snmpPlugin.c

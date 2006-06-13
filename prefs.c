@@ -1171,6 +1171,9 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
     }
 
     processIntPref (NTOP_PREF_PRINT_FCORIP, value, &tmpInt, savePref);
+  } else if(strcmp(key, NTOP_PREF_RRD_ABERRANT) == 0) {
+    processBoolPref (NTOP_PREF_RRD_ABERRANT, value2bool(value),
+		     &pref->enableRRDAberrant, savePref);
   } else if(strcmp(key, NTOP_PREF_NO_INVLUN) == 0) {
     processBoolPref (NTOP_PREF_NO_INVLUN, value2bool(value),
 		     &pref->noInvalidLunDisplay, savePref);
@@ -1399,6 +1402,7 @@ void initUserPrefs(UserPref *pref) {
    pref->printIpOnly = DEFAULT_NTOP_PRINTIPONLY;
    pref->printFcOnly = DEFAULT_NTOP_PRINTFCONLY;
    pref->noInvalidLunDisplay = DEFAULT_NTOP_NO_INVLUN_DISPLAY;
+   pref->enableRRDAberrant = DEFAULT_NTOP_RRD_ABERRANT;
    pref->disableMutexExtraInfo = DEFAULT_NTOP_DISABLE_MUTEXINFO;
    pref->skipVersionCheck = DEFAULT_NTOP_SKIP_VERSION_CHECK;
 }

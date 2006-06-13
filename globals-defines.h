@@ -2147,6 +2147,7 @@
 #define DEFAULT_NTOP_PRINTIPONLY            FALSE
 #define DEFAULT_NTOP_PRINTFCONLY            FALSE
 #define DEFAULT_NTOP_NO_INVLUN_DISPLAY      FALSE
+#define DEFAULT_NTOP_RRD_ABERRANT           FALSE
 #define DEFAULT_NTOP_DISABLE_MUTEXINFO      TRUE
 #define DEFAULT_NTOP_SKIP_VERSION_CHECK     TRUE
 
@@ -2853,6 +2854,7 @@ struct ip6_hdr
 #define NTOP_PREF_MAXLINES               "ntop.maxNumLines"
 #define NTOP_PREF_PRINT_FCORIP           "ntop.printFcOrIp"
 #define NTOP_PREF_NO_INVLUN              "ntop.noInvalidLunDisplay"
+#define NTOP_PREF_RRD_ABERRANT           "ntop.enableRRDAberrant"
 #define NTOP_PREF_W3C                    "ntop.w3c"
 #define NTOP_PREF_IPV4                   "ntop.ipv4"
 #define NTOP_PREF_IPV6                   "ntop.ipv6"

@@ -33,15 +33,20 @@ PROGRAM  = $(PKGNAME)-$(VERSION)
 DEFS      = @DEFS@
 INCS      = @INCS@
 
-INCLUDES  = -I. $(INCS) -Imyrrd
+RRD_HOME=@RRD_HOME@
+RRD_INC=-I${RRD_HOME}/include
+RRD_LIB=-L${RRD_HOME}/lib -lrrd_th
+
+INCLUDES  = -I. $(INCS) ${RRD_INC}
 LIBS      = 
-BASE_LIBS = @LIBS@
+BASE_LIBS = @LIBS@ ${RRD_LIB}
 AS        = @AS@
 AWK       = @AWK@
 CC        = @CC@
 CCLD      = @CCLD@
 AM_CFLAGS = @CFLAGS@
 AM_LDFLAGS= @LDFLAGS@
+
 
 DISTCLEANFILES = trivialcompilemessage *.db #* *~ *.log
 CLEANFILES     = $(DISTCLEANFILES) stamp-h1
@@ -62,7 +67,7 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
                        stamp-h.in
 
 
-SUBDIRS = myrrd . @PLUGINS@
+SUBDIRS = . @PLUGINS@
 
 ETTER_PASSIVE_FILE = etter.finger.os
 ETTER_PASSIVE = $(ETTER_PASSIVE_FILE).gz
@@ -103,8 +108,8 @@ EXTRA_PROGRAMS = ntops sntop
 bin_SCRIPTS    = 
 
 ntop_SOURCES       = main.c admin.c
-ntop_DEPENDENCIES  = libntopreport.la libntop.la myrrd/libmyrrd.la
-ntop_LDADD         = libntopreport.la libntop.la myrrd/libmyrrd.la $(BASE_LIBS)
+ntop_DEPENDENCIES  = libntopreport.la libntop.la
+ntop_LDADD         = libntopreport.la libntop.la $(BASE_LIBS)
 ntop_LDFLAGS       = $(AM_LDFLAGS)
 ntop_CFLAGS        = 
 
@@ -154,9 +159,6 @@ libntopreport_la_LIBADD       =
 libntopreport_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 
 man_MANS = ntop.8
-
-myrrd/libmyrrd.la:
-	cd myrrd; make
 
 .PHONY: snapshot
 

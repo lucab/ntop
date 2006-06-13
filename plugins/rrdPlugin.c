@@ -47,6 +47,7 @@ Aberrant RRD Behavior (http://cricket.sourceforge.net/aberrant/)
 patch courtesy of Dominique Karg <dk@ipsoluciones.com>
 
 2.4     General cleanup
+2.8     Moved to rrdtool 1.2.X
 */
 
 #include "rrdPlugin.h"
@@ -54,10 +55,6 @@ patch courtesy of Dominique Karg <dk@ipsoluciones.com>
 #ifndef _GETOPT_H
 #define _GETOPT_H
 #endif
-
-#include "myrrd/rrd.h"
-#include "myrrd/rrd_tool.h"
-#include "myrrd/rrd_format.h"
 
 #define REMOTE_SERVER_PORT 2005
 static u_char useDaemon = 0;
@@ -139,7 +136,7 @@ static PluginInfo rrdPluginInfo[] = {
     "This plugin is used to setup, activate and deactivate ntop's rrd support.<br>"
     "This plugin also produces the graphs of rrd data, available via a<br>"
     "link from the various 'Info about host xxxxx' reports.",
-    "2.7a", /* version */
+    "2.8", /* version */
     "<a HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "rrdPlugin", /* http://<host>:<port>/plugins/rrdPlugin */
     1, /* Active by default */
@@ -173,6 +170,10 @@ static void calfree (void) {
       free(calcpr);
   }
 }
+
+/* ******************************************* */
+
+static inline char* upperInitial(char *str) { str[0] = toupper(str[0]); return(str); }
 
 /* ******************************************* */
 
@@ -483,12 +484,11 @@ static int endsWith(char* label, char* pattern) {
 
 static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdCounter,
 			char *startTime, char* endTime, char *rrdPrefix) {
-  char path[512], *argv[32], buf[384], buf1[384], buf2[384], fname[384], *label, tmpStr[32];
-#ifdef HAVE_RRD_ABERRANT_BEHAVIOR
+  char path[512], *argv[64], buf[384], buf1[384], buf2[384], fname[384], *label, tmpStr[32];
   char bufa1[384], bufa2[384], bufa3[384];
-#endif
   struct stat statbuf;
   int argc = 0, rc, x, y;
+  double ymin,ymax;
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "graphCounter(%s, %s, %s, %s, %s, %s...)",
@@ -498,11 +498,9 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   memset(&buf, 0, sizeof(buf));
   memset(&buf1, 0, sizeof(buf1));
   memset(&buf2, 0, sizeof(buf2));
-#ifdef HAVE_RRD_ABERRANT_BEHAVIOR
   memset(&bufa1, 0, sizeof(bufa1));
   memset(&bufa2, 0, sizeof(bufa2));
   memset(&bufa3, 0, sizeof(bufa3));
-#endif
 
   safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
 
@@ -527,7 +525,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     argv[argc++] = "--imgformat";
     argv[argc++] = "PNG";
     argv[argc++] = "--vertical-label";
-    argv[argc++] = label;
+    argv[argc++] = upperInitial(label);
 
     if((rrdTitle != NULL) && (rrdTitle[0] != '\0')) {
       argv[argc++] = "--title";
@@ -538,6 +536,23 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     argv[argc++] = startTime;
     argv[argc++] = "--end";
     argv[argc++] = endTime;
+    argv[argc++] = "--slope-mode";
+
+    /* ********************* */
+
+    argv[argc++] = "--rigid";
+    argv[argc++] = "--base";
+    argv[argc++] = "1024";
+    argv[argc++] = "--height";
+    argv[argc++] = "120";
+    argv[argc++] = "--width";
+    argv[argc++] = "500";
+    argv[argc++] = "--alt-autoscale-max";
+    argv[argc++] = "--lower-limit";
+    argv[argc++] = "0";
+    
+    /* ********************* */
+
 #ifdef CONST_RRD_DEFAULT_FONT_NAME
     argv[argc++] = "--font";
 #ifdef CONST_RRD_DEFAULT_FONT_PATH
@@ -553,23 +568,27 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "AREA:ctr#00a000:%s",
 		  spacer(rrdCounter, tmpStr, sizeof(tmpStr)));
     argv[argc++] = buf1;
-    /*  argv[argc++] = "GPRINT:ctr:MIN:Min\\: %3.1lf%s"; */
+    argv[argc++] = "CDEF:smoothed=ctr,1800,TREND";
+
     argv[argc++] = "GPRINT:ctr:MAX:Max\\: %3.1lf%s";
     argv[argc++] = "GPRINT:ctr:AVERAGE:Avg\\: %3.1lf%s";
-    argv[argc++] = "GPRINT:ctr:LAST:Current\\: %3.1lf%s";
-#ifdef HAVE_RRD_ABERRANT_BEHAVIOR
+    argv[argc++] = "GPRINT:ctr:LAST:Current\\: %3.1lf%s\\n";
     safe_snprintf(__FILE__, __LINE__, bufa1, sizeof(bufa1), "DEF:pred=%s:counter:HWPREDICT", path);
     argv[argc++] = bufa1;
     safe_snprintf(__FILE__, __LINE__, bufa2, sizeof(bufa2), "DEF:dev=%s:counter:DEVPREDICT", path);
     argv[argc++] = bufa2;
     safe_snprintf(__FILE__, __LINE__, bufa3, sizeof(bufa3), "DEF:fail=%s:counter:FAILURES", path);
     argv[argc++] = bufa3;
-    argv[argc++] = "TICK:fail#ffffa0:1.0:Anomalia";
-    argv[argc++] = "CDEF:upper=pred,dev,2,*,+";
-    argv[argc++] = "CDEF:lower=pred,dev,2,*,-";
-    argv[argc++] = "LINE1:upper#ff0000:Upper";
-    argv[argc++] = "LINE2:lower#ff0000:Lower";
-#endif
+
+    if(myGlobals.runningPref.enableRRDAberrant) {
+      argv[argc++] = "TICK:fail#ffffa0:1.0:Anomalia";
+      argv[argc++] = "CDEF:upper=pred,dev,2,*,+";
+      argv[argc++] = "CDEF:lower=pred,dev,2,*,-";
+      argv[argc++] = "LINE1:upper#ff0000:Upper";
+      argv[argc++] = "LINE2:lower#a0ffff:Lower";
+    }
+
+    argv[argc++] = "LINE1:smoothed#0000FF:Trend (30 min)";
 
     accessMutex(&rrdMutex, "rrd_graph");
     optind=0; /* reset gnu getopt */
@@ -578,7 +597,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
     rrd_clear_error();
     addRrdDelay();
-    rc = rrd_graph(argc, argv, &calcpr, &x, &y);
+    rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);
 
     calfree();
 
@@ -626,6 +645,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
   char fname[384], *label;
   char **rrds = NULL;
   int argc = 0, rc, x, y, i, entryId=0;
+  double ymin,ymax;
 
   path[0] = '\0';
 
@@ -658,11 +678,13 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
   argv[argc++] = "--imgformat";
   argv[argc++] = "PNG";
   argv[argc++] = "--vertical-label";
-  argv[argc++] = label;
+  argv[argc++] = upperInitial(label);
   argv[argc++] = "--start";
   argv[argc++] = startTime;
   argv[argc++] = "--end";
   argv[argc++] = endTime;
+  argv[argc++] = "--slope-mode";
+
 #ifdef CONST_RRD_DEFAULT_FONT_NAME
   argv[argc++] = "--font";
 #ifdef CONST_RRD_DEFAULT_FONT_PATH
@@ -718,7 +740,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
   rrd_clear_error();
   addRrdDelay();
-  rc = rrd_graph(argc, argv, &calcpr, &x, &y);
+  rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);
 
   calfree();
 
@@ -745,6 +767,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
 
   releaseMutex(&rrdMutex);
 }
+
 /* ******************************************* */
 
 #define MAX_NUM_ENTRIES   32
@@ -757,6 +780,7 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
   char fname[384], *label, title[64];
   char **rrds = NULL;
   int argc = 0, rc, x, y, i, entryId=0;
+  double ymin,ymax;
 
   path[0] = '\0';
 
@@ -796,13 +820,15 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
   argv[argc++] = "--imgformat";
   argv[argc++] = "PNG";
   argv[argc++] = "--vertical-label";
-  argv[argc++] = label;
+  argv[argc++] = upperInitial(label);
   argv[argc++] = "--title";
   argv[argc++] = title;
   argv[argc++] = "--start";
   argv[argc++] = startTime;
   argv[argc++] = "--end";
   argv[argc++] = endTime;
+  argv[argc++] = "--slope-mode"; 
+
 #ifdef CONST_RRD_DEFAULT_FONT_NAME
   argv[argc++] = "--font";
 #ifdef CONST_RRD_DEFAULT_FONT_PATH
@@ -840,8 +866,6 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
       safe_snprintf(__FILE__, __LINE__, buf4[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":MAX:Max\\: %8.2lf %s\\n");
       argv[argc++] = buf4[entryId];
 
-
-
       entryId++;
     }
 
@@ -865,7 +889,7 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
   rrd_clear_error();
   addRrdDelay();
-  rc = rrd_graph(argc, argv, &calcpr, &x, &y);
+  rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);
 
   calfree();
 
@@ -898,6 +922,8 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
 static char* spacer(char* _str, char *tmpStr, int tmpStrLen) {
   int len = strlen(_str), i;
   char *str, *token;
+
+  upperInitial(_str);
 
   memset(tmpStr, 0, tmpStrLen);
 
@@ -934,6 +960,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
   int argc = 0, rc, x, y, i, entryId=0;
   DIR* directoryPointer;
   char *rrd_custom[3], file_a[32], file_b[32];
+  double ymin,ymax;
 
   path[0] = '\0', label = "";
 
@@ -1056,11 +1083,13 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
   argv[argc++] = "--imgformat";
   argv[argc++] = "PNG";
   argv[argc++] = "--vertical-label";
-  argv[argc++] = label;
+  argv[argc++] = upperInitial(label);
   argv[argc++] = "--start";
   argv[argc++] = startTime;
   argv[argc++] = "--end";
   argv[argc++] = endTime;
+   argv[argc++] = "--slope-mode"; 
+
 #ifdef CONST_RRD_DEFAULT_FONT_NAME
   argv[argc++] = "--font";
 #ifdef CONST_RRD_DEFAULT_FONT_PATH
@@ -1133,7 +1162,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
       traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
   }
 
-  rc = rrd_graph(argc, argv, &calcpr, &x, &y);
+  rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);
   calfree();
 
   if(rc == 0) {
@@ -1300,9 +1329,8 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
     if(stat(path, &statbuf) != 0) {
       char startStr[32], stepStr[32], counterStr[64], intervalStr[32];
       char minStr[32], maxStr[32], daysStr[32], monthsStr[32];
-#ifdef HAVE_RRD_ABERRANT_BEHAVIOR
       char tempStr[64];
-#endif
+
       int step;
       int value1, value2, rrdDumpInterval;
       unsigned long topValue;
@@ -1375,11 +1403,9 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	argv[argc++] = monthsStr;
       }
 
-#ifdef HAVE_RRD_ABERRANT_BEHAVIOR
       safe_snprintf(__FILE__, __LINE__, tempStr, sizeof(tempStr),
 		    "RRA:HWPREDICT:1440:0.1:0.0035:20");
       argv[argc++] = tempStr;
-#endif
 
 #if DEBUG
       if(shownCreate == 0) {
@@ -1779,40 +1805,6 @@ static void commonRRDinit(void) {
 
 /* ****************************** */
 
-/* Find the timestamp of the first DETAIL row in an rrd - Ripped from rrd_dump.c
- *
- *  Note the issue - this assumes that the RRA[0] is the most detailed (which SHOULD be true).
- *
- *  A more complete version has been submitted to Tobi for rrdtool 1.0.49+
- *  replace with that version when/if it's becomes available.
- */
-
-static time_t rrd_first(char *path) {
-  FILE *in_file;
-  time_t now;
-  long timer=0, rra_start;
-  rrd_t rrd;
-
-  if(path == NULL) {
-    return(-1);
-  }
-  if(rrd_open(path, &in_file, &rrd, RRD_READONLY)==-1){
-    return(-1);
-  }
-
-  rra_start = ftell(in_file);
-  fseek(in_file,(rra_start +(rrd.rra_ptr[0].cur_row+1) * rrd.stat_head->ds_cnt * sizeof(rrd_value_t)), SEEK_SET);
-  timer = - (rrd.rra_def[0].row_cnt-1);
-  now = (rrd.live_head->last_up -
-	 rrd.live_head->last_up % (rrd.rra_def[0].pdp_cnt*rrd.stat_head->pdp_step)) +
-    (timer*rrd.rra_def[0].pdp_cnt*rrd.stat_head->pdp_step);
-  rrd_free(&rrd);
-  fclose(in_file);
-  return(now);
-}
-
-/* ****************************** */
-
 static void arbitraryAction(char *rrdName,
                             char *rrdInterface,
                             char *rrdIP,
@@ -1821,7 +1813,7 @@ static void arbitraryAction(char *rrdName,
                             char *rrdCounter,
                             char *rrdTitle,
                             char _which) {
-  int i, len, rc=0, argc = 0, countOK=0, countZERO=0;
+  int i, len, rc=0, argc = 0, argc1 = 0,countOK=0, countZERO=0;
   char buf[LEN_GENERAL_WORK_BUFFER],
     rrdKey[64];
 
@@ -1896,11 +1888,7 @@ static void arbitraryAction(char *rrdName,
 
   if((_which == CONST_ARBITRARY_RRDREQUEST_FETCHME[0]) ||
      (_which == CONST_ARBITRARY_RRDREQUEST_FETCHMECSV[0])) {
-    char *argv[32],
-      rptTime[32],
-      startWorkTime[32],
-      path[128],
-      **ds_namv;
+    char *argv[32], *argv1[8], rptTime[32], startWorkTime[32], path[128], **ds_namv;    
     time_t start=0,end=time(NULL)+1, startTimeFound = 0;
     unsigned long step=0, ds_cnt, ii;
     rrd_value_t   *data,*datai, _val;
@@ -1924,13 +1912,15 @@ static void arbitraryAction(char *rrdName,
       sendString("\"\n\n");
     }
 
-
     argv[argc++] = "rrd_fetch";
     argv[argc++] = path;
     argv[argc++] = "AVERAGE";
 
     if((startTime != NULL) && (startTime[0] == '0') && (startTime[1] == '\0')) {
-      startTimeFound = rrd_first(path);
+      argv1[argc1++] = "rrd_first";
+      argv1[argc1++] = path;
+      
+      startTimeFound = rrd_first(argc1, argv1);
       if(startTimeFound != ((time_t)-1)) {
         safe_snprintf(__FILE__, __LINE__, startWorkTime, sizeof(startWorkTime), "%u", startTimeFound);
         argv[argc++] = "--start";
@@ -3940,7 +3930,7 @@ PluginInfo* rrdPluginEntryFctn(void)
 #endif
 {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-	     "RRD: Welcome to %s. (C) 2002-04 by Luca Deri.",
+	     "RRD: Welcome to %s. (C) 2002-06 by Luca Deri.",
 	     rrdPluginInfo->pluginName);
 
   return(rrdPluginInfo);

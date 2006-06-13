@@ -2018,7 +2018,7 @@ typedef struct _userPref {
   bool printFcOnly;             /* --fc-only '147' */
   bool printIpOnly;             /* --no-fc '148' */
   bool noInvalidLunDisplay;     /* --no-invalid-lun '149' */
-
+  bool enableRRDAberrant;
   bool disableMutexExtraInfo;   /* --disable-mutexextrainfo '145' */
 
   bool skipVersionCheck;        /* --skip-version-check '150' */
@@ -2066,8 +2066,7 @@ typedef struct ntopGlobals {
   char *securityItems[MAX_NUM_PWFILE_ENTRIES];
 
   /* Results flags - something we've learned */
-  bool haveASN,
-       haveVLANs;
+  bool haveASN, haveVLANs;
 
   /* Physical and Logical network interfaces */
 

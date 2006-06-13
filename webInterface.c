@@ -6349,8 +6349,11 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   }
 
 #ifdef HAVE_PCAP_LIB_VERSION
-  printFeatureConfigInfo(textPrintFlag, "libpcap version", (char *)pcap_lib_version());
+  printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.tcpdump.org>libpcap</A> Version", (char *)pcap_lib_version());
 #endif
+
+  snprintf(buf, sizeof(buf), "%1.4f", rrd_version());
+  printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.rrdtool.org/>RRD</A> Version", buf);
 
 #ifndef WIN32
   if(getDynamicLoadPaths(main, sizeof(main), lib, sizeof(lib), env, sizeof(env)) == 0) {

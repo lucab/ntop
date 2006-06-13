@@ -1210,6 +1210,10 @@ void addDefaultAdminUser(void) {
        processNtopPref(NTOP_PREF_DAEMON, FALSE, savePref, &tmpPrefs);
      }
    
+     if (display_prefs && myGlobals.savedPref.enableRRDAberrant &&
+	 !tmpPrefs.enableRRDAberrant) {
+       processNtopPref(NTOP_PREF_RRD_ABERRANT, FALSE, savePref, &tmpPrefs);
+     }
 
      if (display_prefs && myGlobals.savedPref.noInvalidLunDisplay &&
 	 !tmpPrefs.noInvalidLunDisplay) {
@@ -1647,6 +1651,11 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		  (!pref->printIpOnly && !pref->printFcOnly) ? "CHECKED" : "");
     sendString(buf);
     sendString("</TD></TR>");
+
+    CONFIG_RADIO_ENTRY(DARK_BG, "Enable RRD Aberrant Behavior",
+		       NTOP_PREF_RRD_ABERRANT,
+		       pref->enableRRDAberrant,
+		       "Toggle RRD <A HREF=http://cricket.sourceforge.net/aberrant/rrd_hw.htm>Aberrant Behavior</A> support");
 
     CONFIG_RADIO_ENTRY(DARK_BG, "No Info On Invalid LUNs",
 		       NTOP_PREF_NO_INVLUN,
