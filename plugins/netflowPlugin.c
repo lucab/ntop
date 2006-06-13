@@ -309,6 +309,84 @@ static int setNetFlowInSocket(int deviceId) {
 
 /* *************************** */
 
+static void updateNetFlowIfStats(int deviceId, u_int32_t ifId, u_char sentStats,
+				 u_int32_t pkts, u_int32_t octets) {
+  if(pkts == 0)
+    return;
+  else {
+    u_char found = 0;
+    InterfaceStats *ifStats, *prev = NULL;
+
+    accessMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsMutex, "rrdPluginNetflow");
+    
+    ifStats = myGlobals.device[deviceId].netflowGlobals->ifStats;
+
+    while(ifStats != NULL) {
+      if(ifStats->interface_id == ifId) {
+	found = 1;
+	break;
+      } else if(ifStats->interface_id > ifId)
+	break;
+      else {
+	prev    = ifStats;
+	ifStats = ifStats->next;
+      }
+    }
+
+    if(!found) {
+      if((ifStats = (InterfaceStats*)malloc(sizeof(InterfaceStats))) == NULL) {
+	traceEvent(CONST_TRACE_ERROR, "NETFLOW: not enough memory");
+	releaseMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsMutex);
+	return;
+      }
+
+      memset(ifStats, 0, sizeof(InterfaceStats));
+      ifStats->interface_id = ifId;
+      resetTrafficCounter(&ifStats->outBytes);
+      resetTrafficCounter(&ifStats->outPkts);
+      resetTrafficCounter(&ifStats->inBytes);
+      resetTrafficCounter(&ifStats->inPkts);
+
+      if(prev == NULL) {
+	ifStats->next = myGlobals.device[deviceId].netflowGlobals->ifStats;
+	myGlobals.device[deviceId].netflowGlobals->ifStats = ifStats;
+      } else {
+	ifStats->next = prev->next;
+	prev->next = ifStats;
+      }
+    }
+
+    releaseMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsMutex);
+
+    if(sentStats) {
+      incrementTrafficCounter(&ifStats->outBytes, octets);
+      incrementTrafficCounter(&ifStats->outPkts, pkts);
+    } else {
+      incrementTrafficCounter(&ifStats->inBytes, octets);
+      incrementTrafficCounter(&ifStats->inPkts, pkts);
+    }
+  }
+}
+
+
+/* *************************** */
+
+static void updateInterfaceStats(int deviceId, struct generic_netflow_record *record) {
+
+  if((myGlobals.device[deviceId].netflowGlobals == NULL) || (record == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "NETFLOW: internal error, NULL interface stats");
+    return;
+  }
+
+  updateNetFlowIfStats(deviceId, record->input,  0, ntohl(record->sentPkts), ntohl(record->sentOctets));
+  updateNetFlowIfStats(deviceId, record->output, 1, ntohl(record->sentPkts), ntohl(record->sentOctets));
+
+  updateNetFlowIfStats(deviceId, record->input,  1, ntohl(record->rcvdPkts), ntohl(record->rcvdOctets));
+  updateNetFlowIfStats(deviceId, record->output, 0, ntohl(record->rcvdPkts), ntohl(record->rcvdOctets));
+}
+
+/* *************************** */
+
 static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 			     struct generic_netflow_record *record,
 			     int deviceId, time_t *firstSeen, time_t *lastSeen) {
@@ -472,6 +550,10 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 
   /* accessMutex(&myGlobals.hostsHashMutex, "processNetFlowPacket"); */
 
+  record->input = ntohs(record->input), record->output = ntohs(record->output);
+
+  updateInterfaceStats(deviceId, record);
+
   if(!skipSRC) {
     switch((skipSRC = isOKtoSave(ntohl(record->srcaddr),
 				 myGlobals.device[deviceId].netflowGlobals->whiteNetworks,
@@ -561,8 +643,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   if(srcAS != 0) srcHost->hostAS = srcAS;
   if(dstAS != 0) dstHost->hostAS = dstAS;
 
-  srcHost->ifId = ntohs(record->input);
-  dstHost->ifId = ntohs(record->output);
+  srcHost->ifId = record->input, dstHost->ifId = record->output;
 
 #ifdef DEBUG_FLOWS
   /* traceEvent(CONST_TRACE_INFO, "%d/%d", srcHost->hostAS, dstHost->hostAS); */
@@ -799,7 +880,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   if(myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB)
     insert_flow_record(deviceId,
 		       ntohl(record->srcaddr),  ntohl(record->dstaddr),
-		       ntohs(record->input),    ntohs(record->output),
+		       record->input,  record->output,
 		       ntohl(record->sentPkts), ntohl(record->sentOctets),
 		       ntohl(record->rcvdPkts), ntohl(record->rcvdOctets),
 		       *firstSeen, *lastSeen,
@@ -1016,7 +1097,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
     u_char handle_ipfix;
 
     if(the5Record.flowHeader.version == htons(9)) handle_ipfix = 0; else handle_ipfix = 1;
-    
+
     if(handle_ipfix) {
       numEntries = ntohs(the5Record.flowHeader.count), displ = sizeof(V9FlowHeader);
 #ifdef DEBUG_FLOWS
@@ -1024,7 +1105,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 #endif
 
     } else {
-      numEntries = ntohs(the5Record.flowHeader.count), 
+      numEntries = ntohs(the5Record.flowHeader.count),
 	record_len = ntohs(the5Record.flowHeader.count), displ = sizeof(V9FlowHeader);
     }
 
@@ -1170,7 +1251,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	    int fieldId, init_displ;
 	    V9TemplateField *fields = cursor->fields;
 	    time_t firstSeen, lastSeen;
-	    
+
             /* initialize to zero */
 	    memset(&record, 0, sizeof(record));
 	    record.vlanId = NO_VLAN; /* No VLAN */
@@ -1180,7 +1261,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 
 #ifdef DEBUG_FLOWS
 	    if(0)
-	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d [%d...%d]", 
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d [%d...%d]",
 			 fs.templateId, displ, fs.flowsetLen);
 #endif
 
@@ -1189,7 +1270,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 
 	      /* Defaults */
 	      record.nw_latency_sec = record.nw_latency_usec = htonl(0);
-	      
+
 #ifdef DEBUG_FLOWS
 	      if(0)
 		traceEvent(CONST_TRACE_INFO, ">>>>> Stats [%d...%d]", displ, (init_displ + fs.flowsetLen));
@@ -1205,7 +1286,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 			     displ, fs.flowsetLen,
 			     fs.templateId, ntohs(fields[fieldId].fieldType),
 			     ntohs(fields[fieldId].fieldLen),
-			     fieldId, cursor->templateInfo.fieldCount, 
+			     fieldId, cursor->templateInfo.fieldCount,
 			     displ, (init_displ + fs.flowsetLen),
 			     nf_hex_dump(&buffer[displ], ntohs(fields[fieldId].fieldLen)));
 #endif
@@ -1291,7 +1372,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 		  memcpy(&record.sip_called_party, &buffer[displ], 50);
 		  break;
 		}
-		
+
 		accum_len += ntohs(fields[fieldId].fieldLen);
 		displ += ntohs(fields[fieldId].fieldLen);
 	      }
@@ -1308,7 +1389,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 
 #ifdef DEBUG_FLOWS
 	      if(0)
-		traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d][save=%d]", 
+		traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d][save=%d]",
 			   accum_len, myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB);
 #endif
 
@@ -1327,7 +1408,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 		record.srcport = record.dstport;
 		record.dstport = tmp;
 
-		handleGenericFlow(recordActTime, recordSysUpTime, &record, 
+		handleGenericFlow(recordActTime, recordSysUpTime, &record,
 				  deviceId, &firstSeen, &lastSeen);
 	      }
 
@@ -1372,7 +1453,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 #endif
 
     /* Lock white/black lists for duration of this flow packet */
-    accessMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex, "flowPacket");
+      accessMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex, "flowPacket");
 
     /*
       Reset the record so that fields that are not contained
@@ -1403,7 +1484,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
       record.dst_mask   = the5Record.flowRecord[i].dst_mask;
       record.src_mask   = the5Record.flowRecord[i].src_mask;
 
-      handleGenericFlow(recordActTime, recordSysUpTime, &record, 
+      handleGenericFlow(recordActTime, recordSysUpTime, &record,
 			deviceId, &firstSeen, &lastSeen);
     }
 
@@ -1635,7 +1716,7 @@ static void* netflowMainLoop(void* _deviceId) {
   }
   myGlobals.device[deviceId].activeDevice = 0;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread terminated [p%d]", 
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread terminated [p%d]",
 	     pthread_self(), getpid());
 
   return(NULL);
@@ -1660,6 +1741,7 @@ static void initNetFlowDevice(int deviceId) {
 
   myGlobals.device[deviceId].netflowGlobals->threadActive = 0;
   createMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex);
+  createMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsMutex);
 
   if(fetchPrefsValue(nfValue(deviceId, "netFlowInPort", 1), value, sizeof(value)) == -1)
     storePrefsValue(nfValue(deviceId, "netFlowInPort", 1), "0");
@@ -2460,6 +2542,54 @@ static void printNetFlowConfiguration(int deviceId) {
 static void printNetFlowStatisticsRcvd(int deviceId) {
   char buf[512], formatBuf[32], formatBuf2[32];
   u_int i, totFlows;
+  InterfaceStats *ifStats = myGlobals.device[deviceId].netflowGlobals->ifStats;
+
+  if(ifStats != NULL) {
+    sendString("<tr " TR_ON ">\n<th colspan=\"2\" "DARK_BG">Interface Statistics</th>\n</tr>\n");
+
+    while(ifStats != NULL) {      
+      struct stat statbuf;
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/NetFlow/%d/ifInOctets.rrd",
+		    myGlobals.rrdPath, myGlobals.device[deviceId].humanFriendlyName,
+		    ifStats->interface_id);      
+      revertSlashIfWIN32(buf, 0);
+
+      if(stat(buf, &statbuf) != 0) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<TR " TR_ON ">\n<TH " TH_BG " ALIGN=\"LEFT\" "DARK_BG ">Interface %d</th>\n<td width=\"20%\">",
+		      ifStats->interface_id);
+	sendString(buf);
+
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Pkts: %s in/%s out",
+		      formatPkts(ifStats->inPkts.value, formatBuf, sizeof(formatBuf)),
+		      formatPkts(ifStats->outPkts.value, formatBuf2, sizeof(formatBuf2)));
+	sendString(buf);
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<br>Bytes: %s in/%s out",
+		      formatBytes(ifStats->inBytes.value, 1, formatBuf, sizeof(formatBuf)),
+		      formatBytes(ifStats->outBytes.value, 1, formatBuf2, sizeof(formatBuf2)));
+	sendString(buf);
+
+	sendString("</td></tr>\n");
+      } else {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		     "<TR " TR_ON ">\n<TD " TD_BG " ALIGN=\"CENTER\" colspan=2>"
+		     "<IMG SRC=\"/plugins/rrdPlugin?action=netflowIfSummary&key=%s/NetFlow/%d&graphId=0\">"
+		     "</td></tr>\n",
+		     myGlobals.device[deviceId].humanFriendlyName,
+		     ifStats->interface_id);
+	  sendString(buf);
+
+      }
+
+      ifStats = ifStats->next;
+    }
+  }
+
+
+  /* ***************************************************************** */
 
   sendString("<tr " TR_ON ">\n"
              "<th colspan=\"2\" "DARK_BG">Received Flows</th>\n"
@@ -3201,6 +3331,8 @@ static void handleNetflowHTTPrequest(char* _url) {
 		   "<th>List Mutex</th>\n<td><table>");
 	printMutexStatus(FALSE, &myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex,
 			 "White/Black list mutex");
+	printMutexStatus(FALSE, &myGlobals.device[deviceId].netflowGlobals->ifStatsMutex,
+			 "Interface statistics mutex");
 	sendString("</table><td></tr></table>\n");
       }
     }

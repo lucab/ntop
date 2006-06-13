@@ -116,6 +116,7 @@ static int sumCounter(char *rrdPath, char *rrdFilePath,
 static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdCounter, char *startTime, char* endTime, char* rrdPrefix);
 static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startTime, char* endTime, char* rrdPrefix);
 static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
+static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
 static void updateCounter(char *hostPath, char *key, Counter value, char short_step);
 static void updateGauge(char *hostPath, char *key, Counter value, char short_step);
 static void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter, char short_step);
@@ -552,7 +553,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "AREA:ctr#00a000:%s",
 		  spacer(rrdCounter, tmpStr, sizeof(tmpStr)));
     argv[argc++] = buf1;
-    argv[argc++] = "GPRINT:ctr:MIN:Min\\: %3.1lf%s";
+    /*  argv[argc++] = "GPRINT:ctr:MIN:Min\\: %3.1lf%s"; */
     argv[argc++] = "GPRINT:ctr:MAX:Max\\: %3.1lf%s";
     argv[argc++] = "GPRINT:ctr:AVERAGE:Avg\\: %3.1lf%s";
     argv[argc++] = "GPRINT:ctr:LAST:Current\\: %3.1lf%s";
@@ -744,6 +745,153 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
 
   releaseMutex(&rrdMutex);
 }
+/* ******************************************* */
+
+#define MAX_NUM_ENTRIES   32
+#define MAX_BUF_LEN       128
+
+static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
+  char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN];
+  char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN], tmpStr[32],
+    buf2[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf4[MAX_NUM_ENTRIES][MAX_BUF_LEN];
+  char fname[384], *label, title[64];
+  char **rrds = NULL;
+  int argc = 0, rc, x, y, i, entryId=0;
+
+  path[0] = '\0';
+
+  switch(graphId) {
+  case 0:  rrds = (char**)rrd_summary_nf_if_octets; label = "Bytes/sec"; break;
+  default: rrds = (char**)rrd_summary_nf_if_pkts; label = "Packets/sec"; break;
+  }
+
+  /* startTime[4] skips the 'now-' */
+  safe_snprintf(__FILE__, __LINE__, fname, sizeof(fname), "%s/%s/%s/%s-%s%d%s",
+		myGlobals.rrdPath, rrd_subdirs[2], rrdPath,
+		startTime, rrdPrefix, graphId,
+		CHART_FORMAT);
+
+  revertSlashIfWIN32(fname, 0);
+
+  /* traceEvent(CONST_TRACE_ERROR, "RRD: %s [%s][%s]", fname); */
+
+  if(rrds == NULL) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    printHTMLheader("RRD Graph Summary", NULL, 0);
+    printFlagedWarning("<I>Error while building graph of the requested file "
+		       "(unknown RRD files)</I>");
+    return;
+  }
+
+  for(i=strlen(rrdPath)-1; i>0; i--)
+    if(rrdPath[i] == '/')
+      break;
+  
+  safe_snprintf(__FILE__, __LINE__, title, sizeof(title), "NetFlow Interface %s", &rrdPath[i+1]);
+
+  rrdGraphicRequests++;
+  argv[argc++] = "rrd_graph";
+  argv[argc++] = fname;
+  argv[argc++] = "--lazy";
+  argv[argc++] = "--imgformat";
+  argv[argc++] = "PNG";
+  argv[argc++] = "--vertical-label";
+  argv[argc++] = label;
+  argv[argc++] = "--title";
+  argv[argc++] = title;
+  argv[argc++] = "--start";
+  argv[argc++] = startTime;
+  argv[argc++] = "--end";
+  argv[argc++] = endTime;
+#ifdef CONST_RRD_DEFAULT_FONT_NAME
+  argv[argc++] = "--font";
+#ifdef CONST_RRD_DEFAULT_FONT_PATH
+  argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" \
+    CONST_RRD_DEFAULT_FONT_PATH CONST_RRD_DEFAULT_FONT_NAME;
+#else
+  argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" CONST_RRD_DEFAULT_FONT_NAME;
+#endif
+#endif
+  revertDoubleColumnIfWIN32(path);
+
+  for(i=0, entryId=0; rrds[i] != NULL; i++) {
+    struct stat statbuf;
+
+    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/%s/%s.rrd",
+		  myGlobals.rrdPath, rrd_subdirs[2], rrdPath, rrds[i]);
+
+    revertSlashIfWIN32(path, 0);
+
+
+    if(stat(path, &statbuf) == 0) {
+      safe_snprintf(__FILE__, __LINE__, buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path);
+      argv[argc++] = buf[entryId];
+
+      /* traceEvent(CONST_TRACE_ERROR, "RRD: --> [%s]", &rrds[i][2]); */
+
+      safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
+		    entryId, rrd_colors[entryId], spacer(&rrds[i][2], tmpStr, sizeof(tmpStr)));
+      argv[argc++] = buf1[entryId];
+ 
+      safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Current\\: %8.2lf %s");
+      argv[argc++] = buf2[entryId];
+      safe_snprintf(__FILE__, __LINE__, buf3[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %8.2lf %s");
+      argv[argc++] = buf3[entryId];
+      safe_snprintf(__FILE__, __LINE__, buf4[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":MAX:Max\\: %8.2lf %s\\n");
+      argv[argc++] = buf4[entryId];
+
+
+
+      entryId++;
+    }
+
+    if(entryId >= MAX_NUM_ENTRIES) break;
+
+    if(entryId >= CONST_NUM_BAR_COLORS) {
+      if(colorWarn == 0) {
+        traceEvent(CONST_TRACE_WARNING, "RRD: Number of defined bar colors less than max entries.  Some graph(s) truncated");
+        colorWarn = 1;
+      }
+      break;
+    }
+  }
+
+  /* traceEventRRDebugARGV(0); */
+
+  accessMutex(&rrdMutex, "rrd_graph");
+  optind=0; /* reset gnu getopt */
+  opterr=0; /* no error messages */
+
+  fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
+  rrd_clear_error();
+  addRrdDelay();
+  rc = rrd_graph(argc, argv, &calcpr, &x, &y);
+
+  calfree();
+
+  if(rc == 0) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_PNG, 0, 1);
+    sendGraphFile(fname, 0);
+    unlink(fname);
+  } else {
+    traceEventRRDebugARGV(3);
+
+    if(++graphErrCount < 50) {
+      traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error());
+      traceEvent(CONST_TRACE_INFO, "RRD: Failing file in netflowSummary() is %s", path);
+    }
+
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    printHTMLheader("RRD Graph Summary", NULL, 0);
+    safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
+		  "<I>Error while building graph of the requested file. %s</I>",
+		  rrd_get_error());
+    printFlagedWarning(path);
+    rrd_clear_error();
+  }
+
+  releaseMutex(&rrdMutex);
+}
 
 /* ******************************* */
 
@@ -759,6 +907,7 @@ static char* spacer(char* _str, char *tmpStr, int tmpStrLen) {
     str = _str;
 
   if(((token = strstr(str, "Bytes")) != NULL)
+     || ((token = strstr(str, "Octets")) != NULL)
      || ((token = strstr(str, "Pkts")) != NULL)
      || ((token = strstr(str, "Num")) != NULL)
      ) {
@@ -941,8 +1090,10 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
 		    spacer(rrds[i], tmpStr, sizeof(tmpStr)));
       argv[argc++] = buf1[entryId];
 
-      safe_snprintf(__FILE__, __LINE__, buf2[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":MIN:Min\\: %3.1lf%s");
-      argv[argc++] = buf2[entryId];
+      /*
+	safe_snprintf(__FILE__, __LINE__, buf2[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":MIN:Min\\: %3.1lf%s");
+	argv[argc++] = buf2[entryId];
+      */
 
       safe_snprintf(__FILE__, __LINE__, buf3[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":MAX:Max\\: %3.1lf%s");
       argv[argc++] = buf3[entryId];
@@ -2209,7 +2360,7 @@ static void arbitraryActionPage(void) {
              "<tr><th width=\"250\" align=\"left\" "DARK_BG">Host IP address</th>\n<td align=\"left\">"
              "<input name=\"" CONST_ARBITRARY_IP "\" size=\"20\" value=\"\">"
              "&nbsp;&nbsp;Leave blank to create a per-interface graph.</td></tr>\n"
-             "<tr><th align=\"center\" "DARK_BG" colspan=\"2\">\n<table border=\"0\" width=\"80%\"><tr><td>"
+             "<tr><td align=\"left\"  colspan=\"2\">\n"
              "<p><i>A note about time specification</i>: You may specify time in a number of ways - please "
              "see \"AT-STYLE TIME SPECIFICATION\" in the rrdfetch man page for the full details. Here "
              "are some examples:</p>\n<ul>\n"
@@ -2235,7 +2386,7 @@ static void arbitraryActionPage(void) {
              "counter for the entire interval, you need to multipy the per-second rate by the number of "
              "seconds in the interval (this is the step, reported at the bottom of the output page).</p>\n"
              "<p>If start time is left blank, the default is --start end-1d. To force a dump from the "
-             "earliest detail point in the rrd, use the special value 0.</th></tr>\n</table>\n</td></tr>\n"
+             "earliest detail point in the rrd, use the special value 0.</tr>\n"
              "<tr><th align=\"left\" "DARK_BG">Start</th>\n<td align=\"left\">"
              "<input name=\"start\" size=\"20\" value=\"");
   sendString(startTime);
@@ -2356,6 +2507,7 @@ static void handleRRDHTTPrequest(char* url) {
 	  else if(strcmp(value, CONST_ARBITRARY_RRDREQUEST) == 0)     action = FLAG_RRD_ACTION_ARBITRARY;
 	  else if(strcmp(value, "graphSummary") == 0) action = FLAG_RRD_ACTION_GRAPH_SUMMARY;
 	  else if(strcmp(value, "netflowSummary") == 0) action = FLAG_RRD_ACTION_NF_SUMMARY;
+	  else if(strcmp(value, "netflowIfSummary") == 0) action = FLAG_RRD_ACTION_NF_IF_SUMMARY;
 	  else if(strcmp(value, "list") == 0) action = FLAG_RRD_ACTION_LIST;
 	} else if(strcmp(key, "key") == 0) {
 	  safe_snprintf(__FILE__, __LINE__, rrdKey, sizeof(rrdKey), "%s", value);
@@ -2555,6 +2707,9 @@ static void handleRRDHTTPrequest(char* url) {
     return;
   } else if(action == FLAG_RRD_ACTION_NF_SUMMARY) {
     netflowSummary(rrdKey, graphId, startTime, endTime, rrdPrefix);
+    return;
+  } else if(action == FLAG_RRD_ACTION_NF_IF_SUMMARY) {
+    netflowIfSummary(rrdKey, graphId, startTime, endTime, rrdPrefix);
     return;
   } else if(action == FLAG_RRD_ACTION_LIST) {
     listResource(rrdKey, rrdTitle, startTime, endTime);
@@ -3552,6 +3707,34 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      updateCounter(rrdPath, tmpStr, ctr.value, 0);
 	    }
 	  }
+	}
+
+	/* ******************************** */
+
+	if(myGlobals.device[devIdx].netflowGlobals) {
+	  InterfaceStats *ifStats;
+
+	  accessMutex(&myGlobals.device[devIdx].netflowGlobals->ifStatsMutex, "rrdPluginNetflow");
+
+	  ifStats = myGlobals.device[devIdx].netflowGlobals->ifStats;
+
+	  while(ifStats != NULL) {
+	    char rrdIfPath[512];
+	    
+	    safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
+			  "%s/interfaces/%s/NetFlow/%d/", myGlobals.rrdPath,
+			  myGlobals.device[devIdx].humanFriendlyName, ifStats->interface_id);
+	    mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
+	    
+	    updateCounter(rrdIfPath, "ifInOctets",  ifStats->inBytes.value, 0);
+	    updateCounter(rrdIfPath, "ifInPkts",    ifStats->inPkts.value, 0);
+	    updateCounter(rrdIfPath, "ifOutOctets", ifStats->outBytes.value, 0);
+	    updateCounter(rrdIfPath, "ifOutPkts",   ifStats->outPkts.value, 0);
+	    
+	    ifStats = ifStats->next;
+	  }
+
+	  releaseMutex(&myGlobals.device[devIdx].netflowGlobals->ifStatsMutex);	  
 	}
 
 	/* ******************************** */

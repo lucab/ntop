@@ -2213,12 +2213,13 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
                    theSession->dport);
 #endif
       } else {
-        traceEvent(CONST_TRACE_NOISY, "LATENCY: %s:%d->%s:%d is %d us",
-                   _addrtostr(&theSession->initiatorRealIp, buf, sizeof(buf)),
-                   theSession->sport,
-                   _addrtostr(&theSession->remotePeerRealIp, buf1, sizeof(buf1)),
-                   theSession->dport,
-                   theSession->nwLatency.tv_sec * 1000000 + theSession->nwLatency.tv_usec);
+        if(0) 
+	  traceEvent(CONST_TRACE_NOISY, "LATENCY: %s:%d->%s:%d is %d us",
+		     _addrtostr(&theSession->initiatorRealIp, buf, sizeof(buf)),
+		     theSession->sport,
+		     _addrtostr(&theSession->remotePeerRealIp, buf1, sizeof(buf1)),
+		     theSession->dport,
+		     theSession->nwLatency.tv_sec * 1000000 + theSession->nwLatency.tv_usec);
       }
 
       theSession->sessionState = FLAG_STATE_ACTIVE;

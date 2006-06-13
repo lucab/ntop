@@ -1213,6 +1213,12 @@ typedef struct flowSetV9 {
   struct flowSetV9 *next;
 } FlowSetV9;
 
+typedef struct interfaceStats {
+  u_short interface_id;
+  TrafficCounter inBytes, outBytes, inPkts, outPkts;
+  struct interfaceStats *next;
+} InterfaceStats;
+
 typedef struct netFlowGlobals {
   u_char netFlowDebug;
 
@@ -1246,6 +1252,7 @@ typedef struct netFlowGlobals {
 
   /* Stats */
   ProbeInfo probeList[MAX_NUM_PROBES];
+  InterfaceStats *ifStats;
   u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3], blackNetworks[MAX_NUM_NETWORKS][3];
   u_short numWhiteNets, numBlackNets;
   u_int32_t flowProcessed;
@@ -1255,7 +1262,7 @@ typedef struct netFlowGlobals {
 
   pthread_t netFlowThread;
   int threadActive;
-  PthreadMutex whiteblackListMutex;
+  PthreadMutex whiteblackListMutex, ifStatsMutex;
 } NetFlowGlobals;
 
 /* *********************************** */

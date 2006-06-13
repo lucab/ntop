@@ -66,6 +66,11 @@ ntop.h
 #include "config.h"
 #endif
 
+/* See http://www.redhat.com/magazine/009jul05/features/execshield/ */
+#ifndef _FORTIFY_SOURCE
+#define _FORTIFY_SOURCE 2
+#endif
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*  Standard header expansion control items                                */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

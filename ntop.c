@@ -230,7 +230,7 @@ void detachFromTerminalUnderUnix(int doChdir) {
     myGlobals.runningPref.useSyslog = DEFAULT_SYSLOG_FACILITY;
 #endif /* MAKE_WITH_SYSLOG */
 
-  if(doChdir) chdir("/");
+  if(doChdir) (void)chdir("/");
   setsid();  /* detach from the terminal */
 
   fclose(stdin);

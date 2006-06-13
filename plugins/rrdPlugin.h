@@ -42,7 +42,8 @@
 #define FLAG_RRD_ACTION_LIST                2
 #define FLAG_RRD_ACTION_GRAPH_SUMMARY       3
 #define FLAG_RRD_ACTION_NF_SUMMARY          4
-#define FLAG_RRD_ACTION_ARBITRARY           5
+#define FLAG_RRD_ACTION_NF_IF_SUMMARY       5
+#define FLAG_RRD_ACTION_ARBITRARY           6
 
 #define CONST_RRD_PERMISSIONS_PRIVATE       0
 #define CONST_RRD_PERMISSIONS_GROUP         1
@@ -181,7 +182,7 @@ static char *rrdNames[] = {
 /* RRD_DEBUG controls debug messages in rrdPlugin.c.  See the definition in globals-defines.h,
  * where you really should set it, so the util.c calls get enabled.
  */
-/* #define RRD_DEBUG */
+#define RRD_DEBUG 3
 
 /*
  * Optional: Set a default font for the rrd generated graphs
@@ -317,6 +318,19 @@ static const char *rrd_summary_host_sentRcvd_bytes[] = {
   "bytesRcvd",
   NULL
 };
+
+static const char *rrd_summary_nf_if_octets[] = { 
+  "ifInOctets",
+  "ifOutOctets",
+  NULL
+};
+
+static const char *rrd_summary_nf_if_pkts[] = { 
+  "ifInPkts",
+  "ifOutPkts",
+  NULL
+};
+
 
 #ifdef MAX_RRD_PROCESS_BUFFER
 static float rrdprocessBuffer[MAX_RRD_PROCESS_BUFFER];

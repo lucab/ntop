@@ -877,7 +877,7 @@ AC_CHECK_HEADERS([mysql.h])
 if test ".${ac_cv_header_mysql_h}" != ".yes"; then
    echo "MySQL not found. Database support disabled";
 else
-NTOP_RPT_LOC([mysql pcap], `mysql_config --libs`, `mysql_config --cflags`)
+NTOP_RPT_LOC([mysql pcap], `mysql_config --libs_r`, `mysql_config --cflags`)
 fi
 
 
