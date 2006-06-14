@@ -173,13 +173,11 @@ static void calfree (void) {
 
 /* ******************************************* */
 
-static char* upperInitial(char *_str) { 
-  static char str[256];
-  char c = toupper(_str[0]);
+static char* capitalizeInitial(char *str) { 
+  char c = toupper(str[0]);
 
   // traceEvent(CONST_TRACE_INFO, "RRD: (%s)", str);
 
-  safe_snprintf(__FILE__, __LINE__, str, sizeof(str), "%s", _str);
   str[0] = c;
 
   return(str);
@@ -495,7 +493,7 @@ static int endsWith(char* label, char* pattern) {
 static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdCounter,
 			char *startTime, char* endTime, char *rrdPrefix) {
   char path[512], *argv[64], buf[384], buf1[384], buf2[384], fname[384], *label, tmpStr[32];
-  char bufa1[384], bufa2[384], bufa3[384];
+  char bufa1[384], bufa2[384], bufa3[384], show_trend = 1;
   struct stat statbuf;
   int argc = 0, rc, x, y;
   double ymin,ymax;
@@ -526,6 +524,10 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   else if(endsWith(rrdName, "Pkts")) label = "Packets/sec";
   else label = rrdName;
 
+  if((!strcmp(endTime, "now")) 
+     && (!strcmp(startTime, "now-600s")))
+    show_trend = 0;
+
   rrdGraphicRequests++;
 
   if(stat(path, &statbuf) == 0) {
@@ -535,7 +537,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     argv[argc++] = "--imgformat";
     argv[argc++] = "PNG";
     argv[argc++] = "--vertical-label";
-    argv[argc++] = upperInitial(label);
+    argv[argc++] = capitalizeInitial(label);
 
     if((rrdTitle != NULL) && (rrdTitle[0] != '\0')) {
       argv[argc++] = "--title";
@@ -578,7 +580,8 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "AREA:ctr#00a000:%s",
 		  spacer(rrdCounter, tmpStr, sizeof(tmpStr)));
     argv[argc++] = buf1;
-    argv[argc++] = "CDEF:smoothed=ctr,1800,TREND";
+
+    if(show_trend) argv[argc++] = "CDEF:smoothed=ctr,1800,TREND";
 
     argv[argc++] = "GPRINT:ctr:MAX:Max\\: %3.1lf%s";
     argv[argc++] = "GPRINT:ctr:AVERAGE:Avg\\: %3.1lf%s";
@@ -598,7 +601,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
       argv[argc++] = "LINE2:lower#a0ffff:Lower";
     }
 
-    argv[argc++] = "LINE1:smoothed#0000FF:Trend (30 min)";
+    if(show_trend) argv[argc++] = "LINE1:smoothed#0000FF:Trend (30 min)";
 
     accessMutex(&rrdMutex, "rrd_graph");
     optind=0; /* reset gnu getopt */
@@ -688,7 +691,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
   argv[argc++] = "--imgformat";
   argv[argc++] = "PNG";
   argv[argc++] = "--vertical-label";
-  argv[argc++] = upperInitial(label);
+  argv[argc++] = label;
   argv[argc++] = "--start";
   argv[argc++] = startTime;
   argv[argc++] = "--end";
@@ -828,7 +831,7 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
   argv[argc++] = "--imgformat";
   argv[argc++] = "PNG";
   argv[argc++] = "--vertical-label";
-  argv[argc++] = upperInitial(label);
+  argv[argc++] = label;
   argv[argc++] = "--title";
   argv[argc++] = title;
   argv[argc++] = "--start";
@@ -932,7 +935,7 @@ static char* spacer(char* _str, char *tmpStr, int tmpStrLen) {
   int len = strlen(_str), i;
   char *str, *token;
 
-  upperInitial(_str);
+  capitalizeInitial(_str);
 
   memset(tmpStr, 0, tmpStrLen);
 
@@ -1093,7 +1096,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
   argv[argc++] = "--imgformat";
   argv[argc++] = "PNG";
   argv[argc++] = "--vertical-label";
-  argv[argc++] = upperInitial(label);
+  argv[argc++] = label;
   argv[argc++] = "--start";
   argv[argc++] = startTime;
   argv[argc++] = "--end";
