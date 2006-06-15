@@ -752,7 +752,8 @@ static void ssiMenu_Body() {
              " </tr>\n"
              " <tr>\n"
              "  <th class=\"leftmenuitem\">\n"
-             "   <div id=\"ntopMenuID\">Rut Row - bad mojo Scooby!</div>\n"
+	     "   <noscript>Please enable JavaScript support in your browser</noscript>
+             "   <div id=\"ntopMenuID\">Please enable make sure that the ntop html/ directory is properly installed</div>\n"
              "<script type=\"text/javascript\" language=\"JavaScript\"><!--\n"
              "        cmDraw ('ntopMenuID', ntopMenu, 'hbr', cmThemeOffice, 'ThemeOffice');\n"
              "-->\n"

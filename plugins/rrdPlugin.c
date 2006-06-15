@@ -578,7 +578,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "DEF:ctr=%s:counter:AVERAGE", path);
     argv[argc++] = buf;
     safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "AREA:ctr#00a000:%s",
-		  spacer(rrdCounter, tmpStr, sizeof(tmpStr)));
+		  spacer(capitalizeInitial(rrdCounter), tmpStr, sizeof(tmpStr)));
     argv[argc++] = buf1;
 
     if(show_trend) argv[argc++] = "CDEF:smoothed=ctr,1800,TREND";
@@ -934,8 +934,6 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
 static char* spacer(char* _str, char *tmpStr, int tmpStrLen) {
   int len = strlen(_str), i;
   char *str, *token;
-
-  capitalizeInitial(_str);
 
   memset(tmpStr, 0, tmpStrLen);
 
