@@ -5097,9 +5097,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	
 	if(fetchPrefsValue(buf, sym_nw_name, sizeof(sym_nw_name)) == -1)
 	  sym_nw_name[0] = '\0';
-
-	traceEvent(CONST_TRACE_WARNING, "-> %s [%s]", buf, sym_nw_name);
-
+       
 	safe_snprintf(__FILE__, __LINE__, link_name, sizeof(link_name),
 		      " <A HREF=\"%s?key=network.name.%s\">%s</A>",
 		      CONST_EDIT_PREFS, domain_network_name,
