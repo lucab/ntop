@@ -9181,6 +9181,8 @@ int handlePluginHTTPRequest(char* url) {
 
 void edit_prefs(char *db_key, char *db_val) {
   datum key, nextkey;
+  int num_added = 0;
+  char buf[1024];
 
   printHTMLheader("Edit Preferences", NULL, 0);
 
@@ -9190,8 +9192,9 @@ void edit_prefs(char *db_key, char *db_val) {
 	     "<TH ALIGN=CENTER "DARK_BG">Action</TH></TR>\n");
 
   if(db_key && db_val) {
+    unescape_url(db_key);
     unescape_url(db_val);
-
+    
     if(db_val[0] == '\0')
       delPrefsValue(db_key);
     else
@@ -9200,28 +9203,35 @@ void edit_prefs(char *db_key, char *db_val) {
 
   key = gdbm_firstkey(myGlobals.prefsFile);
   while (key.dptr) {
-    char buf[1024];
     char val[512];
 
-    if (fetchPrefsValue(key.dptr, val, sizeof(val)) == 0) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<FORM ACTION="CONST_EDIT_PREFS">"
-		    "<TR><TH ALIGN=LEFT "DARK_BG"><INPUT TYPE=HIDDEN NAME=key VALUE=\"%s\">%s</TH>"
-		    "<TD><INPUT TYPE=TEXT NAME=val VALUE=\"%s\"></TD>"
-		    "<TD ALIGN=CENTER><INPUT TYPE=SUBMIT VALUE=Set></TD></TR></FORM>\n",
-		    key.dptr, key.dptr, val);
-      sendString(buf);
+    if((db_key == NULL) || (strcmp(key.dptr, db_key) == 0)) {
+      num_added++;
+      if(fetchPrefsValue(key.dptr, val, sizeof(val)) == 0) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<FORM ACTION="CONST_EDIT_PREFS">"
+		      "<TR><TH ALIGN=LEFT "DARK_BG"><INPUT TYPE=HIDDEN NAME=key VALUE=\"%s\">%s</TH>"
+		      "<TD><INPUT TYPE=TEXT NAME=val VALUE=\"%s\" size=30></TD>"
+		      "<TD ALIGN=CENTER><INPUT TYPE=SUBMIT VALUE=Set></TD></TR></FORM>\n",
+		      key.dptr, key.dptr, val);
+	sendString(buf);
+      }
     }
-
+    
     nextkey = gdbm_nextkey (myGlobals.prefsFile, key);
     free (key.dptr);
     key = nextkey;
   }
 
-  sendString("<FORM ACTION="CONST_EDIT_PREFS">"
-	     "<TR><TH ALIGN=LEFT "DARK_BG"><INPUT TYPE=TEXT NAME=key VALUE=\"\"></TH>"
-	     "<TD><INPUT TYPE=TEXT NAME=val VALUE=\"\"></TD>"
-	     "<TD ALIGN=CENTER><INPUT TYPE=SUBMIT VALUE=Add></TD></TR></FORM>\n");
+  if(((db_key == NULL) && (num_added > 0)) 
+     || ((db_key != NULL) && (num_added == 0))) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<FORM ACTION="CONST_EDIT_PREFS">"
+		  "<TR><TH ALIGN=LEFT "DARK_BG"><INPUT TYPE=TEXT NAME=key VALUE=\"%s\" size=30></TH>"
+		  "<TD><INPUT TYPE=TEXT NAME=val VALUE=\"\" size=30></TD>"
+		  "<TD ALIGN=CENTER><INPUT TYPE=SUBMIT VALUE=Add></TD></TR></FORM>\n",
+		  (db_key == NULL) ? "" : db_key);
+    sendString(buf);
+  }
 
   sendString("</TABLE></CENTER>\n");
 

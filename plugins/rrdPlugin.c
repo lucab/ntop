@@ -522,7 +522,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 
   if(endsWith(rrdName, "Bytes")) label = "Bytes/sec";
   else if(endsWith(rrdName, "Pkts")) label = "Packets/sec";
-  else label = rrdName;
+  else label = capitalizeInitial(rrdName);
 
   if((!strcmp(endTime, "now")) 
      && (!strcmp(startTime, "now-600s")))
@@ -537,7 +537,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     argv[argc++] = "--imgformat";
     argv[argc++] = "PNG";
     argv[argc++] = "--vertical-label";
-    argv[argc++] = capitalizeInitial(label);
+    argv[argc++] = label;
 
     if((rrdTitle != NULL) && (rrdTitle[0] != '\0')) {
       argv[argc++] = "--title";
@@ -2962,7 +2962,7 @@ RETSIGTYPE rrdcleanup(int signo) {
 
 static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
   char value[512 /* leave it big for hosts filter */];
-  u_int32_t networks[32][3];
+  u_int32_t networks[32][4];
   u_short numLocalNets;
   int idx;
   char rrdPath[512];
@@ -2992,7 +2992,7 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 
       if((numLocalNets > 0)
 	 && (el->hostIpAddress.hostFamily == AF_INET) /* IPv4 ONLY <-- FIX */
-	 && (!__pseudoLocalAddress(&el->hostIpAddress.Ip4Address, networks, numLocalNets))) {
+	 && (!__pseudoLocalAddress(&el->hostIpAddress.Ip4Address, networks, numLocalNets, NULL, NULL))) {
 	return;
       }
 
@@ -3275,7 +3275,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     dname[256],
     endTime[32];
   int i, j, sleep_tm, devIdx, idx;
-  u_int32_t networks[32][3];
+  u_int32_t networks[32][4];
   u_short numLocalNets;
   ProtocolsList *protoList;
   struct tm workT;

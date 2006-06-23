@@ -345,7 +345,7 @@ void printTrafficSummary (int revertOrder) {
     if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
       if(pcap_stats(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr, &pcapStat) >= 0) {
 	Counter realDropped;
-	
+
 	/*
 	  Recent libpcap versions do not report total/cumulative values
 	  but their value is reset everytime is read
@@ -354,7 +354,7 @@ void printTrafficSummary (int revertOrder) {
 	if(myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value > pcapStat.ps_recv) {
 	  /* The counter is reset at each run */
 	  realDropped = (myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value += pcapStat.ps_drop);
-	  
+
 	} else {
 	  /* The counter is NOT reset at each run */
 	  myGlobals.device[myGlobals.actualReportDeviceId].pcapDroppedPkts.value = pcapStat.ps_drop;
@@ -587,15 +587,15 @@ void printTrafficStatistics(int revertOrder) {
       } else
 	sendString("&nbsp;");
       sendString("</TD>");
-      
+
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>",
 		    myGlobals.device[i].samplingRate);
       sendString(buf);
-      
+
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>",
 		    myGlobals.mtuSize[myGlobals.device[i].datalink]);
       sendString(buf);
-      
+
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>",
 		    myGlobals.headerSize[myGlobals.device[i].datalink]);
       sendString(buf);
@@ -1292,7 +1292,7 @@ void printTrafficStatistics(int revertOrder) {
 		myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
 
- 
+
   revertSlashIfWIN32(buf, 0);
 
   if((i = stat(buf, &statbuf)) == 0) {
@@ -2090,7 +2090,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if(((el->pktMulticastSent.value > 0) || (el->pktMulticastRcvd.value > 0))
        && (!broadcastHost(el))) {
-      if(el->community && (!isAllowedCommunity(el->community))) continue;      
+      if(el->community && (!isAllowedCommunity(el->community))) continue;
       tmpTable[numEntries++] = el;
     }
 
@@ -2268,9 +2268,9 @@ void makeDot() {
 	     && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))) {
 	    if((el2 = quickHostLink(el->contactedRcvdPeers.peersSerials[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	      makeHostName(el2, buf1, sizeof(buf1));
-	      
+
 	      for(i=0; i<strlen(buf1); i++) if(buf1[i] == '\"') buf1[i] = ' ';
-	      
+
 	      if(addNodeInfo(fd, el2)) {
 		fprintf(fd, "\"%s\" -> \"%s\";\n", buf1, buf);
 		if(!urlSent) urlSent = addNodeInfo(fd, el);
@@ -2328,7 +2328,7 @@ void makeDot() {
                strerror(errno), errno, path);
       sendString(buf);
       return;
-    } 
+    }
     if(!feof(make) && (fgets(buf, sizeof(buf), make) != NULL)) {
       sendString("<h1>ERROR</h1>\n<center><p>Creation of network map failed</p></center>\n"
 		 "<p>Command was:</p>\n<pre>");
@@ -2397,7 +2397,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     return;
   }
   ifId = abs(ifId);
-  
+
   printHTMLheader("Host Information", NULL, 0);
 
   memset(buf, 0, sizeof(buf));
@@ -2463,7 +2463,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
     qsort(tmpTable, numEntries, sizeof(HostTraffic*), sortHostFctn);
 
-    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), 
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
 		  "<A HREF=\"/%s?col=%s", CONST_HOSTS_INFO_HTML, sign);
     safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1),
 		  "<A HREF=\"/%s?col=", CONST_HOSTS_INFO_HTML);
@@ -2514,12 +2514,12 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
       for(i=0; i<MAX_VLAN; i++)
 	if(vlanList[i] == 1) {
 	  if(i == vlanId)
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>%s</b> ] ", 
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>%s</b> ] ",
 			  vlan2name(i, (char*)tmpBuf, sizeof(tmpBuf))), found = 1;
 	  else
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 			  "[ <A HREF=\"/%s?unit=%d&vlan=%d\">%s</A> ] ",
-			  CONST_HOSTS_INFO_HTML, showBytes, i, 
+			  CONST_HOSTS_INFO_HTML, showBytes, i,
 			  vlan2name(i, (char*)tmpBuf, sizeof(tmpBuf)));
 
 	  sendString(buf);
@@ -2675,10 +2675,10 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	sendString(buf);
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>", 
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>",
 		      (el->community == NULL) ? "&nbsp;" : el->community);
 	sendString(buf);
-	
+
 
 	sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
 
@@ -2839,7 +2839,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 			el->hostAS, el->hostAS);
           sendString(buf);
         }
-	
+
 	sendString("</TR>\n");
 
 	printedEntries++;
@@ -2930,7 +2930,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     returnHTTPpageNotFound(errorAdditionalText);
     return;
   }
-  
+
   if(el->community && (!isAllowedCommunity(el->community))) {
     returnHTTPpageBadCommunity();
     return;
@@ -3106,7 +3106,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->otherIpPortsSent[idx] >= 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
 		      el->otherIpPortsSent[idx],
 		      getAllPortByNum(el->otherIpPortsSent[idx], portBuf, sizeof(portBuf)));
@@ -3120,7 +3120,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->otherIpPortsRcvd[idx] >= 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
 		      el->otherIpPortsRcvd[idx],
 		      getAllPortByNum(el->otherIpPortsRcvd[idx], portBuf, sizeof(portBuf)));
@@ -3150,7 +3150,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->recentlyUsedClientPorts[idx] >= 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
 		      el->recentlyUsedClientPorts[idx],
 		      getAllPortByNum(el->recentlyUsedClientPorts[idx], portBuf, sizeof(portBuf)));
@@ -3165,7 +3165,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->recentlyUsedServerPorts[idx] >= 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
 		      el->recentlyUsedServerPorts[idx],
 		      getAllPortByNum(el->recentlyUsedServerPorts[idx], portBuf, sizeof(portBuf)));
@@ -3263,7 +3263,7 @@ void printLocalRoutersList(int actualDeviceId) {
       HostTraffic tmpEl;
 
       if((router = quickHostLink(routerList[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TR "TR_ON" %s><TH "TH_BG" align=left>%s</TH><TD "TD_BG" ALIGN=LEFT><UL>\n",
 		      getRowColor(),
 		      makeHostLink(router, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
@@ -3646,23 +3646,23 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	else if(session->voipSession)
 	  voipStr = "&nbsp&lt;VoIP&gt;";
 	else
-	  voipStr = "";       
+	  voipStr = "";
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s%s%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s</TD>",
 		      getRowColor(),
-		      makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT, 
+		      makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT,
 				   0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 		      sport, session->isP2P == 1 ? "&nbsp&lt;P2P&gt;" : "",
-		      voipStr, makeHostLink(session->remotePeer, 
-					    FLAG_HOSTLINK_TEXT_FORMAT, 
-					    0, 0, hostLinkBuf1, 
+		      voipStr, makeHostLink(session->remotePeer,
+					    FLAG_HOSTLINK_TEXT_FORMAT,
+					    0, 0, hostLinkBuf1,
 					    sizeof(hostLinkBuf1)),
 		      dport);
 	sendString(buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
@@ -3751,7 +3751,7 @@ void printIpProtocolUsage(void) {
 	ports = el->portsUsage;
 	while(ports) {
           j = ports->port;
-	  if((clientPorts[j] == 0) && (serverPorts[j] == 0)) 
+	  if((clientPorts[j] == 0) && (serverPorts[j] == 0))
 	    numPorts++;
 	  clientPorts[j] += ports->clientUses;
           serverPorts[j] += ports->serverUses;
@@ -3974,7 +3974,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
 			CONST_COLOR_1, remainingTraffic, percentage, 0, 0, 0);
       }
-	    
+
       sendString("</TABLE>"TABLE_OFF"<P>\n");
       sendString("</CENTER>\n");
     }
@@ -4002,7 +4002,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       percentage = ((float)(partialTotal*100))/((float)total);
       printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
 				"TCP", "UDP", total, percentage, 0, 0);
-      
+
       sendString("</TABLE>"TABLE_OFF);
       sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
 		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
@@ -4056,7 +4056,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       percentage = ((float)(partialTotal*100))/((float)total);
       printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
 				"TCP", "UDP", total, percentage, 0, 0);
-      
+
       sendString("</TABLE>"TABLE_OFF"\n");
       sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
 		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
@@ -4192,8 +4192,8 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	  remainingTraffic += partialTotal;
 	  percentage = ((float)(partialTotal*100))/((float)total);
 	  numProtosFound++;
-	  printTableEntry(buf, sizeof(buf), 
-			  myGlobals.ipTrafficProtosNames[i], CONST_COLOR_1, 
+	  printTableEntry(buf, sizeof(buf),
+			  myGlobals.ipTrafficProtosNames[i], CONST_COLOR_1,
 			  partialTotal/1024, percentage,
 			  1, myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].totalFlows.value, 1);
 	}
@@ -4207,11 +4207,11 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       if(remainingTraffic > 0) {
  	float totFlows = (float)myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.totalFlows.value +
 	  (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.totalFlows.value;
-	      
+
 	if(remainingFlows > totFlows)
 	  remainingFlows = 0;
 	else
-	  remainingFlows = totFlows - remainingFlows;	      
+	  remainingFlows = totFlows - remainingFlows;
 
 	percentage = ((float)(remainingTraffic*100))/((float)total);
 	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
@@ -4226,24 +4226,24 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
 		   "<IMG SRC=\"" CONST_BAR_IPPROTO_DIST CHART_FORMAT "\" "
 		   "class=tooltip alt=\"Global ipProtocol distribution chart\"></TD></TR>");
-	
+
 	/* RRD */
 	/* Do NOT add a '/' at the end of the path because Win32 will complain about it */
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
 		      myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
-	
+
     revertSlashIfWIN32(buf, 0);
 
 	if((i = stat(buf, &statbuf)) == 0) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 			"<TR "TR_ON" "DARK_BG"><TH "TH_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
 			"<p><IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=4&"
 			"key=interfaces/%s/&start=now-12h&end=now\" BORDER=0></TD></TR>",
 			myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
 	  sendString(buf);
 	}
-	
+
 	sendString("</TD></TR>\n");
       }
 #endif
@@ -4907,29 +4907,29 @@ void printThptStats(int sortedColumn _UNUSED_) {
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/interfaces/%s/throughput.rrd",
 		myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
-  
+
   revertSlashIfWIN32(tmpBuf, 0);
 
   if((i = stat(tmpBuf, &statbuf)) != 0) {
     useRRD = 0;
     return;
   }
-   
-    
+
+
   if(useRRD) {
     sendString("<CENTER>\n");
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR, 
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
 		  0, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		  "now-600s", "Last+10+Minutes+Throughput");
     sendString(tmpBuf);
 
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
 		  formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
-		  formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));    
+		  formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
     sendString(tmpBuf);
-    
-    
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR, 
+
+
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
 		  1, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		  "now-1h", "Last+Hour+Throughput");
     sendString(tmpBuf);
@@ -4938,7 +4938,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
       printNoDataYet();
       return;
     }
-    
+
     sendString("<CENTER>\n");
     sendString("<A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=1\" BORDER=0 BGCOLOR=white>"
 	       "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=1\" class=tooltip alt=\"Current Hour throughput chart\"></A><BR>\n");
@@ -4950,18 +4950,18 @@ void printThptStats(int sortedColumn _UNUSED_) {
   sendString(tmpBuf);
 
   if(useRRD) {
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR, 
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
 		  2, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		  "now-1d", "Current+Day+Throughput");
     sendString(tmpBuf);
   } else {
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 60)
-      goto endPrintThptStats;   
+      goto endPrintThptStats;
     else
       sendString("<P><A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=2\" BORDER=0 BGCOLOR=white>"
 		 "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=2\" class=tooltip alt=\"Current Day throughput chart\"></A><BR>\n");
   }
-  
+
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
 		formatTimeStamp(0, 24, 0, formatBuf, sizeof(formatBuf)),
 		formatTimeStamp(0,  0, 0, formatBuf1, sizeof(formatBuf1)));
@@ -4970,13 +4970,13 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
 
   if(useRRD) {
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR, 
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
 		  3, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		  "now-1m", "Last+Month+Throughput");
     sendString(tmpBuf);
   } else {
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 1440 /* 60 * 24 */)
-      goto endPrintThptStats;   
+      goto endPrintThptStats;
 
     sendString("<P><IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=3\" class=tooltip alt=\"Current 30day throughput chart\"><BR>\n");
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
@@ -4988,7 +4988,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
 		formatTimeStamp(30, 0, 0, formatBuf, sizeof(formatBuf)),
 		formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1)));
-  sendString(tmpBuf);    
+  sendString(tmpBuf);
 
  endPrintThptStats:
   sendString("</CENTER>\n");
@@ -4998,7 +4998,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<p align=right>"
 		  "[ <A HREF=\"/" CONST_PLUGINS_HEADER"rrdPlugin\">Change Throughput Granularity</A> ]</p>",
 		  formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
-		  formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));    
+		  formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
     sendString(tmpBuf);
   }
 
@@ -5065,11 +5065,12 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
 #define MAX_NUM_CLUSTERS     16
 
 /* if myGlobals.runningPref.domainName == NULL -> print all domains */
-void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int revertOrder, int pageNum) {
+void printDomainStats(char* domain_network_name, int network_mode,
+		      int clusterMode, int sortedColumn, int revertOrder, int pageNum) {
   u_int idx, tmpIdx, numEntries=0, printedEntries=0, maxHosts;
   u_short keyValue=0, i;
   HostTraffic *el;
-  char buf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], buf1[64];
   DomainStats **stats, *tmpStats = NULL, *statsEntry;
   char htmlAnchor[2*LEN_GENERAL_WORK_BUFFER], htmlAnchor1[2*LEN_GENERAL_WORK_BUFFER],
     *sign, *arrowGif, *arrow[48], *theAnchor[48];
@@ -5077,20 +5078,46 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32], formatBuf4[32],
     formatBuf5[32], formatBuf6[32], formatBuf7[32], formatBuf8[32], formatBuf9[32],
     hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-  u_int32_t localNetworks[MAX_NUM_CLUSTERS][MAX_NUM_NETWORKS][3]; /* [0]=network, [1]=mask, [2]=broadcast */
+  u_int32_t localNetworks[MAX_NUM_CLUSTERS][MAX_NUM_NETWORKS][4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
   u_short numLocalNetworks[MAX_NUM_CLUSTERS], totNumClusters=0;
   u_char *clusterNames[MAX_NUM_CLUSTERS];
 
   if(!clusterMode) {
-    if(domainName == NULL)
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Statistics for all Domains");
-    else
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Statistics for hosts in Domain <i>%s</i>", domainName);
+    char sym_nw_name[256] = { 0 };
+
+    if(domain_network_name == NULL)
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Statistics for all %s",
+		    (network_mode == 1) ? "Networks" : "Domains");
+    else {
+      char link_name[256] = { 0 };
+
+      if(network_mode == 1) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "network.name.%s",
+		      domain_network_name);
+	
+	if(fetchPrefsValue(buf, sym_nw_name, sizeof(sym_nw_name)) == -1)
+	  sym_nw_name[0] = '\0';
+
+	traceEvent(CONST_TRACE_WARNING, "-> %s [%s]", buf, sym_nw_name);
+
+	safe_snprintf(__FILE__, __LINE__, link_name, sizeof(link_name),
+		      " <A HREF=\"%s?key=network.name.%s\">%s</A>",
+		      CONST_EDIT_PREFS, domain_network_name,
+		      "<img class=tooltip alt=\"Change network name\" "
+		      "src=\"/modifyUser.gif\" border=\"0\">");
+      }
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "Statistics for hosts in %s %s %s",
+		    (network_mode == 1) ? "network" : "domain",
+		    (sym_nw_name[0] == '\0') ? domain_network_name : sym_nw_name,
+		    link_name);
+    }
   } else {
     char localAddresses[1024];
     datum key, nextkey;
 
-    if(domainName == NULL) {
+    if(domain_network_name == NULL) {
       key = gdbm_firstkey(myGlobals.prefsFile);
       while (key.dptr) {
 	char val[256];
@@ -5115,19 +5142,19 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
     } else {
       char clusterAddresses[256];
 
-      snprintf(buf, sizeof(buf), "cluster.%s", domainName);
+      snprintf(buf, sizeof(buf), "cluster.%s", domain_network_name);
       if(fetchPrefsValue(buf, clusterAddresses, sizeof(clusterAddresses)) != -1) {
 	localAddresses[0] = '\0';
 	numLocalNetworks[totNumClusters] = 0;
 	handleAddressLists(clusterAddresses, localNetworks[totNumClusters], &numLocalNetworks[totNumClusters],
 			   localAddresses, sizeof(localAddresses),
 			   CONST_HANDLEADDRESSLISTS_CLUSTERS);
-	clusterNames[totNumClusters] = (u_char*)strdup((char*)&domainName[CLUSTER_HEADER_LEN]);
+	clusterNames[totNumClusters] = (u_char*)strdup((char*)&domain_network_name[CLUSTER_HEADER_LEN]);
 	totNumClusters++;
       }
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Statistics for hosts in cluster <i>%s</i>",
-		    domainName);
+		    domain_network_name);
     }
 
     if(totNumClusters == 0) {
@@ -5154,7 +5181,7 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
     return;
   }
 
-  /* traceEvent(CONST_TRACE_INFO, "'%s' '%d' '%d'", domainName, sortedColumn, revertOrder); */
+  /* traceEvent(CONST_TRACE_INFO, "'%s' '%d' '%d'", domain_network_name, sortedColumn, revertOrder); */
 
   if(revertOrder) {
     sign = "";
@@ -5168,35 +5195,69 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     fillDomainName(el);
 
-    if(el->community && (!isAllowedCommunity(el->community))) 
-      continue;
-    else if(broadcastHost(el))
-      continue;
-    else if(!clusterMode) {
-      if(domainName 
-	 && el->dnsDomainValue
-	 && (strcmp(el->dnsDomainValue, domainName) != 0))
+    if(network_mode) {
+      if((el->network_mask == 0) || (el->network_mask == 32))
 	continue;
+      else if((domain_network_name != NULL) && (domain_network_name[0] != '\0')) {
+	char *nw_name = host2networkName(el, buf1, sizeof(buf1));
+	if(strcmp(nw_name, domain_network_name))
+	  continue;
+      }
+    } else {
+      if(el->community && (!isAllowedCommunity(el->community)))
+	continue;
+      else if(broadcastHost(el))
+	continue;
+      else if(!clusterMode) {
+	if(domain_network_name
+	   && el->dnsDomainValue
+	   && (strcmp(el->dnsDomainValue, domain_network_name) != 0))
+	  continue;
 
-      if((el->dnsDomainValue == NULL)
-	 || (el->dnsDomainValue[0] == '\0')
-	 || (el->ip2ccValue == NULL)
-	 || (el->hostResolvedName[0] == '\0')
-	 || (el->ip2ccValue == '\0'))
-	continue;
+	if((el->dnsDomainValue == NULL)
+	   || (el->dnsDomainValue[0] == '\0')
+	   || (el->ip2ccValue == NULL)
+	   || (el->hostResolvedName[0] == '\0')
+	   || (el->ip2ccValue == '\0'))
+	  continue;
+      }
     }
 
-    if(domainName == NULL) /* All entries */ {
+    if(domain_network_name == NULL) /* All entries */ {
       if(!clusterMode) {
-	/* Domain */
-	for(keyValue=0, tmpIdx=0; el->dnsDomainValue[tmpIdx] != '\0'; tmpIdx++)
-	  keyValue += (tmpIdx+1)*(u_short)el->dnsDomainValue[tmpIdx];
 
-	keyValue %= maxHosts;
+	if(network_mode) {
+	  /* Network */
+	  char *nw_name = host2networkName(el, buf1, sizeof(buf1));
 
-	while((stats[keyValue] != NULL)
-	      && (strcasecmp(stats[keyValue]->domainHost->dnsDomainValue, el->dnsDomainValue) != 0))
-	  keyValue = (keyValue+1) % maxHosts;
+	  for(keyValue=0, tmpIdx=0; nw_name[tmpIdx] != '\0'; tmpIdx++)
+	    keyValue += (tmpIdx+1)*(u_short)nw_name[tmpIdx];
+
+	  keyValue %= maxHosts;
+
+	  while(stats[keyValue] != NULL) {
+	    u_int32_t a, b;
+
+	    a = el->hostIpAddress.Ip4Address.s_addr && (0xFFFFFFFF << (32-el->network_mask));
+	    b = stats[keyValue]->domainHost->hostIpAddress.Ip4Address.s_addr
+	      && (0xFFFFFFFF << (32-stats[keyValue]->domainHost->network_mask));
+
+	    if(a == b)
+	      break;
+	    else
+	      keyValue = (keyValue+1) % maxHosts;
+	  }
+	} else {
+	  /* Domain */
+	  for(keyValue=0, tmpIdx=0; el->dnsDomainValue[tmpIdx] != '\0'; tmpIdx++)
+	    keyValue += (tmpIdx+1)*(u_short)el->dnsDomainValue[tmpIdx];
+
+	  keyValue %= maxHosts;
+
+	  while((stats[keyValue] != NULL)
+		&& (strcasecmp(stats[keyValue]->domainHost->dnsDomainValue, el->dnsDomainValue) != 0))
+	    keyValue = (keyValue+1) % maxHosts;
+	}
       } else {
 	/* Cluster */
 	u_char found = 0;
@@ -5207,7 +5268,7 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
       all_hosts_cluster:
 	for(; keyValue<totNumClusters; keyValue++) {
 	  if(__pseudoLocalAddress(&el->hostIpAddress.addr._hostIp4Address,
-				  localNetworks[keyValue], numLocalNetworks[keyValue])) {
+				  localNetworks[keyValue], numLocalNetworks[keyValue], NULL, NULL)) {
 	    found = 1;
 	    break;
 	  }
@@ -5233,7 +5294,7 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
 
       if(clusterMode) {
 	if(!__pseudoLocalAddress(&el->hostIpAddress.addr._hostIp4Address,
-				 localNetworks[0], numLocalNetworks[0]))
+				 localNetworks[0], numLocalNetworks[0], NULL, NULL))
 	  continue;
       }
 
@@ -5282,16 +5343,16 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
   if(totBytesRcvd == 0)
     totBytesRcvd = 1;
 
-  if(domainName == NULL) {
-    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", 
-		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, sign);
-    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=",
-		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML);
+  if(domain_network_name == NULL) {
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s&netmode=%d",
+		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, sign, network_mode);
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=&netmode=%d",
+		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, network_mode);
   } else {
-    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s&col=%s",
-		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, domainName, sign);
-    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?dom=%s&col=",
-		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, domainName);
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s&col=%s&netmode=%d",
+		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, domain_network_name, sign, network_mode);
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?dom=%s&col=&netmode=%d",
+		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, domain_network_name, network_mode);
   }
 
   for(i=0; i<=15; i++)
@@ -5305,11 +5366,13 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"<TR "TR_ON" "DARK_BG">"
 		"<TH "TH_BG" rowspan=\"3\">%s0>Name%s</A></TH>"
-		"<TH "TH_BG" rowspan=\"3\">%s1>Domain%s</A></TH>"
+		"<TH "TH_BG" rowspan=\"3\">%s1>%s%s</A></TH>"
 		"<TH "TH_BG" colspan=\"8\">TCP/IP</A></TH>"
 		"<TH "TH_BG" colspan=\"4\">ICMP</A></TH>\n",
 		theAnchor[0], arrow[0],
-		theAnchor[1], arrow[1]);
+		theAnchor[1],
+		(network_mode == 1) ? "Networks" : "Domains",
+		arrow[1]);
   sendString(buf);
 
   sendString( "<TR "TR_ON" "DARK_BG">"
@@ -5349,11 +5412,27 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
     else
       statsEntry = &tmpStats[idx];
 
-    if(domainName == NULL) {
-      safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s>%s</A>",
-		    clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML,
-		    clusterMode ? statsEntry->clusterName : statsEntry->domainHost->dnsDomainValue,
-		    clusterMode ? statsEntry->clusterName : statsEntry->domainHost->dnsDomainValue);
+    if(domain_network_name == NULL) {
+      if(network_mode) {
+	char *nw_name = host2networkName(statsEntry->domainHost, buf1, sizeof(buf1));
+	char sym_nw_name[256];
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "network.name.%s",
+		      nw_name);
+
+	if(fetchPrefsValue(buf, sym_nw_name, sizeof(sym_nw_name)) == -1)
+	  sym_nw_name[0] = '\0';
+
+	safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
+		      "<A HREF=/%s?dom=%s&netmode=%d>%s</A>",
+		      CONST_DOMAIN_STATS_HTML, nw_name, network_mode,
+		      (sym_nw_name[0] == '\0') ? nw_name : sym_nw_name);
+	
+      } else
+	safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s>%s</A>",
+		      clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML,
+		      clusterMode ? statsEntry->clusterName : statsEntry->domainHost->dnsDomainValue,
+		      clusterMode ? statsEntry->clusterName : statsEntry->domainHost->dnsDomainValue);
     } else {
       char tmpBuf[64], *hostLink;
       int blankId;
@@ -5369,7 +5448,7 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
 
       releaseAddrResMutex();
 
-      if((blankId > 0) && (strcmp(&tmpBuf[blankId+1], domainName) == 0))
+      if((blankId > 0) && (strcmp(&tmpBuf[blankId+1], domain_network_name) == 0))
 	tmpBuf[blankId] = '\0';
 
       hostLink = makeHostLink(statsEntry->domainHost, FLAG_HOSTLINK_TEXT_FORMAT, 1,
@@ -5388,7 +5467,7 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		  getRowColor(), htmlAnchor,
-		  (clusterMode && (!domainName)) ? "&nbsp;" : getHostCountryIconURL(statsEntry->domainHost),
+		  (clusterMode && (!domain_network_name)) ? "&nbsp;" : getHostCountryIconURL(statsEntry->domainHost),
 		  formatBytes(statsEntry->bytesSent.value, 1, formatBuf, sizeof(formatBuf)),
 		  (100*((float)statsEntry->bytesSent.value/(float)totBytesSent)),
 		  formatBytes(statsEntry->bytesRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
@@ -5411,9 +5490,9 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
   sendString("</TABLE>"TABLE_OFF"</HTML>\n");
   sendString("</CENTER>\n");
 
-  if(domainName != NULL) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s?dom=%s", 
-		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, domainName);
+  if(domain_network_name != NULL) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s?dom=%s",
+		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, domain_network_name);
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
 		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML);
@@ -5424,14 +5503,15 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
 		   revertOrder, abs(sortedColumn));
 
 #ifndef EMBEDDED
+/* FIX */
   /* RRDs for domains */
-  if (domainName != NULL) {
+  if (domain_network_name != NULL) {
     struct stat statbufDomain;
 
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/domains/%s",
 		  myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,domainName);
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,domain_network_name);
 
     revertSlashIfWIN32(buf, 0);
 
@@ -5450,16 +5530,20 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
 		    "</tr></table>\n</center>\n"
 		    "<p>&nbsp;</p>\n",
 		    myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		    domainName,domainName);
+		    domain_network_name,domain_network_name);
       sendString(buf);
     }
   }
 #endif
 
   if(!clusterMode) {
-    sendString("<p align=\"center\"><b>NOTE</b>: <small>The domain is determined by simply stripping off "
-	       "the first name, so for host x.yz.com, the domain is yz.com and for host "
-	       "x.y.z.com, the domain is y.z.com.</small></p>\n");
+    sendString("<p align=\"center\"><b>NOTE</b>: ");
+    if(network_mode)
+      sendString("<small>Hosts without a known network are not displayed in this report</small>\n");
+    else
+      sendString("<small>The domain is determined by simply stripping off "
+		 "the first name, so for host x.yz.com, the domain is yz.com and for host "
+		 "x.y.z.com, the domain is y.z.com.</small></p>\n");
   } else {
     sendString("<p align=\"center\"><b>NOTE</b>: <small>You can define host clusters in the ntop <A HREF=/"CONST_EDIT_PREFS">preferences</A>. "
 	       "Please understand that a host cluster is an aggregated view of hosts known to ntop.</small></p>\n");
@@ -6298,7 +6382,7 @@ void purgeHost(char *serialized_serial) {
 	    myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[j] = el1->next;
 	  else
 	    el_prev->next = el1->next;
-	  
+
 	  freeHostInfo(el, myGlobals.actualReportDeviceId);
 	  break;
 	}
@@ -6310,12 +6394,12 @@ void purgeHost(char *serialized_serial) {
 
     if(found) {
       char buf[LEN_GENERAL_WORK_BUFFER];
-      
+
       safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
 		    "<center>\n"
 		    "<p><font color=\"#FF0000\" size=\"+1\">%s</font></p>\n"
 		    "</center>\n", "Host Purged Succesfully");
-      sendString(buf);      
+      sendString(buf);
     } else
       printFlagedWarning("Unable to purge the specified host: internal error");
   }

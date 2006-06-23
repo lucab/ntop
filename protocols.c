@@ -178,7 +178,7 @@ void handleBootp(HostTraffic *srcHost,
 		realDstHost->dnsTLDValue = NULL;
 		if (realDstHost->ip2ccValue != NULL) free(realDstHost->ip2ccValue);
 		realDstHost->ip2ccValue = NULL;
-		if(isBroadcastAddress(&realDstHost->hostIpAddress))
+		if(isBroadcastAddress(&realDstHost->hostIpAddress, NULL, NULL))
 		  FD_SET(FLAG_BROADCAST_HOST, &realDstHost->flags);
 		else
 		  FD_CLR(FLAG_BROADCAST_HOST, &realDstHost->flags);

@@ -55,20 +55,20 @@ extern int allow_severity, deny_severity;
 
 /* version.c */
 extern char *version, *osName, *author, *buildDate, *configureDate,
-            *configure_parameters,
-            *host_system_type,
-            *target_system_type,
-            *compiler_cppflags,
-            *compiler_cflags,
-            *include_path,
-            *system_libs,
-            *install_path,
+  *configure_parameters,
+  *host_system_type,
+  *target_system_type,
+  *compiler_cppflags,
+  *compiler_cflags,
+  *include_path,
+  *system_libs,
+  *install_path,
 #ifdef MAKE_WITH_I18N
-            *locale_dir,
+  *locale_dir,
 #endif
-            *distro,
-            *release,
-            *force_runtime;
+  *distro,
+  *release,
+  *force_runtime;
 #ifdef MEMORY_DEBUG
 extern char *memoryDebug;
 #endif
@@ -109,7 +109,7 @@ extern void revertDoubleColumnIfWIN32(char *str);
 extern void checkUserIdentity(int userSpecified);
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-    Work-arounds.  Instead of cluttering ntop with a bunch of #ifdef logic,
+   Work-arounds.  Instead of cluttering ntop with a bunch of #ifdef logic,
    * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 #ifndef HAVE_PCAP_OPEN_DEAD
 extern pcap_t *pcap_open_dead(int linktype, int snaplen);
@@ -119,7 +119,7 @@ extern pcap_t *pcap_open_dead(int linktype, int snaplen);
 extern char *ntop_strsignal(int sig);
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-    Dummies.  Instead of cluttering ntop with a bunch of #ifdef logic,
+   Dummies.  Instead of cluttering ntop with a bunch of #ifdef logic,
    * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 #ifndef HAVE_PCAP_FREECODE
 extern void pcap_freecode(struct bpf_program *pgm);
@@ -170,6 +170,7 @@ extern u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
                                  short *isRequest, short *positiveReply);
 extern void checkSpoofing(HostTraffic *el, int actualDeviceId);
 extern void cleanupHostEntries();
+extern char* host2networkName(HostTraffic *el, char *buf, u_short buf_len);
 
 /* admin.c */
 extern void showUsers(void);
@@ -208,7 +209,7 @@ extern HostTraffic* allocFcScsiCounters(HostTraffic *host);
 extern u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 		      short* useIPAddressForSearching, HostTraffic **el, int actualDeviceId);
 extern u_int hashFcHost(FcAddress *fcAddress, u_short vsanId,
-                         HostTraffic **el, int actualDeviceId);
+			HostTraffic **el, int actualDeviceId);
 extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern int purgeIdleHosts(int devId);
@@ -239,8 +240,8 @@ extern void startSniffer(void);
 
 
 extern int safe_snprintf(char* file, int line,
-                          char* buf, size_t sizeofbuf,
-                          char* format, ...);
+			 char* buf, size_t sizeofbuf,
+			 char* format, ...);
 
 #define safe_strncat(a, b, c) _safe_strncat(__FILE__, __LINE__, a, b, c)
 extern int _safe_strncat(char* file, int line,
@@ -274,34 +275,34 @@ extern char* ntop_safestrdup(char *ptr, char* file, int line);
 
 #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
 
-  /* mtrace()/muntrace() - use existing routines */
+/* mtrace()/muntrace() - use existing routines */
 
 #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 2)
 
-  /* ElectricFence - use existing routines */
+/* ElectricFence - use existing routines */
 
 #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
 
-#define _memorycheck(a,b,c,d) { \
-  enum mcheck_status _status = mprobe((void *)a); \
-  switch(_status) { \
-    case MCHECK_DISABLED: \
-    case MCHECK_OK: \
-      break; \
-    case MCHECK_HEAD: \
+#define _memorycheck(a,b,c,d) {						\
+    enum mcheck_status _status = mprobe((void *)a);			\
+    switch(_status) {							\
+    case MCHECK_DISABLED:						\
+    case MCHECK_OK:							\
+      break;								\
+    case MCHECK_HEAD:							\
       traceEvent(CONST_TRACE_WARNING, "MCHECK(%s): %p MCHECK_HEAD, modified before block [%s@%d]", b, a, c, d); \
-      break; \
-    case MCHECK_TAIL: \
+      break;								\
+    case MCHECK_TAIL:							\
       traceEvent(CONST_TRACE_WARNING, "MCHECK(%s): %p MCHECK_TAIL, modified after block [%s@%d]", b, a, c, d); \
-      break; \
-    case MCHECK_FREE: \
+      break;								\
+    case MCHECK_FREE:							\
       traceEvent(CONST_TRACE_WARNING, "MCHECK(%s): %p MCHECK_FREE, already freed [%s@%d]", b, a, c, d); \
-      break; \
-  } \
-}
+      break;								\
+    }									\
+  }
 #define memorycheck(a,b) _memorycheck(a, b, __FILE__, __LINE__)
 
-  /* ntop custom monitor */
+/* ntop custom monitor */
 
 extern void initLeaks(void);
 extern void termLeaks(void);
@@ -318,14 +319,14 @@ extern void resetLeaks(void);
    Berthold Gunreben <bg@suse.de>
    
 */
-#define free(a) do {   \
-       union __x {     \
-       void **voidptr; \
-       __typeof__(&(a)) ptr;      \
-       } __x;  \
-       __x.ptr = &(a);  \
-       ntop_free(__x.voidptr, __FILE__, __LINE__); \
-} while (0)
+#define free(a) do {				\
+    union __x {					\
+      void **voidptr;				\
+      __typeof__(&(a)) ptr;			\
+    } __x;					\
+    __x.ptr = &(a);				\
+    ntop_free(__x.voidptr, __FILE__, __LINE__); \
+  } while (0)
 
 extern void*          ntop_malloc(unsigned int sz, char* file, int line);
 extern void*          ntop_calloc(unsigned int c, unsigned int sz, char* file, int line);
@@ -335,7 +336,7 @@ extern void           ntop_free(void **ptr, char* file, int line);
 
 #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 4)
 
-  /* mcheck() - use existing routines */
+/* mcheck() - use existing routines */
 
 #elif defined(MEMORY_DEBUG) 
 #else
@@ -476,7 +477,7 @@ extern void initUserPrefs(UserPref *pref);
 
 /* util.c */
 extern void setEmptySerial(HostSerial *a);
-extern void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
+extern void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][4],
 			       u_short *numNetworks, char *localAddresses,
 			       int localAddressesLen, int flagWhat);
 extern void handleFlowsSpecs(void);
@@ -504,42 +505,90 @@ extern int in6_isglobal(struct in6_addr *addr);
 extern unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, int size);
 extern unsigned short addrlookup(struct in6_addr *addr,  NtopIfaceAddr *addrs);
 extern NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
-extern unsigned short isLinkLocalAddress(struct in6_addr *addr);
-extern unsigned short in6_isMulticastAddress(struct in6_addr *addr);
-extern unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId);
-extern unsigned short in6_pseudoLocalAddress(struct in6_addr *addr);
-extern unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId);
-extern unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId);
-extern unsigned short in6_isPrivateAddress(struct in6_addr *addr);
+extern unsigned short isLinkLocalAddress(struct in6_addr *addr,
+					 u_int32_t *the_local_network, 
+					 u_int32_t *the_local_network_mask);
+extern unsigned short in6_isMulticastAddress(struct in6_addr *addr,
+					     u_int32_t *the_local_network, 
+					     u_int32_t *the_local_network_mask);
+extern unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId,
+					 u_int32_t *the_local_network, 
+					 u_int32_t *the_local_network_mask);
+extern unsigned short in6_pseudoLocalAddress(struct in6_addr *addr,
+					     u_int32_t *the_local_network, 
+					     u_int32_t *the_local_network_mask);
+extern unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId,
+					     u_int32_t *the_local_network, 
+					     u_int32_t *the_local_network_mask);
+extern unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId,
+					       u_int32_t *the_local_network, 
+					       u_int32_t *the_local_network_mask);
+extern unsigned short in6_isPrivateAddress(struct in6_addr *addr,
+					   u_int32_t *the_local_network, 
+					   u_int32_t *the_local_network_mask);
 #endif
 extern unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport);
 extern u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport);
-extern unsigned short in_isBroadcastAddress(struct in_addr *addr);
-extern unsigned short in_isMulticastAddress(struct in_addr *addr);
-extern unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId);
-extern unsigned short in_isPrivateAddress(struct in_addr *addr);
-extern unsigned short in_deviceLocalAddress(struct in_addr *addr, u_int deviceId);
-extern unsigned short in_pseudoLocalAddress(struct in_addr *addr);
-extern unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId);
-extern unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr);
+extern unsigned short in_isBroadcastAddress(struct in_addr *addr,
+					    u_int32_t *the_local_network, 
+					    u_int32_t *the_local_network_mask);
+extern unsigned short in_isMulticastAddress(struct in_addr *addr,
+					    u_int32_t *the_local_network, 
+					    u_int32_t *the_local_network_mask);
+extern unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId,
+					u_int32_t *the_local_network, 
+					u_int32_t *the_local_network_mask);
+extern unsigned short in_isPrivateAddress(struct in_addr *addr,
+					  u_int32_t *the_local_network, 
+					  u_int32_t *the_local_network_mask);
+extern unsigned short in_deviceLocalAddress(struct in_addr *addr, u_int deviceId,
+					    u_int32_t *the_local_network, 
+					    u_int32_t *the_local_network_mask);
+extern unsigned short in_pseudoLocalAddress(struct in_addr *addr,
+					    u_int32_t *the_local_network, 
+					    u_int32_t *the_local_network_mask);
+extern unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId,
+					      u_int32_t *the_local_network, 
+					      u_int32_t *the_local_network_mask);
+extern unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr,
+						  u_int32_t *the_local_network, 
+						  u_int32_t *the_local_network_mask);
 extern char* copy_argv(register char **argv);
-extern unsigned short isPrivateAddress(HostAddr *addr);
-extern unsigned short isBroadcastAddress(HostAddr *addr);
-extern unsigned short isMulticastAddress(HostAddr *addr);
-extern unsigned short isLocalAddress(HostAddr *addr, u_int actualDeviceId);
+extern unsigned short isPrivateAddress(HostAddr *addr,
+				       u_int32_t *the_local_network, 
+				       u_int32_t *the_local_network_mask);
+extern unsigned short isBroadcastAddress(HostAddr *addr,
+					 u_int32_t *the_local_network, 
+					 u_int32_t *the_local_network_mask);
+extern unsigned short isMulticastAddress(HostAddr *addr,
+					 u_int32_t *the_local_network, 
+					 u_int32_t *the_local_network_mask);
+extern unsigned short isLocalAddress(HostAddr *addr, u_int actualDeviceId,
+				     u_int32_t *the_local_network, 
+				     u_int32_t *the_local_network_mask);
 extern int dotted2bits(char *mask);
 extern void handleLocalAddresses(char* addresses);
-extern unsigned short isPseudoLocalAddress(HostAddr *addr, u_int actualDeviceId);
-extern unsigned short _pseudoLocalAddress(HostAddr *addr);
+extern unsigned short isPseudoLocalAddress(HostAddr *addr, u_int actualDeviceId,
+					   u_int32_t *the_local_network, 
+					   u_int32_t *the_local_network_mask);
+extern unsigned short _pseudoLocalAddress(HostAddr *addr,
+					  u_int32_t *the_local_network, 
+					  u_int32_t *the_local_network_mask);
 extern unsigned short __pseudoLocalAddress(struct in_addr *addr,
-					   u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
-					   u_short numNetworks);
-extern unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId);
-extern unsigned short isPseudoBroadcastAddress(HostAddr *addr);
+					   u_int32_t theNetworks[MAX_NUM_NETWORKS][4],
+					   u_short numNetworks,
+					   u_int32_t *the_local_network, 
+					   u_int32_t *the_local_network_mask);
+extern unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId,
+					   u_int32_t *the_local_network, 
+					   u_int32_t *the_local_network_mask);
+extern unsigned short isPseudoBroadcastAddress(HostAddr *addr,
+					       u_int32_t *the_local_network, 
+					       u_int32_t *the_local_network_mask);
 extern void printLogTime(void);
 extern int32_t gmt2local(time_t t);
 extern char *dotToSlash(char *name);
-extern int getLocalHostAddress(struct in_addr *hostIpAddress, char* device);
+extern int getLocalHostAddress(struct in_addr *hostIpAddress, u_int8_t *netmask_v6, char* device);
 extern NtopIfaceAddr * getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
 extern void fillDomainName(HostTraffic *el);
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *), char* userParm);
@@ -570,14 +619,14 @@ extern int _lockHostsHashMutex(HostTraffic *host, char *where, char *file, int l
 #define unlockHostsHashMutex(a) _unlockHostsHashMutex(a, __FILE__, __LINE__)
 extern int _unlockHostsHashMutex(HostTraffic *host, char* file, int line);
 
-#define setHolder(a) { \
-                       if(fileName != NULL) { strncpy(a.file, fileName, sizeof(a.file)-1); a.file[sizeof(a.file)-1]='\0'; } else \
-                                            { memset(&(a), 0, sizeof(a)); } \
-                       a.line = fileLine; \
-                       a.pid = getpid(); \
-                       a.thread = pthread_self(); \
-                       gettimeofday(&(a.time), NULL) ; \
-                     }
+#define setHolder(a) {							\
+    if(fileName != NULL) { strncpy(a.file, fileName, sizeof(a.file)-1); a.file[sizeof(a.file)-1]='\0'; } else \
+      { memset(&(a), 0, sizeof(a)); }					\
+    a.line = fileLine;							\
+    a.pid = getpid();							\
+    a.thread = pthread_self();						\
+    gettimeofday(&(a.time), NULL) ;					\
+  }
 
 extern int createCondvar(ConditionalVariable *condvarId);
 extern void deleteCondvar(ConditionalVariable *condvarId);
@@ -612,8 +661,8 @@ extern time_t getTimeMapping(u_int16_t transactionId,
                              struct timeval theTime);
 extern void traceEvent(int eventTraceLevel, char* file,
                        int line, char * format, ...)
-     __attribute__ ((format (printf, 4, 5)));
-     extern char *_strncpy(char *dest, const char *src, size_t n);
+  __attribute__ ((format (printf, 4, 5)));
+extern char *_strncpy(char *dest, const char *src, size_t n);
 #ifndef HAVE_LOCALTIME_R
 extern struct tm *localtime_r(const time_t *t, struct tm *tp);
 #endif
@@ -703,16 +752,16 @@ extern int snprintf(char *str, size_t n, const char *fmt, ...);
   Courtesy of http://ettercap.sourceforge.net/
 */
 #ifndef CFG_LITTLE_ENDIAN
-#define ptohs(x) ( (u_int16_t)                       \
-                      ((u_int16_t)*((u_int8_t *)x+1)<<8|  \
-                      (u_int16_t)*((u_int8_t *)x+0)<<0)   \
-                    )
+#define ptohs(x) ( (u_int16_t)				\
+		   ((u_int16_t)*((u_int8_t *)x+1)<<8|	\
+		    (u_int16_t)*((u_int8_t *)x+0)<<0)   \
+		   )
 
-#define ptohl(x) ( (u_int32)*((u_int8_t *)x+3)<<24|  \
-                      (u_int32)*((u_int8_t *)x+2)<<16|  \
-                      (u_int32)*((u_int8_t *)x+1)<<8|   \
-                      (u_int32)*((u_int8_t *)x+0)<<0    \
-                    )
+#define ptohl(x) ( (u_int32)*((u_int8_t *)x+3)<<24|	\
+		   (u_int32)*((u_int8_t *)x+2)<<16|	\
+		   (u_int32)*((u_int8_t *)x+1)<<8|	\
+		   (u_int32)*((u_int8_t *)x+0)<<0	\
+		   )
 #else
 #define ptohs(x) *(u_int16_t *)(x)
 #define ptohl(x) *(u_int32 *)(x)
@@ -722,8 +771,8 @@ extern int snprintf(char *str, size_t n, const char *fmt, ...);
 
 #ifdef HAVE_GETOPT_H
 extern int getopt_long(int ___argc, char *const *___argv,
-                        const char *__shortopts,
-                        const struct option *__longopts, int *__longind);
+		       const char *__shortopts,
+		       const struct option *__longopts, int *__longind);
 extern int getopt_long_only();
 #endif /* HAVE_GETOPT_H */
 
@@ -733,12 +782,12 @@ extern char **buildargv(const char *argv);
 #ifndef HAVE_FREEARGV
 extern void freeargv(char **argv);
 #endif
-extern void handleWhiteBlackListAddresses(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
+extern void handleWhiteBlackListAddresses(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][4],
 					  u_short *numNets, char* outAddresses,
 					  int outAddressesLen);
 extern unsigned short isOKtoSave(u_int32_t addr,
-				 u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3],
-				 u_int32_t blackNetworks[MAX_NUM_NETWORKS][3],
+				 u_int32_t whiteNetworks[MAX_NUM_NETWORKS][4],
+				 u_int32_t blackNetworks[MAX_NUM_NETWORKS][4],
 				 u_short numWhiteNets, u_short numBlackNets);
 extern float timeval_subtract(struct timeval x, struct timeval y);
 extern void freePortsUsage(HostTraffic *el);
@@ -767,7 +816,7 @@ extern void l7SessionProtoDetection(IPSession *theSession,
 extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);
 extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, u_char allocateMemoryIfNeeded, u_char lockMutex);
 extern void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
-                           u_char allocateMemoryIfNeeded, u_char lockMutex);
+			  u_char allocateMemoryIfNeeded, u_char lockMutex);
 extern void scanTimedoutTCPSessions(int actualDeviceId);
 extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
 			    u_short sport, u_short dport, u_int length);
@@ -783,12 +832,12 @@ extern void updateHostUsers(char *userName, int userType, HostTraffic *theHost);
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
 
 extern FCSession* handleFcSession(const struct pcap_pkthdr *h,
-                                   u_short fragmentedData,
-                                   HostTraffic *srcHost, HostTraffic *dstHost,
-                                   u_int length, u_int payload_len, u_short oxid,
-                                   u_short rxid, u_short protocol, u_char rCtl,
-                                   u_char isXchgOrig, const u_char *bp,
-                                   int actualDeviceId);
+				  u_short fragmentedData,
+				  HostTraffic *srcHost, HostTraffic *dstHost,
+				  u_int length, u_int payload_len, u_short oxid,
+				  u_short rxid, u_short protocol, u_char rCtl,
+				  u_char isXchgOrig, const u_char *bp,
+				  int actualDeviceId);
 
 /* fcUtils.c */
 extern int isFlogiAcc(FcAddress *fcAddress, u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
@@ -797,15 +846,15 @@ extern int isPlogi(u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
 extern int isLogout(u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
 extern int isRscn(u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
 extern int fillFcpInfo(const u_char *bp, HostTraffic *srcHost,
-                        HostTraffic *dstHost);
+		       HostTraffic *dstHost);
 extern FcFabricElementHash *getFcFabricElementHash(u_short vsanId,
-                                             int actualDeviceId);
+						   int actualDeviceId);
 extern int isValidFcNxPort(FcAddress *fcAddress);
 extern int updateFcFabricElementHash(FcFabricElementHash **theHash, u_short vsanId,
-                                      const u_char *bp, FcAddress *srcAddr,
-                                      FcAddress *dstAddr,
-                                      u_short protocol, u_char r_ctl,
-                                      u_int32_t pktlen);
+				     const u_char *bp, FcAddress *srcAddr,
+				     FcAddress *dstAddr,
+				     u_short protocol, u_char r_ctl,
+				     u_int32_t pktlen);
 extern void processFcNSCacheFile(char *filename);
 
 extern u_int32_t num_db_insert, num_db_insert_failed;
@@ -858,25 +907,25 @@ extern int h_errno; /* netdb.h */
 #define NOW ((time_t) time ((time_t *) 0))
 
 #if defined(LBL_ALIGN)
-#define EXTRACT_16BITS(p) \
-	((u_short)*((u_char *)(p) + 0) << 8 | \
-	(u_short)*((u_char *)(p) + 1))
-#define EXTRACT_32BITS(p) \
-	((u_int32_t)*((u_char *)(p) + 0) << 24 | \
-	(u_int32_t)*((u_char *)(p) + 1) << 16 | \
-	(u_int32_t)*((u_char *)(p) + 2) << 8 | \
-	(u_int32_t)*((u_char *)(p) + 3))
+#define EXTRACT_16BITS(p)			\
+  ((u_short)*((u_char *)(p) + 0) << 8 |		\
+   (u_short)*((u_char *)(p) + 1))
+#define EXTRACT_32BITS(p)			\
+  ((u_int32_t)*((u_char *)(p) + 0) << 24 |	\
+   (u_int32_t)*((u_char *)(p) + 1) << 16 |	\
+   (u_int32_t)*((u_char *)(p) + 2) << 8 |	\
+   (u_int32_t)*((u_char *)(p) + 3))
 #else
-#define EXTRACT_16BITS(p) \
-	((u_short)ntohs(*(u_short *)(p)))
-#define EXTRACT_32BITS(p) \
-	((u_int32_t)ntohl(*(u_int32_t *)(p)))
+#define EXTRACT_16BITS(p)			\
+  ((u_short)ntohs(*(u_short *)(p)))
+#define EXTRACT_32BITS(p)			\
+  ((u_int32_t)ntohl(*(u_int32_t *)(p)))
 #endif
 
-#define EXTRACT_24BITS(p) \
-	((u_int32_t)*((u_char *)(p) + 0) << 16 | \
-	(u_int32_t)*((u_char *)(p) + 1) << 8 | \
-	(u_int32_t)*((u_char *)(p) + 2))
+#define EXTRACT_24BITS(p)			\
+  ((u_int32_t)*((u_char *)(p) + 0) << 16 |	\
+   (u_int32_t)*((u_char *)(p) + 1) << 8 |	\
+   (u_int32_t)*((u_char *)(p) + 2))
 
 #define incrementUsageCounter(a, b, c) _incrementUsageCounter(a, b, c, __FILE__, __LINE__)
 
@@ -896,18 +945,18 @@ extern int h_errno; /* netdb.h */
 
 /* *************************************
 
-   Code "inherited" from nslookup
+Code "inherited" from nslookup
 
-   ************************************* */
+************************************* */
 
 #ifndef NS_GET16
-#define NS_GET16(s, cp) { \
-        u_char *t_cp = (u_char *)(cp); \
-        (s) = ((u_int16_t)t_cp[0] << 8) \
-            | ((u_int16_t)t_cp[1]) \
-            ; \
-        (cp) += NS_INT16SZ; \
-}
+#define NS_GET16(s, cp) {			\
+    u_char *t_cp = (u_char *)(cp);		\
+    (s) = ((u_int16_t)t_cp[0] << 8)		\
+      | ((u_int16_t)t_cp[1])			\
+      ;						\
+    (cp) += NS_INT16SZ;				\
+  }
 #endif
 
 /* Bit test macros */
@@ -960,38 +1009,38 @@ extern int h_errno; /* netdb.h */
 /* #define getSerial(a) myGlobals.device[deviceToUpdate].hash_hostTraffic[a]->hostSerial */
 
 #ifdef SSLWATCHDOG_DEBUG
-#define sslwatchdogDebug(text, bpcFlag, note) { \
-          traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: %1d %-10s %-15s %-15s %s", \
-                                 myGlobals.sslwatchdogCondvar.predicate, \
-                                 ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""), \
-                                 ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""), \
-                                 ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""), \
-                                 note); \
-}
-#define sslwatchdogDebugN(text, bpcFlag, note) { \
-          traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: %1d %-10s %-15s %-15s %d", \
-                                 myGlobals.sslwatchdogCondvar.predicate, \
-                                 ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""), \
-                                 ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""), \
-                                 ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""), \
-                                 note); \
-}
-#define sslwatchdogError(text, bpcFlag, note) { \
-          traceEvent(CONST_TRACE_INFO, "SSLWDERROR: %1d %-10s %-15s %-15s %s", \
-                                 myGlobals.sslwatchdogCondvar.predicate, \
-                                 ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""), \
-                                 ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""), \
-                                 ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""), \
-                                 note); \
-}
-#define sslwatchdogErrorN(text, bpcFlag, note) { \
-          traceEvent(CONST_TRACE_INFO, "SSLWDERROR: %1d %-10s %-15s %-15s %d", \
-                                 myGlobals.sslwatchdogCondvar.predicate, \
-                                 ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""), \
-                                 ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""), \
-                                 ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""), \
-                                 note); \
-}
+#define sslwatchdogDebug(text, bpcFlag, note) {				\
+    traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: %1d %-10s %-15s %-15s %s", \
+	       myGlobals.sslwatchdogCondvar.predicate,			\
+	       ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""),	\
+	       ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""),	\
+	       ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""),	\
+	       note);							\
+  }
+#define sslwatchdogDebugN(text, bpcFlag, note) {			\
+    traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: %1d %-10s %-15s %-15s %d", \
+	       myGlobals.sslwatchdogCondvar.predicate,			\
+	       ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""),	\
+	       ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""),	\
+	       ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""),	\
+	       note);							\
+  }
+#define sslwatchdogError(text, bpcFlag, note) {				\
+    traceEvent(CONST_TRACE_INFO, "SSLWDERROR: %1d %-10s %-15s %-15s %s", \
+	       myGlobals.sslwatchdogCondvar.predicate,			\
+	       ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""),	\
+	       ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""),	\
+	       ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""),	\
+	       note);							\
+  }
+#define sslwatchdogErrorN(text, bpcFlag, note) {			\
+    traceEvent(CONST_TRACE_INFO, "SSLWDERROR: %1d %-10s %-15s %-15s %d", \
+	       myGlobals.sslwatchdogCondvar.predicate,			\
+	       ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""),	\
+	       ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""),	\
+	       ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""),	\
+	       note);							\
+  }
 #else
 #define sslwatchdogDebug(text, bpcFlag, note) {}
 #define sslwatchdogDebugN(text, bpcFlag, note) {}
@@ -1010,23 +1059,23 @@ extern int h_errno; /* netdb.h */
 #endif
 
 #ifndef IN6_IS_ADDR_LINKLOCAL
-#define IN6_IS_ADDR_LINKLOCAL(a) \
-        ((((uint32_t *) (a))[0] & htonl (0xffc00000))                 \
-         == htonl (0xfe800000))
+#define IN6_IS_ADDR_LINKLOCAL(a)		\
+  ((((uint32_t *) (a))[0] & htonl (0xffc00000))	\
+   == htonl (0xfe800000))
 #endif
 
 /* **********************************************************
    Fixup for gdbm (which doesn't require zero termed strings
    ********************************************************** */
-#define zeroPadMallocString(sz, ptr) { \
-    if(ptr[sz-1] != '\0') { \
-      char *_zeropadmallocstringtemp = ptr; \
-      ptr = malloc(sz + 1); \
-      strncpy(ptr, _zeropadmallocstringtemp, sz); \
-      ptr[sz] = '\0'; \
-      free(_zeropadmallocstringtemp); \
-    } \
-}
+#define zeroPadMallocString(sz, ptr) {			\
+    if(ptr[sz-1] != '\0') {				\
+      char *_zeropadmallocstringtemp = ptr;		\
+      ptr = malloc(sz + 1);				\
+      strncpy(ptr, _zeropadmallocstringtemp, sz);	\
+      ptr[sz] = '\0';					\
+      free(_zeropadmallocstringtemp);			\
+    }							\
+  }
 
 /* **********************************************************
    Used in all the prints flowing from printNtopConfigInfo...

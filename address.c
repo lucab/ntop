@@ -519,7 +519,7 @@ static void queueAddress(HostAddr elem, int forceResolution) {
 
   if((!forceResolution)
      && myGlobals.runningPref.trackOnlyLocalHosts
-     && (!_pseudoLocalAddress(&elem)))
+     && (!_pseudoLocalAddress(&elem, NULL, NULL)))
     return;
 
   /*
@@ -1771,7 +1771,6 @@ u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
   return(transactionId);
 }
 
-
 /* **************************************** */
 
 void checkSpoofing(HostTraffic *hostToCheck, int actualDeviceId) {
@@ -1799,3 +1798,17 @@ void checkSpoofing(HostTraffic *hostToCheck, int actualDeviceId) {
 
 }
 
+/* **************************************** */
+
+char* host2networkName(HostTraffic *el, char *buf, u_short buf_len) {
+  struct in_addr addr = el->hostIpAddress.Ip4Address;
+  char buf1[64];
+      
+  addr.s_addr = addr.s_addr & (0xFFFFFFFF << (32-el->network_mask));
+
+  safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s/%d",
+		_intoa(addr, buf1, sizeof(buf1)), 
+		el->network_mask);
+  
+  return(buf);
+}

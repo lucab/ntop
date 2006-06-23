@@ -1495,6 +1495,7 @@
 #define CONST_NETWORK_ENTRY                 0
 #define CONST_NETMASK_ENTRY                 1
 #define CONST_BROADCAST_ENTRY               2
+#define CONST_NETMASK_V6_ENTRY              3
 #define CONST_INVALIDNETMASK                -1
 
 /*

@@ -250,7 +250,7 @@ extern void printIpTrafficMatrix(void);
 extern void printFcTrafficMatrix (u_short vsanId, u_char sent);
 extern void printThptStatsMatrix(int sortedColumn);
 extern void printThptStats(int sortedColumn);
-extern void printDomainStats(char* domainName, int clusterMode, 
+extern void printDomainStats(char* domain_domain_name, int network_mode, int clusterMode, 
 			     int sortedColumn, int revertOrder, int pageNum);
 extern void printNoDataYet(void);
 extern void printNotAvailable(char* flagName);

@@ -538,7 +538,7 @@ void updateThpt(int fullUpdate) {
 /* Check if a host can be potentially added the host matrix */
 int isMatrixHost(HostTraffic *host, int actualDeviceId) {
   if((host->hostIpAddress.hostFamily == AF_INET) /* Only IPv4 addresses are used in the matrix */
-     && (deviceLocalAddress(&host->hostIpAddress, actualDeviceId) || multicastHost(host))
+     && (deviceLocalAddress(&host->hostIpAddress, actualDeviceId, NULL, NULL) || multicastHost(host))
      && (!broadcastHost(host)))
     return(1);
   else
@@ -738,7 +738,7 @@ char* findHostCommunity(u_int32_t host_ip, char *buf, u_short buf_len) {
   key = gdbm_firstkey(myGlobals.prefsFile);
   while (key.dptr) {
     char val[256], localAddresses[1024], *communityName;
-    u_int32_t localNetworks[MAX_NUM_NETWORKS][3]; /* [0]=network, [1]=mask, [2]=broadcast */
+    u_int32_t localNetworks[MAX_NUM_NETWORKS][4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
     u_short numLocalNetworks = 0, i;
     
     if((fetchPrefsValue(key.dptr, val, sizeof(val)) == 0)

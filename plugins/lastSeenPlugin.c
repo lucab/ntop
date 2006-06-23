@@ -107,7 +107,7 @@ static void handleLsPacket(u_char *_deviceId,
   traceEvent(CONST_TRACE_INFO, "->%s [%x]", intoa(ip.ip_dst), ip.ip_dst.s_addr);
 #endif
 
-  rc = in_isPseudoLocalAddress(&ip.ip_src, deviceId);
+  rc = in_isPseudoLocalAddress(&ip.ip_src, deviceId, NULL, NULL);
 
   if(rc == 0) 
     return;

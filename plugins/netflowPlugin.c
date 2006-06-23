@@ -622,6 +622,12 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
     return(0);
   }
 
+  if((srcHost->network_mask == 0) && record->src_mask)
+    srcHost->network_mask = record->src_mask;
+
+  if((dstHost->network_mask == 0) && record->dst_mask)
+    dstHost->network_mask = record->dst_mask;
+
   if(srcHost->firstSeen > *firstSeen) srcHost->firstSeen = *firstSeen;
   if(srcHost->lastSeen < *lastSeen)   srcHost->lastSeen = *lastSeen;
   if(dstHost->firstSeen > *firstSeen) dstHost->firstSeen = *firstSeen;

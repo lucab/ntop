@@ -790,6 +790,7 @@ typedef struct hostTraffic {
   u_char           lastEthAddress[LEN_ETHERNET_ADDRESS]; /* used for remote addresses */
   char             ethAddressString[LEN_ETHERNET_ADDRESS_DISPLAY];
   char             hostNumIpAddress[20] /* xxx.xxx.xxx.xxx */, *dnsDomainValue, *dnsTLDValue;
+  u_char           network_mask; /* IPv6 notation e.g. /24 */
   char             *hwModel, *description, *community;
   char             *ip2ccValue, *fingerprint;
   char             hostResolvedName[MAX_LEN_SYM_HOST_NAME];
@@ -1253,7 +1254,7 @@ typedef struct netFlowGlobals {
   /* Stats */
   ProbeInfo probeList[MAX_NUM_PROBES];
   InterfaceStats *ifStats;
-  u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3], blackNetworks[MAX_NUM_NETWORKS][3];
+  u_int32_t whiteNetworks[MAX_NUM_NETWORKS][4], blackNetworks[MAX_NUM_NETWORKS][4];
   u_short numWhiteNets, numBlackNets;
   u_int32_t flowProcessed;
   Counter flowProcessedBytes;
@@ -1317,7 +1318,7 @@ typedef struct sFlowGlobals {
 
   /* Stats */
   ProbeInfo probeList[MAX_NUM_PROBES];
-  u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3], blackNetworks[MAX_NUM_NETWORKS][3];
+  u_int32_t whiteNetworks[MAX_NUM_NETWORKS][4], blackNetworks[MAX_NUM_NETWORKS][4];
   u_short numWhiteNets, numBlackNets;
   u_int32_t flowProcessed;
   Counter flowProcessedBytes;
@@ -2260,7 +2261,7 @@ typedef struct ntopGlobals {
   u_short *mtuSize, *headerSize;
 
   /* (Pseudo) Local Networks */
-  u_int32_t localNetworks[MAX_NUM_NETWORKS][3]; /* [0]=network, [1]=mask, [2]=broadcast */
+  u_int32_t localNetworks[MAX_NUM_NETWORKS][4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
   u_short numLocalNetworks;
 
 #if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)

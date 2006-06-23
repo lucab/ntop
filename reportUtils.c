@@ -3414,7 +3414,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   char *dynIp, *multihomed, *multivlaned;
   u_short as=0;
   HostTraffic *theHost, tmpEl;
-  char formatBuf[LEN_TIMEFORMAT_BUFFER], formatBuf1[LEN_TIMEFORMAT_BUFFER], formatBuf2[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char formatBuf[LEN_TIMEFORMAT_BUFFER], formatBuf1[LEN_TIMEFORMAT_BUFFER], 
+    formatBuf2[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
 
   accessAddrResMutex("printAllSessionsHTML");
 
@@ -3511,6 +3512,16 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       } /* for */
       
       sendString("</TD></TR>");
+    }
+
+    traceEvent(CONST_TRACE_INFO, "-> %d", el->network_mask);
+
+    if((el->network_mask > 0) && (el->network_mask != 32)) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n", getRowColor(),
+		    "Host&nbsp;Network", host2networkName(el, buf1, sizeof(buf1)));
+      sendString(buf);
     }
 
     if((el->protocolInfo != NULL) && (el->protocolInfo->dhcpStats != NULL)) {

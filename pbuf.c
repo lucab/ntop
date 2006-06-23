@@ -718,7 +718,7 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
       incrementTrafficCounter(&srcHost->bytesBroadcastSent, length.value);
     }
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].broadcastPkts, numPkts);
-  } else if(isMulticastAddress(&(dstHost->hostIpAddress))) {
+  } else if(isMulticastAddress(&(dstHost->hostIpAddress), NULL, NULL)) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "%s->%s",
 	       srcHost->hostResolvedName, dstHost->hostResolvedName);
@@ -1057,7 +1057,7 @@ static void processIpPkt(const u_char *bp,
   if(ip6 == NULL) {
 #endif
     if((!myGlobals.runningPref.dontTrustMACaddr)
-       && isBroadcastAddress(&dstAddr)
+       && isBroadcastAddress(&dstAddr, NULL, NULL)
        && (ether_src != NULL) && (ether_dst != NULL) /* PPP has no ethernet */
        && (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
       /* forceUsingIPaddress = 1; */
@@ -1097,7 +1097,7 @@ static void processIpPkt(const u_char *bp,
 			 Don't check for multihoming when
 			 the destination address is a broadcast address
 		       */
-		       (!isBroadcastAddress(&dstAddr)),
+		       (!isBroadcastAddress(&dstAddr, NULL, NULL)),
 		       forceUsingIPaddress, actualDeviceId);
 
   if(srcHost == NULL) {
@@ -3698,7 +3698,7 @@ void processPacket(u_char *_deviceId,
 		if(myGlobals.runningPref.numericFlag == 0)
 		  ipaddr2str(srcHost->hostIpAddress, 1);
 
-		if(isPseudoLocalAddress(&srcHost->hostIpAddress, actualDeviceId)) {
+		if(isPseudoLocalAddress(&srcHost->hostIpAddress, actualDeviceId, NULL, NULL)) {
 		  FD_SET(FLAG_SUBNET_LOCALHOST, &srcHost->flags);
 		  FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &srcHost->flags);
 		} else {

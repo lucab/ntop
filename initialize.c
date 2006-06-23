@@ -1378,7 +1378,9 @@ void addDevice(char* deviceName, char* deviceDescr) {
   /* ********************************************* */
 
   if(!(myGlobals.device[deviceId].dummyDevice || myGlobals.device[deviceId].virtualDevice)){
-    getLocalHostAddress(&myGlobals.device[deviceId].ifAddr, myGlobals.device[deviceId].name);
+    u_int8_t netmask_v6;
+    
+    getLocalHostAddress(&myGlobals.device[deviceId].ifAddr, &netmask_v6, myGlobals.device[deviceId].name);
 #ifdef INET6
     myGlobals.device[deviceId].v6Addrs = getLocalHostAddressv6(myGlobals.device[deviceId].v6Addrs, myGlobals.device[deviceId].name);
 #endif
@@ -1432,10 +1434,12 @@ void addDevice(char* deviceName, char* deviceDescr) {
     if(myGlobals.numDevices < MAX_NUM_DEVICES) {
       traceEvent(CONST_TRACE_INFO, "Checking %s for additional devices", myGlobals.device[deviceId].name);
       for(k=0; k<=MAX_NUM_DEVICES_VIRTUAL; k++) {
+	u_int8_t netmask_v6;
+	
 	safe_snprintf(__FILE__, __LINE__, tmpDeviceName, sizeof(tmpDeviceName), "%s:%d", myGlobals.device[deviceId].name, k);
 
 	traceEvent(CONST_TRACE_NOISY, "Checking %s", tmpDeviceName);
-	if(getLocalHostAddress(&myLocalHostAddress, tmpDeviceName) == 0) {
+	if(getLocalHostAddress(&myLocalHostAddress, &netmask_v6, tmpDeviceName) == 0) {
 	  /* The virtual interface exists */
 
 	  mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);

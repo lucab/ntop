@@ -552,6 +552,7 @@ static void ssiMenu_Head() {
              "				[null,'Traffic','/" CONST_SORT_DATA_IP_HTML "',null,null],\n"
              "				[null,'Multicast','/" CONST_MULTICAST_STATS_HTML "',null,null],\n"
              "				[null,'Internet Domain','/" CONST_DOMAIN_STATS_HTML "',null,null],\n"
+             "				[null,'Networks','/" CONST_DOMAIN_STATS_HTML "?netmode=1',null,null],\n"
              "				[null,'Host Clusters','/" CONST_CLUSTER_STATS_HTML "',null,null],\n"
              "				[null,'Distribution','/" CONST_IP_PROTO_DISTRIB_HTML "',null,null],\n"
              "		],\n"
@@ -1946,7 +1947,7 @@ static int returnHTTPPage(char* pageName,
                           char *requestedLanguage[],
                           int numLang, int isPostMethod) {
   char *questionMark, *pageURI, *token;
-  int sortedColumn = 0, printTrailer=1, idx;
+  int sortedColumn = 0, printTrailer=1, idx, networkMode = 0;
   int errorCode=0, pageNum = 0, found=0, portNr=0;
   struct stat statbuf;
   FILE *fd = NULL;
@@ -1993,6 +1994,8 @@ static int returnHTTPPage(char* pageName,
 	sortedColumn = abs(idx);
       } else if(strncmp(tkn, "dom=", 4) == 0) {
 	domainNameParm = strdup(&tkn[4]);
+      } else if(strncmp(tkn, "netmode=", 8) == 0) {
+	networkMode = atoi(&tkn[8]);
       } else if(strncmp(tkn, "key=", 4) == 0) {
 	db_key = strdup(&tkn[4]);
       } else if(strncmp(tkn, "val=", 4) == 0) {
@@ -2654,10 +2657,10 @@ static int returnHTTPPage(char* pageName,
 	printMulticastStats(sortedColumn, revertOrder, pageNum);
       } else if(strncasecmp(pageName, CONST_DOMAIN_STATS_HTML, strlen(CONST_DOMAIN_STATS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printDomainStats(domainNameParm, 0, abs(sortedColumn), revertOrder, pageNum);
+	printDomainStats(domainNameParm, abs(networkMode), 0, abs(sortedColumn), revertOrder, pageNum);
       } else if(strncasecmp(pageName, CONST_CLUSTER_STATS_HTML, strlen(CONST_CLUSTER_STATS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printDomainStats(domainNameParm, 1, abs(sortedColumn), revertOrder, pageNum);
+	printDomainStats(domainNameParm, 0, 1, abs(sortedColumn), revertOrder, pageNum);
       } else if(strncasecmp(pageName, CONST_SHOW_PORT_TRAFFIC_HTML,
 			    strlen(CONST_SHOW_PORT_TRAFFIC_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);

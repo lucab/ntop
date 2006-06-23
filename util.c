@@ -586,8 +586,13 @@ char* copy_argv(register char **argv) {
 /**************************************/
 
 #ifdef INET6
-unsigned short isLinkLocalAddress(struct in6_addr *addr) {
+unsigned short isLinkLocalAddress(struct in6_addr *addr,
+				  u_int32_t *the_local_network, 
+				  u_int32_t *the_local_network_mask) {
   int i;
+
+  if(the_local_network && the_local_network_mask) 
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   if(addr == NULL)
     return 1;
@@ -609,7 +614,13 @@ unsigned short isLinkLocalAddress(struct in6_addr *addr) {
 /*******************************************/
 
 #ifdef INET6
-unsigned short in6_isMulticastAddress(struct in6_addr *addr) {
+unsigned short in6_isMulticastAddress(struct in6_addr *addr,
+				      u_int32_t *the_local_network, 
+				      u_int32_t *the_local_network_mask) {
+
+  if(the_local_network && the_local_network_mask) 
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;
+  
   if(IN6_IS_ADDR_MULTICAST(addr)) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: %s is multicast [%X/%X]",
@@ -624,7 +635,13 @@ unsigned short in6_isMulticastAddress(struct in6_addr *addr) {
 /*******************************************/
 
 #ifdef INET6
-unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId) {
+unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId,
+				  u_int32_t *the_local_network, 
+				  u_int32_t *the_local_network_mask) {
+
+  if(the_local_network && the_local_network_mask) 
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;
+
   if(deviceId >= myGlobals.numDevices) {
     traceEvent(CONST_TRACE_WARNING, "Index %u out of range [0..%u] - address treated as remote",
 	       deviceId, myGlobals.numDevices);
@@ -645,21 +662,32 @@ unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId) {
   traceEvent(CONST_TRACE_INFO, "DEBUG: %s is %s", intop(addr));
 #endif
   /* Link Local Addresses are local */
-  return(isLinkLocalAddress(addr));
+  return(isLinkLocalAddress(addr, the_local_network, the_local_network_mask));
 }
 
 /* ******************************************* */
 
-unsigned short in6_isPrivateAddress(struct in6_addr *addr) {
+unsigned short in6_isPrivateAddress(struct in6_addr *addr,
+				    u_int32_t *the_local_network, 
+				    u_int32_t *the_local_network_mask) {
   /* IPv6 have private addresses ?*/
+
+  if(the_local_network && the_local_network_mask) 
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;
+
   return(0);
 }
 #endif
 
 /* ********************************* */
 
-unsigned short in_isBroadcastAddress(struct in_addr *addr) {
+unsigned short in_isBroadcastAddress(struct in_addr *addr,
+				     u_int32_t *the_local_network, 
+				     u_int32_t *the_local_network_mask) {
   int i;
+
+  if(the_local_network && the_local_network_mask) 
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   if(addr == NULL)
     return 1;
@@ -689,13 +717,19 @@ unsigned short in_isBroadcastAddress(struct in_addr *addr) {
       }
     }
 
-    return(in_isPseudoBroadcastAddress(addr));
+    return(in_isPseudoBroadcastAddress(addr, the_local_network, the_local_network_mask));
   }
 }
 
 /* ********************************* */
 
-unsigned short in_isMulticastAddress(struct in_addr *addr) {
+unsigned short in_isMulticastAddress(struct in_addr *addr,
+				     u_int32_t *the_local_network, 
+				     u_int32_t *the_local_network_mask) {
+
+  if(the_local_network && the_local_network_mask) 
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;
+
   if((addr->s_addr & CONST_MULTICAST_MASK) == CONST_MULTICAST_MASK) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: %s is multicast [%X/%X]",
@@ -711,7 +745,26 @@ unsigned short in_isMulticastAddress(struct in_addr *addr) {
 
 /* ********************************* */
 
-unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId) {
+static u_int8_t num_network_bits(u_int32_t addr) {
+  int num_bits;
+
+  for(num_bits=0; addr > 0; num_bits++)
+    addr = addr >> 2;
+  
+  /* traceEvent(CONST_TRACE_WARNING, "-> num_bits=%d", num_bits); */
+
+  return(num_bits);
+}
+
+/* ********************************* */
+
+unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId,
+				 u_int32_t *the_local_network, 
+				 u_int32_t *the_local_network_mask) {
+
+  if(the_local_network && the_local_network_mask) 
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;
+
   if(deviceId >= myGlobals.numDevices) {
     traceEvent(CONST_TRACE_WARNING, "Index %u out of range [0..%u] - address treated as remote",
 	       deviceId, myGlobals.numDevices);
@@ -731,7 +784,11 @@ unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId) {
 #ifdef ADDRESS_DEBUG
       traceEvent(CONST_TRACE_INFO, "ADDRESS_DEBUG: %s is local", intoa(*addr));
 #endif
-      return 1;
+
+      if(the_local_network && the_local_network_mask) 
+	(*the_local_network) = myGlobals.device[deviceId].network.s_addr, 
+	  (*the_local_network_mask) = num_network_bits(myGlobals.device[deviceId].netmask.s_addr);
+     return 1;
     }
   } else {
     int i;
@@ -741,6 +798,9 @@ unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId) {
 #ifdef ADDRESS_DEBUG
 	traceEvent(CONST_TRACE_INFO, "ADDRESS_DEBUG: %s is local", intoa(*addr));
 #endif
+      if(the_local_network && the_local_network_mask) 
+	(*the_local_network) = myGlobals.device[i].network.s_addr, 
+	  (*the_local_network_mask) = num_network_bits(myGlobals.device[deviceId].netmask.s_addr);
 	return 1;
       }
   }
@@ -753,20 +813,25 @@ unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId) {
 	     isBroadcastAddress(addr) ? "pseudolocal" : "remote");
 #endif
   /* Broadcast is considered a local address */
-  return(in_isBroadcastAddress(addr));
+  return(in_isBroadcastAddress(addr, the_local_network, the_local_network_mask));
 }
 
 /* ********************************* */
 
-unsigned short in_isPrivateAddress(struct in_addr *addr) {
+unsigned short in_isPrivateAddress(struct in_addr *addr,
+				   u_int32_t *the_local_network, 
+				   u_int32_t *the_local_network_mask) {
   /* See http://www.isi.edu/in-notes/rfc1918.txt */
+
+  if(the_local_network && the_local_network_mask) 
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   /* Fixes below courtesy of Wies-Software <wies@wiessoft.de> */
   if(   ((addr->s_addr & 0xFF000000) == 0x0A000000) /* 10.0.0.0/8  */
-     || ((addr->s_addr & 0xFFF00000) == 0xAC100000) /* 172.16/12   */
-     || ((addr->s_addr & 0xFFFF0000) == 0xC0A80000) /* 192.168/16  */
-     || ((addr->s_addr & 0xFF000000) == 0x7F000000) /* 127.0.0.0/8 */
-     )
+	|| ((addr->s_addr & 0xFFF00000) == 0xAC100000) /* 172.16/12   */
+	|| ((addr->s_addr & 0xFFFF0000) == 0xC0A80000) /* 192.168/16  */
+	|| ((addr->s_addr & 0xFF000000) == 0x7F000000) /* 127.0.0.0/8 */
+	)
     return(1);
   else
     return(0);
@@ -774,13 +839,18 @@ unsigned short in_isPrivateAddress(struct in_addr *addr) {
 
 /***************************************/
 
-unsigned short isBroadcastAddress(HostAddr *addr) {
+unsigned short isBroadcastAddress(HostAddr *addr,
+				  u_int32_t *the_local_network, 
+				  u_int32_t *the_local_network_mask) {
+  if(the_local_network && the_local_network_mask) 
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;
+
   switch(addr->hostFamily) {
   case AF_INET:
-    return (in_isBroadcastAddress(&addr->Ip4Address));
+    return (in_isBroadcastAddress(&addr->Ip4Address, the_local_network, the_local_network_mask));
 #ifdef INET6
   case AF_INET6:
-    return (isLinkLocalAddress(&addr->Ip6Address));
+    return (isLinkLocalAddress(&addr->Ip6Address, NULL, NULL));
 #endif
   default: return(0);
   }
@@ -788,13 +858,18 @@ unsigned short isBroadcastAddress(HostAddr *addr) {
 
 /* ******************************************** */
 
-unsigned short isMulticastAddress(HostAddr *addr) {
+unsigned short isMulticastAddress(HostAddr *addr,
+				  u_int32_t *the_local_network, 
+				  u_int32_t *the_local_network_mask) {
+  if(the_local_network && the_local_network_mask) 
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;
+
   switch(addr->hostFamily) {
   case AF_INET:
-    return (in_isMulticastAddress(&addr->Ip4Address));
+    return (in_isMulticastAddress(&addr->Ip4Address, the_local_network, the_local_network_mask));
 #ifdef INET6
   case AF_INET6:
-    return (in6_isMulticastAddress(&addr->Ip6Address));
+    return (in6_isMulticastAddress(&addr->Ip6Address, NULL, NULL));
 #endif
   default: return(0);
   }
@@ -802,13 +877,18 @@ unsigned short isMulticastAddress(HostAddr *addr) {
 
 /* ************************************************* */
 
-unsigned short isLocalAddress(HostAddr *addr, u_int deviceId) {
+unsigned short isLocalAddress(HostAddr *addr, u_int deviceId,
+			      u_int32_t *the_local_network, 
+			      u_int32_t *the_local_network_mask) {
+  if(the_local_network && the_local_network_mask) 
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;
+
   switch(addr->hostFamily) {
   case AF_INET:
-    return (in_isLocalAddress(&addr->Ip4Address, deviceId));
+    return (in_isLocalAddress(&addr->Ip4Address, deviceId, the_local_network, the_local_network_mask));
 #ifdef INET6
   case AF_INET6:
-    return (in6_isLocalAddress(&addr->Ip6Address, deviceId));
+    return (in6_isLocalAddress(&addr->Ip6Address, deviceId, NULL, NULL));
 #endif
   default: return(0);
   }
@@ -816,13 +896,18 @@ unsigned short isLocalAddress(HostAddr *addr, u_int deviceId) {
 
 /* ************************************************** */
 
-unsigned short isPrivateAddress(HostAddr *addr) {
+unsigned short isPrivateAddress(HostAddr *addr,
+				u_int32_t *the_local_network, 
+				u_int32_t *the_local_network_mask) {
+  if(the_local_network && the_local_network_mask) 
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;
+
   switch(addr->hostFamily) {
   case AF_INET:
-    return (in_isPrivateAddress(&addr->Ip4Address));
+    return (in_isPrivateAddress(&addr->Ip4Address, the_local_network, the_local_network_mask));
 #ifdef INET6
   case AF_INET6:
-    return (in6_isPrivateAddress(&addr->Ip6Address));
+    return (in6_isPrivateAddress(&addr->Ip6Address, NULL, NULL));
 #endif
   default: return(0);
   }
@@ -964,7 +1049,7 @@ int dotted2bits(char *mask) {
 
 /* Example: "131.114.0.0/16,193.43.104.0/255.255.255.0" */
 
-void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
+void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][4],
 			u_short *numNetworks, char *localAddresses,
 			int localAddressesLen, int flagWhat) {
   char *strtokState, *address;
@@ -1105,9 +1190,10 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
         }
 
 	if(found == 0) {
-          theNetworks[(*numNetworks)][CONST_NETWORK_ENTRY]   = network;
-          theNetworks[(*numNetworks)][CONST_NETMASK_ENTRY]   = networkMask;
-          theNetworks[(*numNetworks)][CONST_BROADCAST_ENTRY] = broadcast;
+          theNetworks[(*numNetworks)][CONST_NETWORK_ENTRY]    = network;
+          theNetworks[(*numNetworks)][CONST_NETMASK_ENTRY]    = networkMask;
+	  theNetworks[(*numNetworks)][CONST_NETMASK_V6_ENTRY] = bits;	  
+          theNetworks[(*numNetworks)][CONST_BROADCAST_ENTRY]  = broadcast;
 
           a = (int) ((network >> 24) & 0xff);
           b = (int) ((network >> 16) & 0xff);
@@ -1171,28 +1257,37 @@ void handleLocalAddresses(char* addresses) {
 /* ********************************* */
 
 #ifdef INET6
-unsigned short in6_pseudoLocalAddress(struct in6_addr *addr) {
+unsigned short in6_pseudoLocalAddress(struct in6_addr *addr,
+				      u_int32_t *the_local_network, 
+				      u_int32_t *the_local_network_mask) {
   int i;
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if (prefixlookup(addr,myGlobals.device[i].v6Addrs,0) == 1)
-      return (1);
+      return(1);
 
   }
   return(0);
 }
 #endif
 
+/* ******************************************************* */
+
 unsigned short __pseudoLocalAddress(struct in_addr *addr,
-				    u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
-				    u_short numNetworks) {
+				    u_int32_t theNetworks[MAX_NUM_NETWORKS][4],
+				    u_short numNetworks,
+				    u_int32_t *the_local_network, 
+				    u_int32_t *the_local_network_mask) {
   int i;
+
+  if(the_local_network && the_local_network_mask) 
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;      
 
   for(i=0; i<numNetworks; i++) {
 #ifdef ADDRESS_DEBUG
     char buf[32], buf1[32], buf2[32];
     struct in_addr addr1, addr2;
-
+    
     addr1.s_addr = theNetworks[i][CONST_NETWORK_ENTRY];
     addr2.s_addr = theNetworks[i][CONST_NETMASK_ENTRY];
 
@@ -1205,7 +1300,11 @@ unsigned short __pseudoLocalAddress(struct in_addr *addr,
 #ifdef ADDRESS_DEBUG
       traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %s is pseudolocal", intoa(*addr));
 #endif
-      return 1;
+      if(the_local_network && the_local_network_mask) {
+	(*the_local_network)      = theNetworks[i][CONST_NETWORK_ENTRY];
+	(*the_local_network_mask) = theNetworks[i][CONST_NETMASK_V6_ENTRY];
+      }
+      return(1);
     } else {
 #ifdef ADDRESS_DEBUG
       traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %s is NOT pseudolocal", intoa(*addr));
@@ -1218,14 +1317,19 @@ unsigned short __pseudoLocalAddress(struct in_addr *addr,
 
 /* ********************************* */
 
-unsigned short in_pseudoLocalAddress(struct in_addr *addr) {
-  return(__pseudoLocalAddress(addr, myGlobals.localNetworks, myGlobals.numLocalNetworks));
+unsigned short in_pseudoLocalAddress(struct in_addr *addr,
+				     u_int32_t *the_local_network, 
+				     u_int32_t *the_local_network_mask) {
+  return(__pseudoLocalAddress(addr, myGlobals.localNetworks, myGlobals.numLocalNetworks,
+			      the_local_network, the_local_network_mask));
 }
 
 /* ********************************* */
 
 #ifdef INET6
-unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId) {
+unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId,
+				      u_int32_t *the_local_network, 
+				      u_int32_t *the_local_network_mask) {
   int rc;
 
   if(addrlookup(addr,myGlobals.device[deviceId].v6Addrs))
@@ -1239,7 +1343,9 @@ unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId) {
 
 /* ********************************* */
 
-unsigned short in_deviceLocalAddress(struct in_addr *addr, u_int deviceId) {
+unsigned short in_deviceLocalAddress(struct in_addr *addr, u_int deviceId,
+				     u_int32_t *the_local_network, 
+				     u_int32_t *the_local_network_mask) {
   int rc;
 
   if((addr->s_addr & myGlobals.device[deviceId].netmask.s_addr) == myGlobals.device[deviceId].network.s_addr)
@@ -1262,10 +1368,12 @@ unsigned short in_deviceLocalAddress(struct in_addr *addr, u_int deviceId) {
 /* ********************************* */
 
 #ifdef INET6
-unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId) {
+unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId,
+					u_int32_t *the_local_network, 
+					u_int32_t *the_local_network_mask) {
   int i;
 
-  i = in6_isLocalAddress(addr, deviceId);
+  i = in6_isLocalAddress(addr, deviceId, the_local_network, the_local_network_mask);
 
   if(i == 1) {
 #ifdef ADDRESS_DEBUG
@@ -1275,7 +1383,7 @@ unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId) {
     return 1; /* This is a real local address */
   }
 
-  if(in6_pseudoLocalAddress(addr))
+  if(in6_pseudoLocalAddress(addr, the_local_network, the_local_network_mask))
     return 1;
 
   /*
@@ -1295,10 +1403,13 @@ unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId) {
 
 /* This function returns true when a host is considered local
    as specified using the 'm' flag */
-unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId) {
+unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId,				       
+				       u_int32_t *the_local_network, 
+				       u_int32_t *the_local_network_mask) {
   int i;
-
-  i = in_isLocalAddress(addr, deviceId);
+  
+  /* FIX */
+  i = in_isLocalAddress(addr, deviceId, the_local_network, the_local_network_mask);
 
   if(i == 1) {
 #ifdef ADDRESS_DEBUG
@@ -1308,7 +1419,7 @@ unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId) {
     return 1; /* This is a real local address */
   }
 
-  if(in_pseudoLocalAddress(addr))
+  if(in_pseudoLocalAddress(addr, the_local_network, the_local_network_mask))
     return 1;
 
   /*
@@ -1329,7 +1440,9 @@ unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId) {
 /* This function returns true when an address is the broadcast
    for the specified (-m flag subnets */
 
-unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr) {
+unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr,
+					   u_int32_t *the_local_network, 
+					   u_int32_t *the_local_network_mask) {
   int i;
 
 #ifdef ADDRESS_DEBUG
@@ -1354,13 +1467,15 @@ unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr) {
 
 /*************************************/
 
-unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId) {
+unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId,
+				  u_int32_t *the_local_network, 
+				  u_int32_t *the_local_network_mask) {
   switch(addr->hostFamily) {
   case AF_INET:
-    return (in_deviceLocalAddress(&addr->Ip4Address, deviceId));
+    return (in_deviceLocalAddress(&addr->Ip4Address, deviceId, the_local_network, the_local_network_mask));
 #ifdef INET6
   case AF_INET6:
-    return (in6_deviceLocalAddress(&addr->Ip6Address, deviceId));
+    return (in6_deviceLocalAddress(&addr->Ip6Address, deviceId, NULL, NULL));
 #endif
   default: return(0);
   }
@@ -1368,13 +1483,19 @@ unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId) {
 
 /* ********************************* */
 
-unsigned short isPseudoLocalAddress(HostAddr *addr, u_int deviceId) {
+unsigned short isPseudoLocalAddress(HostAddr *addr, u_int deviceId,
+				    u_int32_t *the_local_network, 
+				    u_int32_t *the_local_network_mask) {
+
+  if(the_local_network && the_local_network_mask) 
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;
+
   switch(addr->hostFamily) {
   case AF_INET:
-    return (in_isPseudoLocalAddress(&addr->Ip4Address, deviceId));
+    return (in_isPseudoLocalAddress(&addr->Ip4Address, deviceId, the_local_network, the_local_network_mask));
 #ifdef INET6
   case AF_INET6:
-    return (in6_isPseudoLocalAddress(&addr->Ip6Address, deviceId));
+    return (in6_isPseudoLocalAddress(&addr->Ip6Address, deviceId, NULL, NULL));
 #endif
   default: return(0);
   }
@@ -1382,10 +1503,12 @@ unsigned short isPseudoLocalAddress(HostAddr *addr, u_int deviceId) {
 
 /* ********************************* */
 
-unsigned short isPseudoBroadcastAddress(HostAddr *addr) {
+unsigned short isPseudoBroadcastAddress(HostAddr *addr,
+					u_int32_t *the_local_network, 
+					u_int32_t *the_local_network_mask) {
   switch(addr->hostFamily) {
   case AF_INET:
-    return (in_isPseudoBroadcastAddress(&addr->Ip4Address));
+    return (in_isPseudoBroadcastAddress(&addr->Ip4Address, the_local_network, the_local_network_mask));
 #ifdef INET6
   case AF_INET6:
     return 0;
@@ -1396,13 +1519,15 @@ unsigned short isPseudoBroadcastAddress(HostAddr *addr) {
 
 /* ********************************* */
 
-unsigned short _pseudoLocalAddress(HostAddr *addr) {
+unsigned short _pseudoLocalAddress(HostAddr *addr,
+				   u_int32_t *the_local_network, 
+				   u_int32_t *the_local_network_mask) {
   switch(addr->hostFamily) {
   case AF_INET:
-    return (in_pseudoLocalAddress(&addr->Ip4Address));
+    return (in_pseudoLocalAddress(&addr->Ip4Address, the_local_network, the_local_network_mask));
 #ifdef INET6
   case AF_INET6:
-    return (in6_pseudoLocalAddress(&addr->Ip6Address));
+    return (in6_pseudoLocalAddress(&addr->Ip6Address, NULL, NULL));
 #endif
   default: return(0);
   }
@@ -1599,13 +1724,13 @@ void handleFlowsSpecs(void) {
 
 /* ********************************* */
 
-int getLocalHostAddress(struct in_addr *hostAddress, char* device) {
+int getLocalHostAddress(struct in_addr *hostAddress, u_int8_t *netmask_v6, char* device) {
   int rc = 0;
 #ifdef WIN32
   hostAddress->s_addr = GetHostIPAddr();
   return(0);
 #else
-  int fd;
+  int fd, numHosts;
   struct sockaddr_in *sinAddr;
   struct ifreq ifr;
 #ifdef DEBUG
@@ -1643,19 +1768,20 @@ int getLocalHostAddress(struct in_addr *hostAddress, char* device) {
 
   /* ******************************* */
 
-#ifdef DEBUG
-  {
-    int numHosts;
-
-    if(ioctl(fd, SIOCGIFNETMASK, (char*)&ifr) >= 0) {
-      sinAddr = (struct sockaddr_in *)&ifr.ifr_broadaddr;
-      numHosts = 0xFFFFFFFF - ntohl(sinAddr->sin_addr.s_addr)+1;
-    } else
-      numHosts = 256; /* default C class */
-
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Num subnet hosts: %d", numHosts);
+  if(ioctl(fd, SIOCGIFNETMASK, (char*)&ifr) >= 0) {
+    sinAddr = (struct sockaddr_in *)&ifr.ifr_broadaddr;
+    numHosts = 0xFFFFFFFF - ntohl(sinAddr->sin_addr.s_addr)+1;
+  } else
+    numHosts = 256; /* default C class */
+  
+  (*netmask_v6) = 0;
+  
+  while(numHosts > 0) {
+    numHosts = numHosts >> 1;
+    (*netmask_v6)++;
   }
-#endif
+
+  // traceEvent(CONST_TRACE_INFO, "DEBUG: Num subnet hosts: %d", numHosts);
 
   /* ******************************* */
 
@@ -2102,7 +2228,7 @@ int _lockHostsHashMutex(HostTraffic *host, char *where, char *file, int line) {
       myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]++;
       _accessMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], where, file, line);
     } else {
-	  /* Already locked */
+      /* Already locked */
       myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]++; 
     }
     _releaseMutex(&myGlobals.hostsHashLockMutex, file, line);
@@ -2918,25 +3044,25 @@ void stringSanityCheck(char* string, char* parm) {
 void uriSanityCheck(char* string, char* parm, int allowParms) {
   int i, j;
 
-//      Our reduced BNF is:
-//            relativeURI    = ["/" ] fsegment *( "/" segment )
-//            fsegment       = 1*pchar
-//            segment        = *pchar
-//     
-//            pchar          = unreserved | ":" | "@" | "&" | "=" | "+"
-//            unreserved     = ALPHA | DIGIT | safe | extra | national
-//     
-//            reserved       = ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+"
-//                                    ^--- is legal character as segment sep.
-//            extra          = "!" | "*" | "'" | "(" | ")" | ","
-//            safe           = "$" | "-" | "_" | "."
-//            unsafe         = CTL | SP | <"> | "#" | "%" | "<" | ">"
-//            national       = <any OCTET excluding ALPHA, DIGIT,
-//                             reserved, extra, safe, and unsafe> 
-//      And we look for reserved or unsafe chars.
+  //      Our reduced BNF is:
+  //            relativeURI    = ["/" ] fsegment *( "/" segment )
+  //            fsegment       = 1*pchar
+  //            segment        = *pchar
+  //     
+  //            pchar          = unreserved | ":" | "@" | "&" | "=" | "+"
+  //            unreserved     = ALPHA | DIGIT | safe | extra | national
+  //     
+  //            reserved       = ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+"
+  //                                    ^--- is legal character as segment sep.
+  //            extra          = "!" | "*" | "'" | "(" | ")" | ","
+  //            safe           = "$" | "-" | "_" | "."
+  //            unsafe         = CTL | SP | <"> | "#" | "%" | "<" | ">"
+  //            national       = <any OCTET excluding ALPHA, DIGIT,
+  //                             reserved, extra, safe, and unsafe> 
+  //      And we look for reserved or unsafe chars.
 
-// If this is a URI which we allow parms in, then we add ? & to the valid chars
-// We add : as legal for Port specification
+  // If this is a URI which we allow parms in, then we add ? & to the valid chars
+  // We add : as legal for Port specification
 
   if(string == NULL)  {
     traceEvent(CONST_TRACE_FATALERROR, "Invalid (empty) uri specified for option %s", parm);
@@ -2949,26 +3075,26 @@ void uriSanityCheck(char* string, char* parm, int allowParms) {
       string[i]='.';
       j = 0;
     } else switch(string[i]) {
-      case ';':
-      case '@':
-      case '+':
-      case '"':
-      case '#':
-      case '%':
-      case '<':
-      case '>':
-      case '\\':  /* Add this one for directory traversal */
-        string[i]='.';
-        j=0;
-        break;
-      case '=':
-      case '?':
-      case '&':
-        if(allowParms == FALSE) {
-          string[i]='.';
-          j=0;
-        }
-        break;
+    case ';':
+    case '@':
+    case '+':
+    case '"':
+    case '#':
+    case '%':
+    case '<':
+    case '>':
+    case '\\':  /* Add this one for directory traversal */
+      string[i]='.';
+      j=0;
+      break;
+    case '=':
+    case '?':
+    case '&':
+      if(allowParms == FALSE) {
+	string[i]='.';
+	j=0;
+      }
+      break;
     }
   }
 
@@ -2988,18 +3114,18 @@ void pathSanityCheck(char* string, char* parm) {
 
   static char paChar[256];
 
-// Common:
-//     Upper and lower case letters:  A - Z and a - z  
-//     Numbers  0 - 9  
-//     Period, underscore, hyphen  . _ -  
+  // Common:
+  //     Upper and lower case letters:  A - Z and a - z  
+  //     Numbers  0 - 9  
+  //     Period, underscore, hyphen  . _ -  
 
-// Unix:
-//     Slash
-//     Comma
+  // Unix:
+  //     Slash
+  //     Comma
 
-// Win
-//     Backslash
-//     Colon, quotes, space
+  // Win
+  //     Backslash
+  //     Colon, quotes, space
 
   if(string == NULL)  {
     traceEvent(CONST_TRACE_FATALERROR, "Invalid (empty) path specified for option %s", parm);
@@ -3055,16 +3181,16 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
 
   static char fnChar[256];
 
-// Common:
-//     Upper and lower case letters:  A - Z and a - z  
-//     Numbers  0 - 9  
-//     Period, underscore, hyphen  . _ -  
+  // Common:
+  //     Upper and lower case letters:  A - Z and a - z  
+  //     Numbers  0 - 9  
+  //     Period, underscore, hyphen  . _ -  
 
-// Unix:
-//     Comma
+  // Unix:
+  //     Comma
 
-// Win
-//     Colon, quotes, space
+  // Win
+  //     Colon, quotes, space
 
   if(string == NULL)  {
 
@@ -3096,26 +3222,26 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
 
   if(strlen(string) > 0) {
 #ifdef WIN32
-  /* Strip "ed string for test */
-  if((string[0] != '"') || (string[strlen(string)-1] != '"') )
-    k=1;
+    /* Strip "ed string for test */
+    if((string[0] != '"') || (string[strlen(string)-1] != '"') )
+      k=1;
 #endif
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "Sanitizing string '%s'", string);
+    traceEvent(CONST_TRACE_INFO, "Sanitizing string '%s'", string);
 #endif
 
-  for(i=k, j=1; i<strlen(string)-k; i++) {
-    if(fnChar[string[i]] == 0) {
+    for(i=k, j=1; i<strlen(string)-k; i++) {
+      if(fnChar[string[i]] == 0) {
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "Sanitized invalid char '%c'", string[i]);
+	traceEvent(CONST_TRACE_INFO, "Sanitized invalid char '%c'", string[i]);
 #endif
-      string[i]='.';
-      j = 0;
+	string[i]='.';
+	j = 0;
+      }
     }
-  }
   } else
-	  j = 0;
+    j = 0;
 
   if(j == 0) {
     if(strlen(string) > 40) string[40] = '\0';
@@ -4096,13 +4222,13 @@ void escape(char *dest, int destLen, char *src) {
   len = strlen(src);
   for (srcIdx = 0, destIdx = 0; srcIdx < len && destIdx < destLen; src++) {
     switch (src[srcIdx]) {
-      case ' ':
-        dest[destIdx++] = '%';
-        dest[destIdx++] = '2';
-        dest[destIdx++] = '0';
-        break;
-      default:
-        dest[destIdx++] = src[srcIdx];
+    case ' ':
+      dest[destIdx++] = '%';
+      dest[destIdx++] = '2';
+      dest[destIdx++] = '0';
+      break;
+    default:
+      dest[destIdx++] = src[srcIdx];
     }
   }
 }
@@ -4464,10 +4590,10 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
 /* ******************************************
  *        For ntop_gdbm_xxxx see leaks.c
-/* ****************************************** */
+ /* ****************************************** */
 
 void handleWhiteBlackListAddresses(char* addresses,
-                                   u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
+                                   u_int32_t theNetworks[MAX_NUM_NETWORKS][4],
                                    u_short *numNets,
                                    char* outAddresses,
                                    int outAddressesLen) {
@@ -4501,8 +4627,8 @@ void handleWhiteBlackListAddresses(char* addresses,
  *  So we have to flip the whitelist code
  */
 unsigned short isOKtoSave(u_int32_t addr,
-			  u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3],
-			  u_int32_t blackNetworks[MAX_NUM_NETWORKS][3],
+			  u_int32_t whiteNetworks[MAX_NUM_NETWORKS][4],
+			  u_int32_t blackNetworks[MAX_NUM_NETWORKS][4],
 			  u_short numWhiteNets, u_short numBlackNets) {
   int rc;
   struct in_addr workAddr;
@@ -4510,13 +4636,13 @@ unsigned short isOKtoSave(u_int32_t addr,
   workAddr.s_addr = addr;
 
   if(numBlackNets > 0) {
-    rc = __pseudoLocalAddress(&workAddr, blackNetworks, numBlackNets);
+    rc = __pseudoLocalAddress(&workAddr, blackNetworks, numBlackNets, NULL, NULL);
     if(rc == 1)
       return 2;
   }
 
   if(numWhiteNets > 0) {
-    rc = __pseudoLocalAddress(&workAddr, whiteNetworks, numWhiteNets);
+    rc = __pseudoLocalAddress(&workAddr, whiteNetworks, numWhiteNets, NULL, NULL);
     return(1 - rc);
   }
 
@@ -5157,15 +5283,15 @@ void displayPrivacyNotice(void) {
   // information for the ntop-dev mailing list.
   // Normally you would enable this, run ntop, collect the values and
   // then shut ntop down.
-#define cNV2N(a, b) \
-{ \
-  unsigned int vv; \
-  vv = convertNtopVersionToNumber(a); \
-  if (vv != b) \
-    traceEvent(CONST_TRACE_INFO, "CHKVER_TEST: cNV2N %-10s -> %10u expected %10u", a, vv, b); \
-  else \
-    traceEvent(CONST_TRACE_INFO, "CHKVER_TEST: cNV2N %-10s -> %10u OK", a, vv); \
-}
+#define cNV2N(a, b)							\
+  {									\
+    unsigned int vv;							\
+    vv = convertNtopVersionToNumber(a);					\
+    if (vv != b)							\
+      traceEvent(CONST_TRACE_INFO, "CHKVER_TEST: cNV2N %-10s -> %10u expected %10u", a, vv, b); \
+    else								\
+      traceEvent(CONST_TRACE_INFO, "CHKVER_TEST: cNV2N %-10s -> %10u OK", a, vv); \
+  }
 
   cNV2N("1.3",     103000000);
   cNV2N("2.1",     201000000);
@@ -5219,14 +5345,14 @@ char *reportNtopVersionCheck(void) {
 /* ********************************** */
 
 /* pseudo-function to use stringification to find the xml tag */
-#define xmlextract(a) { \
-       a = strstr(next, "<" #a ">"); \
-       if (a != NULL) { \
-           a += sizeof( #a ) + 1; \
-           if (strchr(a, '<') != NULL) \
-               strchr(a, '<')[0] = '\0'; \
-       } \
-}
+#define xmlextract(a) {				\
+    a = strstr(next, "<" #a ">");		\
+    if (a != NULL) {				\
+      a += sizeof( #a ) + 1;			\
+      if (strchr(a, '<') != NULL)		\
+	strchr(a, '<')[0] = '\0';		\
+    }						\
+  }
 
 /* ********************************** */
 
@@ -6605,9 +6731,9 @@ void mkdir_p(char *tag, char *path, int permission) {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
-    Work-Arounds.  For things we just HAVE to have, code the work-around
-                   so we don't clutter mainline with #ifdef logic.
- */
+  Work-Arounds.  For things we just HAVE to have, code the work-around
+  so we don't clutter mainline with #ifdef logic.
+*/
 
 #ifndef HAVE_PCAP_OPEN_DEAD
 
@@ -6728,17 +6854,17 @@ char *ntop_strsignal(int sig) {
 #ifdef SIGXFSZ
          : sig == SIGXFSZ ? "SIGXFSZ"
 #endif
-          : "unable to determine");
+	 : "unable to determine");
 }
 #endif
    
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
-    Dummies.  Instead of cluttering ntop with a bunch of #ifdef logic,
-              just define the function (or a work-around) here and in globals-core.h if we
-              don't have it.
- */
+  Dummies.  Instead of cluttering ntop with a bunch of #ifdef logic,
+  just define the function (or a work-around) here and in globals-core.h if we
+  don't have it.
+*/
 #ifndef WIN32
 
 #ifndef HAVE_PCAP_FREECODE
@@ -6748,14 +6874,14 @@ void pcap_freecode(struct bpf_program *pgm) {
 #endif
 
 #ifndef HAVE_PCAP_FINDALLDEVS
- #warning using ntop work-around for missing pcap_findalldevs... suggest you upgrade libpcap!
+#warning using ntop work-around for missing pcap_findalldevs... suggest you upgrade libpcap!
 int pcap_findalldevs(pcap_if_t **alldevsp, char *errbuf) {
   return(-1); /* failed */
 }
 #endif
 
 #ifndef HAVE_PCAP_FREEALLDEVS
- #warning using ntop work-around for missing pcap_freealldevs ... suggest you upgrade libpcap!
+#warning using ntop work-around for missing pcap_freealldevs ... suggest you upgrade libpcap!
 void pcap_freealldevs(pcap_if_t *alldevs) {
   return;
 }

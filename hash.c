@@ -38,6 +38,7 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
   u_int idx = 0;
   *el = NULL;
 
+
   if(myGlobals.runningPref.dontTrustMACaddr)  /* MAC addresses don't make sense here */
     (*useIPAddressForSearching) = 1;
 
@@ -51,8 +52,8 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 
   if(((*useIPAddressForSearching) == 1) || ((ether_addr == NULL) && (hostIpAddress != NULL))) {
     if(myGlobals.runningPref.trackOnlyLocalHosts
-       && (!isLocalAddress(hostIpAddress, actualDeviceId))
-       && (!_pseudoLocalAddress(hostIpAddress))) {
+       && (!isLocalAddress(hostIpAddress, actualDeviceId, NULL, NULL))
+       && (!_pseudoLocalAddress(hostIpAddress, NULL, NULL))) {
       *el = myGlobals.otherHostEntry;
       return(OTHER_HOSTS_ENTRY);
     } else {
@@ -73,16 +74,16 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
   } else if(hostIpAddress == NULL) {
     memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(u_int)], sizeof(u_int));
     (*useIPAddressForSearching) = 0;
-  } else if(isBroadcastAddress(hostIpAddress)) {
+  } else if(isBroadcastAddress(hostIpAddress, NULL, NULL)) {
     *el = myGlobals.broadcastEntry;
     return(BROADCAST_HOSTS_ENTRY);
-  } else if(isPseudoLocalAddress(hostIpAddress, actualDeviceId)) {
+  } else if(isPseudoLocalAddress(hostIpAddress, actualDeviceId, NULL, NULL)) {
     memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(u_int)], sizeof(u_int));
     (*useIPAddressForSearching) = 0;
   } else {
     if(hostIpAddress != NULL) {
       if(myGlobals.runningPref.trackOnlyLocalHosts
-	 && (!isPseudoLocalAddress(hostIpAddress, actualDeviceId))) {
+	 && (!isPseudoLocalAddress(hostIpAddress, actualDeviceId, NULL, NULL))) {
 	*el = myGlobals.otherHostEntry;
 	return(OTHER_HOSTS_ENTRY);
       } else {
@@ -774,6 +775,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   u_short numRuns=0;
   u_int hostFound = 0;
   u_int updateIPinfo = 0;
+  u_int32_t the_local_network, the_local_network_mask;
 
   if((hostIpAddress == NULL) && (ether_addr == NULL)) {
     traceEvent(CONST_TRACE_WARNING, "Both Ethernet and IP addresses are NULL in lookupHost()[%s/%d]", file, line);
@@ -926,7 +928,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       if(myGlobals.runningPref.numericFlag == 0)
         ipaddr2str(el->hostIpAddress, 1);
 
-      if(isBroadcastAddress(&el->hostIpAddress))
+      if(isBroadcastAddress(&el->hostIpAddress, NULL, NULL))
         FD_SET(FLAG_BROADCAST_HOST, &el->flags);
     }
   } else {
@@ -990,11 +992,13 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     myGlobals.device[actualDeviceId].hash_hostTraffic[el->hostTrafficBucket] = el;  /* Insert a new entry */
     myGlobals.device[actualDeviceId].hostsno++;
 
+    the_local_network = 0, the_local_network_mask = 0;
+
     if(ether_addr != NULL) {
       if((hostIpAddress == NULL)
 	 || ((hostIpAddress != NULL)
-	     && isPseudoLocalAddress(hostIpAddress, actualDeviceId)
-	     /* && (!isBroadcastAddress(hostIpAddress))*/
+	     && isPseudoLocalAddress(hostIpAddress, actualDeviceId, &the_local_network, &the_local_network_mask)
+	     /* && (!isBroadcastAddress(hostIpAddress, &the_local_network, &the_local_network_mask))*/
 	     )) {
 	char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
@@ -1007,6 +1011,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	symEthName = getSpecialMacInfo(el, (short)(!myGlobals.separator[0]));
 	FD_SET(FLAG_SUBNET_LOCALHOST, &el->flags);
 	FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
+	/* traceEvent(CONST_TRACE_WARNING, "-> %u/%u", the_local_network, the_local_network_mask); */
       } else if(hostIpAddress != NULL) {
 	/* This is packet that's being routed or belonging to a
 	   remote network that uses the same physical wire (or forged)*/
@@ -1022,10 +1027,10 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 
 	  FD_CLR(FLAG_SUBNET_LOCALHOST, &el->flags);
 
-	  if(isPrivateAddress(hostIpAddress)) FD_SET(FLAG_PRIVATE_IP_ADDRESS, &el->flags);
+	  if(isPrivateAddress(hostIpAddress, &the_local_network, &the_local_network_mask)) FD_SET(FLAG_PRIVATE_IP_ADDRESS, &el->flags);
 
-	  if(!isBroadcastAddress(hostIpAddress)) {
-	    if(isPseudoLocalAddress(hostIpAddress, actualDeviceId))
+	  if(!isBroadcastAddress(hostIpAddress, &the_local_network, &the_local_network_mask)) {
+	    if(isPseudoLocalAddress(hostIpAddress, actualDeviceId, &the_local_network, &the_local_network_mask))
 	      FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
 	    else
 	      FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
@@ -1052,7 +1057,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	}
 
 	FD_SET(FLAG_BROADCAST_HOST, &el->flags);
-	if(isMulticastAddress(&el->hostIpAddress))
+	if(isMulticastAddress(&el->hostIpAddress, &the_local_network, &the_local_network_mask))
 	  FD_SET(FLAG_MULTICAST_HOST, &el->flags);
 	strncpy(el->hostNumIpAddress,
 		_addrtostr(&el->hostIpAddress, buf, sizeof(buf)),
@@ -1061,7 +1066,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 
 	if((!addrnull(&el->hostIpAddress)) /* 0.0.0.0 */
 	   && (!addrfull(&el->hostIpAddress)) /* 255.255.255.255 */
-	   && isBroadcastAddress(&el->hostIpAddress)) {
+	   && isBroadcastAddress(&el->hostIpAddress, &the_local_network, &the_local_network_mask)) {
 	  /*
 	    The sender of this packet has obviously a wrong netmask because:
 	    - it is a local host
@@ -1103,10 +1108,10 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       strncpy(el->hostNumIpAddress,
 	      _addrtostr(hostIpAddress, buf, sizeof(buf)),
 	      sizeof(el->hostNumIpAddress));
-      if(isBroadcastAddress(&el->hostIpAddress)) FD_SET(FLAG_BROADCAST_HOST, &el->flags);
-      if(isMulticastAddress(&el->hostIpAddress)) FD_SET(FLAG_MULTICAST_HOST, &el->flags);
-      if(isPrivateAddress(hostIpAddress))        FD_SET(FLAG_PRIVATE_IP_ADDRESS,  &el->flags);
-      if((ether_addr == NULL) && (isPseudoLocalAddress(hostIpAddress, actualDeviceId)))
+      if(isBroadcastAddress(&el->hostIpAddress, &the_local_network, &the_local_network_mask)) FD_SET(FLAG_BROADCAST_HOST, &el->flags);
+      if(isMulticastAddress(&el->hostIpAddress, &the_local_network, &the_local_network_mask)) FD_SET(FLAG_MULTICAST_HOST, &el->flags);
+      if(isPrivateAddress(hostIpAddress, &the_local_network, &the_local_network_mask))        FD_SET(FLAG_PRIVATE_IP_ADDRESS,  &el->flags);
+      if((ether_addr == NULL) && (isPseudoLocalAddress(hostIpAddress, actualDeviceId, &the_local_network, &the_local_network_mask)))
 	FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
 
       setResolvedName(el, el->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
