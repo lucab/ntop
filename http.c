@@ -33,63 +33,63 @@
 /* Private structure definitions */
 
 struct _HTTPstatus {
-    int statusCode;
-    char *reasonPhrase;
-    char *longDescription;
+  int statusCode;
+  char *reasonPhrase;
+  char *longDescription;
 };
 
 /*
-   This is the complete list of "Status Codes" and suggested
-   "Reason Phrases" for HTTP responses, as stated in RFC 2068
-   NOTE: the natural order is altered so "200 OK" results the
-         first item in the table (index = 0)
+  This is the complete list of "Status Codes" and suggested
+  "Reason Phrases" for HTTP responses, as stated in RFC 2068
+  NOTE: the natural order is altered so "200 OK" results the
+  first item in the table (index = 0)
 */
 struct _HTTPstatus HTTPstatus[] = {
-    { 200, "OK", NULL },
-    { 100, "Continue", NULL },
-    { 101, "Switching Protocols", NULL },
-    { 201, "Created", NULL },
-    { 202, "Accepted", NULL },
-    { 203, "Non-Authoritative Information", NULL },
-    { 204, "No Content", NULL },
-    { 205, "Reset Content", NULL },
-    { 206, "Partial Content", NULL },
-    { 300, "Multiple Choices", NULL },
-    { 301, "Moved Permanently", NULL },
-    { 302, "Moved Temporarily", NULL },
-    { 303, "See Other", NULL },
-    { 304, "Not Modified", NULL },
-    { 305, "Use Proxy", NULL },
-    { 400, "Bad Request", "The specified request is invalid." },
-    { 401, "Authorization Required", "Unauthorized to access the document." },
-    { 402, "Payment Required", NULL },
-    { 403, "Forbidden", "Server refused to fulfill your request." },
-    { 404, "Not Found", "The server cannot find the requested page "
-                        "(page expired or ntop configuration ?)." },
-    { 405, "Method Not Allowed", NULL },
-    { 406, "Not Acceptable", NULL },
-    { 407, "Proxy Authentication Required", NULL },
-    { 408, "Request Time-out", "The request was timed-out." },
-    { 409, "Conflict", NULL },
-    { 410, "Gone", "The page you requested is not available in your current ntop "
-                   "<A HREF=\"/" CONST_INFO_NTOP_HTML "\">configuration</A>. See the ntop "
-                   "<A HREF=\"/" CONST_MAN_NTOP_HTML "\">man page</A> for more information" },
-    { 411, "Length Required", NULL },
-    { 412, "Precondition Failed", NULL },
-    { 413, "Request Entity Too Large", NULL },
-    { 414, "Request-URI Too Large", NULL },
-    { 415, "Unsupported Media Type", NULL },
-    { 500, "Internal Server Error", NULL },
-    { 501, "Not Implemented", "The requested method is not implemented by this server." },
-    { 502, "Bad Gateway", NULL },
-    { 503, "Service Unavailable", NULL },
-    { 504, "Gateway Time-out", NULL },
-    { 505, "HTTP Version not supported", "This server doesn't support the specified HTTP version." },
+  { 200, "OK", NULL },
+  { 100, "Continue", NULL },
+  { 101, "Switching Protocols", NULL },
+  { 201, "Created", NULL },
+  { 202, "Accepted", NULL },
+  { 203, "Non-Authoritative Information", NULL },
+  { 204, "No Content", NULL },
+  { 205, "Reset Content", NULL },
+  { 206, "Partial Content", NULL },
+  { 300, "Multiple Choices", NULL },
+  { 301, "Moved Permanently", NULL },
+  { 302, "Moved Temporarily", NULL },
+  { 303, "See Other", NULL },
+  { 304, "Not Modified", NULL },
+  { 305, "Use Proxy", NULL },
+  { 400, "Bad Request", "The specified request is invalid." },
+  { 401, "Authorization Required", "Unauthorized to access the document." },
+  { 402, "Payment Required", NULL },
+  { 403, "Forbidden", "Server refused to fulfill your request." },
+  { 404, "Not Found", "The server cannot find the requested page "
+    "(page expired or ntop configuration ?)." },
+  { 405, "Method Not Allowed", NULL },
+  { 406, "Not Acceptable", NULL },
+  { 407, "Proxy Authentication Required", NULL },
+  { 408, "Request Time-out", "The request was timed-out." },
+  { 409, "Conflict", NULL },
+  { 410, "Gone", "The page you requested is not available in your current ntop "
+    "<A HREF=\"/" CONST_INFO_NTOP_HTML "\">configuration</A>. See the ntop "
+    "<A HREF=\"/" CONST_MAN_NTOP_HTML "\">man page</A> for more information" },
+  { 411, "Length Required", NULL },
+  { 412, "Precondition Failed", NULL },
+  { 413, "Request Entity Too Large", NULL },
+  { 414, "Request-URI Too Large", NULL },
+  { 415, "Unsupported Media Type", NULL },
+  { 500, "Internal Server Error", NULL },
+  { 501, "Not Implemented", "The requested method is not implemented by this server." },
+  { 502, "Bad Gateway", NULL },
+  { 503, "Service Unavailable", NULL },
+  { 504, "Gateway Time-out", NULL },
+  { 505, "HTTP Version not supported", "This server doesn't support the specified HTTP version." },
 };
 
 /*
   Note: the numbers below are offsets inside the HTTPstatus table,
-        they must be corrected every time the table is modified.
+  they must be corrected every time the table is modified.
 */
 #define BITFLAG_HTTP_STATUS_200	( 0<<8)
 #define BITFLAG_HTTP_STATUS_302	(11<<8)
@@ -212,8 +212,8 @@ static int readHTTPheader(char* theRequestedURL,
 
     if(myGlobals.newSock > 0) {
       /*
-	 Call select only for HTTP.
-	 Fix courtesy of Olivier Maul <oli@42.nu>
+	Call select only for HTTP.
+	Fix courtesy of Olivier Maul <oli@42.nu>
       */
 
       /* select returns immediately */
@@ -406,24 +406,24 @@ char* encodeString(char* in, char* out, u_int out_len) {
   out[0] = '\0';
   
   for(i = out_idx = 0; i < strlen(in); i++) {
-      if(isalnum(in[i])) {
-	out[out_idx++] = in[i];
-	if(out_idx >= out_len) return(out);
+    if(isalnum(in[i])) {
+      out[out_idx++] = in[i];
+      if(out_idx >= out_len) return(out);
 
-      } else if(in[i] == ' ') {
-	out[out_idx++] = '+';
-	if(out_idx >= out_len) return(out);
-      } else {
-	char hex_str[8];
+    } else if(in[i] == ' ') {
+      out[out_idx++] = '+';
+      if(out_idx >= out_len) return(out);
+    } else {
+      char hex_str[8];
 
-	out[out_idx++] = '%';
+      out[out_idx++] = '%';
 
-	sprintf(hex_str, "%02X", in[i] & 0xFF);
-	out[out_idx++] = hex_str[0];
-	if(out_idx >= out_len) return(out);
-	out[out_idx++] = hex_str[1];
-	if(out_idx >= out_len) return(out);
-      }
+      sprintf(hex_str, "%02X", in[i] & 0xFF);
+      out[out_idx++] = hex_str[0];
+      if(out_idx >= out_len) return(out);
+      out[out_idx++] = hex_str[1];
+      if(out_idx >= out_len) return(out);
+    }
   }
   
   out[out_idx++] = '\0';
@@ -513,256 +513,254 @@ static void ssiMenu_Head() {
   memset(&buf, 0, sizeof(buf));
 
   sendStringWOssi(
-             "<link rel=\"stylesheet\" href=\"/theme.css\" TYPE=\"text/css\">\n"
-             "<script type=\"text/javascript\" language=\"JavaScript\" src=\"/theme.js\"></script>\n"
-             "<script type=\"text/javascript\" language=\"JavaScript\" SRC=\"/JSCookMenu.js\"></script>\n"
-             "<script type=\"text/javascript\" language=\"JavaScript\"><!--\n"
-             "var ntopMenu =\n"
-             "[\n"
-             "	[null,'About',null,null,null,\n"
-             "		[null,'What is ntop?','/" CONST_ABTNTOP_HTML "',null,null],\n"
-             "		[null,'Show Configuration','/" CONST_INFO_NTOP_HTML "',null,null],\n"
-             "		[null,'Credits','/" CONST_CREDITS_HTML "',null,null],\n"
-             "		[null,'Man Page','/" CONST_MAN_NTOP_HTML "',null,null],\n"
-             "		['<img src=\"/help.png\">','Help','/ntop" CONST_NTOP_HELP_HTML "',null,null],\n"
-             "		['<img src=\"/bug.png\">','Report a Problem','/" CONST_PROBLEMRPT_HTML "',null,null],\n"
-             "		[null,'FAQ','/faq.html',null,null],\n"
-             "		['<img src=\"/Risk_high.gif\">','Risk Flags','/" CONST_NTOP_HELP_HTML "',null,null],\n"
-             "		],\n"
-             "	[null,'Summary',null,null,null,\n"
-             "		[null,'Traffic','/" CONST_TRAFFIC_STATS_HTML "',null,null],\n"
-             "		[null,'Hosts','/" CONST_HOSTS_INFO_HTML "',null,null],\n"
-             "		[null,'Network Load','/" CONST_SORT_DATA_THPT_STATS_HTML "',null,null],\n");
-  if(myGlobals.haveASN == TRUE)
-    sendStringWOssi(
-             "		[null,'ASN Info','/" CONST_AS_LIST_HTML "',null,null],\n");
+		  "<link rel=\"stylesheet\" href=\"/theme.css\" TYPE=\"text/css\">\n"
+		  "<script type=\"text/javascript\" language=\"JavaScript\" src=\"/theme.js\"></script>\n"
+		  "<script type=\"text/javascript\" language=\"JavaScript\" SRC=\"/JSCookMenu.js\"></script>\n"
+		  "<script type=\"text/javascript\" language=\"JavaScript\"><!--\n"
+		  "var ntopMenu =\n"
+		  "[\n"
+		  "	[null,'About',null,null,null,\n"
+		  "		[null,'What is ntop?','/" CONST_ABTNTOP_HTML "',null,null],\n"
+		  "		[null,'Show Configuration','/" CONST_INFO_NTOP_HTML "',null,null],\n"
+		  "		[null,'Credits','/" CONST_CREDITS_HTML "',null,null],\n"
+		  "		[null,'Man Page','/" CONST_MAN_NTOP_HTML "',null,null],\n"
+		  "		['<img src=\"/help.png\">','Help','/ntop" CONST_NTOP_HELP_HTML "',null,null],\n"
+		  "		['<img src=\"/bug.png\">','Report a Problem','/" CONST_PROBLEMRPT_HTML "',null,null],\n"
+		  "		[null,'FAQ','/faq.html',null,null],\n"
+		  "		['<img src=\"/Risk_high.gif\">','Risk Flags','/" CONST_NTOP_HELP_HTML "',null,null],\n"
+		  "		],\n"
+		  "	[null,'Summary',null,null,null,\n"
+		  "		[null,'Traffic','/" CONST_TRAFFIC_STATS_HTML "',null,null],\n"
+		  "		[null,'Hosts','/" CONST_HOSTS_INFO_HTML "',null,null],\n"
+		  "		[null,'Network Load','/" CONST_SORT_DATA_THPT_STATS_HTML "',null,null],\n");
   if(myGlobals.haveVLANs == TRUE)
     sendStringWOssi(
-             "		[null,'VLAN Info','/" CONST_VLAN_LIST_HTML "',null,null],\n");
+		    "		[null,'VLAN Info','/" CONST_VLAN_LIST_HTML "',null,null],\n");
   sendStringWOssi(
-             "		[null,'Network Flows','/" CONST_NET_FLOWS_HTML "',null,null],\n"
-             "		],\n"
-             "  [null,'All Protocols',null,null,null,\n"
-             "          [null,'Traffic','/" CONST_SORT_DATA_PROTOS_HTML "',null,null],\n"
-             "          [null,'Throughput','/" CONST_SORT_DATA_THPT_HTML "',null,null],\n"
-             "          [null,'Activity','/" CONST_SORT_DATA_HOST_TRAFFIC_HTML "',null,null],\n"
-             "          ],\n"
-             "	[null,'IP',null,null,null,\n"
-             "		[null,'Summary',null,null,null,\n"
-             "				[null,'Traffic','/" CONST_SORT_DATA_IP_HTML "',null,null],\n"
-             "				[null,'Multicast','/" CONST_MULTICAST_STATS_HTML "',null,null],\n"
-             "				[null,'Internet Domain','/" CONST_DOMAIN_STATS_HTML "',null,null],\n"
-             "				[null,'Networks','/" CONST_DOMAIN_STATS_HTML "?netmode=1',null,null],\n"
-             "				[null,'Host Clusters','/" CONST_CLUSTER_STATS_HTML "',null,null],\n"
-             "				[null,'Distribution','/" CONST_IP_PROTO_DISTRIB_HTML "',null,null],\n"
-             "		],\n"
-             "		[null,'Traffic Directions',null,null,null,\n"
-             "				[null,'Local to Local','/" CONST_IP_L_2_L_HTML "',null,null],\n"
-             "				[null,'Local to Remote','/" CONST_IP_L_2_R_HTML "',null,null],\n"
-             "				[null,'Remote to Local','/" CONST_IP_R_2_L_HTML "',null,null],\n"
-             "				[null,'Remote to Remote','/" CONST_IP_R_2_R_HTML "',null,null],\n"
-             "		],\n"
-             "		[null,'Local',null,null,null,\n");
+		  "		[null,'Network Flows','/" CONST_NET_FLOWS_HTML "',null,null],\n"
+		  "		],\n"
+		  "  [null,'All Protocols',null,null,null,\n"
+		  "          [null,'Traffic','/" CONST_SORT_DATA_PROTOS_HTML "',null,null],\n"
+		  "          [null,'Throughput','/" CONST_SORT_DATA_THPT_HTML "',null,null],\n"
+		  "          [null,'Activity','/" CONST_SORT_DATA_HOST_TRAFFIC_HTML "',null,null],\n"
+		  "          ],\n"
+		  "	[null,'IP',null,null,null,\n"
+		  "		[null,'Summary',null,null,null,\n"
+		  "				[null,'Traffic','/" CONST_SORT_DATA_IP_HTML "',null,null],\n"
+		  "				[null,'Multicast','/" CONST_MULTICAST_STATS_HTML "',null,null],\n"
+		  "				[null,'Internet Domain','/" CONST_DOMAIN_STATS_HTML "',null,null],\n"
+		  "				[null,'Networks','/" CONST_DOMAIN_STATS_HTML "?netmode=1',null,null],\n"
+		  "				[null,'ASs','/" CONST_DOMAIN_STATS_HTML "?netmode=2',null,null],\n"
+		  "				[null,'Host Clusters','/" CONST_CLUSTER_STATS_HTML "',null,null],\n"
+		  "				[null,'Distribution','/" CONST_IP_PROTO_DISTRIB_HTML "',null,null],\n"
+		  "		],\n"
+		  "		[null,'Traffic Directions',null,null,null,\n"
+		  "				[null,'Local to Local','/" CONST_IP_L_2_L_HTML "',null,null],\n"
+		  "				[null,'Local to Remote','/" CONST_IP_L_2_R_HTML "',null,null],\n"
+		  "				[null,'Remote to Local','/" CONST_IP_R_2_L_HTML "',null,null],\n"
+		  "				[null,'Remote to Remote','/" CONST_IP_R_2_R_HTML "',null,null],\n"
+		  "		],\n"
+		  "		[null,'Local',null,null,null,\n");
   if(myGlobals.runningPref.dontTrustMACaddr)
     sendStringWOssi(
-             "				[null,'Routers','/" CONST_LOCAL_ROUTERS_LIST_HTML "',null,null],\n");
+		    "				[null,'Routers','/" CONST_LOCAL_ROUTERS_LIST_HTML "',null,null],\n");
   sendStringWOssi(
-             "				[null,'Ports Used','/" CONST_IP_PROTO_USAGE_HTML "',null,null],\n");
+		  "				[null,'Ports Used','/" CONST_IP_PROTO_USAGE_HTML "',null,null],\n");
   if(myGlobals.runningPref.enableSessionHandling)
     sendStringWOssi(
-             "				[null,'Active TCP/UDP Sessions','/" CONST_ACTIVE_TCP_SESSIONS_HTML "',null,null],\n");
+		    "				[null,'Active TCP/UDP Sessions','/" CONST_ACTIVE_TCP_SESSIONS_HTML "',null,null],\n");
   sendStringWOssi(
-             "				[null,'Host Fingerprint','/" CONST_HOSTS_LOCAL_FINGERPRINT_HTML "',null,null],\n"
-             "				[null,'Host Characterization','/" CONST_HOSTS_LOCAL_CHARACT_HTML "',null,null],\n");
+		  "				[null,'Host Fingerprint','/" CONST_HOSTS_LOCAL_FINGERPRINT_HTML "',null,null],\n"
+		  "				[null,'Host Characterization','/" CONST_HOSTS_LOCAL_CHARACT_HTML "',null,null],\n");
 #ifndef WIN32
   sendStringWOssi(
-             "				[null,'Network Traffic Map','/" CONST_NETWORK_MAP_HTML "',null,null],\n");
+		  "				[null,'Network Traffic Map','/" CONST_NETWORK_MAP_HTML "',null,null],\n");
 #endif
   sendStringWOssi(
-             "				[null,'Local Matrix','/" CONST_IP_TRAFFIC_MATRIX_HTML "',null,null],\n"
-             "		],\n"
-             "	],\n");
+		  "				[null,'Local Matrix','/" CONST_IP_TRAFFIC_MATRIX_HTML "',null,null],\n"
+		  "		],\n"
+		  "	],\n");
   if(!myGlobals.runningPref.printIpOnly) {
     sendStringWOssi(
-             "	[null,'Media',null,null,null,\n"
-             "		[null,'Fibre Channel',null,null,null,\n"
-             "				[null,'Traffic','/" CONST_FC_DATA_HTML "',null,null],\n"
-             "				[null,'Throughput','/" CONST_FC_THPT_HTML "',null,null],\n"
-             "				[null,'Activity','/" CONST_FC_ACTIVITY_HTML "',null,null],\n"
-             "				[null,'Hosts','/" CONST_FC_HOSTS_INFO_HTML "',null,null],\n"
-             "				[null,'Traffic Per Port','/" CONST_FC_TRAFFIC_HTML "',null,null],\n");
+		    "	[null,'Media',null,null,null,\n"
+		    "		[null,'Fibre Channel',null,null,null,\n"
+		    "				[null,'Traffic','/" CONST_FC_DATA_HTML "',null,null],\n"
+		    "				[null,'Throughput','/" CONST_FC_THPT_HTML "',null,null],\n"
+		    "				[null,'Activity','/" CONST_FC_ACTIVITY_HTML "',null,null],\n"
+		    "				[null,'Hosts','/" CONST_FC_HOSTS_INFO_HTML "',null,null],\n"
+		    "				[null,'Traffic Per Port','/" CONST_FC_TRAFFIC_HTML "',null,null],\n");
     if(myGlobals.runningPref.enableSessionHandling) 
       sendStringWOssi(
-             "				[null,'Sessions','/" CONST_FC_SESSIONS_HTML "',null,null],\n");
+		      "				[null,'Sessions','/" CONST_FC_SESSIONS_HTML "',null,null],\n");
     sendStringWOssi(
-             "				[null,'VSANs','/" CONST_VSAN_LIST_HTML "',null,null],\n"
-             "				[null,'VSAN Summary','/" CONST_VSAN_DISTRIB_HTML "',null,null],\n"
-             "		],\n");
+		    "				[null,'VSANs','/" CONST_VSAN_LIST_HTML "',null,null],\n"
+		    "				[null,'VSAN Summary','/" CONST_VSAN_DISTRIB_HTML "',null,null],\n"
+		    "		],\n");
     if(myGlobals.runningPref.enableSessionHandling) 
       sendStringWOssi(
-             "		[null,'SCSI Sessions',null,null,null,\n"
-             "				[null,'Bytes','/" CONST_SCSI_BYTES_HTML "',null,null],\n"
-             "				[null,'Times','/" CONST_SCSI_TIMES_HTML "',null,null],\n"
-             "				[null,'Status','/" CONST_SCSI_STATUS_HTML "',null,null],\n"
-             "				[null,'Task Management','/" CONST_SCSI_TM_HTML "',null,null],\n"
-             "		],\n");
-  sendStringWOssi(
-             "	],\n");
+		      "		[null,'SCSI Sessions',null,null,null,\n"
+		      "				[null,'Bytes','/" CONST_SCSI_BYTES_HTML "',null,null],\n"
+		      "				[null,'Times','/" CONST_SCSI_TIMES_HTML "',null,null],\n"
+		      "				[null,'Status','/" CONST_SCSI_STATUS_HTML "',null,null],\n"
+		      "				[null,'Task Management','/" CONST_SCSI_TM_HTML "',null,null],\n"
+		      "		],\n");
+    sendStringWOssi(
+		    "	],\n");
   }
   sendStringWOssi(
-             "	[null,'Utils',null,null,null,\n"
-             "		[null,'Data Dump','/dump.html',null,null],\n"
-             "		[null,'View Log','/" CONST_VIEW_LOG_HTML "',null,null],\n"
-             "		],\n");
+		  "	[null,'Utils',null,null,null,\n"
+		  "		[null,'Data Dump','/dump.html',null,null],\n"
+		  "		[null,'View Log','/" CONST_VIEW_LOG_HTML "',null,null],\n"
+		  "		],\n");
 
   while(flows != NULL) {
     if((flows->pluginStatus.pluginPtr != NULL) && (flows->pluginStatus.pluginPtr->pluginURLname != NULL)) {
       if(foundAplugin == 0) {
         sendStringWOssi(
-               "	[null,'Plugins',null,null,null,\n");
+			"	[null,'Plugins',null,null,null,\n");
         foundAplugin = 1;
       }
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-                  "		[null,'%s',null,null,null,\n",
-                  flows->pluginStatus.pluginPtr->pluginName);
+		    "		[null,'%s',null,null,null,\n",
+		    flows->pluginStatus.pluginPtr->pluginName);
       sendStringWOssi(buf);
    
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-                  "				[null,'%sctivate','/" CONST_SHOW_PLUGINS_HTML "?%s=%d',null,null],\n",
-                  flows->pluginStatus.activePlugin ? "Dea" : "A",
-                  flows->pluginStatus.pluginPtr->pluginURLname,
-                  flows->pluginStatus.activePlugin ? 0: 1);
+		    "				[null,'%sctivate','/" CONST_SHOW_PLUGINS_HTML "?%s=%d',null,null],\n",
+		    flows->pluginStatus.activePlugin ? "Dea" : "A",
+		    flows->pluginStatus.pluginPtr->pluginURLname,
+		    flows->pluginStatus.activePlugin ? 0: 1);
       sendStringWOssi(buf);
 
       switch(flows->pluginStatus.pluginPtr->viewConfigureFlag) {
-        case NoViewNoConfigure:
-          break;
-        case ViewOnly:
-          if(flows->pluginStatus.activePlugin) {
-            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+      case NoViewNoConfigure:
+	break;
+      case ViewOnly:
+	if(flows->pluginStatus.activePlugin) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                         "				[null,'View','/" CONST_PLUGINS_HEADER "%s',null,null],\n",
                         flows->pluginStatus.pluginPtr->pluginURLname);
-            sendStringWOssi(buf);
-          }
-          break;
-        case ConfigureOnly:
-          if((flows->pluginStatus.pluginPtr->inactiveSetup) ||
-             (flows->pluginStatus.activePlugin)) {
-            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+	  sendStringWOssi(buf);
+	}
+	break;
+      case ConfigureOnly:
+	if((flows->pluginStatus.pluginPtr->inactiveSetup) ||
+	   (flows->pluginStatus.activePlugin)) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                         "				[null,'Configure','/" CONST_PLUGINS_HEADER "%s',null,null],\n",
                         flows->pluginStatus.pluginPtr->pluginURLname);
-            sendStringWOssi(buf);
-          }
-          break;
-        default:
-          if((flows->pluginStatus.pluginPtr->inactiveSetup) ||
-             (flows->pluginStatus.activePlugin)) {
-            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+	  sendStringWOssi(buf);
+	}
+	break;
+      default:
+	if((flows->pluginStatus.pluginPtr->inactiveSetup) ||
+	   (flows->pluginStatus.activePlugin)) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                         "				[null,'View/Configure','/" CONST_PLUGINS_HEADER "%s',null,null],\n",
                         flows->pluginStatus.pluginPtr->pluginURLname);
-            sendStringWOssi(buf);
-          }
-          break;
+	  sendStringWOssi(buf);
+	}
+	break;
       }
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-                  "				[null,'Describe','/" CONST_SHOW_PLUGINS_HTML "?%s',null,null],\n",
-                  flows->pluginStatus.pluginPtr->pluginURLname);
+		    "				[null,'Describe','/" CONST_SHOW_PLUGINS_HTML "?%s',null,null],\n",
+		    flows->pluginStatus.pluginPtr->pluginURLname);
       sendStringWOssi(buf);
 
       ep = flows->pluginStatus.pluginPtr->extraPages;
       while((ep != NULL) && (ep->url != NULL)) {
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-                    "				[%s%s%s,'%s','/" CONST_PLUGINS_HEADER "%s/%s',null,null],\n",
-                    ep->icon != NULL ? "'<img src=\"/" : "",
-                    ep->icon != NULL ? ep->icon : "null",
-                    ep->icon != NULL ? "\">'" : "",
-                    ep->descr,
-                    flows->pluginStatus.pluginPtr->pluginURLname,
-                    ep->url);
+		      "				[%s%s%s,'%s','/" CONST_PLUGINS_HEADER "%s/%s',null,null],\n",
+		      ep->icon != NULL ? "'<img src=\"/" : "",
+		      ep->icon != NULL ? ep->icon : "null",
+		      ep->icon != NULL ? "\">'" : "",
+		      ep->descr,
+		      flows->pluginStatus.pluginPtr->pluginURLname,
+		      ep->url);
         sendStringWOssi(buf);
         ep++;
       }
 
       sendStringWOssi(
-                  "             ],\n");
+		      "             ],\n");
     } /* true plugin */
 
     flows = flows->next;
   }
   if(foundAplugin != 0)
     sendStringWOssi(
-             "		[null,'All','/" CONST_SHOW_PLUGINS_HTML "',null,null],\n"
-             "		],\n");
+		    "		[null,'All','/" CONST_SHOW_PLUGINS_HTML "',null,null],\n"
+		    "		],\n");
 
   sendStringWOssi(
-             "	[null,'Admin',null,null,null,\n");
+		  "	[null,'Admin',null,null,null,\n");
   if(!myGlobals.runningPref.mergeInterfaces)
     sendStringWOssi(
-             "		[null,'Switch NIC','/" CONST_SWITCH_NIC_HTML "',null,null],\n");
+		    "		[null,'Switch NIC','/" CONST_SWITCH_NIC_HTML "',null,null],\n");
   sendStringWOssi(
-             "		['<img src=\"/lock.png\">','Configure',null,null,null,\n"
-             "			['<img src=\"/lock.png\">','Startup Options','/" CONST_CONFIG_NTOP_HTML "',null,null],\n"
-             "			['<img src=\"/lock.png\">','Preferences','/"CONST_EDIT_PREFS"',null,null],\n"
-             "			['<img src=\"/lock.png\">','Packet Filter','/" CONST_CHANGE_FILTER_HTML "',null,null],\n"
-             "			['<img src=\"/lock.png\">','Reset Stats','/" CONST_RESET_STATS_HTML "',null,null],\n"
-             "			['<img src=\"/lock.png\">','Web Users','/" CONST_SHOW_USERS_HTML "',null,null],\n"
-             "			['<img src=\"/lock.png\">','Protect URLs','/" CONST_SHOW_URLS_HTML "',null,null],\n"
-             "		],\n"
-             "		['<img src=\"/lock.png\">','Shutdown','/" CONST_SHUTDOWN_NTOP_HTML "',null,null],\n"
-             "	]\n"
-             "];\n"
-             "--></script>\n");
+		  "		['<img src=\"/lock.png\">','Configure',null,null,null,\n"
+		  "			['<img src=\"/lock.png\">','Startup Options','/" CONST_CONFIG_NTOP_HTML "',null,null],\n"
+		  "			['<img src=\"/lock.png\">','Preferences','/"CONST_EDIT_PREFS"',null,null],\n"
+		  "			['<img src=\"/lock.png\">','Packet Filter','/" CONST_CHANGE_FILTER_HTML "',null,null],\n"
+		  "			['<img src=\"/lock.png\">','Reset Stats','/" CONST_RESET_STATS_HTML "',null,null],\n"
+		  "			['<img src=\"/lock.png\">','Web Users','/" CONST_SHOW_USERS_HTML "',null,null],\n"
+		  "			['<img src=\"/lock.png\">','Protect URLs','/" CONST_SHOW_URLS_HTML "',null,null],\n"
+		  "		],\n"
+		  "		['<img src=\"/lock.png\">','Shutdown','/" CONST_SHUTDOWN_NTOP_HTML "',null,null],\n"
+		  "	]\n"
+		  "];\n"
+		  "--></script>\n");
 }
 
 static void ssiMenu_Body() {
     
   sendStringWOssi(
-             "<table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
-             " <tr>\n"
-             "  <td colspan=\"2\" align=\"left\">\n"
-             "   <table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
-             "    <tr>\n"
-             "     <td colspan=\"2\" align=\"left\">");
+		  "<table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
+		  " <tr>\n"
+		  "  <td colspan=\"2\" align=\"left\">\n"
+		  "   <table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
+		  "    <tr>\n"
+		  "     <td colspan=\"2\" align=\"left\">");
   if(myGlobals.runningPref.instance != NULL) {
     sendStringWOssi(
-             "      <table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
-             "       <tr>"
-             "        <td><img src=\"/");
+		    "      <table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
+		    "       <tr>"
+		    "        <td><img src=\"/");
     if(myGlobals.runningPref.logo != NULL) {
       sendStringWOssi(myGlobals.runningPref.logo);
     } else {
       sendStringWOssi(CONST_NTOP_LOGO_GIF);
     }
     sendStringWOssi("\" class=tooltip alt=\"ntop logo\"></td>\n"
-             "        <td valign=\"top\" align=\"right\" class=\"instance\">Instance:&nbsp;");
+		    "        <td valign=\"top\" align=\"right\" class=\"instance\">Instance:&nbsp;");
     sendStringWOssi(myGlobals.runningPref.instance);
     sendStringWOssi(
-             "        </td>\n"
-             "       </tr>\n"
-             "      </table>");
+		    "        </td>\n"
+		    "       </tr>\n"
+		    "      </table>");
   } else {
     sendStringWOssi(
-             "      <img src=\"/" CONST_NTOP_LOGO_GIF "\">");
+		    "      <img src=\"/" CONST_NTOP_LOGO_GIF "\">");
   }
   sendStringWOssi(
-             "     </td>\n"
-             "    </tr>\n"
-             "   </table></td>\n"
-             " </tr>\n"
-             " <tr>\n"
-             "  <th class=\"leftmenuitem\">\n"
-	     "   <noscript>Please enable JavaScript support in your browser</noscript>\n"
-             "   <div id=\"ntopMenuID\">Please enable make sure that the ntop html/ directory is properly installed</div>\n"
-             "<script type=\"text/javascript\" language=\"JavaScript\"><!--\n"
-             "        cmDraw ('ntopMenuID', ntopMenu, 'hbr', cmThemeOffice, 'ThemeOffice');\n"
-             "-->\n"
-             "</script></th>\n"
-             "  <th class=\"leftmenuitem\" align=\"right\">(C) 1998-2006 - " CONST_MAILTO_LUCA "&nbsp;&nbsp;</th>\n"
-             " </tr>\n"
-             "</table>\n"
-             "<p>&nbsp;</p>\n");
+		  "     </td>\n"
+		  "    </tr>\n"
+		  "   </table></td>\n"
+		  " </tr>\n"
+		  " <tr>\n"
+		  "  <th class=\"leftmenuitem\">\n"
+		  "   <noscript>Please enable JavaScript support in your browser</noscript>\n"
+		  "   <div id=\"ntopMenuID\">Please enable make sure that the ntop html/ directory is properly installed</div>\n"
+		  "<script type=\"text/javascript\" language=\"JavaScript\"><!--\n"
+		  "        cmDraw ('ntopMenuID', ntopMenu, 'hbr', cmThemeOffice, 'ThemeOffice');\n"
+		  "-->\n"
+		  "</script></th>\n"
+		  "  <th class=\"leftmenuitem\" align=\"right\">(C) 1998-2006 - " CONST_MAILTO_LUCA "&nbsp;&nbsp;</th>\n"
+		  " </tr>\n"
+		  "</table>\n"
+		  "<p>&nbsp;</p>\n");
 
 }
 
@@ -772,9 +770,9 @@ static void processSSI(const char *ssiRequest) {
 
   int rc;
   char *ssiVirtual,
-       *ssiURIstart,
-       *ssiURIend,
-       *ssiPARMstart;
+    *ssiURIstart,
+    *ssiURIend,
+    *ssiPARMstart;
 
   myGlobals.numSSIRequests++;
 
@@ -840,10 +838,10 @@ static void processSSI(const char *ssiRequest) {
 
   while(ssiURIstart[0] == '/') { ssiURIstart++; }
   while((ssiURIend > ssiURIstart) &&
-         ((ssiURIend[0] == ' ') ||
-          (ssiURIend[0] == '\n') ||
-          (ssiURIend[0] == '\r') ||
-          (ssiURIend[0] == '\t'))) { 
+	((ssiURIend[0] == ' ') ||
+	 (ssiURIend[0] == '\n') ||
+	 (ssiURIend[0] == '\r') ||
+	 (ssiURIend[0] == '\t'))) { 
     ssiURIend[0] = '\0';
     ssiURIend--;
   }
@@ -1048,7 +1046,7 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
                      "ECONNRESET during sending of page to web client (skipping further warnings)");
 #endif
       } else if(errno == EBADF /* Bad file descriptor: a
-				   disconnected client is still sending */) {
+				  disconnected client is still sending */) {
         traceEvent(CONST_TRACE_INFO, "EBADF during sending of page to web client");
       } else {
         traceEvent(CONST_TRACE_INFO, "errno %d during sending of page to web client");
@@ -1128,35 +1126,35 @@ void printHTMLtrailer(void) {
   int i, len, numRealDevices = 0;
 
   switch (myGlobals.ntopRunState) {
-      case FLAG_NTOPSTATE_STOPCAP:
-	sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
-		   "Packet capture stopped"
-		   "</B></FONT></CENTER>");
-	break;
+  case FLAG_NTOPSTATE_STOPCAP:
+    sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
+	       "Packet capture stopped"
+	       "</B></FONT></CENTER>");
+    break;
 
-      case FLAG_NTOPSTATE_SHUTDOWN:
-      case FLAG_NTOPSTATE_SHUTDOWNREQ:
-        sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
-	           "ntop shutting down"
-	           "</B></FONT></CENTER>");
-        break;
+  case FLAG_NTOPSTATE_SHUTDOWN:
+  case FLAG_NTOPSTATE_SHUTDOWNREQ:
+    sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
+	       "ntop shutting down"
+	       "</B></FONT></CENTER>");
+    break;
 
-      case FLAG_NTOPSTATE_TERM:
-        sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
-	           "ntop stopped"
-	           "</B></FONT></CENTER>");
-        break;
+  case FLAG_NTOPSTATE_TERM:
+    sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
+	       "ntop stopped"
+	       "</B></FONT></CENTER>");
+    break;
   }
   
   sendString("\n<hr>\n<h5><font face=\"Helvetica, Arial, Sans Serif\" size=\"-1\"><b>\n");
   
   safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "Report created on %s ",
-	      ctime(&myGlobals.actTime));
+		ctime(&myGlobals.actTime));
   sendString(buf);
 
   if(myGlobals.runningPref.rFileName == NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "[ntop uptime: %s]\n",
-	      formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
+		  formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
 		  "[from file %s]\n",
@@ -1213,7 +1211,7 @@ void printHTMLtrailer(void) {
     for(i=len=numRealDevices=0; i<myGlobals.numDevices; i++, len=strlen(buf)) {
       if((!myGlobals.device[i].virtualDevice) && myGlobals.device[i].activeDevice) {
 	safe_snprintf(__FILE__, __LINE__, &buf[len], LEN_GENERAL_WORK_BUFFER - len, "%s%s",
-		    (numRealDevices>0) ? "," : "Listening on [", myGlobals.device[i].humanFriendlyName);
+		      (numRealDevices>0) ? "," : "Listening on [", myGlobals.device[i].humanFriendlyName);
 	numRealDevices++;
       }
     }
@@ -1230,11 +1228,11 @@ void printHTMLtrailer(void) {
   if ((myGlobals.runningPref.currentFilterExpression != NULL) &&
       (*myGlobals.runningPref.currentFilterExpression != '\0')) {
     safe_snprintf(__FILE__, __LINE__, &buf[len], LEN_GENERAL_WORK_BUFFER-len,
-		"with kernel (libpcap) filtering expression </b>\"%s\"<b><br>\n",
-		myGlobals.runningPref.currentFilterExpression);
+		  "with kernel (libpcap) filtering expression </b>\"%s\"<b><br>\n",
+		  myGlobals.runningPref.currentFilterExpression);
   } else {
     safe_snprintf(__FILE__, __LINE__, &buf[len], LEN_GENERAL_WORK_BUFFER-len,
-		"for all packets (i.e. without a filtering expression)\n<br>");
+		  "for all packets (i.e. without a filtering expression)\n<br>");
   }
 
   sendString(buf);
@@ -1273,49 +1271,49 @@ void termAccessLog(void) {
 /* ******************************* */
 
 static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent) {
- char theDate[48], myUser[64], buf[24];
- struct timeval loggingAt;
- unsigned long msSpent;
- char theZone[6];
- unsigned long gmtoffset;
+  char theDate[48], myUser[64], buf[24];
+  struct timeval loggingAt;
+  unsigned long msSpent;
+  char theZone[6];
+  unsigned long gmtoffset;
   struct tm t;
 
   if(myGlobals.accessLogFd != NULL) {
-   gettimeofday(&loggingAt, NULL);
+    gettimeofday(&loggingAt, NULL);
 
-   if(httpRequestedAt != NULL)
-     msSpent = (unsigned long)(delta_time(&loggingAt, httpRequestedAt)/1000);
-   else
-     msSpent = 0;
+    if(httpRequestedAt != NULL)
+      msSpent = (unsigned long)(delta_time(&loggingAt, httpRequestedAt)/1000);
+    else
+      msSpent = 0;
 
-   /* Use standard Apache format per http://httpd.apache.org/docs/logs.html */
-   strftime(theDate, sizeof(theDate), CONST_APACHELOG_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
+    /* Use standard Apache format per http://httpd.apache.org/docs/logs.html */
+    strftime(theDate, sizeof(theDate), CONST_APACHELOG_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
 
-   gmtoffset =  (myGlobals.thisZone < 0) ? -myGlobals.thisZone : myGlobals.thisZone;
-   safe_snprintf(__FILE__, __LINE__, theZone, sizeof(theZone), "%c%2.2ld%2.2ld",
-	       (myGlobals.thisZone < 0) ? '-' : '+', gmtoffset/3600, (gmtoffset/60)%60);
+    gmtoffset =  (myGlobals.thisZone < 0) ? -myGlobals.thisZone : myGlobals.thisZone;
+    safe_snprintf(__FILE__, __LINE__, theZone, sizeof(theZone), "%c%2.2ld%2.2ld",
+		  (myGlobals.thisZone < 0) ? '-' : '+', gmtoffset/3600, (gmtoffset/60)%60);
 
-   if((theHttpUser == NULL)
-      || (theHttpUser[0] == '\0'))
-     strncpy(myUser, "-", 64);
-   else {
-     safe_snprintf(__FILE__, __LINE__, myUser, sizeof(myUser), " %s ", theHttpUser);
-   }
+    if((theHttpUser == NULL)
+       || (theHttpUser[0] == '\0'))
+      strncpy(myUser, "-", 64);
+    else {
+      safe_snprintf(__FILE__, __LINE__, myUser, sizeof(myUser), " %s ", theHttpUser);
+    }
 
-   if(gzipBytesSent > 0)
-     fprintf(myGlobals.accessLogFd, "%s %s - [%s %s] \"%s\" %d %u/%u - - %lu\n",
-	     _addrtostr(requestFrom, buf, sizeof(buf)),
-	     myUser, theDate, theZone,
-	     httpRequestedURL, rc, gzipBytesSent, httpBytesSent,
-	     msSpent);
-   else
-     fprintf(myGlobals.accessLogFd, "%s %s - [%s %s] \"%s\" %d %u - - %lu\n",
-	     _addrtostr(requestFrom, buf, sizeof(buf)),
-	     myUser, theDate, theZone,
-	     httpRequestedURL, rc, httpBytesSent,
-	     msSpent);
-   fflush(myGlobals.accessLogFd);
- }
+    if(gzipBytesSent > 0)
+      fprintf(myGlobals.accessLogFd, "%s %s - [%s %s] \"%s\" %d %u/%u - - %lu\n",
+	      _addrtostr(requestFrom, buf, sizeof(buf)),
+	      myUser, theDate, theZone,
+	      httpRequestedURL, rc, gzipBytesSent, httpBytesSent,
+	      msSpent);
+    else
+      fprintf(myGlobals.accessLogFd, "%s %s - [%s %s] \"%s\" %d %u - - %lu\n",
+	      _addrtostr(requestFrom, buf, sizeof(buf)),
+	      myUser, theDate, theZone,
+	      httpRequestedURL, rc, httpBytesSent,
+	      msSpent);
+    fflush(myGlobals.accessLogFd);
+  }
 }
 
 /* ************************* */
@@ -1399,14 +1397,14 @@ static void returnHTTPspecialStatusCode(int statusFlag, char *additionalText) {
   printHTMLheader(buf, NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_HEADING);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-	   "<H1>Error %d</H1>\n%s\n",
-	   HTTPstatus[statusIdx].statusCode, HTTPstatus[statusIdx].longDescription);
+		"<H1>Error %d</H1>\n%s\n",
+		HTTPstatus[statusIdx].statusCode, HTTPstatus[statusIdx].longDescription);
   sendString(buf);
 
   if(strlen(httpRequestedURL) > 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-	     "<P>Received request:<BR><BLOCKQUOTE><TT>&quot;%s&quot;</TT></BLOCKQUOTE>",
-	     httpRequestedURL);
+		  "<P>Received request:<BR><BLOCKQUOTE><TT>&quot;%s&quot;</TT></BLOCKQUOTE>",
+		  httpRequestedURL);
     sendString(buf);
   }
 
@@ -1447,22 +1445,22 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
 #endif
   }
   safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "HTTP/1.0 %d %s\r\n",
-                   HTTPstatus[statusIdx].statusCode, HTTPstatus[statusIdx].reasonPhrase);
+		HTTPstatus[statusIdx].statusCode, HTTPstatus[statusIdx].reasonPhrase);
   sendString(tmpStr);
 
   if( (myGlobals.runningPref.P3Pcp != NULL) || (myGlobals.runningPref.P3Puri != NULL) ) {
-      sendString("P3P: ");
-      if(myGlobals.runningPref.P3Pcp != NULL) {
-          safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "cp=\"%s\"%s",
-                              myGlobals.runningPref.P3Pcp, myGlobals.runningPref.P3Puri != NULL ? ", " : "");
-          sendString(tmpStr);
-      }
+    sendString("P3P: ");
+    if(myGlobals.runningPref.P3Pcp != NULL) {
+      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "cp=\"%s\"%s",
+		    myGlobals.runningPref.P3Pcp, myGlobals.runningPref.P3Puri != NULL ? ", " : "");
+      sendString(tmpStr);
+    }
 
-      if(myGlobals.runningPref.P3Puri != NULL) {
-          safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "policyref=\"%s\"", myGlobals.runningPref.P3Puri);
-          sendString(tmpStr);
-       }
-       sendString("\r\n");
+    if(myGlobals.runningPref.P3Puri != NULL) {
+      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "policyref=\"%s\"", myGlobals.runningPref.P3Puri);
+      sendString(tmpStr);
+    }
+    sendString("\r\n");
   }
 
   /* Use en standard for this per RFC */
@@ -1486,46 +1484,46 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
   sendString(tmpStr);
 
   if(headerFlags & BITFLAG_HTTP_NEED_AUTHENTICATION) {
-      sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server\"\r\n");
+    sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server\"\r\n");
   }
 
   switch(mimeType) {
-    case FLAG_HTTP_TYPE_HTML:
-      sendString("Content-Type: text/html\r\n");
-      break;
-    case FLAG_HTTP_TYPE_GIF:
-      sendString("Content-Type: image/gif\r\n");
-      break;
-    case FLAG_HTTP_TYPE_JPEG:
-      sendString("Content-Type: image/jpeg\r\n");
-      break;
-    case FLAG_HTTP_TYPE_PNG:
-      sendString("Content-Type: image/png\r\n");
-      break;
-    case FLAG_HTTP_TYPE_CSS:
-      sendString("Content-Type: text/css\r\n");
-      break;
-    case FLAG_HTTP_TYPE_TEXT:
-      sendString("Content-Type: text/plain\r\n");
-      break;
-    case FLAG_HTTP_TYPE_ICO:
-      sendString("Content-Type: application/octet-stream\r\n");
-      break;
-    case FLAG_HTTP_TYPE_JS:
-      sendString("Content-Type: text/javascript\r\n");
-      break;
-    case FLAG_HTTP_TYPE_XML:
-      sendString("Content-Type: text/xml\r\n");
-      break;
-    case FLAG_HTTP_TYPE_P3P:
-      sendString("Content-Type: text/xml\r\n");
-      break;
-    case FLAG_HTTP_TYPE_NONE:
-      break;
+  case FLAG_HTTP_TYPE_HTML:
+    sendString("Content-Type: text/html\r\n");
+    break;
+  case FLAG_HTTP_TYPE_GIF:
+    sendString("Content-Type: image/gif\r\n");
+    break;
+  case FLAG_HTTP_TYPE_JPEG:
+    sendString("Content-Type: image/jpeg\r\n");
+    break;
+  case FLAG_HTTP_TYPE_PNG:
+    sendString("Content-Type: image/png\r\n");
+    break;
+  case FLAG_HTTP_TYPE_CSS:
+    sendString("Content-Type: text/css\r\n");
+    break;
+  case FLAG_HTTP_TYPE_TEXT:
+    sendString("Content-Type: text/plain\r\n");
+    break;
+  case FLAG_HTTP_TYPE_ICO:
+    sendString("Content-Type: application/octet-stream\r\n");
+    break;
+  case FLAG_HTTP_TYPE_JS:
+    sendString("Content-Type: text/javascript\r\n");
+    break;
+  case FLAG_HTTP_TYPE_XML:
+    sendString("Content-Type: text/xml\r\n");
+    break;
+  case FLAG_HTTP_TYPE_P3P:
+    sendString("Content-Type: text/xml\r\n");
+    break;
+  case FLAG_HTTP_TYPE_NONE:
+    break;
 #ifdef URL_DEBUG
-    default:
-      traceEvent(CONST_TRACE_ERROR,
-		 "URL_DEBUG: INTERNAL: invalid MIME type code requested (%d)\n", mimeType);
+  default:
+    traceEvent(CONST_TRACE_ERROR,
+	       "URL_DEBUG: INTERNAL: invalid MIME type code requested (%d)\n", mimeType);
 #endif
   }
 
@@ -1553,7 +1551,7 @@ static int checkURLsecurity(char *url) {
 #endif
 
 #if 0
-    traceEvent(CONST_TRACE_INFO, "URL_DEBUG: RAW url is '%s'", url);
+  traceEvent(CONST_TRACE_INFO, "URL_DEBUG: RAW url is '%s'", url);
 #endif
 
   /*
@@ -1597,7 +1595,7 @@ static int checkURLsecurity(char *url) {
     /* Convert encoding (%nn) to their base characters -
      * we also handle the special case of %3A (:)
      * which we convert to _ (not :)
-         * See urlFixupFromRFC1945Inplace() and urlFixupToRFC1945Inplace()
+     * See urlFixupFromRFC1945Inplace() and urlFixupToRFC1945Inplace()
      * We handle this 1st because some of the gcc functions interpret encoding/unicode "for" us
      */
     for(i=0, begin=0; i<strlen(url); i++) {
@@ -1608,17 +1606,17 @@ static int checkURLsecurity(char *url) {
         } else {
  	  int v1, v2;
           v1 = url[i+1] < '0' ? -1 :
-              url[i+1] <= '9' ? (url[i+1] - '0') :
-              url[i+1] < 'A' ? -1 :
-              url[i+1] <= 'F' ? (url[i+1] - 'A' + 10) :
-              url[i+1] < 'a' ? -1 :
-              url[i+1] <= 'f' ? (url[i+1] - 'a' + 10) : -1;
+	    url[i+1] <= '9' ? (url[i+1] - '0') :
+	    url[i+1] < 'A' ? -1 :
+	    url[i+1] <= 'F' ? (url[i+1] - 'A' + 10) :
+	    url[i+1] < 'a' ? -1 :
+	    url[i+1] <= 'f' ? (url[i+1] - 'a' + 10) : -1;
           v2 = url[i+2] < '0' ? -1 :
-              url[i+2] <= '9' ? (url[i+2] - '0') :
-              url[i+2] < 'A' ? -1 :
-              url[i+2] <= 'F' ? (url[i+2] - 'A' + 10) :
-              url[i+2] < 'a' ? -1 :
-              url[i+2] <= 'f' ? (url[i+2] - 'a' + 10) : -1;
+	    url[i+2] <= '9' ? (url[i+2] - '0') :
+	    url[i+2] < 'A' ? -1 :
+	    url[i+2] <= 'F' ? (url[i+2] - 'A' + 10) :
+	    url[i+2] < 'a' ? -1 :
+	    url[i+2] <= 'f' ? (url[i+2] - 'a' + 10) : -1;
 
  	  if((v1<0) || (v2<0)) {
  	    url[begin++] = '\0';
@@ -1654,17 +1652,17 @@ static int checkURLsecurity(char *url) {
 
   /* Still got a % - maybe it's Unicode?  Somethings fishy... */
   if(strstr(url, "%") != NULL) {
-      traceEvent(CONST_TRACE_INFO,
-                 "URL security(1): Found percent in decoded URL...DANGER...rejecting request (%s)", url);
+    traceEvent(CONST_TRACE_INFO,
+	       "URL security(1): Found percent in decoded URL...DANGER...rejecting request (%s)", url);
 
-      /* Explicitly, update so it's not used anywhere else in ntop */
-      url[0] = '*'; url[1] = 'd'; url[2] = 'a'; url[3] = 'n'; url[4] = 'g'; url[5] = 'e'; url[6] = 'r'; url[7] = '*';
-      url[8] = '\0';
-      httpRequestedURL[0] = '*'; httpRequestedURL[1] = 'd'; httpRequestedURL[2] = 'a';
-      httpRequestedURL[3] = 'n'; httpRequestedURL[4] = 'g'; httpRequestedURL[5] = 'e';
-      httpRequestedURL[6] = 'r'; httpRequestedURL[7] = '*';
-      httpRequestedURL[8] = '\0';
-      return(1);
+    /* Explicitly, update so it's not used anywhere else in ntop */
+    url[0] = '*'; url[1] = 'd'; url[2] = 'a'; url[3] = 'n'; url[4] = 'g'; url[5] = 'e'; url[6] = 'r'; url[7] = '*';
+    url[8] = '\0';
+    httpRequestedURL[0] = '*'; httpRequestedURL[1] = 'd'; httpRequestedURL[2] = 'a';
+    httpRequestedURL[3] = 'n'; httpRequestedURL[4] = 'g'; httpRequestedURL[5] = 'e';
+    httpRequestedURL[6] = 'r'; httpRequestedURL[7] = '*';
+    httpRequestedURL[8] = '\0';
+    return(1);
   }
 
   /* a double slash? */
@@ -1694,13 +1692,13 @@ static int checkURLsecurity(char *url) {
   /* Past the bad stuff -- check the URI (not the parameters) for prohibited characters */
   workURL = strdup(url);
 
-   token = strchr(workURL, '?');
-     if(token != NULL) {
-       token[0] = '\0';
-   }
+  token = strchr(workURL, '?');
+  if(token != NULL) {
+    token[0] = '\0';
+  }
 
 #ifdef URL_DEBUG
-    traceEvent(CONST_TRACE_INFO, "URL_DEBUG: uri is '%s'", workURL);
+  traceEvent(CONST_TRACE_INFO, "URL_DEBUG: uri is '%s'", workURL);
 #endif
 
   /* Prohibited characters? */
@@ -1712,17 +1710,17 @@ static int checkURLsecurity(char *url) {
     return(4);
   }
 
-/* So far, so go - check the extension */
+  /* So far, so go - check the extension */
 
-/* BMS - allow cvs2html/diff/diff... */
+  /* BMS - allow cvs2html/diff/diff... */
   if (strncmp(url, "cvs2html/diff/diff", strlen("cvs2html/diff/diff")) == 0) {
-      return(0);
+    return(0);
   }
 
-/* allow w3c/p3p.xml...
- *   NOTE that we don't allow general .p3p and .xml requests
- *        Those are bounced below...
- */
+  /* allow w3c/p3p.xml...
+   *   NOTE that we don't allow general .p3p and .xml requests
+   *        Those are bounced below...
+   */
   if(strncasecmp(workURL, CONST_W3C_P3P_XML, strlen(CONST_W3C_P3P_XML)) == 0) {
     free(workURL);
     return(0);
@@ -1736,9 +1734,9 @@ static int checkURLsecurity(char *url) {
 #ifdef MAKE_WITH_XMLDUMP
   /* Special cases for plugins/xmldump/xxxx.xml... */
   if((strncasecmp(workURL,
-             "/" CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME,
-             strlen("/" CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME)) == 0) ||
-    (strncasecmp(workURL, "/" CONST_XML_DTD_NAME, strlen("/" CONST_XML_DTD_NAME)) == 0)) {
+		  "/" CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME,
+		  strlen("/" CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME)) == 0) ||
+     (strncasecmp(workURL, "/" CONST_XML_DTD_NAME, strlen("/" CONST_XML_DTD_NAME)) == 0)) {
     free(workURL);
     return(0);
   }
@@ -1796,120 +1794,120 @@ RETSIGTYPE httpcleanup(int signo) {
   if(msgSent<10) {
     traceEvent(CONST_TRACE_ERROR, "http: caught signal %d %s", signo,
                signo == SIGHUP ? "SIGHUP" :
-                 signo == SIGINT ? "SIGINT" :
-                 signo == SIGQUIT ? "SIGQUIT" :
-                 signo == SIGILL ? "SIGILL" :
-                 signo == SIGABRT ? "SIGABRT" :
-                 signo == SIGFPE ? "SIGFPE" :
-                 signo == SIGKILL ? "SIGKILL" :
-                 signo == SIGSEGV ? "SIGSEGV" :
-                 signo == SIGPIPE ? "SIGPIPE" :
-                 signo == SIGALRM ? "SIGALRM" :
-                 signo == SIGTERM ? "SIGTERM" :
-                 signo == SIGUSR1 ? "SIGUSR1" :
-                 signo == SIGUSR2 ? "SIGUSR2" :
-                 signo == SIGCHLD ? "SIGCHLD" :
- #ifdef SIGCONT
-                 signo == SIGCONT ? "SIGCONT" :
- #endif
- #ifdef SIGSTOP
-                 signo == SIGSTOP ? "SIGSTOP" :
- #endif
- #ifdef SIGBUS
-                 signo == SIGBUS ? "SIGBUS" :
- #endif
- #ifdef SIGSYS
-                 signo == SIGSYS ? "SIGSYS"
- #endif
+	       signo == SIGINT ? "SIGINT" :
+	       signo == SIGQUIT ? "SIGQUIT" :
+	       signo == SIGILL ? "SIGILL" :
+	       signo == SIGABRT ? "SIGABRT" :
+	       signo == SIGFPE ? "SIGFPE" :
+	       signo == SIGKILL ? "SIGKILL" :
+	       signo == SIGSEGV ? "SIGSEGV" :
+	       signo == SIGPIPE ? "SIGPIPE" :
+	       signo == SIGALRM ? "SIGALRM" :
+	       signo == SIGTERM ? "SIGTERM" :
+	       signo == SIGUSR1 ? "SIGUSR1" :
+	       signo == SIGUSR2 ? "SIGUSR2" :
+	       signo == SIGCHLD ? "SIGCHLD" :
+#ifdef SIGCONT
+	       signo == SIGCONT ? "SIGCONT" :
+#endif
+#ifdef SIGSTOP
+	       signo == SIGSTOP ? "SIGSTOP" :
+#endif
+#ifdef SIGBUS
+	       signo == SIGBUS ? "SIGBUS" :
+#endif
+#ifdef SIGSYS
+	       signo == SIGSYS ? "SIGSYS"
+#endif
                : "other");
     msgSent++;
   }
 
- #ifdef HAVE_BACKTRACE
+#ifdef HAVE_BACKTRACE
   size = backtrace(array, 20);
   strings = (char**)backtrace_symbols(array, size);
 
   traceEvent(CONST_TRACE_ERROR, "http: BACKTRACE:     backtrace is:");
   if(size < 2)
-      traceEvent(CONST_TRACE_ERROR, "http: BACKTRACE:         **unavailable!");
+    traceEvent(CONST_TRACE_ERROR, "http: BACKTRACE:         **unavailable!");
   else /* Ignore the 0th entry, that's our cleanup() */
     for(i=1; i<size; i++)
       traceEvent(CONST_TRACE_ERROR, "http: BACKTRACE:          %2d. %s", i, strings[i]);
 
   traceEvent(CONST_TRACE_FATALERROR, "http: ntop shutting down...");
   exit(3); /* Just in case */
- #endif
+#endif
 }
 #endif /* MAKE_WITH_HTTPSIGTRAP */
 
 /* ******************************************
-   * This block of code generates internal  *
-   * copies of the major navigational pages *
-   * which are normally in the html/        *
-   * directory, in case that directory is   *
-   * damaged.                               *
-   *                                        *
-   * There are also a few real pages        *
-   * in here.                               *
-   *                                        *
-   * Return 0 if you generated the page     *
-   *        1 if not                        *
-   *                                        *
-   **************************************** */
+ * This block of code generates internal  *
+ * copies of the major navigational pages *
+ * which are normally in the html/        *
+ * directory, in case that directory is   *
+ * damaged.                               *
+ *                                        *
+ * There are also a few real pages        *
+ * in here.                               *
+ *                                        *
+ * Return 0 if you generated the page     *
+ *        1 if not                        *
+ *                                        *
+ **************************************** */
 
 static int generateNewInternalPages(char* pageName) {
 
-/* Note we do not have CONST_INDEX_HTML nor CONST_LEFTMENU_HTML here.
- *
- * They are special cased with CONST_TRAFFIC_STATS_HTML, below, so old-style
- * URLs probably still work...
- *
- *TODO: This stuff is just to warn the user ... and both chunks should probably be
- * removed around 3.4...
- */
+  /* Note we do not have CONST_INDEX_HTML nor CONST_LEFTMENU_HTML here.
+   *
+   * They are special cased with CONST_TRAFFIC_STATS_HTML, below, so old-style
+   * URLs probably still work...
+   *
+   *TODO: This stuff is just to warn the user ... and both chunks should probably be
+   * removed around 3.4...
+   */
  
-    if((strcasecmp(pageName, CONST_INDEX_INNER_HTML) == 0) ||
-       (strcasecmp(pageName, CONST_LEFTMENU_HTML) == 0) ||
-       (strcasecmp(pageName, CONST_LEFTMENU_NOJS_HTML) == 0) ||
-       (strcasecmp(pageName, CONST_HOME_UNDERSCORE_HTML) == 0)) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      sendString("<!-- Internally generated page -->\n");
-      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH);
-      sendString("<h1>Problem</h1>\n"
-                 "<p>The page you have requested (either explicitly or implicitly),</p>\n<pre>");
+  if((strcasecmp(pageName, CONST_INDEX_INNER_HTML) == 0) ||
+     (strcasecmp(pageName, CONST_LEFTMENU_HTML) == 0) ||
+     (strcasecmp(pageName, CONST_LEFTMENU_NOJS_HTML) == 0) ||
+     (strcasecmp(pageName, CONST_HOME_UNDERSCORE_HTML) == 0)) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    sendString("<!-- Internally generated page -->\n");
+    printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH);
+    sendString("<h1>Problem</h1>\n"
+	       "<p>The page you have requested (either explicitly or implicitly),</p>\n<pre>");
 
-      sendString(pageName);
-      sendString("</pre>\n<p>Is one which used to be part of <b>ntop</b>, but is no longer available.</p>\n"
-                 "<p>The framesets used in versions 3.1 and earlier have been removed. "
-                 "Please update your bookmarks or contact your system's administrator for help.</p>\n");
-      return(0);
-    }
+    sendString(pageName);
+    sendString("</pre>\n<p>Is one which used to be part of <b>ntop</b>, but is no longer available.</p>\n"
+	       "<p>The framesets used in versions 3.1 and earlier have been removed. "
+	       "Please update your bookmarks or contact your system's administrator for help.</p>\n");
+    return(0);
+  }
 
-    if(strcasecmp(pageName, CONST_ABTNTOP_HTML) == 0) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      sendString("<!-- Internally generated page -->\n");
-      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH);
-      sendString("<FONT FACE=Helvetica>\n<HR>\n");
-      sendString("<b>ntop</b> shows the current network usage. It displays a list of hosts that are\n");
-      sendString("currently using the network and reports information concerning the IP\n");
-      sendString("(Internet Protocol) and Fibre Channel (FC) traffic generated by each host. The traffic is \n");
-      sendString("sorted according to host and protocol. Protocols (user configurable) include:\n");
-      sendString("<ul><li>TCP/UDP/ICMP<li>(R)ARP<li>IPX<li>DLC<li>"
-		 "Decnet<li>AppleTalk<li>Netbios<li>TCP/UDP<ul><li>FTP<li>"
-		 "HTTP<li>DNS<li>Telnet<li>SMTP/POP/IMAP<li>SNMP<li>\n");
-      sendString("NFS<li>X11</ul>\n<p>\n");
-      sendString("<li>Fibre Channel<ul><li>Control Traffic - SW2,GS3,ELS<li>SCSI</ul></ul><p>\n");
-      sendString("<p><b>ntop</b>'s author strongly believes in <A class=external HREF=http://www.opensource.org/>\n");
-      sendString("open source software</A> and encourages everyone to modify, improve\n ");
-      sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
-      sendString("to the enclosed licence (see COPYING).</p><p>Problems, bugs, questions, ");
-      sendString("desirable enhancements, source code contributions, etc., should be sent to the ");
-      sendString(CONST_MAILTO_LIST ".</p>\n");
-      sendString("<p>For information on <b>ntop</b> and information privacy, see ");
-      sendString("<A HREF=\"" CONST_PRIVACYNOTICE_HTML "\">this</A> page.</p>\n</font>");
-      return 0;
-    }
-    return 1; /* Not in this bunch, boss */
+  if(strcasecmp(pageName, CONST_ABTNTOP_HTML) == 0) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    sendString("<!-- Internally generated page -->\n");
+    printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH);
+    sendString("<FONT FACE=Helvetica>\n<HR>\n");
+    sendString("<b>ntop</b> shows the current network usage. It displays a list of hosts that are\n");
+    sendString("currently using the network and reports information concerning the IP\n");
+    sendString("(Internet Protocol) and Fibre Channel (FC) traffic generated by each host. The traffic is \n");
+    sendString("sorted according to host and protocol. Protocols (user configurable) include:\n");
+    sendString("<ul><li>TCP/UDP/ICMP<li>(R)ARP<li>IPX<li>DLC<li>"
+	       "Decnet<li>AppleTalk<li>Netbios<li>TCP/UDP<ul><li>FTP<li>"
+	       "HTTP<li>DNS<li>Telnet<li>SMTP/POP/IMAP<li>SNMP<li>\n");
+    sendString("NFS<li>X11</ul>\n<p>\n");
+    sendString("<li>Fibre Channel<ul><li>Control Traffic - SW2,GS3,ELS<li>SCSI</ul></ul><p>\n");
+    sendString("<p><b>ntop</b>'s author strongly believes in <A class=external HREF=http://www.opensource.org/>\n");
+    sendString("open source software</A> and encourages everyone to modify, improve\n ");
+    sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
+    sendString("to the enclosed licence (see COPYING).</p><p>Problems, bugs, questions, ");
+    sendString("desirable enhancements, source code contributions, etc., should be sent to the ");
+    sendString(CONST_MAILTO_LIST ".</p>\n");
+    sendString("<p>For information on <b>ntop</b> and information privacy, see ");
+    sendString("<A HREF=\"" CONST_PRIVACYNOTICE_HTML "\">this</A> page.</p>\n</font>");
+    return 0;
+  }
+  return 1; /* Not in this bunch, boss */
 }
 
 /* **************************************** */
@@ -2182,7 +2180,7 @@ static int returnHTTPPage(char* pageName,
 
   if(fd != NULL) {
     char theDate[48],
-         *buffer;
+      *buffer;
     time_t theTime;
     int sz, len = strlen(pageURI), mimeType = FLAG_HTTP_TYPE_HTML;
 
@@ -2259,8 +2257,8 @@ static int returnHTTPPage(char* pageName,
   /* **************** */
 
   /*
-     Revert to the full requested pageName, as these strncasecmp strcasecmp
-     check the fronts only
+    Revert to the full requested pageName, as these strncasecmp strcasecmp
+    check the fronts only
   */
   free(pageURI);
 
@@ -2366,7 +2364,7 @@ static int returnHTTPPage(char* pageName,
     else
       addUser(&questionMark[1]);
     theLastHttpUser[0] = '\0';
- } else if(strcasecmp(pageName, CONST_SHOW_URLS_HTML) == 0) {
+  } else if(strcasecmp(pageName, CONST_SHOW_URLS_HTML) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     showURLs();
   } else if(strcasecmp(pageName, CONST_ADD_URLS_HTML) == 0) {
@@ -2417,10 +2415,10 @@ static int returnHTTPPage(char* pageName,
   } else if ((strncasecmp(pageName, CONST_TRAFFIC_STATS_HTML,
                           strlen(CONST_TRAFFIC_STATS_HTML)) == 0)
              || (strncasecmp(pageName, CONST_INDEX_HTML,
-                          strlen(CONST_INDEX_HTML)) == 0)
+			     strlen(CONST_INDEX_HTML)) == 0)
              || (strncasecmp(pageName, CONST_LEFTMENU_HTML,
                              strlen(CONST_LEFTMENU_HTML)) == 0)) {
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
     if((myGlobals.ntopRunState < FLAG_NTOPSTATE_RUN)
        || ((myGlobals.numDevices == 1) && (!strcmp(myGlobals.device[0].name, "none")))) {
@@ -2675,9 +2673,6 @@ static int returnHTTPPage(char* pageName,
       } else if(strcasecmp(pageName, CONST_LOCAL_ROUTERS_LIST_HTML) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printLocalRoutersList(myGlobals.actualReportDeviceId);
-      } else if(strcasecmp(pageName, CONST_AS_LIST_HTML) == 0) {
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printASList(myGlobals.actualReportDeviceId);
       } else if(strcasecmp(pageName, CONST_VLAN_LIST_HTML) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printVLANList(myGlobals.actualReportDeviceId);
@@ -3230,10 +3225,10 @@ static int checkHTTPpassword(char *theRequestedURL,
       key = nextkey;
 
       if(myGlobals.securityItemsLoaded == MAX_NUM_PWFILE_ENTRIES) {
-          traceEvent(CONST_TRACE_WARNING,
-                     "Number of entries in password file, %d at limit",
-                     myGlobals.securityItemsLoaded);
-          break;
+	traceEvent(CONST_TRACE_WARNING,
+		   "Number of entries in password file, %d at limit",
+		   myGlobals.securityItemsLoaded);
+	break;
       }
     }
 
@@ -3247,7 +3242,7 @@ static int checkHTTPpassword(char *theRequestedURL,
   for(i=0; i<myGlobals.securityItemsLoaded; i++) {
     if(myGlobals.securityItems[i][0] == '2') /* 2 = URL */ {
       if(strncasecmp(&theRequestedURL[1], &myGlobals.securityItems[i][1],
-               strlen(myGlobals.securityItems[i])-1) == 0) {
+		     strlen(myGlobals.securityItems[i])-1) == 0) {
         strncpy(outBuffer,
                 myGlobals.securityItems[i],
                 sizeof(outBuffer)-1)[sizeof(outBuffer)-1] = '\0';
@@ -3303,7 +3298,7 @@ static int checkHTTPpassword(char *theRequestedURL,
   if(strlen(user) >= sizeof(theHttpUser)) user[sizeof(theHttpUser)-1] = '\0';
   strcpy(theHttpUser, user);
 
-/* Following is not URL_DEBUG so we don't accidentally log the crypt()ed password value */
+  /* Following is not URL_DEBUG so we don't accidentally log the crypt()ed password value */
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: User='%s' - Pw='%s'", user, thePw);
 #endif
@@ -3314,15 +3309,15 @@ static int checkHTTPpassword(char *theRequestedURL,
   if(strstr(nextkey.dptr, users) == NULL) {
     if(nextkey.dptr != NULL) free(nextkey.dptr);
     if(strlen(&theRequestedURL[1]) > 40) {
-        theRequestedURL[40]='.';
-        theRequestedURL[41]='.';
-        theRequestedURL[42]='.';
-        theRequestedURL[43]='\0';
+      theRequestedURL[40]='.';
+      theRequestedURL[41]='.';
+      theRequestedURL[42]='.';
+      theRequestedURL[43]='\0';
     }
     traceEvent(CONST_TRACE_NOISY,
                "SECURITY: user '%s' request for url '%s' disallowed",
                user == NULL ? "none" :
-                 strcmp(user, "") || user[0] == '\0' ? "unspecified" : user,
+	       strcmp(user, "") || user[0] == '\0' ? "unspecified" : user,
                &theRequestedURL[1]);
     return 0; /* The specified user is not among those who are
                  allowed to access the URL */
@@ -3357,8 +3352,8 @@ static int checkHTTPpassword(char *theRequestedURL,
       free (fmtdata.dptr);
     }
 #ifdef URL_DEBUG
-      else
-        traceEvent(CONST_TRACE_NOISY, "URL_DEBUG: '3' record for %s(%d) not found", fmtkey.dptr, fmtkey.dsize);
+    else
+      traceEvent(CONST_TRACE_NOISY, "URL_DEBUG: '3' record for %s(%d) not found", fmtkey.dptr, fmtkey.dsize);
 #endif
   }
 #endif
@@ -3367,7 +3362,7 @@ static int checkHTTPpassword(char *theRequestedURL,
   key.dsize = strlen(users)+1;
   nextkey = gdbm_fetch(myGlobals.pwFile, key);
 
-/* Following is not URL_DEBUG so we don't accidentally log the crypt()ed password value */
+  /* Following is not URL_DEBUG so we don't accidentally log the crypt()ed password value */
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: Record='%s' = '%s'", users, nextkey.dptr);
 #endif
@@ -3383,21 +3378,21 @@ static int checkHTTPpassword(char *theRequestedURL,
   } else
     rc = 0;
 
-    if(strcmp(theHttpUser, theLastHttpUser)) {
-      char prefKey[64], communities[256], *item, *strtokState;
+  if(strcmp(theHttpUser, theLastHttpUser)) {
+    char prefKey[64], communities[256], *item, *strtokState;
       
-      strcpy(theLastHttpUser, theHttpUser);
+    strcpy(theLastHttpUser, theHttpUser);
       
-      snprintf(prefKey, sizeof(prefKey), "%s%s", COMMUNITY_PREFIX, theHttpUser);
-      fetchPwValue(prefKey, allowedCommunities, sizeof(allowedCommunities));
-      // traceEvent(CONST_TRACE_INFO, "++++++++++++> '%s'", allowedCommunities);
+    snprintf(prefKey, sizeof(prefKey), "%s%s", COMMUNITY_PREFIX, theHttpUser);
+    fetchPwValue(prefKey, allowedCommunities, sizeof(allowedCommunities));
+    // traceEvent(CONST_TRACE_INFO, "++++++++++++> '%s'", allowedCommunities);
 
-      item = strtok_r(allowedCommunities, "&", &strtokState);
-      for(i=0; (item != NULL) && (i < sizeof(allowedCommunities)-1); i++) {
-	listAllowedCommunities[i] = item;
-	item = strtok_r(NULL, "&", &strtokState);
-      }     
-    }
+    item = strtok_r(allowedCommunities, "&", &strtokState);
+    for(i=0; (item != NULL) && (i < sizeof(allowedCommunities)-1); i++) {
+      listAllowedCommunities[i] = item;
+      item = strtok_r(NULL, "&", &strtokState);
+    }     
+  }
 
   if(rc == 0) {
     if(strlen(&theRequestedURL[1]) > 40) {
@@ -3409,7 +3404,7 @@ static int checkHTTPpassword(char *theRequestedURL,
     traceEvent(CONST_TRACE_NOISY,
                "SECURITY: user '%s' request for url '%s' disallowed",
                user == NULL ? "none" :
-                 strcmp(user, "") || user[0] == '\0' ? "unspecified" : user,
+	       strcmp(user, "") || user[0] == '\0' ? "unspecified" : user,
                &theRequestedURL[1]);
   }
 
@@ -3504,30 +3499,30 @@ void handleHTTPrequest(HostAddr from) {
   requestFrom = &from;
 
 #if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
-   /* Note if the size of the table is zero, we simply nullify all of this
-      code (why bother wasting the work effort)
-      Burton M. Strauss III <Burton@ntopsupport.com>, June 2002
-    */
+  /* Note if the size of the table is zero, we simply nullify all of this
+     code (why bother wasting the work effort)
+     Burton M. Strauss III <Burton@ntopsupport.com>, June 2002
+  */
 
   for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++) {
     if(addrcmp(&myGlobals.weDontWantToTalkWithYou[i].addr,&from) == 0) {
-       if((myGlobals.weDontWantToTalkWithYou[i].lastBadAccess +
-           PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL) < myGlobals.actTime) {
-         /*
-          * We 'forget' the address of this nasty guy after 5 minutes
-          * since its last bad access as we hope that he will be nicer
-          * with ntop in the future.
-          */
-         memset(&myGlobals.weDontWantToTalkWithYou[i], 0, sizeof(BadGuysAddr));
-         traceEvent(CONST_TRACE_INFO, "clearing lockout for address %s",
-                    _addrtostr(&from, requestedURL, sizeof(requestedURL)));
-       } else {
-         myGlobals.weDontWantToTalkWithYou[i].count++;
-         myGlobals.numHandledBadrequests[myGlobals.newSock > 0]++;
-         traceEvent(CONST_TRACE_ERROR, "Rejected request from address %s (it previously sent ntop a bad request)",
-                    _addrtostr(&from, requestedURL, sizeof(requestedURL)));
-         return;
-       }
+      if((myGlobals.weDontWantToTalkWithYou[i].lastBadAccess +
+	  PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL) < myGlobals.actTime) {
+	/*
+	 * We 'forget' the address of this nasty guy after 5 minutes
+	 * since its last bad access as we hope that he will be nicer
+	 * with ntop in the future.
+	 */
+	memset(&myGlobals.weDontWantToTalkWithYou[i], 0, sizeof(BadGuysAddr));
+	traceEvent(CONST_TRACE_INFO, "clearing lockout for address %s",
+		   _addrtostr(&from, requestedURL, sizeof(requestedURL)));
+      } else {
+	myGlobals.weDontWantToTalkWithYou[i].count++;
+	myGlobals.numHandledBadrequests[myGlobals.newSock > 0]++;
+	traceEvent(CONST_TRACE_ERROR, "Rejected request from address %s (it previously sent ntop a bad request)",
+		   _addrtostr(&from, requestedURL, sizeof(requestedURL)));
+	return;
+      }
     }
   }
 #endif
@@ -3547,26 +3542,26 @@ void handleHTTPrequest(HostAddr from) {
   compressFileFd = NULL;
   acceptGzEncoding = 0;
 
- postLen = readHTTPheader(requestedURL,
-                          sizeof(requestedURL),
-                          pw,
-                          sizeof(pw),
-                          agent,
-                          sizeof(agent),
-                          referer,
-                          sizeof(referer),
-                          workLanguage,
-                          sizeof(workLanguage),
-                          &isPostMethod);
+  postLen = readHTTPheader(requestedURL,
+			   sizeof(requestedURL),
+			   pw,
+			   sizeof(pw),
+			   agent,
+			   sizeof(agent),
+			   referer,
+			   sizeof(referer),
+			   workLanguage,
+			   sizeof(workLanguage),
+			   &isPostMethod);
 
 #if defined(HTTP_DEBUG) || defined(I18N_DEBUG) || defined(URL_DEBUG)
- traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: Requested URL = '%s', length = %d", requestedURL, postLen);
- traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: User-Agent = '%s'", agent);
- traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: Referer = '%s'", referer);
+  traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: Requested URL = '%s', length = %d", requestedURL, postLen);
+  traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: User-Agent = '%s'", agent);
+  traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: Referer = '%s'", referer);
 
- #ifdef MAKE_WITH_I18N
+#ifdef MAKE_WITH_I18N
   traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Accept-Language = '%s'", workLanguage);
- #endif
+#endif
 #endif
 
   if(postLen >= -1) {
@@ -3587,8 +3582,8 @@ void handleHTTPrequest(HostAddr from) {
   }
 
   /*
-     We need to check whether the URL is invalid, i.e. it contains '..' or
-     similar chars that can be used for reading system files
+    We need to check whether the URL is invalid, i.e. it contains '..' or
+    similar chars that can be used for reading system files
   */
 
   requestedURLCopy = strdup(requestedURL);
@@ -3598,37 +3593,37 @@ void handleHTTPrequest(HostAddr from) {
 	       requestedURL, rc, _addrtostr(&from, tmpStr, sizeof(tmpStr)));
 
 #if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
-  {
-   /* Note if the size of the table is zero, we simply nullify all of this
-      code (why bother wasting the work effort
-          Burton M. Strauss III <Burton@ntopsupport.com>, June 2002
-    */
+    {
+      /* Note if the size of the table is zero, we simply nullify all of this
+	 code (why bother wasting the work effort
+	 Burton M. Strauss III <Burton@ntopsupport.com>, June 2002
+      */
 
-    int found = 0;
+      int found = 0;
 
-    /*
-       Let's record the IP address of this nasty
-       guy so he will stay far from ntop
-       for a while
-    */
-    for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++)
-      if(addrcmp(&myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr,&from) == 0) {
-	found = 1;
-	break;
+      /*
+	Let's record the IP address of this nasty
+	guy so he will stay far from ntop
+	for a while
+      */
+      for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++)
+	if(addrcmp(&myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr,&from) == 0) {
+	  found = 1;
+	  break;
+	}
+
+      if(!found) {
+	for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++) {
+	  addrcpy(&myGlobals.weDontWantToTalkWithYou[i].addr,&myGlobals.weDontWantToTalkWithYou[i+1].addr);
+	  myGlobals.weDontWantToTalkWithYou[i].lastBadAccess = myGlobals.weDontWantToTalkWithYou[i+1].lastBadAccess;
+	  myGlobals.weDontWantToTalkWithYou[i].count = myGlobals.weDontWantToTalkWithYou[i+1].count;
+	}
+
+	addrcpy(&myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr,&from);
+	myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].lastBadAccess = myGlobals.actTime;
+	myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].count = 1;
       }
-
-    if(!found) {
-      for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++) {
-	addrcpy(&myGlobals.weDontWantToTalkWithYou[i].addr,&myGlobals.weDontWantToTalkWithYou[i+1].addr);
-	myGlobals.weDontWantToTalkWithYou[i].lastBadAccess = myGlobals.weDontWantToTalkWithYou[i+1].lastBadAccess;
-	myGlobals.weDontWantToTalkWithYou[i].count = myGlobals.weDontWantToTalkWithYou[i+1].count;
-      }
-
-      addrcpy(&myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr,&from);
-      myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].lastBadAccess = myGlobals.actTime;
-      myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].count = 1;
     }
-  }
 #endif
 
     returnHTTPaccessForbidden();
@@ -3649,32 +3644,32 @@ void handleHTTPrequest(HostAddr from) {
 
   if(checkHTTPpassword(requestedURL, sizeof(requestedURL), pw, sizeof(pw) ) != 1) {
     returnHTTPaccessDenied();
-   return;
+    return;
   }
 
   myGlobals.actTime = time(NULL); /* Don't forget this */
 
-/*
- *  Process Accept-Language  - load requestedLanguage[] from workLanguage
- */
+  /*
+   *  Process Accept-Language  - load requestedLanguage[] from workLanguage
+   */
 #ifdef MAKE_WITH_I18N
   if(workLanguage != NULL) {
     char *tmpI18Nstr, *strtokState = NULL, *workSemi;
     tmpI18Nstr = strtok_r(workLanguage, ",", &strtokState);
     while(tmpI18Nstr != NULL) {
-        /* Skip leading blanks */
-        while (tmpI18Nstr[0] == ' ') tmpI18Nstr++;
-        /* Stop at the ; */
-        workSemi = strchr(tmpI18Nstr, ';');
-        if(workSemi != NULL) {
-            workSemi[0] = '\0';
-        }
-        requestedLanguage[numLang++] = i18n_xvert_acceptlanguage2common(tmpI18Nstr);
-        if(numLang > MAX_LANGUAGES_REQUESTED) {
-            tmpI18Nstr = NULL;
-        } else {
-            tmpI18Nstr = strtok_r(NULL, ",", &strtokState);
-        }
+      /* Skip leading blanks */
+      while (tmpI18Nstr[0] == ' ') tmpI18Nstr++;
+      /* Stop at the ; */
+      workSemi = strchr(tmpI18Nstr, ';');
+      if(workSemi != NULL) {
+	workSemi[0] = '\0';
+      }
+      requestedLanguage[numLang++] = i18n_xvert_acceptlanguage2common(tmpI18Nstr);
+      if(numLang > MAX_LANGUAGES_REQUESTED) {
+	tmpI18Nstr = NULL;
+      } else {
+	tmpI18Nstr = strtok_r(NULL, ",", &strtokState);
+      }
     }
   }
 #endif
@@ -3703,9 +3698,9 @@ void handleHTTPrequest(HostAddr from) {
 
 #if defined(MAKE_WITH_I18N) && defined(I18N_DEBUG)
   for (i=0; i<numLang; i++) {
-      traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Requested Language [%d] = '%s'",
-                 i,
-                 requestedLanguage[i]);
+    traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Requested Language [%d] = '%s'",
+	       i,
+	       requestedLanguage[i]);
   }
 #endif
 
@@ -3718,7 +3713,7 @@ void handleHTTPrequest(HostAddr from) {
 
 #ifdef MAKE_WITH_I18N
   for (i=numLang-1; i>=0; i--) {
-      free(requestedLanguage[i]);
+    free(requestedLanguage[i]);
   }
 #endif
 

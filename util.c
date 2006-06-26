@@ -3459,7 +3459,7 @@ void fillDomainName(HostTraffic *el) {
     el->dnsTLDValue = strdup(&el->hostResolvedName[i+1]);
   else if (myGlobals.shortDomainName != NULL) {
     /* Walk back to the last . */
-    i = strlen(el->hostResolvedName)-1;
+    i = strlen(myGlobals.shortDomainName)-1;
     while(i > 0)
       if(myGlobals.shortDomainName[i] == '.')
         break;
@@ -6465,7 +6465,6 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
 /* ********************************************* */
 
 int cmpFctnLocationName(const void *_a, const void *_b) {
-
   /* This function takes two HostTraffic entries and performs a
      standardized compare of the location, either the ip2ccValue field
      or the fallback dnsTLDValue fields, handling unvalued
@@ -6501,7 +6500,7 @@ int cmpFctnLocationName(const void *_a, const void *_b) {
   }
 
   rc = strcasecmp(nameA, nameB);
-  if(rc==0) {
+  if(rc == 0) {
     if((*a)->dnsTLDValue == NULL) {
       nameA = "\xFF\xFF";
     } else {
@@ -6515,7 +6514,7 @@ int cmpFctnLocationName(const void *_a, const void *_b) {
     rc = strcasecmp(nameA != NULL ? nameA : "", nameB != NULL ? nameB : "");
   }
 
-  if(rc==0) {
+  if(rc == 0) {
     rc = cmpFctnResolvedName(a, b);
   }
 

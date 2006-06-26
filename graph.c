@@ -2399,7 +2399,7 @@ void drawVsanStatsBytesDistribution (int deviceId) {
   p[MAX_VSANS_GRAPHED] = 0;
   numVsans = 0;
 
-  memset (tmpTable, sizeof (FcFabricElementHash *)*MAX_ELEMENT_HASH, 0);
+  memset (tmpTable, 0, sizeof (FcFabricElementHash *)*MAX_ELEMENT_HASH);
   for (i=0; i<MAX_ELEMENT_HASH; i++) {
       if((theHash[i] != NULL) && (theHash[i]->vsanId < MAX_HASHDUMP_ENTRY) &&
          (theHash[i]->vsanId < MAX_USER_VSAN)) {
@@ -2482,7 +2482,7 @@ void drawVsanStatsPktsDistribution (int deviceId) {
   p[MAX_VSANS_GRAPHED] = 0;
   numVsans = 0;
 
-  memset (tmpTable, sizeof (FcFabricElementHash *)*MAX_ELEMENT_HASH, 0);
+  memset (tmpTable, 0, sizeof (FcFabricElementHash *)*MAX_ELEMENT_HASH);
   for (i=0; i<MAX_ELEMENT_HASH; i++) {
       if((theHash[i] != NULL) && (theHash[i]->vsanId < MAX_HASHDUMP_ENTRY) &&
          (theHash[i]->vsanId < MAX_USER_VSAN)) {

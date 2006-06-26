@@ -2096,7 +2096,7 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
         sendString("</CENTER>\n");
 
         addPageIndicator(pageUrl, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
-                         revertOrder, sortedColumn);
+                         revertOrder, sortedColumn, -1);
 
         printFooterHostLink();
     } else
@@ -2758,7 +2758,8 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBy
     printBandwidthFooter();   
 
     addPageIndicator(CONST_HOSTS_INFO_HTML, pageNum, numEntries,
-                     myGlobals.runningPref.maxNumLines, revertOrder, abs(sortedColumn));
+                     myGlobals.runningPref.maxNumLines, revertOrder, 
+		     abs(sortedColumn), -1);
 
     free(vsanList);
     free(tmpTable);
@@ -2903,8 +2904,9 @@ void printFcAccounting(int remoteToLocal, int sortedColumn,
 
     sendString("</TABLE>"TABLE_OFF"\n");
 
-    addPageIndicator(CONST_FC_TRAFFIC_HTML, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
-                     revertOrder, abs(sortedColumn));
+    addPageIndicator(CONST_FC_TRAFFIC_HTML, pageNum, numEntries, 
+		     myGlobals.runningPref.maxNumLines,
+                     revertOrder, abs(sortedColumn), -1);
 
     sendString("<P><CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
                "<TH "TH_BG" ALIGN=RIGHT "DARK_BG">Total Traffic</TH>"
@@ -3274,7 +3276,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
         sendString("</CENTER>\n");
         sendString("<P><I>Note: Entries with LUN as N/A indicate traffic for which no command frame was seen</I></P>\n");
         addPageIndicator(pageUrl, pageNum, numSessions-1, myGlobals.runningPref.maxNumLines,
-                         revertOrder, sortedColumn);
+                         revertOrder, sortedColumn, -1);
 
         printFooterHostLink();
     } else {
@@ -3555,7 +3557,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
         sendString("</CENTER>\n");
 
         addPageIndicator(pageUrl, pageNum, numSessions, myGlobals.runningPref.maxNumLines,
-                         revertOrder, sortedColumn);
+                         revertOrder, sortedColumn, -1);
 
         printFooterHostLink();
     } else {
@@ -3792,7 +3794,7 @@ int printScsiSessionStatusInfo(int actualDeviceId, int sortedColumn,
     sendString("</CENTER>\n");
 
     addPageIndicator(pageUrl, pageNum, numSessions, myGlobals.runningPref.maxNumLines,
-		     revertOrder, sortedColumn);
+		     revertOrder, sortedColumn, -1);
 
     printFooterHostLink();
   } else {
@@ -4034,7 +4036,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
         sendString("</CENTER>\n");
 
         addPageIndicator(pageUrl, pageNum, numSessions, myGlobals.runningPref.maxNumLines,
-                         revertOrder, sortedColumn);
+                         revertOrder, sortedColumn, -1);
 
         printFooterHostLink();
     } else {
@@ -4305,7 +4307,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
         sendString("</CENTER>\n");
 
         addPageIndicator(url, pageNum, numSessions, myGlobals.runningPref.maxNumLines,
-                         revertOrder, sortedColumn);
+                         revertOrder, sortedColumn, -1);
 
         printFooterHostLink();
     } else {

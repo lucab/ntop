@@ -21,6 +21,11 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+#define NETWORK_VIEW         1
+#define AS_VIEW              2
+
+static int network_mode_sort;
+
 /* *************************** */
 
 #ifndef WIN32
@@ -141,8 +146,9 @@ int reportValues(time_t *lastTime) {
 
 void addPageIndicator(char *url, u_int pageNum,
 		      u_int numEntries, u_int linesPerPage,
-		      int revertOrder, int numCol) {
-  char buf[LEN_GENERAL_WORK_BUFFER/2], prevBuf[LEN_GENERAL_WORK_BUFFER/2], nextBuf[LEN_GENERAL_WORK_BUFFER/2], shortBuf[16], separator;
+		      int revertOrder, int numCol, int netmode) {
+  char buf[LEN_GENERAL_WORK_BUFFER/2], prevBuf[LEN_GENERAL_WORK_BUFFER/2],
+    nextBuf[LEN_GENERAL_WORK_BUFFER/2], shortBuf[16], separator;
   int numPages = (numEntries+myGlobals.runningPref.maxNumLines-1)/myGlobals.runningPref.maxNumLines;
   int actPage  = pageNum+1;
 
@@ -162,17 +168,19 @@ void addPageIndicator(char *url, u_int pageNum,
 
   if(pageNum >= 1) {
     safe_snprintf(__FILE__, __LINE__, prevBuf, sizeof(prevBuf),
-		  "<A HREF=\"%s%cpage=0&col=%s\"><IMG SRC=/fback.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Back to first page\"></A> "
-		  "<A HREF=\"%s%cpage=%d&col=%s\"><IMG SRC=/back.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Prior page\"></A>",
-		  url, separator, shortBuf, url, separator, pageNum-1, shortBuf);
+		  "<A HREF=\"%s%cpage=0&netmode=%d&col=%s\"><IMG SRC=/fback.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Back to first page\"></A> "
+		  "<A HREF=\"%s%cpage=%d&netmode=%dcol=%s\"><IMG SRC=/back.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Prior page\"></A>",
+		  url, separator, netmode, shortBuf, 
+		  url, separator, pageNum-1, netmode, shortBuf);
   } else
     prevBuf[0] = '\0';
 
   if(actPage < numPages) {
     safe_snprintf(__FILE__, __LINE__, nextBuf, sizeof(nextBuf),
-		  "<A HREF=\"%s%cpage=%d&col=%s\"><IMG SRC=/forward.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Next Page\"></A> "
-		  "<A HREF=\"%s%cpage=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Forward to last page\"></A>",
-		  url, separator, pageNum+1, shortBuf, url, separator, numPages-1, shortBuf);
+		  "<A HREF=\"%s%cpage=%d&netmode=%d&col=%s\"><IMG SRC=/forward.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Next Page\"></A> "
+		  "<A HREF=\"%s%cpage=%d&netmode=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Forward to last page\"></A>",
+		  url, separator, pageNum+1, netmode, shortBuf, 
+		  url, separator, numPages-1, netmode, shortBuf);
   }  else
     nextBuf[0] = '\0';
 
@@ -2043,7 +2051,7 @@ void printHostsTraffic(int reportTypeReq,
   printFooter(reportType);
 
   addPageIndicator(url, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
-		   revertOrder, abs(sortedColumn));
+		   revertOrder, abs(sortedColumn), -1);
 
   sendString("<p><b>NOTE</b>:</p>\n<ul>"
 	     "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> "
@@ -2159,7 +2167,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
     sendString("</CENTER>\n");
 
     addPageIndicator(CONST_MULTICAST_STATS_HTML, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
-		     revertOrder, abs(sortedColumn));
+		     revertOrder, abs(sortedColumn), -1);
 
     printFooterHostLink();
 
@@ -2860,7 +2868,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     printBandwidthFooter();
 
     addPageIndicator(CONST_HOSTS_INFO_HTML, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
-		     revertOrder, abs(sortedColumn));
+		     revertOrder, abs(sortedColumn), -1);
   }
 
   free(tmpTable);
@@ -3494,7 +3502,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     sendString("</TABLE>"TABLE_OFF"\n");
 
     addPageIndicator(str, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
-		     revertOrder, abs(sortedColumn));
+		     revertOrder, abs(sortedColumn), -1);
 
     sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\">\n<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG">Total Traffic</TH><TH "TH_BG">Data Sent</TH>\n"
@@ -3705,7 +3713,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     if(el == NULL)
       addPageIndicator(CONST_ACTIVE_TCP_SESSIONS_HTML, pageNum,
 		       myGlobals.device[actualDeviceId].numTcpSessions,
-		       myGlobals.runningPref.maxNumLines, -1, 0);
+		       myGlobals.runningPref.maxNumLines, -1, 0, -1);
 
     printHostColorCode(FALSE, 0);
 
@@ -5023,31 +5031,46 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
     return(0);
   }
 
+  /*
+    traceEvent(CONST_TRACE_INFO, "--> [columnSort=%d][network_mode_sort=%d]",
+    myGlobals.columnSort, network_mode_sort); 
+  */
+
   switch(myGlobals.columnSort) {
+  case 0:
+    if(network_mode_sort == NETWORK_VIEW) {
+      char buf1[64], buf2[64];
+
+      char *nw_name_a = host2networkName(a->domainHost, buf1, sizeof(buf1));
+      char *nw_name_b = host2networkName(b->domainHost, buf2, sizeof(buf2));
+      rc = strcmp(nw_name_a, nw_name_b);
+
+    } else if(network_mode_sort == AS_VIEW) {
+      a_ = a->domainHost->hostAS , b_ = b->domainHost->hostAS;
+    } else {
+       /* Host */
+      return(cmpFctnResolvedName(&(a->domainHost), &(b->domainHost)));
+    }
+    break;
   case 1: /* Domain Flag */
     /* We don't worry about whether this is single or multi domain, since if it is a single
        domain, our fallback to hostResolvedName will rule anyway.
     */
-
     if(a->clusterName && b->clusterName)
-      rc = strcmp(a->clusterName, b->clusterName);
-    else
-      rc = cmpFctnLocationName(a, b);
-    return(rc);
-  case 2: a_  = a->bytesSent.value, b_ = b->bytesSent.value; break;
-  case 3: a_  = a->bytesRcvd.value, b_ = b->bytesRcvd.value; break;
-  case 4: a_  = a->tcpSent.value  , b_ = b->tcpSent.value;   break;
-  case 5: a_  = a->tcpRcvd.value  , b_ = b->tcpRcvd.value;   break;
-  case 6: a_  = a->udpSent.value  , b_ = b->udpSent.value;   break;
-  case 7: a_  = a->udpRcvd.value  , b_ = b->udpRcvd.value;   break;
-  case 8: a_  = a->icmpSent.value , b_ = b->icmpSent.value;  break;
-  case 9: a_  = a->icmpRcvd.value , b_ = b->icmpRcvd.value;  break;
+	rc = strcmp(a->clusterName, b->clusterName);
+      else
+	rc = cmpFctnLocationName(a, b);
+      return(rc);
+  case 2: a_  = a->bytesSent.value, b_ = b->bytesSent.value;   break;
+  case 3: a_  = a->bytesRcvd.value, b_ = b->bytesRcvd.value;   break;
+  case 4: a_  = a->tcpSent.value  , b_ = b->tcpSent.value;     break;
+  case 5: a_  = a->tcpRcvd.value  , b_ = b->tcpRcvd.value;     break;
+  case 6: a_  = a->udpSent.value  , b_ = b->udpSent.value;     break;
+  case 7: a_  = a->udpRcvd.value  , b_ = b->udpRcvd.value;     break;
+  case 8: a_  = a->icmpSent.value , b_ = b->icmpSent.value;    break;
+  case 9: a_  = a->icmpRcvd.value , b_ = b->icmpRcvd.value;    break;
   case 10:a_  = a->icmp6Sent.value , b_ = b->icmp6Sent.value;  break;
   case 11:a_  = a->icmp6Rcvd.value , b_ = b->icmp6Rcvd.value;  break;
-  default:
-  case 0: /* Host */
-    rc = cmpFctnResolvedName(&(a->domainHost), &(b->domainHost));
-    return(rc);
   }
 
   if(a_ < b_)
@@ -5082,34 +5105,46 @@ void printDomainStats(char* domain_network_name, int network_mode,
   u_short numLocalNetworks[MAX_NUM_CLUSTERS], totNumClusters=0;
   u_char *clusterNames[MAX_NUM_CLUSTERS];
 
+  network_mode_sort = network_mode;
+
   if(!clusterMode) {
     char sym_nw_name[256] = { 0 };
 
     if(domain_network_name == NULL)
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Statistics for all %s",
-		    (network_mode == 1) ? "Networks" : "Domains");
+		    (network_mode == NETWORK_VIEW) ? "Networks" : ((network_mode == AS_VIEW) ? "ASs" : "Domains"));
     else {
       char link_name[256] = { 0 };
 
-      if(network_mode == 1) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "network.name.%s",
+      if(network_mode > 0) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s.name.%s",
+		      (network_mode == NETWORK_VIEW) ? "network" : "as",
 		      domain_network_name);
 	
 	if(fetchPrefsValue(buf, sym_nw_name, sizeof(sym_nw_name)) == -1)
 	  sym_nw_name[0] = '\0';
        
 	safe_snprintf(__FILE__, __LINE__, link_name, sizeof(link_name),
-		      " <A HREF=\"%s?key=network.name.%s\">%s</A>",
-		      CONST_EDIT_PREFS, domain_network_name,
-		      "<img class=tooltip alt=\"Change network name\" "
-		      "src=\"/modifyUser.gif\" border=\"0\">");
+		      " <A HREF=\"%s?key=%s.name.%s\">%s</A>",
+		      CONST_EDIT_PREFS, 
+		      (network_mode == NETWORK_VIEW) ? "network" : "as",
+		      domain_network_name,
+		      "<img class=tooltip alt=\"Change name\" "
+		      "src=/"CONST_EDIT_IMG" border=\"0\">");
       }
 
+      if(network_mode == AS_VIEW) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		    "Statistics for hosts in %s %s %s",
-		    (network_mode == 1) ? "network" : "domain",
-		    (sym_nw_name[0] == '\0') ? domain_network_name : sym_nw_name,
+		    "Statistics for hosts in AS <A HREF=http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%s>%s</A> %s",
+		    domain_network_name, (sym_nw_name[0] == '\0') ? domain_network_name : sym_nw_name,
 		    link_name);
+      } else {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		      "Statistics for hosts in %s %s %s",
+		      (network_mode == NETWORK_VIEW) ? "network" : ((network_mode == AS_VIEW) ? "AS" : "domain"),
+		      (sym_nw_name[0] == '\0') ? domain_network_name : sym_nw_name,
+		      link_name);
+      }
     }
   } else {
     char localAddresses[1024];
@@ -5194,12 +5229,22 @@ void printDomainStats(char* domain_network_name, int network_mode,
     fillDomainName(el);
 
     if(network_mode) {
-      if((el->network_mask == 0) || (el->network_mask == 32))
-	continue;
-      else if((domain_network_name != NULL) && (domain_network_name[0] != '\0')) {
-	char *nw_name = host2networkName(el, buf1, sizeof(buf1));
-	if(strcmp(nw_name, domain_network_name))
+      if(network_mode == NETWORK_VIEW) {
+	if((el->network_mask == 0) || (el->network_mask == 32))
 	  continue;
+	else if((domain_network_name != NULL) && (domain_network_name[0] != '\0')) {
+	  char *nw_name = host2networkName(el, buf1, sizeof(buf1));
+	  if(strcmp(nw_name, domain_network_name))
+	    continue;
+	}
+      } else {
+	getHostAS(el);
+	if(el->hostAS == 0) 
+	  continue;
+	else if((domain_network_name != NULL) && (domain_network_name[0] != '\0')) {
+	  if(el->hostAS != atoi(domain_network_name))
+	    continue;
+	}
       }
     } else {
       if(el->community && (!isAllowedCommunity(el->community)))
@@ -5224,7 +5269,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
     if(domain_network_name == NULL) /* All entries */ {
       if(!clusterMode) {
 
-	if(network_mode) {
+	if(network_mode == NETWORK_VIEW) {
 	  /* Network */
 	  char *nw_name = host2networkName(el, buf1, sizeof(buf1));
 
@@ -5245,6 +5290,17 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	    else
 	      keyValue = (keyValue+1) % maxHosts;
 	  }
+	} else if(network_mode == AS_VIEW) {
+	  keyValue = (el->hostAS % maxHosts);
+
+	  while(stats[keyValue] != NULL) {
+	    if(stats[keyValue]->domainHost->hostAS == el->hostAS)
+	      break;
+	    else
+	      keyValue = (keyValue+1) % maxHosts;
+	  }
+
+	  /* traceEvent(CONST_TRACE_INFO, "--> [AS=%d]", el->hostAS); */
 	} else {
 	  /* Domain */
 	  for(keyValue=0, tmpIdx=0; el->dnsDomainValue[tmpIdx] != '\0'; tmpIdx++)
@@ -5340,16 +5396,17 @@ void printDomainStats(char* domain_network_name, int network_mode,
     totBytesSent = 1;
   if(totBytesRcvd == 0)
     totBytesRcvd = 1;
-
+  
+  /* NOTE: col= must be the last parameter */
   if(domain_network_name == NULL) {
-    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s&netmode=%d",
-		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, sign, network_mode);
-    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=&netmode=%d",
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?netmode=%d&col=%s",
+		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, network_mode, sign);
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?netmode=%d&col=",
 		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, network_mode);
   } else {
-    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s&col=%s&netmode=%d",
-		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, domain_network_name, sign, network_mode);
-    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?dom=%s&col=&netmode=%d",
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s&netmode=%dcol=%s&",
+		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, domain_network_name, network_mode, sign);
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?dom=%s&netmode=%d&col=",
 		  clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, domain_network_name, network_mode);
   }
 
@@ -5368,8 +5425,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		"<TH "TH_BG" colspan=\"8\">TCP/IP</A></TH>"
 		"<TH "TH_BG" colspan=\"4\">ICMP</A></TH>\n",
 		theAnchor[0], arrow[0],
-		theAnchor[1],
-		(network_mode == 1) ? "Networks" : "Domains",
+		theAnchor[1], "Domains",		
 		arrow[1]);
   sendString(buf);
 
@@ -5411,7 +5467,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
       statsEntry = &tmpStats[idx];
 
     if(domain_network_name == NULL) {
-      if(network_mode) {
+      if(network_mode == NETWORK_VIEW) {
 	char *nw_name = host2networkName(statsEntry->domainHost, buf1, sizeof(buf1));
 	char sym_nw_name[256];
 
@@ -5425,6 +5481,20 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		      "<A HREF=/%s?dom=%s&netmode=%d>%s</A>",
 		      CONST_DOMAIN_STATS_HTML, nw_name, network_mode,
 		      (sym_nw_name[0] == '\0') ? nw_name : sym_nw_name);
+	
+      } else if(network_mode == AS_VIEW) {
+	char sym_as_name[256];
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "as.name.%d", 
+		      statsEntry->domainHost->hostAS);
+
+	if(fetchPrefsValue(buf, sym_as_name, sizeof(sym_as_name)) == -1)
+	  snprintf(sym_as_name, sizeof(sym_as_name), "%d", statsEntry->domainHost->hostAS);
+
+	safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
+		      "<A HREF=/%s?dom=%d&netmode=%d>%s</A>",
+		      CONST_DOMAIN_STATS_HTML, statsEntry->domainHost->hostAS, network_mode,
+		      sym_as_name);
 	
       } else
 	safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s>%s</A>",
@@ -5449,27 +5519,36 @@ void printDomainStats(char* domain_network_name, int network_mode,
       if((blankId > 0) && (strcmp(&tmpBuf[blankId+1], domain_network_name) == 0))
 	tmpBuf[blankId] = '\0';
 
-      hostLink = makeHostLink(statsEntry->domainHost, FLAG_HOSTLINK_TEXT_FORMAT, 1,
-			      0, hostLinkBuf, sizeof(hostLinkBuf));
-
-      len = strlen(hostLink); if(len >= sizeof(htmlAnchor)) len = sizeof(htmlAnchor)-1;
-      strncpy(htmlAnchor, hostLink, len);
-      htmlAnchor[len] = '\0';
+      if(network_mode == AS_VIEW) {
+	makeHostLink(statsEntry->domainHost, FLAG_HOSTLINK_TEXT_FORMAT, 0,
+		     0, htmlAnchor, sizeof(htmlAnchor));
+	snprintf(htmlAnchor, sizeof(htmlAnchor), "%s", hostLink);     
+      } else {
+	hostLink = makeHostLink(statsEntry->domainHost, FLAG_HOSTLINK_TEXT_FORMAT, 1,
+				0, hostLinkBuf, sizeof(hostLinkBuf));
+	
+	len = strlen(hostLink); if(len >= sizeof(htmlAnchor)) len = sizeof(htmlAnchor)-1;
+	strncpy(htmlAnchor, hostLink, len);
+	htmlAnchor[len] = '\0';
+      }
     }
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
 		  "<TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=CENTER>%s</TD>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>"
-		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>"
-		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>",
 		  getRowColor(), htmlAnchor,
 		  (clusterMode && (!domain_network_name)) ? "&nbsp;" : getHostCountryIconURL(statsEntry->domainHost),
 		  formatBytes(statsEntry->bytesSent.value, 1, formatBuf, sizeof(formatBuf)),
 		  (100*((float)statsEntry->bytesSent.value/(float)totBytesSent)),
 		  formatBytes(statsEntry->bytesRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
-		  (100*((float)statsEntry->bytesRcvd.value/(float)totBytesRcvd)),
+		  (100*((float)statsEntry->bytesRcvd.value/(float)totBytesRcvd)));
+    sendString(buf);
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		  formatBytes(statsEntry->tcpSent.value, 1, formatBuf2, sizeof(formatBuf2)),
 		  formatBytes(statsEntry->tcpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
 		  formatBytes(statsEntry->udpSent.value, 1, formatBuf4, sizeof(formatBuf4)),
@@ -5498,7 +5577,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
   addPageIndicator(buf, pageNum, numEntries,
 		   myGlobals.runningPref.maxNumLines,
-		   revertOrder, abs(sortedColumn));
+		   revertOrder, abs(sortedColumn), network_mode);
 
 #ifndef EMBEDDED
 /* FIX */
@@ -5536,8 +5615,10 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
   if(!clusterMode) {
     sendString("<p align=\"center\"><b>NOTE</b>: ");
-    if(network_mode)
+    if(network_mode == NETWORK_VIEW)
       sendString("<small>Hosts without a known network are not displayed in this report</small>\n");
+    else if(network_mode == AS_VIEW)
+      sendString("<small>AS numbers are either received via monitoring protocols (e.g. NetFlow) or read from the AS-list ntop configuration file</small>");
     else
       sendString("<small>The domain is determined by simply stripping off "
 		 "the first name, so for host x.yz.com, the domain is yz.com and for host "
@@ -5726,9 +5807,6 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
     return;
 
   switch(criteria) {
-  case 0: /* AS */
-    myGlobals.columnSort = 10;
-    break;
   case 1: /* VLAN */
     myGlobals.columnSort = CONST_VLAN_COLUMN_SORT;
     break;
@@ -5738,10 +5816,6 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if(el->community && (!isAllowedCommunity(el->community))) continue;
     switch(criteria) {
-    case 0: /* AS */
-      getHostAS(el);
-      if(el->hostAS > 0)  tmpTable[numEntries++] = el;
-      break;
     case 1: /* VLAN */
       if(el->vlanId > 0)  tmpTable[numEntries++] = el;
       break;
@@ -5757,17 +5831,13 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
 
     qsort(tmpTable, numEntries, sizeof(HostTraffic*), sortHostFctn);
 
-    /*
-      AS Data Sent/Rcvd patch courtesy of Marco Sanson <marco.sanson@infvic.it>
-    */
-
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
 		  "<TR "TR_ON" "DARK_BG">"
 		  "<TH "TH_BG">%s</A></TH>\n"
 		  "<TH "TH_BG">Hosts</TH>\n"
 		  "<TH "TH_BG">Data Sent</TH>\n"
 		  "<TH "TH_BG">Data Rcvd</TH></TR>\n",
-		  criteria == 0 ? "AS" : "VLAN");
+		  "VLAN");
     sendString(buf);
 
     dataSent = dataRcvd = 0;
@@ -5775,14 +5845,13 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
     for(i=0; i<numEntries; i++) {
       el = tmpTable[numEntries-i-1];
 
-      if(((criteria == 0) && (lastId == el->hostAS)) ||
-	 ((criteria == 1) && (lastId == el->vlanId))) {
-        /* Same AS or VLAN as last entry... just continue it */
+      if((criteria == 1) && (lastId == el->vlanId)) {
+        /* Same VLAN as last entry... just continue it */
         sendString("\n<br>");
       } else {
-        /* New AS or VLAN */
+        /* New VLAN */
 
-        if(i>0) {
+        if(i > 0) {
           /* Finish prior row */
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n"
@@ -5798,19 +5867,10 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
 
         sendString("<TR "TR_ON">\n");
 
-	if(criteria == 0 /* AS */) {
-          lastId = el->hostAS;
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			"<TH "TH_BG" ALIGN=RIGHT "DARK_BG">"
-			"<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\"  class=tooltip title=\"Lookup ASN (offsite)\">%d</a>"
-			"</TH>\n",
-			el->hostAS, el->hostAS);
-	} else {
-          lastId = el->vlanId;
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			"<TH "TH_BG" ALIGN=RIGHT>%d</TH>\n",
-			el->vlanId);
-	}
+	lastId = el->vlanId;
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<TH "TH_BG" ALIGN=RIGHT>%d</TH>\n",
+		      el->vlanId);
         sendString(buf);
 
         sendString("<TH "TH_BG" ALIGN=LEFT>");
@@ -5841,24 +5901,6 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
   }
 
   free(tmpTable);
-}
-
-/* ************************** */
-
-void printASList(unsigned int deviceId) {
-  printHTMLheader("Autonomous Systems Traffic Statistics", NULL, 0);
-
-  if(deviceId > myGlobals.numDevices) {
-    printFlagedWarning("<I>Invalid device specified</I>");
-    return;
-  }
-
-  if(myGlobals.haveASN == FALSE) {
-    printFlagedWarning("<I>ASN data was not loaded</I>");
-    return;
-  }
-
-  dumpHostsCriteria(&myGlobals.device[deviceId], 0 /* AS */);
 }
 
 /* ******************************* */
@@ -6335,7 +6377,7 @@ void printFcHostsTraffic(int reportType,
   printFooter(reportType);
 
   addPageIndicator(url, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
-		   revertOrder, abs(sortedColumn));
+		   revertOrder, abs(sortedColumn), -1);
 
   myGlobals.lastRefreshTime = myGlobals.actTime;
   free(tmpTable);

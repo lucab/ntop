@@ -622,11 +622,18 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
     return(0);
   }
 
-  if((srcHost->network_mask == 0) && record->src_mask)
+  /*
+    All hosts with a netmask are assumed to be (pseudo)local
+  */
+  if((srcHost->network_mask == 0) && record->src_mask) {
     srcHost->network_mask = record->src_mask;
+    FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &srcHost->flags);
+  }
 
-  if((dstHost->network_mask == 0) && record->dst_mask)
+  if((dstHost->network_mask == 0) && record->dst_mask) {
     dstHost->network_mask = record->dst_mask;
+    FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &dstHost->flags);
+  }
 
   if(srcHost->firstSeen > *firstSeen) srcHost->firstSeen = *firstSeen;
   if(srcHost->lastSeen < *lastSeen)   srcHost->lastSeen = *lastSeen;

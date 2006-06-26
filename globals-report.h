@@ -189,7 +189,7 @@ extern void initReports(void);
 extern int reportValues(time_t *lastTime);
 extern void addPageIndicator(char *url, u_int beginIdx,
 			     u_int numEntries, u_int linesPerPage,
-			     int revertOrder, int numCol);
+			     int revertOrder, int numCol, int netmode);
 extern void printTrafficSummary(int revertOrder);
 extern void printTrafficStatistics(int revertOrder);
 extern int combineReportTypeLocality(int reportTypeReq, LocalityDisplayPolicy showLocalityMode);
@@ -256,7 +256,6 @@ extern void printNoDataYet(void);
 extern void printNotAvailable(char* flagName);
 extern void listNetFlows(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
-extern void printASList(unsigned int deviceId);
 extern void printVLANList(unsigned int deviceId);
 extern void showPortTraffic(u_short portNr);
 extern void drawVsanStatsGraph (unsigned int deviceId);

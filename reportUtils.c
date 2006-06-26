@@ -3514,7 +3514,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       sendString("</TD></TR>");
     }
 
-    traceEvent(CONST_TRACE_INFO, "-> %d", el->network_mask);
+    /* traceEvent(CONST_TRACE_INFO, "-> %d", el->network_mask); */
 
     if((el->network_mask > 0) && (el->network_mask != 32)) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
