@@ -173,7 +173,7 @@ static void calfree (void) {
 
 /* ******************************************* */
 
-static char* capitalizeInitial(char *str) { 
+static char* capitalizeInitial(char *str) {
   char c = toupper(str[0]);
 
   // traceEvent(CONST_TRACE_INFO, "RRD: (%s)", str);
@@ -202,12 +202,12 @@ static int validHostCommunity(char *host_ip /* 1.2.3.4 */) {
   char buf[64], *community;
 
   //traceEvent(CONST_TRACE_INFO, "RRD: validHostCommunity(%s)", host_ip);
-  
+
   community = findHostCommunity(inet_addr(host_ip), buf, sizeof(buf));
-  
-  if(community && (!isAllowedCommunity(community))) 
-    return(0);   
-   
+
+  if(community && (!isAllowedCommunity(community)))
+    return(0);
+
   return(1);
 }
 
@@ -343,7 +343,6 @@ static void listResource(char *rrdPath, char *rrdTitle,
   sendString(buf);
 
   sendString("</p>\n<p>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
-
 
   if(strstr(rrdPath, "/sFlow/") == NULL) {
     sendString("<TR><TH "DARK_BG" COLSPAN=1>Traffic Summary</TH></TR>\n");
@@ -524,7 +523,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   else if(endsWith(rrdName, "Pkts")) label = "Packets/sec";
   else label = capitalizeInitial(rrdName);
 
-  if((!strcmp(endTime, "now")) 
+  if((!strcmp(endTime, "now"))
      && (!strcmp(startTime, "now-600s")))
     show_trend = 0;
 
@@ -562,7 +561,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     argv[argc++] = "--alt-autoscale-max";
     argv[argc++] = "--lower-limit";
     argv[argc++] = "0";
-    
+
     /* ********************* */
 
 #ifdef CONST_RRD_DEFAULT_FONT_NAME
@@ -821,7 +820,7 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
   for(i=strlen(rrdPath)-1; i>0; i--)
     if(rrdPath[i] == '/')
       break;
-  
+
   safe_snprintf(__FILE__, __LINE__, title, sizeof(title), "NetFlow Interface %s", &rrdPath[i+1]);
 
   rrdGraphicRequests++;
@@ -838,7 +837,7 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
   argv[argc++] = startTime;
   argv[argc++] = "--end";
   argv[argc++] = endTime;
-  argv[argc++] = "--slope-mode"; 
+  argv[argc++] = "--slope-mode";
   argv[argc++] = "--width";
   argv[argc++] = "500";
   argv[argc++] = "--height";
@@ -870,7 +869,7 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
       safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
 		    entryId, rrd_colors[entryId], spacer(&rrds[i][2], tmpStr, sizeof(tmpStr)));
       argv[argc++] = buf1[entryId];
- 
+
       safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Last\\: %8.2lf %s");
       argv[argc++] = buf2[entryId];
       safe_snprintf(__FILE__, __LINE__, buf3[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %8.2lf %s");
@@ -953,9 +952,9 @@ static char* spacer(char* _str, char *tmpStr, int tmpStrLen) {
 
   if(len > 15) len = 15;
   snprintf(tmpStr, len+1, "%s", str);
-  
+
   for(i=len; i<15; i++) tmpStr[i] = ' ';
-  tmpStr[16] = '\0';  
+  tmpStr[16] = '\0';
 
   return(tmpStr);
 }
@@ -1099,7 +1098,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
   argv[argc++] = startTime;
   argv[argc++] = "--end";
   argv[argc++] = endTime;
-   argv[argc++] = "--slope-mode"; 
+   argv[argc++] = "--slope-mode";
 
 #ifdef CONST_RRD_DEFAULT_FONT_NAME
   argv[argc++] = "--font";
@@ -1236,18 +1235,18 @@ static void initUdp() {
   cliAddr.sin_family = AF_INET;
   cliAddr.sin_addr.s_addr = htonl(INADDR_ANY);
   cliAddr.sin_port = htons(0);
-  
+
   /* get server IP address (no check if input is IP address or DNS name */
   h = gethostbyname("127.0.0.1");
   if(h == NULL) {
     traceEvent(CONST_TRACE_WARNING, "RRD: unknown RRD server host\n");
   }
-  
+
   remoteServAddr.sin_family = h->h_addrtype;
   memcpy((char *) &remoteServAddr.sin_addr.s_addr,
 	 h->h_addr_list[0], h->h_length);
   remoteServAddr.sin_port = htons(REMOTE_SERVER_PORT);
-  
+
 
   /* socket creation */
   sd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -1264,7 +1263,7 @@ static void updateUdpParams() {
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "CFG %d\t%d\t%d\t%d\t%d\t%d",
 		  dumpInterval, dumpShortInterval, dumpHours, dumpDays, dumpMonths, dumpDelay);
-    
+
     sendto(sd, buf, strlen(buf), 0,
 	   (struct sockaddr *)&remoteServAddr,
 	   sizeof(remoteServAddr));
@@ -1275,7 +1274,7 @@ static void updateUdpParams() {
 static void termUdp() {
   if(!useDaemon) return;
   if(sd < 0) return;
-  
+
   close(sd);
   sd = -1;
 }
@@ -1306,10 +1305,10 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
   if(useDaemon) {
     char buf[128];
     int rc;
-    
+
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "CMD %s\t%s\t%lu\t%d\t%d",
 		  hostPath, key, value, isCounter, short_step);
-    
+
     rc = sendto(sd, buf, strlen(buf), 0,
 	       (struct sockaddr *)&remoteServAddr,
 	       sizeof(remoteServAddr));
@@ -1476,7 +1475,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 #if 0 /* Luca: what's this code about ? */
     if((!createdCounter) && (numRuns == 1)) {
       return;
-    } else 
+    } else
 #endif
       {
 #ifdef WIN32
@@ -1816,17 +1815,150 @@ static void commonRRDinit(void) {
 
 /* ****************************** */
 
+#define option_timespan(theStartTime, theLabel, selected)    \
+                  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), \
+                 "<option value=\"/" CONST_PLUGINS_HEADER "%s?action=" CONST_ARBITRARY_RRDREQUEST "&" CONST_ARBITRARY_IP "=%s" \
+		  "&" CONST_ARBITRARY_INTERFACE "=%s" \
+		  "&" CONST_ARBITRARY_FILE "=%s" \
+		  "&start=%d" \
+		  "&end=%d" \
+		  "&counter=%s" \
+		  "&title=%s&mode=zoom\" %s>%s</option>\n", \
+                  "rrdPlugin", rrdIP, rrdInterface, rrdName, theStartTime, the_time, buf1, buf2, \
+                  (selected == 1) ? "selected" : "", theLabel); sendString(buf);
+
+/* ****************************** */
+
 static void arbitraryAction(char *rrdName,
                             char *rrdInterface,
                             char *rrdIP,
-                            char *startTime,
-                            char *endTime,
+                            char *_startTime,
+                            char *_endTime,
                             char *rrdCounter,
                             char *rrdTitle,
-                            char _which) {
-  int i, len, rc=0, argc = 0, argc1 = 0,countOK=0, countZERO=0;
-  char buf[LEN_GENERAL_WORK_BUFFER],
-    rrdKey[64];
+                            char _which,
+			    char *mode) {
+  int i, len, rc=0, argc = 0, argc1 = 0, countOK=0, countZERO=0;
+  char buf[LEN_GENERAL_WORK_BUFFER], rrdKey[64], *startTime, *endTime;
+  time_t the_time;
+  struct tm *the_tm;
+
+  startTime = _startTime, endTime = _endTime;
+  if(atol(startTime) > atol(endTime)) {
+    startTime = endTime;
+  }
+
+  if(!strcmp(mode, "zoom")) {
+    char buf1[LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
+
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    printHTMLheader("" /* "Arbitrary Graph URL" */, NULL, 0);
+    escape(buf1, sizeof(buf1), rrdCounter);
+    escape(buf2, sizeof(buf2), rrdTitle);
+
+    sendString("<center>\n");
+
+    /* *************************************** */
+
+    /*
+      Graph time and zoom: code courtesy of
+      the Cacti (http://www.cacti.net) project.
+    */
+
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/calendar.js\"></SCRIPT>\n");
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/lang/calendar-en.js\"></SCRIPT>\n");
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/calendar-setup.js\"></script>\n");
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/calendar-load.js\"></script>\n");
+    
+    sendString("\n<p align=center>\n<FORM action=/plugins/rrdPlugin name=\"form_timespan_selector\" method=\"get\">\n<TABLE width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n<TBODY><TR><TD align=center class=\"textHeader\" nowrap=\"\">\n<b>Presets</b>: <SELECT name=\"predefined_timespan\" onchange=\"window.location=document.form_timespan_selector.predefined_timespan.options[document.form_timespan_selector.predefined_timespan.selectedIndex].value\">\n");
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<input type=hidden name=action value=" CONST_ARBITRARY_RRDREQUEST ">\n"
+		  "<input type=hidden name="CONST_ARBITRARY_IP "=%s>\n" 
+		  "<input type=hidden name=" CONST_ARBITRARY_INTERFACE " value=%s>\n" 
+		  "<input type=hidden name=" CONST_ARBITRARY_FILE " value=%s>\n" 
+		  "<input type=hidden name=start value=%s>\n" 
+		  "<input type=hidden name=end value=%s>\n" 
+		  "<input type=hidden name=counter value=%s>\n" 
+		  "<input type=hidden name=title value=%s>\n"
+		  "<input type=hidden name=mode value=zoom>\n", 
+                  rrdIP, rrdInterface, rrdName, startTime, endTime, buf1, buf2);
+    sendString(buf);
+
+    /* *************************************** */
+    
+    the_time = time(NULL);
+    option_timespan(the_time-1800, "Last Half Hour", 0);
+    option_timespan(the_time-3600, "Last Hour", 0);
+    option_timespan(the_time-2*3600, "Last 2 Hours", 0);
+    option_timespan(the_time-4*3600, "Last 4 Hours", 0);
+    option_timespan(the_time-6*3600, "Last 6 Hours", 0);
+    option_timespan(the_time-12*3600, "Last 12 Hours", 0);
+    option_timespan(the_time-86400, "Last Day", 0);
+    option_timespan(the_time-2*86400, "Last 2 Days", 0);
+    option_timespan(the_time-4*86400, "Last 4 Days", 0);
+    option_timespan(the_time-7*86400, "Last Week", 1);
+    option_timespan(the_time-30*86400, "Last Month", 0);
+    option_timespan(the_time-2*30*86400, "Last 2 Months", 0);
+    option_timespan(the_time-4*30*86400, "Last 4 Months", 0);
+    option_timespan(the_time-6*30*86400, "Last 6 Months", 0);
+    option_timespan(the_time-12*30*86400, "Last Year", 0);
+
+    sendString("</select>\n&nbsp;<STRONG>From:</STRONG>\n<INPUT type=\"text\" name=\"date1\" id=\"date1\" size=\"16\" value=\"");
+
+    the_time = atol(startTime); the_tm = localtime(&the_time);
+    strftime(buf, sizeof(buf), "%G-%m-%d %H:%M", the_tm); sendString(buf);
+
+    sendString("\">\n<INPUT type=\"image\" src=\"/calendar.gif\" alt=\"Start date selector\" border=\"0\" align=\"absmiddle\" onclick=\"return showCalendar('date1');\">\n");
+    sendString("&nbsp;<strong>To:</strong>\n<INPUT type=\"text\" name=\"date2\" id=\"date2\" size=\"16\" value=\"");
+
+    the_time = atol(endTime); the_tm = localtime(&the_time);
+    strftime(buf, sizeof(buf), "%G-%m-%d %H:%M", the_tm); sendString(buf);
+
+    sendString("\">\n<INPUT type=\"image\" src=\"/calendar.gif\" alt=\"End date selector\" border=\"0\" align=\"absmiddle\" onclick=\"return showCalendar('date2');\">\n"
+	       "<INPUT type=\"submit\" value=\"Update Graph\">\n</FORM>\n</TD></TR></TBODY></TABLE>\n</p>\n");
+
+    /* *************************************** */
+
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/zoom.js\"></SCRIPT>\n"
+	       "<DIV id=\"zoomBox\" style=\"position: absolute; visibility: visible; background-image: initial; background-repeat: initial; "
+	       "background-attachment: initial; background-position-x: initial; background-position-y: initial; background-color: orange; opacity: 0.5;\"></DIV>\n");
+    sendString("<DIV id=\"zoomSensitiveZone\" style=\"position: absolute; visibility: visible; cursor: crosshair; background-image: initial; "
+	       "background-repeat: initial; background-attachment: initial; background-position-x: initial; background-position-y: initial; "
+	       "background-color: blue; opacity: 0;\" oncontextmenu=\"return false\"></DIV>\n");
+    /*
+      NOTE:
+      If the graph size changes, please update the zoom.js file (search for L.Deri)
+    */
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                  "<img id=zoomGraphImage src=\"/" CONST_PLUGINS_HEADER "%s?action=" CONST_ARBITRARY_RRDREQUEST
+		  "&" CONST_ARBITRARY_IP "=%s"
+		  "&" CONST_ARBITRARY_INTERFACE "=%s"
+		  "&" CONST_ARBITRARY_FILE "=%s"
+		  "&start=%s"
+		  "&end=%s"
+		  "&counter=%s"
+		  "&title=%s"
+		  "\" alt=\"graph image\" border=0></center>\n",
+                  rrdPluginInfo->pluginURLname,
+                  rrdIP,
+                  rrdInterface,
+                  rrdName,
+                  startTime,
+                  endTime,
+                  buf1,
+                  buf2);
+    sendString(buf);
+
+    sendString("\n<SCRIPT type=\"text/javascript\">\n\nvar cURLBase = \"/plugins/rrdPlugin?mode=zoom\";\n\n// Global variables\nvar gZoomGraphName = \"zoomGraphImage\";\n"
+	       "var gZoomGraphObj;\nvar gMouseObj;\nvar gUrlObj;\nvar gBrowserObj;\nvar gGraphWidth;\n"
+	       "var gGraphHeight;\n\n\nwindow.onload = initBonsai;\n\n</SCRIPT>\n");
+
+    sendString("</center>\n");
+
+    printHTMLtrailer();
+    return;
+  }
 
   memset(&buf, 0, sizeof(buf));
   memset(&rrdKey, 0, sizeof(rrdKey));
@@ -1899,7 +2031,7 @@ static void arbitraryAction(char *rrdName,
 
   if((_which == CONST_ARBITRARY_RRDREQUEST_FETCHME[0]) ||
      (_which == CONST_ARBITRARY_RRDREQUEST_FETCHMECSV[0])) {
-    char *argv[32], *argv1[8], rptTime[32], startWorkTime[32], path[128], **ds_namv;    
+    char *argv[32], *argv1[8], rptTime[32], startWorkTime[32], path[128], **ds_namv;
     time_t start=0,end=time(NULL)+1, startTimeFound = 0;
     unsigned long step=0, ds_cnt, ii;
     rrd_value_t   *data,*datai, _val;
@@ -1930,7 +2062,7 @@ static void arbitraryAction(char *rrdName,
     if((startTime != NULL) && (startTime[0] == '0') && (startTime[1] == '\0')) {
       argv1[argc1++] = "rrd_first";
       argv1[argc1++] = path;
-      
+
       startTimeFound = rrd_first(argc1, argv1);
       if(startTimeFound != ((time_t)-1)) {
         safe_snprintf(__FILE__, __LINE__, startWorkTime, sizeof(startWorkTime), "%u", startTimeFound);
@@ -2078,7 +2210,7 @@ static void statisticsPage(void) {
   char buf[1024];
   int i;
   float pminDelay=99999.0, pmaxDelay=0.0;
-#ifdef MAX_RRD_PROCESS_BUFFER 
+#ifdef MAX_RRD_PROCESS_BUFFER
   float  /*stddev:*/ pM, pT, pQ, pR, pSD;
 #endif
 
@@ -2126,7 +2258,7 @@ static void statisticsPage(void) {
              "around the average).</p>\n"
              "<p>&nbsp;</p>\n"
              "</td></tr></table></center>\n");
- 
+
 
   if(rrdprocessBufferCount >= MAX_RRD_PROCESS_BUFFER) {
 
@@ -2275,7 +2407,7 @@ static void arbitraryActionPage(void) {
   printHTMLheader("Arbitrary RRD Actions", NULL, 0);
 
   safe_snprintf(__FILE__, __LINE__, dirPath, sizeof(dirPath), "%s/interfaces", myGlobals.rrdPath);
-  revertSlashIfWIN32(dirPath, 0); 
+  revertSlashIfWIN32(dirPath, 0);
   directoryPointer = opendir(dirPath);
   if(directoryPointer == NULL) {
     sendString("<p>No rrds found - check configuration.</p>\n");
@@ -2407,7 +2539,7 @@ static void arbitraryActionPage(void) {
 
 	if(count > 0)
 	  sendString("<input type=submit value=\"Make Request\">");
-	
+
    sendString("<br>&nbsp;</td></tr>\n</table>\n</form>\n</center>\n");
 }
 
@@ -2425,15 +2557,31 @@ static void printRRDPluginTrailer(void) {
 
 /* ****************************** */
 
+static time_t parse_date(char* value) {
+  /* 2006-07-11 10:06 */
+  struct tm _tm;
+
+  memset(&_tm, 0, sizeof(_tm));
+  if(sscanf(value, "%d-%d-%d %d:%d", &_tm.tm_year, &_tm.tm_mon, &_tm.tm_mday, &_tm.tm_hour, &_tm.tm_min) == 5) {
+    _tm.tm_hour--, _tm.tm_mon--, _tm.tm_year -= 1900;
+    
+    return(mktime(&_tm));
+  } else
+    return(0);
+}
+
+/* ****************************** */
+
 static void handleRRDHTTPrequest(char* url) {
   char buf[1024], *strtokState, *mainState, *urlPiece,
     rrdKey[64], rrdName[64], rrdTitle[128], rrdCounter[64], startTime[32], endTime[32],
-    rrdPrefix[32], rrdIP[32], rrdInterface[64], rrdPath[512];
+    rrdPrefix[32], rrdIP[32], rrdInterface[64], rrdPath[512], mode[32];
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
   int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces,
     _dumpMatrix, _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId;
   int i, len, idx;
+  time_t date1 = 0, date2 = 0;
   char * _hostsFilter;
 #ifndef WIN32
   int _dumpPermissions;
@@ -2482,6 +2630,7 @@ static void handleRRDHTTPrequest(char* url) {
   memset(&rrdIP, 0, sizeof(rrdIP));
   memset(&rrdInterface, 0, sizeof(rrdInterface));
   memset(&rrdPath, 0, sizeof(rrdPath));
+  memset(&mode, 0, sizeof(mode));
 
   strcpy(startTime, "now-12h");
   strcpy(endTime, "now");
@@ -2531,6 +2680,8 @@ static void handleRRDHTTPrequest(char* url) {
 	  safe_snprintf(__FILE__, __LINE__, rrdInterface, sizeof(rrdInterface), "%s", value);
         } else if(strcmp(key, CONST_ARBITRARY_FILE) == 0) {
 	  safe_snprintf(__FILE__, __LINE__, rrdName, sizeof(rrdName), "%s", value);
+	} else if(strcmp(key, "mode") == 0) {
+	  safe_snprintf(__FILE__, __LINE__, mode, sizeof(mode), "%s", value);
 	} else if(strcmp(key, "graphId") == 0) {
 	  graphId = atoi(value);
 	} else if(strcmp(key, "name") == 0) {
@@ -2608,11 +2759,18 @@ static void handleRRDHTTPrequest(char* url) {
 #endif
 	} else if(strcmp(key, "which") == 0) {
 	  _which = value[0];
+	} else if(strcmp(key, "date1") == 0) {
+	  date1 = parse_date(value);
+	} else if(strcmp(key, "date2") == 0) {
+	  date2 = parse_date(value);
 	}
       }
 
       urlPiece = strtok_r(NULL, "&", &mainState);
     }
+
+    if(date1 > 0) safe_snprintf(__FILE__, __LINE__, startTime, sizeof(startTime), "%d", date1);
+    if(date2 > 0) safe_snprintf(__FILE__, __LINE__, endTime,   sizeof(endTime),   "%d", date2);
 
     if(action == FLAG_RRD_ACTION_NONE) {
       dumpInterval = _dumpInterval;
@@ -2627,11 +2785,11 @@ static void handleRRDHTTPrequest(char* url) {
 	  if((myGlobals.device[devIdx].virtualDevice && (!myGlobals.device[devIdx].sflowGlobals))
 	     || (!myGlobals.device[devIdx].activeDevice))
 	    continue;
-	  
-	  safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), 
+
+	  safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath),
 			"%s/interfaces/%s/", myGlobals.rrdPath,
 			myGlobals.device[devIdx].humanFriendlyName);
-	  
+
 	  deleteRRD(rrdPath, "throughput");
 	}
       }
@@ -2701,7 +2859,7 @@ static void handleRRDHTTPrequest(char* url) {
     graphCounter(rrdKey, rrdName, NULL, rrdCounter, startTime, endTime, rrdPrefix);
     return;
   } else if(action == FLAG_RRD_ACTION_ARBITRARY) {
-    arbitraryAction(rrdName, rrdInterface, rrdIP, startTime, endTime, rrdCounter, rrdTitle, _which);
+    arbitraryAction(rrdName, rrdInterface, rrdIP, startTime, endTime, rrdCounter, rrdTitle, _which, mode);
     return;
   } else if(action == FLAG_RRD_ACTION_GRAPH_SUMMARY) {
     graphSummary(rrdKey, rrdName, graphId, startTime, endTime, rrdPrefix);
@@ -2998,7 +3156,7 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 
       if((!myGlobals.runningPref.dontTrustMACaddr)
 	 && subnetPseudoLocalHost(el)
-	 && (el->ethAddressString[0] != '\0')) 
+	 && (el->ethAddressString[0] != '\0'))
 	/*
 	  NOTE:
 	  MAC address is empty even for local hosts if this host has
@@ -3221,23 +3379,23 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
 
 static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
 
-  traceEvent(CONST_TRACE_INFO, 
+  traceEvent(CONST_TRACE_INFO,
              "THREADMGMT[t%lu]: RRD: Throughput data collection: Thread starting [p%d]",
              pthread_self(), getpid());
 
   ntopSleepUntilStateRUN();
 
-  traceEvent(CONST_TRACE_INFO, 
+  traceEvent(CONST_TRACE_INFO,
              "THREADMGMT[t%lu]: RRD: Throughput data collection: Thread running [p%d]",
              pthread_self(), getpid());
 
   for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
     int devIdx;
     char rrdPath[512];
-    
+
     ntopSleepWhileSameState(dumpShortInterval);
     if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) {
-      traceEvent(CONST_TRACE_INFO, 
+      traceEvent(CONST_TRACE_INFO,
                  "THREADMGMT[t%lu]: RRD: Throughput data collection: Thread stopping [p%d] State>RUN",
                  pthread_self(), getpid());
       break;
@@ -3261,7 +3419,7 @@ static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
 
   rrdTrafficThread = 0;
 
-  traceEvent(CONST_TRACE_INFO, 
+  traceEvent(CONST_TRACE_INFO,
              "THREADMGMT[t%lu]: RRD: Throughput data collection: Thread terminated [p%d]",
              pthread_self(), getpid());
   return(NULL);
@@ -3381,7 +3539,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     ntopSleepWhileSameState(sleep_tm);
     if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_STOPCAP) {
-      traceEvent(CONST_TRACE_INFO, 
+      traceEvent(CONST_TRACE_INFO,
                  "THREADMGMT[t%lu]: RRD: Data collection thread stopping [p%d] %s",
                  pthread_self(),
                  getpid(),
@@ -3531,7 +3689,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     if(dumpHosts) {
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
 	HostTraffic *el;
-	
+
 	for (el = getFirstHost(devIdx); el != NULL; el = getNextHost(devIdx, el)) {
 	  if (el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH)
 	    rrdUpdateIPHostStats(el, devIdx);
@@ -3721,21 +3879,21 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	  while(ifStats != NULL) {
 	    char rrdIfPath[512];
-	    
+
 	    safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
 			  "%s/interfaces/%s/NetFlow/%d/", myGlobals.rrdPath,
 			  myGlobals.device[devIdx].humanFriendlyName, ifStats->interface_id);
 	    mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
-	    
+
 	    updateCounter(rrdIfPath, "ifInOctets",  ifStats->inBytes.value, 0);
 	    updateCounter(rrdIfPath, "ifInPkts",    ifStats->inPkts.value, 0);
 	    updateCounter(rrdIfPath, "ifOutOctets", ifStats->outBytes.value, 0);
 	    updateCounter(rrdIfPath, "ifOutPkts",   ifStats->outPkts.value, 0);
-	    
+
 	    ifStats = ifStats->next;
 	  }
 
-	  releaseMutex(&myGlobals.device[devIdx].netflowGlobals->ifStatsMutex);	  
+	  releaseMutex(&myGlobals.device[devIdx].netflowGlobals->ifStatsMutex);
 	}
 
 	/* ******************************** */
@@ -3910,7 +4068,7 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
     /*
     if((rrdThread != 0) || (rrdTrafficThread != 0)) {
       traceEvent(CONST_TRACE_INFO,
-                 "THREADMGMT[t%lu]: RRD: Waiting %d seconds for threads to stop", 
+                 "THREADMGMT[t%lu]: RRD: Waiting %d seconds for threads to stop",
                  pthread_self(), (PARM_SLEEP_LIMIT + 2));
       sleep(PARM_SLEEP_LIMIT + 2);
     }

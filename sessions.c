@@ -25,6 +25,8 @@
 
 /* #define SESSION_TRACE_DEBUG 1 */
 
+#define tcp_flags(a, b) ((a & (b)) == (b))
+
 /* ************************************ */
 
 u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line) {
@@ -488,7 +490,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 
     while(theSession != NULL) {
       u_char free_session;
-      
+
       if(theSession->magic != CONST_MAGIC_NUMBER) {
 	theSession = NULL;
 	myGlobals.device[actualDeviceId].numTcpSessions--;
@@ -524,7 +526,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	 ) {
 	free_session = 1;
       } else /* This session will NOT be freed */ {
-	free_session = 0;	
+	free_session = 0;
       }
 
       if(free_session) {
@@ -535,7 +537,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	    prevSession->next = nextSession;
 	  else
 	    traceEvent(CONST_TRACE_ERROR, "Internal error: pointer inconsistency");
-        }     
+        }
 
 	freeSessionCount++;
         freeSession(theSession, actualDeviceId, 1, 0 /* locked by the purge thread */);
@@ -838,10 +840,10 @@ static void handleSIPSession(const struct pcap_pkthdr *h,
 
 	if(theSession->session_info == NULL) {
 	  char tmpStr[256];
-	  
+
 	  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%s called %s", from, to);
 	  theSession->session_info = strdup(tmpStr);
-	}	
+	}
       }
 
       if(audio) {
@@ -885,7 +887,7 @@ static void handleSCCPSession(const struct pcap_pkthdr *h,
   if(packetDataLength > 64) {
     u_int16_t message_id;
     /* NOTE: message_id is coded in little endian */
-    memcpy(&message_id, &packetData[8], sizeof(message_id)); 
+    memcpy(&message_id, &packetData[8], sizeof(message_id));
 #ifdef CFG_BIG_ENDIAN
     message_id = ntohs(message_id);
 #endif
@@ -923,7 +925,7 @@ static void handleSCCPSession(const struct pcap_pkthdr *h,
 	safe_snprintf(__FILE__, __LINE__, caller, sizeof(caller), "%s <%s>", calling_party_name, calling_party);
       else
 	safe_snprintf(__FILE__, __LINE__, caller, sizeof(caller), "%s", calling_party);
-      
+
       if(called_party_name[0] != '\0')
 	safe_snprintf(__FILE__, __LINE__, called, sizeof(called), "%s <%s>", called_party_name, called_party);
       else
@@ -943,7 +945,7 @@ static void handleSCCPSession(const struct pcap_pkthdr *h,
 
       FD_SET(FLAG_HOST_TYPE_SVC_VOIP_GATEWAY, &dstHost->flags);
       FD_SET(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, &srcHost->flags);
-      
+
       updateHostUsers(caller, BITFLAG_VOIP_USER, srcHost);
 
       free(rcStr);
@@ -1918,7 +1920,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     len = sizeof(tmpStr);
   else
     len = packetDataLength;
-  
+
 #ifdef HAVE_LIBPCRE
   if(myGlobals.runningPref.enableL7)
     l7SessionProtoDetection(theSession, packetDataLength, packetData);
@@ -2027,7 +2029,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	  updateFileList(file, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
 	} else if(portRange(sport, dport, 4661, 4665)
 		  || (rcStr[0] == 0xE3) || (rcStr[0] == 0xC5)) {
-	  /* Skype uses the eDonkey protocol so we must male sure that 
+	  /* Skype uses the eDonkey protocol so we must male sure that
 	     we don't mix them */
 
 	  if((sport == IP_TCP_PORT_SKYPE) || (dport == IP_TCP_PORT_SKYPE)) {
@@ -2155,7 +2157,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	} else {
 	  sscanf((char*)&tmpStr[27], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
 	}
-	
+
 	addPassiveSessionInfo(&srcHost->hostIpAddress, (e*256+f), "Passive FTP session");
       }
     } else if((sport == IP_UDP_PORT_SIP) && (dport == IP_UDP_PORT_SIP)) {
@@ -2213,7 +2215,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
                    theSession->dport);
 #endif
       } else {
-        if(0) 
+        if(0)
 	  traceEvent(CONST_TRACE_NOISY, "LATENCY: %s:%d->%s:%d is %d us",
 		     _addrtostr(&theSession->initiatorRealIp, buf, sizeof(buf)),
 		     theSession->sport,
@@ -2541,7 +2543,8 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
                          HostTraffic *dstHost, u_short dport,
                          u_int length, struct tcphdr *tp,
                          u_int packetDataLength, u_char* packetData,
-                         int actualDeviceId, u_short *newSession) {
+                         int actualDeviceId, u_short *newSession,
+			 u_char real_session /* vs. faked/netflow-session */) {
   IPSession *theSession = NULL;
   u_short sessionType = 0;
   struct tcphdr static_tp;
@@ -2579,10 +2582,10 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
   {
     char buf[32], buf1[32];
 
-    traceEvent(CONST_TRACE_INFO, "DEBUG: [%s] %s:%d -> %s:%d [idx=%d]",
+    traceEvent(CONST_TRACE_INFO, "DEBUG: [%s] %s:%d -> %s:%d",
 	       sessionType == IPPROTO_UDP ? "UDP" : "TCP",
 	       _addrtostr(&srcHost->hostIpAddress, buf, sizeof(buf)), sport,
-	       _addrtostr(&dstHost->hostIpAddress, buf1, sizeof(buf1)), dport, idx);
+	       _addrtostr(&dstHost->hostIpAddress, buf1, sizeof(buf1)), dport);
 
     if(tp) {
       printf("DEBUG: [%d]", tp->th_flags);
@@ -2601,22 +2604,48 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
     memset(tp, 0, sizeof(struct tcphdr));
   }
 
-  if((!multicastHost(dstHost))
-     && ((sessionType == IPPROTO_TCP)
-	 /* Simulate a TCP connection for the SIP protocol */
-	 || (((sport == IP_UDP_PORT_SIP) && (dport == IP_UDP_PORT_SIP)
-	      || ((sport > 1024) && (dport > 1024)) /* Needed for SIP */))
-	 || (((sport == IP_TCP_PORT_SCCP) && (dport > 1024)
-	      || ((sport > 1024) && (dport == IP_TCP_PORT_SCCP)) /* Needed for SCCP */))
-	 )) {
-    theSession = handleTCPSession(h, fragmentedData, tcpWin, srcHost, sport,
-				  dstHost, dport, length, tp, packetDataLength,
-				   packetData, actualDeviceId, newSession);
-  } else if(sessionType == IPPROTO_UDP) {
-    /* We don't create any permanent structures for UDP sessions */
-    handleUDPSession(h, fragmentedData, srcHost, sport, dstHost, dport,
-		      length, packetData, actualDeviceId, newSession);
-  }
+    if((!multicastHost(dstHost))
+       && ((sessionType == IPPROTO_TCP)
+	   /* Simulate a TCP connection for the SIP protocol */
+	   || (((sport == IP_UDP_PORT_SIP) && (dport == IP_UDP_PORT_SIP)
+		|| ((sport > 1024) && (dport > 1024)) /* Needed for SIP */))
+	   || (((sport == IP_TCP_PORT_SCCP) && (dport > 1024)
+		|| ((sport > 1024) && (dport == IP_TCP_PORT_SCCP)) /* Needed for SCCP */))
+	   )) {
+      if((real_session)
+	 || ((!tcp_flags(tp->th_flags, TH_SYN|TH_RST)) && (!tcp_flags(tp->th_flags, TH_SYN|TH_FIN)))) {
+	/*
+	  If this is a netflow session that is not self-contained (i.e. that started and
+	  ended into the same flow. In this case it will not be added as it will be
+	  immediately purged
+	*/
+#ifdef DEBUG
+	traceEvent(CONST_TRACE_INFO, "Handled session [%s%s%s%s%s]",
+		   (tp->th_flags & TH_SYN) ? " SYN" : "",
+		   (tp->th_flags & TH_ACK) ? " ACK" : "",
+		   (tp->th_flags & TH_FIN) ? " FIN" : "",
+		   (tp->th_flags & TH_RST) ? " RST" : "",
+		   (tp->th_flags & TH_PUSH) ? " PUSH" : "");
+#endif
+
+	theSession = handleTCPSession(h, fragmentedData, tcpWin, srcHost, sport,
+				      dstHost, dport, length, tp, packetDataLength,
+				      packetData, actualDeviceId, newSession);
+      } else {
+#ifdef DEBUG
+	traceEvent(CONST_TRACE_INFO, "Discarded session [%s%s%s%s%s]",
+		   (tp->th_flags & TH_SYN) ? " SYN" : "",
+		   (tp->th_flags & TH_ACK) ? " ACK" : "",
+		   (tp->th_flags & TH_FIN) ? " FIN" : "",
+		   (tp->th_flags & TH_RST) ? " RST" : "",
+		   (tp->th_flags & TH_PUSH) ? " PUSH" : "");
+#endif
+      }
+    } else if(sessionType == IPPROTO_UDP) {
+      /* We don't create any permanent structures for UDP sessions */
+      handleUDPSession(h, fragmentedData, srcHost, sport, dstHost, dport,
+		       length, packetData, actualDeviceId, newSession);
+    }
 
   if((sport == IP_L4_PORT_ECHO)       || (dport == IP_L4_PORT_ECHO)
      || (sport == IP_L4_PORT_DISCARD) || (dport == IP_L4_PORT_DISCARD)

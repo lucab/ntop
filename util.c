@@ -2430,25 +2430,7 @@ int name_interpret(char *in, char *out, int numBytes) {
 /* ******************************* */
 
 char* getNwInterfaceType(int i) {
-  switch(myGlobals.device[i].datalink) {
-  case DLT_NULL:	return("No&nbsp;link-layer&nbsp;encapsulation");
-  case DLT_EN10MB:	return("Ethernet");
-  case DLT_EN3MB:	return("Experimental&nbsp;Ethernet&nbsp;(3Mb)");
-  case DLT_AX25:	return("Amateur&nbsp;Radio&nbsp;AX.25");
-  case DLT_PRONET:	return("Proteon&nbsp;ProNET&nbsp;Token&nbsp;Ring");
-  case DLT_CHAOS: 	return("Chaos");
-  case DLT_IEEE802:	return("IEEE&nbsp;802&nbsp;Networks");
-  case DLT_ARCNET:	return("ARCNET");
-  case DLT_SLIP:	return("SLIP");
-  case DLT_PPP:         return("PPP");
-  case DLT_FDDI:	return("FDDI");
-  case DLT_ATM_RFC1483:	return("LLC/SNAP&nbsp;encapsulated&nbsp;ATM");
-  case DLT_RAW:  	return("Raw&nbsp;IP");
-  case DLT_SLIP_BSDOS:	return("BSD/OS&nbsp;SLIP");
-  case DLT_PPP_BSDOS:	return("BSD/OS&nbsp;PPP");
-  }
-
-  return(""); /* NOTREACHED (I hope) */
+  return((char*)pcap_datalink_val_to_description(myGlobals.device[i].datalink));
 }
 
 /* ************************************ */

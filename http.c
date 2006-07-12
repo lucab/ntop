@@ -881,7 +881,6 @@ static void processSSI(const char *ssiRequest) {
   } else if(strcasecmp(ssiURIstart, CONST_SSI_MENUHEAD_HTML) == 0) {
     ssiMenu_Head();
   } else {
-    
     /* Not recognized - oh dear */
     sendString("<center><p><b>ERROR</b>: Unrecognized SSI request, '");
     sendString(ssiURIstart);
@@ -943,8 +942,10 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
       }
 
       /* process SSI */
+#if 0
       temp = ssiEnd[0];
       ssiEnd[0] = '\0';
+#endif
       processSSI(ssiStart);
       ssiEnd[0] = temp;
 
@@ -1075,9 +1076,9 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
 
   if(htmlTitle != NULL) theTitle = htmlTitle; else theTitle = title;
 
-  sendString((myGlobals.runningPref.w3c == TRUE) ? CONST_W3C_DOCTYPE_LINE "\n" : "");
+  if(0) sendString((myGlobals.runningPref.w3c == TRUE) ? CONST_W3C_DOCTYPE_LINE "\n" : "\n"); /* FIX */
   sendString("<HTML>\n<HEAD>\n");
-  sendString((myGlobals.runningPref.w3c == TRUE) ? CONST_W3C_CHARTYPE_LINE "\n" : "");
+  if(0) sendString((myGlobals.runningPref.w3c == TRUE) ? CONST_W3C_CHARTYPE_LINE "\n" : "\n"); /* FIX */
 
   if(title != NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TITLE>%s</TITLE>\n", title);

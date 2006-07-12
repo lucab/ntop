@@ -827,7 +827,8 @@ extern IPSession* handleSession(const struct pcap_pkthdr *h,
                                 HostTraffic *dstHost, u_short dport,
                                 u_int length, struct tcphdr *tp,
                                 u_int tcpDataLength, u_char* packetData,
-                                int actualDeviceId, u_short *newSession);
+                                int actualDeviceId, u_short *newSession,
+				u_char real_session /* vs. faked/netflow-session */);
 extern void updateHostUsers(char *userName, int userType, HostTraffic *theHost);
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
 

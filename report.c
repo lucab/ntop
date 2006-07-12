@@ -4895,12 +4895,15 @@ void printThptStatsMatrix(int sortedColumn) {
 
 /* ************************ */
 
-#define RRD_THPT_STR "<A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=%d\" BORDER=0 BGCOLOR=white><IMG class=tooltip SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=throughput&arbiface=%s&arbip=&start=%s&end=now&counter=&title=%s\" border=\"0\" alt=\"Domain-wide Historical Data\"></A>"
+#define RRD_THPT_URL "/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=throughput&arbiface=%s&arbip=&start=%d&end=%d&counter=&title=%s"
+
+#define RRD_THPT_STR "<A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=%d\" BORDER=0 BGCOLOR=white><IMG class=tooltip SRC=\"" RRD_THPT_URL "\" border=\"0\" alt=\"Domain-wide Historical Data\"></A> <A HREF=\"" RRD_THPT_URL "&mode=zoom\" BORDER=0 BGCOLOR=white>&nbsp;<IMG valign=top class=tooltip SRC=graph_zoom.gif border=0></A>"
 
 void printThptStats(int sortedColumn _UNUSED_) {
-  char tmpBuf[512], formatBuf[32], formatBuf1[32];
+  char tmpBuf[1024], formatBuf[32], formatBuf1[32];
   struct stat statbuf;
   int i, useRRD = 1;
+  time_t now = time(NULL);
 
   printHTMLheader("Network Load Statistics", NULL, 0);
 
@@ -4923,12 +4926,12 @@ void printThptStats(int sortedColumn _UNUSED_) {
     return;
   }
 
-
   if(useRRD) {
     sendString("<CENTER>\n");
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		  0, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		  "now-600s", "Last+10+Minutes+Throughput");
+		  0, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-600, now, "Last+10+Minutes+Throughput",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-600, now, "Throughput"
+		  );
     sendString(tmpBuf);
 
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
@@ -4938,8 +4941,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
 
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		  1, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		  "now-1h", "Last+Hour+Throughput");
+		  1, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-3600, now, "Last+Hour+Throughput",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-3600, now, "Throughput");
     sendString(tmpBuf);
   } else {
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples == 0) {
@@ -4959,8 +4962,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   if(useRRD) {
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		  2, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		  "now-1d", "Current+Day+Throughput");
+		  2, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-86400, now, "Current+Day+Throughput",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-86400, now, "Throughput");
     sendString(tmpBuf);
   } else {
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 60)
@@ -4973,20 +4976,18 @@ void printThptStats(int sortedColumn _UNUSED_) {
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
 		formatTimeStamp(0, 24, 0, formatBuf, sizeof(formatBuf)),
 		formatTimeStamp(0,  0, 0, formatBuf1, sizeof(formatBuf1)));
-
   sendString(tmpBuf);
-
 
   if(useRRD) {
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		  3, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		  "now-1m", "Last+Month+Throughput");
+		  3, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-86400*30, now, "Last+Month+Throughput",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-86400*30, now, "Throughput");
     sendString(tmpBuf);
   } else {
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 1440 /* 60 * 24 */)
       goto endPrintThptStats;
 
-    sendString("<P><IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=3\" class=tooltip alt=\"Current 30day throughput chart\"><BR>\n");
+    sendString("<P><IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=3\" class=tooltip alt=\"30 day throughput chart\"><BR>\n");
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
 		  formatTimeStamp(30, 0, 0, formatBuf, sizeof(formatBuf)),
 		  formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1)));
@@ -5001,15 +5002,15 @@ void printThptStats(int sortedColumn _UNUSED_) {
  endPrintThptStats:
   sendString("</CENTER>\n");
 
-
   if(useRRD) {
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<p align=right>"
 		  "[ <A HREF=\"/" CONST_PLUGINS_HEADER"rrdPlugin\">Change Throughput Granularity</A> ]</p>",
 		  formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
 		  formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
     sendString(tmpBuf);
+  } else {
+    sendString("<p align=center>NOTE: this page is not operational when the RRD plugin is disabled or missing</p>");
   }
-
 }
 
 /* ************************ */

@@ -89,7 +89,7 @@ static struct proto_info* loadPattern(char *base_dir, char *pattern_filename) {
 	    if(proto->proto_name != NULL) free(proto->proto_name);
 	    free(proto);
             return(NULL);
-	    traceEvent(CONST_TRACE_WARNING, "Invalid pattern. Skipping...");
+	    traceEvent(CONST_TRACE_WARNING, "Invalid pattern (%s). Skipping...", error);
 	  }
 
 	  break;

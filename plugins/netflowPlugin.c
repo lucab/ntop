@@ -120,7 +120,7 @@ static PluginInfo netflowPluginInfo[] = {
     handleNetflowHTTPrequest,
     NULL, /* no host creation/deletion handle */
 #ifdef DEBUG_FLOWS
-    "udp and (port 9997)",
+    "udp and (port 2055)",
 #else
     NULL, /* no capture */
 #endif
@@ -775,7 +775,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
     traceEvent(CONST_TRACE_INFO, "handleSession(TCP)");
 #endif
     session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, len,
-			    &tp, 0, NULL, actualDeviceId, &newSession);
+			    &tp, 0, NULL, actualDeviceId, &newSession, 0);
     break;
 
   case 17: /* UDP */
@@ -821,7 +821,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
     traceEvent(CONST_TRACE_INFO, "handleSession(UDP)");
 #endif
     session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport,
-			    len, NULL, 0, NULL, actualDeviceId, &newSession);
+			    len, NULL, 0, NULL, actualDeviceId, &newSession, 0);
     break;
 
   default:

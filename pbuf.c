@@ -987,7 +987,10 @@ static void processIpPkt(const u_char *bp,
 #ifdef INET6
   if(ip6 == NULL)
 #endif
-    if((bp != NULL) && (in_cksum((const u_short *)bp, hlen, 0) != 0)) {
+    if((bp != NULL) 
+       && (myGlobals.device[actualDeviceId].datalink != DLT_NULL)
+       && (in_cksum((const u_short *)bp, hlen, 0) != 0)
+       ) {
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.badChecksum, 1);
       return;
     }
@@ -1462,14 +1465,14 @@ static void processIpPkt(const u_char *bp,
 				       srcHost, sport, dstHost,
 				       dport, ntohs(ip6->ip6_plen), &tp, 
 				       tcpDataLength,
-				       theData, actualDeviceId, &newSession);
+				       theData, actualDeviceId, &newSession, 1);
 	  else
 #endif
 	    theSession = handleSession(h, (off & 0x3fff), tp.th_win,
 				       srcHost, sport, dstHost,
 				       dport, ip_len, &tp, 
 				       tcpDataLength,
-				       theData, actualDeviceId, &newSession);
+				       theData, actualDeviceId, &newSession, 1);
 	  if(theSession == NULL)
 	    isPassiveSess = isVoipSess = 0;
 	  else {
@@ -1760,14 +1763,14 @@ static void processIpPkt(const u_char *bp,
 					dport, ntohs(ip6->ip6_plen), NULL,
 					udpDataLength,
 					(u_char*)(bp+hlen+sizeof(struct udphdr)),
-					actualDeviceId, &newSession);
+					actualDeviceId, &newSession, 1);
 	  else
 #endif
 	    theSession =  handleSession (h, (off & 0x3fff), 0,
 					 srcHost, sport, dstHost,
 					 dport, ip_len, NULL, udpDataLength,
 					 (u_char*)(bp+hlen+sizeof(struct udphdr)),
-					 actualDeviceId, &newSession);
+					 actualDeviceId, &newSession, 1);
 	} 
 
 	isPassiveSess = 0;
@@ -2310,21 +2313,13 @@ void queuePacket(u_char *_deviceId,
         if(len >= DEFAULT_SNAPLEN) len = DEFAULT_SNAPLEN-1;
     }
 
-    if(h->len >= MAX_PACKET_LEN) {
-      traceEvent(CONST_TRACE_WARNING, "packet truncated (%d->%d)", 
-		 h->len, MAX_PACKET_LEN);
-      ((struct pcap_pkthdr*)h)->len = MAX_PACKET_LEN-1;
-    }
+    if(h->caplen >= MAX_PACKET_LEN) {
+      if(h->caplen > myGlobals.device[deviceId].mtuSize) {
+	traceEvent(CONST_TRACE_WARNING, "packet truncated (%d->%d)", 
+		   h->len, MAX_PACKET_LEN);
+      }
 
-    if(len >= MAX_PACKET_LEN) {
-      bpf_u_int32 *caplen = (bpf_u_int32*)&(h->caplen);
-
-      len = MAX_PACKET_LEN-1;
-      /*
-	 Trick needed to avoid compilation errors
-	 as caplen is defined as 'const'
-      */
-      (*caplen) = len;
+      ((struct pcap_pkthdr*)h)->caplen = MAX_PACKET_LEN-1;
     }
 
     memcpy(p1, p, len);
@@ -2766,7 +2761,7 @@ void processPacket(u_char *_deviceId,
 
   hlen = (myGlobals.device[deviceId].datalink == DLT_NULL) ? CONST_NULL_HDRLEN : sizeof(struct ether_header);
 
-  if (!myGlobals.initialSniffTime && (myGlobals.runningPref.rFileName != NULL)) {
+  if(!myGlobals.initialSniffTime && (myGlobals.runningPref.rFileName != NULL)) {
       myGlobals.initialSniffTime = h->ts.tv_sec;
       myGlobals.device[deviceId].lastThptUpdate = myGlobals.device[deviceId].lastMinThptUpdate =
           myGlobals.device[deviceId].lastHourThptUpdate = myGlobals.device[deviceId].lastFiveMinsThptUpdate = myGlobals.initialSniffTime;
@@ -2843,12 +2838,17 @@ void processPacket(u_char *_deviceId,
       */
 
       length -= CONST_NULL_HDRLEN; /* don't count nullhdr */
-
+      
       /* All this crap is due to the old little/big endian story... */
-      if((p[0] == 0) && (p[1] == 0) && (p[2] == 8) && (p[3] == 0))
+      if(((p[0] == 0) && (p[1] == 0) && (p[2] == 8) && (p[3] == 0))
+	 || ((p[0] == 2) && (p[1] == 0) && (p[2] == 0) && (p[3] == 0)) /* OSX */)
 	eth_type = ETHERTYPE_IP;
-      else if((p[0] == 0) && (p[1] == 0) && (p[2] == 0x86) && (p[3] == 0xdd))
+      else if(((p[0] == 0) && (p[1] == 0) && (p[2] == 0x86) && (p[3] == 0xdd))
+	      || ((p[0] == 0x1E) && (p[1] == 0) && (p[2] == 0) && (p[3] == 0)) /* OSX */)
 	eth_type = ETHERTYPE_IPv6;
+      else {
+	// traceEvent(CONST_TRACE_INFO, "[%d][%d][%d][%d]", p[0], p[1], p[2], p[3]);
+      }
       ether_src = ether_dst = myGlobals.dummyEthAddress;
       break;
 
