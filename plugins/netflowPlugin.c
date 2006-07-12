@@ -2014,8 +2014,7 @@ static void printNetFlowStatistics(void) {
       }
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "<tr><th colspan=\"2\">Device %d - %s</th></tr>\n",
-                    i,
-	                myGlobals.device[i].humanFriendlyName);
+                    i, myGlobals.device[i].humanFriendlyName);
       sendString(buf);
       printNetFlowStatisticsRcvd(i);
     }

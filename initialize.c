@@ -1431,7 +1431,8 @@ void addDevice(char* deviceName, char* deviceDescr) {
     struct in_addr myLocalHostAddress;
 
 
-    if(myGlobals.numDevices < MAX_NUM_DEVICES) {
+    if((myGlobals.numDevices < MAX_NUM_DEVICES)
+       && strcmp(myGlobals.device[deviceId].name, "none")) {
       traceEvent(CONST_TRACE_INFO, "Checking %s for additional devices", myGlobals.device[deviceId].name);
       for(k=0; k<=MAX_NUM_DEVICES_VIRTUAL; k++) {
 	u_int8_t netmask_v6;

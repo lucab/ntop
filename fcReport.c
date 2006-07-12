@@ -4638,7 +4638,7 @@ void drawVsanStatsGraph (unsigned int deviceId)
     printHTMLheader("Top 10 VSANs", 0, 0);
 
     numVsans = 0;
-    memset (tmpTable, sizeof (FcFabricElementHash *)*MAX_ELEMENT_HASH, 0);
+    memset (tmpTable, 0, sizeof (FcFabricElementHash *)*MAX_ELEMENT_HASH);
 
     for (i=0; i<MAX_ELEMENT_HASH; i++) {
       if((theHash[i] != NULL) && (theHash[i]->vsanId < MAX_HASHDUMP_ENTRY) &&
@@ -4705,7 +4705,7 @@ void printFcTrafficSummary (u_short vsanId)
     }
 
     numVsans = 0;
-    memset (tmpTable, sizeof (FcFabricElementHash *)*MAX_ELEMENT_HASH, 0);
+    memset (tmpTable, 0, sizeof (FcFabricElementHash *)*MAX_ELEMENT_HASH);
 
     for (i=0; i<MAX_ELEMENT_HASH; i++) {
       if((theHash[i] != NULL) && (theHash[i]->vsanId < MAX_HASHDUMP_ENTRY) &&

@@ -3347,9 +3347,6 @@ static void printsFlowConfiguration(int deviceId) {
 
 
 
-
-
-
   sendString("<tr><th rowspan=\"2\" "DARK_BG">Flow<br>Collection</th>\n");
 
   sendString("<th "DARK_BG">Local<br>Collector<br>UDP"
@@ -4089,6 +4086,17 @@ static void handlesFlowHTTPrequest(char* _url) {
 	    }
 	  }
 	} else if(strcmp(device, "name") == 0) {
+	  int i;
+
+	  /* Sanitize name for RRD */
+	  for(i=0; i<strlen(value); i++) {
+	    switch(value[i]) {
+	    case ' ':
+	    case ':':
+	      value[i] = '_';
+	    }
+	  }
+
 	  free(myGlobals.device[deviceId].humanFriendlyName);
 	  myGlobals.device[deviceId].humanFriendlyName = strdup(value);
 	  storePrefsValue(sfValue(deviceId, "humanFriendlyName", 1), value);
@@ -4517,6 +4525,14 @@ static void handlesFlowPacket(u_char *_deviceId,
     struct ip ip;
 
     deviceId = 1; /* Dummy value */
+
+    if(myGlobals.device[deviceId].sflowGlobals == NULL)
+      deviceId = 2;
+    
+    if(myGlobals.device[deviceId].sflowGlobals == NULL) {
+      traceEvent(CONST_TRACE_INFO, "NULL device (%d)", deviceId);
+      return;
+    }
 
 #ifdef DEBUG_FLOWS
     if(0)
