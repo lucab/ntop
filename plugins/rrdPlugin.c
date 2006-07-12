@@ -1872,21 +1872,7 @@ static void arbitraryAction(char *rrdName,
     
     sendString("\n<p align=center>\n<FORM action=/plugins/rrdPlugin name=\"form_timespan_selector\" method=\"get\">\n<TABLE width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n<TBODY><TR><TD align=center class=\"textHeader\" nowrap=\"\">\n<b>Presets</b>: <SELECT name=\"predefined_timespan\" onchange=\"window.location=document.form_timespan_selector.predefined_timespan.options[document.form_timespan_selector.predefined_timespan.selectedIndex].value\">\n");
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		  "<input type=hidden name=action value=" CONST_ARBITRARY_RRDREQUEST ">\n"
-		  "<input type=hidden name="CONST_ARBITRARY_IP "=%s>\n" 
-		  "<input type=hidden name=" CONST_ARBITRARY_INTERFACE " value=%s>\n" 
-		  "<input type=hidden name=" CONST_ARBITRARY_FILE " value=%s>\n" 
-		  "<input type=hidden name=start value=%s>\n" 
-		  "<input type=hidden name=end value=%s>\n" 
-		  "<input type=hidden name=counter value=%s>\n" 
-		  "<input type=hidden name=title value=%s>\n"
-		  "<input type=hidden name=mode value=zoom>\n", 
-                  rrdIP, rrdInterface, rrdName, startTime, endTime, buf1, buf2);
-    sendString(buf);
-
-    /* *************************************** */
-    
+   
     the_time = time(NULL);
     option_timespan(the_time-1800, "Last Half Hour", 0);
     option_timespan(the_time-3600, "Last Hour", 0);
@@ -1904,7 +1890,23 @@ static void arbitraryAction(char *rrdName,
     option_timespan(the_time-6*30*86400, "Last 6 Months", 0);
     option_timespan(the_time-12*30*86400, "Last Year", 0);
 
-    sendString("</select>\n&nbsp;<STRONG>From:</STRONG>\n<INPUT type=\"text\" name=\"date1\" id=\"date1\" size=\"16\" value=\"");
+    sendString("</select>\n");
+    
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<input type=hidden name=action value=\"" CONST_ARBITRARY_RRDREQUEST "\">\n"
+		  "<input type=hidden name="CONST_ARBITRARY_IP " value=\"%s\">\n" 
+		  "<input type=hidden name=" CONST_ARBITRARY_INTERFACE " value=\"%s\">\n" 
+		  "<input type=hidden name=" CONST_ARBITRARY_FILE " value=\"%s\">\n" 
+		  "<input type=hidden name=start value=\"%s\">\n" 
+		  "<input type=hidden name=end value=\"%s\">\n" 
+		  "<input type=hidden name=counter value=\"%s\">\n" 
+		  "<input type=hidden name=title value=\"%s\">\n"
+		  "<input type=hidden name=mode value=\"zoom\">\n", 
+                  rrdIP, rrdInterface, rrdName, startTime, endTime, buf1, buf2);
+    sendString(buf);
+
+
+    sendString("&nbsp;<STRONG>From:</STRONG>\n<INPUT type=\"text\" name=\"date1\" id=\"date1\" size=\"16\" value=\"");
 
     the_time = atol(startTime); the_tm = localtime(&the_time);
     strftime(buf, sizeof(buf), "%G-%m-%d %H:%M", the_tm); sendString(buf);
