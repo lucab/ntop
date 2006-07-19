@@ -223,11 +223,19 @@ void printTrafficSummary (int revertOrder) {
     if(myGlobals.device[i].activeDevice) {
       char buf1[128];
       NtopIfaceAddr *ifaddr;
+      
+      if(myGlobals.device[i].sflowGlobals || myGlobals.device[i].netflowGlobals)
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
+		      "%s</TD>",
+		      myGlobals.device[i].humanFriendlyName[0] != '\0' ? myGlobals.device[i].humanFriendlyName : "&nbsp;");
+      else
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
+		      "%s <A HREF=\""CONST_EDIT_PREFS"?key=device.name.%s\">"
+		      "<img class=tooltip alt=\"Change name\" src=/"CONST_EDIT_IMG" border=\"0\"></A></TD>",
+		      myGlobals.device[i].humanFriendlyName[0] != '\0' ? myGlobals.device[i].humanFriendlyName : "&nbsp;",
+		      myGlobals.device[i].name);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">%s</TD>",
-		    myGlobals.device[i].humanFriendlyName[0] != '\0'
-		    ? myGlobals.device[i].humanFriendlyName : "&nbsp;");
-      sendString(buf);
+	sendString(buf);
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
 		    myGlobals.device[i].name);
@@ -575,9 +583,16 @@ void printTrafficStatistics(int revertOrder) {
       char buf1[128];
       NtopIfaceAddr *ifaddr;
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">%s</TD>",
-		    myGlobals.device[i].humanFriendlyName[0] != '\0'
-		    ? myGlobals.device[i].humanFriendlyName : "&nbsp;");
+      if(myGlobals.device[i].sflowGlobals || myGlobals.device[i].netflowGlobals)
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
+		      "%s</TD>",
+		      myGlobals.device[i].humanFriendlyName[0] != '\0' ? myGlobals.device[i].humanFriendlyName : "&nbsp;");
+      else
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
+		      "%s <A HREF=\""CONST_EDIT_PREFS"?key=device.name.%s\">"
+		      "<img class=tooltip alt=\"Change name\" src=/"CONST_EDIT_IMG" border=\"0\"></A></TD>",
+		      myGlobals.device[i].humanFriendlyName[0] != '\0' ? myGlobals.device[i].humanFriendlyName : "&nbsp;",
+		      myGlobals.device[i].name);
       sendString(buf);
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",

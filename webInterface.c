@@ -9179,6 +9179,8 @@ int handlePluginHTTPRequest(char* url) {
 
 /* *******************************/
 
+#define DEVICE_NAME         "device.name."
+
 void edit_prefs(char *db_key, char *db_val) {
   datum key, nextkey;
   int num_added = 0;
@@ -9197,8 +9199,21 @@ void edit_prefs(char *db_key, char *db_val) {
     
     if(db_val[0] == '\0')
       delPrefsValue(db_key);
-    else
+    else {
+      u_short len = strlen(DEVICE_NAME);
       storePrefsValue(db_key, db_val);
+      
+      if(strncmp(db_key, DEVICE_NAME, strlen(DEVICE_NAME)) == 0) {
+	int i;
+	
+	 for(i=0; i<myGlobals.numDevices; i++) {
+	   if((myGlobals.device[i].activeDevice) && (!strcmp(&db_key[len], myGlobals.device[i].name))) {
+	     if(myGlobals.device[i].humanFriendlyName) free(myGlobals.device[i].humanFriendlyName);
+	     myGlobals.device[i].humanFriendlyName = strdup(db_val);
+	   }
+	 }
+      }
+    }
   }
 
   key = gdbm_firstkey(myGlobals.prefsFile);

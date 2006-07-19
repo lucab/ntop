@@ -1080,8 +1080,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
   int i, deviceId, mallocLen, memlen;
   NtopInterface *tmpDevice, *oldDevice;
   char *workDevices = NULL;
-  char myName[80], *column = NULL;
-  char ebuf[CONST_SIZE_PCAP_ERR_BUF];
+  char myName[80], *column = NULL, ebuf[CONST_SIZE_PCAP_ERR_BUF], tmpStr[64];
 
 
   ebuf[0] = '\0', myName[0] = '\0';
@@ -1114,7 +1113,13 @@ void addDevice(char* deviceName, char* deviceDescr) {
     myGlobals.device = tmpDevice;
     if (oldDevice != NULL) free(oldDevice);
     deviceId = myGlobals.numDevices;
-    myGlobals.device[deviceId].humanFriendlyName = strdup(deviceDescr);
+
+    safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "device.name.%s", deviceName);
+    if(fetchPrefsValue(tmpStr, ebuf, sizeof(ebuf)) != -1)
+      myGlobals.device[deviceId].humanFriendlyName = strdup(ebuf);
+    else
+      myGlobals.device[deviceId].humanFriendlyName = strdup(deviceDescr);
+
     myGlobals.device[deviceId].name = strdup(deviceName);
     myGlobals.device[deviceId].samplingRate =  myGlobals.runningPref.samplingRate;
     myGlobals.numDevices++;
