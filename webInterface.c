@@ -9194,28 +9194,34 @@ void edit_prefs(char *db_key, char *db_val) {
 	     "<TH ALIGN=CENTER "DARK_BG">Action</TH></TR>\n");
 
   if(db_key && db_val) {
+    u_short len = strlen(DEVICE_NAME);
+
     unescape_url(db_key);
     unescape_url(db_val);
     
     if(db_val[0] == '\0')
       delPrefsValue(db_key);
-    else {
-      u_short len = strlen(DEVICE_NAME);
+    else
       storePrefsValue(db_key, db_val);
+        
+    if(strncmp(db_key, DEVICE_NAME, strlen(DEVICE_NAME)) == 0) {
+      int i;
       
-      if(strncmp(db_key, DEVICE_NAME, strlen(DEVICE_NAME)) == 0) {
-	int i;
-	
-	 for(i=0; i<myGlobals.numDevices; i++) {
-	   if((myGlobals.device[i].activeDevice) && (!strcmp(&db_key[len], myGlobals.device[i].name))) {
-	     if(myGlobals.device[i].humanFriendlyName) free(myGlobals.device[i].humanFriendlyName);
-	     myGlobals.device[i].humanFriendlyName = strdup(db_val);
-	   }
-	 }
-      }
-    }
-  }
+      sanitize_rrd_string(db_val);
+      
+      for(i=0; i<myGlobals.numDevices; i++) {
+	if((myGlobals.device[i].activeDevice) && (!strcmp(&db_key[len], myGlobals.device[i].name))) {
+	  if(myGlobals.device[i].humanFriendlyName) free(myGlobals.device[i].humanFriendlyName);
 
+	  if(db_val[0] == '\0')
+	    myGlobals.device[i].humanFriendlyName = strdup(myGlobals.device[i].name);
+	  else
+	    myGlobals.device[i].humanFriendlyName = strdup(db_val);
+	}
+      }
+    }          
+  }
+  
   key = gdbm_firstkey(myGlobals.prefsFile);
   while (key.dptr) {
     char val[512];
