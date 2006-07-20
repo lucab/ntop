@@ -640,6 +640,7 @@ extern void stringSanityCheck(char* string, char* parm);
 extern void uriSanityCheck(char* string, char* parm, int allowParms);
 extern void pathSanityCheck(char* string, char* parm);
 extern int fileSanityCheck(char* string, char* parm, int nonFatal);
+extern void sanitize_rrd_string(char* name);
 extern int ipSanityCheck(char* string, char* parm, int nonFatal);
 extern void deviceSanityCheck(char* string);
 extern int checkCommand(char* commandName);

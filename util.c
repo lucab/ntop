@@ -3158,6 +3158,21 @@ void pathSanityCheck(char* string, char* parm) {
 
 /* ************************** */
 
+void sanitize_rrd_string(char* name) {
+  int i;
+  
+  /* Sanitize name for RRD */
+  for(i=0; i<strlen(name); i++) {
+    switch(name[i]) {
+    case ' ':
+    case ':':
+      name[i] = '_';
+    }
+  }  
+}
+
+/* ************************** */
+
 int fileSanityCheck(char* string, char* parm, int nonFatal) {
   int i, j, k;
 

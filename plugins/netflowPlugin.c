@@ -461,7 +461,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   dstAS    = ntohs(record->dst_as);
 
 #ifdef DEBUG_FLOWS
-  {
+  if(0) {
     char buf1[256], buf[256];
 
     traceEvent(CONST_TRACE_INFO,
@@ -772,7 +772,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
     tp.th_sport = htons(sport), tp.th_dport = htons(dport);
     tp.th_flags = record->tcp_flags;
 #ifdef DEBUG_FLOWS
-    traceEvent(CONST_TRACE_INFO, "handleSession(TCP)");
+    /* traceEvent(CONST_TRACE_INFO, "handleSession(TCP)"); */
 #endif
     session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, len,
 			    &tp, 0, NULL, actualDeviceId, &newSession, 0);
@@ -818,7 +818,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
     }
 
 #ifdef DEBUG_FLOWS
-    traceEvent(CONST_TRACE_INFO, "handleSession(UDP)");
+    /* traceEvent(CONST_TRACE_INFO, "handleSession(UDP)"); */
 #endif
     session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport,
 			    len, NULL, 0, NULL, actualDeviceId, &newSession, 0);
@@ -846,17 +846,18 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 		      valueOf(record->sip_calling_party),
 		      valueOf(record->sip_called_party));
 
-	/* traceEvent(CONST_TRACE_INFO, "DEBUG: ->>>>>>>> '%s'", tmpStr); */
+	traceEvent(CONST_TRACE_INFO, "DEBUG: ->>>>>>>> '%s'", tmpStr);
 	session->session_info = strdup(tmpStr);
       }
     }
 
 #ifdef DEBUG_FLOWS
-    traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [diff=%d]"
-	       "[recordActTime=%d][last-first=%d]",
-	       srcHost->hostNumIpAddress, sport,
-	       dstHost->hostNumIpAddress, dport,
-	       timeDiff, recordActTime, (*lastSeen - *firstSeen));
+    if(0)
+      traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [diff=%d]"
+		 "[recordActTime=%d][last-first=%d]",
+		 srcHost->hostNumIpAddress, sport,
+		 dstHost->hostNumIpAddress, dport,
+		 timeDiff, recordActTime, (*lastSeen - *firstSeen));
 #endif
 
     if(session->firstSeen > timeDiff)
@@ -1377,12 +1378,15 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 		  /* VoIP Extensions */
 		case 130: /* SIP_CALL_ID */
 		  memcpy(&record.sip_call_id, &buffer[displ], 50);
+		  traceEvent(CONST_TRACE_INFO, "SIP: sip_call_id=%s", record.sip_call_id);
 		  break;
 		case 131: /* SIP_CALLING_PARTY */
 		  memcpy(&record.sip_calling_party, &buffer[displ], 50);
+		  traceEvent(CONST_TRACE_INFO, "SIP: sip_calling_party=%s", record.sip_calling_party);
 		  break;
 		case 132: /* SIP_CALLED_PARTY */
 		  memcpy(&record.sip_called_party, &buffer[displ], 50);
+		  traceEvent(CONST_TRACE_INFO, "SIP: sip_called_party=%s", record.sip_called_party);
 		  break;
 		}
 
@@ -3063,18 +3067,8 @@ static void handleNetflowHTTPrequest(char* _url) {
 	      setNetFlowInSocket(deviceId);
 	    }
 	  }
-	} else if(strcmp(device, "name") == 0) {
-	  int i;
-
-	  /* Sanitize name for RRD */
-	  for(i=0; i<strlen(value); i++) {
-	    switch(value[i]) {
-	    case ' ':
-	    case ':':
-	      value[i] = '_';
-	    }
-	  }
-
+	} else if(strcmp(device, "name") == 0) {	
+	  sanitize_rrd_string(value);
 	  free(myGlobals.device[deviceId].humanFriendlyName);
 	  myGlobals.device[deviceId].humanFriendlyName = strdup(value);
 	  storePrefsValue(nfValue(deviceId, "humanFriendlyName", 1), value);

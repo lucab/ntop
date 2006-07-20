@@ -4086,17 +4086,7 @@ static void handlesFlowHTTPrequest(char* _url) {
 	    }
 	  }
 	} else if(strcmp(device, "name") == 0) {
-	  int i;
-
-	  /* Sanitize name for RRD */
-	  for(i=0; i<strlen(value); i++) {
-	    switch(value[i]) {
-	    case ' ':
-	    case ':':
-	      value[i] = '_';
-	    }
-	  }
-
+	  sanitize_rrd_string(value);
 	  free(myGlobals.device[deviceId].humanFriendlyName);
 	  myGlobals.device[deviceId].humanFriendlyName = strdup(value);
 	  storePrefsValue(sfValue(deviceId, "humanFriendlyName", 1), value);
