@@ -2706,8 +2706,10 @@
 /* Other, OS specific stuff                                                        */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef WIN32
 #ifndef HAVE_SQRTF
 #define sqrtf(x) ((float)(sqrt((double)x)))
+#endif
 #endif
 
 /*

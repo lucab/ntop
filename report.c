@@ -4944,7 +4944,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
   if(useRRD) {
     sendString("<CENTER>\n");
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		  0, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-600, now, "Last+10+Minutes+Throughput",
+		  0,
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-600, now, "Last+10+Minutes+Throughput",
 		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-600, now, "Throughput"
 		  );
     sendString(tmpBuf);
@@ -4956,7 +4957,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
 
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		  1, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-3600, now, "Last+Hour+Throughput",
+		  1,
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-3600, now, "Last+Hour+Throughput",
 		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-3600, now, "Throughput");
     sendString(tmpBuf);
   } else {

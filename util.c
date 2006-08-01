@@ -2832,6 +2832,7 @@ char* _strncpy(char *dest, const char *src, size_t n) {
 
 /* ******************************************** */
 
+#ifndef WIN32
 /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 #ifndef HAVE_STRTOK_R
 /* Reentrant string tokenizer.  Generic myGlobals.version.
@@ -2881,6 +2882,7 @@ char *strtok_r(char *s, const char *delim, char **save_ptr) {
 
   return token;
 }
+#endif
 #endif
 
 /* ********************************** */
@@ -4027,6 +4029,7 @@ void checkUserIdentity(int userSpecified) {
 
 /* ******************************** */
 
+#ifndef WIN32
 #ifndef HAVE_LOCALTIME_R
 #undef localtime
 
@@ -4053,6 +4056,7 @@ struct tm *localtime_r(const time_t *t, struct tm *tp) {
 
   return(tp);
 }
+#endif
 #endif
 
 /* ************************************ */
