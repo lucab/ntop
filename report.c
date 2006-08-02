@@ -4910,7 +4910,7 @@ void printThptStatsMatrix(int sortedColumn) {
 
 /* ************************ */
 
-#define RRD_THPT_URL "/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=throughput&arbiface=%s&arbip=&start=%d&end=%d&counter=&title=%s"
+#define RRD_THPT_URL "/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=throughput&arbiface=%s&arbip=&start=%u&end=%u&counter=&title=%s"
 
 #define RRD_THPT_STR "<A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=%d\" BORDER=0 BGCOLOR=white><IMG class=tooltip SRC=\"" RRD_THPT_URL "\" border=\"0\" alt=\"Domain-wide Historical Data\"></A> <A HREF=\"" RRD_THPT_URL "&mode=zoom\" BORDER=0 BGCOLOR=white>&nbsp;<IMG valign=top class=tooltip SRC=graph_zoom.gif border=0></A>"
 
@@ -4943,10 +4943,27 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   if(useRRD) {
     sendString("<CENTER>\n");
+	printf("\n\n%s\n\n", RRD_THPT_STR);
+
+	/*
+	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), 
+	"<A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=%d\" BORDER=0 BGCOLOR=white><IMG class=tooltip SRC=\"" , 0);
+
+ safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), 
+	"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=throughput&arbiface=%s&arbip=&start=%u&end=%u&counter=&title=%s"
+	"\" border=\"0\" alt=\"Domain-wide Historical Data\"></A>",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, 
+		  (unsigned int)(now-600), (unsigned int)now, "Last+10+Minutes+Throughput");
+	
+	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), 
+		  "<A HREF=\"" RRD_THPT_URL "&mode=zoom\" BORDER=0 BGCOLOR=white>&nbsp;<IMG valign=top class=tooltip SRC=graph_zoom.gif border=0></A>",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-600, now, "Throughput");
+*/
+
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
 		  0,
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-600, now, "Last+10+Minutes+Throughput",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-600, now, "Throughput"
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-600), (unsigned int)now, "Last+10+Minutes+Throughput",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-600), (unsigned int)now, "Throughput"
 		  );
     sendString(tmpBuf);
 
@@ -4958,8 +4975,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
 		  1,
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-3600, now, "Last+Hour+Throughput",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-3600, now, "Throughput");
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-3600), (unsigned int)now, "Last+Hour+Throughput",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-3600), (unsigned int)now, "Throughput");
     sendString(tmpBuf);
   } else {
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples == 0) {
@@ -4979,8 +4996,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   if(useRRD) {
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		  2, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-86400, now, "Current+Day+Throughput",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-86400, now, "Throughput");
+		  2, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-86400), (unsigned int)now, "Current+Day+Throughput",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-86400), (unsigned int)now, "Throughput");
     sendString(tmpBuf);
   } else {
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 60)
@@ -4997,8 +5014,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   if(useRRD) {
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		  3, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-86400*30, now, "Last+Month+Throughput",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-86400*30, now, "Throughput");
+		  3, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-86400*30), (unsigned int)now, "Last+Month+Throughput",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-86400*30), (unsigned int)now, "Throughput");
     sendString(tmpBuf);
   } else {
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 1440 /* 60 * 24 */)

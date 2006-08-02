@@ -923,34 +923,29 @@ void switchNwInterface(int _interface) {
 /* **************************************** */
 
 void shutdownNtop(void) {
-  char buf[LEN_GENERAL_WORK_BUFFER],
-       bufTime[LEN_TIMEFORMAT_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER];
   time_t theTime = time(NULL);
-  struct tm t;
 
   memset(&buf, 0, sizeof(buf));
-  memset(&bufTime, 0, sizeof(bufTime));
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: shutdown.html - request has been received - processing");
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
   printHTMLheader("ntop is shutting down...", NULL, BITFLAG_HTML_NO_REFRESH);
 
-  strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC, localtime_r(&theTime, &t));
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<p>Shutdown request received %s is being processed, and the "
                 "<b>ntop</b> web server is closing down.</p>\n",
-                bufTime);
+                ctime(&theTime));
   sendString(buf);
 
   theTime = time(NULL) + 2*PARM_SLEEP_LIMIT + 5;
-  strftime(bufTime, sizeof(bufTime), "%T", localtime_r(&theTime, &t));
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<p>Please allow up to %d seconds (until approximately %s) for all threads to terminate "
                 "and the shutdown request to complete.</p>\n"
                 "<p>You will not receive further messages.</p>\n",
                 2*PARM_SLEEP_LIMIT + 5,
-                bufTime);
+                ctime(&theTime));
   sendString(buf);
 
   sendString("<!-- trigger actual shutdown after rest of page is retrieved -->\n"

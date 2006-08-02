@@ -1820,11 +1820,11 @@ static void commonRRDinit(void) {
                  "<option value=\"/" CONST_PLUGINS_HEADER "%s?action=" CONST_ARBITRARY_RRDREQUEST "&" CONST_ARBITRARY_IP "=%s" \
 		  "&" CONST_ARBITRARY_INTERFACE "=%s" \
 		  "&" CONST_ARBITRARY_FILE "=%s" \
-		  "&start=%d" \
-		  "&end=%d" \
+		  "&start=%u" \
+		  "&end=%u" \
 		  "&counter=%s" \
 		  "&title=%s&mode=zoom\" %s>%s</option>\n", \
-                  "rrdPlugin", rrdIP, rrdInterface, rrdName, theStartTime, the_time, buf1, buf2, \
+                  "rrdPlugin", rrdIP, rrdInterface, rrdName, (unsigned int)theStartTime, (unsigned int)the_time, buf1, buf2, \
                   (selected == 1) ? "selected" : "", theLabel); sendString(buf);
 
 /* ****************************** */
@@ -1909,13 +1909,13 @@ static void arbitraryAction(char *rrdName,
     sendString("&nbsp;<STRONG>From:</STRONG>\n<INPUT type=\"text\" name=\"date1\" id=\"date1\" size=\"16\" value=\"");
 
     the_time = atol(startTime); the_tm = localtime(&the_time);
-    strftime(buf, sizeof(buf), "%G-%m-%d %H:%M", the_tm); sendString(buf);
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M", the_tm); sendString(buf);
 
     sendString("\">\n<INPUT type=\"image\" src=\"/calendar.gif\" alt=\"Start date selector\" border=\"0\" align=\"absmiddle\" onclick=\"return showCalendar('date1');\">\n");
     sendString("&nbsp;<strong>To:</strong>\n<INPUT type=\"text\" name=\"date2\" id=\"date2\" size=\"16\" value=\"");
 
     the_time = atol(endTime); the_tm = localtime(&the_time);
-    strftime(buf, sizeof(buf), "%G-%m-%d %H:%M", the_tm); sendString(buf);
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M", the_tm); sendString(buf);
 
     sendString("\">\n<INPUT type=\"image\" src=\"/calendar.gif\" alt=\"End date selector\" border=\"0\" align=\"absmiddle\" onclick=\"return showCalendar('date2');\">\n"
 	       "<INPUT type=\"submit\" value=\"Update Graph\">\n</FORM>\n</TD></TR></TBODY></TABLE>\n</p>\n");

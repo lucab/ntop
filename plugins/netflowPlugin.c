@@ -2578,12 +2578,12 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 	sendString(buf);
 
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Pkts: %s in/%s out",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Pkts:&nbsp;%s&nbsp;in/%s&nbsp;out",
 		      formatPkts(ifStats->inPkts.value, formatBuf, sizeof(formatBuf)),
 		      formatPkts(ifStats->outPkts.value, formatBuf2, sizeof(formatBuf2)));
 	sendString(buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<br>Bytes: %s in/%s out",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<br>Bytes:&nbsp;%s&nbsp;in/%s&nbsp;out",
 		      formatBytes(ifStats->inBytes.value, 1, formatBuf, sizeof(formatBuf)),
 		      formatBytes(ifStats->outBytes.value, 1, formatBuf2, sizeof(formatBuf2)));
 	sendString(buf);
