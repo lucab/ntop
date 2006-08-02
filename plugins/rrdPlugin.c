@@ -1472,19 +1472,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
     argv[argc++] = "rrd_update";
     argv[argc++] = path;
 
-#if 0 /* Luca: what's this code about ? */
-    if((!createdCounter) && (numRuns == 1)) {
-      return;
-    } else
-#endif
-      {
-#ifdef WIN32
-	safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%I64u", rrdTime, value);
-#else
-	safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%llu", rrdTime, value);
-#endif
-      }
-
+	safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%llu", (unsigned int)rrdTime, (unsigned long long)value);
     argv[argc++] = cmd;
 
     accessMutex(&rrdMutex, "rrd_update");

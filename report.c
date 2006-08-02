@@ -4943,22 +4943,6 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   if(useRRD) {
     sendString("<CENTER>\n");
-	printf("\n\n%s\n\n", RRD_THPT_STR);
-
-	/*
-	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), 
-	"<A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=%d\" BORDER=0 BGCOLOR=white><IMG class=tooltip SRC=\"" , 0);
-
- safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), 
-	"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=throughput&arbiface=%s&arbip=&start=%u&end=%u&counter=&title=%s"
-	"\" border=\"0\" alt=\"Domain-wide Historical Data\"></A>",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, 
-		  (unsigned int)(now-600), (unsigned int)now, "Last+10+Minutes+Throughput");
-	
-	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), 
-		  "<A HREF=\"" RRD_THPT_URL "&mode=zoom\" BORDER=0 BGCOLOR=white>&nbsp;<IMG valign=top class=tooltip SRC=graph_zoom.gif border=0></A>",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now-600, now, "Throughput");
-*/
 
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
 		  0,
