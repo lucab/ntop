@@ -645,6 +645,7 @@ int purgeIdleHosts(int actDevice) {
                    (el->fcCounters->hostNumFcAddress[0] == '\0')))) {
 	  /* Host selected for deletion */
 	  theFlaggedHosts[numHosts++] = el;
+	  remove_valid_ptr(el);
 	  next = el->next;
 
 	  if(prev != NULL)
@@ -1381,4 +1382,66 @@ static void hostHashSanityCheck(HostTraffic *host) {
 }
 
 #endif /* HASH_DEBUG */
+
+/* ****************************** 
+   
+   Utility functions used by the remote plugin
+   
+   ****************************** */
+
+#define MAX_NUM_VALID_PTRS   8
+static void* valid_ptrs[MAX_NUM_VALID_PTRS] = { NULL };
+
+void add_valid_ptr(void* ptr) {
+  int i;
+  
+  traceEvent(CONST_TRACE_INFO, "add_valid_ptr(%p)", ptr);
+
+  for(i=0; i<MAX_NUM_VALID_PTRS; i++) {
+    if(valid_ptrs[i] == NULL) {
+      valid_ptrs[i] = ptr;
+      break;
+    }
+  }
+
+  valid_ptrs[MAX_NUM_VALID_PTRS-1] = ptr;
+}
+
+/* ****************************** */
+
+void remove_valid_ptr(void* ptr) {
+  int i;
+
+  traceEvent(CONST_TRACE_INFO, "remove_valid_ptr(%p)", ptr);
+
+  for(i=0; i<MAX_NUM_VALID_PTRS; i++) {
+    if(valid_ptrs[i] == ptr) {
+      valid_ptrs[i] = NULL;
+      return;
+    }
+  } 
+}
+
+/* ****************************** */
+
+int is_valid_ptr(void* ptr) {
+  int i;
+
+  for(i=0; i<MAX_NUM_VALID_PTRS; i++) {
+    if(valid_ptrs[i] == ptr) {
+      if(i > 0) {
+	/* Move towards the top */
+	void *swap = valid_ptrs[i-1];
+	valid_ptrs[i-1] = valid_ptrs[i];
+	valid_ptrs[i] = swap;
+      }
+      
+      traceEvent(CONST_TRACE_INFO, "is_valid_ptr(%p): 1", ptr);
+      return(1);
+    }
+  }
+
+  traceEvent(CONST_TRACE_INFO, "is_valid_ptr(%p): 0", ptr);
+  return(0);
+}
 

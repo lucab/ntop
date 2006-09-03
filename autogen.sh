@@ -9,7 +9,12 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # $Log$
+# Revision 2.11  2006/09/03 13:06:05  deri
+# Minor updates. Added the skeleton of a new plugin that allows ntop to be
+# queried from remote without a web browser
+#
 # Revision 2.10  2006/05/26 13:39:44  deri
+#
 # Added (open)solaris fixes
 #
 # Revision 2.9  2006/05/17 13:04:00  burton
@@ -200,7 +205,7 @@ if test "$GNU_OR_DIE" -eq 0; then
 fi
 
 # Check versions...
-libtoolversion=`$LIBTOOL --version < /dev/null 2>&1 | grep libtool | cut --delimiter=" " --fields=4`
+libtoolversion=`$LIBTOOL --version < /dev/null 2>&1 | grep libtool | cut -d " " -f 4`
 echo "    libtool ..... ${libtoolversion}"
 case "${libtoolversion}" in
   *1\.3\.[[45]]\-freebsd\-ports*)
@@ -232,7 +237,7 @@ esac
 echo "        .... ok"
 
 
-automakeversion=`automake --version < /dev/null 2>&1 | grep ^automake | cut --delimiter=" " --fields=4`
+automakeversion=`automake --version < /dev/null 2>&1 | grep ^automake | cut -d " " -f 4`
 echo "    automake .... ${automakeversion}"
 
 case "${automakeversion}" in
@@ -251,12 +256,12 @@ esac
 echo "        .... ok"
 
 
-m4version=`m4 --version < /dev/null 2>&1 | grep M4 | cut --delimiter=" " --fields=3`
+m4version=`m4 --version < /dev/null 2>&1 | grep M4 | cut -d " " -f 3`
 echo "    m4 .... ${m4version}"
 echo "        .... ok"
 
 
-autoconfversion=`autoconf --version < /dev/null 2>&1 | grep ^autoconf | cut --delimiter=" " --fields=4`
+autoconfversion=`autoconf --version < /dev/null 2>&1 | grep ^autoconf | cut -d " " -f 4`
 echo "    autoconf .... ${autoconfversion}"
 
 case "${autoconfversion}" in

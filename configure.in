@@ -142,6 +142,16 @@ AC_ARG_ENABLE(iknowbetter,
               ac_willfailoverride="$enableval",
               ac_willfailoverride="no")
 
+AC_ARG_ENABLE(mysql,
+              [  --enable-mysql                 Enable usage of mysql [[default=enabled]]],
+              if test "x$enableval" = xyes; then
+                  ac_with_mysql="no"
+              else
+	          echo "x$enableval"
+                  ac_with_mysql="yes"
+              fi,
+              ac_with_mysql="yes")
+
 AC_ARG_ENABLE(void,
               [  +----------------------------------------------------------------------------+])
 
@@ -873,6 +883,7 @@ fi
 dnl> NTOPCONFIGDEBUG_SETTINGS([After criticals])
 
 
+if test ".${ac_without_mysql}" = ".no"; then
 CFLAGS="${CFLAGS} -I/usr/include/mysql -I/usr/local/mysql/include"
 CPPFLAGS="${CPPFLAGS} -I/usr/include/mysql -I/usr/local/mysql/include"
 LDFLAGS="${LDFLAGS} -L/usr/lib/mysql -L/usr/local/mysql/lib"
@@ -883,7 +894,9 @@ if test ".${ac_cv_header_mysql_h}" != ".yes"; then
 else
 NTOP_RPT_LOC([mysql pcap], `mysql_config --libs_r`, `mysql_config --cflags`)
 fi
-
+else
+echo "MySQL support disabled";
+fi
 
 dnl> Pattern matching
 dnl>

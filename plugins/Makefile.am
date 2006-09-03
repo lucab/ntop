@@ -51,6 +51,7 @@ noinst_PROGRAMS = \
                   lastSeenPlugin.so \
                   netflowPlugin.so \
                   pdaPlugin.so \
+                  remotePlugin.so \
                   rrdPlugin.so \
                   snmpPlugin.so \
                   sflowPlugin.so \
@@ -61,6 +62,7 @@ lib_LTLIBRARIES = \
                   liblastSeenPlugin.la \
                   libnetflowPlugin.la \
                   libpdaPlugin.la \
+                  libremotePlugin.la \
                   librrdPlugin.la \
                   libsnmpPlugin.la \
                   libsflowPlugin.la \
@@ -81,6 +83,10 @@ libnetflowPlugin_la_CFLAGS = $(AM_CFLAGS)
 libpdaPlugin_la_SOURCES = pdaPlugin.c
 libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 libpdaPlugin_la_CFLAGS = $(AM_CFLAGS)
+
+libremotePlugin_la_SOURCES = remotePlugin.c
+libremotePlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+libremotePlugin_la_CFLAGS = $(AM_CFLAGS)
 
 librrdPlugin_la_SOURCES = rrdPlugin.c
 librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
@@ -116,6 +122,8 @@ libxmldumpPlugin_la_CFLAGS = $(AM_CFLAGS)
 icmpPlugin.so$(EXEEXT): .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libicmpPlugin.so icmpPlugin.so
 
+###############
+
 .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@:
 	@if test -f liblastSeenPlugin_la-lastSeenPlugin.o; then \
 	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ liblastSeenPlugin_la-lastSeenPlugin.o; \
@@ -125,6 +133,8 @@ icmpPlugin.so$(EXEEXT): .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 
 lastSeenPlugin.so$(EXEEXT): .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/liblastSeenPlugin.so lastSeenPlugin.so
+
+###############
 
 .libs/libnetflowPlugin.so@SO_VERSION_PATCH@:
 	@if test -f libnetflowPlugin_la-netflowPlugin.o; then \
@@ -136,6 +146,8 @@ lastSeenPlugin.so$(EXEEXT): .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
 netflowPlugin.so$(EXEEXT): .libs/libnetflowPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libnetflowPlugin.so netflowPlugin.so
 
+###############
+
 .libs/libpdaPlugin.so@SO_VERSION_PATCH@:
 	@if test -f libpdaPlugin_la-pdaPlugin.o; then \
 	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ libpdaPlugin_la-pdaPlugin.o; \
@@ -145,6 +157,20 @@ netflowPlugin.so$(EXEEXT): .libs/libnetflowPlugin.so@SO_VERSION_PATCH@
 
 pdaPlugin.so$(EXEEXT): .libs/libpdaPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libpdaPlugin.so pdaPlugin.so
+
+###############
+
+.libs/libremotePlugin.so@SO_VERSION_PATCH@:
+	@if test -f libremotePlugin_la-remotePlugin.o; then \
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libremotePlugin.so@SO_VERSION_PATCH@ libremotePlugin_la-remotePlugin.o; \
+	else \
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libremotePlugin.so@SO_VERSION_PATCH@ remotePlugin.o; \
+	fi
+
+remotePlugin.so$(EXEEXT): .libs/libremotePlugin.so@SO_VERSION_PATCH@
+	@$(LN_S) .libs/libremotePlugin.so remotePlugin.so
+
+###############
 
 .libs/librrdPlugin.so@SO_VERSION_PATCH@:
 	@if test -f librrdPlugin_la-rrdPlugin.o; then \
@@ -156,6 +182,8 @@ pdaPlugin.so$(EXEEXT): .libs/libpdaPlugin.so@SO_VERSION_PATCH@
 rrdPlugin.so$(EXEEXT): .libs/librrdPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/librrdPlugin.so rrdPlugin.so
 
+###############
+
 .libs/libsnmpPlugin.so@SO_VERSION_PATCH@:
 	@if test -f libsnmpPlugin_la-snmpPlugin.o; then \
 	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libsnmpPlugin.so@SO_VERSION_PATCH@ libsnmpPlugin_la-snmpPlugin.o; \
@@ -165,6 +193,8 @@ rrdPlugin.so$(EXEEXT): .libs/librrdPlugin.so@SO_VERSION_PATCH@
 
 snmpPlugin.so$(EXEEXT): .libs/libsnmpPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libsnmpPlugin.so snmpPlugin.so
+
+###############
 
 .libs/libsflowPlugin.so@SO_VERSION_PATCH@:
 	@if test -f libsflowPlugin_la-sflowPlugin.o; then \
@@ -176,6 +206,8 @@ snmpPlugin.so$(EXEEXT): .libs/libsnmpPlugin.so@SO_VERSION_PATCH@
 sflowPlugin.so$(EXEEXT): .libs/libsflowPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libsflowPlugin.so sflowPlugin.so
 
+###############
+
 .libs/libxmldumpPlugin.so@SO_VERSION_PATCH@:
 	@if test -f libxmldumpPlugin_la-xmldumpPlugin.o; then \
 	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libxmldumpPlugin.so@SO_VERSION_PATCH@ libxmldumpPlugin_la-xmldumpPlugin.o; \
@@ -185,6 +217,8 @@ sflowPlugin.so$(EXEEXT): .libs/libsflowPlugin.so@SO_VERSION_PATCH@
 
 xmldumpPlugin.so$(EXEEXT): .libs/libxmldumpPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libxmldumpPlugin.so xmldumpPlugin.so
+
+###############
 
 install-data-local:
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)$(plugindir);

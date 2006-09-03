@@ -221,6 +221,10 @@ extern HostTraffic * _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 #define lookupHost(a, b, c, d, e, f) _lookupHost(a, b, c, d, e, f, __FILE__, __LINE__)
 extern HostTraffic * lookupFcHost(FcAddress *fcAddress, u_short vsanId,
 				  int actualDeviceId);
+extern void add_valid_ptr(void* ptr);
+extern void remove_valid_ptr(void* ptr);
+extern int is_valid_ptr(void* ptr);
+
 /* initialize.c */
 extern void initIPServices(void);
 extern void resetDevice(int devIdx, short fullReset);
