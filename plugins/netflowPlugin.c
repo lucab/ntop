@@ -25,7 +25,7 @@
 
 static void* netflowMainLoop(void* _deviceId);
 
-#define DEBUG_FLOWS
+/* #define DEBUG_FLOWS */
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -319,9 +319,10 @@ static void updateNetFlowIfStats(int deviceId, u_int32_t ifId, u_char sentStats,
     Counter pkts = (Counter)_pkts;
     Counter octets = (Counter)_octets;
 
-    traceEvent(CONST_TRACE_INFO, "NETFLOW: updateNetFlowIfStats(deviceId=%d, ifId=%d, sentStats=%d, pkts=%d, octets=%d)",
-	       deviceId, ifId, sentStats, pkts, octets);
-
+    if(0) 
+      traceEvent(CONST_TRACE_INFO, "NETFLOW: updateNetFlowIfStats(deviceId=%d, ifId=%d, sentStats=%d, pkts=%d, octets=%d)",
+		 deviceId, ifId, sentStats, pkts, octets);
+    
     accessMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsMutex, "rrdPluginNetflow");
     
     ifStats = myGlobals.device[deviceId].netflowGlobals->ifStats;

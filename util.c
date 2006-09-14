@@ -1058,15 +1058,15 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
   if((addresses == NULL) || (addresses[0] == '\0'))
     return;
 
-  traceEvent(CONST_TRACE_NOISY,
-             "Processing %s parameter '%s'",
-             flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
-	     flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-	     flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
-	     flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" : 
-	     flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
-             addresses);
-
+  if(0) traceEvent(CONST_TRACE_NOISY,
+		   "Processing %s parameter '%s'",
+		   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
+		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
+		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
+		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" : 
+		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
+		   addresses);
+  
   memset(localAddresses, 0, localAddressesLen);
 
   address = strtok_r(addresses, ",", &strtokState);
