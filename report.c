@@ -2251,7 +2251,7 @@ void makeDot() {
 
   if(stat(dotPath, &statbuf) != 0) {
     snprintf(buf, sizeof(buf),
-	     "<h1>ERROR</h1>\n<center><b>Missing 'dot' tool (expected %s). Please set its path (key dot.path) "
+	     "<h1>ERROR</h1>\n<center><b>Missing <A HREF=http://www.graphviz.org/>dot</A> tool (expected %s). Please set its path (key dot.path) "
 	     "<A HREF="CONST_EDIT_PREFS">here</A>.</b></center>",
 	     dotPath);
     sendString(buf);
