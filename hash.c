@@ -1410,9 +1410,7 @@ void add_valid_ptr(void* ptr) {
 /* ****************************** */
 
 void remove_valid_ptr(void* ptr) {
-  int i;
-
-  traceEvent(CONST_TRACE_INFO, "remove_valid_ptr(%p)", ptr);
+  int i;  
 
   for(i=0; i<MAX_NUM_VALID_PTRS; i++) {
     if(valid_ptrs[i] == ptr) {
@@ -1420,6 +1418,8 @@ void remove_valid_ptr(void* ptr) {
       return;
     }
   } 
+
+  /* traceEvent(CONST_TRACE_ERROR, "remove_valid_ptr(%p) failed", ptr); */
 }
 
 /* ****************************** */

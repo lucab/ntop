@@ -5374,6 +5374,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
       statsEntry = &tmpStats[numEntries++];
       memset(statsEntry, 0, sizeof(DomainStats));
       statsEntry->domainHost = el;
+      /* traceEvent(CONST_TRACE_INFO, "--> Adding %s [ptr=%p][%s]", el->hostNumIpAddress, el); */
       stats[keyValue++] = statsEntry;
     }
 
@@ -5514,7 +5515,6 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		      "<A HREF=/%s?dom=%d&netmode=%d>%s</A>",
 		      CONST_DOMAIN_STATS_HTML, statsEntry->domainHost->hostAS, network_mode,
 		      sym_as_name);
-	
       } else
 	safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s>%s</A>",
 		      clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML,
@@ -5541,7 +5541,6 @@ void printDomainStats(char* domain_network_name, int network_mode,
       if(network_mode == AS_VIEW) {
 	makeHostLink(statsEntry->domainHost, FLAG_HOSTLINK_TEXT_FORMAT, 0,
 		     0, htmlAnchor, sizeof(htmlAnchor));
-	snprintf(htmlAnchor, sizeof(htmlAnchor), "%s", hostLink);     
       } else {
 	hostLink = makeHostLink(statsEntry->domainHost, FLAG_HOSTLINK_TEXT_FORMAT, 1,
 				0, hostLinkBuf, sizeof(hostLinkBuf));

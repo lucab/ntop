@@ -309,7 +309,7 @@ static int setNetFlowInSocket(int deviceId) {
 
 /* *************************** */
 
-static void updateNetFlowIfStats(int deviceId, u_int32_t ifId, u_char sentStats,
+static void updateNetFlowIfStats(int deviceId, u_int32_t ifId, u_char selfUpdate, u_char sentStats,
 				 u_int32_t _pkts, u_int32_t _octets) {
   if(_pkts == 0)
     return;
@@ -352,6 +352,8 @@ static void updateNetFlowIfStats(int deviceId, u_int32_t ifId, u_char sentStats,
       resetTrafficCounter(&ifStats->outPkts);
       resetTrafficCounter(&ifStats->inBytes);
       resetTrafficCounter(&ifStats->inPkts);
+      resetTrafficCounter(&ifStats->selfBytes);
+      resetTrafficCounter(&ifStats->selfPkts);
 
       if(prev == NULL) {
 	ifStats->next = myGlobals.device[deviceId].netflowGlobals->ifStats;
@@ -366,20 +368,22 @@ static void updateNetFlowIfStats(int deviceId, u_int32_t ifId, u_char sentStats,
 
     if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: PKTS=%d", pkts);
 		 
-    if(sentStats) {
-      incrementTrafficCounter(&ifStats->outBytes, octets);
-      incrementTrafficCounter(&ifStats->outPkts, pkts);
-      if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: SENT ifStats[%d][pkts=%d] [in=%d][out=%d]", 
-		 ifStats->interface_id, pkts, ifStats->inPkts, ifStats->outPkts);
+    if(selfUpdate) {
+      incrementTrafficCounter(&ifStats->selfBytes, octets);
+      incrementTrafficCounter(&ifStats->selfPkts, pkts);	
     } else {
-      incrementTrafficCounter(&ifStats->inBytes, octets);
-      incrementTrafficCounter(&ifStats->inPkts, pkts);
-      if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: RCVD ifStats[%d[pkts=%d]] [in=%d][out=%d]", 
-		 ifStats->interface_id, pkts, ifStats->inPkts, ifStats->outPkts);
-      
+      if(sentStats) {
+	incrementTrafficCounter(&ifStats->outBytes, octets);
+	incrementTrafficCounter(&ifStats->outPkts, pkts);
+	if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: SENT ifStats[%d][pkts=%d] [in=%d][out=%d]", 
+			 ifStats->interface_id, pkts, ifStats->inPkts, ifStats->outPkts);
+      } else {
+	incrementTrafficCounter(&ifStats->inBytes, octets);
+	incrementTrafficCounter(&ifStats->inPkts, pkts);
+	if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: RCVD ifStats[%d[pkts=%d]] [in=%d][out=%d]", 
+			 ifStats->interface_id, pkts, ifStats->inPkts, ifStats->outPkts);      
+      }
     }
-
- 
   }
 }
 
@@ -392,25 +396,25 @@ static void updateInterfaceStats(int deviceId, struct generic_netflow_record *re
     traceEvent(CONST_TRACE_WARNING, "NETFLOW: internal error, NULL interface stats");
     return;
   }
-  if(0) traceEvent(CONST_TRACE_INFO, "0 ------------------------------------------------------");
 
-  if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: updateInterfaceStats(%d/%d) [sent_pkts=%d][sent_bytes=%d][rcvd_pkts=%d][rcvd_bytes=%d]",
-	     record->input, record->output,
-	     ntohl(record->sentPkts), ntohl(record->sentOctets),
-	     ntohl(record->rcvdPkts), ntohl(record->rcvdOctets)
-	     );
+  if(0)
+    traceEvent(CONST_TRACE_INFO, "NETFLOW: updateInterfaceStats(%d/%d) "
+	       "[sent_pkts=%d][sent_bytes=%d][rcvd_pkts=%d][rcvd_bytes=%d]",
+	       record->input, record->output,
+	       ntohl(record->sentPkts), ntohl(record->sentOctets),
+	       ntohl(record->rcvdPkts), ntohl(record->rcvdOctets));
 
-  if(0) traceEvent(CONST_TRACE_INFO, "1 ------------------------------------------------------");
-  updateNetFlowIfStats(deviceId, record->output /* 2 */, 1, ntohl(record->sentPkts), ntohl(record->sentOctets));
+  updateNetFlowIfStats(deviceId, record->output, 0, 1, ntohl(record->sentPkts), ntohl(record->sentOctets));
 
   if(ntohl(record->rcvdPkts) != 0) {
-    updateNetFlowIfStats(deviceId, record->input /* 11 */,  0, ntohl(record->rcvdPkts), ntohl(record->rcvdOctets));
+    updateNetFlowIfStats(deviceId, record->input,  0, 0, ntohl(record->rcvdPkts), ntohl(record->rcvdOctets));
   } else {
     /* pre v9 */
-    updateNetFlowIfStats(deviceId, record->input /* 11 */,  0, ntohl(record->sentPkts), ntohl(record->sentOctets));
+    updateNetFlowIfStats(deviceId, record->input,  0, 0, ntohl(record->sentPkts), ntohl(record->sentOctets));
   }
-
-  if(0) traceEvent(CONST_TRACE_INFO, "2 ------------------------------------------------------");
+  
+  if(record->input == record->output)
+    updateNetFlowIfStats(deviceId, record->input,  1 /* self update */, 0, ntohl(record->sentPkts), ntohl(record->sentOctets));
 }
 
 /* *************************** */
@@ -1033,7 +1037,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
   flowVersion = ntohs(the5Record.flowHeader.version);
 
 #ifdef DEBUG_FLOWS
-  if(1)
+  if(0)
     traceEvent(CONST_TRACE_INFO, "NETFLOW: +++++++ version=%d",  flowVersion);
 #endif
 
@@ -1494,7 +1498,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
     if(numFlows > CONST_V5FLOWS_PER_PAK) numFlows = CONST_V5FLOWS_PER_PAK;
 
 #ifdef DEBUG_FLOWS
-      traceEvent(CONST_TRACE_INFO, "dissectFlow(%d flows)", numFlows);
+    if(0) traceEvent(CONST_TRACE_INFO, "dissectFlow(%d flows)", numFlows);
 #endif
 
     /* Lock white/black lists for duration of this flow packet */

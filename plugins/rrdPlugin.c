@@ -843,6 +843,8 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
   argv[argc++] = "--height";
   argv[argc++] = "120";
   argv[argc++] = "--alt-autoscale-max";
+  argv[argc++] = "--lower-limit";
+  argv[argc++] = "0";
 
 #ifdef CONST_RRD_DEFAULT_FONT_NAME
   argv[argc++] = "--font";
@@ -1306,19 +1308,20 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
     char buf[128];
     int rc;
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "CMD %s\t%s\t%lu\t%d\t%d",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "CMD %s\t%s\t%lu\t%d\t%d",
 		  hostPath, key, value, isCounter, short_step);
-
+    
     rc = sendto(sd, buf, strlen(buf), 0,
-	       (struct sockaddr *)&remoteServAddr,
-	       sizeof(remoteServAddr));
+		(struct sockaddr *)&remoteServAddr,
+		sizeof(remoteServAddr));
   } else {
     char path[512], *argv[32], cmd[64];
     struct stat statbuf;
     int argc = 0, rc, createdCounter = 0, i;
 #ifdef MAX_RRD_PROCESS_BUFFER
     struct timeval rrdStartOfProcessing,
-                   rrdEndOfProcessing;
+      rrdEndOfProcessing;
     float elapsed;
 #endif
 
@@ -1447,12 +1450,12 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
       rc = rrd_create(argc, argv);
 
       if(rrd_test_error()) {
-		traceEventRRDebugARGV(3);
+	traceEventRRDebugARGV(3);
 
-		traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s",
-			path, rrd_get_error());
-		rrd_clear_error();
-		numRRDerrors++;
+	traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s",
+		   path, rrd_get_error());
+	rrd_clear_error();
+	numRRDerrors++;
       }
 
       releaseMutex(&rrdMutex);
@@ -1472,7 +1475,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
     argv[argc++] = "rrd_update";
     argv[argc++] = path;
 
-	safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%llu", (unsigned int)rrdTime, (unsigned long long)value);
+    safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%llu", (unsigned int)rrdTime, (unsigned long long)value);
     argv[argc++] = cmd;
 
     accessMutex(&rrdMutex, "rrd_update");
@@ -1518,11 +1521,21 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 		     rrdLast == -1 ? "rrdlast ERROR" : errTimeBuf3);
 	} else if(strstr(rrdError, "is not an RRD file")) {
 	  unlink(path);
+	} else {
+	  char key[128], do_delete = 0;
+	  
+	  /* Delete empty RRD files */
+	  if(stat(path, &statbuf) == 0) {
+	    if(statbuf.st_size == 0) do_delete = 1;
+	  } else
+	    do_delete = 1;
+
+	  if(do_delete) unlink(path);
 	}
 
-		rrd_clear_error();
+	rrd_clear_error();
       } else {
-		traceEventRRDebug(0, "rrd_update(%s, %s, %s)=%d", hostPath, key, cmd, rc);
+	traceEventRRDebug(0, "rrd_update(%s, %s, %s)=%d", hostPath, key, cmd, rc);
       }
     }
 
@@ -3875,10 +3888,12 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 			  myGlobals.device[devIdx].humanFriendlyName, ifStats->interface_id);
 	    mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
 
-	    updateCounter(rrdIfPath, "ifInOctets",  ifStats->inBytes.value, 0);
-	    updateCounter(rrdIfPath, "ifInPkts",    ifStats->inPkts.value, 0);
-	    updateCounter(rrdIfPath, "ifOutOctets", ifStats->outBytes.value, 0);
-	    updateCounter(rrdIfPath, "ifOutPkts",   ifStats->outPkts.value, 0);
+	    updateCounter(rrdIfPath, "ifInOctets",   ifStats->inBytes.value, 0);
+	    updateCounter(rrdIfPath, "ifInPkts",     ifStats->inPkts.value, 0);
+	    updateCounter(rrdIfPath, "ifOutOctets",  ifStats->outBytes.value, 0);
+	    updateCounter(rrdIfPath, "ifOutPkts",    ifStats->outPkts.value, 0);
+	    updateCounter(rrdIfPath, "ifSelfOctets", ifStats->selfBytes.value, 0);
+	    updateCounter(rrdIfPath, "ifSelfPkts",   ifStats->selfPkts.value, 0);
 
 	    ifStats = ifStats->next;
 	  }
