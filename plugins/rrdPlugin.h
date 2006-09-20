@@ -322,13 +322,15 @@ static const char *rrd_summary_host_sentRcvd_bytes[] = {
 static const char *rrd_summary_nf_if_octets[] = { 
   "ifInOctets",
   "ifOutOctets",
+  "ifSelfOctets",
   NULL
 };
 
 static const char *rrd_summary_nf_if_pkts[] = { 
   "ifInPkts",
   "ifOutPkts",
-  NULL
+  "ifSelfPkts",
+ NULL
 };
 
 

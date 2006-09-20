@@ -25,7 +25,7 @@
 
 static void* netflowMainLoop(void* _deviceId);
 
-#define DEBUG_FLOWS
+/* #define DEBUG_FLOWS */
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -406,15 +406,15 @@ static void updateInterfaceStats(int deviceId, struct generic_netflow_record *re
 
   updateNetFlowIfStats(deviceId, record->output, 0, 1, ntohl(record->sentPkts), ntohl(record->sentOctets));
 
-  if(ntohl(record->rcvdPkts) != 0) {
+  if(record->input == record->output)
+    updateNetFlowIfStats(deviceId, record->input,  1 /* self update */, 0, ntohl(2*record->sentPkts), ntohl(2*record->sentOctets));
+  else if(ntohl(record->rcvdPkts) != 0) {
     updateNetFlowIfStats(deviceId, record->input,  0, 0, ntohl(record->rcvdPkts), ntohl(record->rcvdOctets));
   } else {
     /* pre v9 */
     updateNetFlowIfStats(deviceId, record->input,  0, 0, ntohl(record->sentPkts), ntohl(record->sentOctets));
   }
   
-  if(record->input == record->output)
-    updateNetFlowIfStats(deviceId, record->input,  1 /* self update */, 0, ntohl(record->sentPkts), ntohl(record->sentOctets));
 }
 
 /* *************************** */
@@ -2451,7 +2451,7 @@ static void printNetFlowConfiguration(int deviceId) {
 
   /* ****************************************************** */
 
-  sendString("<tr><th colspan=\"2\" "DARK_BG">Enable Session Handling<br>into SQL DB</th>\n");
+  sendString("<tr><th colspan=\"2\" "DARK_BG">Enable Session Handling</th>\n");
 
   sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
   sendString(netflowPluginInfo->pluginURLname);
