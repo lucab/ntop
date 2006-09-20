@@ -1221,6 +1221,14 @@ typedef struct interfaceStats {
   struct interfaceStats *next;
 } InterfaceStats;
 
+/* AS statistics */
+typedef struct astats {
+  u_short as_id;
+  TrafficCounter inBytes, outBytes, inPkts, outPkts;
+  TrafficCounter selfBytes, selfPkts;
+  struct astats *next;
+} AsStats;
+
 typedef struct netFlowGlobals {
   u_char netFlowDebug;
 
@@ -1236,7 +1244,7 @@ typedef struct netFlowGlobals {
 #ifdef HAVE_SCTP
   int netFlowInSctpSocket;
 #endif
-  u_char netFlowAssumeFTP, saveFlowsIntoDB;
+  u_char netFlowAssumeFTP, saveFlowsIntoDB, enableSessionHandling;
   u_short netFlowInPort;
   struct in_addr netFlowIfAddress, netFlowIfMask;
   char *netFlowWhiteList, *netFlowBlackList;
@@ -1377,6 +1385,8 @@ typedef struct ntopInterface {
   char *filter;                  /* user defined filter expression (if any) */
 
   int fd;                        /* unique identifier (Unix file descriptor) */
+
+  AsStats *asStats;
 
   /*
    * NPA - Network Packet Analyzer (main thread)

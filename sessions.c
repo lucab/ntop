@@ -1861,12 +1861,13 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
       */
     } else
 #endif
-      if((theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) return(NULL);
 
+      if((theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) return(NULL);
+    
     memset(theSession, 0, sizeof(IPSession));
     addedNewEntry = 1;
 
-    if(tp->th_flags == TH_SYN) {
+    if(tp && (tp->th_flags == TH_SYN)) {
       theSession->nwLatency.tv_sec = h->ts.tv_sec;
       theSession->nwLatency.tv_usec = h->ts.tv_usec;
       theSession->sessionState = FLAG_STATE_SYN;
@@ -1908,6 +1909,9 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     theSession->firstSeen = myGlobals.actTime;
     flowDirection = FLAG_CLIENT_TO_SERVER;
   }
+
+  if(tp)
+    theSession->lastFlags |= tp->th_flags; 
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: ->%d", idx);
@@ -2184,9 +2188,9 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   printf("DEBUG: sessionsState=%d\n", theSession->sessionState);
 #endif
 
-  if((tp->th_flags == (TH_SYN|TH_ACK)) && (theSession->sessionState == FLAG_STATE_SYN))  {
+  if((theSession->lastFlags == (TH_SYN|TH_ACK)) && (theSession->sessionState == FLAG_STATE_SYN))  {
     theSession->sessionState = FLAG_FLAG_STATE_SYN_ACK;
-  } else if((tp->th_flags == TH_ACK) && (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK)) {
+  } else if((theSession->lastFlags == TH_ACK) && (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK)) {
     if(h->ts.tv_sec >= theSession->nwLatency.tv_sec) {
       theSession->nwLatency.tv_sec = h->ts.tv_sec-theSession->nwLatency.tv_sec;
 
@@ -2265,7 +2269,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   } else if ((addedNewEntry == 0)
 	     && ((theSession->sessionState == FLAG_STATE_SYN)
 		 || (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK))
-	     && (!(tp->th_flags & TH_RST))) {
+	     && (!(theSession->lastFlags & TH_RST))) {
     /*
       We might have lost a packet so:
       - we cannot calculate latency
@@ -2273,15 +2277,16 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     */
 
     theSession->nwLatency.tv_usec = theSession->nwLatency.tv_sec = 0;
+
 #ifdef LATENCY_DEBUG
     traceEvent(CONST_TRACE_NOISY, "LATENCY: (%s ->0x%x%s%s%s%s%s) %s:%d->%s:%d invalid (lost packet?), ignored",
                (theSession->sessionState == FLAG_STATE_SYN) ? "SYN" : "SYN_ACK",
-               tp->th_flags,
-               (tp->th_flags & TH_SYN) ? " SYN" : "",
-               (tp->th_flags & TH_ACK) ? " ACK" : "",
-               (tp->th_flags & TH_FIN) ? " FIN" : "",
-               (tp->th_flags & TH_RST) ? " RST" : "",
-               (tp->th_flags & TH_PUSH) ? " PUSH" : "",
+               theSession->lastFlags,
+               (theSession->lastFlags & TH_SYN) ? " SYN" : "",
+               (theSession->lastFlags & TH_ACK) ? " ACK" : "",
+               (theSession->lastFlags & TH_FIN) ? " FIN" : "",
+               (theSession->lastFlags & TH_RST) ? " RST" : "",
+               (theSession->lastFlags & TH_PUSH) ? " PUSH" : "",
                _addrtostr(&theSession->initiatorRealIp, buf, sizeof(buf)),
                theSession->sport,
                _addrtostr(&theSession->remotePeerRealIp, buf1, sizeof(buf1)),
@@ -2325,7 +2330,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
    * sessions initiated/received by the hosts can be updated
    *
    */
-  if(tp->th_flags & TH_FIN) {
+  if(theSession->lastFlags & TH_FIN) {
     u_int32_t fin = ntohl(tp->th_seq);
 
     if(sport < dport) /* Server->Client */
@@ -2343,7 +2348,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
       else /* Client->Server */
 	theSession->lastCSFin = fin;
 
-      if(tp->th_flags & TH_ACK) {
+      if(theSession->lastFlags & TH_ACK) {
 	/* This is a FIN_ACK */
 	theSession->sessionState = FLAG_STATE_FIN2_ACK2;
       } else {
@@ -2368,7 +2373,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
       printf("DEBUG: Rcvd Duplicated FIN %u\n", fin);
 #endif
     }
-  } else if(tp->th_flags == TH_ACK) {
+  } else if(theSession->lastFlags == TH_ACK) {
     u_int32_t ack = ntohl(tp->th_ack);
 
     if((ack == theSession->lastAckIdI2R) && (ack == theSession->lastAckIdR2I)) {
@@ -2444,10 +2449,21 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     }
   }
 
-  theSession->lastFlags = tp->th_flags;
+#if 0
+  traceEvent(CONST_TRACE_NOISY, "==> %s%s%s%s%s",
+	     (theSession->lastFlags & TH_SYN) ? " SYN" : "",
+	     (theSession->lastFlags & TH_ACK) ? " ACK" : "",
+	     (theSession->lastFlags & TH_FIN) ? " FIN" : "",
+	     (theSession->lastFlags & TH_RST) ? " RST" : "",
+	     (theSession->lastFlags & TH_PUSH) ? " PUSH" : "");
+
+  traceEvent(CONST_TRACE_NOISY, "==> %s [len=%d]", 
+	     print_flags(theSession, buf, sizeof(buf)), length);
+#endif
+
 
   if((theSession->sessionState == FLAG_STATE_FIN2_ACK2)
-     || (tp->th_flags & TH_RST)) /* abortive release */ {
+     || (theSession->lastFlags & TH_RST)) /* abortive release */ {
     if(theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK) {
       /*
 	Rcvd RST packet before to complete the 3-way handshake.

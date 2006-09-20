@@ -925,6 +925,82 @@ void incrementUnknownProto(HostTraffic *host,
 
 /* ************************************ */
 
+static AsStats* allocASStats(u_int16_t as_id) {
+  AsStats *asStats = (AsStats*)malloc(sizeof(AsStats));
+
+  if(asStats != NULL) {
+    memset(asStats, 0, sizeof(AsStats));
+    asStats->as_id = as_id;
+    resetTrafficCounter(&asStats->outBytes);
+    resetTrafficCounter(&asStats->outPkts);
+    resetTrafficCounter(&asStats->inBytes);
+    resetTrafficCounter(&asStats->inPkts);
+    resetTrafficCounter(&asStats->selfBytes);
+    resetTrafficCounter(&asStats->selfPkts);          
+  }
+  
+  return(asStats);
+}
+
+/* ************************************ */
+
+static updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
+		       u_int16_t dst_as_id, u_int octets) {
+  AsStats *stats;
+  u_char found_src = 0, found_dst = 0;
+
+  if((src_as_id == 0) && (dst_as_id == 0)) 
+    return;
+  else
+    stats = myGlobals.device[actualDeviceId].asStats;
+
+  while(stats) {
+    if(stats->as_id == src_as_id) {
+      incrementTrafficCounter(&stats->outBytes, octets), incrementTrafficCounter(&stats->outPkts, 1);
+      if(src_as_id == dst_as_id) {
+	incrementTrafficCounter(&stats->selfBytes, octets), incrementTrafficCounter(&stats->selfPkts, 1);
+	return;
+      }
+      
+      if(dst_as_id == 0)
+	return;
+      else
+	found_src = 1;
+    } else if(stats->as_id == dst_as_id) {
+      incrementTrafficCounter(&stats->inBytes, octets), incrementTrafficCounter(&stats->inPkts, 1);
+      if(src_as_id == dst_as_id) {
+	incrementTrafficCounter(&stats->selfBytes, octets), incrementTrafficCounter(&stats->selfPkts, 1);
+	return;
+      }
+
+      if(src_as_id == 0)
+	return;
+      else
+	found_dst = 1;
+    }
+
+    if(found_src && found_dst) return;
+    stats = stats->next;
+  }
+
+  /* One (or both) ASs are missing */
+  if((src_as_id != 0) && (!found_src)) {
+    stats = allocASStats(src_as_id);
+    stats->next = myGlobals.device[actualDeviceId].asStats;
+    myGlobals.device[actualDeviceId].asStats = stats;    
+  }
+
+  if((dst_as_id != 0) && (dst_as_id != src_as_id) && (!found_dst)) {
+    stats = allocASStats(dst_as_id);
+    stats->next = myGlobals.device[actualDeviceId].asStats;
+    myGlobals.device[actualDeviceId].asStats = stats;    
+  }
+
+  updateASTraffic(actualDeviceId, src_as_id, dst_as_id, octets); 
+}
+
+/* ************************************ */
+
 static void processIpPkt(const u_char *bp,
 			 const struct pcap_pkthdr *h,
 			 u_int length,
@@ -1237,6 +1313,9 @@ static void processIpPkt(const u_char *bp,
 #endif
     }
   }
+
+  updateASTraffic(actualDeviceId, srcHost->hostAS, dstHost->hostAS, length);
+
 
 #ifdef INET6
   if(ip6) {

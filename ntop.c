@@ -1177,6 +1177,12 @@ RETSIGTYPE cleanup(int signo) {
 #endif
   }
 
+  while(myGlobals.device[i].asStats) {
+    AsStats *next = myGlobals.device[i].asStats->next;
+    free(myGlobals.device[i].asStats);
+    myGlobals.device[i].asStats = next;
+  }
+
   if(myGlobals.device)
     free(myGlobals.device);
 

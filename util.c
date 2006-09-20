@@ -4782,8 +4782,8 @@ void addPortToList(HostTraffic *host, int *thePorts /* 0...MAX_NUM_RECENT_PORTS 
     }
 
   if(!found) {
-    for(i = 0; i<(MAX_NUM_RECENT_PORTS-1); i++)
-      thePorts[i] =  thePorts[i+1];
+    for(i = 0; i<(MAX_NUM_RECENT_PORTS-2); i++)
+      thePorts[i] = thePorts[i+1];
 
     thePorts[MAX_NUM_RECENT_PORTS-1] = port;
   }

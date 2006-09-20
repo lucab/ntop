@@ -1522,7 +1522,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	} else if(strstr(rrdError, "is not an RRD file")) {
 	  unlink(path);
 	} else {
-	  char key[128], do_delete = 0;
+	  char do_delete = 0;
 	  
 	  /* Delete empty RRD files */
 	  if(stat(path, &statbuf) == 0) {

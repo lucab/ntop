@@ -25,7 +25,7 @@
 
 static void* netflowMainLoop(void* _deviceId);
 
-/* #define DEBUG_FLOWS */
+#define DEBUG_FLOWS
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -806,8 +806,10 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 #ifdef DEBUG_FLOWS
     /* traceEvent(CONST_TRACE_INFO, "handleSession(TCP)"); */
 #endif
-    session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, len,
-			    &tp, 0, NULL, actualDeviceId, &newSession, 0);
+
+    if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling)
+      session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, len,
+			      &tp, 0, NULL, actualDeviceId, &newSession, 0);
     break;
 
   case 17: /* UDP */
@@ -852,8 +854,10 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 #ifdef DEBUG_FLOWS
     /* traceEvent(CONST_TRACE_INFO, "handleSession(UDP)"); */
 #endif
-    session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport,
-			    len, NULL, 0, NULL, actualDeviceId, &newSession, 0);
+
+    if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling)
+      session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport,
+			      len, NULL, 0, NULL, actualDeviceId, &newSession, 0);
     break;
 
   default:
@@ -1862,6 +1866,12 @@ static void initNetFlowDevice(int deviceId) {
   } else
     myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = atoi(value);
 
+  if(fetchPrefsValue(nfValue(deviceId, "enableSessionHandling", 1), value, sizeof(value)) == -1) {
+    storePrefsValue(nfValue(deviceId, "enableSessionHandling", 1), "0" /* no */);
+    myGlobals.device[deviceId].netflowGlobals->enableSessionHandling = 0;
+  } else
+    myGlobals.device[deviceId].netflowGlobals->enableSessionHandling = atoi(value);
+
   if(fetchPrefsValue(nfValue(deviceId, "saveFlowsIntoDB", 1), value, sizeof(value)) == -1) {
     storePrefsValue(nfValue(deviceId, "saveFlowsIntoDB", 1), "0" /* no */);
     myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB = 0;
@@ -2438,6 +2448,33 @@ static void printNetFlowConfiguration(int deviceId) {
 
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
              "<tr><th colspan=\"4\" "DARK_BG">General Options</th></tr>\n");
+
+  /* ****************************************************** */
+
+  sendString("<tr><th colspan=\"2\" "DARK_BG">Enable Session Handling<br>into SQL DB</th>\n");
+
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString(netflowPluginInfo->pluginURLname);
+  sendString("\" method=GET>\n<p>");
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+  sendString(buf);
+
+  if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling) {
+    sendString("<input type=\"radio\" name=\"enableSessionHandling\" value=\"1\" checked>Yes\n"
+               "<input type=\"radio\" name=\"enableSessionHandling\" value=\"0\">No\n");
+  } else {
+    sendString("<input type=\"radio\" name=\"enableSessionHandling\" value=\"1\">Yes\n"
+               "<input type=\"radio\" name=\"enableSessionHandling\" value=\"0\" checked>No\n");
+  }
+
+  sendString("<input type=\"submit\" value=\"Change Session Handling\"></p>\n</form>\n"
+	     "<p>If enabled, incoming flows will be added to the list of active TCP/UDP"
+	     " sessions. If you have a large network, make sure you enable this option "
+	     "only if the ntop host has enough computing resources as this can lead "
+	     "to high CPU and memory consumption.</p>\n"
+	     "</td>\n</tr>\n");
 
   /* ****************************************************** */
 
@@ -3131,6 +3168,11 @@ static void handleNetflowHTTPrequest(char* _url) {
 	    myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB = atoi(value);
 	    storePrefsValue(nfValue(deviceId, "saveFlowsIntoDB", 1), value);
 	  }
+	} else if(strcmp(device, "enableSessionHandling") == 0) {
+	  if(deviceId > 0) {
+	    myGlobals.device[deviceId].netflowGlobals->enableSessionHandling = atoi(value);
+	    storePrefsValue(nfValue(deviceId, "enableSessionHandling", 1), value);
+	  }
 	} else if(strcmp(device, "ifNetMask") == 0) {
 	  int a, b, c, d, a1, b1, c1, d1;
 
@@ -3571,12 +3613,13 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 
 /* Plugin entry fctn */
 #ifdef MAKE_STATIC_PLUGIN
-PluginInfo* netflowPluginEntryFctn(void)
+  PluginInfo* netflowPluginEntryFctn(void)
 #else
-     PluginInfo* PluginEntryFctn(void)
+  PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Welcome to %s.(C) 2002-06 by Luca Deri",
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
+	     "NETFLOW: Welcome to %s.(C) 2002-06 by Luca Deri",
 	     netflowPluginInfo->pluginName);
 
   return(netflowPluginInfo);

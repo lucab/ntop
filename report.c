@@ -3558,9 +3558,22 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 
 /* ********************************** */
 
+static char* print_flags(IPSession *session, char *buf, int buf_len) {
+  snprintf(buf, buf_len,"%s%s%s%s%s&nbsp;",
+	   (session->lastFlags & TH_SYN) ? " SYN" : "",
+	   (session->lastFlags & TH_ACK) ? " ACK" : "",
+	   (session->lastFlags & TH_FIN) ? " FIN" : "",
+	   (session->lastFlags & TH_RST) ? " RST" : "",
+	   (session->lastFlags & TH_PUSH) ? " PUSH" : "");  
+
+  return(buf);
+}
+  
+/* ********************************** */
+
 void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   int idx;
-  char buf[1500], hostLinkBuf[LEN_GENERAL_WORK_BUFFER],
+  char buf[1500], hostLinkBuf[LEN_GENERAL_WORK_BUFFER], flags_buf[64],
     hostLinkBuf1[LEN_GENERAL_WORK_BUFFER], *voipStr;
   int numSessions, printedSessions;
   char formatBuf[64], formatBuf1[64], formatBuf2[64], formatBuf3[64],
@@ -3613,10 +3626,13 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	}
 
 	if(printedSessions == 0) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d Active TCP/UDP Sessions",
+			myGlobals.device[actualDeviceId].numTcpSessions);			
+
 	  if(el == NULL)
-	    printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
+	    printHTMLheader(buf, NULL, 0);
 	  else
-	    printSectionTitle("Active TCP/UDP Sessions");
+	    printSectionTitle(buf);
 
 	  sendString("<CENTER>\n"
                      ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
@@ -3703,7 +3719,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
 		      formatLatency(session->nwLatency, session->sessionState, formatBuf6, sizeof(formatBuf6)),
 		      (session->guessed_protocol == NULL) ? "&nbsp;" : session->guessed_protocol,
-		      session->session_info ? session->session_info : "&nbsp;");
+		      session->session_info ? session->session_info : 
+		      print_flags(session, flags_buf, sizeof(flags_buf)) /* "&nbsp;" */);
 	sendString(buf);
 
 #ifdef PARM_PRINT_ALL_SESSIONS
@@ -3736,7 +3753,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   } else {
     if(el == NULL) {
       printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
-      printFlagedWarning("<I>No Active TCP/UDP Sessions</I>");
+      printNoDataYet();
     }
   }
 }
