@@ -786,7 +786,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
 #define MAX_BUF_LEN       128
 
 static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
-  char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN];
+  char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf0[MAX_NUM_ENTRIES][MAX_BUF_LEN];
   char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN], tmpStr[32],
     buf2[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf4[MAX_NUM_ENTRIES][MAX_BUF_LEN];
   char fname[384], *label, title[64];
@@ -797,7 +797,7 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
   path[0] = '\0';
 
   switch(graphId) {
-  case 0:  rrds = (char**)rrd_summary_nf_if_octets; label = "Bytes/sec"; break;
+  case 0:  rrds = (char**)rrd_summary_nf_if_octets; label = "Bit/sec"; break;
   default: rrds = (char**)rrd_summary_nf_if_pkts; label = "Packets/sec"; break;
   }
 
@@ -865,8 +865,11 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
     revertSlashIfWIN32(path, 0);
 
     if(stat(path, &statbuf) == 0) {
-      safe_snprintf(__FILE__, __LINE__, buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path);
+      safe_snprintf(__FILE__, __LINE__, buf[entryId], MAX_BUF_LEN, "DEF:bctr%d=%s:counter:AVERAGE", entryId, path);
       argv[argc++] = buf[entryId];
+
+      safe_snprintf(__FILE__, __LINE__, buf0[entryId], MAX_BUF_LEN, "CDEF:ctr%d=bctr%d,8,*", entryId, entryId);
+      argv[argc++] = buf0[entryId];
 
       safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
 		    entryId, rrd_colors[entryId], spacer(&rrds[i][2], tmpStr, sizeof(tmpStr)));
