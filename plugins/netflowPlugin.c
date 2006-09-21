@@ -25,7 +25,7 @@
 
 static void* netflowMainLoop(void* _deviceId);
 
-/* #define DEBUG_FLOWS */
+/* #define DEBUG_FLOWS  */
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -691,7 +691,8 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   srcHost->ifId = record->input, dstHost->ifId = record->output;
 
 #ifdef DEBUG_FLOWS
-  /* traceEvent(CONST_TRACE_INFO, "%d/%d", srcHost->hostAS, dstHost->hostAS); */
+  if(0) 
+    traceEvent(CONST_TRACE_INFO, "************* AS %d/%d", srcHost->hostAS, dstHost->hostAS);
 #endif
 
   if((sport != 0) && (dport != 0)) {
