@@ -3876,6 +3876,37 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	/* ******************************** */
 
+	if(myGlobals.device[devIdx].asStats) {
+	  AsStats *asStats;
+
+	  accessMutex(&myGlobals.device[devIdx].asMutex, "rrdPluginAS");
+
+	  asStats = myGlobals.device[devIdx].asStats;
+
+	  while(asStats) {
+	    char rrdIfPath[512];
+
+	    safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
+			  "%s/interfaces/%s/AS/%d/", myGlobals.rrdPath,
+			  myGlobals.device[devIdx].humanFriendlyName,
+			  asStats->as_id);
+	    mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
+
+	    updateCounter(rrdIfPath, "ifInOctets",   asStats->inBytes.value, 0);
+	    updateCounter(rrdIfPath, "ifInPkts",     asStats->inPkts.value, 0);
+	    updateCounter(rrdIfPath, "ifOutOctets",  asStats->outBytes.value, 0);
+	    updateCounter(rrdIfPath, "ifOutPkts",    asStats->outPkts.value, 0);
+	    updateCounter(rrdIfPath, "ifSelfOctets", asStats->selfBytes.value, 0);
+	    updateCounter(rrdIfPath, "ifSelfPkts",   asStats->selfPkts.value, 0);
+	    
+	    asStats = asStats->next;
+	  }
+
+	  releaseMutex(&myGlobals.device[devIdx].asMutex);
+	}
+
+	/* ******************************** */
+
 	if(myGlobals.device[devIdx].netflowGlobals) {
 	  InterfaceStats *ifStats;
 
