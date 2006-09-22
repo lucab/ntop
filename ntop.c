@@ -1176,13 +1176,13 @@ RETSIGTYPE cleanup(int signo) {
         free(tmp);
       }
     }
-#endif
-  }
-
-  while(myGlobals.device[i].asStats) {
-    AsStats *next = myGlobals.device[i].asStats->next;
-    free(myGlobals.device[i].asStats);
-    myGlobals.device[i].asStats = next;
+#endif  
+    
+    while(myGlobals.device[i].asStats) {
+      AsStats *next = myGlobals.device[i].asStats->next;
+      free(myGlobals.device[i].asStats);
+      myGlobals.device[i].asStats = next;
+    }
   }
 
   if(myGlobals.device)

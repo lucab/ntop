@@ -772,7 +772,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   char buf[MAX_LEN_SYM_HOST_NAME_HTML];
   short useIPAddressForSearching = forceUsingIPaddress;
   char* symEthName = NULL, *ethAddr;
-  u_char setSpoofingFlag = 0;
+  u_char setSpoofingFlag = 0, locked_mutex = 0;
   u_short numRuns=0;
   u_int hostFound = 0;
   u_int updateIPinfo = 0;
@@ -807,8 +807,14 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     return(el); /* Found */
   else if(idx == FLAG_NO_PEER)
     return(NULL);
-  else
+  else {
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+    if(el) {
+      lockHostsHashMutex(el, "_lookupHost");
+      el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+      locked_mutex = 1;
+    }
+  }
 
   while (el != NULL) {
     if(el->magic != CONST_MAGIC_NUMBER) {
@@ -945,6 +951,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 		   myGlobals.runningPref.maxNumHashEntries);
       }
 
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
       return(NULL);
     }
 
@@ -959,8 +966,10 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     } else
 #endif
       {   
-        if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL)
+        if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) {
+	  if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
           return(NULL);
+	}
       }
     memset(el, 0, sizeof(HostTraffic));
     el->firstSeen = myGlobals.actTime;
@@ -975,11 +984,17 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       freePortsUsage(el);
 
     len = (size_t)myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo**);
-    if((el->ipProtosList = (ShortProtoTrafficInfo**)malloc(len)) == NULL) return(NULL);
+    if((el->ipProtosList = (ShortProtoTrafficInfo**)malloc(len)) == NULL) {
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+      return(NULL);
+    }
     memset(el->ipProtosList, 0, len);
 
     len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**);
-    if((el->protoIPTrafficInfos = (ProtoTrafficInfo**)malloc(len)) == NULL) return(NULL);
+    if((el->protoIPTrafficInfos = (ProtoTrafficInfo**)malloc(len)) == NULL) {
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+      return(NULL);
+    }
     memset(el->protoIPTrafficInfos, 0, len);
 
     el->magic = CONST_MAGIC_NUMBER;
@@ -1175,6 +1190,8 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   hashSanityCheck();
 #endif
 
+  if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+  
   return(el);
 }
 
@@ -1185,6 +1202,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
   u_int idx;
   HostTraffic *el=NULL;
   FcNameServerCacheEntry *fcnsEntry;
+  u_char locked_mutex = 0;
   u_short numRuns=0;
   u_int hostFound = 0;
 
@@ -1202,9 +1220,14 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
   }
   else if(idx == FLAG_NO_PEER)
     return(NULL);
-  else
+  else {
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
-
+    if(el) {
+      lockHostsHashMutex(el, "lookupFcHost");
+      el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+      locked_mutex = 1;
+    }
+  }
 
   hostFound = 0;  /* This is the same type as the one of HashList */
 
@@ -1247,6 +1270,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 		   myGlobals.runningPref.maxNumHashEntries);
       }
 
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
       return(NULL);
     }
 
@@ -1261,8 +1285,10 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     } else
 #endif
       {
-	if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL)
+	if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) {
+	  if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
 	  return(NULL);
+	}
       }
 
     memset(el, 0, sizeof(HostTraffic));
@@ -1270,7 +1296,10 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 
     resetHostsVariables(el);
 
-    if(allocFcScsiCounters(el) == NULL) return(NULL);
+    if(allocFcScsiCounters(el) == NULL) {
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+      return(NULL);
+    }
     el->l2Family = FLAG_HOST_TRAFFIC_AF_FC;
     el->fcCounters->devType = SCSI_DEV_UNINIT;
     el->magic = CONST_MAGIC_NUMBER;
@@ -1323,6 +1352,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
   hashSanityCheck();
 #endif
 
+  if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
   return(el);
 }
 

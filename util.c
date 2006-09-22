@@ -2220,9 +2220,13 @@ int signalCondvar(ConditionalVariable *condvarId) {
 
 #undef _lockHostsHashMutex
 int _lockHostsHashMutex(HostTraffic *host, char *where, char *file, int line) {
-  int rc = 0;
+  int rc = 0;  
   
   if(host) {
+    if(0) 
+      traceEvent(CONST_TRACE_INFO, "==> lockHostsHashMutex(idx=%d) [%s:%d]", 
+		 host->hostTrafficBucket, file, line);
+
     _accessMutex(&myGlobals.hostsHashLockMutex, "lockHostsHashMutex", file, line);
     if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 0) {
       myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]++;
@@ -2246,6 +2250,10 @@ int _unlockHostsHashMutex(HostTraffic *host, char *file, int line) {
   int rc;
 
   if(host) {
+    if(0) 
+      traceEvent(CONST_TRACE_INFO, "==> unlockHostsHashMutex(idx=%d) [%s:%d]", 
+		 host->hostTrafficBucket, file, line);
+
     accessMutex(&myGlobals.hostsHashLockMutex, "unlockHostsHashMutex");
     if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] > 1) {
       myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]--;
