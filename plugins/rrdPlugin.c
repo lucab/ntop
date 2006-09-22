@@ -110,10 +110,11 @@ static char* spacer(char* str, char *tmpStr, int tmpStrLen);
 
 static int sumCounter(char *rrdPath, char *rrdFilePath,
 		      char *startTime, char* endTime, Counter *total, float *average);
-static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdCounter, char *startTime, char* endTime, char* rrdPrefix);
+static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdCounter, 
+			char *startTime, char* endTime, char* rrdPrefix);
 static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startTime, char* endTime, char* rrdPrefix);
 static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
-static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
+static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
 static void updateCounter(char *hostPath, char *key, Counter value, char short_step);
 static void updateGauge(char *hostPath, char *key, Counter value, char short_step);
 static void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter, char short_step);
@@ -785,7 +786,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
 #define MAX_NUM_ENTRIES   32
 #define MAX_BUF_LEN       128
 
-static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
+static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
   char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf0[MAX_NUM_ENTRIES][MAX_BUF_LEN];
   char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN], tmpStr[32],
     buf2[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf4[MAX_NUM_ENTRIES][MAX_BUF_LEN];
@@ -821,7 +822,12 @@ static void netflowIfSummary(char *rrdPath, int graphId, char *startTime, char* 
     if(rrdPath[i] == '/')
       break;
 
-  safe_snprintf(__FILE__, __LINE__, title, sizeof(title), "NetFlow Interface %s", &rrdPath[i+1]);
+  if(strstr(rrdPath, "/AS/"))
+    safe_snprintf(__FILE__, __LINE__, title, sizeof(title), 
+		  "AS %s", &rrdPath[i+1]);
+  else
+    safe_snprintf(__FILE__, __LINE__, title, sizeof(title), 
+		  "NetFlow Interface %s", &rrdPath[i+1]);
 
   rrdGraphicRequests++;
   argv[argc++] = "rrd_graph";
@@ -2662,7 +2668,8 @@ static void handleRRDHTTPrequest(char* url) {
 	  if(strcmp(value, "graph") == 0)     action = FLAG_RRD_ACTION_GRAPH;
 	  else if(strcmp(value, CONST_ARBITRARY_RRDREQUEST) == 0)     action = FLAG_RRD_ACTION_ARBITRARY;
 	  else if(strcmp(value, "graphSummary") == 0) action = FLAG_RRD_ACTION_GRAPH_SUMMARY;
-	  else if(strcmp(value, "netflowSummary") == 0) action = FLAG_RRD_ACTION_NF_SUMMARY;
+	  else if(strcmp(value, "netflowSummary") == 0)   action = FLAG_RRD_ACTION_NF_SUMMARY;
+	  else if(strcmp(value, "interfaceSummary") == 0) action = FLAG_RRD_ACTION_IF_SUMMARY;
 	  else if(strcmp(value, "netflowIfSummary") == 0) action = FLAG_RRD_ACTION_NF_IF_SUMMARY;
 	  else if(strcmp(value, "list") == 0) action = FLAG_RRD_ACTION_LIST;
 	} else if(strcmp(key, "key") == 0) {
@@ -2873,8 +2880,8 @@ static void handleRRDHTTPrequest(char* url) {
   } else if(action == FLAG_RRD_ACTION_NF_SUMMARY) {
     netflowSummary(rrdKey, graphId, startTime, endTime, rrdPrefix);
     return;
-  } else if(action == FLAG_RRD_ACTION_NF_IF_SUMMARY) {
-    netflowIfSummary(rrdKey, graphId, startTime, endTime, rrdPrefix);
+  } else if((action == FLAG_RRD_ACTION_NF_IF_SUMMARY) || (action == FLAG_RRD_ACTION_IF_SUMMARY)) {
+    interfaceSummary(rrdKey, graphId, startTime, endTime, rrdPrefix);
     return;
   } else if(action == FLAG_RRD_ACTION_LIST) {
     listResource(rrdKey, rrdTitle, startTime, endTime);

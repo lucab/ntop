@@ -171,6 +171,12 @@
 #define PARM_PASSIVE_SESSION_MINIMUM_IDLE   60
 
 /*
+ *  How long an idle AS entry can last (sec)
+ *  NOTE: it should be longer than the default RRD time
+ */
+#define PARM_AS_MAXIMUM_IDLE   360
+
+/*
  *  How long to leave somebody in myGlobals.weDontWantToTalkWithYou[]
  */
 #define PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL 5*60     /* 5 minutes */

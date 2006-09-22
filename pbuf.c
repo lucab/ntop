@@ -951,7 +951,7 @@ static AsStats* allocASStats(u_int16_t as_id) {
 
 static updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
 		       u_int16_t dst_as_id, u_int octets) {
-  AsStats *stats;
+  AsStats *stats, *prev_stats = NULL;
   u_char found_src = 0, found_dst = 0;
 
   if(0) 
@@ -967,6 +967,7 @@ static updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
 
   while(stats) {
     if(stats->as_id == src_as_id) {
+      stats->lastUpdate = myGlobals.actTime;
       incrementTrafficCounter(&stats->outBytes, octets), incrementTrafficCounter(&stats->outPkts, 1);
       if(src_as_id == dst_as_id) {
 	incrementTrafficCounter(&stats->selfBytes, octets), incrementTrafficCounter(&stats->selfPkts, 1);
@@ -981,6 +982,7 @@ static updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
 	found_src = 1;
 
     } else if(stats->as_id == dst_as_id) {
+      stats->lastUpdate = myGlobals.actTime;
       incrementTrafficCounter(&stats->inBytes, octets), incrementTrafficCounter(&stats->inPkts, 1);
       if(src_as_id == dst_as_id) {
 	incrementTrafficCounter(&stats->selfBytes, octets), incrementTrafficCounter(&stats->selfPkts, 1);
@@ -991,7 +993,7 @@ static updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
       if(src_as_id == 0) {
 	releaseMutex(&myGlobals.device[actualDeviceId].asMutex);
 	return;
-      }else
+      } else
 	found_dst = 1;
     }
 
@@ -999,19 +1001,36 @@ static updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
       releaseMutex(&myGlobals.device[actualDeviceId].asMutex);
       return;
     }
-    stats = stats->next;
-  }
+
+    if((myGlobals.actTime-stats->lastUpdate) > PARM_AS_MAXIMUM_IDLE) {
+      AsStats *next = stats->next;
+            
+      traceEvent(CONST_TRACE_INFO, "Purging stats about AS %d", stats->as_id);
+      if(prev_stats == NULL)
+	myGlobals.device[actualDeviceId].asStats = next;
+      else
+	prev_stats->next = next;
+      
+      free(stats);
+      stats = next;      
+    } else {
+      prev_stats = stats;
+      stats = stats->next;
+    }
+  } /* while */
 
   /* One (or both) ASs are missing */
   if((src_as_id != 0) && (!found_src)) {
     stats = allocASStats(src_as_id);
     stats->next = myGlobals.device[actualDeviceId].asStats;
+    stats->lastUpdate = myGlobals.actTime;
     myGlobals.device[actualDeviceId].asStats = stats;
   }
 
   if((dst_as_id != 0) && (dst_as_id != src_as_id) && (!found_dst)) {
     stats = allocASStats(dst_as_id);
     stats->next = myGlobals.device[actualDeviceId].asStats;
+    stats->lastUpdate = myGlobals.actTime;
     myGlobals.device[actualDeviceId].asStats = stats;
   }
 

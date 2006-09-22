@@ -1224,6 +1224,7 @@ typedef struct interfaceStats {
 /* AS statistics */
 typedef struct astats {
   u_short as_id;
+  time_t lastUpdate;
   TrafficCounter inBytes, outBytes, inPkts, outPkts;
   TrafficCounter selfBytes, selfPkts;
   struct astats *next;
