@@ -510,7 +510,10 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   memset(&bufa2, 0, sizeof(bufa2));
   memset(&bufa3, 0, sizeof(bufa3));
 
-  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
+  if(strstr(rrdName, "AS"))
+    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/AS/%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
+  else
+    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
 
   /* startTime[4] skips the 'now-' */
   safe_snprintf(__FILE__, __LINE__, fname, sizeof(fname), "%s/%s/%s-%s%s%s",
@@ -619,7 +622,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
       sendGraphFile(fname, 0);
       unlink(fname);
     } else {
-      traceEventRRDebugARGV(3);
+      traceEventRRDebugARGV(0);
 
       if(++graphErrCount < 50) {
         traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error());
@@ -643,6 +646,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 		       "(unknown RRD file)</I>");
     rc = -1;
   }
+
   return(rc);
 }
 
@@ -3885,14 +3889,14 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	if(myGlobals.device[devIdx].asStats) {
 	  AsStats *asStats;
+	  u_int totAS = 0;
+	  char rrdIfPath[512];
 
 	  accessMutex(&myGlobals.device[devIdx].asMutex, "rrdPluginAS");
 
 	  asStats = myGlobals.device[devIdx].asStats;
 
 	  while(asStats) {
-	    char rrdIfPath[512];
-
 	    safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
 			  "%s/interfaces/%s/AS/%d/", myGlobals.rrdPath,
 			  myGlobals.device[devIdx].humanFriendlyName,
@@ -3907,9 +3911,15 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    updateCounter(rrdIfPath, "ifSelfPkts",   asStats->selfPkts.value, 0);
 	    
 	    asStats = asStats->next;
+	    totAS++;
 	  }
 
 	  releaseMutex(&myGlobals.device[devIdx].asMutex);
+
+	  safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
+			"%s/interfaces/%s/AS/", myGlobals.rrdPath,
+			myGlobals.device[devIdx].humanFriendlyName);
+	  updateCounter(rrdIfPath, "numAS", totAS, 0);
 	}
 
 	/* ******************************** */

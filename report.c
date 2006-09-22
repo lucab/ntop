@@ -5271,6 +5271,22 @@ void printDomainStats(char* domain_network_name, int network_mode,
   } else {
     /* traceEvent(CONST_TRACE_INFO, "'%s' '%d' '%d'", domain_network_name, sortedColumn, revertOrder); */
 
+    if((network_mode == AS_VIEW) && (domain_network_name == NULL)) {
+      struct stat statbuf;
+      
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/AS/numAS.rrd", 
+		    myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
+      
+      if((i = stat(buf, &statbuf)) == 0) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<center>"
+		      "<IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=numAS&arbiface=%s&start=%u&end=%u&counter=&title=%s\">"
+		      "</center>",
+		      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(myGlobals.actTime-600), 
+		      (unsigned int)myGlobals.actTime, "Active ASs");
+	sendString(buf);
+      }
+    }
+
     if(revertOrder) {
       sign = "";
       arrowGif = "&nbsp;" CONST_IMG_ARROW_UP;
