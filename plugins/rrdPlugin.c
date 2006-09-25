@@ -95,7 +95,7 @@ static unsigned long numRuns = 0, numRRDerrors = 0, numRRDCycles=0;
 static time_t start_tm, end_tm, rrdTime;
 
 static u_short dumpDomains, dumpFlows, dumpHosts,
-  dumpInterfaces, dumpMatrix, shownCreate=0;
+  dumpInterfaces, dumpASs, enableAberrant, dumpMatrix, shownCreate=0;
 
 static Counter rrdGraphicRequests=0;
 
@@ -596,7 +596,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     safe_snprintf(__FILE__, __LINE__, bufa3, sizeof(bufa3), "DEF:fail=%s:counter:FAILURES", path);
     argv[argc++] = bufa3;
 
-    if(myGlobals.runningPref.enableRRDAberrant) {
+    if(enableAberrant) {
       argv[argc++] = "TICK:fail#ffffa0:1.0:Anomalia";
       argv[argc++] = "CDEF:upper=pred,dev,2,*,+";
       argv[argc++] = "CDEF:lower=pred,dev,2,*,-";
@@ -959,6 +959,7 @@ static char* spacer(char* _str, char *tmpStr, int tmpStrLen) {
   if(((token = strstr(str, "Bytes")) != NULL)
      || ((token = strstr(str, "Octets")) != NULL)
      || ((token = strstr(str, "Pkts")) != NULL)
+     || ((token = strstr(str, "AS")) != NULL)
      || ((token = strstr(str, "Num")) != NULL)
      ) {
     /* traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: '%s'", token);  */
@@ -1707,6 +1708,20 @@ static void commonRRDinit(void) {
     dumpInterfaces = atoi(value);
   }
 
+  if(fetchPrefsValue("rrd.dumpASs", value, sizeof(value)) == -1) {
+    storePrefsValue("rrd.dumpASs", "1");
+    dumpASs = 1;
+  } else {
+    dumpASs = atoi(value);
+  }
+
+  if(fetchPrefsValue("rrd.enableAberrant", value, sizeof(value)) == -1) {
+    storePrefsValue("rrd.enableAberrant", "1");
+    enableAberrant = 1;
+  } else {
+    enableAberrant = atoi(value);
+  }
+  
   if(fetchPrefsValue("rrd.dataDumpMatrix", value, sizeof(value)) == -1) {
     storePrefsValue("rrd.dataDumpMatrix", "0");
     dumpMatrix = 0;
@@ -1808,6 +1823,7 @@ static void commonRRDinit(void) {
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpFlows %s", dumpFlows == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpHosts %s", dumpHosts == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterfaces %s", dumpInterfaces == 0 ? "no" : "yes");
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpASs %s", dumpASs == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpMatrix %s", dumpMatrix == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpDetail %s",
 	     dumpDetail == FLAG_RRD_DETAIL_HIGH ? "high" :
@@ -2594,7 +2610,7 @@ static void handleRRDHTTPrequest(char* url) {
     rrdPrefix[32], rrdIP[32], rrdInterface[64], rrdPath[512], mode[32];
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
-  int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces,
+  int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces, _dumpASs,
     _dumpMatrix, _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId;
   int i, len, idx;
   time_t date1 = 0, date2 = 0;
@@ -2622,6 +2638,7 @@ static void handleRRDHTTPrequest(char* url) {
   _dumpFlows=0;
   _dumpHosts=0;
   _dumpInterfaces=0;
+  _dumpASs=0;
   _dumpMatrix=0;
   _dumpDetail=CONST_RRD_DETAIL_DEFAULT;
   _dumpInterval=DEFAULT_RRD_INTERVAL;
@@ -2763,6 +2780,8 @@ static void handleRRDHTTPrequest(char* url) {
 	  _dumpHosts = 1;
 	} else if(strcmp(key, "dumpInterfaces") == 0) {
 	  _dumpInterfaces = 1;
+	} else if(strcmp(key, "dumpASs") == 0) {
+	  _dumpASs = 1;
 	} else if(strcmp(key, "dumpMatrix") == 0) {
 	  _dumpMatrix = 1;
 #ifndef WIN32
@@ -2819,6 +2838,7 @@ static void handleRRDHTTPrequest(char* url) {
       dumpFlows=_dumpFlows;
       dumpHosts=_dumpHosts;
       dumpInterfaces=_dumpInterfaces;
+      dumpASs=_dumpASs;
       dumpMatrix=_dumpMatrix;
       dumpDetail = _dumpDetail;
 #ifndef WIN32
@@ -2843,7 +2863,11 @@ static void handleRRDHTTPrequest(char* url) {
       storePrefsValue("rrd.dataDumpHosts", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpInterfaces);
       storePrefsValue("rrd.dataDumpInterfaces", buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpMatrix);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpASs);
+      storePrefsValue("rrd.dumpASs", buf);
+       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", enableAberrant);
+      storePrefsValue("rrd.enableAberrant", buf);
+     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpMatrix);
       storePrefsValue("rrd.dataDumpMatrix", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDetail);
       storePrefsValue("rrd.dataDumpDetail", buf);
@@ -2967,6 +2991,10 @@ static void handleRRDHTTPrequest(char* url) {
 		dumpInterfaces ? "CHECKED" : "");
   sendString(buf);
 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpASs VALUE=1 %s> ASs<br>\n",
+		dumpASs ? "CHECKED" : "");
+  sendString(buf);
+
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpMatrix VALUE=1 %s> Matrix<br>\n",
 		dumpMatrix ? "CHECKED" : "");
   sendString(buf);
@@ -2985,6 +3013,8 @@ static void handleRRDHTTPrequest(char* url) {
 	       "be stored on disk</td></tr>\n");
   }
 
+  /* ******************************** */
+
   sendString("<tr><th align=\"left\" "DARK_BG">RRD Detail</th><td>");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Low\n",
 		FLAG_RRD_DETAIL_LOW, (dumpDetail == FLAG_RRD_DETAIL_LOW) ? "CHECKED" : "");
@@ -2998,6 +3028,22 @@ static void handleRRDHTTPrequest(char* url) {
 		FLAG_RRD_DETAIL_HIGH, (dumpDetail == FLAG_RRD_DETAIL_HIGH) ? "CHECKED" : "");
   sendString(buf);
   sendString("</td></tr>\n");
+
+  /* ******************************** */
+
+  sendString("<tr><th align=\"left\" "DARK_BG">Detect Anomalies</th><td>");
+  
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=enableAberrant VALUE=%d %s>Yes\n",
+		FLAG_RRD_DETAIL_LOW, (enableAberrant == 1) ? "CHECKED" : "");
+  sendString(buf);
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=enableAberrant VALUE=%d %s>No\n",
+		FLAG_RRD_DETAIL_MEDIUM, (enableAberrant == 0) ? "CHECKED" : "");
+  sendString(buf);
+  sendString("<p>Toggle RRD <A HREF=http://cricket.sourceforge.net/aberrant/rrd_hw.htm>Aberrant Behavior</A> support");
+  sendString("</td></tr>\n");
+
+  /* ******************************** */
 
   sendString("<tr><th align=\"left\" "DARK_BG">RRD Files Path</th><td>"
              "<INPUT NAME=rrdPath SIZE=50 VALUE=\"");
@@ -3887,7 +3933,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	/* ******************************** */
 
-	if(myGlobals.device[devIdx].asStats) {
+	if(dumpASs && myGlobals.device[devIdx].asStats) {
 	  AsStats *asStats;
 	  u_int totAS = 0;
 	  char rrdIfPath[512];

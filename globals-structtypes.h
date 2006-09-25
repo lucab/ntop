@@ -2032,7 +2032,6 @@ typedef struct _userPref {
   bool printFcOnly;             /* --fc-only '147' */
   bool printIpOnly;             /* --no-fc '148' */
   bool noInvalidLunDisplay;     /* --no-invalid-lun '149' */
-  bool enableRRDAberrant;
   bool disableMutexExtraInfo;   /* --disable-mutexextrainfo '145' */
 
   bool skipVersionCheck;        /* --skip-version-check '150' */
