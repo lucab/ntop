@@ -5280,8 +5280,8 @@ void printDomainStats(char* domain_network_name, int network_mode,
       if((i = stat(buf, &statbuf)) == 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<center>"
 		      "<IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=numAS&arbiface=%s&start=%u&end=%u&counter=&title=%s\">"
-		      "</center>",
-		      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(myGlobals.actTime-600), 
+		      "</center><p>&nbsp;<p>",
+		      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(myGlobals.actTime-3600), 
 		      (unsigned int)myGlobals.actTime, "Active ASs");
 	sendString(buf);
       }
