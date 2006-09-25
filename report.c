@@ -5636,11 +5636,12 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		    formatBytes(statsEntry->icmp6Rcvd.value, 1, formatBuf9, sizeof(formatBuf9)));
       sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/AS/%s", 
-		    myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, 
-		    sym_as_name);
+      if(sym_as_name[0] != '\0')
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/AS/%s", 
+		      myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, 
+		      sym_as_name);
       
-       if((i = stat(buf, &statbuf)) == 0) {
+      if((sym_as_name[0] != '\0') && ((i = stat(buf, &statbuf)) == 0)) {
 	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		       "<TD "TD_BG" ALIGN=CENTER><A HREF=\"/%s?netmode=%d&dom=%s\">"
 		       "<img class=tooltip valign=top border=0 src=/graph.gif></A></TD></TR>\n",
