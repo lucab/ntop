@@ -163,8 +163,6 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
     return(-1);
   }
 
-  updateASTraffic(actualDeviceId, srcHost->hostAS, dstHost->hostAS, length);
-
   if(isPassiveSess) {
     /* Emulate non passive session */
     idx = myGlobals.FTPIdx;
@@ -657,6 +655,8 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
     return;
   }
 
+  updateASTraffic(actualDeviceId, srcHost->hostAS, dstHost->hostAS, length.value);
+
   if (!myGlobals.runningPref.printIpOnly) {
       if (srcHost == dstHost) {
           /* Fabric controllers exchange link messages where the S_ID & D_ID
@@ -968,7 +968,7 @@ static updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
   while(stats) {
     if(stats->as_id == src_as_id) {
       stats->lastUpdate = myGlobals.actTime;
-      incrementTrafficCounter(&stats->outBytes, octets), incrementTrafficCounter(&stats->outPkts, 1);
+      incrementTrafficCounter(&stats->outBytes, octets), incrementTrafficCounter(&stats->outPkts, 1), stats->totPktsSinceLastRRDDump++;
       if(src_as_id == dst_as_id) {
 	incrementTrafficCounter(&stats->selfBytes, octets), incrementTrafficCounter(&stats->selfPkts, 1);
 	releaseMutex(&myGlobals.device[actualDeviceId].asMutex);
@@ -983,7 +983,7 @@ static updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
 
     } else if(stats->as_id == dst_as_id) {
       stats->lastUpdate = myGlobals.actTime;
-      incrementTrafficCounter(&stats->inBytes, octets), incrementTrafficCounter(&stats->inPkts, 1);
+      incrementTrafficCounter(&stats->inBytes, octets), incrementTrafficCounter(&stats->inPkts, 1), stats->totPktsSinceLastRRDDump++;
       if(src_as_id == dst_as_id) {
 	incrementTrafficCounter(&stats->selfBytes, octets), incrementTrafficCounter(&stats->selfPkts, 1);
 	releaseMutex(&myGlobals.device[actualDeviceId].asMutex);

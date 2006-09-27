@@ -119,7 +119,8 @@ AC_PREFIX_DEFAULT(${NTOPDIR:-/usr/local})
 
 # Set constants and defaults
 SO_VERSION_PATCH=
-MAKE_SHARED_LIBRARY_PARM="-bundle -flat_namespace -undefined suppress"
+#MAKE_SHARED_LIBRARY_PARM="-bundle -flat_namespace -undefined suppress"
+MAKE_SHARED_LIBRARY_PARM="-shared -flat_namespace"
 
 AS=
 CCLD=

@@ -2610,7 +2610,7 @@ static void handleRRDHTTPrequest(char* url) {
     rrdPrefix[32], rrdIP[32], rrdInterface[64], rrdPath[512], mode[32];
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
-  int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces, _dumpASs,
+  int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces, _dumpASs, _enableAberrant,
     _dumpMatrix, _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId;
   int i, len, idx;
   time_t date1 = 0, date2 = 0;
@@ -2639,6 +2639,7 @@ static void handleRRDHTTPrequest(char* url) {
   _dumpHosts=0;
   _dumpInterfaces=0;
   _dumpASs=0;
+  _enableAberrant=0;
   _dumpMatrix=0;
   _dumpDetail=CONST_RRD_DETAIL_DEFAULT;
   _dumpInterval=DEFAULT_RRD_INTERVAL;
@@ -2782,6 +2783,8 @@ static void handleRRDHTTPrequest(char* url) {
 	  _dumpInterfaces = 1;
 	} else if(strcmp(key, "dumpASs") == 0) {
 	  _dumpASs = 1;
+	} else if(strcmp(key, "enableAberrant") == 0) {
+	  _enableAberrant = atoi(value);
 	} else if(strcmp(key, "dumpMatrix") == 0) {
 	  _dumpMatrix = 1;
 #ifndef WIN32
@@ -2839,6 +2842,7 @@ static void handleRRDHTTPrequest(char* url) {
       dumpHosts=_dumpHosts;
       dumpInterfaces=_dumpInterfaces;
       dumpASs=_dumpASs;
+      enableAberrant=_enableAberrant;
       dumpMatrix=_dumpMatrix;
       dumpDetail = _dumpDetail;
 #ifndef WIN32
@@ -3033,14 +3037,14 @@ static void handleRRDHTTPrequest(char* url) {
 
   sendString("<tr><th align=\"left\" "DARK_BG">Detect Anomalies</th><td>");
   
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=enableAberrant VALUE=%d %s>Yes\n",
-		FLAG_RRD_DETAIL_LOW, (enableAberrant == 1) ? "CHECKED" : "");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=enableAberrant VALUE=1 %s>Yes\n",
+		(enableAberrant == 1) ? "CHECKED" : "");
   sendString(buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=enableAberrant VALUE=%d %s>No\n",
-		FLAG_RRD_DETAIL_MEDIUM, (enableAberrant == 0) ? "CHECKED" : "");
+  
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=enableAberrant VALUE=0 %s>No\n",
+		(enableAberrant == 0) ? "CHECKED" : "");
   sendString(buf);
-  sendString("<p>Toggle RRD <A HREF=http://cricket.sourceforge.net/aberrant/rrd_hw.htm>Aberrant Behavior</A> support");
+  sendString("<br>Toggle RRD <A HREF=http://cricket.sourceforge.net/aberrant/rrd_hw.htm>Aberrant Behavior</A> support");
   sendString("</td></tr>\n");
 
   /* ******************************** */
@@ -3933,7 +3937,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	/* ******************************** */
 
-	if(dumpASs && myGlobals.device[devIdx].asStats) {
+	if(myGlobals.device[devIdx].asStats) {
 	  AsStats *asStats;
 	  u_int totAS = 0;
 	  char rrdIfPath[512];
@@ -3943,25 +3947,31 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  asStats = myGlobals.device[devIdx].asStats;
 
 	  while(asStats) {
-	    safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
-			  "%s/interfaces/%s/AS/%d/", myGlobals.rrdPath,
-			  myGlobals.device[devIdx].humanFriendlyName,
-			  asStats->as_id);
-	    mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
+	    if(dumpASs) {
+	      if(asStats->totPktsSinceLastRRDDump > AS_RRD_DUMP_PKTS_THRESHOLD) {
+		safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
+			      "%s/interfaces/%s/AS/%d/", myGlobals.rrdPath,
+			      myGlobals.device[devIdx].humanFriendlyName,
+			      asStats->as_id);
+		mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
+		
+		updateCounter(rrdIfPath, "ifInOctets",   asStats->inBytes.value, 0);
+		updateCounter(rrdIfPath, "ifInPkts",     asStats->inPkts.value, 0);
+		updateCounter(rrdIfPath, "ifOutOctets",  asStats->outBytes.value, 0);
+		updateCounter(rrdIfPath, "ifOutPkts",    asStats->outPkts.value, 0);
+		updateCounter(rrdIfPath, "ifSelfOctets", asStats->selfBytes.value, 0);
+		updateCounter(rrdIfPath, "ifSelfPkts",   asStats->selfPkts.value, 0);
+	      }
+	    }
 
-	    updateCounter(rrdIfPath, "ifInOctets",   asStats->inBytes.value, 0);
-	    updateCounter(rrdIfPath, "ifInPkts",     asStats->inPkts.value, 0);
-	    updateCounter(rrdIfPath, "ifOutOctets",  asStats->outBytes.value, 0);
-	    updateCounter(rrdIfPath, "ifOutPkts",    asStats->outPkts.value, 0);
-	    updateCounter(rrdIfPath, "ifSelfOctets", asStats->selfBytes.value, 0);
-	    updateCounter(rrdIfPath, "ifSelfPkts",   asStats->selfPkts.value, 0);
-	    
+	    asStats->totPktsSinceLastRRDDump = 0;
+
 	    asStats = asStats->next;
 	    totAS++;
 	  }
-
+	  
 	  releaseMutex(&myGlobals.device[devIdx].asMutex);
-
+	  
 	  safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
 			"%s/interfaces/%s/AS/", myGlobals.rrdPath,
 			myGlobals.device[devIdx].humanFriendlyName);

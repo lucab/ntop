@@ -72,6 +72,8 @@
 #define DEFAULT_RRD_MONTHS                  36   /* months of day by day data (default) */
 #define DEFAULT_RRD_DUMP_DELAY              10   /* ms (default) */
 
+#define AS_RRD_DUMP_PKTS_THRESHOLD          10   /* packets */
+
 /* ****************************************************** */
 
 /*

@@ -683,7 +683,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
   /* Commented out ... already done in updatePacketCount()                         */
   /* srcHost->pktSent.value     += numPkts, dstHost->pktRcvd.value     += numPkts; */
   /* srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;     */
-  srcHost->ipBytesSent.value += len,     dstHost->ipBytesRcvd.value += len;
+  srcHost->ipBytesSent.value += len,        dstHost->ipBytesRcvd.value += len;
 
   if(srcAS != 0) srcHost->hostAS = srcAS;
   if(dstAS != 0) dstHost->hostAS = dstAS;
