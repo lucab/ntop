@@ -3951,7 +3951,7 @@ static int cmpPortsFctn(const void *_a, const void *_b) {
 
 void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
   int i;
-  char buf[3*LEN_GENERAL_WORK_BUFFER], *sign;
+  char buf[4*LEN_GENERAL_WORK_BUFFER], *sign;
   float total, partialTotal, remainingTraffic;
   float percentage;
   char formatBuf[32], formatBuf1[32], formatBuf2[32];
@@ -4214,10 +4214,10 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       printSectionTitle("Global TCP/UDP Protocol Distribution");
 
       sendString("<CENTER>\n");
-      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\">"
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">"
 		 "<TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>"
 		 "TCP/UDP&nbsp;Protocol</TH>"
-		 "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG">Flows</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
+		 "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG">Flows</TH><TH "TH_BG" COLSPAN=2 width=260>"
 		 "Accumulated Percentage / Historical Protocol View</TH></TR>\n");
 
       remainingTraffic = 0;
@@ -4367,7 +4367,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 
 void printProtoTraffic(int printGraph) {
   float total, perc;
-  char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32];
+  char buf[2*LEN_GENERAL_WORK_BUFFER], formatBuf[32];
 
   total = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value/1024; /* total is expressed in KBytes.value */
 
@@ -5279,11 +5279,20 @@ void printDomainStats(char* domain_network_name, int network_mode,
       
       if((i = stat(buf, &statbuf)) == 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<center>"
-		      "<IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=numAS&arbiface=%s&start=%u&end=%u&counter=&title=%s\">"
-		      "</center><p>&nbsp;<p>",
+		      "<IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=numAS&arbiface=%s&start=%u&end=%u&counter=&title=%s\">",
 		      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(myGlobals.actTime-3600), 
 		      (unsigned int)myGlobals.actTime, "Active ASs");
 	sendString(buf);
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		      "<A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=numAS&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
+		      "<IMG valign=top class=tooltip SRC=graph_zoom.gif border=0></A>",
+		      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(myGlobals.actTime-3600), 
+		      (unsigned int)myGlobals.actTime, "Active ASs");
+	sendString(buf);
+
+
+	sendString("</center><p>&nbsp;<p>");
       }
     }
 
