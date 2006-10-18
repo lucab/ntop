@@ -1622,7 +1622,7 @@ static int checkURLsecurity(char *url) {
  	  if((v1<0) || (v2<0)) {
  	    url[begin++] = '\0';
             traceEvent(CONST_TRACE_NOISY,
-                       "URL security(1): Found invald percent in URL...DANGER...rejecting request partial (url=%s...)",
+                       "URL security(1): Found invalid percent in URL...DANGER...rejecting request partial (url=%s...)",
                        url);
 
             /* Explicitly, update so it's not used anywhere else in ntop */
