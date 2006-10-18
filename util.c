@@ -4232,9 +4232,7 @@ void escape(char *dest, int destLen, char *src) {
   for (srcIdx = 0, destIdx = 0; srcIdx < len && destIdx < destLen; src++) {
     switch (src[srcIdx]) {
     case ' ':
-      dest[destIdx++] = '%';
-      dest[destIdx++] = '2';
-      dest[destIdx++] = '0';
+      dest[destIdx++] = '+';
       break;
     default:
       dest[destIdx++] = src[srcIdx];
