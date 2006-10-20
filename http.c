@@ -580,7 +580,8 @@ static void ssiMenu_Head() {
 		  "				[null,'Local Matrix','/" CONST_IP_TRAFFIC_MATRIX_HTML "',null,null],\n"
 		  "		],\n"
 		  "	],\n");
-  if(!myGlobals.runningPref.printIpOnly) {
+  if(!myGlobals.runningPref.printIpOnly
+     && myGlobals.device[myGlobals.actualReportDeviceId].vsanHash /* We have something to show */) {
     sendStringWOssi(
 		    "	[null,'Media',null,null,null,\n"
 		    "		[null,'Fibre Channel',null,null,null,\n"

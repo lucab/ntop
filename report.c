@@ -320,8 +320,29 @@ void printTrafficSummary (int revertOrder) {
   }
 
   if((i = numActiveSenders(myGlobals.actualReportDeviceId)) > 0) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
-		  "<TD "TD_BG" ALIGN=RIGHT>%u</TD></TR>\n", i);
+    /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+    struct stat statbuf;
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
+		  myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
+    
+    
+    revertSlashIfWIN32(buf, 0);
+   
+    if(stat(buf, &statbuf) != 0) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%u</TD></TR>\n", i);
+    } else
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT>"		    
+		    "%u <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=knownHostsNum&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
+		    "<IMG valign=top class=tooltip SRC=graph.gif border=0></A>"
+		    "</TD></TR>\n", 
+		    i, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(myGlobals.actTime-3600), 
+		    (unsigned int)myGlobals.actTime, "Active+End+Nodes");
+
+    
     sendString(buf);
   }
 
@@ -330,6 +351,8 @@ void printTrafficSummary (int revertOrder) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Traffic Filter</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  myGlobals.runningPref.currentFilterExpression);
+
+
     sendString(buf);
   }
 
@@ -679,8 +702,26 @@ void printTrafficStatistics(int revertOrder) {
   }
 
   if((i = numActiveSenders(myGlobals.actualReportDeviceId)) > 0) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
-		  "<TD "TD_BG" ALIGN=RIGHT>%u</TD></TR>\n", i);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
+		  myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
+    
+    
+    revertSlashIfWIN32(buf, 0);
+   
+    if(stat(buf, &statbuf) != 0) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%u</TD></TR>\n", i);
+    } else
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT>"		    
+		    "%u <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=knownHostsNum&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
+		    "<IMG valign=top class=tooltip SRC=graph.gif border=0></A>"
+		    "</TD></TR>\n", 
+		    i, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(myGlobals.actTime-3600), 
+		    (unsigned int)myGlobals.actTime, "Active+End+Nodes");
+
+    
     sendString(buf);
   }
 
@@ -4278,7 +4319,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 
 	if((i = stat(buf, &statbuf)) == 0) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			"<TR "TR_ON" "DARK_BG"><TH "TH_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
+			"<TR "TR_ON" "DARK_BG"><TH "TH_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=LEFT BGCOLOR=white>"
 			"<p><IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=4&"
 			"key=interfaces/%s/&start=now-12h&end=now\" BORDER=0></TD></TR>",
 			myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);

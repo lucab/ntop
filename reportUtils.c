@@ -3741,7 +3741,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if((as = getHostAS(el)) != 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"%d</TD></TR>\n", getRowColor(), "Origin&nbsp;AS", as);
+		  "<A HREF=/%s?dom=%d&netmode=2>%d</A></TD></TR>\n", getRowColor(), "Origin&nbsp;AS", CONST_DOMAIN_STATS_HTML, as, as);
     sendString(buf);
   }
 
@@ -3860,7 +3860,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(),
 		  "Host&nbsp;Location",
-		  "Local (inside specified/local subnet)");
+		    "Local (inside specified/local subnet)");
     } else {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(),

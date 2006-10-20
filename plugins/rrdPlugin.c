@@ -1902,7 +1902,6 @@ static void arbitraryAction(char *rrdName,
     
     sendString("\n<p align=center>\n<FORM action=/plugins/rrdPlugin name=\"form_timespan_selector\" method=\"get\">\n<TABLE width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n<TBODY><TR><TD align=center class=\"textHeader\" nowrap=\"\">\n<b>Presets</b>: <SELECT name=\"predefined_timespan\" onchange=\"window.location=document.form_timespan_selector.predefined_timespan.options[document.form_timespan_selector.predefined_timespan.selectedIndex].value\">\n");
 
-   
     the_time = time(NULL);
     option_timespan(the_time-1800, "Last Half Hour", 0);
     option_timespan(the_time-3600, "Last Hour", 0);
@@ -1955,9 +1954,9 @@ static void arbitraryAction(char *rrdName,
     sendString("<SCRIPT type=\"text/javascript\" src=\"/zoom.js\"></SCRIPT>\n"
 	       "<DIV id=\"zoomBox\" style=\"position: absolute; visibility: visible; background-image: initial; background-repeat: initial; "
 	       "background-attachment: initial; background-position-x: initial; background-position-y: initial; background-color: orange; opacity: 0.5;\"></DIV>\n");
-    sendString("<DIV id=\"zoomSensitiveZone\" style=\"position: absolute; visibility: visible; cursor: crosshair; background-image: initial; "
-	       "background-repeat: initial; background-attachment: initial; background-position-x: initial; background-position-y: initial; "
-	       "background-color: blue; opacity: 0;\" oncontextmenu=\"return false\"></DIV>\n");
+
+    sendString("<DIV id=\"zoomSensitiveZone\" style=\"position:absolute; overflow:none; background-repeat: initial; background-attachment: initial;  background-position-x: initial; background-position-y: initial; visibility:visible; cursor:crosshair; background:blue; filter:alpha(opacity=0); -moz-opacity:0; -khtml-opacity:0; opacity:0;\" oncontextmenu=\"return false\"></DIV>\n");
+
     /*
       NOTE:
       If the graph size changes, please update the zoom.js file (search for L.Deri)
