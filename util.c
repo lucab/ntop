@@ -57,26 +57,26 @@ static char *versionSite[]   = {
 static HostTraffic* __getFirstHost(u_int actualDeviceId, u_int beginIdx, char *file, int line) {
   u_int idx;
 
-  /* accessMutex(&myGlobals.hostsHashMutex, "__getFirstHost"); */
+  accessMutex(&myGlobals.hostsHashLockMutex, "__getFirstHost");
 
   for(idx=beginIdx; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
     HostTraffic *el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
     if(el != NULL) {
       if(el->magic != CONST_MAGIC_NUMBER) {
-	traceEvent(CONST_TRACE_ERROR, 
+	traceEvent(CONST_TRACE_ERROR,
                    "Bad magic number [expected=%d/real=%d][deviceId=%d] getFirstHost()[%s/%d]",
 		   CONST_MAGIC_NUMBER, el->magic, actualDeviceId, file, line);
-        /* releaseMutex(&myGlobals.hostsHashMutex); */
+	releaseMutex(&myGlobals.hostsHashLockMutex);
         return(NULL);
       }
 
-      /* releaseMutex(&myGlobals.hostsHashMutex); */
+      releaseMutex(&myGlobals.hostsHashLockMutex);
       return(el);
     }
   }
 
-  /* releaseMutex(&myGlobals.hostsHashMutex); */
+  releaseMutex(&myGlobals.hostsHashLockMutex);
   return(NULL);
 }
 
@@ -91,22 +91,22 @@ HostTraffic* _getFirstHost(u_int actualDeviceId, char *file, int line) {
 HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, int line) {
   if(host == NULL) return(NULL);
 
-  /* accessMutex(&myGlobals.hostsHashMutex, "getNextHost"); */
+  accessMutex(&myGlobals.hostsHashLockMutex, "getNextHost");
 
   if(host->next != NULL) {
     if(host->next->magic != CONST_MAGIC_NUMBER) {
       traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) getNextHost()[%s/%d]",
 		 CONST_MAGIC_NUMBER, host->next->magic, file, line);
-      /* releaseMutex(&myGlobals.hostsHashMutex); */
+      releaseMutex(&myGlobals.hostsHashLockMutex);
       return(NULL);
     }
 
-    /* releaseMutex(&myGlobals.hostsHashMutex); */
+    releaseMutex(&myGlobals.hostsHashLockMutex);
     return(host->next);
   } else {
     u_int nextIdx = host->hostTrafficBucket+1;
 
-    /* releaseMutex(&myGlobals.hostsHashMutex); */
+    releaseMutex(&myGlobals.hostsHashLockMutex);
     if(nextIdx < myGlobals.device[actualDeviceId].actualHashSize)
       return(__getFirstHost(actualDeviceId, nextIdx, file, line));
     else
@@ -175,7 +175,7 @@ char* serial2str(HostSerial theSerial, char *buf, int buf_len) {
     int len = 0, i;
     char tmpStr[16];
     char *ptr = (char*)&theSerial;
-           
+
     for(i=0; i<sizeof(HostSerial); i++) {
       snprintf(tmpStr, sizeof(tmpStr), "%02X", ptr[i] & 0xFF);
       strcat(buf, tmpStr);
@@ -192,7 +192,7 @@ void str2serial(HostSerial *theSerial, char *buf, int buf_len) {
     int len = 0, i, j;
     char tmpStr[16];
     char *ptr = (char*)theSerial;
-      
+
     for(i=0, j=0; i<2*sizeof(HostSerial);) {
       tmpStr[0] = buf[i++];
       tmpStr[1] = buf[i++];
@@ -587,11 +587,11 @@ char* copy_argv(register char **argv) {
 
 #ifdef INET6
 unsigned short isLinkLocalAddress(struct in6_addr *addr,
-				  u_int32_t *the_local_network, 
+				  u_int32_t *the_local_network,
 				  u_int32_t *the_local_network_mask) {
   int i;
 
-  if(the_local_network && the_local_network_mask) 
+  if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   if(addr == NULL)
@@ -615,12 +615,12 @@ unsigned short isLinkLocalAddress(struct in6_addr *addr,
 
 #ifdef INET6
 unsigned short in6_isMulticastAddress(struct in6_addr *addr,
-				      u_int32_t *the_local_network, 
+				      u_int32_t *the_local_network,
 				      u_int32_t *the_local_network_mask) {
 
-  if(the_local_network && the_local_network_mask) 
+  if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
-  
+
   if(IN6_IS_ADDR_MULTICAST(addr)) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: %s is multicast [%X/%X]",
@@ -636,10 +636,10 @@ unsigned short in6_isMulticastAddress(struct in6_addr *addr,
 
 #ifdef INET6
 unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId,
-				  u_int32_t *the_local_network, 
+				  u_int32_t *the_local_network,
 				  u_int32_t *the_local_network_mask) {
 
-  if(the_local_network && the_local_network_mask) 
+  if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   if(deviceId >= myGlobals.numDevices) {
@@ -668,11 +668,11 @@ unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId,
 /* ******************************************* */
 
 unsigned short in6_isPrivateAddress(struct in6_addr *addr,
-				    u_int32_t *the_local_network, 
+				    u_int32_t *the_local_network,
 				    u_int32_t *the_local_network_mask) {
   /* IPv6 have private addresses ?*/
 
-  if(the_local_network && the_local_network_mask) 
+  if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   return(0);
@@ -682,11 +682,11 @@ unsigned short in6_isPrivateAddress(struct in6_addr *addr,
 /* ********************************* */
 
 unsigned short in_isBroadcastAddress(struct in_addr *addr,
-				     u_int32_t *the_local_network, 
+				     u_int32_t *the_local_network,
 				     u_int32_t *the_local_network_mask) {
   int i;
 
-  if(the_local_network && the_local_network_mask) 
+  if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   if(addr == NULL)
@@ -724,10 +724,10 @@ unsigned short in_isBroadcastAddress(struct in_addr *addr,
 /* ********************************* */
 
 unsigned short in_isMulticastAddress(struct in_addr *addr,
-				     u_int32_t *the_local_network, 
+				     u_int32_t *the_local_network,
 				     u_int32_t *the_local_network_mask) {
 
-  if(the_local_network && the_local_network_mask) 
+  if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   if((addr->s_addr & CONST_MULTICAST_MASK) == CONST_MULTICAST_MASK) {
@@ -750,7 +750,7 @@ static u_int8_t num_network_bits(u_int32_t addr) {
 
   for(num_bits=0; addr > 0; num_bits++)
     addr = addr >> 2;
-  
+
   /* traceEvent(CONST_TRACE_WARNING, "-> num_bits=%d", num_bits); */
 
   return(num_bits);
@@ -759,10 +759,10 @@ static u_int8_t num_network_bits(u_int32_t addr) {
 /* ********************************* */
 
 unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId,
-				 u_int32_t *the_local_network, 
+				 u_int32_t *the_local_network,
 				 u_int32_t *the_local_network_mask) {
 
-  if(the_local_network && the_local_network_mask) 
+  if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   if(deviceId >= myGlobals.numDevices) {
@@ -785,10 +785,10 @@ unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId,
       traceEvent(CONST_TRACE_INFO, "ADDRESS_DEBUG: %s is local", intoa(*addr));
 #endif
 
-      if(the_local_network && the_local_network_mask) 
-	(*the_local_network) = myGlobals.device[deviceId].network.s_addr, 
+      if(the_local_network && the_local_network_mask)
+	(*the_local_network) = myGlobals.device[deviceId].network.s_addr,
 	  (*the_local_network_mask) = num_network_bits(myGlobals.device[deviceId].netmask.s_addr);
-     return 1;
+      return 1;
     }
   } else {
     int i;
@@ -798,9 +798,9 @@ unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId,
 #ifdef ADDRESS_DEBUG
 	traceEvent(CONST_TRACE_INFO, "ADDRESS_DEBUG: %s is local", intoa(*addr));
 #endif
-      if(the_local_network && the_local_network_mask) 
-	(*the_local_network) = myGlobals.device[i].network.s_addr, 
-	  (*the_local_network_mask) = num_network_bits(myGlobals.device[deviceId].netmask.s_addr);
+	if(the_local_network && the_local_network_mask)
+	  (*the_local_network) = myGlobals.device[i].network.s_addr,
+	    (*the_local_network_mask) = num_network_bits(myGlobals.device[deviceId].netmask.s_addr);
 	return 1;
       }
   }
@@ -819,11 +819,11 @@ unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId,
 /* ********************************* */
 
 unsigned short in_isPrivateAddress(struct in_addr *addr,
-				   u_int32_t *the_local_network, 
+				   u_int32_t *the_local_network,
 				   u_int32_t *the_local_network_mask) {
   /* See http://www.isi.edu/in-notes/rfc1918.txt */
 
-  if(the_local_network && the_local_network_mask) 
+  if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   /* Fixes below courtesy of Wies-Software <wies@wiessoft.de> */
@@ -840,9 +840,9 @@ unsigned short in_isPrivateAddress(struct in_addr *addr,
 /***************************************/
 
 unsigned short isBroadcastAddress(HostAddr *addr,
-				  u_int32_t *the_local_network, 
+				  u_int32_t *the_local_network,
 				  u_int32_t *the_local_network_mask) {
-  if(the_local_network && the_local_network_mask) 
+  if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   switch(addr->hostFamily) {
@@ -859,9 +859,9 @@ unsigned short isBroadcastAddress(HostAddr *addr,
 /* ******************************************** */
 
 unsigned short isMulticastAddress(HostAddr *addr,
-				  u_int32_t *the_local_network, 
+				  u_int32_t *the_local_network,
 				  u_int32_t *the_local_network_mask) {
-  if(the_local_network && the_local_network_mask) 
+  if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   switch(addr->hostFamily) {
@@ -878,9 +878,9 @@ unsigned short isMulticastAddress(HostAddr *addr,
 /* ************************************************* */
 
 unsigned short isLocalAddress(HostAddr *addr, u_int deviceId,
-			      u_int32_t *the_local_network, 
+			      u_int32_t *the_local_network,
 			      u_int32_t *the_local_network_mask) {
-  if(the_local_network && the_local_network_mask) 
+  if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   switch(addr->hostFamily) {
@@ -897,9 +897,9 @@ unsigned short isLocalAddress(HostAddr *addr, u_int deviceId,
 /* ************************************************** */
 
 unsigned short isPrivateAddress(HostAddr *addr,
-				u_int32_t *the_local_network, 
+				u_int32_t *the_local_network,
 				u_int32_t *the_local_network_mask) {
-  if(the_local_network && the_local_network_mask) 
+  if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   switch(addr->hostFamily) {
@@ -1063,10 +1063,10 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 		   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" : 
+		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
 		   addresses);
-  
+
   memset(localAddresses, 0, localAddressesLen);
 
   address = strtok_r(addresses, ",", &strtokState);
@@ -1090,7 +1090,7 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 		   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  : 
+		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
 		   address);
 	address = strtok_r(NULL, ",", &strtokState);
@@ -1103,7 +1103,7 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 		   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  : 
+		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
 		   mask);
 	address = strtok_r(NULL, ",", &strtokState);
@@ -1134,7 +1134,7 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
                    flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  : 
+		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
                    a, b, c, d, bits);
 
@@ -1192,7 +1192,7 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 	if(found == 0) {
           theNetworks[(*numNetworks)][CONST_NETWORK_ENTRY]    = network;
           theNetworks[(*numNetworks)][CONST_NETMASK_ENTRY]    = networkMask;
-	  theNetworks[(*numNetworks)][CONST_NETMASK_V6_ENTRY] = bits;	  
+	  theNetworks[(*numNetworks)][CONST_NETMASK_V6_ENTRY] = bits;
           theNetworks[(*numNetworks)][CONST_BROADCAST_ENTRY]  = broadcast;
 
           a = (int) ((network >> 24) & 0xff);
@@ -1200,7 +1200,7 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
           c = (int) ((network >>  8) & 0xff);
           d = (int) ((network >>  0) & 0xff);
 
-          laBufferUsed = safe_snprintf(__FILE__, __LINE__, 
+          laBufferUsed = safe_snprintf(__FILE__, __LINE__,
 				       &localAddresses[laBufferPosition],
                                        localAddressesLen,
                                        "%s%d.%d.%d.%d/%d",
@@ -1221,12 +1221,12 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
         c = (int) ((network >>  8) & 0xff);
         d = (int) ((network >>  0) & 0xff);
 
-        traceEvent(CONST_TRACE_ERROR, 
+        traceEvent(CONST_TRACE_ERROR,
 		   "%s: %d.%d.%d.%d/%d - Too many networks (limit %d) - discarded",
                    flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  : 
+		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
                    a, b, c, d, bits,
                    MAX_NUM_NETWORKS);
@@ -1258,7 +1258,7 @@ void handleLocalAddresses(char* addresses) {
 
 #ifdef INET6
 unsigned short in6_pseudoLocalAddress(struct in6_addr *addr,
-				      u_int32_t *the_local_network, 
+				      u_int32_t *the_local_network,
 				      u_int32_t *the_local_network_mask) {
   int i;
 
@@ -1276,18 +1276,18 @@ unsigned short in6_pseudoLocalAddress(struct in6_addr *addr,
 unsigned short __pseudoLocalAddress(struct in_addr *addr,
 				    u_int32_t theNetworks[MAX_NUM_NETWORKS][4],
 				    u_short numNetworks,
-				    u_int32_t *the_local_network, 
+				    u_int32_t *the_local_network,
 				    u_int32_t *the_local_network_mask) {
   int i;
 
-  if(the_local_network && the_local_network_mask) 
-    (*the_local_network) = 0,  (*the_local_network_mask) = 0;      
+  if(the_local_network && the_local_network_mask)
+    (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   for(i=0; i<numNetworks; i++) {
 #ifdef ADDRESS_DEBUG
     char buf[32], buf1[32], buf2[32];
     struct in_addr addr1, addr2;
-    
+
     addr1.s_addr = theNetworks[i][CONST_NETWORK_ENTRY];
     addr2.s_addr = theNetworks[i][CONST_NETMASK_ENTRY];
 
@@ -1318,7 +1318,7 @@ unsigned short __pseudoLocalAddress(struct in_addr *addr,
 /* ********************************* */
 
 unsigned short in_pseudoLocalAddress(struct in_addr *addr,
-				     u_int32_t *the_local_network, 
+				     u_int32_t *the_local_network,
 				     u_int32_t *the_local_network_mask) {
   return(__pseudoLocalAddress(addr, myGlobals.localNetworks, myGlobals.numLocalNetworks,
 			      the_local_network, the_local_network_mask));
@@ -1328,7 +1328,7 @@ unsigned short in_pseudoLocalAddress(struct in_addr *addr,
 
 #ifdef INET6
 unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId,
-				      u_int32_t *the_local_network, 
+				      u_int32_t *the_local_network,
 				      u_int32_t *the_local_network_mask) {
   int rc;
 
@@ -1344,7 +1344,7 @@ unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId,
 /* ********************************* */
 
 unsigned short in_deviceLocalAddress(struct in_addr *addr, u_int deviceId,
-				     u_int32_t *the_local_network, 
+				     u_int32_t *the_local_network,
 				     u_int32_t *the_local_network_mask) {
   int rc;
 
@@ -1369,7 +1369,7 @@ unsigned short in_deviceLocalAddress(struct in_addr *addr, u_int deviceId,
 
 #ifdef INET6
 unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId,
-					u_int32_t *the_local_network, 
+					u_int32_t *the_local_network,
 					u_int32_t *the_local_network_mask) {
   int i;
 
@@ -1403,11 +1403,11 @@ unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId,
 
 /* This function returns true when a host is considered local
    as specified using the 'm' flag */
-unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId,				       
-				       u_int32_t *the_local_network, 
+unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId,
+				       u_int32_t *the_local_network,
 				       u_int32_t *the_local_network_mask) {
   int i;
-  
+
   /* FIX */
   i = in_isLocalAddress(addr, deviceId, the_local_network, the_local_network_mask);
 
@@ -1441,7 +1441,7 @@ unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId,
    for the specified (-m flag subnets */
 
 unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr,
-					   u_int32_t *the_local_network, 
+					   u_int32_t *the_local_network,
 					   u_int32_t *the_local_network_mask) {
   int i;
 
@@ -1468,7 +1468,7 @@ unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr,
 /*************************************/
 
 unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId,
-				  u_int32_t *the_local_network, 
+				  u_int32_t *the_local_network,
 				  u_int32_t *the_local_network_mask) {
   switch(addr->hostFamily) {
   case AF_INET:
@@ -1484,10 +1484,10 @@ unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId,
 /* ********************************* */
 
 unsigned short isPseudoLocalAddress(HostAddr *addr, u_int deviceId,
-				    u_int32_t *the_local_network, 
+				    u_int32_t *the_local_network,
 				    u_int32_t *the_local_network_mask) {
 
-  if(the_local_network && the_local_network_mask) 
+  if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
   switch(addr->hostFamily) {
@@ -1504,7 +1504,7 @@ unsigned short isPseudoLocalAddress(HostAddr *addr, u_int deviceId,
 /* ********************************* */
 
 unsigned short isPseudoBroadcastAddress(HostAddr *addr,
-					u_int32_t *the_local_network, 
+					u_int32_t *the_local_network,
 					u_int32_t *the_local_network_mask) {
   switch(addr->hostFamily) {
   case AF_INET:
@@ -1520,7 +1520,7 @@ unsigned short isPseudoBroadcastAddress(HostAddr *addr,
 /* ********************************* */
 
 unsigned short _pseudoLocalAddress(HostAddr *addr,
-				   u_int32_t *the_local_network, 
+				   u_int32_t *the_local_network,
 				   u_int32_t *the_local_network_mask) {
   switch(addr->hostFamily) {
   case AF_INET:
@@ -1684,18 +1684,18 @@ void handleFlowsSpecs(void) {
 	    newFlow->fcode = (struct bpf_program*)calloc(myGlobals.numDevices, sizeof(struct bpf_program));
 
             for(i=0; i<myGlobals.numDevices; i++) {
-              if(myGlobals.device[i].pcapPtr 
+              if(myGlobals.device[i].pcapPtr
 		 && (!myGlobals.device[i].virtualDevice)
 		 /* Fix courtesy of David Fabel <david.fabel@sudop.cz> */
 		 ) {
 		rc = pcap_compile(myGlobals.device[i].pcapPtr, &newFlow->fcode[i],
 				  flowSpec, 1, myGlobals.device[i].netmask.s_addr);
-		
+
 		if(rc < 0) {
 		  traceEvent(CONST_TRACE_WARNING, "Wrong flow specification \"%s\" (syntax error). "
 			     "It has been ignored.", flowSpec);
 		  free(newFlow);
-		  
+
 		  /* Not used anymore */
 		  free(myGlobals.runningPref.flowSpecs);
 		  myGlobals.runningPref.flowSpecs = strdup("Error, wrong flow specification");
@@ -1773,9 +1773,9 @@ int getLocalHostAddress(struct in_addr *hostAddress, u_int8_t *netmask_v6, char*
     numHosts = 0xFFFFFFFF - ntohl(sinAddr->sin_addr.s_addr)+1;
   } else
     numHosts = 256; /* default C class */
-  
+
   (*netmask_v6) = 0;
-  
+
   while(numHosts > 0) {
     numHosts = numHosts >> 1;
     (*netmask_v6)++;
@@ -2220,11 +2220,11 @@ int signalCondvar(ConditionalVariable *condvarId) {
 
 #undef _lockHostsHashMutex
 int _lockHostsHashMutex(HostTraffic *host, char *where, char *file, int line) {
-  int rc = 0;  
-  
+  int rc = 0;
+
   if(host) {
-    if(0) 
-      traceEvent(CONST_TRACE_INFO, "==> lockHostsHashMutex(idx=%d) [%s:%d]", 
+    if(0)
+      traceEvent(CONST_TRACE_INFO, "==> lockHostsHashMutex(idx=%d) [%s:%d]",
 		 host->hostTrafficBucket, file, line);
 
     _accessMutex(&myGlobals.hostsHashLockMutex, "lockHostsHashMutex", file, line);
@@ -2233,7 +2233,7 @@ int _lockHostsHashMutex(HostTraffic *host, char *where, char *file, int line) {
       _accessMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], where, file, line);
     } else {
       /* Already locked */
-      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]++; 
+      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]++;
     }
     _releaseMutex(&myGlobals.hostsHashLockMutex, file, line);
   } else {
@@ -2250,8 +2250,8 @@ int _unlockHostsHashMutex(HostTraffic *host, char *file, int line) {
   int rc;
 
   if(host) {
-    if(0) 
-      traceEvent(CONST_TRACE_INFO, "==> unlockHostsHashMutex(idx=%d) [%s:%d]", 
+    if(0)
+      traceEvent(CONST_TRACE_INFO, "==> unlockHostsHashMutex(idx=%d) [%s:%d]",
 		 host->hostTrafficBucket, file, line);
 
     accessMutex(&myGlobals.hostsHashLockMutex, "unlockHostsHashMutex");
@@ -3040,17 +3040,17 @@ void uriSanityCheck(char* string, char* parm, int allowParms) {
   //            relativeURI    = ["/" ] fsegment *( "/" segment )
   //            fsegment       = 1*pchar
   //            segment        = *pchar
-  //     
+  //
   //            pchar          = unreserved | ":" | "@" | "&" | "=" | "+"
   //            unreserved     = ALPHA | DIGIT | safe | extra | national
-  //     
+  //
   //            reserved       = ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+"
   //                                    ^--- is legal character as segment sep.
   //            extra          = "!" | "*" | "'" | "(" | ")" | ","
   //            safe           = "$" | "-" | "_" | "."
   //            unsafe         = CTL | SP | <"> | "#" | "%" | "<" | ">"
   //            national       = <any OCTET excluding ALPHA, DIGIT,
-  //                             reserved, extra, safe, and unsafe> 
+  //                             reserved, extra, safe, and unsafe>
   //      And we look for reserved or unsafe chars.
 
   // If this is a URI which we allow parms in, then we add ? & to the valid chars
@@ -3107,9 +3107,9 @@ void pathSanityCheck(char* string, char* parm) {
   static char paChar[256];
 
   // Common:
-  //     Upper and lower case letters:  A - Z and a - z  
-  //     Numbers  0 - 9  
-  //     Period, underscore, hyphen  . _ -  
+  //     Upper and lower case letters:  A - Z and a - z
+  //     Numbers  0 - 9
+  //     Period, underscore, hyphen  . _ -
 
   // Unix:
   //     Slash
@@ -3170,7 +3170,7 @@ void pathSanityCheck(char* string, char* parm) {
 
 void sanitize_rrd_string(char* name) {
   int i;
-  
+
   /* Sanitize name for RRD */
   for(i=0; i<strlen(name); i++) {
     switch(name[i]) {
@@ -3178,7 +3178,7 @@ void sanitize_rrd_string(char* name) {
     case ':':
       name[i] = '_';
     }
-  }  
+  }
 }
 
 /* ************************** */
@@ -3189,9 +3189,9 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
   static char fnChar[256];
 
   // Common:
-  //     Upper and lower case letters:  A - Z and a - z  
-  //     Numbers  0 - 9  
-  //     Period, underscore, hyphen  . _ -  
+  //     Upper and lower case letters:  A - Z and a - z
+  //     Numbers  0 - 9
+  //     Period, underscore, hyphen  . _ -
 
   // Unix:
   //     Comma
@@ -3273,7 +3273,7 @@ int ipSanityCheck(char* string, char* parm, int nonFatal) {
   //     .
   //
   // INET6
-  //     Upper and lower case letters:  A - Z and a - z  
+  //     Upper and lower case letters:  A - Z and a - z
   //     :
 
   if(string == NULL)  {
@@ -3631,7 +3631,7 @@ static void addSessionInfo(SessionInfo *ptr, u_short ptr_len, HostAddr *theHost,
       if(!is_hash_full) {
 	traceEvent(CONST_TRACE_INFO, "addSessionInfo: hash full [size=%d]", ptr_len);
 	is_hash_full = 1;
-      }    
+      }
     }
   }
 }
@@ -3646,15 +3646,15 @@ void addPassiveSessionInfo(HostAddr *theHost, u_short thePort, char *notes) {
 
 void addVoIPSessionInfo(HostAddr *theHost, u_short thePort, char *notes) {
 #ifdef DEBUG_VOIP
-  traceEvent(CONST_TRACE_INFO, "DEBUG: addVoIPSessionInfo(%s:%d) [%s]", 
-	     addrtostr(theHost), thePort, notes); 
+  traceEvent(CONST_TRACE_INFO, "DEBUG: addVoIPSessionInfo(%s:%d) [%s]",
+	     addrtostr(theHost), thePort, notes);
 #endif
   addSessionInfo(voipSessions, voipSessionsLen, theHost, thePort, notes);
 }
 
 /* ******************************************* */
 
-static int isKnownSession(SessionInfo *ptr, u_short ptr_len, 
+static int isKnownSession(SessionInfo *ptr, u_short ptr_len,
 			  HostAddr *theHost, u_short thePort, char **notes) {
   int i;
 
@@ -3671,10 +3671,10 @@ static int isKnownSession(SessionInfo *ptr, u_short ptr_len,
 	addrinit(&ptr[i].sessionHost);
 	ptr[i].sessionPort = 0, ptr[i].creationTime = 0;
 	(*notes) = ptr[i].session_info;
-	
+
 	/* NOTE: this memory will be freed by freeSessionInfo */
 	ptr[i].session_info = NULL;
-	
+
 #ifdef DEBUG
 	traceEvent(CONST_TRACE_INFO, "DEBUG: Found session");
 #endif
@@ -3698,7 +3698,7 @@ int isVoIPSession(HostAddr *theHost, u_short thePort, char **notes) {
   int rc = isKnownSession(voipSessions, voipSessionsLen, theHost, thePort, notes);
 
 #ifdef DEBUG_VOIP
-  traceEvent(CONST_TRACE_INFO, "DEBUG: isVoipSession(%s:%d)=%d", addrtostr(theHost), thePort, rc); 
+  traceEvent(CONST_TRACE_INFO, "DEBUG: isVoipSession(%s:%d)=%d", addrtostr(theHost), thePort, rc);
 #endif
   return(rc);
 }
@@ -4090,7 +4090,7 @@ unsigned long _ntopSleepMSWhileSameState(char *file, int line, unsigned long ulD
   unsigned long ulSlice;
   short ntopRunStateSave;
 
-  /* This probably isn't necessary - 
+  /* This probably isn't necessary -
    *  But: It keeps the responsiveness of the Win32 version in that environment
    *  And: Puts less load on non Win32 systems
    */
@@ -4242,8 +4242,8 @@ void escape(char *dest, int destLen, char *src) {
 
 /* ******************************** */
 
-void incrementTrafficCounter(TrafficCounter *ctr, Counter value) {  
-  ctr->value += value, ctr->modified = 1;  
+void incrementTrafficCounter(TrafficCounter *ctr, Counter value) {
+  ctr->value += value, ctr->modified = 1;
 }
 
 /* ******************************** */
@@ -5609,7 +5609,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
 
     memset(&small_buf, 0, sizeof(small_buf));
     safe_snprintf(__FILE__, __LINE__, small_buf,
-		  LEN_SMALL_WORK_BUFFER, " uptime(%d)", 
+		  LEN_SMALL_WORK_BUFFER, " uptime(%d)",
 		  time(NULL)-myGlobals.initialSniffTime);
 
     strncat(userAgent, buf, (LEN_SMALL_WORK_BUFFER - strlen(userAgent) - 1));
@@ -6611,7 +6611,7 @@ float timeval_subtract (struct timeval x, struct timeval y) {
 
 void freePortsUsage(HostTraffic *el) {
   PortUsage *act, *next;
-  
+
   if(el->portsUsage == NULL) return;
 
   act = el->portsUsage;
@@ -6619,7 +6619,7 @@ void freePortsUsage(HostTraffic *el) {
     next = act->next;
     free(act);
     act = next;
-  } 
+  }
   el->portsUsage = NULL;
 }
 
@@ -6645,7 +6645,7 @@ static PortUsage* allocatePortUsage(void) {
  *
  * Here, we:
  * 1. Scan list upto found/end/port > what we care about
- * 2. (not found and createIfNecessary), allocate new one and insert 
+ * 2. (not found and createIfNecessary), allocate new one and insert
  *    into chain, thus keeping the list sorted.
  */
 PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary) {
@@ -6665,7 +6665,7 @@ PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary) 
   if(el->portsUsage == NULL) {
     /* Previously empty chain */
     el->portsUsage = newPort;
-  } else if (ports == el->portsUsage) { 
+  } else if (ports == el->portsUsage) {
     /* 1st in chain */
     newPort->next = el->portsUsage;
     el->portsUsage = newPort;
@@ -6841,7 +6841,7 @@ char *ntop_strsignal(int sig) {
          : sig == SIGTERM ? "SIGTERM"
          : sig == SIGUSR1 ? "SIGUSR1"
          : sig == SIGUSR2 ? "SIGUSR2"
-         : sig == SIGCHLD ? "SIGCHLD" 
+         : sig == SIGCHLD ? "SIGCHLD"
 #ifdef SIGCONT
          : sig == SIGCONT ? "SIGCONT"
 #endif
@@ -6863,7 +6863,7 @@ char *ntop_strsignal(int sig) {
 	 : "unable to determine");
 }
 #endif
-   
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*

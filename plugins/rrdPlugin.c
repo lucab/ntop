@@ -112,7 +112,7 @@ static int sumCounter(char *rrdPath, char *rrdFilePath,
 		      char *startTime, char* endTime, Counter *total, float *average);
 static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdCounter, 
 			char *startTime, char* endTime, char* rrdPrefix);
-static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startTime, char* endTime, char* rrdPrefix);
+static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startTime, char* endTime, char* rrdPrefix, char *mode);
 static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
 static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
 static void updateCounter(char *hostPath, char *key, Counter value, char short_step);
@@ -306,6 +306,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   DIR* directoryPointer=NULL;
   struct dirent* dp;
   int numEntries = 0, i, min, max;
+  time_t now = time(NULL);
 
   if(!validHostCommunity(rrdTitle)) {
     returnHTTPpageBadCommunity();
@@ -324,23 +325,23 @@ static void listResource(char *rrdPath, char *rrdTitle,
   sendString("<CENTER>\n<p ALIGN=right>\n");
 
   safe_snprintf(__FILE__, __LINE__, url, sizeof(url),
-		"/" CONST_PLUGINS_HEADER "%s?action=list&key=%s&title=%s&end=now",
+		"/" CONST_PLUGINS_HEADER "%s?action=list&key=%s&title=%s&end=%u",
 		rrdPluginInfo->pluginURLname,
-		rrdPath, rrdTitle);
+		rrdPath, rrdTitle, now);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<b>View:</b> [ <A HREF=\"%s&start=now-1y\">year</A> ]", url);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<b>View:</b> [ <A HREF=\"%s&start=%u\">year</A> ]", url, now - 365*86400);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=now-1m\">month</A> ]", url);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=%u\">month</A> ]", url, now - 30*86400);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=now-1w\">week</A> ]", url);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=%u\">week</A> ]", url, now - 7*86400);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=now-1d\">day</A> ]", url);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=%u\">day</A> ]", url, now - 86400);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=now-12h\">last 12h</A> ]\n", url);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=%u\">last 12h</A> ]\n", url, now - 12 * 3600);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=now-6h\">last 6h</A> ]\n", url);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=%u\">last 6h</A> ]\n", url, now - 6 * 86400);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=now-1h\">last hour</A> ]&nbsp;\n", url);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=%u\">last hour</A> ]&nbsp;\n", url, now - 86400);
   sendString(buf);
 
   sendString("</p>\n<p>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
@@ -357,7 +358,13 @@ static void listResource(char *rrdPath, char *rrdTitle,
     for(i=min; i<=max; i++) {
       sendString("<TR><TD COLSPAN=1 ALIGN=CENTER>");
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<IMG SRC=\"/" CONST_PLUGINS_HEADER "%s?action=graphSummary"
-		    "&graphId=%d&key=%s/&start=%s&end=%s\"></TD></TR>\n",
+		    "&graphId=%d&key=%s/&start=%s&end=%s\">\n",
+                    rrdPluginInfo->pluginURLname,
+		    i, rrdPath, startTime, endTime);
+      sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "&nbsp;<A HREF=\"/" CONST_PLUGINS_HEADER "%s?mode=zoom&action=graphSummary"
+		    "&graphId=%d&key=%s/&start=%s&end=%s\">"
+		    "<IMG valign=top class=tooltip SRC=/graph_zoom.gif border=0></A></TD></TR>\n",
                     rrdPluginInfo->pluginURLname,
 		    i, rrdPath, startTime, endTime);
       sendString(buf);
@@ -448,9 +455,15 @@ static void listResource(char *rrdPath, char *rrdTitle,
 	  sendString("<TR><TD>\n");
 
 	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "<img class=tooltip src=\"/" CONST_PLUGINS_HEADER "%s?"
-			"action=graphSummary&graphId=99&key=%s/&name=%s&title=%s&start=%s&end=%s\"><p>\n",
+			"action=graphSummary&graphId=99&key=%s/&name=%s&title=%s&start=%s&end=%s\">\n",
                         rrdPluginInfo->pluginURLname,
 			rrdPath, rsrcName, rsrcName, startTime, endTime);
+	  sendString(path);
+
+	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "&nbsp;<A HREF=\"/" CONST_PLUGINS_HEADER "%s?"
+			"mode=zoom&action=graphSummary&graphId=99&key=%s/&name=%s&title=%s&start=%s&end=%s\">"
+			"<IMG valign=top class=tooltip SRC=/graph_zoom.gif border=0></A><p>\n",
+                        rrdPluginInfo->pluginURLname, rrdPath, rsrcName, rsrcName, startTime, endTime);
 	  sendString(path);
 
 	  sendString("</TD></TR>\n");
@@ -975,13 +988,26 @@ static char* spacer(char* _str, char *tmpStr, int tmpStrLen) {
   return(tmpStr);
 }
 
+/* ****************************** */
+
+#define option_timespan(theStartTime, theLabel, selected)    \
+                  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), \
+                 "<option value=\"/" CONST_PLUGINS_HEADER "%s?action=graphSummary" \
+		  "&key=%s" \
+		  "&graphId=%d" \
+		  "&start=%u" \
+		  "&end=%u" \
+		  "&mode=zoom&name=%s\" %s>%s</option>\n", \
+                  "rrdPlugin", rrdInterface, graphId, (unsigned int)theStartTime, (unsigned int)the_time, \
+                  _rrdName, (selected == 1) ? "selected" : "", theLabel); sendString(buf);
+
 /* ******************************* */
 
-static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
-  char path[512], *argv[6*MAX_NUM_ENTRIES], tmpStr[32], fname[384], *label;
-  char buf[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf1[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
+static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startTime, char* endTime, char *rrdPrefix, char *mode) {
+  char path[512], *argv[6*MAX_NUM_ENTRIES], tmpStr[32], fname[384], *label;  
+  char buf0[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf1[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
   char buf2[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
-  char buf4[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf5[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
+  char buf4[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf5[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], _rrdName[256];
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
   int argc = 0, rc, x, y, i, entryId=0;
   DIR* directoryPointer;
@@ -989,6 +1015,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
   double ymin,ymax;
 
   path[0] = '\0', label = "";
+  safe_snprintf(__FILE__, __LINE__, _rrdName, sizeof(_rrdName), "%s", rrdName);
 
   switch(graphId) {
   case 0: rrds = (char**)rrd_summary_packets; label = "Packets/sec"; break;
@@ -1086,6 +1113,111 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
     break;
   }
 
+  if(!strcmp(mode, "zoom")) {
+    char buf[LEN_GENERAL_WORK_BUFFER];
+    time_t the_time = time(NULL);
+    char *rrdIP = "", *rrdInterface = rrdPath;
+    struct tm *the_tm;
+
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    printHTMLheader("" /* "Arbitrary Graph URL" */, NULL, 0);
+
+    sendString("<center>\n");
+
+    /* *************************************** */
+
+    /*
+      Graph time and zoom: code courtesy of
+      the Cacti (http://www.cacti.net) project.
+    */
+
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/calendar.js\"></SCRIPT>\n");
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/lang/calendar-en.js\"></SCRIPT>\n");
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/calendar-setup.js\"></script>\n");
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/calendar-load.js\"></script>\n");
+    
+    sendString("\n<p align=center>\n<FORM action=/plugins/rrdPlugin name=\"form_timespan_selector\" method=\"get\">\n<TABLE width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n<TBODY><TR><TD align=center class=\"textHeader\" nowrap=\"\">\n<b>Presets</b>: <SELECT name=\"predefined_timespan\" onchange=\"window.location=document.form_timespan_selector.predefined_timespan.options[document.form_timespan_selector.predefined_timespan.selectedIndex].value\">\n");
+
+    option_timespan(the_time-1800, "Last Half Hour", 0);
+    option_timespan(the_time-3600, "Last Hour", 0);
+    option_timespan(the_time-2*3600, "Last 2 Hours", 0);
+    option_timespan(the_time-4*3600, "Last 4 Hours", 0);
+    option_timespan(the_time-6*3600, "Last 6 Hours", 0);
+    option_timespan(the_time-12*3600, "Last 12 Hours", 0);
+    option_timespan(the_time-86400, "Last Day", 0);
+    option_timespan(the_time-2*86400, "Last 2 Days", 0);
+    option_timespan(the_time-4*86400, "Last 4 Days", 0);
+    option_timespan(the_time-7*86400, "Last Week", 1);
+    option_timespan(the_time-30*86400, "Last Month", 0);
+    option_timespan(the_time-2*30*86400, "Last 2 Months", 0);
+    option_timespan(the_time-4*30*86400, "Last 4 Months", 0);
+    option_timespan(the_time-6*30*86400, "Last 6 Months", 0);
+    option_timespan(the_time-12*30*86400, "Last Year", 0);
+
+    sendString("</select>\n");
+    
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<input type=hidden name=action value=graphSummary>\n"
+		  "<input type=hidden name=graphId value=\"%d\">\n" 
+		  "<input type=hidden name=key value=\"%s\">\n" 
+		  "<input type=hidden name=name value=\"%s\">\n" 
+		  "<input type=hidden name=start value=\"%s\">\n" 
+		  "<input type=hidden name=end value=\"%s\">\n" 
+		  "<input type=hidden name=mode value=\"zoom\">\n", 
+		  graphId, _rrdName, rrdInterface, startTime, endTime);
+    sendString(buf);
+
+    sendString("&nbsp;<STRONG>From:</STRONG>\n<INPUT type=\"text\" name=\"date1\" id=\"date1\" size=\"16\" value=\"");
+
+    the_time = atol(startTime); the_tm = localtime(&the_time);
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M", the_tm); sendString(buf);
+
+    sendString("\">\n<INPUT type=\"image\" src=\"/calendar.gif\" alt=\"Start date selector\" border=\"0\" align=\"absmiddle\" onclick=\"return showCalendar('date1');\">\n");
+    sendString("&nbsp;<strong>To:</strong>\n<INPUT type=\"text\" name=\"date2\" id=\"date2\" size=\"16\" value=\"");
+
+    the_time = atol(endTime); the_tm = localtime(&the_time);
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M", the_tm); sendString(buf);
+
+    sendString("\">\n<INPUT type=\"image\" src=\"/calendar.gif\" alt=\"End date selector\" border=\"0\" align=\"absmiddle\" onclick=\"return showCalendar('date2');\">\n"
+	       "<INPUT type=\"submit\" value=\"Update Graph\">\n</FORM>\n</TD></TR></TBODY></TABLE>\n</p>\n");
+
+    /* *************************************** */
+
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/zoom.js\"></SCRIPT>\n"
+	       "<DIV id=\"zoomBox\" style=\"position: absolute; visibility: visible; background-image: initial; background-repeat: initial; "
+	       "background-attachment: initial; background-position-x: initial; background-position-y: initial; background-color: orange; opacity: 0.5;\"></DIV>\n");
+
+    sendString("<DIV id=\"zoomSensitiveZone\" style=\"position:absolute; overflow:none; background-repeat: initial; background-attachment: initial;  background-position-x: initial; background-position-y: initial; visibility:visible; cursor:crosshair; background:blue; filter:alpha(opacity=0); -moz-opacity:0; -khtml-opacity:0; opacity:0;\" oncontextmenu=\"return false\"></DIV>\n");
+
+    /*
+      NOTE:
+      If the graph size changes, please update the zoom.js file (search for L.Deri)
+    */
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                  "<img id=zoomGraphImage src=\"/" CONST_PLUGINS_HEADER "%s?action=graphSummary"
+		  "&graphId=%d"
+		  "&key=%s"
+		  "&name=%s"
+		  "&start=%s"
+		  "&end=%s"
+		  "\" alt=\"graph image\" border=0></center>\n",
+                  rrdPluginInfo->pluginURLname,
+		  graphId,
+		  rrdInterface, _rrdName,
+                  startTime,
+                  endTime);
+    sendString(buf);
+
+    sendString("\n<SCRIPT type=\"text/javascript\">\n\nvar cURLBase = \"/plugins/rrdPlugin?mode=zoom\";\n\n// Global variables\nvar gZoomGraphName = \"zoomGraphImage\";\n"
+	       "var gZoomGraphObj;\nvar gMouseObj;\nvar gUrlObj;\nvar gBrowserObj;\nvar gGraphWidth;\n"
+	       "var gGraphHeight;\n\n\nwindow.onload = initBonsai;\n\n</SCRIPT>\n");
+
+    sendString("</center>\n");
+
+    printHTMLtrailer();
+    return;
+  }
+
   /* startTime[4] skips the 'now-' */
   safe_snprintf(__FILE__, __LINE__, fname, sizeof(fname), "%s/%s/%s-%s%d%s",
 		myGlobals.rrdPath, rrd_subdirs[0],
@@ -1136,9 +1268,9 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
     revertSlashIfWIN32(path, 0);
 
     if(stat(path, &statbuf) == 0) {
-      safe_snprintf(__FILE__, __LINE__, buf[entryId], 2*MAX_BUF_LEN,
+      safe_snprintf(__FILE__, __LINE__, buf0[entryId], 2*MAX_BUF_LEN,
 		    "DEF:ctr%d=%s:counter:AVERAGE", entryId, path);
-      argv[argc++] = buf[entryId];
+      argv[argc++] = buf0[entryId];
       safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
 		    "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
 		    entryId, rrd_colors[entryId],
@@ -1845,6 +1977,7 @@ static void commonRRDinit(void) {
 
 /* ****************************** */
 
+#undef option_timespan
 #define option_timespan(theStartTime, theLabel, selected)    \
                   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), \
                  "<option value=\"/" CONST_PLUGINS_HEADER "%s?action=" CONST_ARBITRARY_RRDREQUEST "&" CONST_ARBITRARY_IP "=%s" \
@@ -2424,6 +2557,7 @@ static void arbitraryActionPage(void) {
   DIR* directoryPointer=NULL;
   struct dirent* dp;
   struct stat statBuf;
+  time_t now = time(NULL);
 
   memset(&buf, 0, sizeof(buf));
   memset(&dirPath, 0, sizeof(dirPath));
@@ -2431,8 +2565,8 @@ static void arbitraryActionPage(void) {
   memset(&startTime, 0, sizeof(startTime));
   memset(&endTime, 0, sizeof(endTime));
 
-  strcpy(startTime, "now-12h");
-  strcpy(endTime, "now");
+  safe_snprintf(__FILE__, __LINE__, startTime, sizeof(startTime), "%u", now-12*3600);
+  safe_snprintf(__FILE__, __LINE__, endTime, sizeof(endTime), "%u", now);
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
   printHTMLheader("Arbitrary RRD Actions", NULL, 0);
@@ -2617,6 +2751,7 @@ static void handleRRDHTTPrequest(char* url) {
 #ifndef WIN32
   int _dumpPermissions;
 #endif
+  time_t now = time(NULL);
 
   if(initialized == 0)
     commonRRDinit();
@@ -2665,8 +2800,9 @@ static void handleRRDHTTPrequest(char* url) {
   memset(&rrdPath, 0, sizeof(rrdPath));
   memset(&mode, 0, sizeof(mode));
 
-  strcpy(startTime, "now-12h");
-  strcpy(endTime, "now");
+  safe_snprintf(__FILE__, __LINE__, startTime, sizeof(startTime), "%u", now-12*3600);
+  safe_snprintf(__FILE__, __LINE__, endTime, sizeof(endTime), "%u", now);
+
 
   if((url != NULL) && (url[0] != '\0')) {
     unescape_url(url);
@@ -2906,7 +3042,7 @@ static void handleRRDHTTPrequest(char* url) {
     arbitraryAction(rrdName, rrdInterface, rrdIP, startTime, endTime, rrdCounter, rrdTitle, _which, mode);
     return;
   } else if(action == FLAG_RRD_ACTION_GRAPH_SUMMARY) {
-    graphSummary(rrdKey, rrdName, graphId, startTime, endTime, rrdPrefix);
+    graphSummary(rrdKey, rrdName, graphId, startTime, endTime, rrdPrefix, mode);
     return;
   } else if(action == FLAG_RRD_ACTION_NF_SUMMARY) {
     netflowSummary(rrdKey, graphId, startTime, endTime, rrdPrefix);

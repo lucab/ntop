@@ -575,13 +575,20 @@ function onMouseUpEvent(e) {
 		newGraphStart = graphStart - Timespan * 2;
 
 		var urlBase = cURLBase;
+		var  action = gUrlObj.getUrlParameterValue("action");
+		var  graphId = gUrlObj.getUrlParameterValue("graphId");
 		var  arbfile = gUrlObj.getUrlParameterValue("arbfile");
 		var  arbiface = gUrlObj.getUrlParameterValue("arbiface");
 		var  title = gUrlObj.getUrlParameterValue("title");
+		var  key = gUrlObj.getUrlParameterValue("key");
+		var  name = gUrlObj.getUrlParameterValue("name");
 		var  graph_width = gUrlObj.getUrlParameterValue("graph_width");
 		var  graph_height = gUrlObj.getUrlParameterValue("graph_height");
 
-		open(urlBase + "&action=arbreq&which=graph&arbfile=" + arbfile + "&arbiface=" + arbiface + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom", "_self");
+		if(typeof arbfile != "undefined")
+			open(urlBase + "&action="+action+"&which=graph&key="+key+"&name="+name+"&arbfile=" + arbfile + "&graphId=" + graphId + "&arbiface=" + arbiface + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom", "_self");
+		else
+			open(urlBase + "&action="+action+"&key="+key+"&name="+name+"&graphId=" + graphId + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom&name="+name, "_self");
 	}
 
 	// zoom in action
@@ -632,12 +639,20 @@ function onMouseUpEvent(e) {
 
 				//  var urlBase = gUrlObj.getUrlBase();
 				var urlBase = cURLBase;
+		var  action = gUrlObj.getUrlParameterValue("action");
+		var  graphId = gUrlObj.getUrlParameterValue("graphId");
 		var  arbfile = gUrlObj.getUrlParameterValue("arbfile");
 		var  arbiface = gUrlObj.getUrlParameterValue("arbiface");
 		var  title = gUrlObj.getUrlParameterValue("title");
+		var  key = gUrlObj.getUrlParameterValue("key");
+		var  name = gUrlObj.getUrlParameterValue("name");
+		var  graph_width = gUrlObj.getUrlParameterValue("graph_width");
+		var  graph_height = gUrlObj.getUrlParameterValue("graph_height");
 
-		open(urlBase + "&action=arbreq&which=graph&arbfile=" + arbfile + "&arbiface=" + arbiface + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&mode=zoom", "_self");
-
+		if(typeof arbfile != "undefined")
+			open(urlBase + "&action="+action+"&which=graph&key="+key+"&name="+name+"&arbfile=" + arbfile + "&graphId=" + graphId + "&arbiface=" + arbiface + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom", "_self");
+		else
+		open(urlBase + "&action="+action+"&which=graph&key="+key+"&name="+name+"&graphId=" + graphId + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom", "_self");
 
 			}
 		}
