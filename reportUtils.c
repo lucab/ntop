@@ -4328,10 +4328,11 @@ void printTableEntry(char *buf, int bufLen,
       time_t now = time(NULL);
 
       safe_snprintf(__FILE__, __LINE__, rrdBuf, sizeof(rrdBuf), 
-		    "<p>"
-		    "<IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=IP_%sBytes&arbiface=%s&arbip=&start=now-12h&end=now&counter=&title=\" BORDER=0>"
+		    "<p><table border=0>"
+		    "<tr><td align=left><IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph"
+		    "&arbfile=IP_%sBytes&arbiface=%s&arbip=&start=now-12h&end=now&counter=&title=\" BORDER=0></td><td>"
 		    "<A HREF=\"/plugins/rrdPlugin?mode=zoom&action=arbreq&which=graph&arbfile=IP_%sBytes&arbiface=%s&arbip=&start=%d&end=%d&counter=&title=\">"
-		    "&nbsp;<IMG valign=top class=tooltip SRC=graph_zoom.gif border=0></A>\n",
+		    "&nbsp;<IMG valign=top class=tooltip SRC=graph_zoom.gif border=0></A></td></tr></table>\n",
 		    _label, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		    _label, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		    now-12*3600, now);

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-05 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 2002-06 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -344,10 +344,10 @@ static void listResource(char *rrdPath, char *rrdTitle,
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=%u\">last hour</A> ]&nbsp;\n", url, now - 86400);
   sendString(buf);
 
-  sendString("</p>\n<p>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
+  sendString("</p>\n<p>\n<TABLE BORDER=0 "TABLE_DEFAULTS">\n");
 
   if(strstr(rrdPath, "/sFlow/") == NULL) {
-    sendString("<TR><TH "DARK_BG" COLSPAN=1>Traffic Summary</TH></TR>\n");
+    /* sendString("<TR><TH "DARK_BG" COLSPAN=2>Traffic Summary</TH></TR>\n"); */
 
     if(strncmp(rrdTitle, "interface", strlen("interface")) == 0) {
       min = 0, max = 5;
@@ -356,13 +356,13 @@ static void listResource(char *rrdPath, char *rrdTitle,
     }
 
     for(i=min; i<=max; i++) {
-      sendString("<TR><TD COLSPAN=1 ALIGN=CENTER>");
+      sendString("<TR><TD ALIGN=LEFT>");
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<IMG SRC=\"/" CONST_PLUGINS_HEADER "%s?action=graphSummary"
 		    "&graphId=%d&key=%s/&start=%s&end=%s\">\n",
                     rrdPluginInfo->pluginURLname,
 		    i, rrdPath, startTime, endTime);
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "&nbsp;<A HREF=\"/" CONST_PLUGINS_HEADER "%s?mode=zoom&action=graphSummary"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=RIGHT><A HREF=\"/" CONST_PLUGINS_HEADER "%s?mode=zoom&action=graphSummary"
 		    "&graphId=%d&key=%s/&start=%s&end=%s\">"
 		    "<IMG valign=top class=tooltip SRC=/graph_zoom.gif border=0></A></TD></TR>\n",
                     rrdPluginInfo->pluginURLname,
@@ -452,7 +452,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 	 || strncmp(rsrcName, "udp", 3)
 	 ) {
 	if(strstr(rsrcName, "Sent")) {
-	  sendString("<TR><TD>\n");
+	  sendString("<TR><TD align=left>\n");
 
 	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "<img class=tooltip src=\"/" CONST_PLUGINS_HEADER "%s?"
 			"action=graphSummary&graphId=99&key=%s/&name=%s&title=%s&start=%s&end=%s\">\n",
@@ -460,7 +460,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 			rrdPath, rsrcName, rsrcName, startTime, endTime);
 	  sendString(path);
 
-	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "&nbsp;<A HREF=\"/" CONST_PLUGINS_HEADER "%s?"
+	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "</td><td align=right><A HREF=\"/" CONST_PLUGINS_HEADER "%s?"
 			"mode=zoom&action=graphSummary&graphId=99&key=%s/&name=%s&title=%s&start=%s&end=%s\">"
 			"<IMG valign=top class=tooltip SRC=/graph_zoom.gif border=0></A><p>\n",
                         rrdPluginInfo->pluginURLname, rrdPath, rsrcName, rsrcName, startTime, endTime);
@@ -1665,7 +1665,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 		     errTimeBuf2,
 		     rrdLast,
 		     rrdLast == -1 ? "rrdlast ERROR" : errTimeBuf3);
-	} else if(strstr(rrdError, "is not an RRD file")) {
+	} else if(strstr(rrdError, "is not an RRD file") || strstr(rrdError, "read operation failed")) {
 	  unlink(path);
 	} else {
 	  char do_delete = 0;

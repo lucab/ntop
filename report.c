@@ -4318,11 +4318,19 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
     revertSlashIfWIN32(buf, 0);
 
 	if((i = stat(buf, &statbuf)) == 0) {
+	  time_t now = time(NULL);
+
+
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			"<TR "TR_ON" "DARK_BG"><TH "TH_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=LEFT BGCOLOR=white>"
-			"<p><IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=4&"
-			"key=interfaces/%s/&start=now-12h&end=now\" BORDER=0></TD></TR>",
+			"<TR "TR_ON" "DARK_BG"><TH "TH_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=left BGCOLOR=white>"
+			"<table border=0><tr><td><IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=4&"
+			"key=interfaces/%s/&start=now-12h&end=now\" BORDER=0>",
 			myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
+	  sendString(buf);
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"</td><td><A HREF=\"/plugins/rrdPlugin?mode=zoom&action=graphSummary&graphId=4&"
+			"key=interfaces/%s/&start=%u&end=%u\"><IMG valign=top class=tooltip SRC=graph_zoom.gif border=0></A></tr></table></TD></TR>",
+			myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now - 12 * 3600, now);
 	  sendString(buf);
 	}
 
@@ -4332,7 +4340,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=5 ALIGN=LEFT "DARK_BG">"
 		 "Note:\n"
 		 "<ul><li>What is a flow?<br><ul><li>TCP: a flows is a TCP connection."
-		 "<li>UDP: a flow is a packet.</ul>"
+		 "<li>UDP: a flow is a set of packets with the same protocol/peers/port.</ul>"
 		 "<li>TCP flows are not accounted for fully (sender and recipient) remote peers."
 		 "</ul>"
 		 "</TD></TR>\n");
