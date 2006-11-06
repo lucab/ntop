@@ -89,9 +89,13 @@ HostTraffic* _getFirstHost(u_int actualDeviceId, char *file, int line) {
 /* ************************************ */
 
 HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, int line) {
-  if(host == NULL) return(NULL);
 
   accessMutex(&myGlobals.hostsHashLockMutex, "getNextHost");
+
+  if((host == NULL) || (host->magic != CONST_MAGIC_NUMBER)) {
+    releaseMutex(&myGlobals.hostsHashLockMutex);
+    return(NULL);
+  }
 
   if(host->next != NULL) {
     if(host->next->magic != CONST_MAGIC_NUMBER) {
