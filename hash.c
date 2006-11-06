@@ -567,9 +567,32 @@ void freeHostInstances(int actualDeviceId) {
 
 /* ************************************ */
 
+int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now) {
+  /* Time used to decide whether a host need to be purged */
+  time_t noSessionPurgeTime   = now-PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES;
+  time_t withSessionPurgeTime = now-PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES;
+
+  if((el->refCount == 0)
+     && (   ((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
+	    || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime)))
+     && (!broadcastHost(el)) && (el != myGlobals.otherHostEntry)
+     && (myGlobals.device[actDevice].virtualDevice /* e.g. sFlow/NetFlow */
+	 || (!myGlobals.runningPref.stickyHosts)
+	 || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) &&
+	     ((el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
+	      || (!subnetPseudoLocalHost(el)))) /* Purge remote hosts only */
+	 || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) &&
+	     (el->fcCounters->hostNumFcAddress[0] == '\0'))))
+    return(1);
+  else
+    return(0);
+}
+
+/* ************************************ */
+
 int purgeIdleHosts(int actDevice) {
   u_int idx, numFreedBuckets=0, numHosts = 0;
-  time_t startTime = time(NULL), noSessionPurgeTime, withSessionPurgeTime;
+  time_t now = time(NULL);
   static time_t lastPurgeTime[MAX_NUM_DEVICES];
   static char firstRun = 1;
   HostTraffic **theFlaggedHosts = NULL;
@@ -591,23 +614,14 @@ int purgeIdleHosts(int actDevice) {
 
   gettimeofday(&hiresTimeStart, NULL);
 
-  if(startTime < (lastPurgeTime[actDevice]+PARM_HOST_PURGE_INTERVAL))
+  if(now < (lastPurgeTime[actDevice]+PARM_HOST_PURGE_INTERVAL))
     return(0); /* Too short */
   else
-    lastPurgeTime[actDevice] = startTime;
+    lastPurgeTime[actDevice] = now;
 
   maxHosts = myGlobals.device[actDevice].hostsno; /* save it as it can change */
   myGlobals.piMem = maxHosts*sizeof(HostTraffic*);
   theFlaggedHosts = (HostTraffic**)calloc(1, myGlobals.piMem);
-
-  /* Time used to decide whether a host need to be purged */
-  noSessionPurgeTime   = startTime-PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES;
-  withSessionPurgeTime = startTime-PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES;
-
-#ifdef IDLE_PURGE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Beginning noS < %d, wS < %d",
-	     noSessionPurgeTime, withSessionPurgeTime);
-#endif
 
   purgeOldFragmentEntries(actDevice); /* let's do this too */
 
@@ -632,17 +646,7 @@ int purgeIdleHosts(int actDevice) {
       prev = NULL;     
 
       while(el) {
-	if((el->refCount == 0)
-	   && (   ((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
-	       || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime)))
-	   && (!broadcastHost(el)) && (el != myGlobals.otherHostEntry)
-	   && (myGlobals.device[actDevice].virtualDevice /* e.g. sFlow/NetFlow */
-	       || (!myGlobals.runningPref.stickyHosts)
-	       || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) &&
-                   ((el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
-                    || (!subnetPseudoLocalHost(el)))) /* Purge remote hosts only */
-               || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) &&
-                   (el->fcCounters->hostNumFcAddress[0] == '\0')))) {
+	if(is_host_ready_to_purge(actDevice, el, now)) {
 	  /* Host selected for deletion */
 	  theFlaggedHosts[numHosts++] = el;
 	  el->magic = CONST_UNMAGIC_NUMBER;

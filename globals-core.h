@@ -212,6 +212,7 @@ extern u_int hashFcHost(FcAddress *fcAddress, u_short vsanId,
 			HostTraffic **el, int actualDeviceId);
 extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
+extern int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now);
 extern int purgeIdleHosts(int devId);
 extern void setHostSerial(HostTraffic *el);
 extern HostTraffic * _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, 

@@ -62,7 +62,7 @@ static HostTraffic* __getFirstHost(u_int actualDeviceId, u_int beginIdx, char *f
   for(idx=beginIdx; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
     HostTraffic *el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
-    if(el != NULL) {
+    while(el != NULL) {
       if(el->magic != CONST_MAGIC_NUMBER) {
 	traceEvent(CONST_TRACE_ERROR,
                    "Bad magic number [expected=%d/real=%d][deviceId=%d] getFirstHost()[%s/%d]",
@@ -71,8 +71,12 @@ static HostTraffic* __getFirstHost(u_int actualDeviceId, u_int beginIdx, char *f
         return(NULL);
       }
 
-      releaseMutex(&myGlobals.hostsHashLockMutex);
-      return(el);
+      if(!is_host_ready_to_purge(actualDeviceId, el, time(NULL))) {
+	/* Do not return hosts that will soon be purged off memory */
+	releaseMutex(&myGlobals.hostsHashLockMutex);
+	return(el);
+      } else
+	el = el->next;
     }
   }
 
@@ -89,6 +93,8 @@ HostTraffic* _getFirstHost(u_int actualDeviceId, char *file, int line) {
 /* ************************************ */
 
 HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, int line) {
+  u_int nextIdx;
+  time_t now = time(NULL);
 
   accessMutex(&myGlobals.hostsHashLockMutex, "getNextHost");
 
@@ -97,7 +103,9 @@ HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, i
     return(NULL);
   }
 
-  if(host->next != NULL) {
+  nextIdx = host->hostTrafficBucket+1;
+
+  while(host->next != NULL) {
     if(host->next->magic != CONST_MAGIC_NUMBER) {
       traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) getNextHost()[%s/%d]",
 		 CONST_MAGIC_NUMBER, host->next->magic, file, line);
@@ -105,17 +113,19 @@ HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, i
       return(NULL);
     }
 
-    releaseMutex(&myGlobals.hostsHashLockMutex);
-    return(host->next);
-  } else {
-    u_int nextIdx = host->hostTrafficBucket+1;
-
-    releaseMutex(&myGlobals.hostsHashLockMutex);
-    if(nextIdx < myGlobals.device[actualDeviceId].actualHashSize)
-      return(__getFirstHost(actualDeviceId, nextIdx, file, line));
-    else
-      return(NULL);
+    if(!is_host_ready_to_purge(actualDeviceId, host->next, now)) {
+      releaseMutex(&myGlobals.hostsHashLockMutex);
+      return(host->next);
+    } else
+      host = host->next;
   }
+
+  /* No host has been found: move to next bucket */
+  releaseMutex(&myGlobals.hostsHashLockMutex);
+  if(nextIdx < myGlobals.device[actualDeviceId].actualHashSize)
+    return(__getFirstHost(actualDeviceId, nextIdx, file, line));
+  else
+    return(NULL);
 }
 
 /* ************************************ */
