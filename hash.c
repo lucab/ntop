@@ -645,6 +645,7 @@ int purgeIdleHosts(int actDevice) {
                    (el->fcCounters->hostNumFcAddress[0] == '\0')))) {
 	  /* Host selected for deletion */
 	  theFlaggedHosts[numHosts++] = el;
+	  el->magic = CONST_UNMAGIC_NUMBER;
 	  remove_valid_ptr(el);
 	  next = el->next;
 
@@ -688,7 +689,8 @@ int purgeIdleHosts(int actDevice) {
   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: releaseMutex(purgeMutex)...released");
 #endif
 
-  traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d [%s] FINISHED selection, %d [out of %d] hosts selected",
+  traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d [%s] FINISHED selection, "
+	     "%d [out of %d] hosts selected",
 	     actDevice, myGlobals.device[actDevice].name, numHosts, scannedHosts);
 
   /* Now free the entries */
