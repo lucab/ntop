@@ -690,9 +690,9 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 
   srcHost->ifId = record->input, dstHost->ifId = record->output;
 
-#ifdef DEBUG_FLOWS
-  if(0) 
-    traceEvent(CONST_TRACE_INFO, "************* AS %d/%d", srcHost->hostAS, dstHost->hostAS);
+#ifdef DEBUG_FLOWS 
+  if((srcAS == 13018) || (dstAS == 13018))
+    traceEvent(CONST_TRACE_ERROR, "************* AS %d/%d", srcHost->hostAS, dstHost->hostAS);
 #endif
 
   if((sport != 0) && (dport != 0)) {
@@ -1670,8 +1670,8 @@ static void* netflowMainLoop(void* _deviceId) {
   myGlobals.device[deviceId].netflowGlobals->threadActive = 1;
 
   ntopSleepUntilStateRUN();
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread running [p%d]",
-             pthread_self(), getpid());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: (port %d) thread running [p%d]",
+             pthread_self(), myGlobals.device[deviceId].netflowGlobals->netFlowInPort, getpid());
 
   for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
     int maxSock = myGlobals.device[deviceId].netflowGlobals->netFlowInSocket;
@@ -1717,6 +1717,7 @@ static void* netflowMainLoop(void* _deviceId) {
 	rc = recvmsg(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket, &msg, 0);
       }
 #endif
+
 
 #ifdef DEBUG_FLOWS
       traceEvent(CONST_TRACE_INFO, "NETFLOW_DEBUG: Received NetFlow packet(len=%d)(deviceId=%d)",

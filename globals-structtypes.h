@@ -775,6 +775,7 @@ typedef struct fcScsiCounters {
 
 /* Host Traffic */
 typedef struct hostTraffic {
+  u_int8_t         to_be_deleted; /* 1 = the host will be deleted in the next purge loop */
   u_short          magic;
   u_short          l2Family;    /* 0 = Ethernet, 1 = Fibre Channel (FC) */
   u_int            hostTrafficBucket; /* Index in the **hash_hostTraffic list */

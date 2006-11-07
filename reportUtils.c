@@ -3858,8 +3858,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if(!multicastHost(el)) {
     if(subnetPseudoLocalHost(el)) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		  "%s</TD></TR>\n", getRowColor(),
-		  "Host&nbsp;Location",
+		    "%s</TD></TR>\n", getRowColor(),
+		    "Host&nbsp;Location", 
 		    "Local (inside specified/local subnet)");
     } else {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"

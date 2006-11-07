@@ -37,7 +37,6 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 	       int actualDeviceId) {
   u_int idx = 0;
   *el = NULL;
-  time_t now = myGlobals.actTime;
 
   if(myGlobals.runningPref.dontTrustMACaddr)  /* MAC addresses don't make sense here */
     (*useIPAddressForSearching) = 1;
@@ -571,18 +570,20 @@ int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now) {
   /* Time used to decide whether a host need to be purged */
   time_t noSessionPurgeTime   = now-PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES;
   time_t withSessionPurgeTime = now-PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES;
-
-  if((el->refCount == 0)
-     && (   ((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
-	    || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime)))
-     && (!broadcastHost(el)) && (el != myGlobals.otherHostEntry)
-     && (myGlobals.device[actDevice].virtualDevice /* e.g. sFlow/NetFlow */
-	 || (!myGlobals.runningPref.stickyHosts)
-	 || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) &&
-	     ((el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
-	      || (!subnetPseudoLocalHost(el)))) /* Purge remote hosts only */
-	 || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) &&
-	     (el->fcCounters->hostNumFcAddress[0] == '\0'))))
+  
+  if(el->to_be_deleted
+     || (
+	 (el->refCount == 0)
+	 && (   ((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
+		|| ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime)))
+	 && (!broadcastHost(el)) && (el != myGlobals.otherHostEntry)
+	 && (myGlobals.device[actDevice].virtualDevice /* e.g. sFlow/NetFlow */
+	     || (!myGlobals.runningPref.stickyHosts)
+	     || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) &&
+		 ((el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
+		  || (!subnetPseudoLocalHost(el)))) /* Purge remote hosts only */
+	     || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) &&
+		 (el->fcCounters->hostNumFcAddress[0] == '\0')))))
     return(1);
   else
     return(0);
@@ -647,6 +648,13 @@ int purgeIdleHosts(int actDevice) {
 
       while(el) {
 	if(is_host_ready_to_purge(actDevice, el, now)) {
+	  if(!el->to_be_deleted) {
+	    el->to_be_deleted = 1; /* Delete it at the next run */
+
+	    /* Skip it and move to next host */
+	    prev = el;
+	    el = el->next;	    
+	  } else {
 	  /* Host selected for deletion */
 	  theFlaggedHosts[numHosts++] = el;
 	  el->magic = CONST_UNMAGIC_NUMBER;
@@ -660,6 +668,7 @@ int purgeIdleHosts(int actDevice) {
 
           el->next = NULL;
 	  el = next;
+	  }
 	} else {
 	  /* Move to next host */
 	  prev = el;
@@ -840,71 +849,72 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
                  file, line);
     }
 
-    if(useIPAddressForSearching == 0) {
-      /* compare with the ethernet-address then the IP address */
-      if(memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0) {
-	if((hostIpAddress != NULL) &&
-	   (hostIpAddress->hostFamily == el->hostIpAddress.hostFamily)) {
-	  if((!isMultihomed) && checkForMultihoming) {
-	    /* This is a local address hence this is a potential multihomed host. */
+    if(!is_host_ready_to_purge(actualDeviceId, el, myGlobals.actTime)) {
+      if(useIPAddressForSearching == 0) {
+	/* compare with the ethernet-address then the IP address */
+	if(memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0) {
+	  if((hostIpAddress != NULL) &&
+	     (hostIpAddress->hostFamily == el->hostIpAddress.hostFamily)) {
+	    if((!isMultihomed) && checkForMultihoming) {
+	      /* This is a local address hence this is a potential multihomed host. */
 
-	    if(!(addrnull(&el->hostIpAddress)) &&
-		(addrcmp(&el->hostIpAddress,hostIpAddress) != 0)) {
-	      isMultihomed = 1;
-	      FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
-	    } else {
-	      updateIPinfo = 1;
+	      if(!(addrnull(&el->hostIpAddress)) &&
+		 (addrcmp(&el->hostIpAddress,hostIpAddress) != 0)) {
+		isMultihomed = 1;
+		FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
+	      } else {
+		updateIPinfo = 1;
+	      }
+	    }
+	    hostFound = 1;
+	    break;
+	  } else if(hostIpAddress == NULL){  /* Only Mac Addresses */
+	    hostFound = 1;
+	    break;
+	  } else { /* MAC match found and we have the IP - need to update... */
+	    updateIPinfo = 1;
+	    hostFound = 1;
+	    break;
+	  }
+	} else if((hostIpAddress != NULL) &&
+		  (addrcmp(&el->hostIpAddress, hostIpAddress) == 0)) {
+	  /* Spoofing or duplicated MAC address:
+	     two hosts with the same IP address and different MAC
+	     addresses
+	  */
+
+	  if(!hasDuplicatedMac(el)) {
+	    FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
+
+	    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
+	      char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+
+	      traceEvent(CONST_TRACE_WARNING,
+			 "Two MAC addresses found for the same IP address "
+			 "%s: [%s/%s] (spoofing detected?)",
+			 el->hostNumIpAddress,
+			 etheraddr_string(ether_addr, etherbuf), el->ethAddressString);
+	      dumpSuspiciousPacket(actualDeviceId);
 	    }
 	  }
-	  hostFound = 1;
-	  break;
-	} else if(hostIpAddress == NULL){  /* Only Mac Addresses */
-	  hostFound = 1;
-	  break;
-	} else { /* MAC match found and we have the IP - need to update... */
-	  updateIPinfo = 1;
+
+	  setSpoofingFlag = 1;
 	  hostFound = 1;
 	  break;
 	}
-      } else if((hostIpAddress != NULL) &&
-		(addrcmp(&el->hostIpAddress, hostIpAddress) == 0)) {
-	/* Spoofing or duplicated MAC address:
-	   two hosts with the same IP address and different MAC
-	   addresses
-	*/
-
-	if(!hasDuplicatedMac(el)) {
-	  FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
-
-	  if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-	    char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
-
-	    traceEvent(CONST_TRACE_WARNING,
-		       "Two MAC addresses found for the same IP address "
-		       "%s: [%s/%s] (spoofing detected?)",
-		       el->hostNumIpAddress,
-		       etheraddr_string(ether_addr, etherbuf), el->ethAddressString);
-	    dumpSuspiciousPacket(actualDeviceId);
-	  }
+      } else {
+	/* -o | --no-mac (or NetFlow, which doesn't have MACs) - compare with only the IP address */
+	if(addrcmp(&el->hostIpAddress, hostIpAddress) == 0) {
+	  hostFound = 1;
+	  break;
 	}
-
-	setSpoofingFlag = 1;
-	hostFound = 1;
-	break;
-      }
-    } else {
-      /* -o | --no-mac (or NetFlow, which doesn't have MACs) - compare with only the IP address */
-      if(addrcmp(&el->hostIpAddress, hostIpAddress) == 0) {
-        hostFound = 1;
-        break;
       }
     }
-
     el = el->next;
     numRuns++;
   } /* while */
 
-  releaseMutex(&myGlobals.hostsHashLockMutex);
+  if(locked_mutex) releaseMutex(&myGlobals.hostsHashLockMutex);
 
   if((hostFound == 1) && (vlanId != NO_VLAN) && (vlanId != el->vlanId) && (!isMultivlaned(el))) {
     FD_SET(FLAG_HOST_TYPE_MULTIVLANED, &el->flags);

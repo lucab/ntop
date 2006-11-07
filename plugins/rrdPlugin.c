@@ -4110,7 +4110,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
 			"%s/interfaces/%s/AS/", myGlobals.rrdPath,
 			myGlobals.device[devIdx].humanFriendlyName);
-	  updateCounter(rrdIfPath, "numAS", totAS, 0);
+	  updateGauge(rrdIfPath, "numAS", totAS, 0);
+	  // traceEvent(CONST_TRACE_WARNING, "numAS=%d", totAS);
 	}
 
 	/* ******************************** */

@@ -933,6 +933,8 @@ void incrementUnknownProto(HostTraffic *host,
 static AsStats* allocASStats(u_int16_t as_id) {
   AsStats *asStats = (AsStats*)malloc(sizeof(AsStats));
 
+  if(0) traceEvent(CONST_TRACE_WARNING, "Allocating stats for AS %d", as_id);
+
   if(asStats != NULL) {
     memset(asStats, 0, sizeof(AsStats));
     asStats->as_id = as_id;
@@ -1005,7 +1007,7 @@ static updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
     if((myGlobals.actTime-stats->lastUpdate) > PARM_AS_MAXIMUM_IDLE) {
       AsStats *next = stats->next;
             
-      traceEvent(CONST_TRACE_INFO, "Purging stats about AS %d", stats->as_id);
+      if(0) traceEvent(CONST_TRACE_INFO, "Purging stats about AS %d", stats->as_id);
       if(prev_stats == NULL)
 	myGlobals.device[actualDeviceId].asStats = next;
       else
