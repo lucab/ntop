@@ -37,7 +37,7 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 	       int actualDeviceId) {
   u_int idx = 0;
   *el = NULL;
-
+  time_t now = myGlobals.actTime;
 
   if(myGlobals.runningPref.dontTrustMACaddr)  /* MAC addresses don't make sense here */
     (*useIPAddressForSearching) = 1;
@@ -278,7 +278,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     return;
   }
 
-  if(host->magic != CONST_MAGIC_NUMBER) {
+  if((host->magic != CONST_MAGIC_NUMBER) && (host->magic != CONST_UNMAGIC_NUMBER)) {
     traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) freeHostInfo()",
 	       CONST_MAGIC_NUMBER, host->magic);
     return;
@@ -814,6 +814,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   else if(idx == FLAG_NO_PEER)
     return(NULL);
   else {
+    accessMutex(&myGlobals.hostsHashLockMutex, "lookupHost");
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
     if(el) {
       lockHostsHashMutex(el, "_lookupHost");
@@ -902,6 +903,8 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     el = el->next;
     numRuns++;
   } /* while */
+
+  releaseMutex(&myGlobals.hostsHashLockMutex);
 
   if((hostFound == 1) && (vlanId != NO_VLAN) && (vlanId != el->vlanId) && (!isMultivlaned(el))) {
     FD_SET(FLAG_HOST_TYPE_MULTIVLANED, &el->flags);
@@ -1142,6 +1145,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       if(myGlobals.runningPref.numericFlag == 0)
 	ipaddr2str(el->hostIpAddress, 1);
 
+      getHostAS(el);
     } else {
       /* This is a new entry and hostIpAddress was NOT set.  Fill in MAC address, if we have it */
       if(symEthName[0] != '\0') {
