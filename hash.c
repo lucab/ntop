@@ -814,10 +814,10 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   else if(idx == FLAG_NO_PEER)
     return(NULL);
   else {
-    accessMutex(&myGlobals.hostsHashLockMutex, "lookupHost");
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
     if(el) {
       lockHostsHashMutex(el, "_lookupHost");
+      accessMutex(&myGlobals.hostsHashLockMutex, "lookupHost");
       el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
       locked_mutex = 1;
     }
