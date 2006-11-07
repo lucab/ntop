@@ -617,7 +617,7 @@
 
 
 /* Maximum number of queued addresses waiting to be resolved */
-#define MAX_NUM_QUEUED_ADDRESSES          4096
+#define MAX_NUM_QUEUED_ADDRESSES          16384
 
 /*
  * Number of (optional) "AR - Address Resolution" threads,

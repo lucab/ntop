@@ -526,7 +526,7 @@ static void queueAddress(HostAddr elem, int forceResolution) {
     The address queue is far too long. This is usefult for
     avoiding problems due to DOS applications
   */
-  if(myGlobals.addressQueuedCurrent > MAX_NUM_QUEUED_ADDRESSES) {
+  if(myGlobals.addressQueuedCurrent > (MAX_NUM_QUEUED_ADDRESSES*myGlobals.numDevices)) {
     static char shownMsg = 0;
 
     if(!shownMsg) {
