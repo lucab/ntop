@@ -1107,6 +1107,7 @@ RETSIGTYPE cleanup(int signo) {
   }
 
   deleteCondvar(&myGlobals.queueAddressCondvar);
+  deleteMutex(&myGlobals.queueAddressMutex);
 
   termGdbm();
   termDB();

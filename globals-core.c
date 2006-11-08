@@ -333,6 +333,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
    * Create two variables (semaphores) used by functions in pbuf.c to queue packets
    */
   createCondvar(&myGlobals.queueAddressCondvar);
+  createMutex(&myGlobals.queueAddressMutex);
 
   createMutex(&myGlobals.gdbmMutex);        /* data to synchronize thread access to db files */
   createMutex(&myGlobals.tcpSessionsMutex); /* data to synchronize TCP sessions access */

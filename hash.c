@@ -484,26 +484,8 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     #endif
   */
 
-  /*
-    Do not free the host pointer but add it to
-    a list of 'ready to use' pointers.
-
-    Memory Recycle
-  */
-
-#if RECYCLE_MEMORY
-  if(myGlobals.hostsCacheLen < (MAX_HOSTS_CACHE_LEN-1)) {
-    host->magic = 0;
-    myGlobals.hostsCache[myGlobals.hostsCacheLen++] = host;
-    if(myGlobals.hostsCacheLen > myGlobals.hostsCacheLenMax)
-      myGlobals.hostsCacheLenMax = myGlobals.hostsCacheLen;
-  } else
-#endif
-    {
-      /* No room left: it's time to free the bucket */
-      memset(host, 0, sizeof(HostTraffic)); /* Debug code */
-      free(host);
-    }
+  memset(host, 0, sizeof(HostTraffic)); /* Debug code */
+  free(host);
 
   myGlobals.numPurgedHosts++;
 
@@ -658,6 +640,7 @@ int purgeIdleHosts(int actDevice) {
 	  /* Host selected for deletion */
 	  theFlaggedHosts[numHosts++] = el;
 	  el->magic = CONST_UNMAGIC_NUMBER;
+	  purgeQueuedV4HostAddress(el->hostIpAddress.Ip4Address.s_addr);
 	  remove_valid_ptr(el);
 	  next = el->next;
 
@@ -973,23 +956,12 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
       return(NULL);
     }
-
-#if RECYCLE_MEMORY
-    if(myGlobals.hostsCacheLen > 0) {
-      el = myGlobals.hostsCache[--myGlobals.hostsCacheLen];
-      myGlobals.hostsCacheReused++;
-      /*
-	traceEvent(CONST_TRACE_INFO, "Fetched host from pointers cache (len=%d)",
-	(int)myGlobals.hostsCacheLen);
-      */
-    } else
-#endif
-      {   
-        if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) {
-	  if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
-          return(NULL);
-	}
-      }
+        
+    if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) {
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+      return(NULL);
+    }
+      
     memset(el, 0, sizeof(HostTraffic));
     el->firstSeen = myGlobals.actTime;
 
@@ -1294,22 +1266,10 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
       return(NULL);
     }
 
-#if RECYCLE_MEMORY
-    if(myGlobals.hostsCacheLen > 0) {
-      el = myGlobals.hostsCache[--myGlobals.hostsCacheLen];
-      myGlobals.hostsCacheReused++;
-      /*
-	traceEvent(CONST_TRACE_INFO, "Fetched host from pointers cache (len=%d)",
-	(int)myGlobals.hostsCacheLen);
-      */
-    } else
-#endif
-      {
-	if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) {
-	  if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
-	  return(NULL);
-	}
-      }
+    if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) {
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+      return(NULL);
+    }
 
     memset(el, 0, sizeof(HostTraffic));
     el->firstSeen = myGlobals.actTime;

@@ -2679,6 +2679,7 @@ void traceEvent(int eventTraceLevel, char* file,
       mFile = strdup(file);
 
       if(mFile) {
+#if 0
 	for(beginFileIdx=strlen(mFile)-1; beginFileIdx>0; beginFileIdx--) {
 	  if(mFile[beginFileIdx] == '.') mFile[beginFileIdx] = '\0'; /* Strip off .c */
 #if defined(WIN32)
@@ -2687,12 +2688,14 @@ void traceEvent(int eventTraceLevel, char* file,
 	  if(mFile[beginFileIdx-1] == '/') break;   /* Start after / (!Win32) */
 #endif
 	}
+#endif
 
 	if(myGlobals.runningPref.traceLevel >= CONST_DETAIL_TRACE_LEVEL) {
 	  unsigned int messageid = 0;
 	  int i;
 
-	  safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[t%lu %s:%d] ", pthread_self(), &mFile[beginFileIdx], line);
+	  safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[t%lu %s:%d] ", 
+			pthread_self(), &mFile[beginFileIdx], line);
 
 	  /* Hash the message format into an id */
 	  for (i=0; i<=strlen(format); i++) {

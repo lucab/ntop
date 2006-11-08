@@ -149,6 +149,7 @@ extern void initNtop(char *devices);
 extern int printable(int ch);
 extern void cleanupAddressQueue(void);
 extern void* dequeueAddress(void* notUsed);
+extern void purgeQueuedV4HostAddress(u_int32_t addr);
 #ifdef INET6
 extern char* _intop(struct in6_addr *addr,char *buf, u_short buflen);
 extern char* intop(struct in6_addr *addr);

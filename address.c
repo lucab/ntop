@@ -153,7 +153,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
   /* First check whether the address we search for is cached... */
   if((data_data.dptr != NULL) &&
      (data_data.dsize == (sizeof(StoredAddress))) &&
-     (myGlobals.actTime - ((StoredAddress*)data_data.dptr)->recordCreationTime < CONST_DNSCACHE_LIFETIME) ) {
+     (myGlobals.actTime - ((StoredAddress*)data_data.dptr)->recordCreationTime < CONST_DNSCACHE_LIFETIME)) {
     StoredAddress *retrievedAddress;
 
     retrievedAddress = (StoredAddress*)data_data.dptr;
@@ -567,9 +567,11 @@ static void queueAddress(HostAddr elem, int forceResolution) {
   rc = gdbm_store(myGlobals.addressQueueFile, key_data, data_data, GDBM_INSERT);
 
   if (rc == 0) {
+    accessMutex(&myGlobals.queueAddressMutex, "dequeueAddress");
     myGlobals.addressQueuedCurrent++, myGlobals.addressQueuedCount++;
     if (myGlobals.addressQueuedCurrent > myGlobals.addressQueuedMax)
       myGlobals.addressQueuedMax = myGlobals.addressQueuedCurrent;
+    releaseMutex(&myGlobals.queueAddressMutex);
 
 #ifdef DNS_DEBUG
     traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Queued address '%s' [addr queue=%d/max=%d]",
@@ -589,7 +591,9 @@ static void queueAddress(HostAddr elem, int forceResolution) {
                  myGlobals.addressQueuedMax);
       traceEvent(CONST_TRACE_INFO, "ntop processing continues, address will not be resolved");
     } else {
+      accessMutex(&myGlobals.queueAddressMutex, "dequeueAddress");
       myGlobals.addressQueuedDup++;
+      releaseMutex(&myGlobals.queueAddressMutex);
 #ifdef DNS_DEBUG
       traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Duplicate queue of address '%s' ignored",
 		 dataBuf);
@@ -604,6 +608,27 @@ static void queueAddress(HostAddr elem, int forceResolution) {
 
 void cleanupAddressQueue(void) {
   /* Nothing to do */
+}
+
+/* ************************************ */
+
+/*
+  Remove from queue an address that was waiting to be
+  resolved
+*/
+void purgeQueuedV4HostAddress(u_int32_t addr) {
+  datum key_data;
+  struct in_addr addrv4;
+  char buf[32];
+
+  addrv4.s_addr = addr;
+
+  traceEvent(CONST_TRACE_INFO, "purgeQueuedV4HostAddress(%s)", 
+	     _intoa(addrv4, buf, sizeof(buf))); 
+
+  key_data.dptr = (void*)&addr;
+  key_data.dsize = 4;
+  gdbm_delete(myGlobals.addressQueueFile, key_data);
 }
 
 /* ************************************ */
@@ -662,7 +687,10 @@ void* dequeueAddress(void *_i) {
       traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Resolved address %s", addrtostr(&addr));
 #endif
 
-      myGlobals.addressQueuedCurrent--;
+      accessMutex(&myGlobals.queueAddressMutex, "dequeueAddress");
+      if(myGlobals.addressQueuedCurrent > 0) myGlobals.addressQueuedCurrent--;
+      releaseMutex(&myGlobals.queueAddressMutex);
+
       gdbm_delete(myGlobals.addressQueueFile, data_data);
       key_data = data_data;
       data_data = gdbm_nextkey(myGlobals.addressQueueFile, key_data);

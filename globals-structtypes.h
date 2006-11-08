@@ -2107,6 +2107,7 @@ typedef struct ntopGlobals {
   unsigned short numThreads;       /* # of running threads */
 
   ConditionalVariable queueAddressCondvar;
+  PthreadMutex queueAddressMutex;
 
   pthread_t mainThreadId;
 
