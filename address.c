@@ -628,7 +628,11 @@ void purgeQueuedV4HostAddress(u_int32_t addr) {
 
   key_data.dptr = (void*)&addr;
   key_data.dsize = 4;
-  gdbm_delete(myGlobals.addressQueueFile, key_data);
+  if(gdbm_delete(myGlobals.addressQueueFile, key_data)) {
+    accessMutex(&myGlobals.queueAddressMutex, "purgeQueuedV4HostAddress");
+    if(myGlobals.addressQueuedCurrent > 0) myGlobals.addressQueuedCurrent--;
+    releaseMutex(&myGlobals.queueAddressMutex);
+  }
 }
 
 /* ************************************ */
