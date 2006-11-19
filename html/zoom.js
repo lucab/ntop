@@ -288,7 +288,7 @@ function zoomGraphObjRefresh() {
 		this.zoomBoxTop = this.zoomGraphTop + cZoomBoxTopOffsetWText - y_displacement;
 	}
 	// calculate the left hand coordinate (rrdGAx1) of the zoom box (aka rrd Graph area)
-	this.zoomBoxLeft = this.zoomBoxRight - zoomBoxWidth - x_displacement; 
+	this.zoomBoxLeft = this.zoomBoxRight - zoomBoxWidth - x_displacement;
 
 	// calculate the bottom coordinate (rrdGAy1) of the zoom box (aka rrd Graph area)
 	this.zoomBoxBottom = this.zoomBoxTop + zoomBoxHeight - y_displacement;
@@ -585,10 +585,12 @@ function onMouseUpEvent(e) {
 		var  graph_width = gUrlObj.getUrlParameterValue("graph_width");
 		var  graph_height = gUrlObj.getUrlParameterValue("graph_height");
 
+		if(action == undefined) action = "arbreq";
+
 		if(typeof arbfile != "undefined")
-			open(urlBase + "&action="+action+"&which=graph&key="+key+"&name="+name+"&arbfile=" + arbfile + "&graphId=" + graphId + "&arbiface=" + arbiface + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom", "_self");
+		open(urlBase + "&action="+action+"&which=graph&key="+key+"&name="+name+"&arbfile=" + arbfile + "&graphId=" + graphId + "&arbiface=" + arbiface + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom", "_self");
 		else
-			open(urlBase + "&action="+action+"&key="+key+"&name="+name+"&graphId=" + graphId + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom&name="+name, "_self");
+		open(urlBase + "&action="+action+"&key="+key+"&name="+name+"&graphId=" + graphId + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom&name="+name, "_self");
 	}
 
 	// zoom in action
@@ -649,11 +651,11 @@ function onMouseUpEvent(e) {
 		var  graph_width = gUrlObj.getUrlParameterValue("graph_width");
 		var  graph_height = gUrlObj.getUrlParameterValue("graph_height");
 
+		if(action == undefined) action = "arbreq";
 		if(typeof arbfile != "undefined")
 			open(urlBase + "&action="+action+"&which=graph&key="+key+"&name="+name+"&arbfile=" + arbfile + "&graphId=" + graphId + "&arbiface=" + arbiface + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom", "_self");
 		else
 		open(urlBase + "&action="+action+"&which=graph&key="+key+"&name="+name+"&graphId=" + graphId + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom", "_self");
-
 			}
 		}
 	}
