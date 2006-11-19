@@ -1415,6 +1415,8 @@ unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId,
 
 /* ******************************************** */
 
+/* #define ADDRESS_DEBUG */
+
 /* This function returns true when a host is considered local
    as specified using the 'm' flag */
 unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId,
@@ -1448,6 +1450,8 @@ unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId,
 
   return(0);
 }
+
+/* #undef ADDRESS_DEBUG */
 
 /* ********************************* */
 

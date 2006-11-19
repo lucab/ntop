@@ -1216,6 +1216,7 @@ typedef struct flowSetV9 {
 } FlowSetV9;
 
 typedef struct interfaceStats {
+  u_int32_t netflow_device_ip;
   u_short interface_id;
   TrafficCounter inBytes, outBytes, inPkts, outPkts;
   TrafficCounter selfBytes, selfPkts;

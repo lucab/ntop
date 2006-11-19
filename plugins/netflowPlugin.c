@@ -309,7 +309,8 @@ static int setNetFlowInSocket(int deviceId) {
 
 /* *************************** */
 
-static void updateNetFlowIfStats(int deviceId, u_int32_t ifId, u_char selfUpdate, u_char sentStats,
+static void updateNetFlowIfStats(u_int32_t netflow_device_ip, int deviceId, u_int32_t ifId,
+				 u_char selfUpdate, u_char sentStats,
 				 u_int32_t _pkts, u_int32_t _octets) {
   if(_pkts == 0)
     return;
@@ -328,7 +329,7 @@ static void updateNetFlowIfStats(int deviceId, u_int32_t ifId, u_char selfUpdate
     ifStats = myGlobals.device[deviceId].netflowGlobals->ifStats;
 
     while(ifStats != NULL) {
-      if(ifStats->interface_id == ifId) {
+      if((ifStats->interface_id == ifId) && (ifStats->netflow_device_ip == netflow_device_ip)) {
 	found = 1;
 	break;
       } else if(ifStats->interface_id > ifId)
@@ -347,7 +348,7 @@ static void updateNetFlowIfStats(int deviceId, u_int32_t ifId, u_char selfUpdate
       }
 
       memset(ifStats, 0, sizeof(InterfaceStats));
-      ifStats->interface_id = ifId;
+      ifStats->netflow_device_ip = netflow_device_ip, ifStats->interface_id = ifId;
       resetTrafficCounter(&ifStats->outBytes);
       resetTrafficCounter(&ifStats->outPkts);
       resetTrafficCounter(&ifStats->inBytes);
@@ -390,7 +391,7 @@ static void updateNetFlowIfStats(int deviceId, u_int32_t ifId, u_char selfUpdate
 
 /* *************************** */
 
-static void updateInterfaceStats(int deviceId, struct generic_netflow_record *record) {
+static void updateInterfaceStats(u_int32_t netflow_device_ip, int deviceId, struct generic_netflow_record *record) {
 
   if((myGlobals.device[deviceId].netflowGlobals == NULL) || (record == NULL)) {
     traceEvent(CONST_TRACE_WARNING, "NETFLOW: internal error, NULL interface stats");
@@ -404,22 +405,23 @@ static void updateInterfaceStats(int deviceId, struct generic_netflow_record *re
 	       ntohl(record->sentPkts), ntohl(record->sentOctets),
 	       ntohl(record->rcvdPkts), ntohl(record->rcvdOctets));
 
-  updateNetFlowIfStats(deviceId, record->output, 0, 1, ntohl(record->sentPkts), ntohl(record->sentOctets));
+  updateNetFlowIfStats(netflow_device_ip, deviceId, record->output, 0, 1, ntohl(record->sentPkts), ntohl(record->sentOctets));
 
   if(record->input == record->output)
-    updateNetFlowIfStats(deviceId, record->input,  1 /* self update */, 0, ntohl(2*record->sentPkts), ntohl(2*record->sentOctets));
+    updateNetFlowIfStats(netflow_device_ip, deviceId, record->input,  1 /* self update */, 0, ntohl(2*record->sentPkts), ntohl(2*record->sentOctets));
   else if(ntohl(record->rcvdPkts) != 0) {
-    updateNetFlowIfStats(deviceId, record->input,  0, 0, ntohl(record->rcvdPkts), ntohl(record->rcvdOctets));
+    updateNetFlowIfStats(netflow_device_ip, deviceId, record->input,  0, 0, ntohl(record->rcvdPkts), ntohl(record->rcvdOctets));
   } else {
     /* pre v9 */
-    updateNetFlowIfStats(deviceId, record->input,  0, 0, ntohl(record->sentPkts), ntohl(record->sentOctets));
+    updateNetFlowIfStats(netflow_device_ip, deviceId, record->input,  0, 0, ntohl(record->sentPkts), ntohl(record->sentOctets));
   }
   
 }
 
 /* *************************** */
 
-static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
+static int handleGenericFlow(u_int32_t netflow_device_ip, 
+			     time_t recordActTime, time_t recordSysUpTime,
 			     struct generic_netflow_record *record,
 			     int deviceId, time_t *firstSeen, time_t *lastSeen) {
   int actualDeviceId;
@@ -584,7 +586,7 @@ static int handleGenericFlow(time_t recordActTime, time_t recordSysUpTime,
 
   record->input = ntohs(record->input), record->output = ntohs(record->output);
 
-  updateInterfaceStats(deviceId, record);
+  updateInterfaceStats(netflow_device_ip, deviceId, record);
 
   if(!skipSRC) {
     switch((skipSRC = isOKtoSave(ntohl(record->srcaddr),
@@ -1020,7 +1022,8 @@ static char* nf_hex_dump(char *buf, u_short len) {
 
 /* ********************************************************* */
 
-static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
+static void dissectFlow(u_int32_t netflow_device_ip, 
+			char *buffer, int bufferLen, int deviceId) {
   NetFlow5Record the5Record;
   int flowVersion;
   time_t recordActTime = 0, recordSysUpTime = 0;
@@ -1438,7 +1441,8 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 		v9 flows and bidirectional. This means that if there's some
 		bidirectional traffic, handleGenericFlow is called twice.
 	      */
-	      handleGenericFlow(recordActTime, recordSysUpTime, &record,
+	      handleGenericFlow(netflow_device_ip, recordActTime,
+				recordSysUpTime, &record,
 				deviceId, &firstSeen, &lastSeen);
 
 #ifdef DEBUG_FLOWS
@@ -1462,7 +1466,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 		record.srcport = record.dstport;
 		record.dstport = tmp;
 
-		handleGenericFlow(recordActTime, recordSysUpTime, &record,
+		handleGenericFlow(netflow_device_ip, recordActTime, recordSysUpTime, &record,
 				  deviceId, &firstSeen, &lastSeen);
 	      }
 
@@ -1538,7 +1542,8 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
       record.dst_mask   = the5Record.flowRecord[i].dst_mask;
       record.src_mask   = the5Record.flowRecord[i].src_mask;
 
-      handleGenericFlow(recordActTime, recordSysUpTime, &record,
+      handleGenericFlow(netflow_device_ip, recordActTime,
+			recordSysUpTime, &record,
 			deviceId, &firstSeen, &lastSeen);
     }
 
@@ -1745,7 +1750,7 @@ static void* netflowMainLoop(void* _deviceId) {
 	  }
 	}
 
-	dissectFlow((char*)buffer, rc, deviceId);
+	dissectFlow(fromHost.sin_addr.s_addr, (char*)buffer, rc, deviceId);
 
 #ifdef MAX_NETFLOW_PACKET_BUFFER
         gettimeofday(&netflowEndOfRecordProcessing, NULL);
@@ -2637,6 +2642,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
     while(ifStats != NULL) {      
       struct stat statbuf;
       int found = 0;
+      struct in_addr addr;
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/NetFlow/%d/ifInOctets.rrd",
 		    myGlobals.rrdPath, myGlobals.device[deviceId].humanFriendlyName,
@@ -2660,19 +2666,27 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 	sendString(buf);
       } else {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		      "<TR " TR_ON ">\n<TD " TD_BG " ALIGN=\"CENTER\" >"
-		      "<IMG SRC=\"/plugins/rrdPlugin?action=netflowIfSummary&key=%s/NetFlow/%d&graphId=0\"></td>\n<td width=\"20%\">\n",
-		      myGlobals.device[deviceId].humanFriendlyName,
-		      ifStats->interface_id);
+		      "<TR " TR_ON ">\n<TD " TD_BG " ALIGN=\"CENTER\" valign=top>"
+		      "<IMG SRC=\"/plugins/rrdPlugin?action=netflowIfSummary&key=%s/NetFlow/%d&graphId=0\">"
+		      "<A HREF=\"/plugins/rrdPlugin?action=netflowIfSummary&key=%s/NetFlow/%d&graphId=0&mode=zoom\">&nbsp;"
+		      "<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A>"
+		      "</td>\n<td width=\"20%\">\n",
+		      myGlobals.device[deviceId].humanFriendlyName, ifStats->interface_id,
+		      myGlobals.device[deviceId].humanFriendlyName, ifStats->interface_id);
 	sendString(buf);
       }
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Pkts:&nbsp;%s&nbsp;in/%s&nbsp;out",
+      addr.s_addr = ifStats->netflow_device_ip;
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "NetFlow&nbsp;device: %s<br>", 
+		    _intoa(addr, formatBuf, sizeof(formatBuf)));
+      sendString(buf);
+      
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Pkts:&nbsp;%s&nbsp;in/%s&nbsp;out<br>",
 		    formatPkts(ifStats->inPkts.value, formatBuf, sizeof(formatBuf)),
 		    formatPkts(ifStats->outPkts.value, formatBuf2, sizeof(formatBuf2)));
       sendString(buf);
       
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<br>Bytes:&nbsp;%s&nbsp;in/%s&nbsp;out",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Bytes:&nbsp;%s&nbsp;in/%s&nbsp;out",
 		    formatBytes(ifStats->inBytes.value, 1, formatBuf, sizeof(formatBuf)),
 		    formatBytes(ifStats->outBytes.value, 1, formatBuf2, sizeof(formatBuf2)));
       sendString(buf);      

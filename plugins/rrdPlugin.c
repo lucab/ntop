@@ -108,13 +108,13 @@ static void printRRDPluginTrailer(void);
 static void handleRRDHTTPrequest(char* url);
 static char* spacer(char* str, char *tmpStr, int tmpStrLen);
 
-static int sumCounter(char *rrdPath, char *rrdFilePath,
+static int sumCounter(char *rrdPath, char *rrdFilePath, char *consolidation_function,
 		      char *startTime, char* endTime, Counter *total, float *average);
 static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdCounter, 
 			char *startTime, char* endTime, char* rrdPrefix);
 static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startTime, char* endTime, char* rrdPrefix, char *mode);
-static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
-static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
+static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix, char *mode);
+static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix, char *mode);
 static void updateCounter(char *hostPath, char *key, Counter value, char short_step);
 static void updateGauge(char *hostPath, char *key, Counter value, char short_step);
 static void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter, char short_step);
@@ -241,7 +241,7 @@ static void addRrdDelay() {
 
 /* ******************************************* */
 
-static int sumCounter(char *rrdPath, char *rrdFilePath,
+static int sumCounter(char *rrdPath, char *rrdFilePath, char *consolidation_function,
 		      char *startTime, char* endTime, Counter *total, float *average) {
   char *argv[32], path[512];
   int argc = 0, rc;
@@ -257,7 +257,7 @@ static int sumCounter(char *rrdPath, char *rrdFilePath,
 
   argv[argc++] = "rrd_fetch";
   argv[argc++] = path;
-  argv[argc++] = "AVERAGE";
+  argv[argc++] = consolidation_function;
   argv[argc++] = "--start";
   argv[argc++] = startTime;
   argv[argc++] = "--end";
@@ -305,7 +305,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   char path[512], url[512], hasNetFlow, buf[512];
   DIR* directoryPointer=NULL;
   struct dirent* dp;
-  int numEntries = 0, i, min, max;
+  int numEntries = 0, i, min, max, numFailures = 0;
   time_t now = time(NULL);
 
   if(!validHostCommunity(rrdTitle)) {
@@ -439,7 +439,12 @@ static void listResource(char *rrdPath, char *rrdTitle,
     if(strcmp(rsrcName, CONST_RRD_EXTENSION))
       continue;
 
-    rc = sumCounter(rrdPath, dp->d_name, startTime, endTime, &total, &average);
+    /*
+    if(sumCounter(rrdPath, dp->d_name, "FAILURES", startTime, endTime, &total, &average) >= 0)
+      numFailures += total;
+    */
+
+    rc = sumCounter(rrdPath, dp->d_name, "AVERAGE", startTime, endTime, &total, &average);
 
     if(isGauge || ((rc >= 0) && (total > 0))) {
       rsrcName[0] = '\0';
@@ -473,10 +478,8 @@ static void listResource(char *rrdPath, char *rrdTitle,
   } /* while */
 
   closedir(directoryPointer);
-
-  /* if(numEntries > 0) */ {
-    sendString("</TABLE>\n");
-  }
+  
+  sendString("</TABLE>\n");  
 
   sendString("</CENTER>");
 
@@ -668,14 +671,28 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 #define MAX_NUM_ENTRIES   32
 #define MAX_BUF_LEN       128
 
-static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
+#undef option_timespan
+#define option_timespan(theStartTime, theLabel, selected)    \
+                  safe_snprintf(__FILE__, __LINE__, strbuf, sizeof(strbuf), \
+                 "<option value=\"/" CONST_PLUGINS_HEADER "%s?action=netflowIfSummary" \
+		  "&key=%s" \
+		  "&graphId=%d" \
+		  "&start=%u" \
+		  "&end=%u" \
+		  "&mode=zoom&name=%s\" %s>%s</option>\n", \
+                  "rrdPlugin", rrdInterface, graphId, (unsigned int)theStartTime, (unsigned int)the_time, \
+                  _rrdName, (selected == 1) ? "selected" : "", theLabel); sendString(strbuf);
+
+/* ****************************** */
+
+static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix, char *mode) {
   char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN];
   char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN], tmpStr[32],
     buf2[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][MAX_BUF_LEN];
-  char fname[384], *label;
+  char fname[384], *label, _rrdName[256];
   char **rrds = NULL;
   int argc = 0, rc, x, y, i, entryId=0;
-  double ymin,ymax;
+  double ymin, ymax;
 
   path[0] = '\0';
 
@@ -690,6 +707,113 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
 		myGlobals.rrdPath, rrd_subdirs[0],
 		startTime, rrdPrefix, graphId,
 		CHART_FORMAT);
+
+  safe_snprintf(__FILE__, __LINE__, _rrdName, sizeof(_rrdName), "%s", rrdPath);
+
+  if(!strcmp(mode, "zoom")) {
+    char strbuf[LEN_GENERAL_WORK_BUFFER];
+    time_t the_time = time(NULL);
+    char *rrdIP = "", *rrdInterface = rrdPath;
+    struct tm *the_tm;
+
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    printHTMLheader("" /* "Arbitrary Graph URL" */, NULL, 0);
+
+    sendString("<center>\n");
+
+    /* *************************************** */
+
+    /*
+      Graph time and zoom: code courtesy of
+      the Cacti (http://www.cacti.net) project.
+    */
+
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/calendar.js\"></SCRIPT>\n");
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/lang/calendar-en.js\"></SCRIPT>\n");
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/calendar-setup.js\"></script>\n");
+    sendString("<SCRIPT type\"text/javascript\" src=\"/jscalendar/calendar-load.js\"></script>\n");
+    
+    sendString("\n<p align=center>\n<FORM action=/plugins/rrdPlugin name=\"form_timespan_selector\" method=\"get\">\n<TABLE width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n<TBODY><TR><TD align=center class=\"textHeader\" nowrap=\"\">\n<b>Presets</b>: <SELECT name=\"predefined_timespan\" onchange=\"window.location=document.form_timespan_selector.predefined_timespan.options[document.form_timespan_selector.predefined_timespan.selectedIndex].value\">\n");
+
+    option_timespan(the_time-1800, "Last Half Hour", 0);
+    option_timespan(the_time-3600, "Last Hour", 0);
+    option_timespan(the_time-2*3600, "Last 2 Hours", 0);
+    option_timespan(the_time-4*3600, "Last 4 Hours", 0);
+    option_timespan(the_time-6*3600, "Last 6 Hours", 0);
+    option_timespan(the_time-12*3600, "Last 12 Hours", 0);
+    option_timespan(the_time-86400, "Last Day", 0);
+    option_timespan(the_time-2*86400, "Last 2 Days", 0);
+    option_timespan(the_time-4*86400, "Last 4 Days", 0);
+    option_timespan(the_time-7*86400, "Last Week", 1);
+    option_timespan(the_time-30*86400, "Last Month", 0);
+    option_timespan(the_time-2*30*86400, "Last 2 Months", 0);
+    option_timespan(the_time-4*30*86400, "Last 4 Months", 0);
+    option_timespan(the_time-6*30*86400, "Last 6 Months", 0);
+    option_timespan(the_time-12*30*86400, "Last Year", 0);
+
+    sendString("</select>\n");
+    
+    safe_snprintf(__FILE__, __LINE__, strbuf, sizeof(strbuf), 
+		  "<input type=hidden name=action value=netflowIfSummary>\n"
+		  "<input type=hidden name=graphId value=\"%d\">\n" 
+		  "<input type=hidden name=key value=\"%s\">\n" 
+		  "<input type=hidden name=name value=\"%s\">\n" 
+		  "<input type=hidden name=start value=\"%s\">\n" 
+		  "<input type=hidden name=end value=\"%s\">\n" 
+		  "<input type=hidden name=mode value=\"zoom\">\n", 
+		  graphId, _rrdName, rrdInterface, startTime, endTime);
+    sendString(strbuf);
+
+    sendString("&nbsp;<STRONG>From:</STRONG>\n<INPUT type=\"text\" name=\"date1\" id=\"date1\" size=\"16\" value=\"");
+
+    the_time = atol(startTime); the_tm = localtime(&the_time);
+    strftime(strbuf, sizeof(strbuf), "%Y-%m-%d %H:%M", the_tm); sendString(strbuf);
+
+    sendString("\">\n<INPUT type=\"image\" src=\"/calendar.gif\" alt=\"Start date selector\" border=\"0\" align=\"absmiddle\" onclick=\"return showCalendar('date1');\">\n");
+    sendString("&nbsp;<strong>To:</strong>\n<INPUT type=\"text\" name=\"date2\" id=\"date2\" size=\"16\" value=\"");
+
+    the_time = atol(endTime); the_tm = localtime(&the_time);
+    strftime(strbuf, sizeof(strbuf), "%Y-%m-%d %H:%M", the_tm); sendString(strbuf);
+
+    sendString("\">\n<INPUT type=\"image\" src=\"/calendar.gif\" alt=\"End date selector\" border=\"0\" align=\"absmiddle\" onclick=\"return showCalendar('date2');\">\n"
+	       "<INPUT type=\"submit\" value=\"Update Graph\">\n</FORM>\n</TD></TR></TBODY></TABLE>\n</p>\n");
+
+    /* *************************************** */
+
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/zoom.js\"></SCRIPT>\n"
+	       "<DIV id=\"zoomBox\" style=\"position: absolute; visibility: visible; background-image: initial; background-repeat: initial; "
+	       "background-attachment: initial; background-position-x: initial; background-position-y: initial; background-color: orange; opacity: 0.5;\"></DIV>\n");
+
+    sendString("<DIV id=\"zoomSensitiveZone\" style=\"position:absolute; overflow:none; background-repeat: initial; background-attachment: initial;  background-position-x: initial; background-position-y: initial; visibility:visible; cursor:crosshair; background:blue; filter:alpha(opacity=0); -moz-opacity:0; -khtml-opacity:0; opacity:0;\" oncontextmenu=\"return false\"></DIV>\n");
+
+    /*
+      NOTE:
+      If the graph size changes, please update the zoom.js file (search for L.Deri)
+    */
+    safe_snprintf(__FILE__, __LINE__, strbuf, sizeof(strbuf),
+                  "<img id=zoomGraphImage src=\"/" CONST_PLUGINS_HEADER "%s?action=netflowIfSummary"
+		  "&graphId=%d"
+		  "&key=%s"
+		  "&name=%s"
+		  "&start=%s"
+		  "&end=%s"
+		  "\" alt=\"graph image\" border=0></center>\n",
+                  rrdPluginInfo->pluginURLname,
+		  graphId,
+		  rrdInterface, _rrdName,
+                  startTime,
+                  endTime);
+    sendString(strbuf);
+
+    sendString("\n<SCRIPT type=\"text/javascript\">\n\nvar cURLBase = \"/plugins/rrdPlugin?mode=zoom\";\n\n// Global variables\nvar gZoomGraphName = \"zoomGraphImage\";\n"
+	       "var gZoomGraphObj;\nvar gMouseObj;\nvar gUrlObj;\nvar gBrowserObj;\nvar gGraphWidth;\n"
+	       "var gGraphHeight;\n\n\nwindow.onload = initBonsai;\n\n</SCRIPT>\n");
+
+    sendString("</center>\n");
+
+    printHTMLtrailer();
+    return;
+  }
 
   revertSlashIfWIN32(fname, 0);
 
@@ -803,20 +927,138 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
 #define MAX_NUM_ENTRIES   32
 #define MAX_BUF_LEN       128
 
-static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
+#undef option_timespan
+#define option_timespan(theStartTime, theLabel, selected)    \
+                  safe_snprintf(__FILE__, __LINE__, strbuf, sizeof(strbuf), \
+                 "<option value=\"/" CONST_PLUGINS_HEADER "%s?action=netflowIfSummary" \
+		  "&key=%s" \
+		  "&graphId=%d" \
+		  "&start=%u" \
+		  "&end=%u" \
+		  "&mode=zoom&name=%s\" %s>%s</option>\n", \
+                  "rrdPlugin", rrdInterface, graphId, (unsigned int)theStartTime, (unsigned int)the_time, \
+                  _rrdName, (selected == 1) ? "selected" : "", theLabel); sendString(strbuf);
+
+static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix, char *mode) {
   char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf0[MAX_NUM_ENTRIES][MAX_BUF_LEN];
   char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN], tmpStr[32],
     buf2[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf4[MAX_NUM_ENTRIES][MAX_BUF_LEN];
-  char fname[384], *label, title[64];
+  char fname[384], *label, title[64], _rrdName[256];
   char **rrds = NULL;
   int argc = 0, rc, x, y, i, entryId=0;
-  double ymin,ymax;
+  double ymin, ymax;
 
   path[0] = '\0';
+  safe_snprintf(__FILE__, __LINE__, _rrdName, sizeof(_rrdName), "%s", rrdPath);
 
   switch(graphId) {
   case 0:  rrds = (char**)rrd_summary_nf_if_octets; label = "Bit/sec"; break;
   default: rrds = (char**)rrd_summary_nf_if_pkts; label = "Packets/sec"; break;
+  }
+
+  if(!strcmp(mode, "zoom")) {
+    char strbuf[LEN_GENERAL_WORK_BUFFER];
+    time_t the_time = time(NULL);
+    char *rrdIP = "", *rrdInterface = rrdPath;
+    struct tm *the_tm;
+
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    printHTMLheader("" /* "Arbitrary Graph URL" */, NULL, 0);
+
+    sendString("<center>\n");
+
+    /* *************************************** */
+
+    /*
+      Graph time and zoom: code courtesy of
+      the Cacti (http://www.cacti.net) project.
+    */
+
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/calendar.js\"></SCRIPT>\n");
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/lang/calendar-en.js\"></SCRIPT>\n");
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/calendar-setup.js\"></script>\n");
+    sendString("<SCRIPT type\"text/javascript\" src=\"/jscalendar/calendar-load.js\"></script>\n");
+    
+    sendString("\n<p align=center>\n<FORM action=/plugins/rrdPlugin name=\"form_timespan_selector\" method=\"get\">\n<TABLE width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n<TBODY><TR><TD align=center class=\"textHeader\" nowrap=\"\">\n<b>Presets</b>: <SELECT name=\"predefined_timespan\" onchange=\"window.location=document.form_timespan_selector.predefined_timespan.options[document.form_timespan_selector.predefined_timespan.selectedIndex].value\">\n");
+
+    option_timespan(the_time-1800, "Last Half Hour", 0);
+    option_timespan(the_time-3600, "Last Hour", 0);
+    option_timespan(the_time-2*3600, "Last 2 Hours", 0);
+    option_timespan(the_time-4*3600, "Last 4 Hours", 0);
+    option_timespan(the_time-6*3600, "Last 6 Hours", 0);
+    option_timespan(the_time-12*3600, "Last 12 Hours", 0);
+    option_timespan(the_time-86400, "Last Day", 0);
+    option_timespan(the_time-2*86400, "Last 2 Days", 0);
+    option_timespan(the_time-4*86400, "Last 4 Days", 0);
+    option_timespan(the_time-7*86400, "Last Week", 1);
+    option_timespan(the_time-30*86400, "Last Month", 0);
+    option_timespan(the_time-2*30*86400, "Last 2 Months", 0);
+    option_timespan(the_time-4*30*86400, "Last 4 Months", 0);
+    option_timespan(the_time-6*30*86400, "Last 6 Months", 0);
+    option_timespan(the_time-12*30*86400, "Last Year", 0);
+
+    sendString("</select>\n");
+    
+    safe_snprintf(__FILE__, __LINE__, strbuf, sizeof(strbuf), 
+		  "<input type=hidden name=action value=netflowIfSummary>\n"
+		  "<input type=hidden name=graphId value=\"%d\">\n" 
+		  "<input type=hidden name=key value=\"%s\">\n" 
+		  "<input type=hidden name=name value=\"%s\">\n" 
+		  "<input type=hidden name=start value=\"%s\">\n" 
+		  "<input type=hidden name=end value=\"%s\">\n" 
+		  "<input type=hidden name=mode value=\"zoom\">\n", 
+		  graphId, _rrdName, rrdInterface, startTime, endTime);
+    sendString(strbuf);
+
+    sendString("&nbsp;<STRONG>From:</STRONG>\n<INPUT type=\"text\" name=\"date1\" id=\"date1\" size=\"16\" value=\"");
+
+    the_time = atol(startTime); the_tm = localtime(&the_time);
+    strftime(strbuf, sizeof(strbuf), "%Y-%m-%d %H:%M", the_tm); sendString(strbuf);
+
+    sendString("\">\n<INPUT type=\"image\" src=\"/calendar.gif\" alt=\"Start date selector\" border=\"0\" align=\"absmiddle\" onclick=\"return showCalendar('date1');\">\n");
+    sendString("&nbsp;<strong>To:</strong>\n<INPUT type=\"text\" name=\"date2\" id=\"date2\" size=\"16\" value=\"");
+
+    the_time = atol(endTime); the_tm = localtime(&the_time);
+    strftime(strbuf, sizeof(strbuf), "%Y-%m-%d %H:%M", the_tm); sendString(strbuf);
+
+    sendString("\">\n<INPUT type=\"image\" src=\"/calendar.gif\" alt=\"End date selector\" border=\"0\" align=\"absmiddle\" onclick=\"return showCalendar('date2');\">\n"
+	       "<INPUT type=\"submit\" value=\"Update Graph\">\n</FORM>\n</TD></TR></TBODY></TABLE>\n</p>\n");
+
+    /* *************************************** */
+
+    sendString("<SCRIPT type=\"text/javascript\" src=\"/zoom.js\"></SCRIPT>\n"
+	       "<DIV id=\"zoomBox\" style=\"position: absolute; visibility: visible; background-image: initial; background-repeat: initial; "
+	       "background-attachment: initial; background-position-x: initial; background-position-y: initial; background-color: orange; opacity: 0.5;\"></DIV>\n");
+
+    sendString("<DIV id=\"zoomSensitiveZone\" style=\"position:absolute; overflow:none; background-repeat: initial; background-attachment: initial;  background-position-x: initial; background-position-y: initial; visibility:visible; cursor:crosshair; background:blue; filter:alpha(opacity=0); -moz-opacity:0; -khtml-opacity:0; opacity:0;\" oncontextmenu=\"return false\"></DIV>\n");
+
+    /*
+      NOTE:
+      If the graph size changes, please update the zoom.js file (search for L.Deri)
+    */
+    safe_snprintf(__FILE__, __LINE__, strbuf, sizeof(strbuf),
+                  "<img id=zoomGraphImage src=\"/" CONST_PLUGINS_HEADER "%s?action=netflowIfSummary"
+		  "&graphId=%d"
+		  "&key=%s"
+		  "&name=%s"
+		  "&start=%s"
+		  "&end=%s"
+		  "\" alt=\"graph image\" border=0></center>\n",
+                  rrdPluginInfo->pluginURLname,
+		  graphId,
+		  rrdInterface, _rrdName,
+                  startTime,
+                  endTime);
+    sendString(strbuf);
+
+    sendString("\n<SCRIPT type=\"text/javascript\">\n\nvar cURLBase = \"/plugins/rrdPlugin?mode=zoom\";\n\n// Global variables\nvar gZoomGraphName = \"zoomGraphImage\";\n"
+	       "var gZoomGraphObj;\nvar gMouseObj;\nvar gUrlObj;\nvar gBrowserObj;\nvar gGraphWidth;\n"
+	       "var gGraphHeight;\n\n\nwindow.onload = initBonsai;\n\n</SCRIPT>\n");
+
+    sendString("</center>\n");
+
+    printHTMLtrailer();
+    return;
   }
 
   /* startTime[4] skips the 'now-' */
@@ -990,6 +1232,7 @@ static char* spacer(char* _str, char *tmpStr, int tmpStrLen) {
 
 /* ****************************** */
 
+#undef option_timespan
 #define option_timespan(theStartTime, theLabel, selected)    \
                   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), \
                  "<option value=\"/" CONST_PLUGINS_HEADER "%s?action=graphSummary" \
@@ -1621,7 +1864,8 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
     argv[argc++] = "rrd_update";
     argv[argc++] = path;
 
-    safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%llu", (unsigned int)rrdTime, (unsigned long long)value);
+    safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%llu", 
+		  (unsigned int)rrdTime, (unsigned long long)value);
     argv[argc++] = cmd;
 
     accessMutex(&rrdMutex, "rrd_update");
@@ -1682,6 +1926,53 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	rrd_clear_error();
       } else {
 	traceEventRRDebug(0, "rrd_update(%s, %s, %s)=%d", hostPath, key, cmd, rc);
+      }
+    } else if(0) {
+      
+      unsigned long step, ds_cnt;
+      rrd_value_t   *data,*datai, _total, _val;
+      char          **ds_namv, time_buf[32];
+      time_t        start,end;
+
+      safe_snprintf(__FILE__, __LINE__, time_buf, sizeof(time_buf), "%u", rrdTime);
+
+      argc = 0;
+      argv[argc++] = "rrd_fetch";
+      argv[argc++] = path;
+      argv[argc++] = "FAILURES";
+      argv[argc++] = "--start";
+      argv[argc++] = time_buf;
+      argv[argc++] = "--end";
+      argv[argc++] = time_buf;
+
+      accessMutex(&rrdMutex, "rrd_fetch");
+      optind=0; /* reset gnu getopt */
+      opterr=0; /* no error messages */
+
+      fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
+
+      rrd_clear_error();
+      addRrdDelay();
+      rc = rrd_fetch(argc, argv, &start, &end, &step, &ds_cnt, &ds_namv, &data);
+
+      releaseMutex(&rrdMutex);
+
+      if(rc != -1) {
+	datai  = data, _total = 0;
+
+	for(i = start; i <= end; i += step) {
+	  _val = *(datai++);
+	  
+	  if(_val > 0)
+	    _total += _val;
+	}
+	
+	for(i=0;i<ds_cnt;i++) free(ds_namv[i]);
+	free(ds_namv);
+	free(data);
+	
+	traceEvent(CONST_TRACE_WARNING, "Host %s: detected failure on key %s", 
+		   hostPath, key);
       }
     }
 
@@ -2728,7 +3019,7 @@ static time_t parse_date(char* value) {
 
   memset(&_tm, 0, sizeof(_tm));
   if(sscanf(value, "%d-%d-%d %d:%d", &_tm.tm_year, &_tm.tm_mon, &_tm.tm_mday, &_tm.tm_hour, &_tm.tm_min) == 5) {
-    _tm.tm_hour--, _tm.tm_mon--, _tm.tm_year -= 1900;
+    _tm.tm_hour/* -- */, _tm.tm_mon--, _tm.tm_year -= 1900;
     
     return(mktime(&_tm));
   } else
@@ -3045,10 +3336,10 @@ static void handleRRDHTTPrequest(char* url) {
     graphSummary(rrdKey, rrdName, graphId, startTime, endTime, rrdPrefix, mode);
     return;
   } else if(action == FLAG_RRD_ACTION_NF_SUMMARY) {
-    netflowSummary(rrdKey, graphId, startTime, endTime, rrdPrefix);
+    netflowSummary(rrdKey, graphId, startTime, endTime, rrdPrefix, mode);
     return;
   } else if((action == FLAG_RRD_ACTION_NF_IF_SUMMARY) || (action == FLAG_RRD_ACTION_IF_SUMMARY)) {
-    interfaceSummary(rrdKey, graphId, startTime, endTime, rrdPrefix);
+    interfaceSummary(rrdKey, graphId, startTime, endTime, rrdPrefix, mode);
     return;
   } else if(action == FLAG_RRD_ACTION_LIST) {
     listResource(rrdKey, rrdTitle, startTime, endTime);

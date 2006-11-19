@@ -623,8 +623,10 @@ void purgeQueuedV4HostAddress(u_int32_t addr) {
 
   addrv4.s_addr = addr;
 
-  traceEvent(CONST_TRACE_INFO, "purgeQueuedV4HostAddress(%s)", 
-	     _intoa(addrv4, buf, sizeof(buf))); 
+  /*
+    traceEvent(CONST_TRACE_INFO, "purgeQueuedV4HostAddress(%s)", 
+                                 _intoa(addrv4, buf, sizeof(buf))); 
+  */
 
   key_data.dptr = (void*)&addr;
   key_data.dsize = 4;
