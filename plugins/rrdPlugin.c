@@ -641,7 +641,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
       traceEventRRDebugARGV(0);
 
       if(++graphErrCount < 50) {
-        traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error());
+        traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error() ? rrd_get_error() : "");
         traceEvent(CONST_TRACE_INFO, "RRD: Failing file in graphCounter() is %s", path);
       }
 
@@ -649,7 +649,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
       printHTMLheader("RRD Graph", NULL, 0);
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
 		    "<I>Error while building graph of the requested file. %s</I>",
-		    rrd_get_error());
+		    rrd_get_error() ? rrd_get_error() : "");
       printFlagedWarning(path);
       rrd_clear_error();
     }
@@ -906,7 +906,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
     traceEventRRDebugARGV(3);
 
     if(++graphErrCount < 50) {
-      traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error());
+      traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error() ? rrd_get_error() : "");
       traceEvent(CONST_TRACE_INFO, "RRD: Failing file in netflowSummary() is %s", path);
     }
 
@@ -914,7 +914,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
     printHTMLheader("RRD Graph Summary", NULL, 0);
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
 		  "<I>Error while building graph of the requested file. %s</I>",
-		  rrd_get_error());
+		  rrd_get_error() ? rrd_get_error() : "");
     printFlagedWarning(path);
     rrd_clear_error();
   }
@@ -1182,7 +1182,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
     traceEventRRDebugARGV(3);
 
     if(++graphErrCount < 50) {
-      traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error());
+      traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error() ? rrd_get_error() : "");
       traceEvent(CONST_TRACE_INFO, "RRD: Failing file in netflowSummary() is %s", path);
     }
 
@@ -1190,7 +1190,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
     printHTMLheader("RRD Graph Summary", NULL, 0);
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
 		  "<I>Error while building graph of the requested file. %s</I>",
-		  rrd_get_error());
+		  rrd_get_error() ? rrd_get_error() : "");
     printFlagedWarning(path);
     rrd_clear_error();
   }
@@ -1574,7 +1574,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
     traceEventRRDebugARGV(3);
 
     if(++graphErrCount < 50) {
-      traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error());
+      traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error() ? rrd_get_error() : "");
       traceEvent(CONST_TRACE_INFO, "RRD: Failing file in graphSummary() is %s", path);
     }
 
@@ -1582,7 +1582,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
     printHTMLheader("RRD Graph Summary", NULL, 0);
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
 		  "<I>Error while building graph of the requested file. %s</I>",
-		  rrd_get_error());
+		  rrd_get_error() ? rrd_get_error() : "");
     printFlagedWarning(path);
     rrd_clear_error();
   }
@@ -1842,7 +1842,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	traceEventRRDebugARGV(3);
 
 	traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s",
-		   path, rrd_get_error());
+		   path, rrd_get_error() ? rrd_get_error() : "");
 	rrd_clear_error();
 	numRRDerrors++;
       }
@@ -2547,7 +2547,7 @@ static void arbitraryAction(char *rrdName,
       traceEventRRDebugARGV(3);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "%sError retrieving rrd data, %s%s\n",
-                    rrd_get_error(),
+                    rrd_get_error() ? rrd_get_error() : "",
                     (_which == CONST_ARBITRARY_RRDREQUEST_FETCHME[0]) ? "<p>" : "",
                     (_which == CONST_ARBITRARY_RRDREQUEST_FETCHME[0]) ? "</p>" : "");
       sendString(buf);
