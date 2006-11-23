@@ -6915,4 +6915,3 @@ void pcap_freealldevs(pcap_if_t *alldevs) {
 #endif
 
 #endif /* WIN32 */
-

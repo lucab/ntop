@@ -1218,6 +1218,7 @@ typedef struct flowSetV9 {
 typedef struct interfaceStats {
   u_int32_t netflow_device_ip;
   u_short interface_id;
+  char interface_name[32];
   TrafficCounter inBytes, outBytes, inPkts, outPkts;
   TrafficCounter selfBytes, selfPkts;
   struct interfaceStats *next;

@@ -575,12 +575,7 @@ void          rewinddir(DIR *);
 #define HANDLE_DIED_CHILD
 #endif
 
-/*****************************************************************/
-
-#ifdef INET6
 #include "iface.h"
-#endif
 
-/*****************************************************************/
 
 #endif /* NTOP_H */

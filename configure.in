@@ -241,13 +241,13 @@ AC_ARG_ENABLE(ignoresigpipe,
               ac_enable_ignoresigpipe="no")
 
 AC_ARG_ENABLE(snmp,
-              [  --disable-snmp              Disable SNMP support [[default=disable]]],
+              [  --disable-snmp              Disable SNMP support [[default=enable]]],
               if test "x$enableval" = xno; then
                   ac_disable_snmp="yes"
               else
                   ac_disable_snmp="no"
               fi,
-              ac_disable_snmp="yes")
+              ac_disable_snmp="no")
 
 AC_ARG_ENABLE(i18n,
               [  --enable-i18n               Enable (limited) internationalization [[default=disabled]]],
@@ -1801,19 +1801,26 @@ else
 fi
 
 dnl>
-dnl> SNMP Support
+dnl> MySQL
+dnl>
+AC_CHECK_TOOL(MYSQL, mysql_config)
+if test "x$ac_cv_prog_ac_ct_MYSQL" = "xmysql_config"; then
+  LIBS="${LIBS} -lwrap `mysql_config --libs`"
+  INCS="${INCS} -lwrap `mysql_config --cflags`"
+fi
+
+dnl>
+dnl> NET-SNMP
 dnl>
 if test ".${ac_disable_snmp}" != ".yes"; then
- AC_CHECK_HEADERS(net-snmp/net-snmp-config.h)
- AC_MSG_CHECKING([SNMP])
- if test "x$ac_cv_header_net_snmp_net_snmp_config_h" = "xyes"; then
-   AC_DEFINE_UNQUOTED(HAVE_SNMP, 1, [SNMP is supported])
-   SNMP_LIBS=`net-snmp-config --agent-libs`
-   AC_MSG_RESULT(yes)
-   AC_DEFINE_UNQUOTED(MAKE_WITH_SNMP, 1, [SNMP is available])
- else
-   AC_MSG_RESULT(no)
- fi
+  AC_CHECK_TOOL(NETSNMP, net-snmp-config)
+  if test "x$ac_cv_prog_ac_ct_NETSNMP" = "xnet-snmp-config"; then
+    AC_DEFINE_UNQUOTED(HAVE_SNMP, 1, [SNMP is supported])
+    LIBS="${LIBS} -lwrap `net-snmp-config --libs`"
+    INCS="${INCS} -lwrap `net-snmp-config --cflags --agent-libs`"
+  else
+    AC_MSG_RESULT("NET-SNMP is not present: SNMP support is disabled")
+  fi
 fi
 
 

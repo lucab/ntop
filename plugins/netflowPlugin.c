@@ -309,6 +309,23 @@ static int setNetFlowInSocket(int deviceId) {
 
 /* *************************** */
 
+static void updateInterfaceName(InterfaceStats *ifStats) {
+#ifdef HAVE_SNMP
+  char buf[32];
+  struct in_addr addr;
+
+  addr.s_addr = ifStats->netflow_device_ip;
+  
+  getIfName(_intoa(addr, buf, sizeof(buf)),
+	    "public", ifStats->interface_id,
+	    ifStats->interface_name, sizeof(ifStats->interface_name));
+#else
+  ifStats->interface_name[0] = '\0';
+#endif
+}
+
+/* *************************** */
+
 static void updateNetFlowIfStats(u_int32_t netflow_device_ip, int deviceId, u_int32_t ifId,
 				 u_char selfUpdate, u_char sentStats,
 				 u_int32_t _pkts, u_int32_t _octets) {
@@ -366,6 +383,8 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip, int deviceId, u_in
     }
 
     releaseMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsMutex);
+
+    updateInterfaceName(ifStats);
 
     if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: PKTS=%d", pkts);
 		 
@@ -2677,10 +2696,17 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
       }
 
       addr.s_addr = ifStats->netflow_device_ip;
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "NetFlow&nbsp;device: %s<br>", 
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "NetFlow&nbsp;Device: %s<br>", 
 		    _intoa(addr, formatBuf, sizeof(formatBuf)));
       sendString(buf);
       
+      if(ifStats->interface_name[0] != '\0') {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Interface&nbsp;Name: %s<br>", 
+		      ifStats->interface_name);
+	sendString(buf);
+      }
+
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Pkts:&nbsp;%s&nbsp;in/%s&nbsp;out<br>",
 		    formatPkts(ifStats->inPkts.value, formatBuf, sizeof(formatBuf)),
 		    formatPkts(ifStats->outPkts.value, formatBuf2, sizeof(formatBuf2)));

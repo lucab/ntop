@@ -9,6 +9,9 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # $Log$
+# Revision 2.12  2006/11/23 08:50:16  deri
+# Added initial SNMP name resolution for NetFlow device names
+#
 # Revision 2.11  2006/09/03 13:06:05  deri
 # Minor updates. Added the skeleton of a new plugin that allows ntop to be
 # queried from remote without a web browser
@@ -24,6 +27,29 @@
 # -----Burton
 #
 #
+
+######################################
+
+#
+# This is mostly a fix for FreeBSD hosts that have the
+# bad behaviour of calling programs as <program name><version>
+#
+
+find_command()
+{
+    for P in "$1"; do
+	IFS=:
+	for D in $PATH; do
+	    for F in $D/$P; do
+		[ -x "$F" ] && echo $F && return 0
+	    done
+	done
+    done
+}
+
+#######################################
+
+AUTOMAKE=`find_command 'automake-*'`
 
 version="0.2.1"
 
@@ -170,7 +196,8 @@ echo "1. Testing gnu tools...."
   GNU_OR_DIE=0
 }
 
-(automake --version) < /dev/null > /dev/null 2>&1 ||
+AUTOMAKE=`find_command 'automake*'`
+($AUTOMAKE --version) < /dev/null > /dev/null 2>&1 ||
 {
   echo
   echo "You must have automake installed to compile $#NAME#."
@@ -180,17 +207,8 @@ echo "1. Testing gnu tools...."
   GNU_OR_DIE=0
 }
 
-#(m4 --version) < /dev/null > /dev/null 2>&1 ||
-#{
-#  echo
-#  echo "You must have GNU m4 installed to compile $#NAME#."
-#  echo "Download the appropriate package for your distribution, or get the"
-#  echo "source tarball from ftp://ftp.gnu.org/pub/gnu/m4"
-#  echo "     We recommend version 1.4 or higher"
-#  GNU_OR_DIE=0
-#}
-
-(autoconf --version) < /dev/null > /dev/null 2>&1 ||
+AUTOCONF=`find_command 'autoconf*'`
+($AUTOCONF --version) < /dev/null > /dev/null 2>&1 ||
 {
   echo
   echo "You must have autoconf installed to compile $progname."
@@ -237,7 +255,7 @@ esac
 echo "        .... ok"
 
 
-automakeversion=`automake --version < /dev/null 2>&1 | grep ^automake | cut -d " " -f 4`
+automakeversion=`$AUTOMAKE --version < /dev/null 2>&1 | grep ^automake | cut -d " " -f 4`
 echo "    automake .... ${automakeversion}"
 
 case "${automakeversion}" in
@@ -256,12 +274,7 @@ esac
 echo "        .... ok"
 
 
-m4version=`m4 --version < /dev/null 2>&1 | grep M4 | cut -d " " -f 3`
-echo "    m4 .... ${m4version}"
-echo "        .... ok"
-
-
-autoconfversion=`autoconf --version < /dev/null 2>&1 | grep ^autoconf | cut -d " " -f 4`
+autoconfversion=`$AUTOCONF --version < /dev/null 2>&1 | grep ^autoconf | cut -d " " -f 4`
 echo "    autoconf .... ${autoconfversion}"
 
 case "${autoconfversion}" in
@@ -337,7 +350,8 @@ echo ""
 # 5. run 'autoheader' to create config.h.in from configure.in
 #
 echo "5. Running autoheader to create config.h.in ..."
-autoheader
+AUTOHEADER=`find_command 'autoheader*'`
+$AUTOHEADER
 echo "        .... done"
 echo ""
 
@@ -352,7 +366,7 @@ echo "timestamp" > stamp-h.in
 #
 echo "6. Running automake to create Makefile.in ..."
 touch NEWS AUTHORS ChangeLog
-automake --add-missing --copy
+$AUTOMAKE --add-missing --copy
 echo "        .... done"
 echo ""
 
@@ -362,7 +376,7 @@ echo ""
 # run 'autoconf' to create configure from configure.in
 #
 echo "7. Running autoconf to create configure ..."
-autoconf
+$AUTOCONF
 echo "        .... done"
 echo ""
 

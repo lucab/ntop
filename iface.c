@@ -725,3 +725,96 @@ int iface_getalladdr(int type, int *size, char **addr){
 #endif
 
 #endif /* INET6 */
+
+/* ********************************************************************** */
+
+#ifdef HAVE_SNMP
+
+#include <net-snmp/net-snmp-config.h>
+#include <net-snmp/net-snmp-includes.h>
+#include <string.h>
+
+#ifndef min
+#define min(a,b) (a<b ? a : b)
+#endif
+
+char* getIfName(char *hostname, char *community, int ifIdx,
+		char *ifName_buf, u_short ifName_buflen) 
+{
+  struct snmp_session session, *ss;
+  struct snmp_pdu *pdu;
+  struct snmp_pdu *response;
+  char buf[64];
+  oid anOID[MAX_OID_LEN];
+  size_t anOID_len = MAX_OID_LEN;
+
+  struct variable_list *vars;
+  int status;
+  int count=1;
+
+  ifName_buf[0] = '\0';
+
+  /*
+   * Initialize the SNMP library
+   */
+  init_snmp("getIfName");
+
+  /*
+   * Initialize a "session" that defines who we're going to talk to
+   */
+  snmp_sess_init( &session );                   /* set up defaults */
+  session.peername = strdup(hostname);
+
+  /* set up the authentication parameters for talking to the server */
+
+  /* set the SNMP version number */
+  session.version = SNMP_VERSION_1;
+
+  /* set the SNMPv1 community name used for authentication */
+  session.community = community;
+  session.community_len = strlen(session.community);
+
+  /*
+   * Open the session
+   */
+  ss = snmp_open(&session); /* establish the session */
+
+  if (!ss)
+    return(ifName_buf);  
+    
+  snprintf(buf, sizeof(buf), ".1.3.6.1.2.1.31.1.1.1.1.%d", ifIdx);
+  pdu = snmp_pdu_create(SNMP_MSG_GET);
+  read_objid(buf, anOID, &anOID_len);
+  snmp_add_null_var(pdu, anOID, anOID_len);
+  
+  /*
+   * Send the Request out.
+   */
+  status = snmp_synch_response(ss, pdu, &response);
+
+  /*
+   * Process the response.
+   */
+  if (status == STAT_SUCCESS && response->errstat == SNMP_ERR_NOERROR) {
+    /* manipuate the information ourselves */
+    for(vars = response->variables; vars; vars = vars->next_variable) {
+      if (vars->type == ASN_OCTET_STR) {
+	int len = min(vars->val_len, ifName_buflen-1);
+	memcpy(ifName_buf, vars->val.string, len);
+	ifName_buf[len] = '\0';
+      }
+    }
+  }
+
+  /*
+   * Clean up:
+   *  1) free the response.
+   *  2) close the session.
+   */
+  if (response) snmp_free_pdu(response);
+  snmp_close(ss);
+
+  return (ifName_buf);
+}
+
+#endif

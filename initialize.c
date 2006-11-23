@@ -1628,7 +1628,10 @@ void initDevices(char* devices) {
 
       traceEvent(CONST_TRACE_NOISY, "Checking requested device '%s'", tmpDev);
 
-      if((nwInterface = strchr(tmpDev, ':')) != NULL) {
+      if(((nwInterface = strchr(tmpDev, ':')) != NULL) 
+	 && (!strstr(tmpDev, "dag")) /* Endace DAG cards are valid (e.g. dag0:0) */
+	 )
+	{
  	/* This is a virtual nwInterface */
         char *requestedDev;
 

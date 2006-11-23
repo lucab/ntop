@@ -322,9 +322,6 @@
 /* Define to 1 if you have the <net/route.h> header file. */
 #undef HAVE_NET_ROUTE_H
 
-/* Define to 1 if you have the <net-snmp/net-snmp-config.h> header file. */
-#undef HAVE_NET_SNMP_NET_SNMP_CONFIG_H
-
 /* OPENSSL is available */
 #undef HAVE_OPENSSL
 
@@ -615,9 +612,6 @@
 
 /* Define for Jumbo (9k) Ethernet Frames */
 #undef MAKE_WITH_JUMBO_FRAMES
-
-/* SNMP is available */
-#undef MAKE_WITH_SNMP
 
 /* Support SSLv3 if available */
 #undef MAKE_WITH_SSLV3_SUPPORT
