@@ -269,7 +269,8 @@ static int setNetFlowInSocket(int deviceId) {
 	     (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0)
 #ifdef HAVE_SCTP
        || ((myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket > 0)
-	   && (bind(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0))
+	   && (bind(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket, 
+		    (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0))
 #endif
        ) {
       traceEvent(CONST_TRACE_ERROR, "NETFLOW: Collector port %d already in use",
@@ -385,9 +386,6 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip, int deviceId, u_in
 	ifStats->next = prev->next;
 	prev->next = ifStats;
       }
-    }
-
-    releaseMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsMutex);
 
 #ifdef HAVE_SNMP
     accessMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueMutex, "netflowUtilsLoop");
@@ -399,6 +397,9 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip, int deviceId, u_in
 #else
     ifStats->interface_name[0] = '\0';
 #endif
+    }
+
+    releaseMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsMutex);
 
     if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: PKTS=%d", pkts);
 
