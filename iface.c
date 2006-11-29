@@ -782,10 +782,10 @@ char* getIfName(char *hostname, char *community, int ifIdx,
   if (!ss)
     return(ifName_buf);  
     
-  snprintf(buf, sizeof(buf), ".1.3.6.1.2.1.31.1.1.1.1.%d", ifIdx);
   pdu = snmp_pdu_create(SNMP_MSG_GET);
-  read_objid(buf, anOID, &anOID_len);
-  snmp_add_null_var(pdu, anOID, anOID_len);
+
+  snprintf(buf, sizeof(buf), ".1.3.6.1.2.1.31.1.1.1.1.%d", ifIdx);
+  read_objid(buf, anOID, &anOID_len); snmp_add_null_var(pdu, anOID, anOID_len);
   
   /*
    * Send the Request out.

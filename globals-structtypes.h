@@ -1234,6 +1234,8 @@ typedef struct astats {
   struct astats *next;
 } AsStats;
 
+#define MAX_INTERFACE_STATS_QUEUE_LEN  32
+
 typedef struct netFlowGlobals {
   u_char netFlowDebug;
 
@@ -1278,6 +1280,15 @@ typedef struct netFlowGlobals {
   pthread_t netFlowThread;
   int threadActive;
   PthreadMutex whiteblackListMutex, ifStatsMutex;
+
+#ifdef HAVE_SNMP
+  pthread_t netFlowUtilsThread;
+  InterfaceStats *ifStatsQueue[MAX_INTERFACE_STATS_QUEUE_LEN];
+  u_short ifStatsQueue_len;
+  PthreadMutex ifStatsQueueMutex;
+  ConditionalVariable ifStatsQueueCondvar;
+#endif
+
 } NetFlowGlobals;
 
 /* *********************************** */

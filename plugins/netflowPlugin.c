@@ -24,6 +24,9 @@
 #include "globals-report.h"
 
 static void* netflowMainLoop(void* _deviceId);
+#ifdef HAVE_SNMP
+static void* netflowUtilsLoop(void* _deviceId);
+#endif
 
 /* #define DEBUG_FLOWS */
 
@@ -299,6 +302,10 @@ static int setNetFlowInSocket(int deviceId) {
     /* This plugin works only with threads */
     createThread(&myGlobals.device[deviceId].netflowGlobals->netFlowThread,
 		 netflowMainLoop, (void*)deviceId);
+#ifdef HAVE_SNMP
+    createThread(&myGlobals.device[deviceId].netflowGlobals->netFlowUtilsThread,
+		 netflowUtilsLoop, (void*)deviceId);
+#endif
     traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: Started thread for receiving flows on port %d",
                  (long)myGlobals.device[deviceId].netflowGlobals->netFlowThread,
                  myGlobals.device[deviceId].netflowGlobals->netFlowInPort);
@@ -309,20 +316,18 @@ static int setNetFlowInSocket(int deviceId) {
 
 /* *************************** */
 
-static void updateInterfaceName(InterfaceStats *ifStats) {
 #ifdef HAVE_SNMP
+static void updateInterfaceName(InterfaceStats *ifStats) {
   char buf[32];
   struct in_addr addr;
 
   addr.s_addr = ifStats->netflow_device_ip;
-  
+
   getIfName(_intoa(addr, buf, sizeof(buf)),
 	    "public", ifStats->interface_id,
 	    ifStats->interface_name, sizeof(ifStats->interface_name));
-#else
-  ifStats->interface_name[0] = '\0';
-#endif
 }
+#endif
 
 /* *************************** */
 
@@ -337,12 +342,12 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip, int deviceId, u_in
     Counter pkts = (Counter)_pkts;
     Counter octets = (Counter)_octets;
 
-    if(0) 
+    if(0)
       traceEvent(CONST_TRACE_INFO, "NETFLOW: updateNetFlowIfStats(deviceId=%d, ifId=%d, sentStats=%d, pkts=%d, octets=%d)",
 		 deviceId, ifId, sentStats, pkts, octets);
-    
+
     accessMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsMutex, "rrdPluginNetflow");
-    
+
     ifStats = myGlobals.device[deviceId].netflowGlobals->ifStats;
 
     while(ifStats != NULL) {
@@ -384,24 +389,33 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip, int deviceId, u_in
 
     releaseMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsMutex);
 
-    updateInterfaceName(ifStats);
+#ifdef HAVE_SNMP
+    accessMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueMutex, "netflowUtilsLoop");
+    if(myGlobals.device[deviceId].netflowGlobals->ifStatsQueue_len < (MAX_INTERFACE_STATS_QUEUE_LEN-1)) {
+      myGlobals.device[deviceId].netflowGlobals->ifStatsQueue[myGlobals.device[deviceId].netflowGlobals->ifStatsQueue_len++] = ifStats;
+      signalCondvar(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueCondvar);
+    }
+    releaseMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueMutex);
+#else
+    ifStats->interface_name[0] = '\0';
+#endif
 
     if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: PKTS=%d", pkts);
-		 
+
     if(selfUpdate) {
       incrementTrafficCounter(&ifStats->selfBytes, octets);
-      incrementTrafficCounter(&ifStats->selfPkts, pkts);	
+      incrementTrafficCounter(&ifStats->selfPkts, pkts);
     } else {
       if(sentStats) {
 	incrementTrafficCounter(&ifStats->outBytes, octets);
 	incrementTrafficCounter(&ifStats->outPkts, pkts);
-	if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: SENT ifStats[%d][pkts=%d] [in=%d][out=%d]", 
+	if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: SENT ifStats[%d][pkts=%d] [in=%d][out=%d]",
 			 ifStats->interface_id, pkts, ifStats->inPkts, ifStats->outPkts);
       } else {
 	incrementTrafficCounter(&ifStats->inBytes, octets);
 	incrementTrafficCounter(&ifStats->inPkts, pkts);
-	if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: RCVD ifStats[%d[pkts=%d]] [in=%d][out=%d]", 
-			 ifStats->interface_id, pkts, ifStats->inPkts, ifStats->outPkts);      
+	if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: RCVD ifStats[%d[pkts=%d]] [in=%d][out=%d]",
+			 ifStats->interface_id, pkts, ifStats->inPkts, ifStats->outPkts);
       }
     }
   }
@@ -434,12 +448,12 @@ static void updateInterfaceStats(u_int32_t netflow_device_ip, int deviceId, stru
     /* pre v9 */
     updateNetFlowIfStats(netflow_device_ip, deviceId, record->input,  0, 0, ntohl(record->sentPkts), ntohl(record->sentOctets));
   }
-  
+
 }
 
 /* *************************** */
 
-static int handleGenericFlow(u_int32_t netflow_device_ip, 
+static int handleGenericFlow(u_int32_t netflow_device_ip,
 			     time_t recordActTime, time_t recordSysUpTime,
 			     struct generic_netflow_record *record,
 			     int deviceId, time_t *firstSeen, time_t *lastSeen) {
@@ -711,7 +725,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
   srcHost->ifId = record->input, dstHost->ifId = record->output;
 
-#ifdef DEBUG_FLOWS 
+#ifdef DEBUG_FLOWS
   if((srcAS == 13018) || (dstAS == 13018))
     traceEvent(CONST_TRACE_ERROR, "************* AS %d/%d", srcHost->hostAS, dstHost->hostAS);
 #endif
@@ -1041,7 +1055,7 @@ static char* nf_hex_dump(char *buf, u_short len) {
 
 /* ********************************************************* */
 
-static void dissectFlow(u_int32_t netflow_device_ip, 
+static void dissectFlow(u_int32_t netflow_device_ip,
 			char *buffer, int bufferLen, int deviceId) {
   NetFlow5Record the5Record;
   int flowVersion;
@@ -1642,6 +1656,27 @@ RETSIGTYPE netflowcleanup(int signo) {
 
 /* ****************************** */
 
+#ifdef HAVE_SNMP
+static void* netflowUtilsLoop(void* _deviceId) {
+  int deviceId = (int)_deviceId;
+
+  while(1) {
+    if(myGlobals.device[deviceId].netflowGlobals->ifStatsQueue_len > 0) {
+      InterfaceStats *iface;
+
+      accessMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueMutex, "netflowUtilsLoop");
+      iface = myGlobals.device[deviceId].netflowGlobals->ifStatsQueue[--myGlobals.device[deviceId].netflowGlobals->ifStatsQueue_len];
+      releaseMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueMutex);
+      updateInterfaceName(iface);
+    } else {
+      waitCondvar(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueCondvar);
+    }
+  }
+}
+#endif
+
+/* ****************************** */
+
 static void* netflowMainLoop(void* _deviceId) {
   fd_set netflowMask;
   int rc, len, deviceId;
@@ -1792,6 +1827,9 @@ static void* netflowMainLoop(void* _deviceId) {
   if(myGlobals.device[deviceId].netflowGlobals != NULL) {
     myGlobals.device[deviceId].netflowGlobals->threadActive = 0;
     myGlobals.device[deviceId].netflowGlobals->netFlowThread = 0;
+#ifdef HAVE_SNMP
+    myGlobals.device[deviceId].netflowGlobals->netFlowUtilsThread = 0;
+#endif
   }
   myGlobals.device[deviceId].activeDevice = 0;
 
@@ -1821,6 +1859,11 @@ static void initNetFlowDevice(int deviceId) {
   myGlobals.device[deviceId].netflowGlobals->threadActive = 0;
   createMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex);
   createMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsMutex);
+
+#ifdef HAVE_SNMP
+  createMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueMutex);
+  createCondvar(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueCondvar);
+#endif
 
   if(fetchPrefsValue(nfValue(deviceId, "netFlowInPort", 1), value, sizeof(value)) == -1)
     storePrefsValue(nfValue(deviceId, "netFlowInPort", 1), "0");
@@ -2658,22 +2701,22 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
   if(ifStats != NULL) {
     sendString("<tr " TR_ON ">\n<th colspan=\"2\" "DARK_BG">Interface Statistics</th>\n</tr>\n");
 
-    while(ifStats != NULL) {      
+    while(ifStats != NULL) {
       struct stat statbuf;
       int found = 0;
       struct in_addr addr;
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/NetFlow/%d/ifInOctets.rrd",
 		    myGlobals.rrdPath, myGlobals.device[deviceId].humanFriendlyName,
-		    ifStats->interface_id);      
+		    ifStats->interface_id);
       revertSlashIfWIN32(buf, 0);
 
-      if(!stat(buf, &statbuf)) 
+      if(!stat(buf, &statbuf))
 	found = 1;
       else {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/NetFlow/%d/ifOutOctets.rrd",
 		      myGlobals.rrdPath, myGlobals.device[deviceId].humanFriendlyName,
-		      ifStats->interface_id);      
+		      ifStats->interface_id);
 	revertSlashIfWIN32(buf, 0);
 	if(!stat(buf, &statbuf)) found = 1;
       }
@@ -2684,7 +2727,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 		      ifStats->interface_id);
 	sendString(buf);
       } else {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TR " TR_ON ">\n<TD " TD_BG " ALIGN=\"CENTER\" valign=top>"
 		      "<IMG SRC=\"/plugins/rrdPlugin?action=netflowIfSummary&key=%s/NetFlow/%d&graphId=0\">"
 		      "<A HREF=\"/plugins/rrdPlugin?action=netflowIfSummary&key=%s/NetFlow/%d&graphId=0&mode=zoom\">&nbsp;"
@@ -2697,12 +2740,12 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 
       addr.s_addr = ifStats->netflow_device_ip;
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "NetFlow&nbsp;Device: %s<br>", 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "NetFlow&nbsp;Device: %s<br>",
 		    _intoa(addr, formatBuf, sizeof(formatBuf)));
       sendString(buf);
-      
+
       if(ifStats->interface_name[0] != '\0') {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Interface&nbsp;Name: %s<br>", 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Interface&nbsp;Name: %s<br>",
 		      ifStats->interface_name);
 	sendString(buf);
       }
@@ -2711,11 +2754,11 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 		    formatPkts(ifStats->inPkts.value, formatBuf, sizeof(formatBuf)),
 		    formatPkts(ifStats->outPkts.value, formatBuf2, sizeof(formatBuf2)));
       sendString(buf);
-      
+
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Bytes:&nbsp;%s&nbsp;in/%s&nbsp;out",
 		    formatBytes(ifStats->inBytes.value, 1, formatBuf, sizeof(formatBuf)),
 		    formatBytes(ifStats->outBytes.value, 1, formatBuf2, sizeof(formatBuf2)));
-      sendString(buf);      
+      sendString(buf);
       sendString("</td></tr>\n");
 
       ifStats = ifStats->next;
@@ -3185,7 +3228,7 @@ static void handleNetflowHTTPrequest(char* _url) {
 	      setNetFlowInSocket(deviceId);
 	    }
 	  }
-	} else if(strcmp(device, "name") == 0) {	
+	} else if(strcmp(device, "name") == 0) {
 	  sanitize_rrd_string(value);
 	  free(myGlobals.device[deviceId].humanFriendlyName);
 	  myGlobals.device[deviceId].humanFriendlyName = strdup(value);
@@ -3516,6 +3559,9 @@ static void termNetflowDevice(int deviceId) {
   if((deviceId >= 0) && (deviceId < myGlobals.numDevices)) {
     if(myGlobals.device[deviceId].netflowGlobals->threadActive) {
       killThread(&myGlobals.device[deviceId].netflowGlobals->netFlowThread);
+#ifdef HAVE_SNMP
+      killThread(&myGlobals.device[deviceId].netflowGlobals->netFlowUtilsThread);
+#endif
       myGlobals.device[deviceId].netflowGlobals->threadActive = 0;
     }
     tryLockMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex, "termNetflow");
@@ -3660,7 +3706,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
   PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY,
 	     "NETFLOW: Welcome to %s.(C) 2002-06 by Luca Deri",
 	     netflowPluginInfo->pluginName);
 
