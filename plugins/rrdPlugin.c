@@ -322,29 +322,32 @@ static void listResource(char *rrdPath, char *rrdTitle,
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about %s", rrdTitle);
 
   printHTMLheader(buf, NULL, 0);
-  sendString("<CENTER>\n<p ALIGN=right>\n");
+  sendString("<p ALIGN=left>\n");
 
   safe_snprintf(__FILE__, __LINE__, url, sizeof(url),
 		"/" CONST_PLUGINS_HEADER "%s?action=list&key=%s&title=%s&end=%u",
 		rrdPluginInfo->pluginURLname,
 		rrdPath, rrdTitle, now);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<b>View:</b> [ <A HREF=\"%s&start=%u\">year</A> ]", url, now - 365*86400);
+  sendString("<form name=myform method=get>\n<b>Presets:</b>&nbsp;\n"
+	     "<select name=presets onchange=\"window.location=document.myform.presets.options[document.myform.presets.selectedIndex].value\">\n");
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\">Year</option>\n", url, now - 365*86400);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=%u\">month</A> ]", url, now - 30*86400);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\">Month</option>\n", url, now - 30*86400);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=%u\">week</A> ]", url, now - 7*86400);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\">Week</option>\n", url, now - 7*86400);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=%u\">day</A> ]", url, now - 86400);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\">Day</option>\n", url, now - 86400);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=%u\">last 12h</A> ]\n", url, now - 12 * 3600);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\">Last 12h</option>\n", url, now - 12 * 3600);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=%u\">last 6h</A> ]\n", url, now - 6 * 86400);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\">Last 6h</option>\n", url, now - 6 * 86400);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&start=%u\">last hour</A> ]&nbsp;\n", url, now - 86400);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\">Last Hour</option>\n", url, now - 86400);
   sendString(buf);
 
-  sendString("</p>\n<p>\n<TABLE BORDER=0 "TABLE_DEFAULTS">\n");
+  sendString("</select></form></p>\n<center>\n<p>\n<TABLE BORDER=0 "TABLE_DEFAULTS">\n");
 
   if(strstr(rrdPath, "/sFlow/") == NULL) {
     /* sendString("<TR><TH "DARK_BG" COLSPAN=2>Traffic Summary</TH></TR>\n"); */

@@ -5315,13 +5315,24 @@ void printDomainStats(char* domain_network_name, int network_mode,
   }
 
   if(network_mode == AS_GRAPH_VIEW) {
-    sendString("<center><TABLE BORDER=1 "TABLE_DEFAULTS"><tr "TR_ON"><TH "TH_BG">Authonomous System Statistics</TH></tr>\n");
+    sendString("<center><TABLE BORDER=0 "TABLE_DEFAULTS">");
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<tr><td align=center>"
-		  "<IMG SRC=/plugins/rrdPlugin?action=interfaceSummary&amp;key=%s/AS/%s&amp;graphId=0\"></td></tr>\n",
+		  "<IMG SRC=/plugins/rrdPlugin?action=interfaceSummary&amp;key=%s/AS/%s&amp;graphId=0\">\n",
 		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, domain_network_name);
     sendString(buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "</td><td valign=middle>"
+		  "<A HREF=/plugins/rrdPlugin?mode=zoom&action=interfaceSummary&amp;key=%s/AS/%s&amp;graphId=0\">"
+		  "<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></td></tr>\n",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, domain_network_name);
+    sendString(buf);
+
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<tr><td align=center>"
-		  "<IMG SRC=/plugins/rrdPlugin?action=interfaceSummary&amp;key=%s/AS/%s&amp;graphId=1\"></td></tr>\n",
+		  "<IMG SRC=/plugins/rrdPlugin?action=interfaceSummary&amp;key=%s/AS/%s&amp;graphId=1\">\n",
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, domain_network_name);
+    sendString(buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "</td><td valign=middle>"
+		  "<A HREF=/plugins/rrdPlugin?mode=zoom&action=interfaceSummary&amp;key=%s/AS/%s&amp;graphId=1\">"
+		  "<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></td></tr>\n",
 		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, domain_network_name);
     sendString(buf);
     sendString("</table>\n</center>\n");
