@@ -1243,7 +1243,15 @@ AC_CHECK_HEADERS([net/ethernet.h])
 if test -f "$RRD_HOME/lib/librrd_th.so"; then
    AC_MSG_RESULT(Found RRD)
 else
-  AC_MSG_ERROR(Unable to find RRD in the specified rrd 1.2.x directory);
+  if test -f "$RRD_HOME/lib/librrd_th.dylib"; then # OSX
+     AC_MSG_RESULT(Found RRD)
+  else
+     if test -f "$RRD_HOME/lib/librrd_th.a"; then
+       AC_MSG_RESULT(Found RRD)
+     else 
+       AC_MSG_ERROR(Unable to find RRD in the specified rrd 1.2.x directory);
+     fi
+  fi
 fi
 
 dnl> The failed recheck stuff below is courtesy of Chris Turbeville [turbo@verio.net]
