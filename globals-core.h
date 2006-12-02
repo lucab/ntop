@@ -541,6 +541,7 @@ extern unsigned short in_isBroadcastAddress(struct in_addr *addr,
 extern unsigned short in_isMulticastAddress(struct in_addr *addr,
 					    u_int32_t *the_local_network, 
 					    u_int32_t *the_local_network_mask);
+extern u_int8_t num_network_bits(u_int32_t addr);
 extern unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId,
 					u_int32_t *the_local_network, 
 					u_int32_t *the_local_network_mask);

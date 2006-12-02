@@ -3332,19 +3332,23 @@ static void printUserList(HostTraffic *el) {
   while(list != NULL) {
     if(num > 0) sendString("<br>");
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;[", list->userName);
-    sendString(buf);
+    if(FD_ISSET(BITFLAG_SMTP_USER, &(list->userFlags))) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<A HREF=\"mailto:%s\">%s</A>&nbsp;[&nbsp;SMTP&nbsp;]\n", 
+		    list->userName, list->userName); sendString(buf);
+    } else {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;[", list->userName); sendString(buf);
+      
+      if(FD_ISSET(BITFLAG_POP_USER, &(list->userFlags))) sendString("&nbsp;POP&nbsp;");
+      if(FD_ISSET(BITFLAG_IMAP_USER, &(list->userFlags))) sendString("&nbsp;IMAP&nbsp;");
+      if(FD_ISSET(BITFLAG_SMTP_USER, &(list->userFlags))) sendString("&nbsp;SMTP&nbsp;");
+      if(FD_ISSET(BITFLAG_P2P_USER, &(list->userFlags))) sendString("&nbsp;P2P&nbsp;");
+      if(FD_ISSET(BITFLAG_FTP_USER, &(list->userFlags))) sendString("&nbsp;FTP&nbsp;");
+      if(FD_ISSET(BITFLAG_MESSENGER_USER, &(list->userFlags))) sendString("&nbsp;MSG&nbsp;");
+      if(FD_ISSET(BITFLAG_VOIP_USER, &(list->userFlags))) sendString("&nbsp;VoIP&nbsp;");
+      if(FD_ISSET(BITFLAG_DAAP_USER, &(list->userFlags))) sendString("&nbsp;DAAP&nbsp;");
+      sendString("]\n");
+    }
 
-    if(FD_ISSET(BITFLAG_POP_USER, &(list->userFlags))) sendString("&nbsp;POP&nbsp;");
-    if(FD_ISSET(BITFLAG_IMAP_USER, &(list->userFlags))) sendString("&nbsp;IMAP&nbsp;");
-    if(FD_ISSET(BITFLAG_SMTP_USER, &(list->userFlags))) sendString("&nbsp;SMTP&nbsp;");
-    if(FD_ISSET(BITFLAG_P2P_USER, &(list->userFlags))) sendString("&nbsp;P2P&nbsp;");
-    if(FD_ISSET(BITFLAG_FTP_USER, &(list->userFlags))) sendString("&nbsp;FTP&nbsp;");
-    if(FD_ISSET(BITFLAG_MESSENGER_USER, &(list->userFlags))) sendString("&nbsp;MSG&nbsp;");
-    if(FD_ISSET(BITFLAG_VOIP_USER, &(list->userFlags))) sendString("&nbsp;VoIP&nbsp;");
-    if(FD_ISSET(BITFLAG_DAAP_USER, &(list->userFlags))) sendString("&nbsp;DAAP&nbsp;");
-
-    sendString("]\n");
     list = list->next;
     num++;
   }

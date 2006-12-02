@@ -771,8 +771,8 @@ char* getIfName(char *hostname, char *community, int ifIdx,
   session.version = SNMP_VERSION_1;
 
   /* set the SNMPv1 community name used for authentication */
-  session.community = community;
-  session.community_len = strlen(session.community);
+  session.community = (u_char*)community;
+  session.community_len = strlen(community);
 
   /*
    * Open the session

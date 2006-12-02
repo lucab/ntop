@@ -4979,7 +4979,7 @@ void printThptStatsMatrix(int sortedColumn) {
 
 #define RRD_THPT_URL "/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=throughput&arbiface=%s&arbip=&start=%u&end=%u&counter=&title=%s"
 
-#define RRD_THPT_STR "<A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=%d\" BORDER=0 BGCOLOR=white><IMG class=tooltip SRC=\"" RRD_THPT_URL "\" border=\"0\" alt=\"Domain-wide Historical Data\"></A> <A HREF=\"" RRD_THPT_URL "&mode=zoom\" BORDER=0 BGCOLOR=white>&nbsp;<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A>"
+#define RRD_THPT_STR "<tr><td align=right><A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=%d\" BORDER=0 BGCOLOR=white><IMG class=tooltip SRC=\"" RRD_THPT_URL "\" border=\"0\" alt=\"Domain-wide Historical Data\"></A></td><td align=left><A HREF=\"" RRD_THPT_URL "&mode=zoom\" BORDER=0 BGCOLOR=white>&nbsp;<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></td></tr>"
 
 void printThptStats(int sortedColumn _UNUSED_) {
   char tmpBuf[1024], formatBuf[32], formatBuf1[32];
@@ -5009,7 +5009,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
   }
 
   if(useRRD) {
-    sendString("<CENTER>\n");
+    sendString("<CENTER>\n<table border=0>\n");
 
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
 		  0,
@@ -5020,12 +5020,11 @@ void printThptStats(int sortedColumn _UNUSED_) {
 		  );
     sendString(tmpBuf);
 
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
 		  formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
 		  formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
     sendString(tmpBuf);
-
-
+    
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
 		  1,
 		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-3600), 
@@ -5044,7 +5043,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 	       "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=1\" class=tooltip alt=\"Current Hour throughput chart\"></A><BR>\n");
   }
 
-  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
+  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
 		formatTimeStamp(0, 0, 60, formatBuf, sizeof(formatBuf)),
 		formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
   sendString(tmpBuf);
@@ -5064,7 +5063,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 		 "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=2\" class=tooltip alt=\"Current Day throughput chart\"></A><BR>\n");
   }
 
-  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
+  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
 		formatTimeStamp(0, 24, 0, formatBuf, sizeof(formatBuf)),
 		formatTimeStamp(0,  0, 0, formatBuf1, sizeof(formatBuf1)));
   sendString(tmpBuf);
@@ -5081,19 +5080,19 @@ void printThptStats(int sortedColumn _UNUSED_) {
       goto endPrintThptStats;
 
     sendString("<P><IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=3\" class=tooltip alt=\"30 day throughput chart\"><BR>\n");
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
 		  formatTimeStamp(30, 0, 0, formatBuf, sizeof(formatBuf)),
 		  formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1)));
     sendString(tmpBuf);
   }
 
-  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
+  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
 		formatTimeStamp(30, 0, 0, formatBuf, sizeof(formatBuf)),
 		formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1)));
   sendString(tmpBuf);
 
  endPrintThptStats:
-  sendString("</CENTER>\n");
+  sendString("</table></CENTER>\n");
 
   if(useRRD) {
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<p align=right>"
@@ -5101,9 +5100,9 @@ void printThptStats(int sortedColumn _UNUSED_) {
 		  formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
 		  formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
     sendString(tmpBuf);
-  } else {
-    sendString("<p align=center>NOTE: this page is not operational when the RRD plugin is disabled or missing</p>");
-  }
+  } 
+
+  sendString("<p align=left><b>NOTE</b>: this page is not operational when the <A HREF=/plugins/rrdPlugin>RRD plugin</A> is disabled, misconfigured or missing.</p>");
 }
 
 /* ************************ */
@@ -5724,7 +5723,14 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		       "<img class=tooltip valign=top border=0 src=/graph.gif></A></TD></TR>\n",
 		       CONST_DOMAIN_STATS_HTML, AS_GRAPH_VIEW, sym_as_name);
 	 sendString(buf);
-       } else
+      } else if(clusterMode && statsEntry && statsEntry->clusterName) {
+	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		       "<TD "TD_BG" ALIGN=CENTER><A HREF=\"/" CONST_PLUGINS_HEADER "rrdPlugin?action=list&cluster=%s\">"
+		       "<img class=tooltip valign=top border=0 src=/graph.gif></A></TD></TR>\n",
+		       statsEntry->clusterName);
+	 sendString(buf);
+
+      } else
 	 sendString("<TD "TD_BG" ALIGN=CENTER>&nbsp;</TD>");
 
       /* Avoid huge tables */

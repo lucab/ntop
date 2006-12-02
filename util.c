@@ -759,7 +759,7 @@ unsigned short in_isMulticastAddress(struct in_addr *addr,
 
 /* ********************************* */
 
-static u_int8_t num_network_bits(u_int32_t addr) {
+u_int8_t num_network_bits(u_int32_t addr) {
   int num_bits;
 
   for(num_bits=0; addr > 0; num_bits++)
@@ -1086,165 +1086,163 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
   address = strtok_r(addresses, ",", &strtokState);
 
   while(address != NULL) {
+    u_int32_t network, networkMask, broadcast;
+    int bits, a, b, c, d;
     char *mask = strchr(address, '/');
 
     if(mask == NULL) {
-      if (flagWhat == CONST_HANDLEADDRESSLISTS_MAIN)
-        traceEvent(CONST_TRACE_WARNING, "-m: Empty mask '%s' - ignoring entry", address);
+      bits = 32;
     } else {
-      u_int32_t network, networkMask, broadcast;
-      int bits, a, b, c, d;
-
       mask[0] = '\0';
       mask++;
-      bits = dotted2bits (mask);
+      bits = dotted2bits(mask);
+    }
 
-      if(sscanf(address, "%d.%d.%d.%d", &a, &b, &c, &d) != 4) {
-        traceEvent(CONST_TRACE_WARNING, "%s: Bad format '%s' - ignoring entry",
-		   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
-		   address);
-	address = strtok_r(NULL, ",", &strtokState);
-	continue;
-      }
+    if(sscanf(address, "%d.%d.%d.%d", &a, &b, &c, &d) != 4) {
+      traceEvent(CONST_TRACE_WARNING, "%s: Bad format '%s' - ignoring entry",
+		 flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
+		 address);
+      address = strtok_r(NULL, ",", &strtokState);
+      continue;
+    }
 
-      if(bits == CONST_INVALIDNETMASK) {
-	/* malformed netmask specification */
-        traceEvent(CONST_TRACE_WARNING, "%s: Net mask '%s' not valid - ignoring entry",
-		   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
-		   mask);
-	address = strtok_r(NULL, ",", &strtokState);
-	continue;
-      }
+    if(bits == CONST_INVALIDNETMASK) {
+      /* malformed netmask specification */
+      traceEvent(CONST_TRACE_WARNING, "%s: Net mask '%s' not valid - ignoring entry",
+		 flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
+		 mask);
+      address = strtok_r(NULL, ",", &strtokState);
+      continue;
+    }
 
-      network     = ((a & 0xff) << 24) + ((b & 0xff) << 16) + ((c & 0xff) << 8) + (d & 0xff);
-      /* Special case the /32 mask - yeah, we could probably do it with some fancy
-         u long long stuff, but this is simpler...
-         Burton Strauss <Burton@ntopsupport.com> Jun2002
-      */
-      if (bits == 32) {
-	networkMask = 0xffffffff;
-      } else {
-	networkMask = 0xffffffff >> bits;
-	networkMask = ~networkMask;
-      }
+    network     = ((a & 0xff) << 24) + ((b & 0xff) << 16) + ((c & 0xff) << 8) + (d & 0xff);
+    /* Special case the /32 mask - yeah, we could probably do it with some fancy
+       u long long stuff, but this is simpler...
+       Burton Strauss <Burton@ntopsupport.com> Jun2002
+    */
+    if (bits == 32) {
+      networkMask = 0xffffffff;
+    } else {
+      networkMask = 0xffffffff >> bits;
+      networkMask = ~networkMask;
+    }
 
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: Nw=%08X - Mask: %08X [%08X]",
-		 network, networkMask, (network & networkMask));
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Nw=%08X - Mask: %08X [%08X]",
+	       network, networkMask, (network & networkMask));
 #endif
 
-      if((networkMask >= 0xFFFFFF00) /* Courtesy of Roy-Magne Mo <romo@interpost.no> */
-	 && ((network & networkMask) != network))  {
-	/* malformed network specification */
-	traceEvent(CONST_TRACE_WARNING, "%s: %d.%d.%d.%d/%d is not a valid network - correcting mask",
-                   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
-                   a, b, c, d, bits);
+    if((networkMask >= 0xFFFFFF00) /* Courtesy of Roy-Magne Mo <romo@interpost.no> */
+       && ((network & networkMask) != network))  {
+      /* malformed network specification */
+      traceEvent(CONST_TRACE_WARNING, "%s: %d.%d.%d.%d/%d is not a valid network - correcting mask",
+		 flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
+		 a, b, c, d, bits);
 
-	/* correcting network numbers as specified in the netmask */
-	network &= networkMask;
+      /* correcting network numbers as specified in the netmask */
+      network &= networkMask;
+
+      a = (int) ((network >> 24) & 0xff);
+      b = (int) ((network >> 16) & 0xff);
+      c = (int) ((network >>  8) & 0xff);
+      d = (int) ((network >>  0) & 0xff);
+
+      traceEvent(CONST_TRACE_NOISY, "Assuming %d.%d.%d.%d/%d [0x%08x/0x%08x]",
+		 a, b, c, d, bits, network, networkMask);
+    }
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "DEBUG: %d.%d.%d.%d/%d [0x%08x/0x%08x]",
+	       a, b, c, d, bits, network, networkMask);
+#endif
+
+    broadcast = network | (~networkMask);
+
+#ifdef DEBUG
+    a = (int) ((broadcast >> 24) & 0xff);
+    b = (int) ((broadcast >> 16) & 0xff);
+    c = (int) ((broadcast >>  8) & 0xff);
+    d = (int) ((broadcast >>  0) & 0xff);
+
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Broadcast: [net=0x%08x] [broadcast=%d.%d.%d.%d]",
+	       network, a, b, c, d);
+#endif
+
+    if((*numNetworks) < MAX_NUM_NETWORKS) {
+      int found = 0;
+      /* If this is the real list, we check against the actual network addresses
+       * and warn the user of superfluous entries - for the other lists, rrd and netflow
+       * the local address is valid, it's NOT assumed.
+       */
+      if (flagWhat == CONST_HANDLEADDRESSLISTS_MAIN) {
+	for(i=0; i<myGlobals.numDevices; i++) {
+	  if((network == myGlobals.device[i].network.s_addr) &&
+	     (myGlobals.device[i].netmask.s_addr == networkMask)) {
+	    a = (int) ((network >> 24) & 0xff);
+	    b = (int) ((network >> 16) & 0xff);
+	    c = (int) ((network >>  8) & 0xff);
+	    d = (int) ((network >>  0) & 0xff);
+
+	    traceEvent(CONST_TRACE_INFO,
+		       "-m: Discarded unnecessary parameter %d.%d.%d.%d/%d - this is the local network",
+		       a, b, c, d, bits);
+	    found = 1;
+	  }
+	}
+      }
+
+      if(found == 0) {
+	theNetworks[(*numNetworks)][CONST_NETWORK_ENTRY]    = network;
+	theNetworks[(*numNetworks)][CONST_NETMASK_ENTRY]    = networkMask;
+	theNetworks[(*numNetworks)][CONST_NETMASK_V6_ENTRY] = bits;
+	theNetworks[(*numNetworks)][CONST_BROADCAST_ENTRY]  = broadcast;
 
 	a = (int) ((network >> 24) & 0xff);
 	b = (int) ((network >> 16) & 0xff);
 	c = (int) ((network >>  8) & 0xff);
 	d = (int) ((network >>  0) & 0xff);
 
-	traceEvent(CONST_TRACE_NOISY, "Assuming %d.%d.%d.%d/%d [0x%08x/0x%08x]",
-		   a, b, c, d, bits, network, networkMask);
+	laBufferUsed = safe_snprintf(__FILE__, __LINE__,
+				     &localAddresses[laBufferPosition],
+				     localAddressesLen,
+				     "%s%d.%d.%d.%d/%d",
+				     (*numNetworks) == 0 ? "" : ", ",
+				     a, b, c, d,
+				     bits);
+	if(laBufferUsed > 0) {
+	  laBufferPosition  += laBufferUsed;
+	  localAddressesLen -= laBufferUsed;
+	}
+
+	(*numNetworks)++;
+
       }
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: %d.%d.%d.%d/%d [0x%08x/0x%08x]",
-		 a, b, c, d, bits, network, networkMask);
-#endif
+    } else {
+      a = (int) ((network >> 24) & 0xff);
+      b = (int) ((network >> 16) & 0xff);
+      c = (int) ((network >>  8) & 0xff);
+      d = (int) ((network >>  0) & 0xff);
 
-      broadcast = network | (~networkMask);
-
-#ifdef DEBUG
-      a = (int) ((broadcast >> 24) & 0xff);
-      b = (int) ((broadcast >> 16) & 0xff);
-      c = (int) ((broadcast >>  8) & 0xff);
-      d = (int) ((broadcast >>  0) & 0xff);
-
-      traceEvent(CONST_TRACE_INFO, "DEBUG: Broadcast: [net=0x%08x] [broadcast=%d.%d.%d.%d]",
-		 network, a, b, c, d);
-#endif
-
-      if((*numNetworks) < MAX_NUM_NETWORKS) {
-        int found = 0;
-        /* If this is the real list, we check against the actual network addresses
-         * and warn the user of superfluous entries - for the other lists, rrd and netflow
-         * the local address is valid, it's NOT assumed.
-         */
-        if (flagWhat == CONST_HANDLEADDRESSLISTS_MAIN) {
-          for(i=0; i<myGlobals.numDevices; i++) {
-            if((network == myGlobals.device[i].network.s_addr) &&
-               (myGlobals.device[i].netmask.s_addr == networkMask)) {
-              a = (int) ((network >> 24) & 0xff);
-              b = (int) ((network >> 16) & 0xff);
-              c = (int) ((network >>  8) & 0xff);
-              d = (int) ((network >>  0) & 0xff);
-
-              traceEvent(CONST_TRACE_INFO,
-                         "-m: Discarded unnecessary parameter %d.%d.%d.%d/%d - this is the local network",
-		         a, b, c, d, bits);
-              found = 1;
-            }
-          }
-        }
-
-	if(found == 0) {
-          theNetworks[(*numNetworks)][CONST_NETWORK_ENTRY]    = network;
-          theNetworks[(*numNetworks)][CONST_NETMASK_ENTRY]    = networkMask;
-	  theNetworks[(*numNetworks)][CONST_NETMASK_V6_ENTRY] = bits;
-          theNetworks[(*numNetworks)][CONST_BROADCAST_ENTRY]  = broadcast;
-
-          a = (int) ((network >> 24) & 0xff);
-          b = (int) ((network >> 16) & 0xff);
-          c = (int) ((network >>  8) & 0xff);
-          d = (int) ((network >>  0) & 0xff);
-
-          laBufferUsed = safe_snprintf(__FILE__, __LINE__,
-				       &localAddresses[laBufferPosition],
-                                       localAddressesLen,
-                                       "%s%d.%d.%d.%d/%d",
-                                       (*numNetworks) == 0 ? "" : ", ",
-                                       a, b, c, d,
-                                       bits);
-          if(laBufferUsed > 0) {
-            laBufferPosition  += laBufferUsed;
-            localAddressesLen -= laBufferUsed;
-          }
-
-          (*numNetworks)++;
-
-        }
-      } else {
-        a = (int) ((network >> 24) & 0xff);
-        b = (int) ((network >> 16) & 0xff);
-        c = (int) ((network >>  8) & 0xff);
-        d = (int) ((network >>  0) & 0xff);
-
-        traceEvent(CONST_TRACE_ERROR,
-		   "%s: %d.%d.%d.%d/%d - Too many networks (limit %d) - discarded",
-                   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
-                   a, b, c, d, bits,
-                   MAX_NUM_NETWORKS);
-      }
+      traceEvent(CONST_TRACE_ERROR,
+		 "%s: %d.%d.%d.%d/%d - Too many networks (limit %d) - discarded",
+		 flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
+		 flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
+		 a, b, c, d, bits,
+		 MAX_NUM_NETWORKS);
     }
 
     address = strtok_r(NULL, ",", &strtokState);
@@ -2698,7 +2696,7 @@ void traceEvent(int eventTraceLevel, char* file,
 	  unsigned int messageid = 0;
 	  int i;
 
-	  safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[t%lu %s:%d] ", 
+	  safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[t%lu %s:%d] ",
 			pthread_self(), &mFile[beginFileIdx], line);
 
 	  /* Hash the message format into an id */
