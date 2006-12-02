@@ -338,7 +338,7 @@ static void createMultihostGraph(char *rrdName,
 static void expandRRDList(char *rrdName,
 			  u_int32_t localNetworks[MAX_NUM_NETWORKS][4], /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
 			  u_short numLocalNetworks, char *startTime, char* endTime) {
-  char path[256], rrdName_copy[64], debug=1;
+  char path[256], rrdName_copy[64], debug=0;
   u_int32_t numRrdHosts = 0, i;
   HostTraffic *rrdHosts[MAX_NUM_NETWORKS];
 
