@@ -123,6 +123,8 @@ char x2c(char *what);
 static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
 static void addRrdDelay();
 
+#define MAX_NUM_RRDS 64
+
 /* ************************************* */
 
 static ExtraPage rrdExtraPages[] = {
@@ -384,6 +386,18 @@ static void expandRRDList(char *rrdName,
 
 /* ******************************************* */
 
+static int cmpStrings(const void *_a, const void *_b)
+{
+  char **str_a = (char**)_a;
+  char **str_b = (char**)_b;
+
+  /* traceEvent(CONST_TRACE_WARNING, "RRD: [%s][%s]", *str_a, *str_b); */
+
+  return(strcmp(*str_a, *str_b));
+}
+
+/* ******************************************* */
+
 static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 			 char *startTime, char* endTime) {
   char path[512], url[512], hasNetFlow, buf[512];
@@ -411,9 +425,9 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
   sendString("<p ALIGN=left>\n");
 
   safe_snprintf(__FILE__, __LINE__, url, sizeof(url),
-		"/" CONST_PLUGINS_HEADER "%s?action=list&key=%s&title=%s&end=%u",
+		"/" CONST_PLUGINS_HEADER "%s?action=list&key=%s&title=%s&end=%u&cluster=%s",
 		rrdPluginInfo->pluginURLname,
-		rrdPath, rrdTitle, now);
+		rrdPath, rrdTitle, now, cluster ? cluster : "");
 
   sendString("<form name=myform method=get>\n<b>Presets:</b>&nbsp;\n"
 	     "<select name=presets onchange=\"window.location=document.myform.presets.options[document.myform.presets.selectedIndex].value\">\n");
@@ -549,7 +563,9 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
     /* Cluster */
     char clusterAddresses[256] = { '\0' }, localAddresses[1024] = { '\0' };
     u_int32_t localNetworks[MAX_NUM_NETWORKS][4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
-    u_short numLocalNetworks = 0, found = 0;
+    u_short numLocalNetworks = 0, found = 0, num_rrds = 0;
+    char *keys[MAX_NUM_RRDS];
+    int k;
 
     snprintf(buf, sizeof(buf), "cluster.%s", cluster);
     if(fetchPrefsValue(buf, clusterAddresses, sizeof(clusterAddresses)) != -1) {
@@ -573,17 +589,25 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 	
 	for(j=strlen(myGlobals.rrdPath); j<strlen(path); j++) if((path[j] == '.') || (path[j] == ':')) path[j] = '/';
 
-	traceEvent(CONST_TRACE_INFO, "RRD: ------> %s", path);
-
 	revertSlashIfWIN32(path, 0);
 
 	if((directoryPointer = opendir(path)) != NULL) {
 	  while((dp = readdir(directoryPointer)) != NULL) {
-	    if((dp->d_name[0] == '.') || (!strstr(dp->d_name, "Sent")))
+	    if((dp->d_name[0] == '.') /* || (!strstr(dp->d_name, "Sent")) */)
 	      continue;
 	    else {
+	      int duplicated = 0;
+	      
 	      found = 1;
-	      expandRRDList(dp->d_name, localNetworks, numLocalNetworks, startTime, endTime);
+
+	      for(k=0; k<num_rrds; k++)
+		if(!strcmp(keys[k], dp->d_name)) {
+		  duplicated = 1;
+		  break;
+		}
+
+	      if((!duplicated) && (num_rrds < (MAX_NUM_RRDS-1)))
+		keys[num_rrds++] = strdup(dp->d_name);
 	    }
 	  }
 
@@ -591,6 +615,11 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 	}
       }
     }
+
+    qsort(keys, num_rrds, sizeof(char*), cmpStrings);
+
+    for(k=0; k<num_rrds; k++)
+      expandRRDList(keys[k], localNetworks, numLocalNetworks, startTime, endTime);
 
     if(!found) {
       sendString("<tr><td>");
@@ -1020,7 +1049,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
       argv[argc++] = buf1[entryId];
 
 
-      safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %3.1lf%s");
+      safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %3.1lf%s\\t");
       argv[argc++] = buf2[entryId];
 
       safe_snprintf(__FILE__, __LINE__, buf3[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Last\\: %3.1lf%s\\n");
@@ -1453,6 +1482,48 @@ static char* spacer(char* str, char *tmpStr, int tmpStrLen,
   return(tmpStr);
 }
 
+/* ******************************* */
+
+static char* formatTitle(char *str, char *buf, u_short buf_len) {
+  int len, shift = 0;
+
+  if(buf_len <= (strlen(str) + 10))
+    return(str); /* No much space */
+
+  if(!strncmp(str, "IP_", 3)) shift = 3;
+  safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s", &str[shift]);
+
+  len = strlen(buf);
+
+  if(!strcmp(&buf[len-7], "LocSent")) {
+    buf[len-7] = '\0';
+    strcat(buf, " Sent Locally");
+  } else if(!strcmp(&buf[len-9], "BytesSent")) {
+    buf[len-9] = '\0';
+    strcat(buf, " Sent (Bytes)");
+  } else if(!strcmp(&buf[len-7], "RemSent")) {
+    buf[len-7] = '\0';
+    strcat(buf, " Sent to Remote Hosts");
+  } else if(!strcmp(&buf[len-4], "Sent")) {
+    buf[len-4] = '\0';
+    strcat(buf, " Sent");
+  } else if(!strcmp(&buf[len-9], "BytesRcvd")) {
+    buf[len-9] = '\0';
+    strcat(buf, " Received (Bytes)");
+  } else if(!strcmp(&buf[len-7], "LocRcvd")) {
+    buf[len-7] = '\0';
+    strcat(buf, " Rcvd From Local Hosts");
+  } else if(!strcmp(&buf[len-11], "FromRemRcvd")) {
+    buf[len-11] = '\0';
+    strcat(buf, " Rcvd From Remote Hosts");
+  } else if(!strcmp(&buf[len-4], "Rcvd")) {
+    buf[len-4] = '\0';
+    strcat(buf, " Received");
+  }
+
+  return(buf);
+}
+
 /* ****************************** */
 
 #undef option_timespan
@@ -1482,7 +1553,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   int argc = 0, rc, x, y, i, entryId=0, num_rrd_hosts_path = 0, j;
   DIR* directoryPointer;
   char *rrd_custom[MAX_NUM_RRD_ENTRIES], *rrd_hosts_path[MAX_NUM_RRD_HOSTS], 
-    *rrd_hosts[MAX_NUM_RRD_HOSTS], file_a[32], file_b[32];
+    *rrd_hosts[MAX_NUM_RRD_HOSTS], file_a[32], file_b[32], title_buf[48];
   double ymin,ymax;
 
   path[0] = '\0', label = "";
@@ -1760,7 +1831,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
   if(graphId == 98) {
     argv[argc++] = "--title";
-    argv[argc++] = rrdName;
+    argv[argc++] = formatTitle(rrdName, title_buf, sizeof(title_buf));
   }
 
 #ifdef CONST_RRD_DEFAULT_FONT_NAME
@@ -1781,7 +1852,6 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   for(j=0, entryId=0; j<num_rrd_hosts_path; j++) {
     for(i=0; rrds[i] != NULL; i++) {
       struct stat statbuf;
-      int y;
 
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/%s%s",
 		    myGlobals.rrdPath, rrd_hosts_path[j], rrds[i], CONST_RRD_EXTENSION);
