@@ -322,17 +322,29 @@ static void createMultihostGraph(char *rrdName,
       strcat(hosts, rrdHosts[i]->hostResolvedName);
     }
   }
+ 
+  /*
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		"<A HREF=\"/" CONST_PLUGINS_HEADER "%s?mode=zoom&action=graphSummary&graphId=98&name=%s&start=%s&end=%s&key=%s\">",
+		rrdPluginInfo->pluginURLname, rrdName, startTime, endTime, hosts);
+  sendString(buf);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		"<IMG SRC=\"/" CONST_PLUGINS_HEADER "%s?action=graphSummary&graphId=98&name=%s&start=%s&end=%s&key=%s\"></A>\n",
+		rrdPluginInfo->pluginURLname, rrdName, startTime, endTime, hosts);
+    sendString(buf);
+  */
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		"<tr><td><IMG SRC=\"/" CONST_PLUGINS_HEADER "%s?action=graphSummary&graphId=98&name=%s&start=%s&end=%s&key=%s\"></td>\n",
+		"</td>&nbsp;<td><IMG SRC=\"/" CONST_PLUGINS_HEADER "%s?action=graphSummary&graphId=98&name=%s&start=%s&end=%s&key=%s\"></td>\n",
 		rrdPluginInfo->pluginURLname, rrdName, startTime, endTime, hosts);
     sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"<td><A HREF=\"/" CONST_PLUGINS_HEADER "%s?mode=zoom&action=graphSummary&graphId=98&name=%s&start=%s&end=%s&key=%s\">"
-		"<IMG valign=top class=tooltip SRC=/graph_zoom.gif border=0></A></td></tr>\n",
+		"<IMG valign=top class=tooltip SRC=/graph_zoom.gif border=0></A>\n",
 		rrdPluginInfo->pluginURLname, rrdName, startTime, endTime, hosts);
   sendString(buf);
+
 }
 
 /* ******************************************* */
@@ -360,11 +372,14 @@ static void expandRRDList(char *rrdName,
 
     if((el = findHostByNumIP(ha, 0, myGlobals.actualReportDeviceId)) != NULL) {
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/hosts/%s/%s",
-		    myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].name,
+		    myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		    (el->ethAddressString[0] != '\0') ? el->ethAddressString : el->hostNumIpAddress,
 		    rrdName);
 
-      for(j=strlen(myGlobals.rrdPath); j<strlen(path)-strlen(CONST_RRD_EXTENSION); j++) 
+      for(j=strlen(myGlobals.rrdPath)
+	    +strlen("/interfaces/")
+	    +strlen(myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName)
+	    +strlen("/hosts/"); j<strlen(path)-strlen(CONST_RRD_EXTENSION); j++) 
 	if((path[j] == '.') || (path[j] == ':')) path[j] = '/';
       revertSlashIfWIN32(path, 0);
 
@@ -403,7 +418,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
   char path[512], url[512], hasNetFlow, buf[512];
   DIR* directoryPointer=NULL;
   struct dirent* dp;
-  int numEntries = 0, i, min, max, numFailures = 0;
+  int numEntries = 0, i, min, max, numFailures = 0, debug = 0;
   time_t now = time(NULL);
 
   if(!validHostCommunity(rrdTitle)) {
@@ -584,14 +599,17 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 
       if((el = findHostByNumIP(ha, 0, myGlobals.actualReportDeviceId)) != NULL) {
 	safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/hosts/%s",
-		      myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].name,
+		      myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		      (el->ethAddressString[0] != '\0') ? el->ethAddressString : el->hostNumIpAddress);
 	
-	for(j=strlen(myGlobals.rrdPath); j<strlen(path); j++) if((path[j] == '.') || (path[j] == ':')) path[j] = '/';
+	for(j=strlen(path)-strlen((el->ethAddressString[0] != '\0') ? el->ethAddressString : el->hostNumIpAddress); j<strlen(path); j++) 
+	  if((path[j] == '.') || (path[j] == ':')) path[j] = '/';
 
 	revertSlashIfWIN32(path, 0);
 
 	if((directoryPointer = opendir(path)) != NULL) {
+	  if(debug) traceEvent(CONST_TRACE_INFO, "RRD: Found %s", path);
+
 	  while((dp = readdir(directoryPointer)) != NULL) {
 	    if((dp->d_name[0] == '.') /* || (!strstr(dp->d_name, "Sent")) */)
 	      continue;
@@ -612,14 +630,42 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 	  }
 
 	  closedir(directoryPointer);
-	}
+	} else
+	  if(debug) traceEvent(CONST_TRACE_INFO, "RRD: NOT found %s", path);
       }
     }
 
     qsort(keys, num_rrds, sizeof(char*), cmpStrings);
+    
+    sendString("<table border=0>\n");
 
-    for(k=0; k<num_rrds; k++)
-      expandRRDList(keys[k], localNetworks, numLocalNetworks, startTime, endTime);
+    for(k=0; k<num_rrds; k++) {
+      sendString("\n<!-- XXX -->\n");
+
+      if(strstr(keys[k], "Rcvd")) {
+	if((k > 0) && strstr(keys[k-1], "Rcvd"))
+	  sendString("<td colspan=3>&nbsp;<td></tr>\n");
+
+	sendString("<tr><td>");
+      } else if(strstr(keys[k], "Sent")) {
+	if((k > 0) && strstr(keys[k-1], "Sent"))
+	  sendString("<tr><td colspan=3>&nbsp;<td>");
+	else
+	  sendString("<td>");
+      }
+
+      if(0)
+	sendString("Image</td><td>Link");
+      else
+	expandRRDList(keys[k], localNetworks, numLocalNetworks, startTime, endTime);
+      
+      if(strstr(keys[k], "Rcvd"))
+	sendString("</td>");
+      else if(strstr(keys[k], "Sent"))
+	sendString("</td></tr>\n");
+    }
+
+    sendString("</table>");
 
     if(!found) {
       sendString("<tr><td>");
@@ -1630,8 +1676,12 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
 	  safe_snprintf(__FILE__, __LINE__, tmpPath, sizeof(tmpPath),
 			"interfaces/%s/hosts/%s",
-			myGlobals.device[myGlobals.actualReportDeviceId].name,
+			myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 			the_host);
+	  
+	  for(y=strlen(tmpPath)-strlen(the_host); y<strlen(tmpPath); y++) 
+	    if((path[y] == '.') || (path[y] == ':')) path[y] = '/';
+
 	  rrd_hosts_path[num_rrd_hosts_path++] = strdup(tmpPath);	 
 	  host = strtok_r(NULL, ",", &strTokPos);
 	}
@@ -1855,9 +1905,6 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/%s%s",
 		    myGlobals.rrdPath, rrd_hosts_path[j], rrds[i], CONST_RRD_EXTENSION);
-
-      for(y=strlen(myGlobals.rrdPath); y<strlen(path)-strlen(CONST_RRD_EXTENSION); y++) 
-	if((path[y] == '.') || (path[y] == ':')) path[y] = '/';
       revertSlashIfWIN32(path, 0);
 
       /* traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s) [%d/%d]", path, j, num_rrd_hosts_path); */

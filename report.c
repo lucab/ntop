@@ -5197,7 +5197,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
     hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   u_int32_t localNetworks[MAX_NUM_CLUSTERS][MAX_NUM_NETWORKS][4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
   u_short numLocalNetworks[MAX_NUM_CLUSTERS], totNumClusters=0;
-  u_char *clusterNames[MAX_NUM_CLUSTERS];
+  u_char *clusterNames[MAX_NUM_CLUSTERS], debug = 1;
 
   network_mode_sort = network_mode;
 
@@ -5274,14 +5274,18 @@ void printDomainStats(char* domain_network_name, int network_mode,
     } else {
       char clusterAddresses[256];
 
-      snprintf(buf, sizeof(buf), "cluster.%s", domain_network_name);
+      snprintf(buf, sizeof(buf), CLUSTER_HEADER"%s", domain_network_name);
       if(fetchPrefsValue(buf, clusterAddresses, sizeof(clusterAddresses)) != -1) {
 	localAddresses[0] = '\0';
 	numLocalNetworks[totNumClusters] = 0;
 	handleAddressLists(clusterAddresses, localNetworks[totNumClusters], &numLocalNetworks[totNumClusters],
 			   localAddresses, sizeof(localAddresses),
 			   CONST_HANDLEADDRESSLISTS_CLUSTERS);
-	clusterNames[totNumClusters] = (u_char*)strdup((char*)&domain_network_name[CLUSTER_HEADER_LEN]);
+	/* clusterNames[totNumClusters] = (u_char*)strdup((char*)&domain_network_name[CLUSTER_HEADER_LEN]);  */
+	clusterNames[totNumClusters] = (u_char*)strdup(domain_network_name);
+
+	if(debug) traceEvent(CONST_TRACE_WARNING, "clusterNames[%d]=[%s]", totNumClusters,  clusterNames[totNumClusters]);
+
 	totNumClusters++;
       }
 
@@ -5297,6 +5301,8 @@ void printDomainStats(char* domain_network_name, int network_mode,
     }
   }
 
+  if(debug) traceEvent(CONST_TRACE_WARNING, "totNumClusters=%d", totNumClusters);
+  
   printHTMLheader(buf, NULL, 0);
 
   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
@@ -5394,11 +5400,13 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	  }
 	}
       } else {
+	/* Cluster */
 	if(el->community && (!isAllowedCommunity(el->community)))
 	  continue;
 	else if(broadcastHost(el))
 	  continue;
-	else if(!clusterMode) {
+	else {
+	  /*
 	  if(domain_network_name
 	     && el->dnsDomainValue
 	     && (strcmp(el->dnsDomainValue, domain_network_name) != 0))
@@ -5410,12 +5418,12 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	     || (el->hostResolvedName[0] == '\0')
 	     || (el->ip2ccValue == '\0'))
 	    continue;
+	  */
 	}
       }
 
       if(domain_network_name == NULL) /* All entries */ {
 	if(!clusterMode) {
-
 	  if(network_mode == NETWORK_VIEW) {
 	    /* Network */
 	    char *nw_name = host2networkName(el, buf1, sizeof(buf1));
@@ -5467,6 +5475,10 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
 	  keyValue = 0;
 	all_hosts_cluster:
+
+	  if(debug) traceEvent(CONST_TRACE_WARNING, "[keyValue=%d][totNumClusters=%d]",
+			       keyValue, totNumClusters);
+
 	  for(; keyValue<totNumClusters; keyValue++) {
 	    if(__pseudoLocalAddress(&el->hostIpAddress.addr._hostIp4Address,
 				    localNetworks[keyValue], numLocalNetworks[keyValue], NULL, NULL)) {
@@ -5488,11 +5500,11 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	    statsEntry->clusterName = (char*)clusterNames[keyValue];
 	  else
 	    statsEntry->domainHost = el;
+
 	  stats[keyValue] = statsEntry;
 	  /* traceEvent(CONST_TRACE_INFO, "[%d] %s/%s", numEntries, el->dnsDomainValue, el->ip2ccValue); */
 	}
       } else /* Only the selected items */ {
-
 	if(clusterMode) {
 	  if(!__pseudoLocalAddress(&el->hostIpAddress.addr._hostIp4Address,
 				   localNetworks[0], numLocalNetworks[0], NULL, NULL))
@@ -5502,7 +5514,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	statsEntry = &tmpStats[numEntries++];
 	memset(statsEntry, 0, sizeof(DomainStats));
 	statsEntry->domainHost = el;
-	/* traceEvent(CONST_TRACE_INFO, "--> Adding %s [ptr=%p][%s]", el->hostNumIpAddress, el); */
+	if(debug) traceEvent(CONST_TRACE_INFO, "--> Adding %s [ptr=%p][%s]", el->hostNumIpAddress, el);
 	stats[keyValue++] = statsEntry;
       }
 
@@ -5528,7 +5540,6 @@ void printDomainStats(char* domain_network_name, int network_mode,
       if(numEntries >= maxHosts) break;
     } /* for(;;) */
 
-
     if(numEntries == 0) {
       printNoDataYet();
       free(tmpStats); free(stats);
@@ -5537,6 +5548,8 @@ void printDomainStats(char* domain_network_name, int network_mode,
     }
 
     myGlobals.columnSort = sortedColumn;
+
+    if(debug) traceEvent(CONST_TRACE_WARNING, "qsort(numEntries=%d)", numEntries);
 
     qsort(tmpStats, numEntries, sizeof(DomainStats), cmpStatsFctn);
 
@@ -5831,7 +5844,7 @@ void printNotAvailable(char * flagName) {
 
 void listNetFlows(void) {
   char buf[LEN_GENERAL_WORK_BUFFER];
-  int numEntries=0;
+  int numEntries=0, debug = 1;
   FlowFilterList *list = myGlobals.flowsList;
   char formatBuf[32], formatBuf1[32];
 

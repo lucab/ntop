@@ -96,10 +96,11 @@ static void setDomainName(void) {
   while((len > 0) && (myGlobals.runningPref.domainName[len] != '.'))
     len--;
 
-  if(len == 0)
-    myGlobals.shortDomainName = strdup(myGlobals.runningPref.domainName);
-  else
+  if((len > 0) 
+     && ((len+1) <  strlen(myGlobals.runningPref.domainName)))
     myGlobals.shortDomainName = strdup(&myGlobals.runningPref.domainName[len+1]);
+  else
+    myGlobals.shortDomainName = strdup(myGlobals.runningPref.domainName);
 }
 
 /* ------------------------------------------------------------ */

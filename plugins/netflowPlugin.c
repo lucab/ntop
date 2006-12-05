@@ -388,14 +388,14 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip, int deviceId, u_in
       }
 
 #ifdef HAVE_SNMP
-    accessMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueMutex, "netflowUtilsLoop");
-    if(myGlobals.device[deviceId].netflowGlobals->ifStatsQueue_len < (MAX_INTERFACE_STATS_QUEUE_LEN-1)) {
-      myGlobals.device[deviceId].netflowGlobals->ifStatsQueue[myGlobals.device[deviceId].netflowGlobals->ifStatsQueue_len++] = ifStats;
-      signalCondvar(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueCondvar);
-    }
-    releaseMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueMutex);
+      accessMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueMutex, "netflowUtilsLoop");
+      if(myGlobals.device[deviceId].netflowGlobals->ifStatsQueue_len < (MAX_INTERFACE_STATS_QUEUE_LEN-1)) {
+	myGlobals.device[deviceId].netflowGlobals->ifStatsQueue[myGlobals.device[deviceId].netflowGlobals->ifStatsQueue_len++] = ifStats;
+	signalCondvar(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueCondvar);
+      }
+      releaseMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueMutex);
 #else
-    ifStats->interface_name[0] = '\0';
+      ifStats->interface_name[0] = '\0';
 #endif
     }
 
