@@ -971,6 +971,7 @@ void reinitMutexes (void) {
   }
 
   createMutex(&myGlobals.securityItemsMutex);
+  createMutex(&myGlobals.hostsHashLockMutex);
 
   if(myGlobals.runningPref.numericFlag == 0) {
     createMutex(&myGlobals.addressResolutionMutex);
