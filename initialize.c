@@ -865,9 +865,28 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
   */
 
   memset(&tmpBuf, 0, sizeof(tmpBuf));
+ 
+#ifdef WIN32
+  {
+    unsigned long driveSerial;
+  
+	get_serial(&driveSerial);
+
+	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/%u",
+	      directory != NULL ? directory : myGlobals.dbPath, driveSerial);
+
+	mkdir_p("DB", tmpBuf, 0x777);
+
+		safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/%u/%s",
+	      directory != NULL ? directory : myGlobals.dbPath, driveSerial,
+	      dbName);
+
+  }
+#else
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/%s",
 	      directory != NULL ? directory : myGlobals.dbPath,
 	      dbName);
+#endif
 
   if(statbuf) {
     if(stat(tmpBuf, statbuf) == 0) {

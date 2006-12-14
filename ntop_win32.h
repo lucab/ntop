@@ -428,5 +428,6 @@ extern void sniffSinglePacket(void(*pbuf_process)(u_char *unused,
 #define MAX_NUM_PACKETS   1000
 
 extern short isWinNT();
+extern void get_serial(unsigned long *driveSerial);
 
 /* #define WIN32_DEMO */

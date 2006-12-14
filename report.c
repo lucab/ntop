@@ -5005,6 +5005,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   if((i = stat(tmpBuf, &statbuf)) != 0) {
     useRRD = 0;
+	sendString("<p align=left><b>NOTE</b>: this page is not operational when the <A HREF=/plugins/rrdPlugin>RRD plugin</A> is disabled, misconfigured or missing. Please check the ntop log file.</p>");
+
     return;
   }
 
@@ -5878,6 +5880,8 @@ void listNetFlows(void) {
 
     sendString("</CENTER>\n");
   }
+
+  sendString("<p align=left><b>NOTE</b>: Network flows have no relation at all with NetFlow/sFlow protocols.</p>\n");
 
   if(numEntries == 0) {
     sendString("<CENTER><P><H1>No Available/Active Network Flows</H1><p>"

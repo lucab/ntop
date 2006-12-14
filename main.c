@@ -323,6 +323,15 @@ int main(int argc, char *argv[]) {
        buf[LEN_GENERAL_WORK_BUFFER];
 #endif
 
+  /*
+  unsigned long driveSerial;
+  if(get_serial("C:\\", &driveSerial))
+	  printf("C:\\ Serial Number: %u\n", driveSerial);
+  else
+printf("Unable to read serial number\n");
+		exit(0);
+		*/
+
 /* Don't move this below nor above */
 #if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
   mtrace();

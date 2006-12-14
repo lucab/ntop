@@ -2445,6 +2445,12 @@ static void setGlobalPermissions(int permissionsFlag) {
 static void commonRRDinit(void) {
   char value[1024];
 
+#ifdef WIN32
+  unsigned long driveSerial;
+  
+  get_serial(&driveSerial);
+#endif
+
   initUdp();
   shownCreate = 0;
 
@@ -2625,6 +2631,17 @@ static void commonRRDinit(void) {
     myGlobals.rrdPath  = (char*)malloc(vlen);
     unescape(myGlobals.rrdPath, vlen, value);
   }
+
+#ifdef WIN32
+  {	
+	 char buf[256];
+
+	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%u", myGlobals.rrdPath, driveSerial);
+	 free(myGlobals.rrdPath);
+	 myGlobals.rrdPath = strdup(buf);
+	 mkdir_p("RRD", myGlobals.rrdPath, 0x777);
+  }
+#endif
 
 #ifndef WIN32
   if(fetchPrefsValue("rrd.permissions", value, sizeof(value)) == -1) {
