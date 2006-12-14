@@ -296,7 +296,7 @@ static int sumCounter(char *rrdPath, char *rrdFilePath, char *consolidation_func
   free(ds_namv);
   free(data);
 
-  (*total)   = _total*step;
+  (*total)   = (Counter)(_total*step);
   (*average) = (float)(*total)/(float)(end-start);
   return(0);
 }
@@ -418,7 +418,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
   char path[512], url[512], hasNetFlow, buf[512];
   DIR* directoryPointer=NULL;
   struct dirent* dp;
-  int numEntries = 0, i, min, max, numFailures = 0, debug = 0;
+  int numEntries = 0, i, numFailures = 0, debug = 0;
   time_t now = time(NULL);
 
   if(!validHostCommunity(rrdTitle)) {
@@ -3072,9 +3072,9 @@ static void arbitraryAction(char *rrdName,
 
 static void statisticsPage(void) {
   char buf[1024];
-  int i;
   float pminDelay=99999.0, pmaxDelay=0.0;
 #ifdef MAX_RRD_PROCESS_BUFFER
+  int i;
   float  /*stddev:*/ pM, pT, pQ, pR, pSD;
 #endif
 

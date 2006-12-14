@@ -1748,8 +1748,12 @@ static void* netflowMainLoop(void* _deviceId) {
     }
 #endif
 
+	if(!myGlobals.device[deviceId].activeDevice) break;
     wait_time.tv_sec = 3, wait_time.tv_usec = 0;
-    if((rc = select(maxSock+1, &netflowMask, NULL, NULL, &wait_time)) > 0) {
+	rc = select(maxSock+1, &netflowMask, NULL, NULL, &wait_time);
+    if(!myGlobals.device[deviceId].activeDevice) break;
+
+    if(rc > 0) {
       if(FD_ISSET(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, &netflowMask)){
 	len = sizeof(fromHost);
 	rc = recvfrom(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket,
@@ -3179,6 +3183,24 @@ static int mapNetFlowDeviceToNtopDevice(int netFlowDeviceId) {
 
 /* ****************************** */
 
+static void flushDevicePrefs(int deviceId) {
+	if(deviceId >= myGlobals.numDevices) return;
+	delPrefsValue(nfValue(deviceId, "netFlowInPort", 1));
+	delPrefsValue(nfValue(deviceId, "ifNetMask", 1));
+	delPrefsValue(nfValue(deviceId, "whiteList", 1));
+	delPrefsValue(nfValue(deviceId, "netFlowDumpPath", 1));
+	delPrefsValue(nfValue(deviceId, "netFlowDumpInterval", 1));
+	delPrefsValue(nfValue(deviceId, "blackList", 1));
+	delPrefsValue(nfValue(deviceId, "enableSessionHandling", 1));
+	delPrefsValue(nfValue(deviceId, "saveFlowsIntoDB", 1));
+	delPrefsValue(nfValue(deviceId, "netFlowAssumeFTP", 1));
+	delPrefsValue(nfValue(deviceId, "netFlowAggregation", 1));
+	delPrefsValue(nfValue(deviceId, "debug", 1));
+	delPrefsValue(nfValue(deviceId, "humanFriendlyName", 1));
+}
+
+/* ****************************** */
+
 static void handleNetflowHTTPrequest(char* _url) {
   char workList[1024], *url;
   int deviceId = -1, originalId = -1;
@@ -3230,7 +3252,23 @@ static void handleNetflowHTTPrequest(char* _url) {
 	    }
 	  }
 	} else if(strcmp(device, "name") == 0) {
-	  sanitize_rrd_string(value);
+		char old_name[256], new_name[256];
+		int rc;
+
+		sanitize_rrd_string(value);
+
+		  safe_snprintf(__FILE__, __LINE__, old_name, sizeof(old_name), "%s/interfaces/%s",
+		    myGlobals.rrdPath, myGlobals.device[deviceId].humanFriendlyName);
+			revertSlashIfWIN32(old_name, 0);
+
+		  safe_snprintf(__FILE__, __LINE__, new_name, sizeof(new_name), "%s/interfaces/%s",
+		    myGlobals.rrdPath, value);
+			revertSlashIfWIN32(new_name, 0);
+
+		rc = rename(old_name, new_name);
+
+		// traceEvent(CONST_TRACE_INFO, "NETFLOW: rename(%s -> %s) returned %d", old_name, new_name, rc);
+	  
 	  free(myGlobals.device[deviceId].humanFriendlyName);
 	  myGlobals.device[deviceId].humanFriendlyName = strdup(value);
 	  storePrefsValue(nfValue(deviceId, "humanFriendlyName", 1), value);
@@ -3400,7 +3438,10 @@ static void handleNetflowHTTPrequest(char* _url) {
       storePrefsValue(nfValue(deviceId, "knownDevices", 0), value1);
     }
 
-    termNetflowDevice(readDeviceId);
+	myGlobals.device[readDeviceId].activeDevice = 0; // Terminate thread
+	flushDevicePrefs(readDeviceId);
+
+    // termNetflowDevice(readDeviceId);
 
     printHTMLheader("NetFlow Device Configuration", NULL, 0);
     printNetFlowDeviceConfiguration();

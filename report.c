@@ -6578,7 +6578,10 @@ void purgeHost(char *serialized_serial) {
   HostSerial theSerial;
   HostTraffic *el;
 
-  str2serial(&theSerial, serialized_serial, strlen(serialized_serial));
+    printHTMLheader("Host Purge", NULL, 0);
+// printFlagedWarning("aaa"); return;
+
+str2serial(&theSerial, serialized_serial, strlen(serialized_serial));
 
 #if 0
   {
@@ -6593,30 +6596,21 @@ void purgeHost(char *serialized_serial) {
 
   el = findHostBySerial(theSerial, myGlobals.actualReportDeviceId);
 
-  printHTMLheader("Host Purge", NULL, 0);
-
   if(!el) {
     printFlagedWarning("Unable to purge the specified host: host not found");
   } else {
     int j, found = 0;
 
     for(j=FIRST_HOSTS_ENTRY; (!found) && (j<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize); j++) {
-      HostTraffic *el1 = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[j], *el_prev = NULL;
+      HostTraffic *el1 = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[j];
 
       while(el1 != NULL) {
 	if(el1 == el) {
 	  found = 1;
-
-	  if(el_prev == NULL)
-	    myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[j] = el1->next;
-	  else
-	    el_prev->next = el1->next;
-
-	  freeHostInfo(el, myGlobals.actualReportDeviceId);
+			el->to_be_deleted = 1; /* Delete it at the next run */
 	  break;
 	}
 
-	el_prev = el1;
 	el1 = el1->next;
       }
     } /* for */

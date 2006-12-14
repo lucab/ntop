@@ -1467,7 +1467,7 @@ char *IP_to_a(u_int32_t ipaddr, char *buf);
 #define SF_ABORT_LENGTH_ERROR 3
 
 void SFABORT(SFSample *s, int r) {
-  printf("SFABORT: %d\n");
+  printf("SFABORT: %d\n", r);
 }
 
 
@@ -1896,7 +1896,6 @@ static void readExtendedSwitch(SFSample *sample, int deviceId)
 
 static void readExtendedRouter(SFSample *sample, int deviceId)
 {
-  u_int32_t addrType;
   char buf[51];
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "extendedType ROUTER\n");
   getAddress(sample, &sample->nextHop, deviceId);
@@ -2479,7 +2478,7 @@ static void readFlowSample_v2v4(SFSample *sample, int deviceId)
 
 static void readFlowSample(SFSample *sample, int expanded, int deviceId)
 {
-  u_int32_t num_elements, sampleLength, actualSampleLength;
+  u_int32_t num_elements, sampleLength;
   u_char *sampleStart;
 
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampleType FLOWSAMPLE\n");
@@ -2812,7 +2811,6 @@ static void readCountersSample(SFSample *sample, int expanded, int deviceId)
 
 static void readSFlowDatagram(SFSample *sample, int deviceId)
 {
-  u_int32_t addressType;
   u_int32_t samplesInPacket;
   struct timeval now;
   char buf[51];
@@ -3036,7 +3034,11 @@ static void* sflowMainLoop(void* _deviceId) {
     FD_SET(myGlobals.device[deviceId].sflowGlobals->sflowInSocket, &sflowMask);
 
     wait_time.tv_sec = 3, wait_time.tv_usec = 0;
-    if((rc = select(maxSock+1, &sflowMask, NULL, NULL, &wait_time)) > 0) {
+	if(!myGlobals.device[deviceId].activeDevice) break;
+	rc = select(maxSock+1, &sflowMask, NULL, NULL, &wait_time);
+	if(!myGlobals.device[deviceId].activeDevice) break;
+
+    if(rc > 0) {
       if(FD_ISSET(myGlobals.device[deviceId].sflowGlobals->sflowInSocket, &sflowMask)){
 	len = sizeof(fromHost);
 	rc = recvfrom(myGlobals.device[deviceId].sflowGlobals->sflowInSocket,(char*)&buffer, sizeof(buffer),
@@ -4042,6 +4044,21 @@ static char *ifStatus(u_int32_t interface_status) {
 
 /* ****************************** */
 
+static void flushDevicePrefs(int deviceId) {
+	if(deviceId >= myGlobals.numDevices) return;
+	delPrefsValue(sfValue(deviceId, "ifNetMask", 1));
+	delPrefsValue(sfValue(deviceId, "whiteList", 1));
+	delPrefsValue(sfValue(deviceId, "sflowInPort", 1));
+	delPrefsValue(sfValue(deviceId, "blackList", 1));
+	delPrefsValue(sfValue(deviceId, "enableSessionHandling", 1));
+	delPrefsValue(sfValue(deviceId, "sflowAssumeFTP", 1));
+	delPrefsValue(sfValue(deviceId, "sflowAggregation", 1));
+	delPrefsValue(sfValue(deviceId, "debug", 1));
+	delPrefsValue(sfValue(deviceId, "humanFriendlyName", 1));
+}
+
+/* ****************************** */
+
 static void handlesFlowHTTPrequest(char* _url) {
   char workList[1024], *url;
   int deviceId = -1, originalId = -1;
@@ -4087,7 +4104,20 @@ static void handlesFlowHTTPrequest(char* _url) {
 	    }
 	  }
 	} else if(strcmp(device, "name") == 0) {
-	  sanitize_rrd_string(value);
+	  		char old_name[256], new_name[256];
+		int rc;
+
+		sanitize_rrd_string(value);
+
+		  safe_snprintf(__FILE__, __LINE__, old_name, sizeof(old_name), "%s/interfaces/%s",
+		    myGlobals.rrdPath, myGlobals.device[deviceId].humanFriendlyName);
+			revertSlashIfWIN32(old_name, 0);
+
+		  safe_snprintf(__FILE__, __LINE__, new_name, sizeof(new_name), "%s/interfaces/%s",
+		    myGlobals.rrdPath, value);
+			revertSlashIfWIN32(new_name, 0);
+
+		rc = rename(old_name, new_name);
 	  free(myGlobals.device[deviceId].humanFriendlyName);
 	  myGlobals.device[deviceId].humanFriendlyName = strdup(value);
 	  storePrefsValue(sfValue(deviceId, "humanFriendlyName", 1), value);
@@ -4225,7 +4255,10 @@ static void handlesFlowHTTPrequest(char* _url) {
       storePrefsValue(sfValue(deviceId, "knownDevices", 0), value1);
     }
 
-    termsFlowDevice(readDeviceId);
+	myGlobals.device[readDeviceId].activeDevice = 0; // Terminate thread
+ 	flushDevicePrefs(readDeviceId);
+
+    // termsFlowDevice(readDeviceId);
 
     printHTMLheader("sFlow Device Configuration", NULL, 0);
     printsFlowDeviceConfiguration();

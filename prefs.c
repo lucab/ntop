@@ -645,7 +645,7 @@ int parseOptions(int argc, char* argv[]) {
 
     case 140: /* instance */
     {
-      int idx, i, found;
+      int idx, found;
       struct stat statbuf;
       char fileName[64], tmpStr[512];
       FILE *fd;

@@ -205,13 +205,21 @@ void str2serial(HostSerial *theSerial, char *buf, int buf_len) {
   if(buf_len >= 2*sizeof(HostSerial)) {
     int len = 0, i, j;
     char tmpStr[16];
-    char *ptr = (char*)theSerial;
+    u_char *ptr = (u_char*)theSerial;
 
-    for(i=0, j=0; i<2*sizeof(HostSerial);) {
+    for(i=0, j=0; j<sizeof(HostSerial); j++) {
+	  u_int c;
+	  
       tmpStr[0] = buf[i++];
       tmpStr[1] = buf[i++];
       tmpStr[2] = '\0';
-      sscanf(tmpStr, "%02X", &ptr[j++]);
+      sscanf(tmpStr, "%02X", &c);
+	  ptr[j] = c & 0xFF;
+	  
+	  /*
+	   ptr[j] = ((u_int8_t)buf[i]) * 16 + ((u_int8_t)buf[i+1]);
+	   i += 2;
+	   */
     }
   }
 }
@@ -252,7 +260,7 @@ HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId) {
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
   for(; el != NULL; el = el->next) {
-    if(!strncmp((char*)el->ethAddress, macAddr, LEN_ETHERNET_ADDRESS)) {
+    if(!memcmp((char*)el->ethAddress, macAddr, LEN_ETHERNET_ADDRESS)) {
       if((vlanId > 0) && (el->vlanId != vlanId))
 	continue;
       else

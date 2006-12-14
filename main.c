@@ -316,10 +316,12 @@ int main(int argc, char *argv[]) {
   struct stat fileStat;
   int effective_argc;
   char **effective_argv;
-  char main_buf[LEN_GENERAL_WORK_BUFFER],
-       lib[LEN_GENERAL_WORK_BUFFER],
+  char main_buf[LEN_GENERAL_WORK_BUFFER];
+#ifndef WIN32
+  char lib[LEN_GENERAL_WORK_BUFFER],
        env[LEN_GENERAL_WORK_BUFFER],
        buf[LEN_GENERAL_WORK_BUFFER];
+#endif
 
 /* Don't move this below nor above */
 #if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
@@ -474,7 +476,6 @@ int main(int argc, char *argv[]) {
       }
 
       fclose(fd);
-
     }
   }
   free(readBuffer);

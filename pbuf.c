@@ -63,8 +63,8 @@ static const u_char *p_save;
 static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
 static u_char lowMemoryMsgShown = 0;
 
-static updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
-		       u_int16_t dst_as_id, u_int octets);
+static void	updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
+						    u_int16_t dst_as_id, u_int octets);
 
 /* ******************************* */
 
@@ -951,8 +951,8 @@ static AsStats* allocASStats(u_int16_t as_id) {
 
 /* ************************************ */
 
-static updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
-		       u_int16_t dst_as_id, u_int octets) {
+static void updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
+							u_int16_t dst_as_id, u_int octets) {
   AsStats *stats, *prev_stats = NULL;
   u_char found_src = 0, found_dst = 0;
 
@@ -3271,7 +3271,6 @@ void processPacket(u_char *_deviceId,
 		cdp_idx = 4;
 		while((cdp_idx+sizeof(struct cdp_element)) < (length-(hlen+llcLen))) {
 		  struct cdp_element element;
-		  u_short len;
 
   		  memcpy(&element, &cdp[cdp_idx], sizeof(struct cdp_element));
 

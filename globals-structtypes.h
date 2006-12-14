@@ -66,7 +66,7 @@ typedef u_int   uint32_t;
 
 #if !defined(HAVE_U_INT64_T)
 #if defined(WIN32)
-typedef _int64 u_int64_t;
+/* typedef _int64 u_int64_t; */
 #else
 #if defined(HAVE_UINT64_T)
 #define u_int64_t uint64_t
