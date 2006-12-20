@@ -31,7 +31,7 @@
 
 static void* sflowMainLoop(void* _deviceId);
 
-/* #define DEBUG_FLOWS */
+#define DEBUG_FLOWS 
 
 /* ********************************* */
 
@@ -1367,21 +1367,42 @@ static int setsFlowInSocket(int deviceId) {
 /* *************************** */
 
 static void updateSflowInterfaceCounters(int deviceId, IfCounters *ifName) {
-  if(ifName == NULL) return;
+  IfCounters *counter, *prev_counter, *next;
 
-  if(ifName->ifIndex > MAX_NUM_SFLOW_INTERFACES) {
-    traceEvent(CONST_TRACE_WARNING, "SFLOW: ifIndex=%d is too large (increase MAX_NUM_SFLOW_INTERFACE)", ifName->ifIndex);
-  } else {
-    if(myGlobals.device[deviceId].sflowGlobals->ifCounters[ifName->ifIndex] == NULL) {
-      myGlobals.device[deviceId].sflowGlobals->ifCounters[ifName->ifIndex] = (IfCounters*)malloc(sizeof(IfCounters));
-      if(myGlobals.device[deviceId].sflowGlobals->ifCounters[ifName->ifIndex] == NULL)
-	return; /* Not enough memory */
+  if(ifName == NULL) 
+    return;
+  else
+    prev_counter = NULL, counter = myGlobals.device[deviceId].sflowGlobals->ifCounters;
+
+  while(counter) {
+    if(counter->ifIndex == ifName->ifIndex)
+      break;
+    else if(counter->ifIndex > ifName->ifIndex) {
+      counter = NULL;
+      break;
+    } else {
+      prev_counter = counter;
+      counter = counter->next;
     }
-
-    memcpy(myGlobals.device[deviceId].sflowGlobals->ifCounters[ifName->ifIndex],
-	   ifName, sizeof(IfCounters));
   }
 
+  if(counter == NULL) {
+    counter = (IfCounters*)malloc(sizeof(IfCounters));
+    if(!counter) return; /* Not enough memory */
+
+    if(prev_counter == NULL) {
+      counter->next = NULL;
+      myGlobals.device[deviceId].sflowGlobals->ifCounters = counter;
+    } else {
+      counter->next = prev_counter->next;
+      prev_counter->next = counter;
+    }
+  }
+
+  /* Note: the ->next pointer is not overwritten */
+  next = counter->next;
+  memcpy(counter, ifName, sizeof(IfCounters));
+  counter->next = next;
   myGlobals.device[deviceId].sflowGlobals->numsFlowCounterUpdates++;
 }
 
@@ -3211,11 +3232,8 @@ static void initsFlowDevice(int deviceId) {
   setEmptySerial(&myGlobals.device[deviceId].sflowGlobals->dummyHost->hostSerial);
   myGlobals.device[deviceId].sflowGlobals->dummyHost->portsUsage = NULL;
 
-  memset(myGlobals.device[deviceId].sflowGlobals->ifCounters, 0,
-	 sizeof(IfCounters*)*MAX_NUM_SFLOW_INTERFACES);
-
+  myGlobals.device[deviceId].sflowGlobals->ifCounters = NULL;
   myGlobals.device[deviceId].activeDevice = 1;
-
   myGlobals.device[deviceId].samplingRate = 1;
   myGlobals.device[deviceId].mtuSize    = myGlobals.mtuSize[myGlobals.device[deviceId].datalink];
   myGlobals.device[deviceId].headerSize = myGlobals.headerSize[myGlobals.device[deviceId].datalink];
@@ -4321,7 +4339,9 @@ static void handlesFlowHTTPrequest(char* _url) {
     printsFlowConfiguration(deviceId);
 
     if(myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd > 0) {
-      int headerSent = 0, i;
+      u_int headerSent = 0, i;
+      IfCounters *ifName = myGlobals.device[deviceId].sflowGlobals->ifCounters;
+      char buf[512], formatBuf[256], formatBuf1[256];
 
       sendString("<br><hr><p>\n");
 
@@ -4329,75 +4349,72 @@ static void handlesFlowHTTPrequest(char* _url) {
        * Print interface statistics *
        ****************************** */
 
-      for(i=0; i<MAX_NUM_SFLOW_INTERFACES; i++) {
-	IfCounters *ifName = myGlobals.device[deviceId].sflowGlobals->ifCounters[i];
-	char buf[512], formatBuf[256], formatBuf1[256];
+      while(ifName != NULL) {
+	if(!headerSent) {
+	  printSectionTitle("sFlow Interface Statistics");
+	  sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
+	  sendString("<tr><th>Idx</th><th>Type</th><th>Speed</th><th>Direction</th><th>Status</th><th>Promisc</th>"
+		     "<th>Octets</th><th>Unicasts<br>Packets</th><th>Multicasts<br>Packets</th><th>Broadcasts<br>Packets</th>"
+		     "<th>Discards<br>Packets</th><th>Errors<br>Packets</th><th>Unkn Proto<br>Packets</th><th>&nbsp;</th></tr>\n");
+	  headerSent = 1;
+	}
 
-	if(ifName != NULL) {
-	  if(!headerSent) {
-	    printSectionTitle("sFlow Interface Statistics");
-	    sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
-	    sendString("<tr><th>Idx</th><th>Type</th><th>Speed</th><th>Direction</th><th>Status</th><th>Promisc</th>"
-		       "<th>Octets</th><th>Unicasts<br>Packets</th><th>Multicasts<br>Packets</th><th>Broadcasts<br>Packets</th>"
-		       "<th>Discards<br>Packets</th><th>Errors<br>Packets</th><th>Unkn Proto<br>Packets</th><th>&nbsp;</th></tr>\n");
-	    headerSent = 1;
-	  }
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<tr><th>%u</th>",
+		      ifName->ifIndex); sendString(buf);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s</td>",
+		      ifType(ifName->ifType)); sendString(buf);
 
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<tr><th>%u</th>",
-			ifName->ifIndex); sendString(buf);
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s</td>",
-			ifType(ifName->ifType)); sendString(buf);
-
-	  if(ifName->ifSpeed >= 10000000) {
-	    u_int32_t speed = ifName->ifSpeed / 1000000;
+	if(ifName->ifSpeed >= 10000000) {
+	  u_int32_t speed = ifName->ifSpeed / 1000000;
 	    
-	    if(speed < 1000)
-	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u&nbsp;Mbit</td>",
-			    speed);
-	    else
-	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u&nbsp;Gbit</td>",
-			    speed/1000);
+	  if(speed < 1000)
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u&nbsp;Mbit</td>",
+			  speed);
+	  else
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u&nbsp;Gbit</td>",
+			  speed/1000);
 
-	    sendString(buf);
-	  } else {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u</td>",
-			  ifName->ifSpeed);
-	    sendString(buf);
-	  }
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s</td>",
-			ifDirection(ifName->ifDirection)); sendString(buf);
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s</td>",
-			ifStatus(ifName->ifStatus)); sendString(buf);
+	  sendString(buf);
+	} else {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u</td>",
-			ifName->ifPromiscuousMode); sendString(buf);
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
-			formatBytes(ifName->ifInOctets, 1, formatBuf, sizeof(formatBuf)),
-			formatBytes(ifName->ifOutOctets, 1, formatBuf1, sizeof(formatBuf1))); sendString(buf);
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
-			formatPkts(ifName->ifInUcastPkts, formatBuf, sizeof(formatBuf)),
-			formatPkts(ifName->ifOutUcastPkts, formatBuf1, sizeof(formatBuf1))); sendString(buf);
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
-			formatPkts(ifName->ifInMulticastPkts, formatBuf, sizeof(formatBuf)),
-			formatPkts(ifName->ifOutMulticastPkts, formatBuf1, sizeof(formatBuf1))); sendString(buf);
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
-			formatPkts(ifName->ifInBroadcastPkts, formatBuf, sizeof(formatBuf)),
-			formatPkts(ifName->ifOutBroadcastPkts, formatBuf1, sizeof(formatBuf1))); sendString(buf);
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
-			formatPkts(ifName->ifInDiscards, formatBuf, sizeof(formatBuf)),
-			formatPkts(ifName->ifOutDiscards, formatBuf1, sizeof(formatBuf1))); sendString(buf);
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
-			formatPkts(ifName->ifInErrors, formatBuf, sizeof(formatBuf)),
-			formatPkts(ifName->ifOutErrors, formatBuf, sizeof(formatBuf1))); sendString(buf);
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s</td>",
-			formatPkts(ifName->ifInUnknownProtos, formatBuf, sizeof(formatBuf))); sendString(buf);
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center><A HREF=\"/plugins/rrdPlugin?action=list&key="
-			"interfaces/%s/sFlow/%d&title=Interface%%20Id%%20%d\">"
-			"<IMG SRC=/graph.gif BORDER=0></A></td></tr>",
-			myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-			i, i,
-			formatPkts(ifName->ifInUnknownProtos, formatBuf, sizeof(formatBuf))); 
+			ifName->ifSpeed);
 	  sendString(buf);
 	}
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s</td>",
+		      ifDirection(ifName->ifDirection)); sendString(buf);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s</td>",
+		      ifStatus(ifName->ifStatus)); sendString(buf);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u</td>",
+		      ifName->ifPromiscuousMode); sendString(buf);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
+		      formatBytes(ifName->ifInOctets, 1, formatBuf, sizeof(formatBuf)),
+		      formatBytes(ifName->ifOutOctets, 1, formatBuf1, sizeof(formatBuf1))); sendString(buf);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
+		      formatPkts(ifName->ifInUcastPkts, formatBuf, sizeof(formatBuf)),
+		      formatPkts(ifName->ifOutUcastPkts, formatBuf1, sizeof(formatBuf1))); sendString(buf);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
+		      formatPkts(ifName->ifInMulticastPkts, formatBuf, sizeof(formatBuf)),
+		      formatPkts(ifName->ifOutMulticastPkts, formatBuf1, sizeof(formatBuf1))); sendString(buf);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
+		      formatPkts(ifName->ifInBroadcastPkts, formatBuf, sizeof(formatBuf)),
+		      formatPkts(ifName->ifOutBroadcastPkts, formatBuf1, sizeof(formatBuf1))); sendString(buf);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
+		      formatPkts(ifName->ifInDiscards, formatBuf, sizeof(formatBuf)),
+		      formatPkts(ifName->ifOutDiscards, formatBuf1, sizeof(formatBuf1))); sendString(buf);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
+		      formatPkts(ifName->ifInErrors, formatBuf, sizeof(formatBuf)),
+		      formatPkts(ifName->ifOutErrors, formatBuf, sizeof(formatBuf1))); sendString(buf);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s</td>",
+		      formatPkts(ifName->ifInUnknownProtos, formatBuf, sizeof(formatBuf))); sendString(buf);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center><A HREF=\"/plugins/rrdPlugin?action=list&key="
+		      "interfaces%s%s/sFlow/%u&title=Interface+Id+%u\">"
+		      "<IMG SRC=/graph.gif BORDER=0></A></td></tr>",
+		      (myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName[0] == '/') ? "" : "/",
+		      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		      i, i,
+		      formatPkts(ifName->ifInUnknownProtos, formatBuf, sizeof(formatBuf))); 
+	sendString(buf);
+	ifName = ifName->next;
       }
 
       if(headerSent) sendString("</table><p><table><tr><td>Note: Counters are represented as "
@@ -4489,9 +4506,11 @@ static void termsFlowDevice(int deviceId) {
       closeNwSocket(&myGlobals.device[deviceId].sflowGlobals->sflowInSocket);
     }
 
-    for(i=0; i<MAX_NUM_SFLOW_INTERFACES; i++)
-      if(myGlobals.device[deviceId].sflowGlobals->ifCounters[i] != NULL)
-	free(myGlobals.device[deviceId].sflowGlobals->ifCounters[i]);
+    while(myGlobals.device[deviceId].sflowGlobals->ifCounters != NULL) {
+      IfCounters *next = myGlobals.device[deviceId].sflowGlobals->ifCounters->next;
+      free(myGlobals.device[deviceId].sflowGlobals->ifCounters);
+      myGlobals.device[deviceId].sflowGlobals->ifCounters = next;
+    }
 
     free(myGlobals.device[deviceId].sflowGlobals);
     myGlobals.device[deviceId].activeDevice = 0;

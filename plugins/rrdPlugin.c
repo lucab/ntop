@@ -4867,10 +4867,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	/* ******************************** */
 
 	if(myGlobals.device[devIdx].sflowGlobals) {
-	  for(i=0; i<MAX_NUM_SFLOW_INTERFACES; i++) {
-	    IfCounters *ifName = myGlobals.device[devIdx].sflowGlobals->ifCounters[i];
-
-	    if(ifName != NULL) {
+	  IfCounters *ifName = myGlobals.device[devIdx].sflowGlobals->ifCounters;
+	  	  
+	  while(ifName != NULL) {
 	      char rrdIfPath[512];
 
 	      safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
@@ -4891,7 +4890,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      updateCounter(rrdIfPath, "ifOutBroadcastPkts", ifName->ifOutBroadcastPkts, 0);
 	      updateCounter(rrdIfPath, "ifOutDiscards", ifName->ifOutDiscards, 0);
 	      updateCounter(rrdIfPath, "ifOutErrors", ifName->ifOutErrors, 0);
-	    }
+
+	      ifName = ifName->next;
 	  }
 	}
       }
