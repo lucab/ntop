@@ -512,7 +512,8 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
       sendString("</CENTER>");
       printHTMLtrailer();
       return;
-    }
+    } else
+      traceEvent(CONST_TRACE_WARNING, "RRD: reading directory %s", path); /* FIX */
 
     while((dp = readdir(directoryPointer)) != NULL) {
       char *rsrcName;
@@ -532,6 +533,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 	isGauge = 0;
 
       rsrcName = &dp->d_name[strlen(dp->d_name)-strlen(CONST_RRD_EXTENSION)];
+
       if(strcmp(rsrcName, CONST_RRD_EXTENSION))
 	continue;
 
@@ -543,7 +545,6 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
       rc = sumCounter(rrdPath, dp->d_name, "MAX", startTime, endTime, &total, &average);
 
       if(isGauge || ((rc >= 0) && (total > 0))) {
-	rsrcName[0] = '\0';
 	rsrcName = dp->d_name;
 
 	/* if(strcmp(rsrcName, "pktSent") || strcmp(rsrcName, "pktRcvd")) continue; */
@@ -552,7 +553,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 	   || strncmp(rsrcName, "tcp", 3)
 	   || strncmp(rsrcName, "udp", 3)
 	   ) {
-	  if(strstr(rsrcName, "Sent")) {
+	  if(!strstr(rsrcName, "Rcvd")) {
 	    sendString("<TR><TD align=left>\n");
 
 	    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "<img class=tooltip src=\"/" CONST_PLUGINS_HEADER "%s?"
@@ -1710,17 +1711,23 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	rrd_custom[2] = NULL;
 	rrds = (char**)rrd_custom;
 
-	if(pkts || strstr(rrdName, "pkt"))
-	  label = "Packets/sec";
-	else if(strstr(rrdName, "Peers"))
-	  label = "Contacted Peers";
-	else
-	  label = "Bytes/sec";
 	/* traceEvent(CONST_TRACE_WARNING, "RRD: [%s][%s]", file_a, file_b); */
       } else {
-	traceEvent(CONST_TRACE_WARNING, "RRD: Not found [%s]", rrdName);
-	return; /* Error */
+	snprintf(file_a, sizeof(file_a), "%s", rrdName);
+	file_a[strlen(file_a)-strlen(CONST_RRD_EXTENSION)] = '\0';
+	rrd_custom[0] = file_a;
+	rrd_custom[1] = NULL;
+	rrds = (char**)rrd_custom;
+
+	/* traceEvent(CONST_TRACE_WARNING, "RRD: Not found [%s]", rrdName); */
       }
+
+      if(pkts || strstr(rrdName, "pkt"))
+	label = "Packets/sec";
+      else if(strstr(rrdName, "Peers"))
+	label = "Contacted Peers";
+      else
+	label = "Bytes/sec";
     }
 
     break;
@@ -1907,7 +1914,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 		    myGlobals.rrdPath, rrd_hosts_path[j], rrds[i], CONST_RRD_EXTENSION);
       revertSlashIfWIN32(path, 0);
 
-      /* traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s) [%d/%d]", path, j, num_rrd_hosts_path); */
+      /* traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s) [%d/%d]", path, j, num_rrd_hosts_path);  */
 
       if(stat(path, &statbuf) == 0) {
 	char metric_name[32];
