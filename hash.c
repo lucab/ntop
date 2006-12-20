@@ -113,8 +113,8 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 
 /* ************************************ */
 
-u_int hashFcHost (FcAddress *fcaddr, u_short vsanId, HostTraffic **el,
-                  int actualDeviceId)
+u_int hashFcHost(FcAddress *fcaddr, u_short vsanId, HostTraffic **el,
+		 int actualDeviceId)
 {
   u_int idx = 0;
 
@@ -556,8 +556,9 @@ int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now) {
   if(el->to_be_deleted
      || (
 	 (el->refCount == 0)
-	 && (   ((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
-		|| ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime)))
+	 && ((!myGlobals.runningPref.rFileName) 
+	     &&  (((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
+		  || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime))))
 	 && (!broadcastHost(el)) && (el != myGlobals.otherHostEntry)
 	 && (myGlobals.device[actDevice].virtualDevice /* e.g. sFlow/NetFlow */
 	     || (!myGlobals.runningPref.stickyHosts)
@@ -583,7 +584,7 @@ int purgeIdleHosts(int actDevice) {
   float hiresDeltaTime;
   struct timeval hiresTimeStart, hiresTimeEnd;
   HostTraffic *el, *prev, *next;
-
+  
   /* if(myGlobals.runningPref.rFileName != NULL) return; */
 
 #ifdef IDLE_PURGE_DEBUG
@@ -961,7 +962,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
       return(NULL);
     }
-      
+     
     memset(el, 0, sizeof(HostTraffic));
     el->firstSeen = myGlobals.actTime;
 
@@ -998,6 +999,10 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     el->next = myGlobals.device[actualDeviceId].hash_hostTraffic[el->hostTrafficBucket];
     myGlobals.device[actualDeviceId].hash_hostTraffic[el->hostTrafficBucket] = el;  /* Insert a new entry */
     myGlobals.device[actualDeviceId].hostsno++;
+
+    if(0) 
+      traceEvent(CONST_TRACE_INFO, "-> Allocated(%d) [tot=%d]", 
+		 actualDeviceId, myGlobals.device[actualDeviceId].hostsno);
 
     the_local_network = 0, the_local_network_mask = 0;
 

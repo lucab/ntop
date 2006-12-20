@@ -765,6 +765,108 @@ static void handleIMAPSession (const struct pcap_pkthdr *h,
 
 /* *********************************** */
 
+typedef struct {
+  u_int16_t src_call, dst_call; /* Together they form the callId */
+  u_int32_t timestamp;
+  u_int8_t outbound_seq_num, inbound_seq_num;
+  u_int8_t frame_class /* 2 = voice */, frame_subclass;
+  /* Payload */
+} IAX2Header;
+
+#define IAX2_STR_LEN   32
+
+typedef struct {
+  u_int8_t element_id, element_len;
+  char element_data[IAX2_STR_LEN];
+} IAX2PayloadElement;
+
+/* IAX2 packets courtesy of richard.crouch@vodafone.com */
+
+static void handleAsteriskSession(const struct pcap_pkthdr *h,
+				  HostTraffic *srcHost, u_short sport,
+				  HostTraffic *dstHost, u_short dport,
+				  u_int packetDataLength, u_char* packetData,
+				  IPSession *theSession, int actualDeviceId) {
+  u_char debug = 0;
+
+  if(packetDataLength > sizeof(IAX2Header)) {
+    IAX2Header *header = (IAX2Header*)packetData;
+    u_int16_t pkt_shift;
+
+    if(debug) {
+      traceEvent(CONST_TRACE_WARNING, "-------------------------");
+      traceEvent(CONST_TRACE_WARNING, "[Class=%d][SubClass=%d]", header->frame_class, header->frame_subclass);
+    }
+
+    if(header->frame_class == 6) /* IAX */ {
+      char caller_name[IAX2_STR_LEN] = { '\0' }; 
+      char caller_num[IAX2_STR_LEN]  = { '\0' }; 
+      char called_num[IAX2_STR_LEN]  = { '\0' };
+      char username[IAX2_STR_LEN]    = { '\0' };
+	  
+      pkt_shift = sizeof(IAX2Header);
+
+      while(packetDataLength > (pkt_shift + 2 /* element_id+element_len */)) {
+	IAX2PayloadElement *pe = (IAX2PayloadElement*)&packetData[pkt_shift];
+	char tmpStr[IAX2_STR_LEN] = { '\0' };
+	u_short len;
+
+	if(pe->element_len >= (sizeof(tmpStr)-1))
+	  len = sizeof(tmpStr)-2;
+	else
+	  len = pe->element_len;
+	
+	memcpy(tmpStr, pe->element_data, len);
+
+	switch(pe->element_id) {
+	case 1:  /* Called Number */
+	  strcpy(called_num, tmpStr);
+	  break;
+	case 2:  /* Calling Number */
+	  strcpy(caller_num, tmpStr);
+	  break;
+	case 4:  /* Caller Name */
+	  strcpy(caller_name, tmpStr);
+	  break;
+	case 6:  /* UserName (used for authentication) */
+	  strcpy(username, tmpStr);
+	  break;
+	case 13: /* Original Number Being Called */
+	  break;
+	}
+
+	if(debug) traceEvent(CONST_TRACE_WARNING, "\t[Id=%d][Len=%d][%s]",
+			     pe->element_id, pe->element_len, tmpStr);
+
+	pkt_shift += (pe->element_len+2);
+      } /* while */
+
+      if(debug) {
+	traceEvent(CONST_TRACE_WARNING, "-------------------------");
+      }
+      
+      if(username[0] != '\0') updateHostUsers(username, BITFLAG_VOIP_USER, srcHost);
+
+      if(((theSession->session_info == NULL) || (theSession->session_info[0] == '\0'))
+	 && (caller_name[0] != '\0')
+	 && (called_num[0] != '\0')) {
+	char logStr[256];
+
+	FD_SET(FLAG_HOST_TYPE_SVC_VOIP_CLIENT,  &srcHost->flags);
+	FD_SET(FLAG_HOST_TYPE_SVC_VOIP_GATEWAY, &dstHost->flags);
+
+	safe_snprintf(__FILE__, __LINE__, logStr, sizeof(logStr),
+		      "%s <%s> -> <%s>",
+		      caller_name, caller_num,  called_num);
+
+	theSession->session_info = strdup(logStr);
+      }
+    }
+  }
+}
+
+/* *********************************** */
+
 #define SIP_INVITE        "INVITE" /* User Info */
 #define SIP_OK            "SIP/2.0 200 Ok" /* Stream Info */
 
@@ -1863,7 +1965,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 #endif
 
       if((theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) return(NULL);
-    
+
     memset(theSession, 0, sizeof(IPSession));
     addedNewEntry = 1;
 
@@ -1911,7 +2013,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   }
 
   if(tp)
-    theSession->lastFlags |= tp->th_flags; 
+    theSession->lastFlags |= tp->th_flags;
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: ->%d", idx);
@@ -2168,6 +2270,10 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
       handleSIPSession(h, srcHost, sport, dstHost, dport,
 		       packetDataLength, packetData, theSession,
 		       actualDeviceId);
+    } else if((sport == IP_UDP_PORT_IAX2) && (dport == IP_UDP_PORT_IAX2)) {
+      handleAsteriskSession(h, srcHost, sport, dstHost, dport,
+			    packetDataLength, packetData, theSession,
+			    actualDeviceId);
     } else if(((sport == IP_TCP_PORT_SCCP) && (dport > 1024))
 	      || ((dport == IP_TCP_PORT_SCCP) && (sport > 1024))) {
       handleSCCPSession(h, srcHost, sport, dstHost, dport,
@@ -2457,7 +2563,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	     (theSession->lastFlags & TH_RST) ? " RST" : "",
 	     (theSession->lastFlags & TH_PUSH) ? " PUSH" : "");
 
-  traceEvent(CONST_TRACE_NOISY, "==> %s [len=%d]", 
+  traceEvent(CONST_TRACE_NOISY, "==> %s [len=%d]",
 	     print_flags(theSession, buf, sizeof(buf)), length);
 #endif
 

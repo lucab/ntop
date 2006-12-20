@@ -2833,6 +2833,7 @@ struct ip6_hdr
 #define IP_TCP_PORT_SQUID          3128
 
 #define IP_UDP_PORT_SIP            5060
+#define IP_UDP_PORT_IAX2           4569 /* Asterisk */
 #define IP_TCP_PORT_GNUTELLA1      6346
 #define IP_TCP_PORT_GNUTELLA2      6347
 #define IP_TCP_PORT_GNUTELLA3      6348

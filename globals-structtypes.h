@@ -1319,6 +1319,7 @@ typedef struct ifCounters {
   u_int32_t ifOutDiscards;
   u_int32_t ifOutErrors;
   u_int32_t ifPromiscuousMode;
+  struct ifCounters *next;
 } IfCounters;
 
 
@@ -1355,7 +1356,7 @@ typedef struct sFlowGlobals {
 
   u_long numSamplesReceived, initialPool, lastSample;
   u_int32_t flowSampleSeqNo, numSamplesToGo;
-  IfCounters *ifCounters[MAX_NUM_SFLOW_INTERFACES];
+  IfCounters *ifCounters;
 } SflowGlobals;
 
 /* *********************************** */

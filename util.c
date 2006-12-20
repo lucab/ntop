@@ -63,20 +63,25 @@ static HostTraffic* __getFirstHost(u_int actualDeviceId, u_int beginIdx, char *f
     HostTraffic *el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
     while(el != NULL) {
-      if(el->magic != CONST_MAGIC_NUMBER) {
-	traceEvent(CONST_TRACE_ERROR,
-                   "Bad magic number [expected=%d/real=%d][deviceId=%d] getFirstHost()[%s/%d]",
-		   CONST_MAGIC_NUMBER, el->magic, actualDeviceId, file, line);
-	releaseMutex(&myGlobals.hostsHashLockMutex);
-        return(NULL);
-      }
-
-      if(!is_host_ready_to_purge(actualDeviceId, el, time(NULL))) {
-	/* Do not return hosts that will soon be purged off memory */
-	releaseMutex(&myGlobals.hostsHashLockMutex);
-	return(el);
-      } else
+      if(broadcastHost(el) || (el == myGlobals.otherHostEntry)) {
 	el = el->next;
+      } else {
+	if(el->magic != CONST_MAGIC_NUMBER) {
+	  traceEvent(CONST_TRACE_ERROR,
+		     "Bad magic number [expected=%d/real=%d][deviceId=%d] getFirstHost()[%s/%d]",
+		     CONST_MAGIC_NUMBER, el->magic, actualDeviceId, file, line);
+	  releaseMutex(&myGlobals.hostsHashLockMutex);
+	  return(NULL);
+	}
+
+	if(!is_host_ready_to_purge(actualDeviceId, el, time(NULL))) {
+	  /* Do not return hosts that will soon be purged off memory */
+	  releaseMutex(&myGlobals.hostsHashLockMutex);
+	  return(el);
+	} else {
+	  el = el->next;
+	}
+      }
     }
   }
 
@@ -87,7 +92,7 @@ static HostTraffic* __getFirstHost(u_int actualDeviceId, u_int beginIdx, char *f
 /* ************************************ */
 
 HostTraffic* _getFirstHost(u_int actualDeviceId, char *file, int line) {
-  return(__getFirstHost(actualDeviceId, FIRST_HOSTS_ENTRY, file, line));
+  return(__getFirstHost(actualDeviceId, 0 /* FIRST_HOSTS_ENTRY */, file, line));
 }
 
 /* ************************************ */

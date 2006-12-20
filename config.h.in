@@ -216,6 +216,9 @@
 /* Define to 1 if you have the `resolv' library (-lresolv). */
 #undef HAVE_LIBRESOLV
 
+/* Define to 1 if you have the `rrd_th' library (-lrrd_th). */
+#undef HAVE_LIBRRD_TH
+
 /* Define to 1 if you have the `socket' library (-lsocket). */
 #undef HAVE_LIBSOCKET
 

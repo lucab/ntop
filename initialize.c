@@ -1921,12 +1921,14 @@ u_int createDummyInterface(char *ifName) {
   memset(tmpDevice, 0, mallocLen);
 
   if(myGlobals.numDevices > 0) {
+    NtopInterface *old_ptr = myGlobals.device;
     memcpy(tmpDevice, myGlobals.device,
 	   sizeof(NtopInterface)*myGlobals.numDevices);
-    free(myGlobals.device);
-  }
+    myGlobals.device = tmpDevice;
+    free(old_ptr);
+  } else
+    myGlobals.device = tmpDevice;
 
-  myGlobals.device = tmpDevice;
   myGlobals.numDevices++;
   memset(&myGlobals.device[deviceId], 0, sizeof(NtopInterface));
 
