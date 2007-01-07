@@ -1344,6 +1344,10 @@ void printTrafficStatistics(int revertOrder) {
 		     (float)(myGlobals.actTime-myGlobals.initialSniffTime+1)));
       sendString(buf);
 
+    sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
+	       "<embed src=\"/graph_if.svg\" width=\"400\" height=\"250\" type=\"image/svg+xml\" />"
+	       "</TH></TR>\n");
+
       sendString("</TABLE>"TABLE_OFF"</TR>\n");
     }
   }
@@ -6630,4 +6634,20 @@ str2serial(&theSerial, serialized_serial, strlen(serialized_serial));
     } else
       printFlagedWarning("Unable to purge the specified host: internal error");
   }
+}
+
+/* ************************************ */
+
+void printInterfaceStats() {
+  char buf[64];
+  time_t now = time(NULL);
+  
+  sendString(ctime(&now));
+
+  snprintf(buf, sizeof(buf), "%u %u\n", 
+	   (unsigned long)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value,
+	   (unsigned long)(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value
+			   - myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+  sendString(buf);
+  /* traceEvent(CONST_TRACE_ERROR, "%s", buf); */
 }

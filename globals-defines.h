@@ -1175,6 +1175,7 @@
 #define CONST_FC_THPT_HTML                  "fcThpt.html"
 #define CONST_FC_SESSIONS_HTML              "FcSessions.html"
 #define CONST_FILTER_INFO_HTML              "filterInfo.html"
+#define CONST_IF_STATS_HTML                 "ifStats.html"
 #define CONST_NTOP_HELP_HTML                "help.html"
 #define CONST_HOME_HTML                     "home.html"
 #define CONST_HOME_UNDERSCORE_HTML          "home_.html"
@@ -1776,6 +1777,7 @@
 #define FLAG_HTTP_TYPE_JS                   8
 #define FLAG_HTTP_TYPE_XML                  9
 #define FLAG_HTTP_TYPE_P3P                  10
+#define FLAG_HTTP_TYPE_SVG                  11
 
 #define BITFLAG_HTTP_IS_CACHEABLE           (1<<0)
 #define BITFLAG_HTTP_NO_CACHE_CONTROL       (1<<1)

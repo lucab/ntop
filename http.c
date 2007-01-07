@@ -1520,6 +1520,9 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
   case FLAG_HTTP_TYPE_P3P:
     sendString("Content-Type: text/xml\r\n");
     break;
+  case FLAG_HTTP_TYPE_SVG:
+    sendString("Content-Type: image/svg+xml\r\n");
+    break;
   case FLAG_HTTP_TYPE_NONE:
     break;
 #ifdef URL_DEBUG
@@ -1529,7 +1532,8 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
 #endif
   }
 
-  if(mimeType == MIME_TYPE_CHART_FORMAT) {
+  if((mimeType == MIME_TYPE_CHART_FORMAT) 
+     || (mimeType == FLAG_HTTP_TYPE_TEXT) /* FIX */) {
     compressFile = 0;
     if(myGlobals.newSock < 0 /* SSL */) acceptGzEncoding = 0;
   } else {
@@ -1756,6 +1760,7 @@ static int checkURLsecurity(char *url) {
 	   (strcasecmp(&workURL[i], "txt")  == 0) ||
 	   (strcasecmp(&workURL[i], "jpg")  == 0) ||
 	   (strcasecmp(&workURL[i], "png")  == 0) ||
+	   (strcasecmp(&workURL[i], "svg")  == 0) ||
 	   (strcasecmp(&workURL[i], "gif")  == 0) ||
 	   (strcasecmp(&workURL[i], "ico")  == 0) ||
 	   (strcasecmp(&workURL[i], "js")   == 0) || /* Javascript */
@@ -2202,6 +2207,8 @@ static int returnHTTPPage(char* pageName,
       else if(strcasecmp(&pageURI[len-4], ".xml") == 0)
         /* w3c/p3p.xml */
         mimeType = FLAG_HTTP_TYPE_XML;
+      else if(strcasecmp(&pageURI[len-4], ".svg") == 0)
+        mimeType = FLAG_HTTP_TYPE_SVG;
     }
 
     sendHTTPHeader(mimeType, BITFLAG_HTTP_IS_CACHEABLE | BITFLAG_HTTP_MORE_FIELDS, 1);
@@ -2604,6 +2611,11 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printHostsTraffic(SORT_DATA_IP, sortedColumn, revertOrder,
 			  pageNum, CONST_SORT_DATA_IP_HTML, showHostsMode, showLocalityMode, vlanId);
+      } else if(strncasecmp(pageName, CONST_IF_STATS_HTML, strlen(CONST_IF_STATS_HTML)) == 0) {
+	compressFile = 0;
+	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
+	printInterfaceStats();
+        printTrailer=0;
       } else if(strncasecmp(pageName, CONST_SORT_DATA_THPT_HTML, strlen(CONST_SORT_DATA_THPT_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
