@@ -9,6 +9,9 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # $Log$
+# Revision 2.13  2007/01/11 14:39:11  deri
+# Fixed autogen check
+#
 # Revision 2.12  2006/11/23 08:50:16  deri
 # Added initial SNMP name resolution for NetFlow device names
 #
@@ -257,10 +260,10 @@ echo "        .... ok"
 
 automakeversion=`$AUTOMAKE --version < /dev/null 2>&1 | grep ^automake | cut -d " " -f 4`
 echo "    automake .... ${automakeversion}"
+automakeversion=`echo ${automakeversion}| cut -c 3`
 
-case "${automakeversion}" in
-  *1\.[[0-5]]*)
-        echo ""
+if  test ${automakeversion} -lt 6; then
+    echo ""
     echo "******************************************************************"
     echo "*"
     echo "*ERROR: ntop requires automake version 1.6 or newer..."
@@ -269,8 +272,7 @@ case "${automakeversion}" in
     echo "*"
     echo "*******************************************************************"
     exit 1
-    ;;
-esac
+fi
 echo "        .... ok"
 
 
