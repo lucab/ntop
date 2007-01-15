@@ -267,7 +267,8 @@ extern void addDevice(char* deviceName, char* deviceDescr);
 #ifdef MAKE_WITH_SAFER_ROUTINES
 
 /* Fix to the free prototype courtesy of Tanner Lovelace <lovelace@opennms.org> */
-#define free(a)       ntop_safefree((void**)&(a), __FILE__, __LINE__)
+/* Fix free() courtesy of Benoit Dolez <bdolez@exosec.fr> */
+#define free(a)       { void *__t = (a); ntop_safefree((void**)&(__t), __FILE__, __LINE__); a = __t; }
 extern void           ntop_safefree(void **ptr, char* file, int line);
 #define malloc(sz)    ntop_safemalloc(sz, __FILE__, __LINE__)
 extern void*          ntop_safemalloc(unsigned int sz, char* file, int line);
