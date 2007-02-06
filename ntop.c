@@ -973,11 +973,16 @@ RETSIGTYPE cleanup(int signo) {
     traceEvent(CONST_TRACE_INFO, "CLEANUP[t%lu]: ntop caught signal %d", pthread_self(), signo);
 
     if(caught_signal){
-      traceEvent(CONST_TRACE_INFO, "Forcing application termination");
+      traceEvent(CONST_TRACE_INFO, "ntop is now quitting...");
       exit(0);
     } else
       caught_signal = 1;
   }
+
+#ifndef WIN32
+  signal(SIGALRM, cleanup);
+  alarm(10);
+#endif
 
 #ifdef HAVE_BACKTRACE
   if(signo == SIGSEGV) {
