@@ -1,4 +1,4 @@
-
+ï»¿
    _   _ _
   | \ | | |_ ___  _ __
   |  \| | __/ _ \| '_ \
@@ -1241,7 +1241,7 @@ Fixed bugs:
   (Owner: Sebastien Brault <sebastien.brault@cnet.francetelecom.fr>)
 - ntop shouldn't display the help anymore when the
   windows is resized.
-  (Owner: Johan Fredrik Øhman <johan@essay.org>)
+  (Owner: Johan Fredrik Ã¿hman <johan@essay.org>)
 
 -------------------------------------------------
 
@@ -1460,7 +1460,7 @@ Fixed bugs:
   (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).
 - Fixed a compilation glitch with Slackware
 - Token Ring on AIX works now
-  (Owner: Jean Paul López y Driessen
+  (Owner: Jean Paul LÃ›pez y Driessen
           <jean_p_lopez_driessen@es.ibm.com>)
 - Fixed "IP Protocol Subnet Usage" entries
   (Owner: Olaf Schnapauff <O.Schnapauff@tu-bs.de>).

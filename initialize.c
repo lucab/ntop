@@ -932,7 +932,7 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
   traceEvent(CONST_TRACE_NOISY, "%s database '%s'",
 	     doUnlink == TRUE ? "Creating" : "Opening",
 	     tmpBuf);
-  *database = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+  *database = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00640, NULL);
 
   if(*database == NULL) {
     traceEvent(CONST_TRACE_ERROR, "....open of %s failed: %s",

@@ -600,11 +600,11 @@ printf("Unable to read serial number\n");
 
   /* ******************************* */
   
-  checkUserIdentity(userSpecified);
-
 #ifndef WIN32
   saveNtopPid();
 #endif
+
+  checkUserIdentity(userSpecified);
 
   /* ******************************* */
 

@@ -414,7 +414,7 @@ PluginInfo* lsPluginEntryFctn(void) {
   
     /* Fix courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/LsWatch.db", myGlobals.dbPath);
-    LsDB = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+    LsDB = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00640, NULL);
 
     if(LsDB == NULL) {
       traceEvent(CONST_TRACE_ERROR, 

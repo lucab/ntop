@@ -4586,28 +4586,30 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	/* insert all domain data for this interface into the RRDs */
 	for (idx=0; idx < numEntries; idx++) {
-	  statsEntry = &tmpStats[idx];
+	  if(statsEntry->domainHost->dnsDomainValue != NULL) {
+	    statsEntry = &tmpStats[idx];
 
-	  safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/domains/%s/",
-			myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
-			statsEntry->domainHost->dnsDomainValue);
-	  mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
+	    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/domains/%s/",
+			  myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
+			  statsEntry->domainHost->dnsDomainValue);
+	    mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
-	  traceEventRRDebug(2, "Updating %s", rrdPath);
+	    traceEventRRDebug(2, "Updating %s", rrdPath);
 
-	  updateCounter(rrdPath, "bytesSent", statsEntry->bytesSent.value, 0);
-	  updateCounter(rrdPath, "bytesRcvd", statsEntry->bytesRcvd.value, 0);
+	    updateCounter(rrdPath, "bytesSent", statsEntry->bytesSent.value, 0);
+	    updateCounter(rrdPath, "bytesRcvd", statsEntry->bytesRcvd.value, 0);
 
-	  updateCounter(rrdPath, "tcpSent", statsEntry->tcpSent.value, 0);
-	  updateCounter(rrdPath, "udpSent", statsEntry->udpSent.value, 0);
-	  updateCounter(rrdPath, "icmpSent", statsEntry->icmpSent.value, 0);
-	  updateCounter(rrdPath, "icmp6Sent", statsEntry->icmp6Sent.value, 0);
+	    updateCounter(rrdPath, "tcpSent", statsEntry->tcpSent.value, 0);
+	    updateCounter(rrdPath, "udpSent", statsEntry->udpSent.value, 0);
+	    updateCounter(rrdPath, "icmpSent", statsEntry->icmpSent.value, 0);
+	    updateCounter(rrdPath, "icmp6Sent", statsEntry->icmp6Sent.value, 0);
 
-	  updateCounter(rrdPath, "tcpRcvd", statsEntry->tcpRcvd.value, 0);
-	  updateCounter(rrdPath, "udpRcvd", statsEntry->udpRcvd.value, 0);
-	  updateCounter(rrdPath, "icmpRcvd", statsEntry->icmpRcvd.value, 0);
-	  updateCounter(rrdPath, "icmp6Rcvd", statsEntry->icmp6Rcvd.value, 0);
-	}
+	    updateCounter(rrdPath, "tcpRcvd", statsEntry->tcpRcvd.value, 0);
+	    updateCounter(rrdPath, "udpRcvd", statsEntry->udpRcvd.value, 0);
+	    updateCounter(rrdPath, "icmpRcvd", statsEntry->icmpRcvd.value, 0);
+	    updateCounter(rrdPath, "icmp6Rcvd", statsEntry->icmp6Rcvd.value, 0);
+	  }
+	} /* for */
 
 	free(tmpStats); free(stats);
       }
