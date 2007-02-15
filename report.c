@@ -2382,8 +2382,9 @@ void makeDot() {
       fclose(out);
       fclose(in);
     }
-
-    snprintf(path, sizeof(path), "%s -Tpng -Goverlap=false %s/ntop.dot -o %s/"CONST_NETWORK_IMAGE_MAP " 2>&1 ",
+    
+    /* Added -c courtesy of Max Waterman <davidmaxwaterman@fastmail.co.uk> */
+    snprintf(path, sizeof(path), "%s -c -Tpng -Goverlap=false %s/ntop.dot -o %s/"CONST_NETWORK_IMAGE_MAP " 2>&1 ",
 	     dotPath, myGlobals.spoolPath, myGlobals.spoolPath);
     sendString("<!-- dot(generate) command is ");
     sendString(path);
