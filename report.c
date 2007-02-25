@@ -4315,7 +4315,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	struct stat statbuf;
 
 	sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=LEFT BGCOLOR=white>"
-		   "<iframe SRC=\"" CONST_BAR_IPPROTO_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+		   "<iframe  frameborder=0 SRC=\"" CONST_BAR_IPPROTO_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 
 	/* RRD */
 	/* Do NOT add a '/' at the end of the path because Win32 will complain about it */
@@ -5969,7 +5969,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
   if(tcSent > 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<TD ALIGN=CENTER COLSPAN=2 "TD_BG" BGCOLOR=white>"
-		  "<iframe SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"?1\" width=400 height=250></iframe></TD>\n",
+		  "<iframe frameborder=0 SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"?1\" width=400 height=250></iframe></TD>\n",
 		  targetStr, vlanStr);
     sendString(buf);
   } else
@@ -5977,7 +5977,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
   if(tcRcvd > 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG" BGCOLOR=white>"
-		  "<iframe SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"\" width=400 height=250></iframe>"
+		  "<iframe frameborder=0 SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"\" width=400 height=250></iframe>"
 		  "</TD>\n",
 		  targetStr, vlanStr);
     sendString(buf);
