@@ -136,15 +136,19 @@ static void build_chart(u_char is_pie, char *the_type, int num, float *p, char *
   send_graph_header(is_pie);
 
   for(i=0; i<num; i++) {
-    snprintf(buf, sizeof(buf), "{v:%d, label:\"%s\"}%c \n", i, lbl[i], (i == (num-1)) ? ' ' : ',');
-    sendString(buf);
+    if(p[i] > 0) {
+      snprintf(buf, sizeof(buf), "{v:%d, label:\"%s\"}%c \n", i, lbl[i], (i == (num-1)) ? ' ' : ',');
+      sendString(buf);
+    }
   }
 
   send_graph_middle();
 
   for(i=0; i<num; i++) {
-    snprintf(buf, sizeof(buf), "[%d, %.1f]%c ", i, p[i], (i == (num-1)) ? ' ' : ',');
-    sendString(buf);
+    if(p[i] > 0) {
+      snprintf(buf, sizeof(buf), "[%d, %.1f]%c ", i, p[i], (i == (num-1)) ? ' ' : ',');
+      sendString(buf);
+    }
   }
 
   send_graph_footer(the_type);
@@ -1729,7 +1733,7 @@ int drawHostsDistanceGraph(int checkOnly) {
     graphData[0]++;
   }
 
-  build_pie(numPoints, graphData, lbls);
+  build_pie(30, graphData, lbls);
 
   return(numPoints);
 }
