@@ -2253,10 +2253,11 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
       rc = rrd_create(argc, argv);
 
       if(rrd_test_error()) {
+	char *err = rrd_get_error();
 	traceEventRRDebugARGV(3);
 
 	traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s",
-		   path, rrd_get_error() ? rrd_get_error() : "");
+		   path, err ? err : "");
 	rrd_clear_error();
 	numRRDerrors++;
       }

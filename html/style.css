@@ -2,14 +2,15 @@
 
 body
 {
-	font-family: Helvetica, Arial, sans-serif;
+	font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
+	/* font-family: Helvetica, Arial, sans-serif; */
 	font-size: 12px;
 	background: #fff url("/white_bg.gif") repeat-x;
 }
 
 th
 {
-font-family: Helvetica, Arial, sans-serif;
+font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
 font-size: 12px;
 font-weight: bold;
 white-space: nowrap;
@@ -22,14 +23,20 @@ table {
 
 span.leftmenuitem
 {
-font-family: Helvetica, Arial, sans-serif;
+font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
 font-size: 12px;
 font-weight: bold;
 }
 
+canvas
+{
+font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
+font-size: 9px;
+}
+
 td
 {
-font-family: Helvetica, Arial, sans-serif;
+font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
 font-size: 12px;
 }
 
@@ -38,15 +45,15 @@ white-space: normal;
 }
 
 address
-{font-family: Helvetica, Arial, sans-serif;
+{font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
 font-size: 8pt}
 
 h5
-{font-family: Helvetica, Arial, sans-serif;
+{font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
 font-size: 8pt}
 
 form
-{font-family: Helvetica, Arial, sans-serif;
+{font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
 font-size: 12px}
 
 h1
@@ -63,37 +70,37 @@ font-weight: bold}
 
 A:link
 {color: blue;
-font-family: Helvetica, Arial, sans-serif;
+font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
 font-size: 12px;
 text-decoration: none}
 
 A:visited
 {color: blue;
-font-family: Helvetica, Arial, sans-serif;
+font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
 font-size: 12px;
 text-decoration: none}
 
 A:hover
 {color: red;
-font-family: Helvetica, Arial, sans-serif;
+font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
 font-size: 12px;
 text-decoration: underline}
 
 A:link.nav
 {color: #000000;
-font-family: Helvetica, Verdana, Arial, sans-serif}
+font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";}
 
 A:visited.nav
 {color: #000000;
-font-family: Helvetica, Verdana, Arial, sans-serif}
+font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";}
 
 A:hover.nav
 {color: red;
-font-family: Helvetica, Verdana, Arial, sans-serif}
+font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";}
 
 .nav
 {color: #000000;
-font-family: Helvetica, Verdana, Arial, sans-serif}
+font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";}
 
 A.age0min { color:#FF0000 }
 A.age5min { color:#FF00FF }

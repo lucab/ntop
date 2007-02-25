@@ -103,3 +103,16 @@ function confirmReset() {
 function confirmShutdown() {
    return confirm("Are you sure you want to shutdown NTOP?");
 }
+
+
+/* Check SVG browser support */
+var hasSVGSupport = false;  // does client have SVG support?
+if (navigator.mimeTypes != null && navigator.mimeTypes.length > 0)
+{
+   if ((navigator.mimeTypes["image/svg+xml"] != null) || (navigator.mimeTypes["image/svg-xml"] != null))
+    {
+        hasSVGSupport = true;
+    }
+}
+
+

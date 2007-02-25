@@ -2709,8 +2709,13 @@ void traceEvent(int eventTraceLevel, char* file,
 	  unsigned int messageid = 0;
 	  int i;
 
+#ifdef LONG_FORMAT
 	  safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[t%lu %s:%d] ",
 			pthread_self(), &mFile[beginFileIdx], line);
+#else
+	  safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[%s:%d] ",
+			&mFile[beginFileIdx], line);
+#endif
 
 	  /* Hash the message format into an id */
 	  for (i=0; i<=strlen(format); i++) {

@@ -61,6 +61,101 @@ struct bar_elements {
 
 /* ******************************************************************* */
 
+static void send_graph_header(u_char is_pie) {
+sendString("<HTML>\n"
+"<HEAD>\n"
+"<META HTTP-EQUIV=REFRESH CONTENT=10>\n"
+"<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n"
+"<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n"
+"<script type=\"text/javascript\" src=\"/MochiKit/MochiKit.js\"></script>\n"
+"<script type=\"text/javascript\" src=\"/PlotKit/excanvas.js\"></script>\n"
+"<script type=\"text/javascript\" src=\"/PlotKit/Base.js\"></script>\n"
+"<script type=\"text/javascript\" src=\"/PlotKit/Layout.js\"></script>\n"
+"<script type=\"text/javascript\" src=\"/PlotKit/Canvas.js\"></script>\n"
+"<script type=\"text/javascript\" src=\"/PlotKit/SweetCanvas.js\"></script>\n"
+"<script type=\"text/javascript\" src=\"/PlotKit/EasyPlot.js\"></script>\n"
+"<script type=\"text/javascript\">\n"
+"//<![CDATA[\n"
+"function drawchart() {\n"
+"   var hasCanvas = CanvasRenderer.isSupported();\n"
+"\n"
+"   var opts = {\n"
+);
+
+if(is_pie) sendString("   \"pieRadius\": 0.42,	  \n");
+
+ sendString("    \"colorScheme\": PlotKit.Base.palette(PlotKit.Base.baseColors()[0]),\n");
+ if(is_pie) sendString("   \"backgroundColor\": PlotKit.Base.baseColors()[0].lighterColorWithLevel(1),\n" );
+ sendString("   \"xTicks\": [");
+}
+ 
+/**********************************************************/
+
+static void send_graph_middle() {
+sendString("]\n"
+	     "   };\n"
+	     "\n"
+	     "   var data1 = [");
+
+}
+
+/**********************************************************/
+
+static void send_graph_footer(char *the_type) {
+  sendString("];\n"
+	     "   \n"
+	     "   if (hasCanvas) {\n"
+	     "       var pie = new EasyPlot(\"");
+
+sendString(the_type);
+sendString("\", opts, $(\'canvas");
+sendString(the_type);
+sendString("\'), [data1]);\n"
+	     "   }\n"
+	     "}\n"
+	     "\n"
+	     "addLoadEvent(drawchart);\n"
+	     "//]]>\n"
+	     "</script>\n"
+	     "</head>\n"
+	     "<body>\n"
+	     "<div id=\"canvas");
+sendString(the_type);
+sendString("\" width=\"350\" height=\"200\"></div>\n"
+	     "</body>\n"
+	     "</html>\n"
+	     );
+}
+
+/**********************************************************/
+
+static void build_chart(u_char is_pie, char *the_type, int num, float *p, char **lbl) {
+  int i;
+  char buf[64];
+
+  send_graph_header(is_pie);
+
+  for(i=0; i<num; i++) {
+    snprintf(buf, sizeof(buf), "{v:%d, label:\"%s\"}%c \n", i, lbl[i], (i == (num-1)) ? ' ' : ',');
+    sendString(buf);
+  }
+
+  send_graph_middle();
+
+  for(i=0; i<num; i++) {
+    snprintf(buf, sizeof(buf), "[%d, %.1f]%c ", i, p[i], (i == (num-1)) ? ' ' : ',');
+    sendString(buf);
+  }
+
+  send_graph_footer(the_type);
+}
+
+#define build_pie(a, b, c) build_chart(1, "pie", a, b, c)
+#define build_line(a, b, c) build_chart(0, "line", a, b, c)
+#define build_bar(a, b, c) build_chart(0, "bar", a, b, c)
+
+/* ******************************************************************* */
+
 /**********************************************************/
 /* Guess at the version of gd from various breadcrumbs in */
 /* the library (only things checkable at run-time, since  */
@@ -71,9 +166,9 @@ struct bar_elements {
 char* gdVersionGuess(void) {
 #ifdef WIN32
 #if GD2_VERS == 2 /* GD 2.x detected */    
-    return("2.x");
+  return("2.x");
 #else
-    return("1.8.x");
+  return("1.8.x");
 #endif
 #else
 #if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(DARWIN)
@@ -602,7 +697,6 @@ void sendGraphFile(char* fileName, int doNotUnlink) {
 /* ************************ */
 
 void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
@@ -813,40 +907,15 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
       return; /* TODO: this has to be handled better */
     }
 
-#ifndef WIN32
-    /* Unices */
-
-    if(myGlobals.newSock < 0)
-      useFdOpen = 0;
-    else
-      useFdOpen = 1;
-
-    if(useFdOpen)
-      fd = fdopen(abs(myGlobals.newSock), "ab");
-    else
-      fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
     if(num == 1) p[0] = 100; /* just to be safe */
 
-    drawPie(300, 250,
-	    fd,			/* open file pointer */
-	    num,		/* number of slices */
-	    lbl,		/* slice labels */
-	    p, 0);			/* data array */
-    fclose(fd);
-
-    if(!useFdOpen)
-      sendGraphFile(fileName, 0);
+    build_pie(num, p, lbl);
   }
 }
 
 /* ************************ */
 
 void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
@@ -898,40 +967,14 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
       return; /* TODO: this has to be handled better */
     }
 
-#ifndef WIN32
-    /* Unices */
-
-    if(myGlobals.newSock < 0)
-      useFdOpen = 0;
-    else
-      useFdOpen = 1;
-
-    if(useFdOpen)
-      fd = fdopen(abs(myGlobals.newSock), "ab");
-    else
-      fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
     if(num == 1) p[0] = 100; /* just to be safe */
-    drawPie(400, 250,
-	    fd,			/* open file pointer */
-	    num,		/* number of slices */
-	    lbl,		/* slice labels */
-	    p, 1);			/* data array */
-
-    fclose(fd);
-
-    if(!useFdOpen)
-      sendGraphFile(fileName, 0);
+    build_pie(num, p, lbl);
   }
 }
 
 /* ************************ */
 
 void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[24];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "",
@@ -1032,39 +1075,13 @@ void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
     return; /* TODO: this has to be handled better */
   }
   
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
   if(num == 1) p[0] = 100; /* just to be safe */
-  drawPie(300, 250,
-	  fd,		/* open file pointer */
-	  num,		/* number of slices */
-	  lbl,		/* slice labels */
-	  p, 0);	        /* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_pie(num, p, lbl);
 }
 
 /* ************************ */
 
 void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
@@ -1095,40 +1112,14 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
       return; /* TODO: this has to be handled better */
     }
 
-#ifndef WIN32
-    /* Unices */
-
-    if(myGlobals.newSock < 0)
-      useFdOpen = 0;
-    else
-      useFdOpen = 1;
-
-    if(useFdOpen)
-      fd = fdopen(abs(myGlobals.newSock), "ab");
-    else
-      fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
     if(num == 1) p[0] = 100; /* just to be safe */
-    drawPie(400, 250,
-	    fd,			/* open file pointer */
-	    num,		/* number of slices */
-	    lbl,		/* slice labels */
-	    p, 1);			/* data array */
-
-    fclose(fd);
-
-    if(!useFdOpen)
-      sendGraphFile(fileName, 0);
+    build_pie(num, p, lbl);
   }
 }
 
 /* ************************ */
 
 void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[MAX_NUM_PROTOS];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
@@ -1181,46 +1172,16 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
     }
   }
 
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  if(num == 1) p[0] = 100;
-
   if(num == 1) p[0] = 100; /* just to be safe */
-  drawPie(300, 250,
-	  fd,			/* open file pointer */
-	  num,			/* number of slices */
-	  lbl,			/* slice labels */
-	  p, 1);			/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_pie(num, p, lbl);
 }
 
 /* ********************************** */
 
 void pktSizeDistribPie(void) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[10];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "", "" };
   int num=0;
-  FILE *fd;
-  int useFdOpen = 0;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64.value)/
@@ -1288,39 +1249,14 @@ void pktSizeDistribPie(void) {
 #endif
 
 
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
   if(num == 1) p[0] = 100; /* just to be safe */
-  drawPie(400, 250,
-	  fd,			/* open file pointer */
-	  num,			/* number of slices */
-	  lbl,			/* slice labels */
-	  p, 0);			/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  
+  build_pie(num, p, lbl);
 }
 
 /* ********************************** */
 
 void pktTTLDistribPie(void) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[10];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "" };
   int num=0;
@@ -1336,83 +1272,55 @@ void pktTTLDistribPie(void) {
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
-    lbl[num++] = "<= 64";
+    lbl[num++] = "33 - 64";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
-    lbl[num++] = "<= 96";
+    lbl[num++] = "65 - 96";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
-    lbl[num++] = "<= 128";
+    lbl[num++] = "97 - 128";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
-    lbl[num++] = "<= 160";
+    lbl[num++] = "129 - 160";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
-    lbl[num++] = "<= 192";
+    lbl[num++] = "161 - 192";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
-    lbl[num++] = "<= 224";
+    lbl[num++] = "193 - 224";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
-    lbl[num++] = "<= 255";
+    lbl[num++] = "225 - 255";
   };
 
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
   if(num == 1) p[0] = 100; /* just to be safe */
-  drawPie(400, 250,
-	  fd,			/* open file pointer */
-	  num,			/* number of slices */
-	  lbl,			/* slice labels */
-	  p, 0);			/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_pie(num, p, lbl);
 }
 
 /* ************************ */
 
 void ipProtoDistribPie(void) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "Loc", "Rem->Loc", "Loc->Rem" };
   int num=0;
-  FILE *fd;
-  int useFdOpen = 0;
 
   p[num] = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local.value+
 		   myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local.value)/1024;
@@ -1432,46 +1340,18 @@ void ipProtoDistribPie(void) {
     lbl[num++] = "Loc->Rem";
   }
 
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
   if(num == 1) p[0] = 100; /* just to be safe */
-  drawPie(400, 250,
-	  fd,			/* open file pointer */
-	  num,			/* number of slices */
-	  lbl,			/* slice labels */
-	  p, 1);			/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_pie(num, p, lbl);
 }
 
 /* ************************ */
 
 void interfaceTrafficPie(void) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[MAX_NUM_DEVICES];
   int i;
-  FILE *fd;
   TrafficCounter totPkts;
   char	*lbl[MAX_NUM_DEVICES];
   int myDevices=0;
-  int useFdOpen = 0;
 
   totPkts.value = 0;
 
@@ -1493,22 +1373,6 @@ void interfaceTrafficPie(void) {
     }
   }
 
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
   if(myDevices == 1) 
     p[0] = 100; /* just to be safe */
   else if(myDevices == 0) {
@@ -1516,26 +1380,15 @@ void interfaceTrafficPie(void) {
     return;
   }
 
-  drawPie(500, 250,
-	  fd,		/* open file pointer */
-	  myDevices,	/* number of slices */
-	  lbl,		/* slice labels */
-	  p, 1);		/* data array */
-  
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_pie(myDevices, p, lbl);
 }
 
 /* ************************ */
 
 void pktCastDistribPie(void) {
-  char fileName[64] = "/tmp/ntop-graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "", "", "" };
-  int num=0, useFdOpen = 0;
-  FILE *fd;
+  int num=0;
   TrafficCounter unicastPkts;
 
   unicastPkts.value = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value
@@ -1564,45 +1417,16 @@ void pktCastDistribPie(void) {
     lbl[num++] = "Multicast";
   };
 
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  if(num == 1) p[0] = 100;  /* just to be safe */
-  drawPie(400, 250,
-	  fd,			/* open file pointer */
-	  num,			/* number of slices */
-	  lbl,			/* slice labels */
-	  p, 1);			/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_pie(num, p, lbl);
 }
 
 /* ************************ */
 
 void drawTrafficPie(void) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   TrafficCounter ip;
   float p[2];
   char	*lbl[] = { "IP", "Non IP" };
   int num=0;
-  FILE *fd;
-  int useFdOpen = 0;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value == 0) return;
 
@@ -1614,35 +1438,8 @@ void drawTrafficPie(void) {
   if(p[1] > 0)
     num++;
 
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  if(fd == NULL) return;
-
   if(num == 1) p[0] = 100; /* just to be safe */
-  drawPie(400, 250,
-	  fd,			/* open file pointer */
-	  num,			/* number of slices */
-	  lbl,			/* slice labels */
-	  p, 1);			/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_pie(num, p, lbl);
 }
 
 /* ************************ */
@@ -1847,8 +1644,6 @@ void drawGlobalIpProtoDistribution(void) {
   int i, idx=0, idx1 = 0, maxNumDisplayProto = 13;
   float p[256];
   char *lbl[256];
-  FILE *fd;
-  int useFdOpen = 0;
   ProtocolsList *protoList = myGlobals.ipProtosList;
   float total, partialTotal = 0;
 
@@ -1877,6 +1672,8 @@ void drawGlobalIpProtoDistribution(void) {
     if(idx >= maxNumDisplayProto) break;
   }
 
+  if(total == 0) total = 1;
+
   /*  Add a bar for the Other TCP/UDP based protocols
       Courtesy of Robbert Kouprie <r.kouprie@dto.tudelft.nl>
   */
@@ -1886,49 +1683,26 @@ void drawGlobalIpProtoDistribution(void) {
     idx++;
   }
 
-#ifndef WIN32
-  /* Unices */
+  for(i=0; i<idx; i++) p[i] = (p[i] * 100)/total;
 
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  drawBar(600, 300,	/* width/height */
-	  fd,		/* open file pointer */
-	  idx,		/* number of slices */
-	  lbl,		/* slice labels */
-	  p);		/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_pie(idx, p, lbl);
 }
 
 /* ******************************** */
 
 int drawHostsDistanceGraph(int checkOnly) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int i, j, numPoints=0;
-  char  *lbls[32], labels[32][8];
-  FILE *fd;
+  char  *lbls[32], labels[32][16];
   float graphData[60];
-  int useFdOpen = 0;
   HostTraffic *el;
 
   memset(graphData, 0, sizeof(graphData));
 
   for(i=0; i<=30; i++) {
-    safe_snprintf(__FILE__, __LINE__, labels[i], sizeof(labels[i]), "%d", i);
+    if(i == 0)
+      safe_snprintf(__FILE__, __LINE__, labels[i], sizeof(labels[i]), "Local/Direct");
+    else
+      safe_snprintf(__FILE__, __LINE__, labels[i], sizeof(labels[i]), "%d Hops", i);
     lbls[i] = labels[i];
     graphData[i] = 0;
   }
@@ -1947,33 +1721,15 @@ int drawHostsDistanceGraph(int checkOnly) {
   if(checkOnly)
     return(numPoints);
 
-#ifndef WIN32
-  /* Unices */
+  if(numPoints == 0) {
+    lbls[numPoints] = "Unknown Host Distance";
+    graphData[numPoints] = 1;
+    numPoints++;
+  } else if(numPoints == 1) {
+    graphData[0]++;
+  }
 
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  drawArea(400, 250,    /* width, height           */
-	   fd,          /* open FILE pointer       */
-	   30,          /* num points per data set */
-	   lbls,        /* X labels array of char* */
-	   graphData, "Hops (TTL)",
-	   "Number of Hosts", 0);
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_pie(numPoints, graphData, lbls);
 
   return(numPoints);
 }
@@ -1981,12 +1737,10 @@ int drawHostsDistanceGraph(int checkOnly) {
 /* ************************ */
 
 void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[MAX_NUM_PROTOS];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
   int i, num=0, explodePieces[MAX_NUM_PROTOS];
-  FILE *fd;
   TrafficCounter traffic, totalFcTraffic, diffTraffic;
   char *lblstouse[] = { "SCSI", "FICON", "ELS", "NS", "IP/FC", "Others"};
   Counter protoTrafficSent[] = {
@@ -2041,46 +1795,16 @@ void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent) {
       }
   }
 
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-  
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  if(num == 1) p[0] = 100;
-
   if(num == 1) p[0] = 100; /* just to be safe */
-  drawPie(300, 250,
-	  fd,			/* open file pointer */
-	  num,			/* number of slices */
-	  lbl,			/* slice labels */
-	  p, 1);			/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_pie(num, p, lbl);
 }
 
 /* ********************************** */
 
 void fcPktSizeDistribPie(void) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[10];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "", ""};
   int num=0;
-  FILE *fd;
-  int useFdOpen = 0;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo36.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo36.value)/
@@ -2136,33 +1860,8 @@ void fcPktSizeDistribPie(void) {
     lbl[num++] = "> 2136";
   };
 
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
   if(num == 1) p[0] = 100; /* just to be safe */
-  drawPie(400, 250,
-	  fd,			/* open file pointer */
-	  num,			/* number of slices */
-	  lbl,			/* slice labels */
-	  p, 0);			/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_pie(num, p, lbl);
 }
 
 /* ******************************** */
@@ -2549,13 +2248,10 @@ void drawVsanStatsPktsDistribution (int deviceId) {
 /* *******************************************************/
 
 void drawVsanSwilsProtoDistribution(u_short vsanId) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int idx=0;
   FcFabricElementHash *hash;
   float p[256];
   char *lbl[256];
-  FILE *fd;
-  int useFdOpen = 0;
 
   p[myGlobals.numIpProtosToMonitor] = 0;
 
@@ -2603,32 +2299,7 @@ void drawVsanSwilsProtoDistribution(u_short vsanId) {
       lbl[idx++] = "Others";
   }
 
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-  
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  drawPie (600, 250,	/* width/height */
-           fd,		/* open file pointer */
-           idx,		/* number of slices */
-           lbl,		/* slice labels */
-           p, 1);		/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_pie(idx, p, lbl);
 }
 
 /* *******************************************************/

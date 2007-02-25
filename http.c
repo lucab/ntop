@@ -758,7 +758,7 @@ static void ssiMenu_Body() {
 		  "        cmDraw ('ntopMenuID', ntopMenu, 'hbr', cmThemeOffice, 'ThemeOffice');\n"
 		  "-->\n"
 		  "</script></th>\n"
-		  "  <th class=\"leftmenuitem\" align=\"right\">(C) 1998-2006 - " CONST_MAILTO_LUCA "&nbsp;&nbsp;</th>\n"
+		  "  <th class=\"leftmenuitem\" align=\"right\">(C) 1998-2007 - " CONST_MAILTO_LUCA "&nbsp;&nbsp;</th>\n"
 		  " </tr>\n"
 		  "</table>\n"
 		  "<p>&nbsp;</p>\n");
@@ -1098,8 +1098,16 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
     sendString("<LINK REL=stylesheet HREF=\"/style.css\" type=\"text/css\">\n");
   }
 
+
+  sendString("<script type=\"text/javascript\" src=\"/MochiKit/MochiKit.js\"></script>\n");
+  sendString("<script type=\"text/javascript\" src=\"/PlotKit/excanvas.js\"></script>\n");
+  sendString("<script type=\"text/javascript\" src=\"/PlotKit/Base.js\"></script>\n");
+  sendString("<script type=\"text/javascript\" src=\"/PlotKit/Layout.js\"></script>\n");
+  sendString("<script type=\"text/javascript\" src=\"/PlotKit/Canvas.js\"></script>\n");
+  sendString("<script type=\"text/javascript\" src=\"/PlotKit/SweetCanvas.js\"></script>\n");
+
   sendString("<SCRIPT SRC=\"/functions.js\" TYPE=\"text/javascript\" LANGUAGE=\"javascript\"></SCRIPT>\n");
-  sendString("<script type=\"text/javascript\" language=\"javascript\" src=\"/domLib.js\"></script>\n");
+   sendString("<script type=\"text/javascript\" language=\"javascript\" src=\"/domLib.js\"></script>\n");
   sendString("<script type=\"text/javascript\" language=\"javascript\" src=\"/domTT.js\"></script>\n");
   sendString("<script type=\"text/javascript\" language=\"javascript\">var domTT_styleClass = 'niceTitle';</script>\n");
 
@@ -2740,12 +2748,12 @@ static int returnHTTPPage(char* pageName,
       } else if(strncasecmp(pageName, CONST_PIE_VSAN_CNTL_TRAF_DIST,
 			    strlen(CONST_PIE_VSAN_CNTL_TRAF_DIST)) == 0) {
         sscanf (pageName, CONST_PIE_VSAN_CNTL_TRAF_DIST "-%d", &vsanId);
-	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
         drawVsanSwilsProtoDistribution(vsanId);
       } else if(strncasecmp(pageName, CONST_BAR_VSAN_TRAF_DIST_SENT,
 			    strlen(CONST_BAR_VSAN_TRAF_DIST_SENT)) == 0) {
         sscanf (pageName, CONST_BAR_VSAN_TRAF_DIST_SENT "-%d", &vsanId);
-	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
         drawVsanDomainTrafficDistribution(vsanId, TRUE);
       } else if(strncasecmp(pageName, CONST_BAR_VSAN_TRAF_DIST_RCVD,
 			    strlen(CONST_BAR_VSAN_TRAF_DIST_RCVD)) == 0) {
@@ -2759,18 +2767,18 @@ static int returnHTTPPage(char* pageName,
 	drawThptGraph(sortedColumn);
 	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_PIE_IP_TRAFFIC, strlen(CONST_PIE_IP_TRAFFIC)) == 0) {
-	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawTrafficPie();
 	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_PIE_PKT_CAST_DIST,
 			    strlen(CONST_PIE_PKT_CAST_DIST)) == 0) {
-	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	pktCastDistribPie();
 	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_PIE_PKT_SIZE_DIST,
 			    strlen(CONST_PIE_PKT_SIZE_DIST)) == 0) {
 	if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
-	  sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	  pktSizeDistribPie();
 	  printTrailer=0;
 	} else {
@@ -2779,7 +2787,7 @@ static int returnHTTPPage(char* pageName,
       } else if(strncasecmp(pageName, CONST_PIE_FC_PKT_SZ_DIST,
 			    strlen(CONST_PIE_FC_PKT_SZ_DIST)) == 0) {
 	if(myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value > 0) {
-	  sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	  fcPktSizeDistribPie();
 	  printTrailer=0;
 	} else {
@@ -2787,7 +2795,7 @@ static int returnHTTPPage(char* pageName,
 	}
       } else if(strncasecmp(pageName, CONST_PIE_TTL_DIST, strlen(CONST_PIE_TTL_DIST)) == 0) {
 	if(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value > 0) {
-	  sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	  pktTTLDistribPie();
 	  printTrailer=0;
 	} else {
@@ -2795,12 +2803,12 @@ static int returnHTTPPage(char* pageName,
 	}
       } else if(strncasecmp(pageName, CONST_PIE_IPPROTO_RL_DIST,
 			    strlen(CONST_PIE_IPPROTO_RL_DIST)) == 0) {
-	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	ipProtoDistribPie();
 	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_PIE_INTERFACE_DIST,
 			    strlen(CONST_PIE_INTERFACE_DIST)) == 0) {
-	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	interfaceTrafficPie();
 	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_BAR_ALLPROTO_DIST,
@@ -2814,17 +2822,17 @@ static int returnHTTPPage(char* pageName,
 	printTrailer=1;
       } else if(strncasecmp(pageName, CONST_BAR_IPPROTO_DIST,
 			    strlen(CONST_BAR_IPPROTO_DIST)) == 0) {
-	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawGlobalIpProtoDistribution();
 	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_BAR_HOST_DISTANCE,
 			    strlen(CONST_BAR_HOST_DISTANCE)) == 0) {
-	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawHostsDistanceGraph(0);
 	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_BAR_FC_PROTO_DIST,
 			    strlen(CONST_BAR_FC_PROTO_DIST)) == 0) {
-	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawGlobalFcProtoDistribution();
 	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_BAR_LUNSTATS_DIST,
@@ -2883,7 +2891,7 @@ static int returnHTTPPage(char* pageName,
 	  if(el->community && (!isAllowedCommunity(el->community)))
 	    returnHTTPpageBadCommunity();
 	  else {
-	    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	    drawLunStatsBytesDistribution(el);
 	  }
 	  printTrailer=0;
@@ -2940,19 +2948,19 @@ static int returnHTTPPage(char* pageName,
 	  if(el->community && (!isAllowedCommunity(el->community)))
 	    returnHTTPpageBadCommunity();
 	  else {
-	    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	    drawLunStatsPktsDistribution(el);
 	  }
 	  printTrailer=0;
         }
       } else if(strncasecmp(pageName, "drawVsanStatsBytesDistribution",
 			    strlen("drawVsanStatsBytesDistribution")) == 0) {
-        sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+        sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
         drawVsanStatsBytesDistribution (myGlobals.actualReportDeviceId);
         printTrailer=0;
       } else if(strncasecmp(pageName, "drawVsanStatsPktsDistribution",
 			    strlen("drawVsanStatsPktsDistribution")) == 0) {
-        sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+        sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
         drawVsanStatsPktsDistribution (myGlobals.actualReportDeviceId);
         printTrailer=0;
       } else if((strncasecmp(pageName,    "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0)
@@ -3033,7 +3041,7 @@ static int returnHTTPPage(char* pageName,
 	    if(el->community && (!isAllowedCommunity(el->community))) {
 	      returnHTTPpageBadCommunity();
 	    } else {	    
-	      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
 	      switch(idx) {
 	      case 0:

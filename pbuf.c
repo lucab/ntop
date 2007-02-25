@@ -2724,8 +2724,10 @@ void updateDevicePacketStats(u_int length, int actualDeviceId) {
 /* ***************************************************** */
 
 void dumpSuspiciousPacket(int actualDeviceId) {
-  if(myGlobals.device[actualDeviceId].pcapErrDumper != NULL)
+  if(myGlobals.device[actualDeviceId].pcapErrDumper != NULL) {
     pcap_dump((u_char*)myGlobals.device[actualDeviceId].pcapErrDumper, h_save, p_save);
+    traceEvent(CONST_TRACE_INFO, "Dumped %d bytes suspicious packet", h_save->caplen);
+  }
 }
 
 /* ***************************************************** */

@@ -2573,10 +2573,8 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
      if(totalSent > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		    "<IMG SRC=\"hostTrafficDistrib-%s%s"CHART_FORMAT"?1\" "
-		    "ALT=\"Sent Traffic Distribution for %s%s\"></TD>",
-                    linkName, vlanStr,
-                    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress, vlanStr);
+		    "<iframe SRC=\"hostTrafficDistrib-%s%s"CHART_FORMAT"?1\"  width=400 height=250></iframe></TD>",
+		      linkName, vlanStr);
 	sendString(buf);
       } else {
 	sendString("<TD width=250 "TD_BG" ALIGN=RIGHT COLSPAN=2 WIDTH=250>&nbsp;</TD>");
@@ -2584,10 +2582,9 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
       if(totalRcvd > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white><IMG SRC=hostTrafficDistrib-"
-		    "%s%s"CHART_FORMAT" ALT=\"Received Traffic Distribution for %s%s\"></TD>",
-		    linkName, vlanStr,
-		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress, vlanStr);
+		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white><iframe SRC=hostTrafficDistrib-"
+		    "%s%s"CHART_FORMAT"  width=400 height=250></iframe></TD>",
+		      linkName, vlanStr);
 	sendString(buf);
       } else {
 	sendString("<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 WIDTH=250>&nbsp;</TD>");
@@ -2604,17 +2601,17 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	if((el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value) > 0) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		      "<IMG SRC=\"hostIPTrafficDistrib-%s%s"CHART_FORMAT"?1\" ALT=\"Sent IP Traffic Distribution for %s%s\"></TD>",
-		      linkName, vlanStr, el->hostNumIpAddress, vlanStr);
+		      "<iframe SRC=\"hostIPTrafficDistrib-%s%s"CHART_FORMAT"?1\"  width=400 height=250></iframe></TD>",
+		      linkName, vlanStr);
 	  sendString(buf);
 	} else
 	  sendString("<TD "TD_BG" COLSPAN=2 WIDTH=250>&nbsp;</TD>");
 
 	if((el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value+el->udpRcvdLoc.value+el->udpRcvdFromRem.value) > 0) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white><IMG SRC=hostIPTrafficDistrib-"
-		      "%s%s"CHART_FORMAT" ALT=\"Received IP Traffic Distribution for %s%s\"></TD></TR>",
-		      linkName, vlanStr, el->hostNumIpAddress, vlanStr);
+		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white><iframe SRC=hostIPTrafficDistrib-"
+		      "%s%s"CHART_FORMAT"  width=400 height=250></iframe></TD></TR>",
+		      linkName, vlanStr);
 	  sendString(buf);
 	} else
 	  sendString("<TD "TD_BG" COLSPAN=2 WIDTH=250>&nbsp;</TD>");
@@ -2777,8 +2774,8 @@ void printIcmpv4Stats(HostTraffic *el) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   char formatBuf[32], formatBuf1[32];
 
-  sendString("<CENTER>\n<H1>ICMP Traffic</H1><p>\n");
-  sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
+  printSectionTitle("ICMP Traffic");
+  sendString("<CENTER><TABLE BORDER=1 "TABLE_DEFAULTS">\n");
   sendString("<TR "TR_ON" "DARK_BG"><th>Type</th>"
 	     "<TH "TH_BG" ALIGN=LEFT>Pkt&nbsp;Sent</TH>"
 	     "<TH "TH_BG" ALIGN=LEFT>Pkt&nbsp;Rcvd</TH></TR>\n");

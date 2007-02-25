@@ -367,9 +367,8 @@ void printTrafficSummary (int revertOrder) {
       }
 
     if(found) {
-      sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		 "<IMG SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" "
-		 " class=tooltip alt=\"interface traffic chart\"></TD></TR>\n");
+      sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+		 "<iframe border=0 SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\"></iframe></TH></TR>\n");
     }
   }
 #endif
@@ -744,9 +743,8 @@ void printTrafficStatistics(int revertOrder) {
       }
 
     if(found) {
-      sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		 "<IMG SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" "
-		 " class=tooltip alt=\"interface traffic chart\"></TD></TR>\n");
+	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+		   "<iframe border=0 SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
     }
   }
 #endif
@@ -846,9 +844,8 @@ void printTrafficStatistics(int revertOrder) {
 
 #ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
-      sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-		 "<IMG SRC=\"" CONST_PIE_PKT_CAST_DIST CHART_FORMAT "\" "
-		 " class=tooltip alt=\"pktCast distribution chart\"></TH></TR>\n");
+	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+		   "<iframe border=0 SRC=\"" CONST_PIE_PKT_CAST_DIST CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 #endif
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
@@ -877,42 +874,42 @@ void printTrafficStatistics(int revertOrder) {
 					      rcvdPktStats.longest.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&lt;=&nbsp;64&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Size&nbsp;&lt;=&nbsp;64&nbsp;bytes</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktStats.upTo64.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">64&nbsp;to&nbsp;128&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">64&nbsp;&lt;&nbsp;Size&nbsp;&lt;=&nbsp;128&nbsp;bytes</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktStats.upTo128.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">129&nbsp;to&nbsp;256&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">128&nbsp;&lt;&nbsp;Size&nbsp;&lt;=&nbsp;256&nbsp;bytes</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktStats.upTo256.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">257&nbsp;to&nbsp;512&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">256&nbsp;&lt;&nbsp;Size&nbsp;&lt;=&nbsp;512&nbsp;bytes</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktStats.upTo512.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">513&nbsp;to&nbsp;1024&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">512&nbsp;&lt;&nbsp;Size&nbsp;&lt;=&nbsp;1024&nbsp;bytes</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktStats.upTo1024.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">1025&nbsp;to&nbsp;1518&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">1024&nbsp;&lt;&nbsp;Size&nbsp;&lt;=&nbsp;1518&nbsp;bytes</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktStats.upTo1518.value)/
@@ -921,21 +918,21 @@ void printTrafficStatistics(int revertOrder) {
       sendString(buf);
 
 #ifdef MAKE_WITH_JUMBO_FRAMES
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">1519&nbsp;to&nbsp;2500&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">1518&nbsp;&lt;&nbsp;Size&nbsp;&lt;=&nbsp;2500&nbsp;bytes</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktStats.upTo2500.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo2500.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">2501&nbsp;to&nbsp;6500&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">2500&nbsp;&lt;&nbsp;Size&nbsp;&lt;=&nbsp;6500&nbsp;bytes</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktStats.upTo6500.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo6500.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">6501&nbsp;to&nbsp;9000&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">6500&nbsp;&lt;&nbsp;Size&nbsp;&lt;=&nbsp;9000&nbsp;bytes</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktStats.upTo9000.value)/
@@ -950,7 +947,7 @@ void printTrafficStatistics(int revertOrder) {
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above9000.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
 #else
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&gt;&nbsp;1518&nbsp;bytes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Size&nbsp;&gt;&nbsp;1518&nbsp;bytes</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktStats.above1518.value)/
@@ -962,8 +959,7 @@ void printTrafficStatistics(int revertOrder) {
 #ifndef EMBEDDED
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		   "<IMG SRC=\"" CONST_PIE_PKT_SIZE_DIST CHART_FORMAT "\" "
-		   "class=tooltip  alt=\"pktSize distribution chart\"></TH></TR>\n");
+		   "<iframe border=0 SRC=\"" CONST_PIE_PKT_SIZE_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 #endif
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Packets&nbsp;too&nbsp;long [> %d]</th>"
@@ -1127,8 +1123,8 @@ void printTrafficStatistics(int revertOrder) {
 			       formatBuf, sizeof(formatBuf)));
       sendString(buf);
 
-      sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" "DARK_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		 "<IMG class=tooltip SRC=\"" CONST_PIE_FC_PKT_SZ_DIST CHART_FORMAT"\" alt=\"FC pktSize distribution chart\"></TH></TR>\n");
+	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+		   "<iframe border=0 SRC=\"" CONST_PIE_FC_PKT_SZ_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>Packets&nbsp;too&nbsp;long [> %d]</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
@@ -1190,8 +1186,8 @@ void printTrafficStatistics(int revertOrder) {
 
 #ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value > 0)
-      sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-		 "<IMG class=tooltip SRC=\"" CONST_PIE_IP_TRAFFIC CHART_FORMAT "\" alt=\"ipTraffic chart\"></TH></TR>\n");
+	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+		   "<iframe border=0 SRC=\"" CONST_PIE_IP_TRAFFIC  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 #endif
 
     /* ********************* */
@@ -1280,9 +1276,8 @@ void printTrafficStatistics(int revertOrder) {
 	sendString(buf);
 
 #ifndef EMBEDDED
-	sendString("<TR "TR_ON"><TH BGCOLOR=white COLSPAN=3>"
-		   "<IMG SRC=\"" CONST_PIE_TTL_DIST CHART_FORMAT "\" "
-		   " class=tooltip alt=\"pktTTD distribution chart\"></TH></TR>\n");
+	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+		   "<iframe border=0 SRC=\"" CONST_PIE_TTL_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 #endif
       }
     }
@@ -1295,8 +1290,8 @@ void printTrafficStatistics(int revertOrder) {
     if(myGlobals.runningPref.enableSessionHandling && drawHostsDistanceGraph(1))
       sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Remote Hosts Distance</TH>"
                  "<TD BGCOLOR=white ALIGN=CENTER>"
-		 "<IMG SRC=\"" CONST_BAR_HOST_DISTANCE CHART_FORMAT "\" "
-                 "class=tooltip alt=\"hosts distance chart\"></TD></TR>\n");
+		 "<iframe border=0 SRC=\"" CONST_BAR_HOST_DISTANCE CHART_FORMAT "\" width=400 height=250></iframe>"
+                 "</TD></TR>\n");
 #endif
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
@@ -1344,10 +1339,19 @@ void printTrafficStatistics(int revertOrder) {
 		     (float)(myGlobals.actTime-myGlobals.initialSniffTime+1)));
       sendString(buf);
 
-    sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-	       "<embed src=\"/graph_if.svg\" width=\"400\" height=\"250\" type=\"image/svg+xml\" />"
-	       "</TH></TR>\n");
 
+      sendString("<script>if(hasSVGSupport) {\n");
+    sendString("document.write(\"<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
+	       "<embed src=\"/graph_if.svg\" width=\"400\" height=\"250\" type=\"image/svg+xml\" />"
+	       "</TH></TR>\n\"); }</script>\n");
+
+
+#if 0
+    sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
+               "<embed src=\"/bar.html\" width=\"400\" height=\"250\" SCROLLING=NO />"
+               "</TH></TR>\n");
+
+#endif
       sendString("</TABLE>"TABLE_OFF"</TR>\n");
     }
   }
@@ -4011,8 +4015,8 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
     printSectionTitle("IP Protocol Distribution");
 
 #ifndef EMBEDDED
-    sendString("<CENTER><IMG SRC=\"" CONST_PIE_IPPROTO_RL_DIST CHART_FORMAT "\" "
-	       "class=tooltip alt=\"ipProtocol distribution chart\"><p>\n</CENTER>\n");
+    sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+	       "<iframe border=0 SRC=\"" CONST_PIE_IPPROTO_RL_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 #endif
 
     printSectionTitle("Local Traffic");
@@ -4310,9 +4314,8 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       if ((numProtosFound > 0) && printGraph) {
 	struct stat statbuf;
 
-	sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
-		   "<IMG SRC=\"" CONST_BAR_IPPROTO_DIST CHART_FORMAT "\" "
-		   "class=tooltip alt=\"Global ipProtocol distribution chart\"></TD></TR>");
+	sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=LEFT BGCOLOR=white>"
+		   "<iframe SRC=\"" CONST_BAR_IPPROTO_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 
 	/* RRD */
 	/* Do NOT add a '/' at the end of the path because Win32 will complain about it */
@@ -4528,8 +4531,7 @@ void printProtoTraffic(int printGraph) {
 #ifndef EMBEDDED
   if (printGraph) {
     sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
-	       "<IMG SRC=\"" CONST_BAR_ALLPROTO_DIST CHART_FORMAT "\" "
-	       "class=tooltip alt=\"global protocol distribution chart\"></TD></TR>\n");
+	       "<IMG SRC=\"" CONST_BAR_ALLPROTO_DIST  CHART_FORMAT "\"></TH></TR>\n");
   }
 #endif
 
@@ -5861,7 +5863,7 @@ void listNetFlows(void) {
     while(list != NULL) {
       if(list->pluginStatus.activePlugin) {
 	if(numEntries == 0) {
-	  printPageTitle("Network Flows");
+	  printSectionTitle("Network Flows");
  	  sendString("<CENTER>\n");
 	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG">Flow Name</TH>"
   		     "<TH "TH_BG">Packets</TH><TH "TH_BG">Traffic</TH></TR>");
@@ -5967,9 +5969,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
   if(tcSent > 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<TD ALIGN=CENTER COLSPAN=2 "TD_BG" BGCOLOR=white>"
-		  "<IMG SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"?1\""
-		  " class=tooltip alt=\"hostTraffic sent distribution chart\">"
-		  "</TD>\n",
+		  "<iframe SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"?1\" width=400 height=250></iframe></TD>\n",
 		  targetStr, vlanStr);
     sendString(buf);
   } else
@@ -5977,8 +5977,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
   if(tcRcvd > 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG" BGCOLOR=white>"
-		  "<IMG SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"\""
-		  "class=tooltip  alt=\"hostTraffic rcvd distribution chart\">"
+		  "<iframe SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"\" width=400 height=250></iframe>"
 		  "</TD>\n",
 		  targetStr, vlanStr);
     sendString(buf);
