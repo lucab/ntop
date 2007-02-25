@@ -368,7 +368,7 @@ void printTrafficSummary (int revertOrder) {
 
     if(found) {
       sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		 "<iframe border=0 SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\"></iframe></TH></TR>\n");
+		 "<iframe frameborder=0 SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\"></iframe></TH></TR>\n");
     }
   }
 #endif
@@ -744,7 +744,7 @@ void printTrafficStatistics(int revertOrder) {
 
     if(found) {
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		   "<iframe border=0 SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+		   "<iframe frameborder=0 SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
     }
   }
 #endif
@@ -845,7 +845,7 @@ void printTrafficStatistics(int revertOrder) {
 #ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		   "<iframe border=0 SRC=\"" CONST_PIE_PKT_CAST_DIST CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+		   "<iframe frameborder=0 SRC=\"" CONST_PIE_PKT_CAST_DIST CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 #endif
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
@@ -959,7 +959,7 @@ void printTrafficStatistics(int revertOrder) {
 #ifndef EMBEDDED
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		   "<iframe border=0 SRC=\"" CONST_PIE_PKT_SIZE_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+		   "<iframe frameborder=0 SRC=\"" CONST_PIE_PKT_SIZE_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 #endif
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Packets&nbsp;too&nbsp;long [> %d]</th>"
@@ -1124,7 +1124,7 @@ void printTrafficStatistics(int revertOrder) {
       sendString(buf);
 
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		   "<iframe border=0 SRC=\"" CONST_PIE_FC_PKT_SZ_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+		   "<iframe frameborder=0 SRC=\"" CONST_PIE_FC_PKT_SZ_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>Packets&nbsp;too&nbsp;long [> %d]</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
@@ -1187,7 +1187,7 @@ void printTrafficStatistics(int revertOrder) {
 #ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value > 0)
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		   "<iframe border=0 SRC=\"" CONST_PIE_IP_TRAFFIC  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+		   "<iframe frameborder=0 SRC=\"" CONST_PIE_IP_TRAFFIC  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 #endif
 
     /* ********************* */
@@ -1277,7 +1277,7 @@ void printTrafficStatistics(int revertOrder) {
 
 #ifndef EMBEDDED
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		   "<iframe border=0 SRC=\"" CONST_PIE_TTL_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+		   "<iframe frameborder=0 SRC=\"" CONST_PIE_TTL_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 #endif
       }
     }
@@ -1290,7 +1290,7 @@ void printTrafficStatistics(int revertOrder) {
     if(myGlobals.runningPref.enableSessionHandling && drawHostsDistanceGraph(1))
       sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Remote Hosts Distance</TH>"
                  "<TD BGCOLOR=white ALIGN=CENTER>"
-		 "<iframe border=0 SRC=\"" CONST_BAR_HOST_DISTANCE CHART_FORMAT "\" width=400 height=250></iframe>"
+		 "<iframe frameborder=0 SRC=\"" CONST_BAR_HOST_DISTANCE CHART_FORMAT "\" width=400 height=250></iframe>"
                  "</TD></TR>\n");
 #endif
 
@@ -4016,7 +4016,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 
 #ifndef EMBEDDED
     sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-	       "<iframe border=0 SRC=\"" CONST_PIE_IPPROTO_RL_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+	       "<iframe frameborder=0 SRC=\"" CONST_PIE_IPPROTO_RL_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 #endif
 
     printSectionTitle("Local Traffic");
