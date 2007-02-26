@@ -64,7 +64,7 @@ struct bar_elements {
 static void send_graph_header(u_char is_pie) {
 sendString("<HTML>\n"
 "<HEAD>\n"
-"<META HTTP-EQUIV=REFRESH CONTENT=10>\n"
+"<META HTTP-EQUIV=REFRESH CONTENT=30>\n"
 "<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n"
 "<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n"
 "<script type=\"text/javascript\" src=\"/MochiKit/MochiKit.js\"></script>\n"

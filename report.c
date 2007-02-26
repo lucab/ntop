@@ -6651,3 +6651,45 @@ void printInterfaceStats() {
   sendString(buf);
   /* traceEvent(CONST_TRACE_ERROR, "%s", buf); */
 }
+
+/* ************************************ */
+
+void findHost(char *key) {
+  HostTraffic *el=NULL;
+  int num = 0;
+  char buf[256], buf1[256];
+
+  /* traceEvent(CONST_TRACE_INFO, "----------> findHost(%s)", key ? key : "<null>"); */
+
+  sendString("{ results: [");
+
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
+      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+    u_char do_add = 0;
+
+    if((el == myGlobals.broadcastEntry) || (el->hostNumIpAddress == NULL)) continue;
+    
+    if((key == NULL) || (key == "")) do_add = 1;
+    else if(strstr(el->hostNumIpAddress, key)) do_add = 1;
+    else if(strstr(el->ethAddressString, key)) do_add = 1;
+    else if(strstr(el->hostResolvedName, key)) do_add = 1;
+    
+    if(do_add) {      
+      char *str;
+
+      if(el->hostResolvedName) str = el->hostResolvedName;
+      else if(el->ethAddressString[0] != '\0') str = el->ethAddressString;
+      else str = "";
+
+      makeHostLink(el, FLAG_HOSTLINK_TEXT_LITE_FORMAT, 0, 0, buf1, sizeof(buf1));
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "%s\n\t{ id: \"%d\", value: \"%s\", info: \"%s\" }",
+		    (num > 0) ? "," : "", num, str, buf1);
+      sendString(buf);
+      num++;
+    }    
+  }
+
+  sendString("\n] }\n");
+}

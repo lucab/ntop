@@ -263,6 +263,7 @@ extern void printVSANList(unsigned int deviceId);
 extern void handleNtopConfig (char *url, UserPrefDisplayPage page, int postLen);
 extern void purgeHost(char *serialized_serial);
 extern void printInterfaceStats();
+extern void findHost(char *key);
 
 /* webInterface.c */
 extern int execCGI(char* cgiName);

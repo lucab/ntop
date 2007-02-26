@@ -1256,6 +1256,7 @@
 #define CONST_BAR_VSAN_TRAF_DIST_SENT       "vsanDomainTrafficDistribSent"
 #define CONST_BAR_VSAN_TRAF_DIST_RCVD       "vsanDomainTrafficDistribRcvd"
 #define CONST_VSAN_LIST_HTML                "vsanList.html"
+#define CONST_FIND_HOST_JSON                "findHost.json"
 #define CONST_W3C_P3P_XML                   "w3c/p3p.xml"
 #define CONST_XMLDUMP_PLUGIN_NAME           "xmldump"
 
@@ -1778,6 +1779,7 @@
 #define FLAG_HTTP_TYPE_XML                  9
 #define FLAG_HTTP_TYPE_P3P                  10
 #define FLAG_HTTP_TYPE_SVG                  11
+#define FLAG_HTTP_TYPE_JSON                 12
 
 #define BITFLAG_HTTP_IS_CACHEABLE           (1<<0)
 #define BITFLAG_HTTP_NO_CACHE_CONTROL       (1<<1)
