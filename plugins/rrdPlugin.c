@@ -5084,7 +5084,7 @@ PluginInfo* rrdPluginEntryFctn(void)
 #endif
 {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-	     "RRD: Welcome to %s. (C) 2002-06 by Luca Deri.",
+	     "RRD: Welcome to %s. (C) 2002-07 by Luca Deri.",
 	     rrdPluginInfo->pluginName);
 
   return(rrdPluginInfo);

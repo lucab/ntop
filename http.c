@@ -764,7 +764,7 @@ static void ssiMenu_Body() {
 		  "-->\n"
 		  "</script></th>\n"
 		  "  <td class=\"leftmenuitem\" align=\"right\"><div><form name=myform method=get action=\"\">"
-		  "<label><b>Find:</b>&nbsp;</label><input style=\"width: 150px\" type=\"text\" id=\"testinput\" value=\"\" />"
+		  "<label><img border=0 src=/graph_zoom.gif>&nbsp;</label><input placeholder=\"Search ntop...\" style=\"width: 150px\" type=\"text\" id=\"testinput\" value=\"\" />"
 		  "</form></div></td>\n"
 		  " </tr>\n"
 		  "</table>\n"
