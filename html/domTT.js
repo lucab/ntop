@@ -22,7 +22,7 @@
 
 /**
  * Title: DOM Tooltip Library
- * Version: 0.7.2
+ * Version: 0.7.3
  *
  * Summary:
  * Allows developers to add custom tooltips to the webpages.  Tooltips are
@@ -78,10 +78,14 @@ var domTT_lifetime = 0;
 var domTT_grid = 0;
 var domTT_trailDelay = 200;
 var domTT_useGlobalMousePosition = true;
+var domTT_postponeActivation = false;
+var domTT_tooltipIdPrefix = '[domTT]';
 var domTT_screenEdgeDetection = true;
 var domTT_screenEdgePadding = 4;
 var domTT_oneOnly = false;
 var domTT_cloneNodes = false;
+var domTT_detectCollisions = true;
+var domTT_bannedTags = ['OPTION'];
 var domTT_draggable = false;
 if (typeof(domTT_dragEnabled) == 'undefined')
 {
@@ -96,19 +100,17 @@ var domTT_predefined = new Hash();
 // since events can originate on either object
 var domTT_tooltips = new Hash();
 var domTT_lastOpened = 0;
+var domTT_documentLoaded = false;
+var domTT_mousePosition = null;
 
 // }}}
 // {{{ document.onmousemove
 
 if (domLib_useLibrary && domTT_useGlobalMousePosition)
 {
-	var domTT_mousePosition = new Hash();
 	document.onmousemove = function(in_event)
 	{
-		if (typeof(in_event) == 'undefined')
-		{
-			in_event = event;
-		}
+		if (typeof(in_event) == 'undefined') { in_event = window.event; }
 
 		domTT_mousePosition = domLib_getEventPosition(in_event);
 		if (domTT_dragEnabled && domTT_dragMouseDown)
@@ -123,22 +125,28 @@ if (domLib_useLibrary && domTT_useGlobalMousePosition)
 
 function domTT_activate(in_this, in_event)
 {
-	if (!domLib_useLibrary) { return false; }
+	if (!domLib_useLibrary || (domTT_postponeActivation && !domTT_documentLoaded)) { return false; }
 
 	// make sure in_event is set (for IE, some cases we have to use window.event)
-	if (typeof(in_event) == 'undefined')
-	{
-		in_event = window.event;
+	if (typeof(in_event) == 'undefined') { in_event = window.event;	}
+
+	// don't allow tooltips on banned tags (such as OPTION)
+	if (in_event != null) {
+		var target = in_event.srcElement ? in_event.srcElement : in_event.target;
+		if (target != null && (',' + domTT_bannedTags.join(',') + ',').indexOf(',' + target.tagName + ',') != -1)
+		{
+			return false;
+		}
 	}
 
 	var owner = document.body;
 	// we have an active event so get the owner
-	if (in_event.type.match(/key|mouse|click|contextmenu/i))
+	if (in_event != null && in_event.type.match(/key|mouse|click|contextmenu/i))
 	{
 		// make sure we have nothing higher than the body element
 		if (in_this.nodeType && in_this.nodeType != document.DOCUMENT_NODE)
 		{
-			var owner = in_this;
+			owner = in_this;
 		}
 	}
 	// non active event (make sure we were passed a string id)
@@ -160,7 +168,7 @@ function domTT_activate(in_this, in_event)
 		owner.id = '__autoId' + domLib_autoId++;
 	}
 
-	// see if we should only be openning one tip at a time
+	// see if we should only be opening one tip at a time
 	// NOTE: this is not "perfect" yet since it really steps on any other
 	// tip working on fade out or delayed close, but it get's the job done
 	if (domTT_oneOnly && domTT_lastOpened)
@@ -215,7 +223,7 @@ function domTT_activate(in_this, in_event)
 		'fade',			domTT_fade,
 		'fadeMax',		100,
 		'grid',			domTT_grid,
-		'id',			'[domTT]' + owner.id,
+		'id',			domTT_tooltipIdPrefix + owner.id,
 		'inframe',		false,
 		'lifetime',		domTT_lifetime,
 		'offsetX',		domTT_offsetX,
@@ -247,7 +255,7 @@ function domTT_activate(in_this, in_event)
 		}
 	}
 
-	options.set('eventType', in_event.type);
+	options.set('eventType', in_event != null ? in_event.type : null);
 
 	// immediately set the status text if provided
 	if (options.has('statusText'))
@@ -271,7 +279,7 @@ function domTT_activate(in_this, in_event)
 	domTT_create(options);
 
 	// determine the show delay
-	options.set('delay', in_event.type.match(/click|mousedown|contextmenu/i) ? 0 : parseInt(options.get('delay')));
+	options.set('delay', (in_event != null && in_event.type.match(/click|mousedown|contextmenu/i)) ? 0 : parseInt(options.get('delay')));
 	domTT_tooltips.set(owner.id, options);
 	domTT_tooltips.set(options.get('id'), options);
 	options.set('status', 'pending');
@@ -300,8 +308,7 @@ function domTT_create(in_options)
 	tipObj.id = in_options.get('id');
 	tipObj.className = in_options.get('styleClass');
 
-	// content of tip as object
-	var content;
+	var contentBlock;
 	var tableLayout = false;
 
 	if (in_options.get('caption') || (in_options.get('type') == 'sticky' && in_options.get('caption') !== false))
@@ -364,8 +371,15 @@ function domTT_create(in_options)
 				closeLink.innerHTML = in_options.get('closeLink');
 			}
 
-			closeLink.onclick = function() { domTT_deactivate(tipOwner.id); };
-			closeLink.onmousedown = function(in_event) { if (typeof(in_event) == 'undefined') { in_event = event; } in_event.cancelBubble = true; };
+			closeLink.onclick = function()
+			{
+				domTT_deactivate(tipOwner.id);
+			};
+			closeLink.onmousedown = function(in_event)
+			{
+				if (typeof(in_event) == 'undefined') { in_event = window.event; }
+				in_event.cancelBubble = true;
+			};
 			// MacIE has to have a newline at the end and must be made with createTextNode()
 			if (domLib_isMacIE)
 			{
@@ -394,26 +408,32 @@ function domTT_create(in_options)
 			}
 		}
 
-		content = contentCell.appendChild(parentDoc.createElement('div'));
+		contentBlock = contentCell.appendChild(parentDoc.createElement('div'));
 		if (domLib_isIE50)
 		{
-			content.style.height = '100%';
+			contentBlock.style.height = '100%';
 		}
 	}
 	else
 	{
-		content = tipObj.appendChild(parentDoc.createElement('div'));
+		contentBlock = tipObj.appendChild(parentDoc.createElement('div'));
 	}
 
-	content.className = 'contents';
+	contentBlock.className = 'contents';
 
-	if (in_options.get('content').nodeType)
+	var content = in_options.get('content');
+	// allow content has a function to return the actual content
+	if (typeof(content) == 'function') {
+		content = content(in_options.get('id'));
+	}
+
+	if (content != null && content.nodeType)
 	{
-		content.appendChild(domTT_cloneNodes ? in_options.get('content').cloneNode(1) : in_options.get('content'));
+		contentBlock.appendChild(domTT_cloneNodes ? content.cloneNode(1) : content);
 	}
 	else
 	{
-		content.innerHTML = in_options.get('content');
+		contentBlock.innerHTML = content;
 	}
 
 	// adjust the width if specified
@@ -582,7 +602,28 @@ function domTT_create(in_options)
 	}
 	else if (in_options.get('type') == 'velcro')
 	{
-		tipObj.onmouseout = function(in_event) { if (typeof(in_event) == 'undefined') { in_event = event; } if (!domLib_isDescendantOf(in_event[domLib_eventTo], tipObj)) { domTT_deactivate(tipOwner.id); }};
+		/* can use once we have deactivateDelay
+		tipObj.onmouseover = function(in_event)
+		{
+			if (typeof(in_event) == 'undefined') { in_event = window.event; }
+			var tooltip = domTT_tooltips.get(tipObj.id);
+			if (in_options.get('lifetime')) {
+				domLib_clearTimeout(in_options.get('lifetimeTimeout');
+			}
+		};
+		*/
+		tipObj.onmouseout = function(in_event)
+		{
+			if (typeof(in_event) == 'undefined') { in_event = window.event; }
+			if (!domLib_isDescendantOf(in_event[domLib_eventTo], tipObj, domTT_bannedTags)) {
+				domTT_deactivate(tipOwner.id);
+			}
+		};
+		// NOTE: this might interfere with links in the tip
+		tipObj.onclick = function(in_event)
+		{
+			domTT_deactivate(tipOwner.id);
+		};
 	}
 
 	if (in_options.get('position') == 'relative')
@@ -600,6 +641,7 @@ function domTT_create(in_options)
 // in_id is either tip id or the owner id
 function domTT_show(in_id, in_event)
 {
+
 	// should always find one since this call would be cancelled if tip was killed
 	var tooltip = domTT_tooltips.get(in_id);
 	var status = tooltip.get('status');
@@ -614,7 +656,7 @@ function domTT_show(in_id, in_event)
 			mouseX = tooltip.get('x');
 			mouseY = tooltip.get('y');
 		}
-		else if (!domTT_useGlobalMousePosition || status == 'active' || tooltip.get('delay') == 0)
+		else if (!domTT_useGlobalMousePosition || domTT_mousePosition == null || status == 'active' || tooltip.get('delay') == 0)
 		{
 			var eventPosition = domLib_getEventPosition(in_event);
 			var eventX = eventPosition.get('x');
@@ -742,7 +784,7 @@ function domTT_show(in_id, in_event)
 		}
 	}
 
-	if (tooltip.get('position') == 'absolute')
+	if (tooltip.get('position') == 'absolute' && domTT_detectCollisions)
 	{
 		// utilize original collision element cache
 		domLib_detectCollisions(tipObj, false, true);
@@ -774,6 +816,18 @@ function domTT_close(in_handle)
 	}
 
 	domTT_deactivate(id);
+}
+
+// }}}
+// {{{ domTT_closeAll()
+
+// run through the tooltips and close them all
+function domTT_closeAll()
+{
+	// NOTE: this will iterate 2x # of tooltips
+	for (var id in domTT_tooltips.elementData) {
+		domTT_close(id);
+	}
 }
 
 // }}}
@@ -828,9 +882,11 @@ function domTT_deactivate(in_id)
 			}
 
 			tooltip.set('status', 'inactive');
-			// unhide all of the selects that are owned by this object
-			// utilize original collision element cache
-			domLib_detectCollisions(tipObj, true, true); 
+			if (domTT_detectCollisions) {
+				// unhide all of the selects that are owned by this object
+				// utilize original collision element cache
+				domLib_detectCollisions(tipObj, true, true); 
+			}
 		}
 	}
 }
@@ -842,12 +898,9 @@ function domTT_mouseout(in_owner, in_event)
 {
 	if (!domLib_useLibrary) { return false; }
 
-	if (typeof(in_event) == 'undefined')
-	{
-		in_event = event;
-	}
+	if (typeof(in_event) == 'undefined') { in_event = window.event;	}
 
-	var toChild = domLib_isDescendantOf(in_event[domLib_eventTo], in_owner);
+	var toChild = domLib_isDescendantOf(in_event[domLib_eventTo], in_owner, domTT_bannedTags);
 	var tooltip = domTT_tooltips.get(in_owner.id);
 	if (tooltip && (tooltip.get('type') == 'greasy' || tooltip.get('status') != 'active'))
 	{
@@ -871,10 +924,7 @@ function domTT_mousemove(in_owner, in_event)
 {
 	if (!domLib_useLibrary) { return false; }
 
-	if (typeof(in_event) == 'undefined')
-	{
-		in_event = event;
-	}
+	if (typeof(in_event) == 'undefined') { in_event = window.event;	}
 
 	var tooltip = domTT_tooltips.get(in_owner.id);
 	if (tooltip && tooltip.get('trail') && tooltip.get('status') == 'active')
@@ -1034,6 +1084,8 @@ function domTT_replaceTitles(in_decorator)
 // {{{ domTT_update()
 
 // Allow authors to update the contents of existing tips using the DOM
+// Unfortunately, the tip must already exist, or else no work is done.
+// TODO: make getting at content or caption cleaner
 function domTT_update(handle, content, type)
 {
 	// type defaults to 'content', can also be 'caption'

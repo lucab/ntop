@@ -1225,6 +1225,12 @@ AC_CHECK_HEADERS([arpa/inet.h arpa/nameser.h])
 AC_CHECK_HEADERS([net/ethernet.h])
 
 # RRD
+if test -d "$RRD_HOME"; then
+   AC_MSG_RESULT(checking for RRD home... yes)
+else
+   RRD_HOME=/usr/local/rrdtool
+fi
+
 if test -f "$RRD_HOME/lib/librrd_th.so"; then
    AC_MSG_RESULT(Found RRD)
 else

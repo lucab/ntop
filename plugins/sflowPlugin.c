@@ -4411,7 +4411,7 @@ static void handlesFlowHTTPrequest(char* _url) {
 		      "<IMG SRC=/graph.gif BORDER=0></A></td></tr>",
 		      (myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName[0] == '/') ? "" : "/",
 		      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		      i, i,
+		      ifName->ifIndex, ifName->ifIndex,
 		      formatPkts(ifName->ifInUnknownProtos, formatBuf, sizeof(formatBuf))); 
 	sendString(buf);
 	ifName = ifName->next;

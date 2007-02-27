@@ -472,7 +472,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 
     if(directoryPointer == NULL) {
       sendString("</TABLE>");
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<I>(1) Unable to read directory %s</I>", path);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Unable to read directory %s", path);
       traceEvent(CONST_TRACE_INFO, "RRD: %s", buf);
       printFlagedWarning(buf);
       sendString("</CENTER>");
@@ -507,13 +507,14 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
     directoryPointer = opendir(path);
 
     if(directoryPointer == NULL) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<I> (2) Unable to read directory %s</I>", path);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Unable to read directory %s", path);
       printFlagedWarning(buf);
       sendString("</CENTER>");
       printHTMLtrailer();
-      return;
-    } else
-      traceEvent(CONST_TRACE_WARNING, "RRD: reading directory %s", path); /* FIX */
+      return; 
+    } else {
+      // traceEvent(CONST_TRACE_WARNING, "RRD: reading directory %s", path); /* FIX */
+    }
 
     while((dp = readdir(directoryPointer)) != NULL) {
       char *rsrcName;
@@ -542,7 +543,11 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 	numFailures += total;
       */
 
+#if DISPLAY_ONLY_IF_THERE_S_DATA
       rc = sumCounter(rrdPath, dp->d_name, "MAX", startTime, endTime, &total, &average);
+#else
+      rc = 1, total = 1;
+#endif
 
       if(isGauge || ((rc >= 0) && (total > 0))) {
 	rsrcName = dp->d_name;
@@ -4883,8 +4888,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      char rrdIfPath[512];
 
 	      safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
-			    "%s/interfaces/%s/sFlow/%d/", myGlobals.rrdPath,
-			    myGlobals.device[devIdx].humanFriendlyName, i);
+			    "%s/interfaces/%s/sFlow/%u/", myGlobals.rrdPath,
+			    myGlobals.device[devIdx].humanFriendlyName, ifName->ifIndex);
 	      mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
 
 	      updateCounter(rrdIfPath, "ifInOctets", ifName->ifInOctets, 0);
@@ -4979,6 +4984,7 @@ static int initRRDfunct(void) {
 
   setPluginStatus(NULL);
 
+#if 0
   if (myGlobals.runningPref.rFileName != NULL) {
     /* Don't start RRD Plugin for capture files as it doesn't work */
     traceEvent(CONST_TRACE_INFO, "RRD: plugin disabled on capture files");
@@ -4986,6 +4992,7 @@ static int initRRDfunct(void) {
     active = 0;
     return (TRUE);            /* 0 indicates success */
   }
+#endif
 
   traceEvent(CONST_TRACE_INFO, "RRD: Welcome to the RRD plugin");
 

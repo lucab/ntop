@@ -152,7 +152,11 @@ function Hash()
 // using prototype as opposed to inner functions saves on memory 
 Hash.prototype.get = function(in_key)
 {
-	return this.elementData[in_key];
+	if (typeof(this.elementData[in_key]) != 'undefined') {
+		return this.elementData[in_key];
+	}
+
+	return null;
 }
 
 Hash.prototype.set = function(in_key, in_value)
@@ -253,11 +257,22 @@ Hash.prototype.compare = function(in_hash)
 // }}}
 // {{{ domLib_isDescendantOf()
 
-function domLib_isDescendantOf(in_object, in_ancestor)
+function domLib_isDescendantOf(in_object, in_ancestor, in_bannedTags)
 {
+	if (in_object == null)
+	{
+		return false;
+	}
+
 	if (in_object == in_ancestor)
 	{
 		return true;
+	}
+
+	if (typeof(in_bannedTags) != 'undefined' &&
+		(',' + in_bannedTags.join(',') + ',').indexOf(',' + in_object.tagName + ',') != -1)
+	{
+		return false;
 	}
 
 	while (in_object != document.documentElement)
@@ -277,10 +292,10 @@ function domLib_isDescendantOf(in_object, in_ancestor)
 				in_object = tmp_object;
 			}
 		}
-		// in case we get some wierd error, just assume we haven't gone out yet
+		// in case we get some wierd error, assume we left the building
 		catch(e)
 		{
-			return true;
+			return false;
 		}
 	}
 
@@ -416,8 +431,12 @@ function domLib_detectCollisions(in_object, in_recover, in_useCache)
 // }}}
 // {{{ domLib_getOffsets()
 
-function domLib_getOffsets(in_object)
+function domLib_getOffsets(in_object, in_preserveScroll)
 {
+	if (typeof(in_preserveScroll) == 'undefined') {
+		in_preserveScroll = false;
+	}
+
 	var originalObject = in_object;
 	var originalWidth = in_object.offsetWidth;
 	var originalHeight = in_object.offsetHeight;
@@ -430,7 +449,7 @@ function domLib_getOffsets(in_object)
 		offsetTop += in_object.offsetTop;
 		in_object = in_object.offsetParent;
 		// consider scroll offset of parent elements
-		if (in_object)
+		if (in_object && !in_preserveScroll)
 		{
 			offsetLeft -= in_object.scrollLeft;
 			offsetTop -= in_object.scrollTop;
@@ -659,7 +678,7 @@ function domLib_getComputedStyle(in_obj, in_property)
 	// getComputedStyle() is broken in konqueror, so let's go for the style object
 	else if (domLib_isKonq)
 	{
-		var humpBackProp = in_property.replace(/-(.)/, function (a, b) { return b.toUpperCase(); });
+		//var humpBackProp = in_property.replace(/-(.)/, function (a, b) { return b.toUpperCase(); });
 		return eval('in_obj.style.' + in_property);
 	}
 	else

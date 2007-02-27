@@ -1339,12 +1339,13 @@ void printTrafficStatistics(int revertOrder) {
 		     (float)(myGlobals.actTime-myGlobals.initialSniffTime+1)));
       sendString(buf);
 
-
+      
+#if 0
       sendString("<script>if(hasSVGSupport) {\n");
-    sendString("document.write(\"<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-	       "<embed src=\"/graph_if.svg\" width=\"400\" height=\"250\" type=\"image/svg+xml\" />"
-	       "</TH></TR>\n\"); }</script>\n");
-
+      sendString("document.write(\"<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
+		 "<embed src=\"/graph_if.svg\" width=\"400\" height=\"250\" type=\"image/svg+xml\" />"
+		 "</TH></TR>\n\"); }</script>\n");
+#endif
 
 #if 0
     sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
