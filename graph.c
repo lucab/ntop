@@ -130,24 +130,26 @@ sendString("\" width=\"350\" height=\"200\"></div>\n"
 /**********************************************************/
 
 static void build_chart(u_char is_pie, char *the_type, int num, float *p, char **lbl) {
-  int i;
+  int i, num_printed;
   char buf[64];
 
   send_graph_header(is_pie);
 
-  for(i=0; i<num; i++) {
+  for(i=0, num_printed=0; i<num; i++) {
     if(p[i] > 0) {
-      snprintf(buf, sizeof(buf), "%c\n\t{v:%d, label:\"%s\"}", (i == 0) ? ' ' : ',', i, lbl[i]);
+      snprintf(buf, sizeof(buf), "%c\n\t{v:%d, label:\"%s\"}", (num_printed == 0) ? ' ' : ',', i, lbl[i]);
       sendString(buf);
+      num_printed++;
     }
   }
 
   send_graph_middle();
 
-  for(i=0; i<num; i++) {
+  for(i=0, num_printed=0; i<num; i++) {
     if(p[i] > 0) {
-      snprintf(buf, sizeof(buf), "%c [%d, %.1f]", (i == 0) ? ' ' : ',', i, p[i]);
+      snprintf(buf, sizeof(buf), "%c [%d, %.1f]", (num_printed == 0) ? ' ' : ',', i, p[i]);
       sendString(buf);
+      num_printed++;
     }
   }
 
