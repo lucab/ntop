@@ -137,7 +137,7 @@ static void build_chart(u_char is_pie, char *the_type, int num, float *p, char *
 
   for(i=0; i<num; i++) {
     if(p[i] > 0) {
-      snprintf(buf, sizeof(buf), "{v:%d, label:\"%s\"}%c \n", i, lbl[i], (i == (num-1)) ? ' ' : ',');
+      snprintf(buf, sizeof(buf), "%c\n\t{v:%d, label:\"%s\"}", (i == 0) ? ' ' : ',', i, lbl[i]);
       sendString(buf);
     }
   }
@@ -146,7 +146,7 @@ static void build_chart(u_char is_pie, char *the_type, int num, float *p, char *
 
   for(i=0; i<num; i++) {
     if(p[i] > 0) {
-      snprintf(buf, sizeof(buf), "[%d, %.1f]%c ", i, p[i], (i == (num-1)) ? ' ' : ',');
+      snprintf(buf, sizeof(buf), "%c [%d, %.1f]", (i == 0) ? ' ' : ',', i, p[i]);
       sendString(buf);
     }
   }
