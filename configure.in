@@ -1806,36 +1806,33 @@ fi
 dnl>
 dnl> MySQL
 dnl>
+if test "x$ac_with_mysql" = "xyes"; then
+
 AC_CHECK_TOOL(MYSQL, mysql_config)
 if test "x$ac_cv_prog_ac_ct_MYSQL" = "xmysql_config"; then
   OLD_LIBS="${LIBS}"
-  OLD_INCS="${INCS}"
+  OLD_CPPFLAGS="${CPPFLAGS}"
   LIBS="${LIBS} `mysql_config --libs_r`"
-  INCS="${INCS} `mysql_config --cflags`"
+  CPPFLAGS="${CPPFLAGS} `mysql_config --include`"
   AC_CHECK_LIB([mysqlclient_r], [mysql_query])
-  if test ".${ac_cv_lib_mysqlclient_r_mysql_query}" != ".no"; then
-  LIBS="${OLD_LIBS}"
-  INCS="${OLD_INCS}"
+  if test ".${ac_cv_lib_mysqlclient_r_mysql_query}" = ".no"; then
+    LIBS="${OLD_LIBS}"
   else
   dnl>
   dnl> MySQL 4.x or better
   dnl>
-  AC_CHECK_HEADERS([mysql.h])
-  if test ".${ac_cv_header_mysql_h}" != ".yes"; then
-     echo "MySQL not found. Database support disabled";
-     LIBS="${OLD_LIBS}"
-     INCS="${OLD_INCS}"
-  else
-     AC_CHECK_TOOL(MYSQL, mysql_config)
-     if test "x$ac_cv_prog_ac_ct_MYSQL" = "xmysql_config"; then
-	echo "MySQL support enabled";
-     else
-       echo "MySQL support disabled";
-       LIBS="${OLD_LIBS}"
-       INCS="${OLD_INCS}"
-     fi
+    AC_CHECK_HEADERS([mysql.h])
+    if test ".${ac_cv_header_mysql_h}" != ".yes"; then
+      echo "MySQL not found. Database support disabled";
+      LIBS="${OLD_LIBS}"
+    else
+      echo "MySQL support enabled";
+      INCS="${INCS} `mysql_config --include`"
+    fi
   fi
-  fi
+  CPPFLAGS="${OLD_CPPFLAGS}"
+fi
+
 fi
 
 dnl>
@@ -1846,7 +1843,7 @@ if test ".${ac_disable_snmp}" != ".yes"; then
   if test "x$ac_cv_prog_ac_ct_NETSNMP" = "xnet-snmp-config"; then
     AC_DEFINE_UNQUOTED(HAVE_SNMP, 1, [SNMP is supported])
     LIBS="${LIBS} `net-snmp-config --libs --agent-libs`"
-    INCS="${INCS} `net-snmp-config --cflags`"
+dnl    INCS="${INCS} `net-snmp-config --cflags`"
   else
     AC_MSG_RESULT("NET-SNMP is not present: SNMP support is disabled")
   fi
