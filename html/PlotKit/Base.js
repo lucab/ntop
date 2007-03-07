@@ -174,7 +174,8 @@ MochiKit.Base.update(PlotKit.Base, {
          return [hexColor("#4b6b94"), hexColor("#5d81b4"), hexColor("#acbad2")];
     },
 
-    palette: function(baseColor, fromLevel, toLevel, increment) {
+    /* L.Deri - Original function */
+    _palette: function(baseColor, fromLevel, toLevel, increment) {
         var isNil = MochiKit.Base.isUndefinedOrNull;
         var fractions = new Array();
         if (isNil(increment))
@@ -196,7 +197,38 @@ MochiKit.Base.update(PlotKit.Base, {
         return MochiKit.Base.map(partial(makeColor, baseColor), fractions);
     },
     
-    excanvasSupported: function() {
+    /* L.Deri - modified palette (use ntop colors, see graph.c) */
+    palette: function(baseColor, fromLevel, toLevel, increment) {
+        var hexColor = MochiKit.Color.Color.fromHexString;
+        return [
+		hexColor("#f08080"),
+		hexColor("#4682b4"),
+		hexColor("#66cdaa"),
+		hexColor("#f4a460"),
+		hexColor("#b0c4de"),
+		hexColor("#90ee90"),
+		hexColor("#ffd700"),
+		hexColor("#87ceeb"),
+		hexColor("#dda0dd"),
+		hexColor("#7fffd4"),
+		hexColor("#ffb6c1"),
+		hexColor("#708090"),
+		hexColor("#6495ed"),
+		hexColor("#deb887"),
+		hexColor("#6b8e23"),
+		hexColor("#f08080"),
+		hexColor("#4682b4"),
+		hexColor("#66cdaa"),
+		hexColor("#f4a460"),
+		hexColor("#b0c4de"),
+		hexColor("#90ee90"),
+		hexColor("#ffd700"),
+		hexColor("#87ceeb"),
+		hexColor("#dda0ddL")
+                ];
+    },
+    
+   excanvasSupported: function() {
          if (/MSIE/.test(navigator.userAgent) && !window.opera) {
              return true;
          }

@@ -4315,7 +4315,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       if ((numProtosFound > 0) && printGraph) {
 	struct stat statbuf;
 
-	sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=LEFT BGCOLOR=white>"
+	sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=LEFT BGCOLOR=white>"
 		   "<iframe  frameborder=0 SRC=\"" CONST_BAR_IPPROTO_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 
 	/* RRD */
@@ -4331,7 +4331,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 
 
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			"<TR "TR_ON" "DARK_BG"><TH "TH_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=left BGCOLOR=white>"
+			"<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=left BGCOLOR=white>"
 			"<table border=0><tr><td><IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=4&"
 			"key=interfaces/%s/&start=now-12h&end=now\" BORDER=0>",
 			myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);

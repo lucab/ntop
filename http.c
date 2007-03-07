@@ -1061,7 +1061,8 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
         traceEvent(CONST_TRACE_INFO, "errno %d during sending of page to web client");
       }
 
-      traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes, '%s'", strlen(theString), theString);
+      // traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes, '%s'", strlen(theString), theString);
+      traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes", strlen(theString));
       closeNwSocket(&myGlobals.newSock);
       return;
     } else {
