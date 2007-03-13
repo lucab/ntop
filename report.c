@@ -844,8 +844,8 @@ void printTrafficStatistics(int revertOrder) {
 
 #ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
-	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		   "<iframe frameborder=0 SRC=\"" CONST_PIE_PKT_CAST_DIST CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+      sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+		 "<iframe frameborder=0 SRC=\"" CONST_PIE_PKT_CAST_DIST CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 #endif
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {

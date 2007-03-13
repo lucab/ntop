@@ -84,6 +84,16 @@ NTOPDATA = ntop-cert.pem \
 
 NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png \
            html/*.css html/*.dtd \
+	   html/PlotKit \
+	   html/PlotKit/*js \
+	   html/MochiKit \
+	   html/MochiKit/*js \
+	   html/img_inquisitor \
+	   html/img_inquisitor/*gif \
+	   html/jscalendar \
+	   html/jscalendar/*js \
+	   html/jscalendar/lang \
+	   html/jscalendar/lang/*js \
            html/statsicons \
            html/statsicons/flags html/statsicons/os \
            html/statsicons/flags/*.gif html/statsicons/os/*.gif
@@ -166,7 +176,7 @@ man_MANS = ntop.8
 acinclude.m4: acinclude.m4.ntop libtool.m4.in
 	@cat acinclude.m4.ntop libtool.m4.in >acinclude.m4
 
-CLEANLIST = `ls -l $(DESTDIR)$(libdir)/*ntop*.so $(DESTDIR)$(libdir)/*Plugin*.so $(DESTDIR)$(libdir)/*myrrd*.so | \
+CLEANLIST = `ls -l $(DESTDIR)$(libdir)/*ntop*.so $(DESTDIR)$(libdir)/*Plugin*.so | \
           grep -v $(VERSION) | \
           grep -v '\->' | \
           $(AWK) '{ print $$NF }'`
