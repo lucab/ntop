@@ -32,10 +32,6 @@ EXTRA_DIST  =
 
 SUFFIXES    = .so
 
-RRD_HOME=@RRD_HOME@
-RRD_INC=-I${RRD_HOME}/include
-RRD_LIB=-L${RRD_HOME}/lib -lrrd_th
-
 # 
 # Where to install the plugin 
 # 

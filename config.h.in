@@ -183,20 +183,11 @@
 /* Define to 1 if you have the `gdbm' library (-lgdbm). */
 #undef HAVE_LIBGDBM
 
-/* Define to 1 if you have the `gdome' library (-lgdome). */
-#undef HAVE_LIBGDOME
-
-/* Define to 1 if you have the `glib' library (-lglib). */
-#undef HAVE_LIBGLIB
-
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
 /* Define to 1 if you have the `mysqlclient_r' library (-lmysqlclient_r). */
 #undef HAVE_LIBMYSQLCLIENT_R
-
-/* Define to 1 if you have the `nsl' library (-lnsl). */
-#undef HAVE_LIBNSL
 
 /* Define to 1 if you have the `pcap' library (-lpcap). */
 #undef HAVE_LIBPCAP
@@ -216,26 +207,14 @@
 /* Define to 1 if you have the `pthreads' library (-lpthreads). */
 #undef HAVE_LIBPTHREADS
 
-/* Define to 1 if you have the `resolv' library (-lresolv). */
-#undef HAVE_LIBRESOLV
-
 /* Define to 1 if you have the `rrd_th' library (-lrrd_th). */
 #undef HAVE_LIBRRD_TH
-
-/* Define to 1 if you have the `socket' library (-lsocket). */
-#undef HAVE_LIBSOCKET
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
 #undef HAVE_LIBSSL
 
 /* Define for tcp wrappers (-lwrap) */
 #undef HAVE_LIBWRAP
-
-/* Define to 1 if you have the `xml2' library (-lxml2). */
-#undef HAVE_LIBXML2
-
-/* Define to 1 if you have the `xnet' library (-lxnet). */
-#undef HAVE_LIBXNET
 
 /* Define to 1 if you have the `z' library (-lz). */
 #undef HAVE_LIBZ

@@ -33,10 +33,6 @@ PROGRAM  = $(PKGNAME)-$(VERSION)
 DEFS      = @DEFS@
 INCS      = @INCS@
 
-RRD_HOME=@RRD_HOME@
-RRD_INC=-I${RRD_HOME}/include
-RRD_LIB=-L${RRD_HOME}/lib -lrrd_th
-
 INCLUDES  = -I. $(INCS) ${RRD_INC}
 LIBS      = 
 BASE_LIBS = @LIBS@ ${RRD_LIB}
@@ -44,8 +40,9 @@ AS        = @AS@
 AWK       = @AWK@
 CC        = @CC@
 CCLD      = @CCLD@
-AM_CFLAGS = @CFLAGS@
-AM_LDFLAGS= @LDFLAGS@
+
+#AM_CFLAGS =
+#AM_LDFLAGS= 
 
 
 DISTCLEANFILES = trivialcompilemessage *.db #* *~ *.log
@@ -96,7 +93,9 @@ NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.p
 	   html/jscalendar/lang/*js \
            html/statsicons \
            html/statsicons/flags html/statsicons/os \
-           html/statsicons/flags/*.gif html/statsicons/os/*.gif
+           html/statsicons/flags/*.gif html/statsicons/os/*.gif \
+           html/PlotKit html/PlotKit/*.js \
+           html/MochiKit html/MochiKit/*.js
 
 WEBFILES       = `cat www/FILES`
 PLUGINSFILES   = `cat plugins/FILES`

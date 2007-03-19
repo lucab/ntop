@@ -9,6 +9,9 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # $Log$
+# Revision 2.14  2007/03/19 09:16:45  deri
+# Added patches courtesy of Bernard and Patrick
+#
 # Revision 2.13  2007/01/11 14:39:11  deri
 # Fixed autogen check
 #
@@ -54,10 +57,10 @@ find_command()
 
 AUTOMAKE=`find_command 'automake-*'`
 
-version="0.2.1"
+version="0.2.2"
 
 echo ""
-echo "Starting ntop automatic configuration system v$version"
+echo "Starting ntop automatic configuration system v.$version"
 echo ""
 echo "  Please be patient, there is a lot to do..."
 echo ""

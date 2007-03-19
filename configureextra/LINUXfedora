@@ -16,12 +16,12 @@ fi
 #  Note - this assumes you've installed the RH rpms:
 #         glib, glib-devel, libxml2, libxml2-devel
 #         and the gdome2 and gdome2-devel rpms from http://gdome2.cs.unibo.it/
-if test -f /usr/lib/pkgconfig/glib-2.0.pc; then
-  LDFLAGS="${LDFLAGS} "`pkg-config --libs glib-2.0`
+if pkg-config --exists --print-errors glib-2.0; then
+  LIBS="${LIBS} "`pkg-config --libs glib-2.0`
   CPPFLAGS="${CPPFLAGS} "`pkg-config --cflags-only-I glib-2.0`
 else
   if test -f /usr/lib/libglib.so; then
-    LDFLAGS="${LDFLAGS} -lglib"
+    LIBS="${LIBS} -lglib"
   fi
   if test -d /usr/include/glib-1.2; then
     CPPFLAGS="${CPPFLAGS} -I/usr/include/glib-1.2"
@@ -33,8 +33,8 @@ else
     CPPFLAGS="${CPPFLAGS} -I/usr/lib/glib/include"
   fi
 fi
-if test -f /usr/lib/pkgconfig/gdome2.pc; then
-  LDFLAGS="${LDFLAGS} "`pkg-config --libs gdome2`
+if pkg-config --exists --print-errors gdome2; then
+  LIBS="${LIBS} "`pkg-config --libs gdome2`
   CPPFLAGS="${CPPFLAGS} "`pkg-config --cflags-only-I gdome2`
 else
   if test -d /usr/include/libgdome; then
