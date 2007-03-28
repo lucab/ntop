@@ -5602,12 +5602,6 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
   extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "gdbm", gdbm_version);
 #endif
 
-  /*
-   * If we've guessed at the gd version, report it
-   */
-  if(myGlobals.gdVersionGuessValue != NULL)
-    extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "gd", myGlobals.gdVersionGuessValue);
-
 #ifdef HAVE_OPENSSL
   extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "openssl", (char*)SSLeay_version(0));
 #endif

@@ -1251,9 +1251,6 @@ RETSIGTYPE cleanup(int signo) {
   if(myGlobals.rrdPath != NULL)
     free(myGlobals.rrdPath);
 
-  if(myGlobals.gdVersionGuessValue != NULL)
-    free(myGlobals.gdVersionGuessValue);
-
 #if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
   traceEvent(CONST_TRACE_INFO, "===================================");
   muntrace();

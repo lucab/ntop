@@ -703,6 +703,35 @@ static int endsWith(char* label, char* pattern) {
     return(!strcmp(&label[lenLabel-lenPattern], pattern));
 }
 
+/* ************************ */
+
+static void sendGraphFile(char* fileName, int doNotUnlink) {
+  FILE *fd;
+  int len;
+  char tmpStr[256];
+  int bufSize=sizeof(tmpStr)-1, totLen = 0;
+
+  memset(&tmpStr, 0, sizeof(tmpStr));
+
+  if((fd = fopen(fileName, "rb")) != NULL) {
+
+    for(;;) {
+      len = fread(tmpStr, sizeof(char), bufSize, fd);
+      if(len > 0) {
+		sendStringLen(tmpStr, len);
+		totLen += len;
+	  }
+      if(len <= 0) break;
+    }
+    fclose(fd);
+  } else
+    traceEvent(CONST_TRACE_WARNING, "Unable to open file %s - graphic not sent", fileName);
+
+  if (doNotUnlink == 0) {
+    unlink(fileName);
+  }
+}
+
 /* ******************************************* */
 
 static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdCounter,
@@ -738,8 +767,8 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   revertSlashIfWIN32(path, 0);
   revertSlashIfWIN32(fname, 0);
 
-  if(endsWith(rrdName, "Bytes")) label = "Bytes/sec";
-  else if(endsWith(rrdName, "Pkts")) label = "Packets/sec";
+  if(endsWith(rrdName, "Bytes")) label = "Bytes/s";
+  else if(endsWith(rrdName, "Pkts")) label = "Pkt/s";
   else label = capitalizeInitial(rrdName);
 
   if((!strcmp(endTime, "now"))
@@ -1187,8 +1216,8 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
   safe_snprintf(__FILE__, __LINE__, _rrdName, sizeof(_rrdName), "%s", rrdPath);
 
   switch(graphId) {
-  case 0:  rrds = (char**)rrd_summary_nf_if_octets; label = "Bit/sec"; break;
-  default: rrds = (char**)rrd_summary_nf_if_pkts; label = "Packets/sec"; break;
+  case 0:  rrds = (char**)rrd_summary_nf_if_octets; label = "Bit/s"; break;
+  default: rrds = (char**)rrd_summary_nf_if_pkts; label = "Pkt/s"; break;
   }
 
   if(!strcmp(mode, "zoom")) {
@@ -1612,10 +1641,10 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   safe_snprintf(__FILE__, __LINE__, _rrdName, sizeof(_rrdName), "%s", rrdName);
 
   switch(graphId) {
-  case 0: rrds = (char**)rrd_summary_packets;       label = "Packets/sec"; break;
-  case 1: rrds = (char**)rrd_summary_packet_sizes;  label = "Packets/sec"; break;
-  case 2: rrds = (char**)rrd_summary_proto_bytes;   label = "Bytes/sec"; break;
-  case 3: rrds = (char**)rrd_summary_ipproto_bytes; label = "Bytes/sec"; break;
+  case 0: rrds = (char**)rrd_summary_packets;       label = "Pkt/s"; break;
+  case 1: rrds = (char**)rrd_summary_packet_sizes;  label = "Pkt/s"; break;
+  case 2: rrds = (char**)rrd_summary_proto_bytes;   label = "Bytes/s"; break;
+  case 3: rrds = (char**)rrd_summary_ipproto_bytes; label = "Bytes/s"; break;
   case 4:
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s", myGlobals.rrdPath, rrdPath);
 
@@ -1649,11 +1678,11 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
       rrds = (char**)myRRDs;
       closedir(directoryPointer);
     }
-    label = "Bytes/sec";
+    label = "Bytes/s";
     break;
-  case 5: rrds = (char**)rrd_summary_local_remote_ip_bytes; label = "Bytes/sec"; break;
-  case 6: rrds = (char**)rrd_summary_host_sentRcvd_packets; label = "Packets/sec"; break;
-  case 7: rrds = (char**)rrd_summary_host_sentRcvd_bytes; label = "Bytes/sec"; break;
+  case 5: rrds = (char**)rrd_summary_local_remote_ip_bytes; label = "Bytes/s"; break;
+  case 6: rrds = (char**)rrd_summary_host_sentRcvd_packets; label = "Pkt/s"; break;
+  case 7: rrds = (char**)rrd_summary_host_sentRcvd_bytes; label = "Bytes/s"; break;
     
   case 98:
     {
@@ -1728,11 +1757,11 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
       }
 
       if(pkts || strstr(rrdName, "pkt"))
-	label = "Packets/sec";
+	label = "Pkt/s";
       else if(strstr(rrdName, "Peers"))
 	label = "Contacted Peers";
       else
-	label = "Bytes/sec";
+	label = "Bytes/s";
     }
 
     break;

@@ -751,18 +751,6 @@ void initCounters(void) {
 #endif /* MAKE_WITH_I18N */
 
   initIPCountryTable();
-
-#if 0
-  /*
-   * Guess at the version of gd.  Since there's no gdVersion() function, we do
-   * this in an ugly way - we load the .so library and look for the entry point
-   * of functions that have been added along the way.
-   */
-  traceEvent(CONST_TRACE_INFO, "GDVERCHK: Guessing at libgd version");
-  myGlobals.gdVersionGuessValue = strdup(gdVersionGuess());
-  if(myGlobals.gdVersionGuessValue != NULL)
-    traceEvent(CONST_TRACE_INFO, "GDVERCHK: ... as %s", myGlobals.gdVersionGuessValue);
-#endif
 }
 
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2006 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2007 Luca Deri <deri@ntop.org>
  *
  *  			    http://www.ntop.org/
  *
@@ -45,19 +45,6 @@ struct bar_elements {
   char *label;
   float data;
 };
-
-/* ******************************************************************* */
-
-#include "gd.h"
-#include "gdfontl.h"
-#include "gdfonts.h"
-#include "gdfontmb.h"
-
-#ifndef M_PI
-#define M_PI	3.14159265358979323846
-#endif
-
-#include <stdio.h>
 
 /* ******************************************************************* */
 
@@ -107,7 +94,9 @@ sendString("]\n"
 
 /**********************************************************/
 
-static void send_graph_footer(char *the_type) {
+static void send_graph_footer(char *the_type, u_int width, u_int height) {
+  char buf[256];
+
   sendString("];\n"
 	     "   \n"
 	     "   if (hasCanvas) {\n"
@@ -127,15 +116,21 @@ sendString("\'), [data1]);\n"
 	     "<body>\n"
 	     "<div id=\"canvas");
 sendString(the_type);
-sendString("\" width=\"350\" height=\"200\"></div>\n"
-	     "</body>\n"
-	     "</html>\n"
-	     );
+
+
+ snprintf(buf, sizeof(buf), 
+	  "\" width=\"%d\" height=\"%d\"></div>\n"
+	  "</body>\n"
+	  "</html>\n", 
+	  width, height);
+
+ sendString(buf);
 }
 
 /**********************************************************/
 
-static void build_chart(u_char is_pie, char *the_type, int num, float *p, char **lbl) {
+static void build_chart(u_char is_pie, char *the_type, int num, float *p, 
+			char **lbl, u_int width, u_int height) {
   int i, num_printed;
   char buf[64];
 
@@ -159,108 +154,14 @@ static void build_chart(u_char is_pie, char *the_type, int num, float *p, char *
     }
   }
 
-  send_graph_footer(the_type);
+  send_graph_footer(the_type, width, height);
 }
 
-#define build_pie(a, b, c) build_chart(1, "pie", a, b, c)
-#define build_line(a, b, c) build_chart(0, "line", a, b, c)
-#define build_bar(a, b, c) build_chart(0, "bar", a, b, c)
+#define build_pie(a, b, c) build_chart(1, "pie", a, b, c, 350, 200)
+#define build_line(a, b, c) build_chart(0, "line", a, b, c, 600, 200)
+#define build_bar(a, b, c) build_chart(0, "bar", a, b, c, 600, 200)
 
 /* ******************************************************************* */
-
-/**********************************************************/
-/* Guess at the version of gd from various breadcrumbs in */
-/* the library (only things checkable at run-time, since  */
-/* just because it was compiled against a version doesn't */
-/* mean that's what it's running on...)                   */
-/**********************************************************/
-
-char* gdVersionGuess(void) {
-#ifdef WIN32
-#if GD2_VERS == 2 /* GD 2.x detected */    
-  return("2.x");
-#else
-  return("1.8.x");
-#endif
-#else
-#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(DARWIN)
-  void *gdPtr = NULL;
-
-  gdPtr = (void*)dlopen(CONST_LIBGD_SO, RTLD_NOW); /* Load the library */
-
-  if(gdPtr == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "GDVERCHK: Unable to load gd, message is '%s'", dlerror());
-#if GD2_VERS == 2 /* GD 2.x detected */    
-    return("2.x");
-#else
-    return("1.8.x");
-#endif
-  }
-
-#define test_gd_function(a, b)   if((void*)dlsym(gdPtr, a) != NULL) { dlclose(gdPtr); return(b); }
-
-  test_gd_function("gdImageCreateFromPngPtr", "2.0.21+");
-  test_gd_function("gdFontCacheSetup", "2.0.16-2.0.20");
-  test_gd_function("gdImageSetClip", "2.0.12-2.0.15");
-  test_gd_function("gdImageCopyRotated", "2.0.8-2.0.11");
-  test_gd_function("gdImageStringFTEx", "2.0.5-2.0.7");
-  test_gd_function("gdFreeFontCache", "2.0.4");
-  test_gd_function("gdImageCreateTrueColor", "2.0.0-2.0.3");
-  test_gd_function("gdImageCreateFromJpeg", "1.8.4");
-
-#undef test_gd_function
-
-  dlclose(gdPtr);
-
-  return("1.8.3 or below");
-
-#else
-
-  return(NULL);
-#endif
-#endif
-}
-
-/* ************************************************** */
-
-static void drawLegend(gdImagePtr im,
-		       short width,
-		       short height,
-		       int   num_points,
-		       char  *labels[],              /* slice labels */
-		       float data[],
-		       int colors[], int labelColor) {
-
-  int edge_x, edge_y, i;
-#ifdef SHOW_PERCENTAGE
-  float total;
-  char str[32];
-#endif
-
-  edge_x = (width*.75)+10;
-  edge_y = (height/10);
-
-#ifdef SHOW_PERCENTAGE
-  for(i=0, total=0; i<num_points; i++)
-    total += data[i];
-#endif
-
-  for(i=0; i<num_points; i++) {
-    gdImageFilledRectangle(im, edge_x, edge_y, edge_x+CONST_LEGEND_BOX_SIZE, 
-                           edge_y+CONST_LEGEND_BOX_SIZE, colors[i]);
-    gdImageRectangle(im, edge_x-1, edge_y-1, edge_x+CONST_LEGEND_BOX_SIZE+1,
-                     edge_y+CONST_LEGEND_BOX_SIZE+1, labelColor);
-#ifdef SHOW_PERCENTAGE
-    safe_snprintf(__FILE__, __LINE__, str, sizeof(str), "%s(%.1f%%)", labels[i], (data[i]*100)/total);
-    gdImageString(im, gdFontSmall, edge_x+CONST_LEGEND_BOX_SIZE+5, edge_y-5, (unsigned char*)str, labelColor);
-#else
-    gdImageString(im, gdFontSmall, edge_x+CONST_LEGEND_BOX_SIZE+5, edge_y-3, (unsigned char*)labels[i], labelColor);
-#endif
-    edge_y += gdFontSmall->h*1.5;
-  }
-}
-
-/* ************************************************ */
 
 static int cmpElementsFctn(const void *_a, const void *_b) {
   struct bar_elements *a = (struct bar_elements *)_a;
@@ -278,432 +179,6 @@ static int cmpElementsFctn(const void *_a, const void *_b) {
   }
 
   return((a)->data < (b)->data ? 1 : -1);
-}
-
-/* ************************ */
-
-void drawPie(short width,
-	     short height,
-	     FILE* filepointer,            /* open file pointer, can be stdout */
-	     int   num_points,
-	     char  *labels[],              /* slice labels */
-	     float data[],
-	     int sorted) {
-  gdImagePtr im;
-  int black, white, colors[64], numColors, i;
-  int center_x, center_y, radius, begDeg, endDeg, x, y;
-  float total;
-  int displ;
-  float radiant;
-  struct bar_elements *elems = NULL;
-
-  if(num_points == 0) {
-    /* Workaround to the case where there are not point */
-    num_points = 1;
-    labels[0] = "no data";
-    data[0] = 0;
-  }
-
-  if(sorted) {
-    elems = (struct bar_elements*)malloc(sizeof(struct bar_elements)*num_points);
-
-    if(elems == NULL) return; /* Not enough memory */
-
-    for(i=0; i<num_points; i++) {
-      elems[i].label = labels[i];
-      elems[i].data = data[i];
-    }
-
-    qsort(elems, num_points, sizeof(struct bar_elements), cmpElementsFctn);
-
-    for(i=0; i<num_points; i++) {
-      labels[i] = elems[i].label;
-      data[i] = elems[i].data;
-    }
-  }
-
-  im = gdImageCreate(width, height);
-
-  white = gdImageColorAllocate(im, 255, 255, 255); /* bg color */
-  black = gdImageColorAllocate(im, 0, 0, 0);
-  numColors = sizeof(clr)/sizeof(unsigned long);
-  for(i=0; i<numColors; i++) {
-    colors[i] = gdImageColorAllocate(im, clr[i]>>16, clr[i]>>8, clr[i]&0x0000FF);
-  }
-
-  /* ******************************* */
-
-  for(i=0, total=0; i<num_points; i++)
-    total += data[i];
-
-  if(total == 0) total = 1;
-
-  center_x = width/3, center_y = height/2;
-  radius = height/3;
-  begDeg = 0;
-
-  gdImageArc(im, center_x, center_y, 2*radius, 2*radius, 0, 360, black);
-  radiant = begDeg-90; radiant /= 360; radiant *= 2*M_PI;
-  x = center_x+(radius)*cos(radiant);
-  y = center_y+(radius)*sin(radiant);
-  gdImageLine(im, center_x, center_y, x,y, black);
-
-  /* Safety check */
-  if(num_points == 0) {
-    num_points = 1;
-    data[0] = 1;
-  }
-
-  for(i=0; i<num_points; i++) {
-    displ = (360*data[i])/total;
-
-    if(i < (num_points-1))
-      endDeg = begDeg+displ;
-    else
-      endDeg = 360;
-   
-#if GD2_VERS == 2 /* GD 2.x detected */    
-    gdImageFilledArc(im, center_x, center_y, 2*radius, 2*radius,		     
-		     begDeg+270, endDeg+270, colors[i], gdArc);
-#else
-    radiant = begDeg-90; radiant /= 360; radiant *= 2*M_PI;
-    x = center_x+(radius)*cos(radiant);
-    y = center_y+(radius)*sin(radiant);
-    gdImageArc(im, center_x, center_y, 2*radius, 2*radius,
-	       begDeg+270, endDeg+270, black);
-    gdImageLine(im, center_x, center_y, x,y, black);
-
-    begDeg = (begDeg+endDeg)/2;
-    radiant = begDeg-90; radiant /= 360; radiant *= 2*M_PI;
-    x = center_x+(radius/2)*cos(radiant);
-    y = center_y+(radius/2)*sin(radiant);
-    gdImageFillToBorder(im, x, y, black, colors[i]);
-#endif
-
-    begDeg = endDeg;
-  }
-
-#if GD2_VERS == 2 /* GD 2.x detected */
-  gdImageArc(im, center_x, center_y, 2*radius, 2*radius, 0, 360, black);
-#endif
-
-  drawLegend(im, width-25, height, num_points, labels, data, colors, black);
-  gdImagePng(im, filepointer);
-  gdImageDestroy(im);
-
-  if(sorted && elems)
-    free(elems);
-}
-
-/* ************************************************ */
-
-/* Fix for large numbers (over 4Gb) courtesy of
-   Kouprie Robbert <r.kouprie@dto.tudelft.nl>
-*/
-void drawBar(short width,
-	     short height,
-	     FILE* filepointer,  /* open file pointer, can be stdout */
-	     int   num_points,
-	     char  *labels[],    /* slice labels */
-	     float data[]) {
-  gdImagePtr im;
-  int black, white, gray, colors[64], numColors, i, ngrid, base, padding;
-  int center_x, center_y, vmargin, hmargin, xsize, ysize, xpos, ypos, dypix;
-  float maxval, total, yscale, txtsz, txtht;
-  float dydat, xmax, ymax, xmin, ymin;
-  struct bar_elements *elems;
-
-  if(num_points <= 0) return;
-  
-  elems = (struct bar_elements*)malloc(sizeof(struct bar_elements)*num_points);
-  if(elems == NULL) return; /* Not enough memory */
-
-  for(i=0; i<num_points; i++) {
-    elems[i].label = labels[i];
-    elems[i].data = data[i];
-  }
-
-  qsort(elems, num_points, sizeof(struct bar_elements), cmpElementsFctn);
-
-  for(i=0; i<num_points; i++) {
-    labels[i] = elems[i].label;
-    data[i] = elems[i].data;
-  }
-
-  im = gdImageCreate(width, height);
-
-  white = gdImageColorAllocate(im, 255, 255, 255); /* bg color */
-  black = gdImageColorAllocate(im, 0, 0, 0);
-  gray = gdImageColorAllocate(im, 200, 200, 200);
-  numColors = sizeof(clr)/sizeof(unsigned long);
-  for(i=0; i<numColors; i++) {
-    colors[i] = gdImageColorAllocate(im, clr[i]>>16, clr[i]>>8, clr[i]&0x0000FF);
-  }
-
-  /* ******************************* */
-
-  maxval = 0;
-
-  for(i=0, total=0; i<num_points; i++) {
-    total += data[i];
-    if(data[i] > maxval) maxval =  data[i];
-  }
-
-  center_x = width/3, center_y = height/2;
-
-  /* ************************* */
-
-  vmargin = 20; // top (bottom) vertical margin for title (x-labels)
-  hmargin = 60; // left horizontal margin for y-labels
-
-  base = floor((((width*.75)) - hmargin) / num_points); // distance between columns
-
-  ysize = height - 2 * vmargin; // y-size of plot
-  xsize = num_points * base; // x-size of plot
-
-  // y labels and grid lines
-  ngrid = 4; // number of grid lines
-
-  dydat = maxval / ngrid; // data units between grid lines
-  dypix = ysize / (ngrid + 1); // pixels between grid lines
-
-  // make y-axis text label from height of grid line (in data units)
-  for (i = 0; i <= (ngrid + 1); i++) {
-    char buf[32];
-    char *theStr = formatBytes(i * dydat, 0, buf, sizeof(buf)); // make label text
-
-    txtsz = gdFontSmall->w*strlen(theStr); // pixel-width of label
-    txtht = gdFontSmall->h; // pixel-height of label
-
-    // height of grid line in pixels
-    ypos = vmargin + ysize - (i*dypix);
-    xpos = hmargin - 10 - txtsz;
-    if(xpos < 1) xpos = 1;
-
-    gdImageString(im, gdFontSmall, xpos, ypos - (int)(txtht/2), (unsigned char*)theStr, black);
-
-    if (!(i == 0) && !(i > ngrid)) {
-      gdImageLine(im, hmargin, ypos, hmargin + xsize, ypos, gray);
-    }
-  }
-
-  // columns and x labels
-  padding = 3; // half of spacing between columns
-  yscale = (float)ysize/((ngrid+1) * dydat); // pixels per data unit
-
-  for (i = 0; i<num_points; i++) {
-    // vertical columns
-    ymax = vmargin + ysize;
-
-    if(ymax > (int)(data[i]*yscale)) {
-      ymin = ymax - (int)(data[i]*yscale);
-      if(ymin < vmargin) ymin = vmargin;
-    }
-    else
-      ymin = vmargin;
-
-    xmax = hmargin + (i+1)*base - padding;
-    xmin = hmargin + i*base + padding;
-
-    if((xmax-xmin) > 100) {
-      xmax = xmin+100;
-    }
-
-    gdImageFilledRectangle(im, xmin, ymin, xmax, ymax, colors[i]);
-    gdImageRectangle(im, xmin, ymin, xmax, ymax, black);
-
-    // x labels
-    txtsz = gdFontSmall->w * strlen(labels[i]);
-
-    xpos = xmin + (int)((base - txtsz) / 2);
-    if(xmin > xpos) xpos = xmin; else xmin = xpos;
-    ypos = ymax + 3; // distance from x axis
-  }
-
-  // plot frame
-  gdImageRectangle(im, hmargin, vmargin, hmargin + xsize, vmargin + ysize, black);
-
-  /* ************************* */
-
-  drawLegend(im, width, height, num_points, labels, data, colors, black);
-  gdImagePng(im, filepointer);
-  gdImageDestroy(im);
-  free(elems);
-}
-
-/* ************************** */
-
-void drawArea(short width, short height,
-	      FILE* filepointer, int num_points,
-	      char* labels[], float data[],
-	      char* xtitle, char* ytitle,
-	      u_short formatYlabels) {
-  gdImagePtr im;
-  int black, white, colors[64], numColors, i;
-  float maxval=0;
-  int center_x, center_y, base;
-  float total, yscale, txtsz, txtht;
-  float vmargin, hmargin, xsize, ysize, ngrid, dydat, dypix, ydat, xpos, ypos;
-  float padding, ymax, ymin, xmax, xmin, gray;
-  char str[16];
-
-  im = gdImageCreate(width, height);
-
-  white = gdImageColorAllocate(im, 255, 255, 255); /* bg color */
-  black = gdImageColorAllocate(im, 0, 0, 0);
-  gray = gdImageColorAllocate(im, 200, 200, 200);
-  numColors = sizeof(clr)/sizeof(unsigned long);
-  for(i=0; i<numColors; i++) {
-    colors[i] = gdImageColorAllocate(im, clr[i]>>16, clr[i]>>8, clr[i]&0x0000FF);
-  }
-
-  /* ******************************* */
-
-  for(i=0, total=0; i<num_points; i++) {
-    total += data[i];
-    if(data[i] > maxval) maxval =  data[i];
-  }
-
-  center_x = width/2, center_y = height/2;
-
-  /* ************************* */
-
-  vmargin = 40; // top (bottom) vertical margin for title (x-labels)
-  hmargin = 70; // left horizontal margin for y-labels
-
-  base = (int)((width - hmargin) / (1+num_points)); // distance between columns
-
-  xsize = num_points * base; // x-size of plot
-  ysize = height - (1.5 * vmargin); // y-size of plot
-
-  /* printf("x-size=%.1f/y-size=%.1f\n", xsize, ysize); */
-  // y labels and grid lines
-  ngrid = 4; // number of grid lines
-
-  dydat = maxval / ngrid; // data units between grid lines
-  dypix = ysize / (ngrid + 1); // pixels between grid lines
-
-  for (i = 0; i <= (ngrid + 1); i++) {
-    // height of grid line in units of data
-    ydat = i * dydat;
-    safe_snprintf(__FILE__, __LINE__, str, sizeof(str), "%.1f", ydat);
-
-    // height of grid line in pixels
-    ypos = vmargin/2 + ysize - (int)(i*dypix);
-    txtht = gdFontSmall->h;
-
-    if(maxval > 0) {
-      if(!formatYlabels) {
-	txtsz = gdFontSmall->w*strlen(str); 
-	xpos = hmargin - txtsz; if(xpos < 1) xpos = 1;
-	gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), (unsigned char*)str, black);
-      } else {
-	char buf[32];
-	char *theStr = formatThroughput(i * dydat, 0, buf, sizeof(buf));
-
-	/* traceEvent(CONST_TRACE_INFO, "%u/%s", i * dydat, theStr); */
-
-	txtsz = gdFontSmall->w*strlen(theStr);
-	xpos = hmargin - txtsz; if(xpos < 1) xpos = 1;
-	gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), (unsigned char*)theStr, black);	
-      }
-    }
-
-    if (!(i == 0) && !(i > ngrid)) {
-      gdImageLine(im, hmargin, ypos, hmargin + xsize, ypos, gray);
-    }
-  }
-
-  // columns and x labels
-  padding = 0; // half of spacing between columns
-  yscale = (float)ysize / ((ngrid+1) * dydat); // pixels per data unit
-
-  if(maxval > 0) {
-    gdPoint points[5];
-
-    memset(points, 0, sizeof(points));
-
-    for (i = 0; i<num_points; i++) {
-      // vertical columns
-      ymax = vmargin/2 + ysize;
-      ymin = ymax - (int)(data[i]*yscale);
-      xmax = hmargin + (i+1)*base - padding;
-      xmin = hmargin + i*base + padding;
-
-      if(i == 0) {
-	points[0].x = xmin; points[0].y = ymin;
-	points[1].x = xmin; points[1].y = ymax;
-	points[2].x = xmax; points[2].y = ymax;
-	points[3].x = xmax; points[3].y = ymin;
-      } else {
-	points[0].x = points[3].x; points[0].y = points[3].y;
-	points[1].x = points[2].x; points[1].y = points[2].y;
-	points[2].x = xmax; points[2].y = ymax;
-	points[3].x = xmax; points[3].y = ymin;
-      }
-
-      points[4].x = points[0].x; points[4].y = points[0].y;
-
-      gdImageFilledPolygon(im, points, 5, colors[0]);
-      gdImageFilledRectangle(im, points[0].x-1, points[0].y-1, points[0].x+1, points[0].y+1, black);
-      gdImageFilledRectangle(im, points[3].x-1, points[3].y-1, points[3].x+1, points[3].y+1, black);
-      gdImageLine(im, points[0].x, points[0].y, points[3].x, points[3].y, black);
-
-      if((i % 2) == 0) {
-	safe_snprintf(__FILE__, __LINE__, str, sizeof(str), "%5s", labels[i]);
-	gdImageStringUp(im, gdFontSmall, points[0].x-gdFontSmall->w, height-2, (unsigned char*)str, black);
-      }
-
-      // x labels
-      txtsz = gdFontSmall->w * strlen(labels[i]);
-
-      xpos = xmin + (int)((base - txtsz) / 2);
-      if(xmin > xpos) xpos = xmin; else xmin = xpos;
-      ypos = ymax + 3; // distance from x axis
-    }
-  }
-
-  // plot frame
-  gdImageRectangle(im, hmargin, vmargin/2, hmargin + xsize, vmargin/2 + ysize, black);
-
-  if(xtitle)
-    gdImageString(im, gdFontSmall, (width/2)-(strlen(xtitle)*gdFontSmall->w)/2,
-		  height-gdFontSmall->h-2, (unsigned char*)xtitle, black);
-
-  if(ytitle)
-    gdImageString(im, gdFontSmall, 5, 2, (unsigned char*)ytitle, black);
-
-  gdImagePng(im, filepointer);
-  gdImageDestroy(im);
-}
-
-/* ************************ */
-
-void sendGraphFile(char* fileName, int doNotUnlink) {
-  FILE *fd;
-  int len;
-  char tmpStr[256];
-  int bufSize=sizeof(tmpStr)-1, totLen = 0;
-
-  memset(&tmpStr, 0, sizeof(tmpStr));
-
-  if((fd = fopen(fileName, "rb")) != NULL) {
-
-    for(;;) {
-      len = fread(tmpStr, sizeof(char), bufSize, fd);
-      if(len > 0) {
-		sendStringLen(tmpStr, len);
-		totLen += len;
-	  }
-      if(len <= 0) break;
-    }
-    fclose(fd);
-  } else
-    traceEvent(CONST_TRACE_WARNING, "Unable to open file %s - graphic not sent", fileName);
-
-  if (doNotUnlink == 0) {
-    unlink(fileName);
-  }
 }
 
 /* ************************ */
@@ -1353,6 +828,7 @@ void ipProtoDistribPie(void) {
   }
 
   if(num == 1) p[0] = 100; /* just to be safe */
+
   build_pie(num, p, lbl);
 }
 
@@ -1456,117 +932,7 @@ void drawTrafficPie(void) {
 
 /* ************************ */
 
-void drawThptGraph(int sortedColumn) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
-  int i, len;
-  char  labels[60][32];
-  char  *lbls[60];
-  FILE *fd;
-  time_t tmpTime;
-  float graphData[60];
-  struct tm t;
-  int useFdOpen = 0;
-
-  memset(graphData, 0, sizeof(graphData));
-
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  switch(sortedColumn) {
-  case 1: /* 60 Minutes */
-    for(i=0; i<60; i++) {
-      lbls[59-i] = labels[i];
-      labels[i][0] = '\0';
-    }
-
-    len = myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples;
-    if(len > 60) len = 60;
-    for(i=0; i<len; i++) {
-      tmpTime = myGlobals.actTime-i*60;
-      strftime(labels[i], 32, CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
-    }
-
-    for(i=0; i<len; i++)
-      graphData[59-i] = myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].trafficValue;
-
-    drawArea(600, 300,            /* width, height           */
-	     fd,                  /* open FILE pointer       */
-	     60,                  /* num points per data set */
-	     (char**)lbls,        /* X labels array of char* */
-	     graphData, NULL,     /* dataset 1   */
-	     "Throughput", 1);
-    break;
-  case 2: /* 24 Hours */
-    for(i=0; i<24; i++) {
-      lbls[23-i] = labels[i];
-      labels[i][0] = '\0';
-    }
-
-    len = myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples/60;
-    if(len > 24) len = 24;
-    for(i=0; i<len; i++) {
-      tmpTime = myGlobals.actTime-((i+1)*60*60);
-      strftime(labels[i], 32, CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
-    }
-
-    for(i=0; i<len; i++)
-      graphData[23-i] = myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].trafficValue;
-
-    drawArea(600, 300,      /* width, height           */
-	     fd,            /* open FILE pointer       */
-	     24,            /* num points per data set */
-	     lbls,          /* X labels array of char* */
-	     graphData, NULL,    /* dataset 1   */
-	     "Throughput", 1);
-    break;
-  case 3: /* 30 Days */
-    for(i=0; i<30; i++) {
-      lbls[29-i] = labels[i];
-      labels[i][0] = '\0';
-    }
-
-    len = myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples/(24*60);
-    if(len > 30) len = 30;
-    for(i=0; i<len; i++) {
-      tmpTime = myGlobals.actTime-((i+1)*(60*60*24));
-      strftime(labels[i], 32, "%d/%m", localtime_r(&tmpTime, &t));
-    }
-
-    for(i=0; i<len; i++)
-      graphData[29-i] = myGlobals.device[myGlobals.actualReportDeviceId].last30daysThpt[i];
-
-    drawArea(600, 300,          /* width, height           */
-	     fd,                /* open FILE pointer       */
-	     30,                /* num points per data set */
-	     lbls,              /* X labels array of char* */
-	     graphData, NULL,
-	     "Throughput", 1);
-    break;
-  }
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
-}
-
-/* ************************ */
-
 void drawGlobalProtoDistribution(void) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   TrafficCounter ip;
   float p[256]; /* Fix courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
   char	*lbl[16];
@@ -1621,38 +987,20 @@ void drawGlobalProtoDistribution(void) {
   }
 
 
-#ifndef WIN32
-  /* Unices */
+  {
+    int i;
+    float the_max = 0.1;
 
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
+    for(i=0; i<idx; i++) the_max = max(the_max, p[i]);
+    for(i=0; i<idx; i++) p[i]    = (p[i]*100)/the_max;
+  }
 
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  drawBar(600, 250,	/* width/height */
-	  fd,	        /* open file pointer */
-	  idx,	        /* number of slices */
-	  lbl,	        /* slice labels */
-	  p);	        /* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_bar(idx, p, lbl);
 }
 
 /* ************************ */
 
 void drawGlobalIpProtoDistribution(void) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int i, idx=0, idx1 = 0, maxNumDisplayProto = 13;
   float p[256];
   char *lbl[256];
@@ -1879,12 +1227,10 @@ void fcPktSizeDistribPie(void) {
 /* ******************************** */
 
 void drawGlobalFcProtoDistribution(void) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int idx=0;
   float p[256];
   char *lbl[256];
   FILE *fd;
-  int useFdOpen = 0;
 
   p[myGlobals.numIpProtosToMonitor] = 0;
 
@@ -1923,38 +1269,12 @@ void drawGlobalFcProtoDistribution(void) {
       lbl[idx++] = "Others";
   }
 
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-  
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  drawBar(600, 250,	/* width/height */
-	  fd,		/* open file pointer */
-	  idx,		/* number of slices */
-	  lbl,		/* slice labels */
-	  p);		/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_bar(idx, p, lbl);
 }
 
 /* *******************************************************/
 
-void drawLunStatsBytesDistribution (HostTraffic *el) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
+void drawLunStatsBytesDistribution(HostTraffic *el) {
   int lun, numEntries, idx=0;
   float p[MAX_LUNS_GRAPHED+1];
   char *lbl[MAX_LUNS_GRAPHED+1];
@@ -1962,7 +1282,6 @@ void drawLunStatsBytesDistribution (HostTraffic *el) {
   LunStatsSortedEntry sortedLunTbl[MAX_LUNS_SUPPORTED];
   LunStatsSortedEntry *entry;
   FILE *fd;
-  int useFdOpen = 0;
   ScsiLunTrafficInfo *lunStats;
 
   p[MAX_LUNS_GRAPHED] = 0;
@@ -1993,44 +1312,17 @@ void drawLunStatsBytesDistribution (HostTraffic *el) {
       }
   }
   
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-  
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  drawBar (600, 250,	/* width/height */
-           fd,		/* open file pointer */
-           idx,     /* number of slices */
-           lbl,		/* slice labels */
-           p);		/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_bar(idx, p, lbl);
 }
 
 /* *******************************************************/
 
-void drawLunStatsPktsDistribution (HostTraffic *el) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
+void drawLunStatsPktsDistribution(HostTraffic *el) {
   int lun, numEntries, idx=0;
   float p[MAX_LUNS_GRAPHED+1];
   char *lbl[MAX_LUNS_GRAPHED+1];
   char label[MAX_LUNS_GRAPHED+1][10];
   FILE *fd;
-  int useFdOpen = 0;
   ScsiLunTrafficInfo *lunStats;
   LunStatsSortedEntry sortedLunTbl[MAX_LUNS_SUPPORTED];
   LunStatsSortedEntry *entry;
@@ -2062,44 +1354,17 @@ void drawLunStatsPktsDistribution (HostTraffic *el) {
       }
   }
 
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-  
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  drawBar (600, 250,	/* width/height */
-           fd,		/* open file pointer */
-           idx,     /* number of slices */
-           lbl,		/* slice labels */
-           p);		/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_bar(idx, p, lbl);
 }
 
 /* *******************************************************/
 
-void drawVsanStatsBytesDistribution (int deviceId) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
+void drawVsanStatsBytesDistribution(int deviceId) {
   int numVsans, idx=0, i, j;
   float p[MAX_VSANS_GRAPHED+1];
   char *lbl[MAX_VSANS_GRAPHED+1];
   char label[MAX_VSANS_GRAPHED+1][10];
   FILE *fd;
-  int useFdOpen = 0;
   FcFabricElementHash **theHash;
   FcFabricElementHash *tmpTable[MAX_ELEMENT_HASH];
   
@@ -2144,45 +1409,18 @@ void drawVsanStatsBytesDistribution (int deviceId) {
       if (j >= MAX_VSANS_GRAPHED)
           break;
   }
-  
-#ifndef WIN32
-  /* Unices */
 
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-  
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  drawBar (600, 250,	/* width/height */
-           fd,		/* open file pointer */
-           idx,     /* number of slices */
-           lbl,		/* slice labels */
-           p);		/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_bar(idx, p, lbl);  
 }
 
 /* *******************************************************/
 
-void drawVsanStatsPktsDistribution (int deviceId) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
+void drawVsanStatsPktsDistribution(int deviceId) {
   int numVsans, idx=0, i, j;
   float p[MAX_VSANS_GRAPHED+1];
   char *lbl[MAX_VSANS_GRAPHED+1];
   char label[MAX_VSANS_GRAPHED+1][10];
   FILE *fd;
-  int useFdOpen = 0;
   FcFabricElementHash **theHash;
   FcFabricElementHash *tmpTable[MAX_ELEMENT_HASH];
   
@@ -2229,32 +1467,7 @@ void drawVsanStatsPktsDistribution (int deviceId) {
           break;
   }
 
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-  
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  drawBar (600, 250,	/* width/height */
-           fd,		/* open file pointer */
-           idx,     /* number of slices */
-           lbl,		/* slice labels */
-           p);		/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_bar(idx, p, lbl);
 }
 
 /* *******************************************************/
@@ -2317,13 +1530,11 @@ void drawVsanSwilsProtoDistribution(u_short vsanId) {
 /* *******************************************************/
 
 void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent) {
-  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int i, idx=0, numEntries = 0;
   FcFabricElementHash *hash;
   float p[MAX_VSANS_GRAPHED+1];
   char *lbl[MAX_VSANS_GRAPHED+1], labels[MAX_VSANS_GRAPHED+1][8];
   FILE *fd;
-  int useFdOpen = 0;
   Counter total;
   SortedFcDomainStatsEntry *fcDomainStats;
 
@@ -2365,7 +1576,7 @@ void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent) {
   }
 
   myGlobals.columnSort = dataSent;
-  qsort (fcDomainStats, numEntries, sizeof (SortedFcDomainStatsEntry), cmpFcDomainFctn);
+  qsort(fcDomainStats, numEntries, sizeof (SortedFcDomainStatsEntry), cmpFcDomainFctn);
   
   for (i = numEntries-1; (idx < MAX_VSANS_GRAPHED) && (i >= 0); i--) {
       if (dataSent) {
@@ -2381,32 +1592,8 @@ void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent) {
           idx++;
       }
   }
-#ifndef WIN32
-  /* Unices */
 
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-  
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-  drawBar(600, 250,	/* width/height */
-	  fd,		/* open file pointer */
-	  idx,		/* number of slices */
-	  lbl,		/* slice labels */
-	  p);		/* data array */
-
-  fclose(fd);
-
-  if(!useFdOpen)
-    sendGraphFile(fileName, 0);
+  build_pie(idx, p, lbl);
 }
 
 

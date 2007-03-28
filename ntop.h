@@ -569,7 +569,6 @@ void          rewinddir(DIR *);
 /* *************************************************************** */
 
 #define HAVE_RRD
-#define CFG_USE_GRAPHICS
 
 #ifdef FREEBSD
 #define HANDLE_DIED_CHILD

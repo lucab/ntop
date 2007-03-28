@@ -4377,12 +4377,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_THPT_STATS_MATRIX_HTML", "undefined");
 #endif
 
-#ifdef CONST_THROUGHPUT_GRAPH
-  printFeatureConfigInfo(textPrintFlag, "CONST_THROUGHPUT_GRAPH", CONST_THROUGHPUT_GRAPH);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_THROUGHPUT_GRAPH", "undefined");
-#endif
-
 #ifdef CONST_TOD_HOUR_TIMESPEC
   printFeatureConfigInfo(textPrintFlag, "CONST_TOD_HOUR_TIMESPEC", CONST_TOD_HOUR_TIMESPEC);
 #else
@@ -6744,12 +6738,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 #else
   printFeatureConfigInfo(textPrintFlag, "zlib version", "disabled via --without-zlib");
 #endif
-
-  /*
-   * If we've guessed at the gd version, report it
-   */
-  if(myGlobals.gdVersionGuessValue != NULL)
-    printFeatureConfigInfo(textPrintFlag, "gd version (guess)", myGlobals.gdVersionGuessValue);
 
 #ifdef MAKE_WITH_XMLDUMP
   printFeatureConfigInfo(textPrintFlag, "XML dump (plugins/xmldump)", "Supported");

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2006 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2007 Luca Deri <deri@ntop.org>
  *
  *		 	    http://www.ntop.org/
  *
@@ -331,12 +331,10 @@ extern char *makeHostLink(HostTraffic *el, short mode,
 extern char *makeFcHostLink (HostTraffic *el, short mode, short cutName,
                              short compactWWN, char *buf, int buflen);
 extern char *makeVsanLink (u_short vsanId, short mode, char *buf, int buflen);
-extern void buildMapLink(HostTraffic *el, char *buf, int buf_len);
+extern void  buildMapLink(HostTraffic *el, char *buf, int buf_len);
 extern char *getHostName(HostTraffic *el, short cutName, char *buf, int bufLen);
 
 /* graph.c */
-extern char* gdVersionGuess(void);
-extern void sendGraphFile(char* fileName, int doNotUnlink);
 extern void hostTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent);
@@ -356,18 +354,10 @@ extern void drawGlobalProtoDistribution(void);
 extern int  drawHostsDistanceGraph(int);
 extern void drawGlobalIpProtoDistribution(void);
 extern void drawGlobalFcProtoDistribution(void);
-extern void drawLunStatsBytesDistribution (HostTraffic *el);
-extern void drawLunStatsPktsDistribution (HostTraffic *el);
-extern void drawVsanStatsBytesDistribution (int deviceId);
-extern void drawVsanStatsPktsDistribution (int deviceId);
-extern void drawVsanDomainTrafficDistribution (u_short vsanId, u_char dataSent);
-extern void drawVsanSwilsProtoDistribution (u_short vsanId);
-extern void drawBar(short width, short height, FILE* filepointer,
-		    int   num_points, char  *labels[], float data[]);
-extern void drawArea(short width, short height, FILE* filepointer,
-		     int   num_points, char  *labels[], float data[],
-		     char *xtitle, char *ytitle, u_short formatYlabels);
-extern void drawPie(short width, short height, FILE* filepointer,
-		    int   num_points, char  *labels[], float data[],
-		    int sorted);
+extern void drawLunStatsBytesDistribution(HostTraffic *el);
+extern void drawLunStatsPktsDistribution(HostTraffic *el);
+extern void drawVsanStatsBytesDistribution(int deviceId);
+extern void drawVsanStatsPktsDistribution(int deviceId);
+extern void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent);
+extern void drawVsanSwilsProtoDistribution(u_short vsanId);
 

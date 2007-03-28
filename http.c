@@ -2792,11 +2792,6 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
         drawVsanDomainTrafficDistribution(vsanId, FALSE);
 #ifndef EMBEDDED
-#ifdef CFG_USE_GRAPHICS
-      } else if(strncasecmp(pageName, CONST_THROUGHPUT_GRAPH, strlen(CONST_THROUGHPUT_GRAPH)) == 0) {
-	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
-	drawThptGraph(sortedColumn);
-	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_PIE_IP_TRAFFIC, strlen(CONST_PIE_IP_TRAFFIC)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawTrafficPie();
@@ -2844,7 +2839,7 @@ static int returnHTTPPage(char* pageName,
 	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_BAR_ALLPROTO_DIST,
 			    strlen(CONST_BAR_ALLPROTO_DIST)) == 0) {
-	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawGlobalProtoDistribution();
 	printTrailer=0;
       } else if(strncasecmp(pageName,CONST_NETWORK_MAP_HTML, strlen(CONST_NETWORK_MAP_HTML)) == 0) {
@@ -3099,7 +3094,6 @@ static int returnHTTPPage(char* pageName,
 	    printTrailer=0;
 	  }
 	}
-#endif /* CFG_USE_GRAPHICS */
 #endif /* EMBEDDED */
       } else if(strcasecmp(pageName, CONST_CREDITS_HTML) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -3115,10 +3109,10 @@ static int returnHTTPPage(char* pageName,
 	sendString("<p>The current release is very different from the initial one as it includes");
 	sendString("many features and much additional media support.</p>");
 	sendString("<p><b>ntop</b> has definitively more than one author:</p>");
-	/* Addresses are blinded to prevent easy spam harvest -
+	/* 
+	 * Addresses are blinded to prevent easy spam harvest -
 	 *   see http://www.wbwip.com/wbw/emailencoder.html
-	 */
-
+	 */	
 	sendString("<ul><li>" CONST_MAILTO_STEFANO " has contributed several ideas and comments</li>");
 	sendString("<li>" CONST_MAILTO_ABDELKADER " and " CONST_MAILTO_OLIVIER " provided IPv6 support</li>");
 	sendString("<li>" CONST_MAILTO_DINESH " for SCSI & FiberChannel support</li>");

@@ -1243,7 +1243,6 @@
 #define CONST_SORT_DATA_THPT_HTML           "sortDataThpt.html"
 #define CONST_SWITCH_NIC_HTML               "switch.html"
 #define CONST_TEXT_INFO_NTOP_HTML           "textinfo.html"
-#define CONST_THROUGHPUT_GRAPH              "thptGraph"
 #define CONST_SORT_DATA_THPT_STATS_HTML     "thptStats.html"
 #define CONST_THPT_STATS_MATRIX_HTML        "thptStatsMatrix.html"
 #define CONST_TRAFFIC_STATS_HTML            "trafficStats.html"

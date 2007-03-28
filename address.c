@@ -645,9 +645,10 @@ void* dequeueAddress(void *_i) {
   HostAddr addr;
   datum key_data, data_data;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Address resolution thread running [p%d]",
+  traceEvent(CONST_TRACE_INFO, 
+	     "THREADMGMT[t%lu]: DNSAR(%d): Address resolution thread running [p%d]",
              pthread_self(), dqaIndex+1, getpid());
-
+  
   while(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Waiting for address to resolve...");

@@ -2255,7 +2255,6 @@ typedef struct ntopGlobals {
   volatile unsigned long numHandledSIGPIPEerrors;
   u_short checkVersionStatus;
   time_t checkVersionStatusAgain;
-  char *gdVersionGuessValue;
 
   /* Purge */
   Counter numPurgedHosts, numTerminatedSessions;

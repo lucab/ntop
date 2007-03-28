@@ -27,19 +27,19 @@ char* formatKBytes(float numKBytes, char *outStr, int outStrLen) {
   if(numKBytes < 0) return(""); /* It shouldn't happen */
 
   if(numKBytes < 1024) {
-    safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sKB", numKBytes, myGlobals.separator);
+    safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sKBytes", numKBytes, myGlobals.separator);
   } else {
     float tmpKBytes = numKBytes/1024;
 
     if(tmpKBytes < 1024) {
-      safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sMB",  tmpKBytes, myGlobals.separator);
+      safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sMBytes",  tmpKBytes, myGlobals.separator);
     } else {
       float tmpGBytes = tmpKBytes/1024;
 
       if(tmpGBytes < 1024) {
-	safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sGB", tmpGBytes, myGlobals.separator);
+	safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sGBytes", tmpGBytes, myGlobals.separator);
       } else {
-	safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sTB", ((float)(tmpGBytes)/1024), myGlobals.separator);
+	safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sTBytes", ((float)(tmpGBytes)/1024), myGlobals.separator);
       }
     }
   }
@@ -62,19 +62,19 @@ char* formatBytes(Counter numBytes, short encodeString, char* outStr, int outStr
   } else if(numBytes < 1024) {
     safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%lu", (unsigned long)numBytes);
   } else if (numBytes < 1048576) {
-    safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sKB", ((float)(numBytes)/1024), locSeparator);
+    safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sKBytes", ((float)(numBytes)/1024), locSeparator);
   } else {
     float tmpMBytes = ((float)numBytes)/1048576;
 
     if(tmpMBytes < 1024) {
-      safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sMB", tmpMBytes, locSeparator);
+      safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sMBytes", tmpMBytes, locSeparator);
     } else {
       tmpMBytes /= 1024;
 
       if(tmpMBytes < 1024) {
-	safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sGB", tmpMBytes, locSeparator);
+	safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sGBytes", tmpMBytes, locSeparator);
       } else {
-	safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sTB", ((float)(tmpMBytes)/1024), locSeparator);
+	safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sTBytes", ((float)(tmpMBytes)/1024), locSeparator);
       }
     }
   }
@@ -90,19 +90,19 @@ char* formatAdapterSpeed(Counter numBits, char* outStr, int outStrLen) {
   } else if(numBits < 1000) {
     safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%lu", (unsigned long)numBits); 
   } else if(numBits < 1000000) {
-    safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f Kb", (float)(numBits)/1000); 
+    safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f Kbit/s", (float)(numBits)/1000); 
   } else {
     float tmpMBytes = ((float)numBits)/1000000;
 
     if(tmpMBytes < 1000) {
-      safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f Mb", tmpMBytes); 
+      safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f Mbit/s", tmpMBytes); 
     } else {
       tmpMBytes /= 1000;
 
       if(tmpMBytes < 1000) {
-	safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f Gb", tmpMBytes); 
+	safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f Gbit/s", tmpMBytes); 
       } else {
-	safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f Tb", ((float)(tmpMBytes)/1000));
+	safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f Tbit/s", ((float)(tmpMBytes)/1000));
       }
     }
   }
@@ -185,11 +185,11 @@ char* formatThroughput(float numBytes /* <=== Bytes/second */, u_char htmlFormat
   numBits = numBytes*8;
 
   if (numBits < divider) {
-    safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sbps", numBits, separator); 
+    safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sbit/s", numBits, separator); 
   } else if (numBits < (divider*divider)) {
-    safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sKbps", ((float)(numBits)/divider), separator); 
+    safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sKbit/s", ((float)(numBits)/divider), separator); 
   } else {
-    safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sMbps", ((float)(numBits)/1048576), separator); 
+    safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.1f%sMbit/s", ((float)(numBits)/1048576), separator); 
   }
 
 #ifdef DEBUG
