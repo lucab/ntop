@@ -585,9 +585,6 @@
    slash. */
 #undef LSTAT_FOLLOWS_SLASHED_SYMLINK
 
-/* Statically build plugins into sntop */
-#undef MAKE_STATIC_PLUGIN
-
 /* Define for internationalization */
 #undef MAKE_WITH_I18N
 

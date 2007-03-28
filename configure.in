@@ -230,11 +230,6 @@ AC_ARG_ENABLE(plugins,
               fi,
               ac_disable_plugins="no")
 
-AC_ARG_ENABLE(  static-plugins,
-              [  --enable-static-plugins     Enable static linked plugins [sntop, default=dynamic]]],
-              ac_enable_static_plugins="$enableval",
-              ac_enable_static_plugins="no")
-
 AC_ARG_ENABLE(ignoresigpipe,
               [  --enable-ignoresigpipe      Ignore SIGPIPE errors [[default=do not ignore]]],
               ac_enable_ignoresigpipe="$enableval",
@@ -875,30 +870,6 @@ if test ".${ac_disable_plugins}" = ".yes"; then
 else
     PLUGINS=plugins
     echo "    ...(Default) Requested. Disable via ./configure command line option --disable-plugins."
-fi
-
-echo
-echo "Static plugins?"
-if test ".${ac_enable_static_plugins}" = ".yes"; then
-    echo "    ...Requested.  Use 'make sntop' instead of 'make'"
-    if test ".${ac_disable_plugins}" = ".yes"; then
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* WARNING:    You requested static plugins but also disabled them"
-        echo "*"
-        echo "*>>> Ignoring the --enable-static-plugins option"
-        echo "*"
-        echo "*???     1. Remove the --disable-plugins option"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-        HAS_WARNING="yes"
-    else
-        AC_DEFINE_UNQUOTED(MAKE_STATIC_PLUGIN, 1, [Statically build plugins into sntop])
-    fi
-else
-    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-static-plugin."
 fi
 
 echo
@@ -2327,11 +2298,8 @@ fi
 
 echo "*"
 echo "*    Building ntop requires GNU Make, so to build ntop, type"
-if test ".${ac_enable_static_plugins}" = ".yes"; then
-    echo "*    'make sntop' (or on *BSD and Solaris systems, 'gmake sntop')"
-else
-    echo "*    'make' (or on *BSD and Solaris systems, 'gmake')"
-fi
+echo "*    'make' (or on *BSD and Solaris systems, 'gmake')"
+
 echo "*"
 echo "*******************************************************************"
 echo
