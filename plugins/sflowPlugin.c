@@ -3736,36 +3736,36 @@ static void printsFlowStatisticsRcvd(int deviceId) {
              "<th " TH_BG " align=\"left\" "DARK_BG ">White net list</th>\n"
              "<td " TD_BG ">");
 
-  if(numWhiteNets == 0) {
+  if(myGlobals.device[deviceId].sflowGlobals->numWhiteNets == 0) {
     sendString("none");
   } else {
     sendString("Network&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
                "Netmask&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
                "Hostmask<br>\n");
 
-    for(i=0; i<numWhiteNets; i++) {
+    for(i=0; i<myGlobals.device[deviceId].sflowGlobals->numWhiteNets; i++) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
                   "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
                   i,
-                  whiteNetworks[i][0],
-                  ((whiteNetworks[i][0] >> 24) & 0xff),
-                  ((whiteNetworks[i][0] >> 16) & 0xff),
-                  ((whiteNetworks[i][0] >>  8) & 0xff),
-                  ((whiteNetworks[i][0]      ) & 0xff),
-                  whiteNetworks[i][1],
-                  ((whiteNetworks[i][1] >> 24) & 0xff),
-                  ((whiteNetworks[i][1] >> 16) & 0xff),
-                  ((whiteNetworks[i][1] >>  8) & 0xff),
-                  ((whiteNetworks[i][1]      ) & 0xff),
-                  whiteNetworks[i][2],
-                  ((whiteNetworks[i][2] >> 24) & 0xff),
-                  ((whiteNetworks[i][2] >> 16) & 0xff),
-                  ((whiteNetworks[i][2] >>  8) & 0xff),
-                  ((whiteNetworks[i][2]      ) & 0xff)
+		    myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][0],
+                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][0] >> 24) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][0] >> 16) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][0] >>  8) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][0]      ) & 0xff),
+                  myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1],
+                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1] >> 24) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1] >> 16) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1] >>  8) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1]      ) & 0xff),
+                  myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2],
+                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2] >> 24) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2] >> 16) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2] >>  8) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2]      ) & 0xff)
                   );
       sendString(buf);
-      if(i<numWhiteNets) sendString("<br>\n");
+      if(i<myGlobals.device[deviceId].sflowGlobals->numWhiteNets) sendString("<br>\n");
     }
   }
 
@@ -3775,36 +3775,36 @@ static void printsFlowStatisticsRcvd(int deviceId) {
              "<th " TH_BG " align=\"left\" "DARK_BG ">Black net list</th>\n"
              "<td " TD_BG ">");
 
-  if(numBlackNets == 0) {
+  if(myGlobals.device[deviceId].sflowGlobals->numBlackNets == 0) {
     sendString("none");
   } else {
     sendString("Network&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
                "Netmask&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
                "Hostmask<br>\n");
 
-    for(i=0; i<numBlackNets; i++) {
+    for(i=0; i<myGlobals.device[deviceId].sflowGlobals->numBlackNets; i++) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
                   "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
                   i,
-                  blackNetworks[i][0],
-                  ((blackNetworks[i][0] >> 24) & 0xff),
-                  ((blackNetworks[i][0] >> 16) & 0xff),
-                  ((blackNetworks[i][0] >>  8) & 0xff),
-                  ((blackNetworks[i][0]      ) & 0xff),
-                  blackNetworks[i][1],
-                  ((blackNetworks[i][1] >> 24) & 0xff),
-                  ((blackNetworks[i][1] >> 16) & 0xff),
-                  ((blackNetworks[i][1] >>  8) & 0xff),
-                  ((blackNetworks[i][1]      ) & 0xff),
-                  blackNetworks[i][2],
-                  ((blackNetworks[i][2] >> 24) & 0xff),
-                  ((blackNetworks[i][2] >> 16) & 0xff),
-                  ((blackNetworks[i][2] >>  8) & 0xff),
-                  ((blackNetworks[i][2]      ) & 0xff)
+                  myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0],
+                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0] >> 24) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0] >> 16) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0] >>  8) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0]      ) & 0xff),
+                  myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1],
+                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1] >> 24) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1] >> 16) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1] >>  8) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1]      ) & 0xff),
+                  myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2],
+                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2] >> 24) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2] >> 16) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2] >>  8) & 0xff),
+                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2]      ) & 0xff)
                   );
       sendString(buf);
-      if(i<numBlackNets) sendString("<br>\n");
+      if(i<myGlobals.device[deviceId].sflowGlobals->numBlackNets) sendString("<br>\n");
     }
   }
 

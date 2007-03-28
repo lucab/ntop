@@ -113,7 +113,7 @@ DOCSFILES      = `cat docs/FILES`
 # The Games
 #
 bin_PROGRAMS   = ntop
-EXTRA_PROGRAMS = ntops sntop
+EXTRA_PROGRAMS = ntops
 bin_SCRIPTS    = 
 
 ntop_SOURCES       = main.c admin.c
@@ -127,16 +127,6 @@ ntops_DEPENDENCIES = $(ntop_DEPENDENCIES)
 ntops_LDADD        = $(ntop_LDADD)
 ntops_LDFLAGS      = $(ntop_LDFLAGS) -static
 
-#
-# Static ntop: everything is linked in
-#
-sntop_SOURCES      = $(ntop_SOURCES) plugins/icmpPlugin.c plugins/lastSeenPlugin.c \
-		     plugins/netflowPlugin.c plugins/snmpPlugin.c plugins/pdaPlugin.c  \
-		     plugins/sflowPlugin.c plugins/rrdPlugin.c
-
-sntop_DEPENDENCIES = $(ntop_DEPENDENCIES)
-sntop_LDADD        = $(ntop_LDADD)
-sntop_LDFLAGS      = $(ntop_LDFLAGS) -static @SNMP_LIBS@
 noinst_HEADERS     =  getopt.h globals-core.h globals-report.h ntop.h
 
 # all the Archives
@@ -153,7 +143,7 @@ libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
                      ntop_darwin.c
 
 libntop_la_DEPENDENCIES =  config.h
-libntop_la_LIBADD       = 
+libntop_la_LIBADD       = $(BASE_LIBS)
 libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 
 # Archive for http representation, or the 'viewer'
@@ -163,8 +153,8 @@ libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
                            webInterface.c
 
 
-libntopreport_la_DEPENDENCIES = config.h
-libntopreport_la_LIBADD       = 
+libntopreport_la_DEPENDENCIES = config.h libntop.la
+libntopreport_la_LIBADD       = libntop.la $(BASE_LIBS)
 libntopreport_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 
 man_MANS = ntop.8

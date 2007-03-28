@@ -1,8 +1,9 @@
-/**
+/*
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ *
  *                          http://www.ntop.org
  *
- * Copyright (C) 1998-2006 Luca Deri <deri@ntop.org>
+ * Copyright (C) 1998-2007 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -172,15 +173,6 @@ HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualD
       }
     }
   }
-
-#ifdef DEBUG
-  {
-    char buf[48];
-
-    traceEvent(CONST_TRACE_NOISY, "==>>> Unable to locate host %s",
-	       _intoa(hostIpAddress, buf, sizeof(buf)));
-  }
-#endif
 
   return(NULL);
 }
@@ -567,10 +559,8 @@ NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
 
   if(tmp != NULL) tmp->next = NULL;
   iface_destroy(ih);
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: Local address is: %s", intop(hostAddress));
-#endif
-  return addrs;
+
+  return(addrs);
 
 }
 #endif
@@ -835,10 +825,6 @@ unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId,
   if(myGlobals.runningPref.trackOnlyLocalHosts)
     return(0);
 
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: %s is %s", intoa(*addr),
-	     isBroadcastAddress(addr) ? "pseudolocal" : "remote");
-#endif
   /* Broadcast is considered a local address */
   return(in_isBroadcastAddress(addr, the_local_network, the_local_network_mask));
 }
@@ -3993,8 +3979,7 @@ int _incrementUsageCounter(UsageCounter *counter,
   u_int i, found=0;
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: incrementUsageCounter(%u) @ %s:%d",
-	     peerIdx, file, line);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: incrementUsageCounter() @ %s:%d", file, line);
 #endif
 
   if(theHost == NULL) return(0);
@@ -4766,16 +4751,7 @@ u_short ip2AS(HostAddr ip) {
     i++;
   }
 
-
-#ifdef DEBUG
-  {
-    char buf[64];
-
-    traceEvent(CONST_TRACE_INFO, "%s: %d AS", _intoa(&addr, buf, sizeof(buf)), as);
-  }
-#endif
-
-  return as;
+  return(as);
 }
 
 /* ************************************ */

@@ -442,8 +442,8 @@ int cmpFcFctn(const void *_a, const void *_b)
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO,
-	     "reportKind=%d/columnSort=%d/sortSendMode=%d/numIpProtosToMonitor=%d\n",
-	     myGlobals.reportKind, myGlobals.columnSort, myGlobals.sortSendMode, myGlobals.numIpProtosToMonitor);
+	     "reportKind=%d/columnSort=%d/numIpProtosToMonitor=%d\n",
+	     myGlobals.reportKind, myGlobals.columnSort, myGlobals.numIpProtosToMonitor);
 #endif
 
 
