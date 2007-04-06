@@ -1,5 +1,5 @@
 /*
- *  Copyright(C) 2002-04 Luca Deri <deri@ntop.org>
+ *  Copyright(C) 2002-07 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -31,7 +31,7 @@
 
 static void* sflowMainLoop(void* _deviceId);
 
-#define DEBUG_FLOWS 
+//#define DEBUG_FLOWS 
 
 /* ********************************* */
 
@@ -1426,7 +1426,7 @@ static void handleSflowSample(SFSample *sample, int deviceId) {
 
   /* Save flows on disk (debug) */
 #ifdef DEBUG_FLOWS
-  if(1) {
+  if(0) {
 #define TCPDUMP_MAGIC 0xa1b2c3d4  /* from libpcap-0.5: savefile.c */
 #define DLT_EN10MB	1	  /* from libpcap-0.5: net/bpf.h */
 #define PCAP_VERSION_MAJOR 2      /* from libpcap-0.5: pcap.h */
@@ -4339,7 +4339,7 @@ static void handlesFlowHTTPrequest(char* _url) {
     printsFlowConfiguration(deviceId);
 
     if(myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd > 0) {
-      u_int headerSent = 0, i;
+      u_int headerSent = 0;
       IfCounters *ifName = myGlobals.device[deviceId].sflowGlobals->ifCounters;
       char buf[512], formatBuf[256], formatBuf1[256];
 
@@ -4478,8 +4478,6 @@ static void handlesFlowHTTPrequest(char* _url) {
 /* ****************************** */
 
 static void termsFlowDevice(int deviceId) {
-  int i;
-
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "SFLOW: terminating deviceId=%d", deviceId);
 
   if(!pluginActive) return;

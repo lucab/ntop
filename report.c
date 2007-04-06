@@ -688,6 +688,8 @@ void printTrafficStatistics(int revertOrder) {
     sendString(buf);
   }
   else {
+	  time_t t = myGlobals.lastPktTime.tv_sec;
+
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  ctime(&myGlobals.initialSniffTime));
@@ -695,7 +697,7 @@ void printTrafficStatistics(int revertOrder) {
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" align=left "DARK_BG">Last Packet Seen</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
-		  ctime((time_t *)&myGlobals.lastPktTime),
+		  ctime(&t),
 		  formatSeconds(myGlobals.lastPktTime.tv_sec-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
     sendString(buf);
   }
@@ -4533,7 +4535,7 @@ void printTrafficStatistics(int revertOrder) {
    if (printGraph) {
      sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
 		"<iframe frameborder=0 SRC=\"" CONST_BAR_ALLPROTO_DIST  CHART_FORMAT "\" "
-		"width=620 height=220></iframe>"
+		"width=650 height=250></iframe>"
 		"</TD></TR>\n");
   }
 #endif
@@ -5445,6 +5447,8 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
 	    /* traceEvent(CONST_TRACE_INFO, "--> [AS=%d]", el->hostAS); */
 	  } else {
+		  if(el->dnsDomainValue == NULL) continue;
+
 	    /* Domain */
 	    for(keyValue=0, tmpIdx=0; el->dnsDomainValue[tmpIdx] != '\0'; tmpIdx++)
 	      keyValue += (tmpIdx+1)*(u_short)el->dnsDomainValue[tmpIdx];

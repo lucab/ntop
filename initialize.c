@@ -1534,7 +1534,7 @@ void initDevices(char* devices) {
     if(myGlobals.device[0].pcapPtr == NULL) {
       traceEvent(CONST_TRACE_ERROR, "pcap_open_offline(%s): '%s'",
 		 myGlobals.runningPref.rFileName, ebuf);
-      return;
+      exit(-1);
     } else {
       if(myGlobals.device[0].humanFriendlyName != NULL) free(myGlobals.device[0].humanFriendlyName);
       myGlobals.device[0].humanFriendlyName = strdup(myGlobals.runningPref.rFileName);
@@ -1733,6 +1733,7 @@ void initDevices(char* devices) {
 void initDeviceDatalink(int deviceId) {
   if(myGlobals.device[deviceId].dummyDevice) return;
   myGlobals.device[deviceId].activeDevice = 1;
+  initDeviceSemaphores(deviceId);
   if(myGlobals.device[deviceId].virtualDevice) return;
 
   /* get datalink type */
@@ -1788,8 +1789,6 @@ void initDeviceDatalink(int deviceId) {
 	       myGlobals.device[deviceId].datalink,
 	       myGlobals.device[deviceId].mtuSize,
 	       myGlobals.device[deviceId].headerSize);
-
-  initDeviceSemaphores(deviceId);
 }
 
 /* ******************************* */

@@ -442,10 +442,20 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
   safe_snprintf(__FILE__, __LINE__, url, sizeof(url),
 		"/" CONST_PLUGINS_HEADER "%s?action=list&key=%s&title=%s&end=%u&cluster=%s",
 		rrdPluginInfo->pluginURLname,
-		rrdPath, rrdTitle, now, cluster ? cluster : "");
+		rrdPath, rrdTitle, (unsigned long)now,
+		cluster ? cluster : "");
+
+  	sendString("<script type=\"text/javascript\">\n"
+	"	function send(f)\n"
+	"	{\n"
+	"		var chosen;\n"
+	"		chosen=f.options[f.selectedIndex].value;\n"
+	"		self.location=chosen;\n"
+	"	}    \n"
+    "</script>\n");
 
   sendString("<form name=myform method=get>\n<b>Presets:</b>&nbsp;\n"
-	     "<select name=presets onchange=\"window.location=document.myform.presets.options[document.myform.presets.selectedIndex].value\">\n");
+	     "<select name=presets onchange=\"send(this)\">\n");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\" default>-----</option>\n", url, now - 86400);
   sendString(buf);
