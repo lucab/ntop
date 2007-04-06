@@ -4881,11 +4881,13 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	  releaseMutex(&myGlobals.device[devIdx].asMutex);
 
-	  safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
-			"%s/interfaces/%s/AS/", myGlobals.rrdPath,
-			myGlobals.device[devIdx].humanFriendlyName);
-	  updateGauge(rrdIfPath, "numAS", totAS, 0);
-	  // traceEvent(CONST_TRACE_WARNING, "numAS=%d", totAS);
+	  if(dumpASs) {
+	    safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
+			  "%s/interfaces/%s/AS/", myGlobals.rrdPath,
+			  myGlobals.device[devIdx].humanFriendlyName);
+	    updateGauge(rrdIfPath, "numAS", totAS, 0);
+	    // traceEvent(CONST_TRACE_WARNING, "numAS=%d", totAS);
+	  }
 	}
 
 	/* ******************************** */

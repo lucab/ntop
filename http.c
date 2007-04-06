@@ -1106,6 +1106,7 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
     sendString("<LINK REL=stylesheet HREF=\"/style.css\" type=\"text/css\">\n");
   }
 
+  /* sendString("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"ntop\" href=\"/rss.xml\">"); */
 
   sendString("<script type=\"text/javascript\" src=\"/MochiKit/MochiKit.js\"></script>\n");
   sendString("<script type=\"text/javascript\" src=\"/PlotKit/excanvas.js\"></script>\n");
@@ -1501,6 +1502,12 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
 
   if(headerFlags & BITFLAG_HTTP_IS_CACHEABLE) {
     sendString("Cache-Control: max-age=3600, must-revalidate, public\r\n");
+    
+    theTime += 3600;
+    strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, localtime_r(&theTime, &t));
+    theDate[sizeof(theDate)-1] = '\0';
+    safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Expires: %s\r\n", theDate);
+    sendString(tmpStr);
   } else if((headerFlags & BITFLAG_HTTP_NO_CACHE_CONTROL) == 0) {
     sendString("Cache-Control: no-cache\r\n");
     sendString("Expires: 0\r\n");

@@ -197,7 +197,8 @@ static void verifyOptions (void) {
 
 #ifndef WIN32    
     if ((myGlobals.runningPref.disablePromiscuousMode != 1) &&
-        getuid() /* We're not root */) {
+        getuid() /* We're not root */
+	&& strcmp(myGlobals.runningPref.devices, "none")) {
         char *theRootPw, *correct, *encrypted;
         struct passwd *pw = getpwuid(0);
 
