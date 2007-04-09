@@ -9,6 +9,10 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # $Log$
+# Revision 2.15  2007/04/09 20:34:24  deri
+# Added fix for detecting automake 1.10 and above. Thanks to
+# Marco Scandaletti <marco@scanda.it> for reporting it.
+#
 # Revision 2.14  2007/03/19 09:16:45  deri
 # Added patches courtesy of Bernard and Patrick
 #
@@ -57,7 +61,7 @@ find_command()
 
 AUTOMAKE=`find_command 'automake-*'`
 
-version="0.2.2"
+version="0.2.3"
 
 echo ""
 echo "Starting ntop automatic configuration system v.$version"
@@ -70,7 +74,7 @@ echo ""
 LIBTOOL=libtool
 LIBTOOLIZE=libtoolize
 config="y"
-
+NAME=ntop
 
 # OSx
 (uname -a|grep -v Darwin) < /dev/null > /dev/null 2>&1 ||
@@ -194,7 +198,7 @@ echo "1. Testing gnu tools...."
 ($LIBTOOL --version) < /dev/null > /dev/null 2>&1 ||
 {
   echo
-  echo "You must have libtool installed to compile $#NAME#."
+  echo "You must have libtool installed to compile $NAME."
   echo "Download the appropriate package for your distribution, or get the"
   echo "source tarball from ftp://ftp.gnu.org/pub/gnu/libtool"
   echo "     We require version 1.4 or higher"
@@ -206,7 +210,7 @@ AUTOMAKE=`find_command 'automake*'`
 ($AUTOMAKE --version) < /dev/null > /dev/null 2>&1 ||
 {
   echo
-  echo "You must have automake installed to compile $#NAME#."
+  echo "You must have automake installed to compile $NAME."
   echo "Download the appropriate package for your distribution, or get the"
   echo "source tarball from ftp://ftp.gnu.org/pub/gnu/automake"
   echo "     We recommend version 1.6.3 or higher"
@@ -263,7 +267,7 @@ echo "        .... ok"
 
 automakeversion=`$AUTOMAKE --version < /dev/null 2>&1 | grep ^automake | cut -d " " -f 4`
 echo "    automake .... ${automakeversion}"
-automakeversion=`echo ${automakeversion}| cut -c 3`
+automakeversion=`echo ${automakeversion}| cut -c 3-`
 
 if  test ${automakeversion} -lt 6; then
     echo ""
