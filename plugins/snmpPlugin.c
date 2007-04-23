@@ -156,6 +156,9 @@ static int maxNumberOfHost;
 static int numberOfHost;
 static HostTraffic** arrayOfHost;
 
+/* Forward */
+static void init_ntop_snmp (void);
+
 /*
  * Plugin functions
  */
@@ -783,7 +786,7 @@ processRequest (netsnmp_table_request_info * table_info,
 {
   struct counter64 result;
   int intresult;
-  char *cp;
+  u_char *cp;
   int size;
 
   if (table_info != NULL && traffic != NULL)
@@ -833,12 +836,12 @@ processRequest (netsnmp_table_request_info * table_info,
 	      size = 6;
 	      break;
 	    case SERIAL_IPV4:
-	      cp = (char *)&traffic->hostSerial.value.ipSerial.ipAddress.Ip4Address.s_addr;
+	      cp = (u_char*)&traffic->hostSerial.value.ipSerial.ipAddress.Ip4Address.s_addr;
 	      size = 4;
 	      break;
 #ifdef INET6
 	    case SERIAL_IPV6:
-	      cp =(char *)&traffic->hostSerial.value.ipSerial.ipAddress.Ip6Address.s6_addr;
+	      cp = (u_char*)&traffic->hostSerial.value.ipSerial.ipAddress.Ip6Address.s6_addr;
 	      size = 16;
 	      break;
 #endif

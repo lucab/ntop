@@ -45,6 +45,10 @@
 /* Define to 1 if you have the <crypt.h> header file. */
 #undef HAVE_CRYPT_H
 
+/* Define to 1 if you have the declaration of `tzname', and to 0 if you don't.
+   */
+#undef HAVE_DECL_TZNAME
+
 /* Define to 1 if you have the <dirent.h> header file. */
 #undef HAVE_DIRENT_H
 
@@ -86,9 +90,6 @@
 
 /* Define to 1 if you have the <gdome.h> header file. */
 #undef HAVE_GDOME_H
-
-/* Define to 1 if you have the <gd.h> header file. */
-#undef HAVE_GD_H
 
 /* Define to 1 if you have the `gethostbyaddr' function. */
 #undef HAVE_GETHOSTBYADDR
@@ -177,9 +178,6 @@
 /* Define to 1 if you have the `dl' library (-ldl). */
 #undef HAVE_LIBDL
 
-/* Define to 1 if you have the `gd' library (-lgd). */
-#undef HAVE_LIBGD
-
 /* Define to 1 if you have the `gdbm' library (-lgdbm). */
 #undef HAVE_LIBGDBM
 
@@ -194,9 +192,6 @@
 
 /* Define to 1 if you have the `pcre' library (-lpcre). */
 #undef HAVE_LIBPCRE
-
-/* Define to 1 if you have the `png' library (-lpng). */
-#undef HAVE_LIBPNG
 
 /* Define to 1 if you have the `posix4' library (-lposix4). */
 #undef HAVE_LIBPOSIX4
@@ -231,9 +226,13 @@
 /* Define to 1 if you have the `localtime_r' function. */
 #undef HAVE_LOCALTIME_R
 
-/* Define to 1 if long double works and has more range or precision than
-   double. */
+/* Define to 1 if the type `long double' works and has more range or precision
+   than `double'. */
 #undef HAVE_LONG_DOUBLE
+
+/* Define to 1 if the type `long double' works and has more range or precision
+   than `double'. */
+#undef HAVE_LONG_DOUBLE_WIDER
 
 /* malloc.h has mallinfo */
 #undef HAVE_MALLINFO_MALLOC_H
@@ -351,9 +350,6 @@
 
 /* libpcap has pcap_setnonblock */
 #undef HAVE_PCAP_SETNONBLOCK
-
-/* Define to 1 if you have the <png.h> header file. */
-#undef HAVE_PNG_H
 
 /* pthread_atfork() exists */
 #undef HAVE_PTHREAD_ATFORK
@@ -668,7 +664,7 @@
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t
 
-/* Define to `unsigned' if <sys/types.h> does not define. */
+/* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
 
 /* Define as `fork' if `vfork' does not work. */
