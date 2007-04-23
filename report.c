@@ -6674,6 +6674,7 @@ void findHost(char *key) {
 		    (num > 0) ? "," : "", num, str, buf1);
       sendString(buf);
       num++;
+      if(num > 32) break; /* Do not display too many entries */
     }    
   }
 
