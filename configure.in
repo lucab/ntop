@@ -230,6 +230,11 @@ AC_ARG_ENABLE(plugins,
               fi,
               ac_disable_plugins="no")
 
+AC_ARG_ENABLE(  static-plugins,
+              [  --enable-static-plugins     Enable static linked plugins [sntop, default=dynamic]]],
+              ac_enable_static_plugins="$enableval",
+              ac_enable_static_plugins="no")
+
 AC_ARG_ENABLE(ignoresigpipe,
               [  --enable-ignoresigpipe      Ignore SIGPIPE errors [[default=do not ignore]]],
               ac_enable_ignoresigpipe="$enableval",
@@ -313,6 +318,32 @@ AC_ARG_WITH(  zlib-include,
               ZLIB_INCLUDE="$withval",
               ZLIB_INCLUDE=)
 
+AC_ARG_WITH(  gd-root,
+              [  --with-gd-root=DIR          gd located in DIR],
+              GD_DIRECTORY="$withval",
+              GD_DIRECTORY=)
+AC_ARG_WITH(  gd-lib,
+              [  --with-gd-lib=DIR            or libgd located in DIR],
+              GD_LIB="$withval",
+              GD_LIB=)
+AC_ARG_WITH(  gd-include,
+              [  --with-gd-include=DIR        or gd.h located in DIR],
+              GD_INCLUDE="$withval",
+              GD_INCLUDE=)
+
+AC_ARG_WITH(  libpng-root,
+              [  --with-libpng-root=DIR      libpng located in DIR],
+              LIBPNG_DIRECTORY="$withval",
+              LIBPNG_DIRECTORY=)
+AC_ARG_WITH(  libpng-lib,
+              [  --with-libpng-lib=DIR        or libpng located in DIR],
+              LIBPNG_LIB="$withval",
+              LIBPNG_LIB=)
+AC_ARG_WITH(  libpng-include,
+              [  --with-libpng-include=DIR    or png.h located in DIR],
+              LIBPNG_INCLUDE="$withval",
+              LIBPNG_INCLUDE=)
+
 AC_ARG_WITH(  ossl-root,
               [  --with-ossl-root=DIR        openSSL located in DIR],
               OSSL_DIRECTORY="$withval",
@@ -366,6 +397,12 @@ NTOP_SET_LIBINC(GDBM)
 if test ".${ac_disable_zlib}" != ".yes"; then
     NTOP_SET_LIBINC(ZLIB)
 fi
+NTOP_SET_LIBINC(GD)
+NTOP_SET_LIBINC(LIBPNG)
+if test ".${ac_disable_openssl}" != ".yes"; then
+    NTOP_SET_LIBINC(OSSL)
+fi
+
 
 
 dnl> From here on out, we only use the _INCLUDE and _LIB except for locale and glibconfig
@@ -738,6 +775,110 @@ if test ".${ac_cv_header_gdbm_h}" != ".yes" ||
     AC_MSG_ERROR(Unable to continue... aborting ./configure)
 fi
 
+dnl> gd
+AC_MSG_CHECKING([for gd])
+AC_MSG_RESULT([])
+
+if (test ".${GD_LIB}" != "."      &&
+    test ! -d ${GD_LIB})              ||
+   (test ".${GD_INCLUDE}" != "."  &&
+    test ! -d ${GD_INCLUDE}); then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR:    You specified or implied a non-existent directory for"
+    echo "*           gd:"
+    echo "*               --with-gd-lib=${GD_LIB}"
+    echo "*               --with-gd-include=${GD_INCLUDE}"
+    echo "*"
+    echo "*>>> Continuing without gd is impossible."
+    echo "*"
+    echo "*???     1. Correct the --with-gd-xxxxx option and rerun"
+    echo "*???        ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    exit 1
+else
+    NTOP_APPENDS([${GD_INCLUDE}], [${GD_LIB}], [gd])
+fi
+
+AC_CHECK_HEADERS(gd.h)
+AC_CHECK_LIB([gd], [gdImageDestroy])
+
+if test ".${ac_cv_header_gd_h}" != ".yes" ||
+   test ".${ac_cv_lib_gd_gdImageDestroy}" != ".yes"; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR: gd header or library routines are missing"
+    echo "*           (yes means it was found, no means it was not found)"
+    echo "*"
+    echo "*              gd.h...${ac_cv_header_gd_h}"
+    echo "*              gdImageDestroy() in -lgd...${ac_cv_lib_gd_gdImageDestroy}"
+    echo "*"
+    echo "*>>> No way to proceed."
+    echo "*"
+    echo "*???        Install gd (and/or gd-devel), check www.boutell.com/gd"
+    echo "*???    and Rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    exit 1
+fi
+
+dnl> libpng
+AC_MSG_CHECKING([for libpng])
+AC_MSG_RESULT([])
+
+if (test ".${LIBPNG_LIB}" != "."      &&
+    test ! -d ${LIBPNG_LIB})              ||
+   (test ".${LIBPNG_INCLUDE}" != "."  &&
+    test ! -d ${LIBPNG_INCLUDE}); then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR:    You specified or implied a non-existent directory for"
+    echo "*           libpng:"
+    echo "*               --with-libpng-lib=${LIBPNG_LIB}"
+    echo "*               --with-libpng-include=${LIBPNG_INCLUDE}"
+    echo "*"
+    echo "*>>> Continuing without libpng is impossible."
+    echo "*"
+    echo "*???     1. Correct the --with-libpng-xxxxx option and rerun"
+    echo "*???        ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    exit 1
+else
+    NTOP_APPENDS([${LIBPNG_INCLUDE}], [${LIBPNG_LIB}], [png])
+fi
+
+AC_CHECK_HEADERS(png.h)
+AC_CHECK_LIB([png], [main])
+
+if test ".${ac_cv_header_png_h}" != ".yes" ||
+   test ".${ac_cv_lib_png_main}" != ".yes"; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR: libpng header or library routines are missing"
+    echo "*           (yes means it was found, no means it was not found)"
+    echo "*"
+    echo "*              png.h...${ac_cv_header_png_h}"
+    echo "*              png_read_info() in -lpng...${ac_cv_lib_png_png_read_info}"
+    echo "*"
+    echo "*>>> No way to proceed."
+    echo "*"
+    echo "*???        Install libpng (and/or libpng-devel), check www.libpng.org"
+    echo "*???    and Rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    exit 1 
+fi
+	
 dnl> NTOPCONFIGDEBUG_SETTINGS([After criticals])
 
 
@@ -870,6 +1011,30 @@ if test ".${ac_disable_plugins}" = ".yes"; then
 else
     PLUGINS=plugins
     echo "    ...(Default) Requested. Disable via ./configure command line option --disable-plugins."
+fi
+
+echo
+echo "Static plugins?"
+if test ".${ac_enable_static_plugins}" = ".yes"; then
+    echo "    ...Requested.  Use 'make sntop' instead of 'make'"
+    if test ".${ac_disable_plugins}" = ".yes"; then
+        echo
+        echo "*******************************************************************"
+        echo "*"
+        echo "* WARNING:    You requested static plugins but also disabled them"
+        echo "*"
+        echo "*>>> Ignoring the --enable-static-plugins option"
+        echo "*"
+        echo "*???     1. Remove the --disable-plugins option"
+        echo "*"
+        echo "*******************************************************************"
+        echo
+        HAS_WARNING="yes"
+    else
+        AC_DEFINE_UNQUOTED(MAKE_STATIC_PLUGIN, 1, [Statically build plugins into sntop])
+    fi
+else
+    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-static-plugin."
 fi
 
 echo
@@ -1255,14 +1420,8 @@ AC_CHECK_FUNCS(isinf, ,
       AC_DEFINE(HAVE_ISINF,1,we have the isinf function)],[AC_MSG_RESULT(no)])])
 
 dnl> XML dump (plugin)
+AC_CHECK_HEADERS(glib.h glibconfig.h)
 AC_CHECK_HEADERS(gdome.h)
-
-if test ".${ac_cv_header_gdome_h}" = ".yes"; then
-   AC_CHECK_HEADERS(glib.h glibconfig.h)
-   AC_CHECK_LIB([glib-2.0], [g_date_get_julian], [:])
-   AC_CHECK_LIB([xml2], [xmlCheckVersion], [:])
-   AC_CHECK_LIB([gdome], [gdome_di_saveDocToFile], [:])
-fi
 
 AC_TYPE_PID_T
 dnl> Autoconf2: AC_CHECK_TYPE(pid_t, int)
@@ -1368,6 +1527,11 @@ dnl>  This is a problem - the test sets HAVE_LIBWRAP, which is the flag in ntop
 dnl>  But we haven't processed --with-tcpwrap yet. So we dummy this out until
 dnl>  such time as we can fix the internal flag in ntop...
 dnl>AC_CHECK_LIB([wrap], [hosts_access])
+
+dnl> XML dump (plugin)
+AC_CHECK_LIB([glib-2.0], [g_date_get_julian], [:])
+AC_CHECK_LIB([xml2], [xmlCheckVersion], [:])
+AC_CHECK_LIB([gdome], [gdome_di_saveDocToFile], [:])
 
 dnl> Functions and types
 AC_FUNC_FORK
@@ -2093,6 +2257,8 @@ NTOP_RPT_LOC([GNU gdbm], [${GDBM_LIB}], [${GDBM_INCLUDE}])
 if test ".${ac_disable_zlib}" != ".yes"; then
     NTOP_RPT_LOC([zlib    ], [${ZLIB_LIB}], [${ZLIB_INCLUDE}])
 fi
+NTOP_RPT_LOC([gd      ], [${GD_LIB}],   [${GD_INCLUDE}])
+NTOP_RPT_LOC([png     ], [${PNG_LIB}],  [${PNG_INCLUDE}])
 if test ".${ac_disable_openssl}" != ".yes"; then
     NTOP_RPT_LOC([openSSL ], [${OSSL_LIB}], [${OSSL_INCLUDE}])
 fi
@@ -2103,6 +2269,14 @@ echo
 echo "    Default prefix: ${ac_default_prefix}"
 echo "    Install into:   ${prefix} (default or via --prefix request)"
 echo 
+
+dnl> Fix as in some platform (e.g. OSX) the datarootdir is not expanded properly
+dnl> and it contains the ${prefix} variable
+if test "x$prefix" = xNONE; then
+   prefix=${ac_default_prefix}
+fi
+datarootdir=`echo $datarootdir|sed -e s,'${prefix}',$prefix,g`
+
 
 CFG_DATAFILE_DIR=$datadir/ntop
 CFG_DATAFILE_DIR=`(
@@ -2298,8 +2472,11 @@ fi
 
 echo "*"
 echo "*    Building ntop requires GNU Make, so to build ntop, type"
-echo "*    'make' (or on *BSD and Solaris systems, 'gmake')"
-
+if test ".${ac_enable_static_plugins}" = ".yes"; then
+    echo "*    'make sntop' (or on *BSD and Solaris systems, 'gmake sntop')"
+else
+    echo "*    'make' (or on *BSD and Solaris systems, 'gmake')"
+fi
 echo "*"
 echo "*******************************************************************"
 echo
