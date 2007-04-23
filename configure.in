@@ -197,15 +197,6 @@ AC_ARG_WITH(ssl,
               fi,
               ac_disable_openssl="no")
 
-AC_ARG_WITH(zlib,
-              [  --without-zlib              disable zlib [[default=enabled]]],
-              if test "x$withval" = xno; then
-                  ac_disable_zlib="yes"
-              else
-                  ac_disable_zlib="no"
-              fi,
-              ac_disable_zlib="no")
-
 AC_ARG_ENABLE(sslv3,
               [  --enable-sslv3              enable ssl v3 support [[default=disabled]]],
               ac_enable_sslv3="$enableval",
@@ -318,32 +309,6 @@ AC_ARG_WITH(  zlib-include,
               ZLIB_INCLUDE="$withval",
               ZLIB_INCLUDE=)
 
-AC_ARG_WITH(  gd-root,
-              [  --with-gd-root=DIR          gd located in DIR],
-              GD_DIRECTORY="$withval",
-              GD_DIRECTORY=)
-AC_ARG_WITH(  gd-lib,
-              [  --with-gd-lib=DIR            or libgd located in DIR],
-              GD_LIB="$withval",
-              GD_LIB=)
-AC_ARG_WITH(  gd-include,
-              [  --with-gd-include=DIR        or gd.h located in DIR],
-              GD_INCLUDE="$withval",
-              GD_INCLUDE=)
-
-AC_ARG_WITH(  libpng-root,
-              [  --with-libpng-root=DIR      libpng located in DIR],
-              LIBPNG_DIRECTORY="$withval",
-              LIBPNG_DIRECTORY=)
-AC_ARG_WITH(  libpng-lib,
-              [  --with-libpng-lib=DIR        or libpng located in DIR],
-              LIBPNG_LIB="$withval",
-              LIBPNG_LIB=)
-AC_ARG_WITH(  libpng-include,
-              [  --with-libpng-include=DIR    or png.h located in DIR],
-              LIBPNG_INCLUDE="$withval",
-              LIBPNG_INCLUDE=)
-
 AC_ARG_WITH(  ossl-root,
               [  --with-ossl-root=DIR        openSSL located in DIR],
               OSSL_DIRECTORY="$withval",
@@ -394,16 +359,7 @@ AC_SEARCH_LIBS([socket], [xnet socket])
 dnl> Handle the root -> lib/include settings
 NTOP_SET_LIBINC(PCAP)
 NTOP_SET_LIBINC(GDBM)
-if test ".${ac_disable_zlib}" != ".yes"; then
-    NTOP_SET_LIBINC(ZLIB)
-fi
-NTOP_SET_LIBINC(GD)
-NTOP_SET_LIBINC(LIBPNG)
-if test ".${ac_disable_openssl}" != ".yes"; then
-    NTOP_SET_LIBINC(OSSL)
-fi
-
-
+NTOP_SET_LIBINC(ZLIB)
 
 dnl> From here on out, we only use the _INCLUDE and _LIB except for locale and glibconfig
 
@@ -775,111 +731,7 @@ if test ".${ac_cv_header_gdbm_h}" != ".yes" ||
     AC_MSG_ERROR(Unable to continue... aborting ./configure)
 fi
 
-dnl> gd
-AC_MSG_CHECKING([for gd])
-AC_MSG_RESULT([])
 
-if (test ".${GD_LIB}" != "."      &&
-    test ! -d ${GD_LIB})              ||
-   (test ".${GD_INCLUDE}" != "."  &&
-    test ! -d ${GD_INCLUDE}); then
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* ERROR:    You specified or implied a non-existent directory for"
-    echo "*           gd:"
-    echo "*               --with-gd-lib=${GD_LIB}"
-    echo "*               --with-gd-include=${GD_INCLUDE}"
-    echo "*"
-    echo "*>>> Continuing without gd is impossible."
-    echo "*"
-    echo "*???     1. Correct the --with-gd-xxxxx option and rerun"
-    echo "*???        ./configure"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    exit 1
-else
-    NTOP_APPENDS([${GD_INCLUDE}], [${GD_LIB}], [gd])
-fi
-
-AC_CHECK_HEADERS(gd.h)
-AC_CHECK_LIB([gd], [gdImageDestroy])
-
-if test ".${ac_cv_header_gd_h}" != ".yes" ||
-   test ".${ac_cv_lib_gd_gdImageDestroy}" != ".yes"; then
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* ERROR: gd header or library routines are missing"
-    echo "*           (yes means it was found, no means it was not found)"
-    echo "*"
-    echo "*              gd.h...${ac_cv_header_gd_h}"
-    echo "*              gdImageDestroy() in -lgd...${ac_cv_lib_gd_gdImageDestroy}"
-    echo "*"
-    echo "*>>> No way to proceed."
-    echo "*"
-    echo "*???        Install gd (and/or gd-devel), check www.boutell.com/gd"
-    echo "*???    and Rerun ./configure"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    exit 1
-fi
-
-dnl> libpng
-AC_MSG_CHECKING([for libpng])
-AC_MSG_RESULT([])
-
-if (test ".${LIBPNG_LIB}" != "."      &&
-    test ! -d ${LIBPNG_LIB})              ||
-   (test ".${LIBPNG_INCLUDE}" != "."  &&
-    test ! -d ${LIBPNG_INCLUDE}); then
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* ERROR:    You specified or implied a non-existent directory for"
-    echo "*           libpng:"
-    echo "*               --with-libpng-lib=${LIBPNG_LIB}"
-    echo "*               --with-libpng-include=${LIBPNG_INCLUDE}"
-    echo "*"
-    echo "*>>> Continuing without libpng is impossible."
-    echo "*"
-    echo "*???     1. Correct the --with-libpng-xxxxx option and rerun"
-    echo "*???        ./configure"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    exit 1
-else
-    NTOP_APPENDS([${LIBPNG_INCLUDE}], [${LIBPNG_LIB}], [png])
-fi
-
-AC_CHECK_HEADERS(png.h)
-AC_CHECK_LIB([png], [main])
-
-if test ".${ac_cv_header_png_h}" != ".yes" ||
-   test ".${ac_cv_lib_png_main}" != ".yes"; then
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* ERROR: libpng header or library routines are missing"
-    echo "*           (yes means it was found, no means it was not found)"
-    echo "*"
-    echo "*              png.h...${ac_cv_header_png_h}"
-    echo "*              png_read_info() in -lpng...${ac_cv_lib_png_png_read_info}"
-    echo "*"
-    echo "*>>> No way to proceed."
-    echo "*"
-    echo "*???        Install libpng (and/or libpng-devel), check www.libpng.org"
-    echo "*???    and Rerun ./configure"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    exit 1 
-fi
-	
-dnl> NTOPCONFIGDEBUG_SETTINGS([After criticals])
 
 
 dnl> Pattern matching
@@ -963,36 +815,6 @@ else
         echo "    ...(Default) Disabled. Request via ./configure command line option  --enable-sslwatchdog"
         echo "                                    or ntop run time option --ssl-watchdog."
     fi
-fi
-
-echo
-echo "ZLIB?"
-if test ".${ac_disable_zlib}" = ".yes"; then
-    echo "    ...Disabled via ./configure command line option --without-zlib"
-    if test ".${ZLIB_LIB}" != "." ||
-       test ".${ZLIB_INCLUDE}" != "."; then
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* WARNING:    You disabled zlib but explicitly or implicitly specified"
-        echo "*             the conflicting options:"
-        echo "*                --with-zlib-lib=${ZLIB_LIB}"
-        echo "*                --with-zlib-include=${ZLIB_INCLUDE}"
-        echo "*"
-        echo "*>>> Ignoring the option(s)"
-        echo "*"
-        echo "*???     1. Remove the --without-zlib option"
-        echo "*??? or  2. Remove the conflicting --with-xxxxx-xxxxx or "
-        echo "*           --enable-xxxxx options"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-        ZLIB_LIB=
-        ZLIB_INCLUDE=
-        HAS_WARNING="yes"
-    fi
-else
-    echo "    ...(Default) Requested if available. Disable via ./configure command line option --without-zlib."
 fi
 
 echo
@@ -1125,16 +947,7 @@ if test ".${ac_disable_openssl}" != ".yes"; then
     fi
 fi
 
-if test ".${ac_disable_zlib}" = ".yes"; then
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* WARNING: Disabled zlib at your request"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    HAS_WARNING="yes"
-elif (test ".${ZLIB_LIB}" != "."      &&
+if (test ".${ZLIB_LIB}" != "."      &&
     test ! -d ${ZLIB_LIB})              ||
    (test ".${ZLIB_INCLUDE}" != "."  &&
     test ! -d ${ZLIB_INCLUDE}); then
@@ -1222,6 +1035,10 @@ AC_CHECK_HEADERS([netinet/in.h])
 AC_CHECK_HEADERS([arpa/inet.h arpa/nameser.h])
 AC_CHECK_HEADERS([net/ethernet.h])
 
+AC_CHECK_LIB([z], [zlibVersion], [], [
+        echo "Error! You need to have zlib."
+        exit -1
+        ])
 # RRD
 if test -d "$RRD_HOME"; then
    AC_MSG_RESULT(checking for RRD home... yes)
@@ -1372,9 +1189,7 @@ AC_CHECK_HEADERS([sys/sockio.h])
 AC_CHECK_HEADERS([sys/stat.h])
 AC_CHECK_HEADERS([sys/un.h])
 AC_CHECK_HEADERS([sys/wait.h])
-if test ".${ac_disable_zlib}" != ".yes"; then
-    AC_CHECK_HEADERS([zlib.h])
-fi
+AC_CHECK_HEADERS([zlib.h])
 
 AC_CHECK_HEADERS([malloc.h])
 AC_CHECK_HEADERS([sys/resource.h])
@@ -1506,9 +1321,6 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>
 #include <dlfcn.h>]], [[dladdr(0,0)]])],[AC_MSG_RESULT(yes)
   AC_DEFINE_UNQUOTED(HAVE_DLADDR, 1, [dladdr is defined])],[AC_MSG_RESULT(no)])
 
-if test ".${ac_disable_zlib}" != ".yes"; then
-    AC_CHECK_LIB([z], [zlibVersion])
-fi
 
 dnl> Check for both sin and ceil - some implementations split them
 AC_CHECK_LIB([c], [sin], , [AC_CHECK_LIB([m], [sin])])
@@ -2257,8 +2069,7 @@ NTOP_RPT_LOC([GNU gdbm], [${GDBM_LIB}], [${GDBM_INCLUDE}])
 if test ".${ac_disable_zlib}" != ".yes"; then
     NTOP_RPT_LOC([zlib    ], [${ZLIB_LIB}], [${ZLIB_INCLUDE}])
 fi
-NTOP_RPT_LOC([gd      ], [${GD_LIB}],   [${GD_INCLUDE}])
-NTOP_RPT_LOC([png     ], [${PNG_LIB}],  [${PNG_INCLUDE}])
+
 if test ".${ac_disable_openssl}" != ".yes"; then
     NTOP_RPT_LOC([openSSL ], [${OSSL_LIB}], [${OSSL_INCLUDE}])
 fi

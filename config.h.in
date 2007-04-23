@@ -87,6 +87,9 @@
 /* Define to 1 if you have the <gdome.h> header file. */
 #undef HAVE_GDOME_H
 
+/* Define to 1 if you have the <gd.h> header file. */
+#undef HAVE_GD_H
+
 /* Define to 1 if you have the `gethostbyaddr' function. */
 #undef HAVE_GETHOSTBYADDR
 
@@ -174,6 +177,9 @@
 /* Define to 1 if you have the `dl' library (-ldl). */
 #undef HAVE_LIBDL
 
+/* Define to 1 if you have the `gd' library (-lgd). */
+#undef HAVE_LIBGD
+
 /* Define to 1 if you have the `gdbm' library (-lgdbm). */
 #undef HAVE_LIBGDBM
 
@@ -188,6 +194,9 @@
 
 /* Define to 1 if you have the `pcre' library (-lpcre). */
 #undef HAVE_LIBPCRE
+
+/* Define to 1 if you have the `png' library (-lpng). */
+#undef HAVE_LIBPNG
 
 /* Define to 1 if you have the `posix4' library (-lposix4). */
 #undef HAVE_LIBPOSIX4
@@ -342,6 +351,9 @@
 
 /* libpcap has pcap_setnonblock */
 #undef HAVE_PCAP_SETNONBLOCK
+
+/* Define to 1 if you have the <png.h> header file. */
+#undef HAVE_PNG_H
 
 /* pthread_atfork() exists */
 #undef HAVE_PTHREAD_ATFORK
@@ -576,6 +588,9 @@
 /* Define to 1 if `lstat' dereferences a symlink specified with a trailing
    slash. */
 #undef LSTAT_FOLLOWS_SLASHED_SYMLINK
+
+/* Statically build plugins into sntop */
+#undef MAKE_STATIC_PLUGIN
 
 /* Define for internationalization */
 #undef MAKE_WITH_I18N
