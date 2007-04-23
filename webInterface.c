@@ -6298,9 +6298,11 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   /* This prints either as text or html, but no header so it can be included in bug reports */
 
   char buf[2*LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
-  char main[LEN_GENERAL_WORK_BUFFER], lib[LEN_GENERAL_WORK_BUFFER], env[LEN_GENERAL_WORK_BUFFER];
+#ifndef WIN32
+  char mainbuf[LEN_GENERAL_WORK_BUFFER];
+#endif
+  char lib[LEN_GENERAL_WORK_BUFFER], env[LEN_GENERAL_WORK_BUFFER];
   char formatBuf[48];
-  const char *_env = NULL;
   int i, bufLength, bufPosition, bufUsed;
   unsigned int idx, minLen, maxLen;
   unsigned long totBuckets=0, nonEmptyBuckets=0;
@@ -6345,8 +6347,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.rrdtool.org/>RRD</A> Version", buf);
 
 #ifndef WIN32
-  if(getDynamicLoadPaths(main, sizeof(main), lib, sizeof(lib), env, sizeof(env)) == 0) {
-    printFeatureConfigInfo(textPrintFlag, "Running from", main);
+  if(getDynamicLoadPaths(mainbuf, sizeof(mainbuf), lib, sizeof(lib), env, sizeof(env)) == 0) {
+    printFeatureConfigInfo(textPrintFlag, "Running from", mainbuf);
     printFeatureConfigInfo(textPrintFlag, "Libraries in", lib);
     if(textPrintFlag == TRUE)
       printFeatureConfigInfo(textPrintFlag, "Library path", env);
@@ -7127,8 +7129,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   float qminDelay=99999.0, qmaxDelay=0.0,
         /*stddev:*/ qM, qT, qQ, qR, qSD, qXBAR,
         pminDelay=99999.0, pmaxDelay=0.0,
-        /*stddev:*/ pM, pT, pQ, pR, pSD, pXBAR,
-        thpt;
+    /*stddev:*/ pM, pT, pQ, pR, pSD, pXBAR;    
 
   if(myGlobals.queueBufferCount >= MAX_PROCESS_BUFFER) {
 

@@ -30,15 +30,6 @@
 #define _GRAPH_C_
 #include "globals-report.h"
 
-static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
-                               0xf4a460L, 0xb0c4deL, 0x90ee90L,
-                               0xffd700L, 0x87ceebL, 0xdda0ddL,
-                               0x7fffd4L, 0xffb6c1L, 0x708090L,
-                               0x6495edL, 0xdeb887L, 0x6b8e23L,
-			       0xf08080L, 0x4682b4L, 0x66cdaaL,
-                               0xf4a460L, 0xb0c4deL, 0x90ee90L,
-                               0xffd700L, 0x87ceebL, 0xdda0ddL };
-
 /* ************************ */
 
 struct bar_elements {
@@ -163,34 +154,13 @@ static void build_chart(u_char is_pie, char *the_type, int num, float *p,
 
 /* ******************************************************************* */
 
-static int cmpElementsFctn(const void *_a, const void *_b) {
-  struct bar_elements *a = (struct bar_elements *)_a;
-  struct bar_elements *b = (struct bar_elements *)_b;
-
-  if((a == NULL) && (b != NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (1)");
-    return(1);
-  } else if((a != NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (2)");
-    return(-1);
-  } else if((a == NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (3)");
-    return(0);
-  }
-
-  return((a)->data < (b)->data ? 1 : -1);
-}
-
-/* ************************ */
-
 void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
   int num=0;
-  FILE *fd;
   TrafficCounter totTraffic;
-  int useFdOpen = 0, idx = 0;
+  int idx = 0;
   ProtocolsList *protoList = myGlobals.ipProtosList;
 
   if(dataSent) {
@@ -200,8 +170,10 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     
     if(theHost->nonIPTraffic != NULL)
       totTraffic.value += theHost->nonIPTraffic->stpSent.value+
-	theHost->nonIPTraffic->ipxSent.value+theHost->nonIPTraffic->osiSent.value+theHost->nonIPTraffic->dlcSent.value+
-	theHost->nonIPTraffic->arp_rarpSent.value+theHost->nonIPTraffic->decnetSent.value+theHost->nonIPTraffic->appletalkSent.value+
+	theHost->nonIPTraffic->ipxSent.value+theHost->nonIPTraffic->osiSent.value+
+	theHost->nonIPTraffic->dlcSent.value+
+	theHost->nonIPTraffic->arp_rarpSent.value+theHost->nonIPTraffic->decnetSent.value+
+	theHost->nonIPTraffic->appletalkSent.value+
 	theHost->nonIPTraffic->netbiosSent.value+theHost->nonIPTraffic->otherSent.value;
 
     idx = 0;
@@ -407,9 +379,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
   int num=0;
-  FILE *fd;
   TrafficCounter totTraffic;
-  int useFdOpen = 0;
 
   if(dataSent)
     totTraffic.value = theHost->tcpFragmentsSent.value+theHost->udpFragmentsSent.value+theHost->icmpFragmentsSent.value;
@@ -467,8 +437,6 @@ void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
 		   "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
   int num=0, i;
-  FILE *fd;
-  int useFdOpen = 0;
 
   for(i=0; i<24; i++) {
     TrafficCounter traf;
@@ -573,9 +541,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
   int num=0;
-  FILE *fd;
   TrafficCounter totFragmentedTraffic, totTraffic;
-  int useFdOpen = 0;
 
   if(dataSent) {
     totTraffic.value = theHost->ipBytesSent.value;
@@ -611,9 +577,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
   int i, num=0;
-  FILE *fd;
   TrafficCounter traffic, totalIPTraffic, diffTraffic;
-  int useFdOpen = 0;
 
   if(theHost->protoIPTrafficInfos == NULL) {
     traceEvent(CONST_TRACE_WARNING, "Graph failure (5)");
@@ -747,8 +711,6 @@ void pktTTLDistribPie(void) {
   float p[10];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "" };
   int num=0;
-  FILE *fd;
-  int useFdOpen = 0;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value)/
@@ -936,9 +898,7 @@ void drawGlobalProtoDistribution(void) {
   TrafficCounter ip;
   float p[256]; /* Fix courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
   char	*lbl[16];
-  FILE *fd;
   int idx = 0;
-  int useFdOpen = 0;
 
   ip.value = myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
 
@@ -1120,7 +1080,6 @@ void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent) {
       theHost->fcCounters->fcIpfcBytesRcvd.value,
       theHost->fcCounters->otherFcBytesRcvd.value,
   };
-  int useFdOpen = 0;
 
   totalFcTraffic.value = 0;
   diffTraffic.value = 0;
@@ -1230,7 +1189,6 @@ void drawGlobalFcProtoDistribution(void) {
   int idx=0;
   float p[256];
   char *lbl[256];
-  FILE *fd;
 
   p[myGlobals.numIpProtosToMonitor] = 0;
 
@@ -1281,7 +1239,6 @@ void drawLunStatsBytesDistribution(HostTraffic *el) {
   char label[MAX_LUNS_GRAPHED+1][10];
   LunStatsSortedEntry sortedLunTbl[MAX_LUNS_SUPPORTED];
   LunStatsSortedEntry *entry;
-  FILE *fd;
   ScsiLunTrafficInfo *lunStats;
 
   p[MAX_LUNS_GRAPHED] = 0;
@@ -1322,7 +1279,6 @@ void drawLunStatsPktsDistribution(HostTraffic *el) {
   float p[MAX_LUNS_GRAPHED+1];
   char *lbl[MAX_LUNS_GRAPHED+1];
   char label[MAX_LUNS_GRAPHED+1][10];
-  FILE *fd;
   ScsiLunTrafficInfo *lunStats;
   LunStatsSortedEntry sortedLunTbl[MAX_LUNS_SUPPORTED];
   LunStatsSortedEntry *entry;
@@ -1364,7 +1320,6 @@ void drawVsanStatsBytesDistribution(int deviceId) {
   float p[MAX_VSANS_GRAPHED+1];
   char *lbl[MAX_VSANS_GRAPHED+1];
   char label[MAX_VSANS_GRAPHED+1][10];
-  FILE *fd;
   FcFabricElementHash **theHash;
   FcFabricElementHash *tmpTable[MAX_ELEMENT_HASH];
   
@@ -1420,7 +1375,6 @@ void drawVsanStatsPktsDistribution(int deviceId) {
   float p[MAX_VSANS_GRAPHED+1];
   char *lbl[MAX_VSANS_GRAPHED+1];
   char label[MAX_VSANS_GRAPHED+1][10];
-  FILE *fd;
   FcFabricElementHash **theHash;
   FcFabricElementHash *tmpTable[MAX_ELEMENT_HASH];
   
@@ -1534,7 +1488,6 @@ void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent) {
   FcFabricElementHash *hash;
   float p[MAX_VSANS_GRAPHED+1];
   char *lbl[MAX_VSANS_GRAPHED+1], labels[MAX_VSANS_GRAPHED+1][8];
-  FILE *fd;
   Counter total;
   SortedFcDomainStatsEntry *fcDomainStats;
 

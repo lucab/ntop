@@ -2977,7 +2977,11 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
         if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) {
           int i;
 
-          for(i=0; i<strlen(sniffedName); i++) if(isupper(sniffedName[i])) tolower(sniffedName[i]);
+          for(i=0; i<strlen(sniffedName); i++) {
+	    if(isupper(sniffedName[i])) 
+	      sniffedName[i] = tolower(sniffedName[i]);
+	  }
+
           setResolvedName(el, sniffedName, FLAG_HOST_SYM_ADDR_TYPE_IP);
         }
       }
@@ -3756,8 +3760,6 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if(el->ifId != NO_INTERFACE) {
-    char tmpBuf[64];
-
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%d</TD></TR>\n", getRowColor(), "Interface&nbsp;Id", el->ifId);

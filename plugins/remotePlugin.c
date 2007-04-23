@@ -92,7 +92,7 @@ static void* remoteMainLoop(void* notUsed _UNUSED_) {
 
       method = strtok_r(buf, "\n;", &strtokstate);
       if(method) {
-	if(reference = strtok_r(NULL, "\n;", &strtokstate)) {
+	if((reference = strtok_r(NULL, "\n;", &strtokstate))) {
 	  traceEvent(CONST_TRACE_INFO, "-> '%s'", reference);
 
 	  if(!strncmp(reference, "reference: 0x", 13)) {
@@ -172,6 +172,8 @@ static void* remoteMainLoop(void* notUsed _UNUSED_) {
   }
 
   traceEvent(CONST_TRACE_INFO, "Remote plugin TERMLOOP");
+
+  return(NULL);
 }
 
 /* ****************************** */

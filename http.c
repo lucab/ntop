@@ -1046,7 +1046,7 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
         traceEvent(CONST_TRACE_INFO, "EPIPE during sending of page to web client");
 #ifndef WIN32
       } else if(errno == ECONNRESET /* Client reset */) {
-        static econnresetcount=0;
+        static int econnresetcount=0;
         econnresetcount++;
         if(econnresetcount < 10)
           traceEvent(CONST_TRACE_WARNING, "ECONNRESET during sending of page to web client");
@@ -1058,11 +1058,11 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
 				  disconnected client is still sending */) {
         traceEvent(CONST_TRACE_INFO, "EBADF during sending of page to web client");
       } else {
-        traceEvent(CONST_TRACE_INFO, "errno %d during sending of page to web client");
+        traceEvent(CONST_TRACE_INFO, "errno %d during sending of page to web client", errno);
       }
 
       // traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes, '%s'", strlen(theString), theString);
-      traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes", strlen(theString));
+      traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes", (int)strlen(theString));
       closeNwSocket(&myGlobals.newSock);
       return;
     } else {
@@ -1631,7 +1631,8 @@ static int checkURLsecurity(char *url) {
     return(0);
 
   if(strlen(url) >= MAX_LEN_URL) {
-    traceEvent(CONST_TRACE_NOISY, "URL security(2): URL too long (len=%d)", strlen(url));
+    traceEvent(CONST_TRACE_NOISY, "URL security(2): URL too long (len=%d)", 
+	       (int)strlen(url));
     return(2);
   }
 
@@ -3433,7 +3434,7 @@ static int checkHTTPpassword(char *theRequestedURL,
     rc = 0;
 
   if(strcmp(theHttpUser, theLastHttpUser)) {
-    char prefKey[64], communities[256], *item, *strtokState;
+    char prefKey[64], *item, *strtokState;
       
     strcpy(theLastHttpUser, theHttpUser);
       

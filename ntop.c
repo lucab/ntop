@@ -77,7 +77,7 @@ void handleSigHup(int signalId _UNUSED_) {
 
 void* pcapDispatch(void *_i) {
   int rc;
-  int i = (int)_i;
+  int i = (int)((long)_i);
   struct pcap_stat pcapStats;
 
 #if defined(FREEBSD) && defined(__FreeBSD_cc_version) && (__FreeBSD_cc_version < 500000) && defined(HAVE_PCAP_SETNONBLOCK)
@@ -912,7 +912,7 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 	  safe_strncat(buf, sizeofbuf, buf2);
 	} else {
 	  traceEvent(CONST_TRACE_INFO, "Joining thread NF%d [%u]", i,
-		     myGlobals.device[i].netflowGlobals->netFlowThread);
+		     (unsigned int)myGlobals.device[i].netflowGlobals->netFlowThread);
 	  close(myGlobals.device[i].netflowGlobals->netFlowInSocket);
 
 	  if(joinThread(&myGlobals.device[i].netflowGlobals->netFlowThread) != 0)
@@ -963,7 +963,6 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 
 /* Report statistics and write out the raw packet file */
 RETSIGTYPE cleanup(int signo) {
-  struct pcap_stat pcapStats;
   int i, j;
   char buf[128];
   static int cleanup_called = 0;

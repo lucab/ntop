@@ -202,10 +202,6 @@ static void handleSnmpHTTPrequest (char *url);
 /*
  * Agent functions
  */
-static void start_agent (void);
-static void *snmpAgentLoop (void *notUsed _UNUSED_);
-static void init_ntop_snmp (void);
-static void initialize_table_ntopTable (void);
 static void simplehandlePluginHostCreationDeletion(HostTraffic * el,
 						   u_short deviceId,
 						   u_char hostCreation);
@@ -254,47 +250,7 @@ PluginEntryFctn (void)
 
 static Netsnmp_Node_Handler ntopTable_handler;
 
-/*
- ****************************** */
-
-static int
-initSnmpFunct (void)
-{
-  if(!everInitialized) {
-    start_agent ();
-    everInitialized = 1;
-  }
-
-  pluginActive = 1;
-  traceEvent (CONST_TRACE_ALWAYSDISPLAY, "SnmpPlugin: initializing agent ");
-  createThread (&snmpThreadId, snmpAgentLoop, NULL);
-  createMutex(&snmpMutex);
-  return(0);
-}
-
-/*
- **************************************** */
-static void
-termSnmpFunct (u_char termNtop /* 0=term plugin, 1=term ntop */)
-{
-  traceEvent (CONST_TRACE_ALWAYSDISPLAY,
-	      "SnmpPlugin: terminating snmp (snmp_shutdown) ");
-  if(pluginActive){
-    killThread(&snmpThreadId);
-    deleteMutex(&snmpMutex);
-  }
-  traceEvent (CONST_TRACE_INFO,
-	      "SnmpPlugin: Thanks for using ntop snmpPlugin");
-  traceEvent (CONST_TRACE_ALWAYSDISPLAY, "SnmpPlugin: Done");
-  pluginActive = 0;
-
-  if(termNtop)
-    snmp_shutdown(AGENT_NAME);
-}
-
-
-/*
- **************************************** */
+/* **************************************** */
 static void
 handleSnmpHTTPrequest (char *_url)
 {
@@ -341,8 +297,7 @@ static void simplehandlePluginHostCreationDeletion (HostTraffic * el, u_short de
   }
 }
 
-static void
-start_agent ()
+static void start_agent (void)
 {
   snmp_enable_stderrlog ();
 
@@ -377,6 +332,42 @@ snmpAgentLoop (void *notUsed _UNUSED_)
 
   return (NULL);
 }
+
+/* ****************************** */
+
+static int initSnmpFunct (void)
+{
+  if(!everInitialized) {
+    start_agent ();
+    everInitialized = 1;
+  }
+
+  pluginActive = 1;
+  traceEvent (CONST_TRACE_ALWAYSDISPLAY, "SnmpPlugin: initializing agent ");
+  createThread (&snmpThreadId, snmpAgentLoop, NULL);
+  createMutex(&snmpMutex);
+  return(0);
+}
+
+/*
+ **************************************** */
+static void termSnmpFunct (u_char termNtop /* 0=term plugin, 1=term ntop */)
+{
+  traceEvent (CONST_TRACE_ALWAYSDISPLAY,
+	      "SnmpPlugin: terminating snmp (snmp_shutdown) ");
+  if(pluginActive){
+    killThread(&snmpThreadId);
+    deleteMutex(&snmpMutex);
+  }
+  traceEvent (CONST_TRACE_INFO,
+	      "SnmpPlugin: Thanks for using ntop snmpPlugin");
+  traceEvent (CONST_TRACE_ALWAYSDISPLAY, "SnmpPlugin: Done");
+  pluginActive = 0;
+
+  if(termNtop)
+    snmp_shutdown(AGENT_NAME);
+}
+
 
 static int
 getHostSerialFromIndex (netsnmp_table_request_info * table_info,

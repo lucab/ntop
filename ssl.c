@@ -304,7 +304,7 @@ SSL* getSSLsocket(int fd) {
 int term_ssl_connection(int fd) {
   int i, rc;
 
-  if(!myGlobals.sslInitialized) return;
+  if(!myGlobals.sslInitialized) return(0);
 
   for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
     if((myGlobals.ssl[i].ctx != NULL)
@@ -314,6 +314,7 @@ int term_ssl_connection(int fd) {
       myGlobals.ssl[i].ctx = NULL;
     }
   }
+
   return(rc);
 }
 

@@ -1462,7 +1462,7 @@ static void processIpPkt(const u_char *bp,
 	char WSS[3], _MSS[5];
 	struct tcphdr *tcp = (struct tcphdr*)(bp+hlen);
 	u_char *tcp_opt = (u_char *)(tcp + 1);
-        u_char *tcp_data = (u_char *)((int)tcp + tp.th_off * 4);
+        u_char *tcp_data = (u_char *)(tcp + tp.th_off * 4);
 
 	if(tcp->th_flags & TH_SYN) {   /* only SYN or SYN-2ACK packets */
 	  if(tcpUdpLen > 0) {
@@ -2388,7 +2388,7 @@ void queuePacket(u_char *_deviceId,
 
   if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) return;
 
-  deviceId = (int)_deviceId;
+  deviceId = (int)((long)_deviceId);
   actDeviceId = getActualInterface(deviceId);
   incrementTrafficCounter(&myGlobals.device[actDeviceId].receivedPkts, 1);
 
@@ -2483,7 +2483,8 @@ void queuePacket(u_char *_deviceId,
       myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].h.caplen = len;
     }
 
-    myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].deviceId = (int)((void*)_deviceId);
+    myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].deviceId = 
+      (int)((long)((void*)_deviceId));
     myGlobals.device[deviceId].packetQueueHead = (myGlobals.device[deviceId].packetQueueHead+1)
       % CONST_PACKET_QUEUE_LENGTH;
     myGlobals.device[deviceId].packetQueueLen++;
@@ -2515,7 +2516,7 @@ void cleanupPacketQueue(void) {
 /* ************************************ */
 
 void* dequeuePacket(void* _deviceId) {
-  u_int deviceId = (u_int)_deviceId;
+  u_int deviceId = (u_int)((long)_deviceId);
   struct pcap_pkthdr h;
   u_char p[MAX_PACKET_LEN];
 
@@ -2814,7 +2815,7 @@ void processPacket(u_char *_deviceId,
   */
   myGlobals.actTime = h->ts.tv_sec;
 
-  deviceId = (int)_deviceId;
+  deviceId = (int)((long)_deviceId);
 
   actualDeviceId = getActualInterface(deviceId);
 

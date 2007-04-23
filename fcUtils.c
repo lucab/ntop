@@ -562,7 +562,10 @@ void processFcNSCacheFile(char *filename) {
 	  break;
 	case FLAG_FC_NS_CASE_FCID:
 	  if (isxdigit (*token)) {
-	    if (sscanf (token, "%02hx.%02hx.%02hx", &domain, &area, &port) == 3) {
+	    if (sscanf (token, "%02hx.%02hx.%02hx", 
+			(short unsigned int *)&domain, 
+			(short unsigned int *)&area, 
+			(short unsigned int *)&port) == 3) {
 	      fcid.domain = domain;
 	      fcid.area = area;
 	      fcid.port = port;

@@ -62,7 +62,7 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 	  symbolic[MAX_LEN_SYM_HOST_NAME-2] = '\0';
 
 	for(i=0; i<strlen(symbolic); i++)
-	  if(isupper(symbolic[i])) tolower(symbolic[i]);
+	  if(isupper(symbolic[i])) symbolic[i] = tolower(symbolic[i]);
 
 	setResolvedName(el, symbolic, type);
       }
@@ -619,7 +619,6 @@ void cleanupAddressQueue(void) {
 void purgeQueuedV4HostAddress(u_int32_t addr) {
   datum key_data;
   struct in_addr addrv4;
-  char buf[32];
 
   addrv4.s_addr = addr;
 
@@ -640,7 +639,7 @@ void purgeQueuedV4HostAddress(u_int32_t addr) {
 /* ************************************ */
 
 void* dequeueAddress(void *_i) {
-  int dqaIndex = (int)_i;
+  int dqaIndex = (int)((long)_i);
 
   HostAddr addr;
   datum key_data, data_data;
@@ -1709,7 +1708,7 @@ u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
     {
       u_int32_t     padding;
 
-      padding=((u_int32_t)bp) % sizeof(u_int32_t);
+      padding=((u_int32_t)((long)bp)) % sizeof(u_int32_t);
       bp += padding;
       buflen -= padding;
     }

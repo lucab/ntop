@@ -2249,11 +2249,11 @@ void printTrafficStatistics(int revertOrder) {
 
  /* ****************************************************************** */
 
- static makeHostName(HostTraffic *el, char *buf, int len) {
-   if(el->hostResolvedName[0] != '\0') strcpy(buf, el->hostResolvedName);
-   else if(el->hostNumIpAddress[0] != '\0') strcpy(buf, el->hostNumIpAddress);
-   else if(el->ethAddressString[0] != '\0') strcpy(buf, el->ethAddressString);
- }
+static void makeHostName(HostTraffic *el, char *buf, int len) {
+  if(el->hostResolvedName[0] != '\0') strcpy(buf, el->hostResolvedName);
+  else if(el->hostNumIpAddress[0] != '\0') strcpy(buf, el->hostNumIpAddress);
+  else if(el->ethAddressString[0] != '\0') strcpy(buf, el->ethAddressString);
+}
 
  /* ****************************************************************** */
 
@@ -2282,7 +2282,7 @@ void printTrafficStatistics(int revertOrder) {
  #else
    HostTraffic *el, *el2, tmpEl;
    char buf[LEN_GENERAL_WORK_BUFFER], buf1[LEN_GENERAL_WORK_BUFFER],
-     path[384], dotPath[256], buf0[128], buf2[128];
+     path[384], dotPath[256];
    FILE *fd, *cmap, *in, *out, *make;
    struct stat statbuf;
    int rc;
@@ -2605,7 +2605,7 @@ void printTrafficStatistics(int revertOrder) {
      }
 
      if(foundIf) {
-       u_char found = 0, tmpBuf[64];
+       u_char found = 0;
 
        sendString("<p><b>Interface Id</b>: ");
 
@@ -2729,7 +2729,11 @@ void printTrafficStatistics(int revertOrder) {
 	       if(strlen(sniffedName) >= (MAX_LEN_SYM_HOST_NAME-1))
 		 sniffedName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
 
-	       for(i=0; i<strlen(sniffedName); i++) if(isupper(sniffedName[i])) tolower(sniffedName[i]);
+	       for(i=0; i<strlen(sniffedName); i++) {
+		 if(isupper(sniffedName[i])) 
+		   sniffedName[i] = tolower(sniffedName[i]);
+	       }
+
 	       setResolvedName(el, sniffedName, FLAG_HOST_SYM_ADDR_TYPE_NAME);
 	     } else
 	       displaySniffedName=1;
@@ -5081,7 +5085,6 @@ void printThptStats(int sortedColumn _UNUSED_) {
 		formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1)));
   sendString(tmpBuf);
 
- endPrintThptStats:
   sendString("</table></CENTER>\n");
 
   if(useRRD) {
@@ -5506,7 +5509,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	statsEntry = &tmpStats[numEntries++];
 	memset(statsEntry, 0, sizeof(DomainStats));
 	statsEntry->domainHost = el;
-	if(debug) traceEvent(CONST_TRACE_INFO, "--> Adding %s [ptr=%p][%s]", el->hostNumIpAddress, el);
+	if(debug) traceEvent(CONST_TRACE_INFO, "--> Adding %s [ptr=%p]", el->hostNumIpAddress, el);
 	stats[keyValue++] = statsEntry;
       }
 
@@ -5836,7 +5839,7 @@ void printNotAvailable(char * flagName) {
 
 void listNetFlows(void) {
   char buf[LEN_GENERAL_WORK_BUFFER];
-  int numEntries=0, debug = 1;
+  int numEntries=0;
   FlowFilterList *list = myGlobals.flowsList;
   char formatBuf[32], formatBuf1[32];
 
@@ -6628,9 +6631,9 @@ void printInterfaceStats() {
   sendString(ctime(&now));
 
   snprintf(buf, sizeof(buf), "%u %u\n", 
-	   (unsigned long)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value,
-	   (unsigned long)(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value
-			   - myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+	   (unsigned int)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value,
+	   (unsigned int)(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value
+			       - myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
   sendString(buf);
   /* traceEvent(CONST_TRACE_ERROR, "%s", buf); */
 }

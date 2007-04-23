@@ -625,13 +625,12 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
 /* ******************************* */
 
 static void handleIcmpWatchHTTPrequest(char* url) {
-  u_int i, revertOrder=0, num, tot = 0;
+  u_int i, revertOrder=0, num;
   int icmpId=-1;
   HostTraffic **hosts;
   struct in_addr hostIpAddress;
   char  **lbls, *strtokState;
-  float *s, *r;
-  FILE *fd;
+  float *s, *r;  
   int icmpColumnSort = 0;
 #ifdef WIN32
   char fileName[256];

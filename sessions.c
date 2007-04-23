@@ -2331,7 +2331,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 		     theSession->sport,
 		     _addrtostr(&theSession->remotePeerRealIp, buf1, sizeof(buf1)),
 		     theSession->dport,
-		     theSession->nwLatency.tv_sec * 1000000 + theSession->nwLatency.tv_usec);
+		     (int)(theSession->nwLatency.tv_sec * 1000000 + theSession->nwLatency.tv_usec));
       }
 
       theSession->sessionState = FLAG_STATE_ACTIVE;
@@ -2729,9 +2729,9 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
     if((!multicastHost(dstHost))
        && ((sessionType == IPPROTO_TCP)
 	   /* Simulate a TCP connection for the SIP protocol */
-	   || (((sport == IP_UDP_PORT_SIP) && (dport == IP_UDP_PORT_SIP)
+	   || ((((sport == IP_UDP_PORT_SIP) && (dport == IP_UDP_PORT_SIP))
 		|| ((sport > 1024) && (dport > 1024)) /* Needed for SIP */))
-	   || (((sport == IP_TCP_PORT_SCCP) && (dport > 1024)
+	   || ((((sport == IP_TCP_PORT_SCCP) && (dport > 1024)) 
 		|| ((sport > 1024) && (dport == IP_TCP_PORT_SCCP)) /* Needed for SCCP */))
 	   )) {
       if((real_session)

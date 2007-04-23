@@ -577,7 +577,7 @@ void initCounters(void) {
               myGlobals.asCount++;
           }
           traceEvent(CONST_TRACE_INFO, "ASN: ....Used %d KB of memory (%d per entry)",
-                     ((myGlobals.asMem+512)/1024), sizeof(IPNode));
+                     ((myGlobals.asMem+512)/1024), (int)sizeof(IPNode));
           myGlobals.haveASN = TRUE;
       } else
           traceEvent(CONST_TRACE_NOISY, "ASN: ntop continues ok, but without ASN information.");
@@ -998,7 +998,7 @@ void initThreads(void) {
   int i;
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    createThread(&myGlobals.device[i].dequeuePacketThreadId, dequeuePacket, (void*)i);
+    createThread(&myGlobals.device[i].dequeuePacketThreadId, dequeuePacket, (void*)((long)i));
     traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NPA: Started thread for network packet analyzer (%s)",
 	       (long)myGlobals.device[i].dequeuePacketThreadId,
 	       myGlobals.device[i].humanFriendlyName);
@@ -1027,7 +1027,7 @@ void initThreads(void) {
      * Create the thread (6) - DNSAR - DNS Address Resolution - optional
      */
     for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
-      createThread(&myGlobals.dequeueAddressThreadId[i], dequeueAddress, (char*)i);
+      createThread(&myGlobals.dequeueAddressThreadId[i], dequeueAddress, (char*)((long)i));
       traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Started thread for DNS address resolution",
 		 (long)myGlobals.dequeueAddressThreadId[i], i+1);
     }
@@ -1886,8 +1886,8 @@ void startSniffer(void) {
       /*
        * (8) - NPS - Network Packet Sniffer (main thread)
        */
-      createThread(&myGlobals.device[i].pcapDispatchThreadId, pcapDispatch, (char*)i);
-      traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NPS(%d): Started thread for network packet sniffing",
+      createThread(&myGlobals.device[i].pcapDispatchThreadId, pcapDispatch, (char*)((long)i));
+      traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NPS(%d): Started thread for network packet sniffing [%s]",
 		 (long)myGlobals.device[i].pcapDispatchThreadId, i+1, myGlobals.device[i].name);
     }
 }

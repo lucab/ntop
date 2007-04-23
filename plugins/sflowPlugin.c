@@ -1079,7 +1079,6 @@ typedef struct _SFConfig {
 } SFConfig;
 
 /* make the options structure global to the program */
-static SFConfig sfConfig;
 
 typedef struct _SFSample {
   struct in_addr sourceIP;
@@ -1355,7 +1354,7 @@ static int setsFlowInSocket(int deviceId) {
      && (!myGlobals.device[deviceId].sflowGlobals->threadActive)) {
     /* This plugin works only with threads */
     createThread(&myGlobals.device[deviceId].sflowGlobals->sflowThread,
-		 sflowMainLoop, (void*)deviceId);
+		 sflowMainLoop, (void*)((long)deviceId));
     traceEvent(CONST_TRACE_INFO, "THREADMGMT: SFLOW: Started thread (%lu) for receiving flows on port %d",
                  (long)myGlobals.device[deviceId].sflowGlobals->sflowThread,
                  myGlobals.device[deviceId].sflowGlobals->sflowInPort);
@@ -1419,7 +1418,7 @@ static void handleSflowSample(SFSample *sample, int deviceId) {
 
   /* Needed to avoid silly (for sFlow) warning */
   myGlobals.runningPref.disableMutexExtraInfo = 1;
-  queuePacket((u_char*)deviceId, &pkthdr, sample->header); /* Pass the packet to ntop */
+  queuePacket((u_char*)((long)deviceId), &pkthdr, sample->header); /* Pass the packet to ntop */
   myGlobals.runningPref.disableMutexExtraInfo = oldVal;
   myGlobals.device[deviceId].samplingRate = sample->meanSkipCount;
   myGlobals.device[deviceId].sflowGlobals->numsFlowsSamples++;
@@ -1615,8 +1614,8 @@ static void decodeLinkLayer(SFSample *sample, int deviceId)
     /* |   pri  | c |         vlan-id        | */
     /*  ------------------------------------- */
     /* [priority = 3bits] [Canonical Format Flag = 1bit] [vlan-id = 12 bits] */
-    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "decodedVLAN %lu\n", vlan);
-    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "decodedPriority %lu\n", priority);
+    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "decodedVLAN %lu\n", (long unsigned int)vlan);
+    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "decodedPriority %lu\n", (long unsigned int)priority);
     /* now get the type_len again (next two bytes) */
     type_len = (ptr[0] << 8) + ptr[1];
     ptr += 2;
@@ -1769,6 +1768,7 @@ static void decodeIPV4(SFSample *sample, int deviceId)
   }
 }
 
+#if 0
 /*_________________---------------------------__________________
   _________________      in_checksum          __________________
   -----------------___________________________------------------
@@ -1793,6 +1793,7 @@ static u_int16_t in_checksum(u_int16_t *addr, int len)
   return (answer);
 }
 
+#endif
 
 /*_________________---------------------------__________________
   _________________   read data fns           __________________
@@ -1824,13 +1825,13 @@ static void skipBytes(SFSample *sample, int skip, int deviceId) {
 
 static u_int32_t sf_log_next32(SFSample *sample, char *fieldName, int deviceId) {
   u_int32_t val = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "%s %lu\n", fieldName, val);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "%s %lu\n", fieldName, (long unsigned int)val);
   return(val);
 }
 
 static u_int64_t sf_log_next64(SFSample *sample, char *fieldName, int deviceId) {
   u_int64_t val = getData64(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "%s %llu\n", fieldName, val);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "%s %llu\n", fieldName, (long long unsigned int)val);
   return(val);
 }
 
@@ -1866,7 +1867,7 @@ static char *printAddress(SFLAddress *address, char *buf, int bufLen, int device
     u_char *b = address->address.ip_v6.s6_addr;
     // should really be: snprintf(buf, buflen,...) but snprintf() is not always available
     sprintf(buf, "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
-	    b[0],b[1],b[2],b[3],b[4],b[5],b[6],b[7],b[8],b[9],b[10],b[11],b[12],b[13],b[14],b[15],b[16]);
+	    b[0],b[1],b[2],b[3],b[4],b[5],b[6],b[7],b[8],b[9],b[10],b[11],b[12],b[13],b[14],b[15]);
   }
 #endif
   return buf;
@@ -1874,7 +1875,7 @@ static char *printAddress(SFLAddress *address, char *buf, int bufLen, int device
 
 static char *printTag(u_int32_t tag, char *buf, int bufLen, int deviceId) {
   // should really be: snprintf(buf, buflen,...) but snprintf() is not always available
-  sprintf(buf, "%lu:%lu", (tag >> 12), (tag & 0x00000FFF));
+  sprintf(buf, "%lu:%lu", (long unsigned int)(tag >> 12), (long unsigned int)(tag & 0x00000FFF));
   return buf;
 }
 
@@ -1904,10 +1905,10 @@ static void readExtendedSwitch(SFSample *sample, int deviceId)
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_SWITCH;
 
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "in_vlan %lu\n", sample->in_vlan);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "in_priority %lu\n", sample->in_priority);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "out_vlan %lu\n", sample->out_vlan);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "out_priority %lu\n", sample->out_priority);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "in_vlan %lu\n", (long unsigned int)sample->in_vlan);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "in_priority %lu\n", (long unsigned int)sample->in_priority);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "out_vlan %lu\n", (long unsigned int)sample->out_vlan);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "out_priority %lu\n", (long unsigned int)sample->out_priority);
 }
 
 /*_________________---------------------------__________________
@@ -1925,9 +1926,10 @@ static void readExtendedRouter(SFSample *sample, int deviceId)
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_ROUTER;
 
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "nextHop %s\n", printAddress(&sample->nextHop, buf, 50, deviceId));
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "srcSubnetMask %lu\n", sample->srcMask);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dstSubnetMask %lu\n", sample->dstMask);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "nextHop %s\n",
+				       printAddress(&sample->nextHop, buf, 50, deviceId));
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "srcSubnetMask %lu\n", (long unsigned int)sample->srcMask);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dstSubnetMask %lu\n", (long unsigned int)sample->dstMask);
 }
 
 /*_________________---------------------------__________________
@@ -1955,18 +1957,25 @@ static void readExtendedGateway_v2(SFSample *sample, int deviceId)
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_GATEWAY;
 
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "my_as %lu\n", sample->my_as);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "src_as %lu\n", sample->src_as);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "src_peer_as %lu\n", sample->src_peer_as);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_as %lu\n", sample->dst_as);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_peer_as %lu\n", sample->dst_peer_as);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_as_path_len %lu\n", sample->dst_as_path_len);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "my_as %lu\n", 
+				       (long unsigned int)sample->my_as);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "src_as %lu\n", 
+				       (long unsigned int)sample->src_as);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "src_peer_as %lu\n", 
+				       (long unsigned int)sample->src_peer_as);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_as %lu\n", 
+				       (long unsigned int)sample->dst_as);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_peer_as %lu\n", 
+				       (long unsigned int)sample->dst_peer_as);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_as_path_len %lu\n",
+				       (long unsigned int)sample->dst_as_path_len);
+
   if(sample->dst_as_path_len > 0) {
     u_int32_t i = 0;
     for(; i < sample->dst_as_path_len; i++) {
-      if(i == 0) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_as_path ");
+      if(i == 0) { if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_as_path "); }
       else if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "-");
-      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "%lu", ntohl(sample->dst_as_path[i]));
+      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "%lu", (long unsigned int)ntohl(sample->dst_as_path[i]));
     }
     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "\n");
   }
@@ -1987,15 +1996,16 @@ static void readExtendedGateway(SFSample *sample, int deviceId)
 
   if(sample->datagramVersion >= 5) {
     getAddress(sample, &sample->bgp_nextHop, deviceId);
-    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "bgp_nexthop %s\n", printAddress(&sample->bgp_nextHop, buf, 50, deviceId));
+    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "bgp_nexthop %s\n",
+					 printAddress(&sample->bgp_nextHop, buf, 50, deviceId));
   }
 
   sample->my_as = getData32(sample, deviceId);
   sample->src_as = getData32(sample, deviceId);
   sample->src_peer_as = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "my_as %lu\n", sample->my_as);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "src_as %lu\n", sample->src_as);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "src_peer_as %lu\n", sample->src_peer_as);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "my_as %lu\n", (long unsigned int)sample->my_as);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "src_as %lu\n", (long unsigned int)sample->src_as);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "src_peer_as %lu\n", (long unsigned int)sample->src_peer_as);
   segments = getData32(sample, deviceId);
   if(segments > 0) {
     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_as_path ");
@@ -2013,7 +2023,7 @@ static void readExtendedGateway(SFSample *sample, int deviceId)
 	else if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "-");
 	/* make sure the AS sets are in parentheses */
 	if(i == 0 && seg_type == SFLEXTENDED_AS_SET) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "(");
-	if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "%lu", asNumber);
+	if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "%lu", (long unsigned int)asNumber);
 	/* mark the last one as the dst_as */
 	if(seg == (segments - 1) && i == (seg_len - 1)) sample->dst_as = asNumber;
       }
@@ -2021,8 +2031,8 @@ static void readExtendedGateway(SFSample *sample, int deviceId)
     }
     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "\n");
   }
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_as %lu\n", sample->dst_as);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_peer_as %lu\n", sample->dst_peer_as);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_as %lu\n", (long unsigned int)sample->dst_as);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_peer_as %lu\n", (long unsigned int)sample->dst_peer_as);
 
   sample->communities_len = getData32(sample, deviceId);
   /* just point at the communities array */
@@ -2034,15 +2044,15 @@ static void readExtendedGateway(SFSample *sample, int deviceId)
   if(sample->communities_len > 0) {
     int j = 0;
     for(; j < sample->communities_len; j++) {
-      if(j == 0) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "BGP_communities ");
+      if(j == 0) { if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "BGP_communities "); }
       else if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "-");
-      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "%lu", ntohl(sample->communities[j]));
+      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "%lu", (long unsigned int)ntohl(sample->communities[j]));
     }
     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "\n");
   }
 
   sample->localpref = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "BGP_localpref %lu\n", sample->localpref);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "BGP_localpref %lu\n", (long unsigned int)sample->localpref);
 
 }
 
@@ -2085,7 +2095,7 @@ static void readExtendedUrl(SFSample *sample, int deviceId)
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "extendedType URL\n");
 
   sample->url_direction = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "url_direction %lu\n", sample->url_direction);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "url_direction %lu\n", (long unsigned int)sample->url_direction);
   sample->url_len = getString(sample, sample->url, SA_MAX_EXTENDED_URL_LEN, deviceId);
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "url %s\n", sample->url);
   if(sample->datagramVersion >= 5) {
@@ -2114,14 +2124,14 @@ static void mplsLabelStack(SFSample *sample, char *fieldName, int deviceId)
   if(lstk.depth > 0) {
     int j = 0;
     for(; j < lstk.depth; j++) {
-      if(j == 0) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "%s ", fieldName);
+      if(j == 0) { if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "%s ", fieldName); }
       else if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "-");
       lab = ntohl(lstk.stack[j]);
       if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "%lu.%lu.%lu.%lu",
-	     (lab >> 12),     // label
-	     (lab >> 9) & 7,  // experimental
-	     (lab >> 8) & 1,  // bottom of stack
-	     (lab &  255));   // TTL
+					   (long unsigned int)(lab >> 12),     // label
+					   (long unsigned int)(lab >> 9) & 7,  // experimental
+					   (long unsigned int)(lab >> 8) & 1,  // bottom of stack
+					   (long unsigned int)(lab &  255));   // TTL
     }
     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "\n");
   }
@@ -2176,9 +2186,9 @@ static void readExtendedMplsTunnel(SFSample *sample, int deviceId)
   if(getString(sample, tunnel_name, SA_MAX_TUNNELNAME_LEN, deviceId) > 0)
     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_tunnel_lsp_name %s\n", tunnel_name);
   tunnel_id = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_tunnel_id %lu\n", tunnel_id);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_tunnel_id %lu\n", (long unsigned int)tunnel_id);
   tunnel_cos = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_tunnel_cos %lu\n", tunnel_cos);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_tunnel_cos %lu\n", (long unsigned int)tunnel_cos);
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_TUNNEL;
 }
 
@@ -2195,9 +2205,9 @@ static void readExtendedMplsVC(SFSample *sample, int deviceId)
   if(getString(sample, vc_name, SA_MAX_VCNAME_LEN, deviceId) > 0)
     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_vc_name %s\n", vc_name);
   vll_vc_id = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_vll_vc_id %lu\n", vll_vc_id);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_vll_vc_id %lu\n", (long unsigned int)vll_vc_id);
   vc_cos = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_vc_cos %lu\n", vc_cos);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_vc_cos %lu\n", (long unsigned int)vc_cos);
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_VC;
 }
 
@@ -2214,7 +2224,7 @@ static void readExtendedMplsFTN(SFSample *sample, int deviceId)
   if(getString(sample, ftn_descr, SA_MAX_FTN_LEN, deviceId) > 0)
     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_ftn_descr %s\n", ftn_descr);
   ftn_mask = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_ftn_mask %lu\n", ftn_mask);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_ftn_mask %lu\n", (long unsigned int)ftn_mask);
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_FTN;
 }
 
@@ -2226,7 +2236,8 @@ static void readExtendedMplsFTN(SFSample *sample, int deviceId)
 static void readExtendedMplsLDP_FEC(SFSample *sample, int deviceId)
 {
   u_int32_t fec_addr_prefix_len = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_fec_addr_prefix_len %lu\n", fec_addr_prefix_len);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "mpls_fec_addr_prefix_len %lu\n", 
+				       (long unsigned int)fec_addr_prefix_len);
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_LDP_FEC;
 }
 
@@ -2248,14 +2259,14 @@ static void readExtendedVlanTunnel(SFSample *sample, int deviceId)
   if(lstk.depth > 0) {
     int j = 0;
     for(; j < lstk.depth; j++) {
-      if(j == 0) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "vlan_tunnel ");
+      if(j == 0) { if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "vlan_tunnel "); }
       else if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "-");
       lab = ntohl(lstk.stack[j]);
       if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "0x%04x.%lu.%lu.%lu",
-	     (lab >> 16),       // TPI
-	     (lab >> 13) & 7,   // priority
-	     (lab >> 12) & 1,   // CFI
-	     (lab & 4095));     // VLAN
+					   (lab >> 16),       // TPI
+					   (long unsigned int)(lab >> 13) & 7,   // priority
+					   (long unsigned int)(lab >> 12) & 1,   // CFI
+					   (long unsigned int)(lab & 4095));     // VLAN
     }
     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "\n");
   }
@@ -2271,16 +2282,16 @@ static void readFlowSample_header(SFSample *sample, int deviceId)
 {
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "flowSampleType HEADER\n");
   sample->headerProtocol = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "headerProtocol %lu\n", sample->headerProtocol);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "headerProtocol %lu\n", (long unsigned int)sample->headerProtocol);
   sample->sampledPacketSize = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampledPacketSize %lu\n", sample->sampledPacketSize);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampledPacketSize %lu\n", (long unsigned int)sample->sampledPacketSize);
   if(sample->datagramVersion > 4) {
     // stripped count introduced in sFlow version 5
     sample->stripped = getData32(sample, deviceId);
-    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "strippedBytes %lu\n", sample->stripped);
+    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "strippedBytes %lu\n", (long unsigned int)sample->stripped);
   }
   sample->headerLen = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "headerLen %lu\n", sample->headerLen);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "headerLen %lu\n", (long unsigned int)sample->headerLen);
 
   sample->header = (u_char *)sample->datap; /* just point at the header */
   skipBytes(sample, sample->headerLen, deviceId);
@@ -2339,8 +2350,8 @@ static void readFlowSample_ethernet(SFSample *sample, int deviceId)
   memcpy(sample->eth_dst, sample->datap, 6);
   skipBytes(sample, 6, deviceId);
   sample->eth_type = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ethernet_type %lu\n", sample->eth_type);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ethernet_len %lu\n", sample->eth_len);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ethernet_type %lu\n", (long unsigned int)sample->eth_type);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ethernet_len %lu\n", (long unsigned int)sample->eth_len);
   p = (char*)sample->eth_src;
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ethernet_src %02x%02x%02x%02x%02x%02x\n", p[0], p[1], p[2], p[3], p[4], p[5]);
   p = (char*)sample->eth_dst;
@@ -2364,7 +2375,7 @@ static void readFlowSample_IPv4(SFSample *sample, int deviceId)
     SFLSampled_ipv4 nfKey;
     memcpy(&nfKey, sample->header, sizeof(nfKey));
     sample->sampledPacketSize = ntohl(nfKey.length);
-    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampledPacketSize %lu\n", sample->sampledPacketSize);
+    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampledPacketSize %lu\n", (long unsigned int)sample->sampledPacketSize);
     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "IPSize %d\n",  sample->sampledPacketSize);
     sample->dcd_srcIP = nfKey.src_ip;
     sample->dcd_dstIP = nfKey.dst_ip;
@@ -2418,7 +2429,7 @@ static void readFlowSample_IPv6(SFSample *sample, int deviceId)
     SFLSampled_ipv6 nfKey6;
     memcpy(&nfKey6, sample->header, sizeof(nfKey6));
     sample->sampledPacketSize = ntohl(nfKey6.length);
-    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampledPacketSize %lu\n", sample->sampledPacketSize);
+    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampledPacketSize %lu\n", (long unsigned int)sample->sampledPacketSize);
   }
   /* bug: more decode to do here */
 }
@@ -2434,12 +2445,15 @@ static void readFlowSample_v2v4(SFSample *sample, int deviceId)
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampleType FLOWSAMPLE\n");
 
   sample->samplesGenerated = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampleSequenceNo %lu\n", sample->samplesGenerated);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampleSequenceNo %lu\n", (long unsigned int)sample->samplesGenerated);
   {
     u_int32_t samplerId = getData32(sample, deviceId);
     sample->ds_class = samplerId >> 24;
     sample->ds_index = samplerId & 0x00ffffff;
-    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sourceId %lu:%lu\n", sample->ds_class, sample->ds_index);
+    if(SFLOW_DEBUG(deviceId)) 
+      traceEvent(CONST_TRACE_INFO, "sourceId %lu:%lu\n", 
+		 (long unsigned int)sample->ds_class, 
+		 (long unsigned int)sample->ds_index);
   }
 
   sample->meanSkipCount = getData32(sample, deviceId);
@@ -2447,16 +2461,16 @@ static void readFlowSample_v2v4(SFSample *sample, int deviceId)
   sample->dropEvents = getData32(sample, deviceId);
   sample->inputPort = getData32(sample, deviceId);
   sample->outputPort = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "meanSkipCount %lu\n", sample->meanSkipCount);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "samplePool %lu\n", sample->samplePool);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dropEvents %lu\n", sample->dropEvents);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "inputPort %lu\n", sample->inputPort);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "meanSkipCount %lu\n", (long unsigned int)sample->meanSkipCount);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "samplePool %lu\n", (long unsigned int)sample->samplePool);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dropEvents %lu\n", (long unsigned int)sample->dropEvents);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "inputPort %lu\n", (long unsigned int)sample->inputPort);
   if(sample->outputPort & 0x80000000) {
     u_int32_t numOutputs = sample->outputPort & 0x7fffffff;
-    if(numOutputs > 0) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "outputPort multiple %d\n", numOutputs);
+    if(numOutputs > 0) { if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "outputPort multiple %d\n", numOutputs); }
     else if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "outputPort multiple >1\n");
   }
-  else if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "outputPort %lu\n", sample->outputPort);
+  else if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "outputPort %lu\n", (long unsigned int)sample->outputPort);
 
   sample->packet_data_tag = getData32(sample, deviceId);
 
@@ -2506,7 +2520,7 @@ static void readFlowSample(SFSample *sample, int expanded, int deviceId)
   sampleLength = getData32(sample, deviceId);
   sampleStart = (u_char *)sample->datap;
   sample->samplesGenerated = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampleSequenceNo %lu\n", sample->samplesGenerated);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampleSequenceNo %lu\n", (long unsigned int)sample->samplesGenerated);
   if(expanded) {
     sample->ds_class = getData32(sample, deviceId);
     sample->ds_index = getData32(sample, deviceId);
@@ -2516,14 +2530,17 @@ static void readFlowSample(SFSample *sample, int expanded, int deviceId)
     sample->ds_class = samplerId >> 24;
     sample->ds_index = samplerId & 0x00ffffff;
   }
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sourceId %lu:%lu\n", sample->ds_class, sample->ds_index);
+  if(SFLOW_DEBUG(deviceId)) 
+    traceEvent(CONST_TRACE_INFO, "sourceId %lu:%lu\n", 
+	       (long unsigned int)sample->ds_class,
+	       (long unsigned int)sample->ds_index);
 
   sample->meanSkipCount = getData32(sample, deviceId);
   sample->samplePool = getData32(sample, deviceId);
   sample->dropEvents = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "meanSkipCount %lu\n", sample->meanSkipCount);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "samplePool %lu\n", sample->samplePool);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dropEvents %lu\n", sample->dropEvents);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "meanSkipCount %lu\n", (long unsigned int)sample->meanSkipCount);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "samplePool %lu\n", (long unsigned int)sample->samplePool);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dropEvents %lu\n", (long unsigned int)sample->dropEvents);
   if(expanded) {
     sample->inputPortFormat = getData32(sample, deviceId);
     sample->inputPort = getData32(sample, deviceId);
@@ -2539,14 +2556,14 @@ static void readFlowSample(SFSample *sample, int expanded, int deviceId)
     sample->inputPort = inp & 0x3fffffff;
     sample->outputPort = outp & 0x3fffffff;
   }
-  if(sample->inputPortFormat == 3) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "inputPort format==3 %lu\n", sample->inputPort);
-  else if(sample->inputPortFormat == 2) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "inputPort multiple %lu\n", sample->inputPort);
-  else if(sample->inputPortFormat == 1) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "inputPort dropCode %lu\n", sample->inputPort);
-  else if(sample->inputPortFormat == 0) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "inputPort %lu\n", sample->inputPort);
-  if(sample->outputPortFormat == 3) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "outputPort format==3 %lu\n", sample->outputPort);
-  else if(sample->outputPortFormat == 2) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "outputPort multiple %lu\n", sample->outputPort);
-  else if(sample->outputPortFormat == 1) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "outputPort dropCode %lu\n", sample->outputPort);
-  else if(sample->outputPortFormat == 0) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "outputPort %lu\n", sample->outputPort);
+  if(sample->inputPortFormat == 3) { if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "inputPort format==3 %lu\n", (long unsigned int)sample->inputPort); }
+  else if(sample->inputPortFormat == 2) { if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "inputPort multiple %lu\n", (long unsigned int)sample->inputPort); }
+  else if(sample->inputPortFormat == 1) { if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "inputPort dropCode %lu\n", (long unsigned int)sample->inputPort); }
+  else if(sample->inputPortFormat == 0) { if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "inputPort %lu\n", (long unsigned int)sample->inputPort); }
+  if(sample->outputPortFormat == 3) { if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "outputPort format==3 %lu\n", (long unsigned int)sample->outputPort); }
+  else if(sample->outputPortFormat == 2) { if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "outputPort multiple %lu\n", (long unsigned int)sample->outputPort); }
+  else if(sample->outputPortFormat == 1) { if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "outputPort dropCode %lu\n", (long unsigned int)sample->outputPort); }
+  else if(sample->outputPortFormat == 0) { if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "outputPort %lu\n", (long unsigned int)sample->outputPort); }
 
   num_elements = getData32(sample, deviceId);
   {
@@ -2598,11 +2615,11 @@ static void readCounters_generic(SFSample *sample, int deviceId)
   IfCounters ifName;
 
   /* the first part of the generic counters block is really just more info about the interface. */
-  sample->ifIndex = getData32(sample, deviceId);      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ifIndex %lu\n", sample->ifIndex);
-  sample->networkType = getData32(sample, deviceId);  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "networkType %lu\n", sample->networkType);
-  sample->ifSpeed = getData64(sample, deviceId);      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ifSpeed %llu\n", sample->ifSpeed);
-  sample->ifDirection = getData32(sample, deviceId);  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ifDirection %lu\n", sample->ifDirection);
-  sample->ifStatus = getData32(sample, deviceId);     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ifStatus %lu\n", sample->ifStatus);
+  sample->ifIndex = getData32(sample, deviceId);      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ifIndex %lu\n", (long unsigned int)sample->ifIndex);
+  sample->networkType = getData32(sample, deviceId);  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "networkType %lu\n", (long unsigned int)sample->networkType);
+  sample->ifSpeed = getData64(sample, deviceId);      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ifSpeed %llu\n", (long long unsigned int)sample->ifSpeed);
+  sample->ifDirection = getData32(sample, deviceId);  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ifDirection %lu\n", (long unsigned int)sample->ifDirection);
+  sample->ifStatus = getData32(sample, deviceId);     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ifStatus %lu\n", (long unsigned int)sample->ifStatus);
 
   ifName.ifIndex = sample->ifIndex;
   ifName.ifType = sample->networkType;
@@ -2713,7 +2730,7 @@ static void readCounters_vg(SFSample *sample, int deviceId)
 static void readCounters_vlan(SFSample *sample, int deviceId)
 {
   sample->in_vlan = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "in_vlan %lu\n", sample->in_vlan);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "in_vlan %lu\n", (long unsigned int)sample->in_vlan);
   sf_log_next64(sample, "octets", deviceId);
   sf_log_next32(sample, "ucastPkts", deviceId);
   sf_log_next32(sample, "multicastPkts", deviceId);
@@ -2730,20 +2747,20 @@ static void readCountersSample_v2v4(SFSample *sample, int deviceId)
 {
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampleType COUNTERSSAMPLE\n");
   sample->samplesGenerated = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampleSequenceNo %lu\n", sample->samplesGenerated);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampleSequenceNo %lu\n", (long unsigned int)sample->samplesGenerated);
   {
     u_int32_t samplerId = getData32(sample, deviceId);
     sample->ds_class = samplerId >> 24;
     sample->ds_index = samplerId & 0x00ffffff;
   }
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sourceId %lu:%lu\n", sample->ds_class, sample->ds_index);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sourceId %lu:%lu\n", (long unsigned int)sample->ds_class, (long unsigned int)sample->ds_index);
 
 
   sample->statsSamplingInterval = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "statsSamplingInterval %lu\n", sample->statsSamplingInterval);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "statsSamplingInterval %lu\n", (long unsigned int)sample->statsSamplingInterval);
   /* now find out what sort of counter blocks we have here... */
   sample->counterBlockVersion = getData32(sample, deviceId);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "counterBlockVersion %lu\n", sample->counterBlockVersion);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "counterBlockVersion %lu\n", (long unsigned int)sample->counterBlockVersion);
 
   /* first see if we should read the generic stats */
   switch(sample->counterBlockVersion) {
@@ -2785,7 +2802,7 @@ static void readCountersSample(SFSample *sample, int expanded, int deviceId)
   sampleStart = (char *)sample->datap;
   sample->samplesGenerated = getData32(sample, deviceId);
 
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampleSequenceNo %lu\n", sample->samplesGenerated);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampleSequenceNo %lu\n", (long unsigned int)sample->samplesGenerated);
   if(expanded) {
     sample->ds_class = getData32(sample, deviceId);
     sample->ds_index = getData32(sample, deviceId);
@@ -2795,7 +2812,8 @@ static void readCountersSample(SFSample *sample, int expanded, int deviceId)
     sample->ds_class = samplerId >> 24;
     sample->ds_index = samplerId & 0x00ffffff;
   }
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sourceId %lu:%lu\n", sample->ds_class, sample->ds_index);
+
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sourceId %lu:%lu\n", (long unsigned int)sample->ds_class, (long unsigned int)sample->ds_index);
 
   num_elements = getData32(sample, deviceId);
   {
@@ -2840,7 +2858,7 @@ static void readSFlowDatagram(SFSample *sample, int deviceId)
   now.tv_sec = time(NULL);
   now.tv_usec = 0;
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "datagramSourceIP %s\n", IP_to_a(sample->sourceIP.s_addr, buf));
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "datagramSize %lu\n", sample->rawSampleLen);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "datagramSize %lu\n", (long unsigned int)sample->rawSampleLen);
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "unixSecondsUTC %lu\n", now.tv_sec);
 
   /* check the version */
@@ -2875,16 +2893,16 @@ static void readSFlowDatagram(SFSample *sample, int deviceId)
   /* version 5 has an agent sub-id as well */
   if(sample->datagramVersion >= 5) {
     sample->agentSubId = getData32(sample, deviceId);
-    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "agentSubId %lu\n", sample->agentSubId);
+    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "agentSubId %lu\n", (long unsigned int)sample->agentSubId);
   }
 
   sample->sequenceNo = getData32(sample, deviceId);  /* this is the packet sequence number */
   sample->sysUpTime = getData32(sample, deviceId);
   samplesInPacket = getData32(sample, deviceId);
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "agent %s\n", printAddress(&sample->agent_addr, buf, 50, deviceId));
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "packetSequenceNo %lu\n", sample->sequenceNo);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sysUpTime %lu\n", sample->sysUpTime);
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "samplesInPacket %lu\n", samplesInPacket);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "packetSequenceNo %lu\n", (long unsigned int)sample->sequenceNo);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sysUpTime %lu\n", (long unsigned int)sample->sysUpTime);
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "samplesInPacket %lu\n", (long unsigned int)samplesInPacket);
 
   /* now iterate and pull out the flows and counters samples */
   {
@@ -3002,7 +3020,7 @@ static void* sflowMainLoop(void* _deviceId) {
   u_char buffer[2048];
   struct sockaddr_in fromHost;
 
-  deviceId = (int)_deviceId;
+  deviceId = (int)((long)_deviceId);
 
   if(!(myGlobals.device[deviceId].sflowGlobals->sflowInSocket > 0)) return(NULL);
 

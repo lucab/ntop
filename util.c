@@ -183,7 +183,7 @@ char* serial2str(HostSerial theSerial, char *buf, int buf_len) {
   buf[0] = '\0';
 
   if(buf_len >= 2*sizeof(HostSerial)) {
-    int len = 0, i;
+    int i;
     char tmpStr[16];
     char *ptr = (char*)&theSerial;
 
@@ -200,7 +200,7 @@ char* serial2str(HostSerial theSerial, char *buf, int buf_len) {
 
 void str2serial(HostSerial *theSerial, char *buf, int buf_len) {
   if(buf_len >= 2*sizeof(HostSerial)) {
-    int len = 0, i, j;
+    int i, j;
     char tmpStr[16];
     u_char *ptr = (u_char*)theSerial;
 
@@ -1821,7 +1821,7 @@ int createThread(pthread_t *threadId,
 
   if(rc != 0)
     traceEvent(CONST_TRACE_NOISY, "THREADMGMT[t%lu]: pthread_create(), rc = %s(%d)",
-	       threadId, strerror(rc), rc);
+	       (long unsigned int)threadId, strerror(rc), rc);
   myGlobals.numThreads++;
   return(rc);
 }
@@ -1839,7 +1839,7 @@ int _killThread(char *file, int line, pthread_t *threadId) {
 
   if((rc = pthread_detach(*threadId)) != 0) {
     traceEvent(CONST_TRACE_NOISY, "THREADMGMT[t%lu]: pthread_detach(), rc = %s(%d)",
-	       threadId, strerror(rc), rc);
+	       (long unsigned int)threadId, strerror(rc), rc);
   }
 
   myGlobals.numThreads--;
@@ -1859,7 +1859,7 @@ int _joinThread(char *file, int line, pthread_t *threadId) {
 
   if((rc = pthread_join(*threadId, NULL)) != 0) {
     traceEvent(CONST_TRACE_NOISY, "THREADMGMT[t%lu]: pthread_join(), rc = %s(%d)",
-	       threadId, strerror(rc), rc);
+	       (long unsigned int)threadId, strerror(rc), rc);
   }
 
   return(rc);
@@ -1947,7 +1947,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
     if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR,
                  "accessMutex() called '%s' with a NULL mutex [t%lu mNULL @%s:%d]",
-                 where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+                 where, pthread_self(), fileName, fileLine);
     return(-1);
   }
 
@@ -2021,7 +2021,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLi
     if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR,
                  "tryLockMutex() called '%s' with a NULL mutex [t%lu mNULL @%s:%d]",
-                 where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+                 where, pthread_self(), fileName, fileLine);
     return(-1);
   }
 
@@ -2106,9 +2106,10 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   }
 
   if(!mutexId->isLocked) {
-    traceEvent(CONST_TRACE_WARNING, "releaseMutex() called with an UN-LOCKED mutex [t%lu m%p @%s:%d] last unlock [t%lu m%p @%s:%d]",
+    traceEvent(CONST_TRACE_WARNING, "releaseMutex() called with an UN-LOCKED mutex [t%lu m%p @%s:%d] last unlock [t%lu m%u @%s:%d]",
 	       pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine,
-               mutexId->unlock.thread, mutexId->unlock.pid, mutexId->unlock.file, mutexId->unlock.line);
+               mutexId->unlock.thread, (int)mutexId->unlock.pid, 
+	       mutexId->unlock.file, mutexId->unlock.line);
 
   }
 
@@ -3174,7 +3175,9 @@ void pathSanityCheck(char* string, char* parm) {
 #endif
 
   for(i=k, j=1; i<strlen(string)-k; i++) {
-    if(paChar[string[i]] == 0) {
+    int idx = string[i];
+
+    if(paChar[idx] == 0) {
       string[i]='.';
       j = 0;
     }
@@ -3262,9 +3265,11 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
 #endif
 
     for(i=k, j=1; i<strlen(string)-k; i++) {
-      if(fnChar[string[i]] == 0) {
+      int idx = string[i];
+
+      if(fnChar[idx] == 0) {
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "Sanitized invalid char '%c'", string[i]);
+	traceEvent(CONST_TRACE_INFO, "Sanitized invalid char '%c'", idx);
 #endif
 	string[i]='.';
 	j = 0;
@@ -3288,7 +3293,7 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
 /* ************************** */
 
 int ipSanityCheck(char* string, char* parm, int nonFatal) {
-  int i, j, rc = 0;
+  int i, j;
   static char ipChar[256];
 
   // Common:
@@ -3318,7 +3323,9 @@ int ipSanityCheck(char* string, char* parm, int nonFatal) {
   }
 
   for(i=0, j=1; i<strlen(string); i++) {
-    if(ipChar[string[i]] == 0) {
+    int idx = string[i];
+
+    if(ipChar[idx] == 0) {
       string[i]='x';
       j = 0;
     }
@@ -3584,7 +3591,11 @@ void setNBnodeNameType(HostTraffic *theHost, char nodeType,
 	if(theHost->hostResolvedName[0] == '\0') {
 	  int i;
 
-	  for(i=0; i<strlen(nbName); i++) if(isupper(nbName[i])) tolower(nbName[i]);
+	  for(i=0; i<strlen(nbName); i++) {
+	    if(isupper(nbName[i])) 
+	      nbName[i] = tolower(nbName[i]);
+	  }
+
           setResolvedName(theHost, nbName, FLAG_HOST_SYM_ADDR_TYPE_NETBIOS);
 	}
 
@@ -4124,7 +4135,7 @@ unsigned long _ntopSleepMSWhileSameState(char *file, int line, unsigned long ulD
 
   ntopRunStateSave = myGlobals.ntopRunState;
 
-  traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "ntopSleepMS(%u)", ulDelay);
+  traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "ntopSleepMS(%lu)", ulDelay);
 
   while(ulDelay > 0L) {
     if(ulDelay < ulSlice)
@@ -4142,7 +4153,10 @@ unsigned long _ntopSleepMSWhileSameState(char *file, int line, unsigned long ulD
         memcpy(&sleepAmount, &remAmount, sizeof(sleepAmount));
         memset(&remAmount, 0, sizeof(remAmount));
 
-        traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "nanosleep({%d, %d}, )", sleepAmount.tv_sec, sleepAmount.tv_nsec);
+        traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line,
+		   "nanosleep({%d, %d}, )", 
+		   (int)sleepAmount.tv_sec, 
+		   (int)sleepAmount.tv_nsec);
 
         if((nanosleep(&sleepAmount, &remAmount) != 0) && (errno == EINTR)) {
 
@@ -4619,7 +4633,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
 /* ******************************************
  *        For ntop_gdbm_xxxx see leaks.c
- /* ****************************************** */
+ * ****************************************** */
 
 void handleWhiteBlackListAddresses(char* addresses,
                                    u_int32_t theNetworks[MAX_NUM_NETWORKS][4],
@@ -5213,7 +5227,7 @@ unsigned int convertNtopVersionToNumber(char *versionString) {
     if(f>=3) {
       prerc=1;
     } else {
-      f = sscanf(versionString, "%u.%u%1[a-z].%u", &n, &m, &l, &x);
+      f = sscanf(versionString, "%u.%u%1[a-z].%u", &n, &m, (char*)&l, &x);
       if(f >= 3) {
 	if(l[0] > 0)
 	  l[0] = tolower(l[0]) - 'a' + 1;

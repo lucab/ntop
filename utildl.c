@@ -91,7 +91,6 @@ int getDynamicLoadPaths(char *main, int mainLen, char *lib, int libLen, char *en
 
 #ifdef HAVE_DLADDR
   char *lastslash, *_env;
-  int chars;
   Dl_info info;
 
   memset(main, 0, mainLen);

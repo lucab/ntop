@@ -25,14 +25,15 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+#ifdef MAKE_WITH_XMLDUMP
 static int dumpXML(char * url);
 
-#ifdef MAKE_WITH_XMLDUMP
 #include <stdarg.h>
 #include <setjmp.h>
 #include <execinfo.h>
-
 #include <glibconfig.h>
+
+#if 0
 #warning
 #warning ===========================================================
 #warning
@@ -45,8 +46,12 @@ static int dumpXML(char * url);
 #warning
 #warning ===========================================================
 #warning
+
+#endif /* 0 */
+
 #else
 
+#if 0
 #warning
 #warning ===========================================================
 #warning
@@ -72,6 +77,8 @@ static int dumpXML(char * url);
 #warning
 #warning ===========================================================
 #warning
+#endif /* 0 */
+
 #endif
 
 /*
@@ -100,12 +107,17 @@ static int dumpXML(char * url);
 #define CONST_XMLDUMP_TEST_LEN              3
 #define CONST_XMLDUMP_VERSION               "version"
 
+#ifdef XMLDUMP_DEBUG
+static unsigned short inTraceEventForked=0;
+static void traceEvent_forked(int eventTraceLevel, char* file, int line, char * format, ...);
+static void xmlDebug(char* file, int line, int level, char *format, ...);
+#endif
+
 /* Forward */
 static int initXmldump(void);
 static void termXmldump(u_char termNtop /* 0=term plugin, 1=term ntop */);
 static void emptyHTTPhandler(char* url);
-static void traceEvent_forked(int eventTraceLevel, char* file, int line, char * format, ...);
-static void xmlDebug(char* file, int line, int level, char *format, ...);
+
 
 #ifdef MAKE_WITH_XMLDUMP
 GdomeDOMImplementation *domimpl;
@@ -132,8 +144,6 @@ static int dumpHosts,
 static int debugLevel=0;
 #endif
 
-static unsigned short inTraceEventForked=0;
-
 jmp_buf siglongjmpEnv, siglongjmpBasicEnv;
 
 /* ****************************** */
@@ -156,7 +166,9 @@ RETSIGTYPE xml_sighandler(int signo, siginfo_t *siginfo, void *ptr);
 
 #endif
 
+#ifdef XMLDUMP_DEBUG
 static unsigned short initialized = 0;
+#endif
 
 /* ****************************** */
 #define CONST_XML_DUMP_XML                  "dump.xml"
@@ -238,9 +250,125 @@ static void emptyHTTPhandler(char* url) {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+/* ************************************************** */
+
+#ifdef XMLDUMP_DEBUG
+static void traceEvent_forked(int eventTraceLevel, char* file,
+			      int line, char * format, ...) {
+  va_list va_ap;
+
+#ifdef WIN32
+    if(isNtopAservice) return;
+#endif
+
+  va_start (va_ap, format);
+
+  if(eventTraceLevel <= myGlobals.runningPref.traceLevel) {
+    char bufF[LEN_GENERAL_WORK_BUFFER];
+    char bufMsg[LEN_GENERAL_WORK_BUFFER];
+    char bufMsgID[LEN_MEDIUM_WORK_BUFFER];
+    char bufLineID[LEN_MEDIUM_WORK_BUFFER];
+
+    int beginFileIdx=0;
+    char *mFile = NULL;
+
+    /* If ntop is a Win32 service, we're done - we don't (yet) write to the
+     * windows event logs and there's no console...
+     */
+    /* First we prepare the various fields */
+  
+    /* The file/line or 'MSGID' tag, depends on logExtra */
+    memset(bufMsgID, 0, sizeof(bufMsgID));
+
+    if(myGlobals.runningPref.traceLevel > CONST_NOISY_TRACE_LEVEL) {
+      mFile = strdup(file);
+
+      if(mFile) {
+        for(beginFileIdx=strlen(mFile)-1; beginFileIdx>0; beginFileIdx--) {
+          if(mFile[beginFileIdx] == '.') mFile[beginFileIdx] = '\0'; /* Strip off .c */
+#if defined(WIN32)
+          if(mFile[beginFileIdx-1] == '\\') break;  /* Start after \ (Win32)  */
+#else
+          if(mFile[beginFileIdx-1] == '/') break;   /* Start after / (!Win32) */
+#endif
+        }
+
+        if(myGlobals.runningPref.traceLevel >= CONST_DETAIL_TRACE_LEVEL) {
+          unsigned int messageid = 0;
+          int i;
+
+          safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[%s:%d] ", &mFile[beginFileIdx], line);
+
+          /* Hash the message format into an id */
+          for (i=0; i<=strlen(format); i++) {
+            messageid = (messageid << 1) ^ max(0,format[i]-32);
+          }
+
+          /* 1st chars of file name for uniqueness */
+          messageid += (file[0]-32) * 256 + file[1]-32;
+          safe_snprintf(__FILE__, __LINE__, bufMsgID, sizeof(bufMsgID), "[MSGID%07d]", (messageid & 0x8fffff));
+        }
+
+        free(mFile);
+      }
+    }
+
+    /* Now we use the variable functions to 'print' the user's message */
+    memset(bufMsg, 0, sizeof(bufMsg));
+    vsnprintf(bufMsg, sizeof(bufMsg), format, va_ap);
+    /* Strip a trailing return from bufMsg */
+    if(bufMsg[strlen(bufMsg)-1] == '\n')
+      bufMsg[strlen(bufMsg)-1] = 0;
+
+    /* Second we prepare the complete log message into buf
+     */
+    memset(bufF, 0, sizeof(bufF));
+    safe_snprintf(__FILE__, __LINE__, bufF, sizeof(bufF), "%s %s%s%s",
+                  (myGlobals.runningPref.traceLevel >= CONST_DETAIL_TRACE_LEVEL) ? bufMsgID : "",
+                  (myGlobals.runningPref.traceLevel > CONST_DETAIL_TRACE_LEVEL) ? bufLineID : "",
+                  eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :
+                  eventTraceLevel == CONST_ERROR_TRACE_LEVEL   ? "**ERROR** " :
+                  eventTraceLevel == CONST_WARNING_TRACE_LEVEL ? "**WARNING** " : "",
+                  bufMsg);
+
+    /* Finished preparing message fields */
+
+    /* No logView */
+
+    /* SYSLOG and set */
+    openlog("ntop", LOG_PID, myGlobals.runningPref.useSyslog);
+
+    /* syslog(..) call fix courtesy of Peter Suschlik <peter@zilium.de> */
+#ifdef MAKE_WITH_LOG_XXXXXX
+    switch(myGlobals.runningPref.traceLevel) {
+    case CONST_FATALERROR_TRACE_LEVEL:
+    case CONST_ERROR_TRACE_LEVEL:
+      syslog(LOG_ERR, "%s", bufF);
+      break;
+    case CONST_WARNING_TRACE_LEVEL:
+      syslog(LOG_WARNING, "%s", bufF);
+      break;
+    case CONST_ALWAYSDISPLAY_TRACE_LEVEL:
+      syslog(LOG_NOTICE, "%s", bufF);
+      break;
+    default:
+      syslog(LOG_INFO, "%s", bufF);
+      break;
+    }
+#else
+    syslog(LOG_ERR, "%s", bufF);
+#endif
+    closelog();
+  }
+
+  va_end (va_ap);
+
+  inTraceEventForked=0;
+}
+
+
 static void xmlDebug(char* file, int line, 
               int level, char *format, ...) {
-#ifdef XMLDUMP_DEBUG
   char cBuf[LEN_GENERAL_WORK_BUFFER],
        fBuf[LEN_GENERAL_WORK_BUFFER];
   va_list va_ap;
@@ -272,8 +400,8 @@ static void xmlDebug(char* file, int line,
           
     va_end (va_ap);
   }
-#endif /* XMLDUMP_DEBUG */
 }
+#endif /* XMLDUMP_DEBUG */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -465,7 +593,8 @@ static void termXmldump(u_char termNtop /* 0=term plugin, 1=term ntop */) {
 
 /* ****************************** */
 
-  /* handle HTTP requests here */
+#ifdef XMLDUMP_DEBUG
+/* handle HTTP requests here */
 
 static void handleXmldumpHTTPrequest(char* url) {
 
@@ -757,6 +886,7 @@ static void handleXmldumpHTTPrequest(char* url) {
 
   printHTMLtrailer();
 }
+#endif
 
 //---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
@@ -1074,15 +1204,6 @@ GdomeElement * _newxml_smartstring_u(char * filename,
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Please keep them in alphabetic order for ease of finding them...              */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-// #define newxml_hostserial_index(parent, name, hostserial_var, index_var, description) \
-//     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u", hostserial_var); \
-//     safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%d", index_var); \
-//     newxml(parent, name, \
-//                                "index", buf2, \
-//                                "value", buf, \
-//                                "description", description); \
-// }
 
 #define newxml_ethaddress(parent, name, ethaddress_var, description) { \
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%02x:%02x:%02x:%02x:%02x:%02x", \
@@ -2132,125 +2253,6 @@ static int dumpXML(char * url) {
 }
 #endif /* MAKE_WITH_XMLDUMP */
 
-/* ************************************************** */
-
-static void traceEvent_forked(int eventTraceLevel, char* file,
-                int line, char * format, ...) {
-  va_list va_ap;
-
-#ifdef WIN32
-    if(isNtopAservice) return;
-#endif
-
-  inTraceEventForked=1;
-
-  va_start (va_ap, format);
-
-  if(eventTraceLevel <= myGlobals.runningPref.traceLevel) {
-    time_t theTime = time(NULL);
-    struct tm t;
-    char bufF[LEN_GENERAL_WORK_BUFFER];
-    char bufMsg[LEN_GENERAL_WORK_BUFFER];
-    char bufMsgID[LEN_MEDIUM_WORK_BUFFER];
-    char bufLineID[LEN_MEDIUM_WORK_BUFFER];
-
-    int beginFileIdx=0;
-    char *mFile = NULL;
-
-    /* If ntop is a Win32 service, we're done - we don't (yet) write to the
-     * windows event logs and there's no console...
-     */
-    /* First we prepare the various fields */
-  
-    /* The file/line or 'MSGID' tag, depends on logExtra */
-    memset(bufMsgID, 0, sizeof(bufMsgID));
-
-    if(myGlobals.runningPref.traceLevel > CONST_NOISY_TRACE_LEVEL) {
-      mFile = strdup(file);
-
-      if(mFile) {
-        for(beginFileIdx=strlen(mFile)-1; beginFileIdx>0; beginFileIdx--) {
-          if(mFile[beginFileIdx] == '.') mFile[beginFileIdx] = '\0'; /* Strip off .c */
-#if defined(WIN32)
-          if(mFile[beginFileIdx-1] == '\\') break;  /* Start after \ (Win32)  */
-#else
-          if(mFile[beginFileIdx-1] == '/') break;   /* Start after / (!Win32) */
-#endif
-        }
-
-        if(myGlobals.runningPref.traceLevel >= CONST_DETAIL_TRACE_LEVEL) {
-          unsigned int messageid = 0;
-          int i;
-
-          safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[%s:%d] ", &mFile[beginFileIdx], line);
-
-          /* Hash the message format into an id */
-          for (i=0; i<=strlen(format); i++) {
-            messageid = (messageid << 1) ^ max(0,format[i]-32);
-          }
-
-          /* 1st chars of file name for uniqueness */
-          messageid += (file[0]-32) * 256 + file[1]-32;
-          safe_snprintf(__FILE__, __LINE__, bufMsgID, sizeof(bufMsgID), "[MSGID%07d]", (messageid & 0x8fffff));
-        }
-
-        free(mFile);
-      }
-    }
-
-    /* Now we use the variable functions to 'print' the user's message */
-    memset(bufMsg, 0, sizeof(bufMsg));
-    vsnprintf(bufMsg, sizeof(bufMsg), format, va_ap);
-    /* Strip a trailing return from bufMsg */
-    if(bufMsg[strlen(bufMsg)-1] == '\n')
-      bufMsg[strlen(bufMsg)-1] = 0;
-
-    /* Second we prepare the complete log message into buf
-     */
-    memset(bufF, 0, sizeof(bufF));
-    safe_snprintf(__FILE__, __LINE__, bufF, sizeof(bufF), "%s %s%s%s",
-                  (myGlobals.runningPref.traceLevel >= CONST_DETAIL_TRACE_LEVEL) ? bufMsgID : "",
-                  (myGlobals.runningPref.traceLevel > CONST_DETAIL_TRACE_LEVEL) ? bufLineID : "",
-                  eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :
-                  eventTraceLevel == CONST_ERROR_TRACE_LEVEL   ? "**ERROR** " :
-                  eventTraceLevel == CONST_WARNING_TRACE_LEVEL ? "**WARNING** " : "",
-                  bufMsg);
-
-    /* Finished preparing message fields */
-
-    /* No logView */
-
-    /* SYSLOG and set */
-    openlog("ntop", LOG_PID, myGlobals.runningPref.useSyslog);
-
-    /* syslog(..) call fix courtesy of Peter Suschlik <peter@zilium.de> */
-#ifdef MAKE_WITH_LOG_XXXXXX
-    switch(myGlobals.runningPref.traceLevel) {
-    case CONST_FATALERROR_TRACE_LEVEL:
-    case CONST_ERROR_TRACE_LEVEL:
-      syslog(LOG_ERR, "%s", bufF);
-      break;
-    case CONST_WARNING_TRACE_LEVEL:
-      syslog(LOG_WARNING, "%s", bufF);
-      break;
-    case CONST_ALWAYSDISPLAY_TRACE_LEVEL:
-      syslog(LOG_NOTICE, "%s", bufF);
-      break;
-    default:
-      syslog(LOG_INFO, "%s", bufF);
-      break;
-    }
-#else
-    syslog(LOG_ERR, "%s", bufF);
-#endif
-    closelog();
-  }
-
-  va_end (va_ap);
-
-  inTraceEventForked=0;
-
-}
 
 #endif /* MAKE_WITH_XMLDUMP */
 

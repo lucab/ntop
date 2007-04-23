@@ -302,10 +302,10 @@ static int setNetFlowInSocket(int deviceId) {
      && (!myGlobals.device[deviceId].netflowGlobals->threadActive)) {
     /* This plugin works only with threads */
     createThread(&myGlobals.device[deviceId].netflowGlobals->netFlowThread,
-		 netflowMainLoop, (void*)deviceId);
+		 netflowMainLoop, (void*)((long)deviceId));
 #ifdef HAVE_SNMP
     createThread(&myGlobals.device[deviceId].netflowGlobals->netFlowUtilsThread,
-		 netflowUtilsLoop, (void*)deviceId);
+		 netflowUtilsLoop, (void*)((long)deviceId));
 #endif
     traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: Started thread for receiving flows on port %d",
                  (long)myGlobals.device[deviceId].netflowGlobals->netFlowThread,
@@ -342,10 +342,6 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip, int deviceId, u_in
     InterfaceStats *ifStats, *prev = NULL;
     Counter pkts = (Counter)_pkts;
     Counter octets = (Counter)_octets;
-
-    if(0)
-      traceEvent(CONST_TRACE_INFO, "NETFLOW: updateNetFlowIfStats(deviceId=%d, ifId=%d, sentStats=%d, pkts=%d, octets=%d)",
-		 deviceId, ifId, sentStats, pkts, octets);
 
     accessMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsMutex, "rrdPluginNetflow");
 
@@ -401,8 +397,6 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip, int deviceId, u_in
 
     releaseMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsMutex);
 
-    if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: PKTS=%d", pkts);
-
     if(selfUpdate) {
       incrementTrafficCounter(&ifStats->selfBytes, octets);
       incrementTrafficCounter(&ifStats->selfPkts, pkts);
@@ -410,13 +404,9 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip, int deviceId, u_in
       if(sentStats) {
 	incrementTrafficCounter(&ifStats->outBytes, octets);
 	incrementTrafficCounter(&ifStats->outPkts, pkts);
-	if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: SENT ifStats[%d][pkts=%d] [in=%d][out=%d]",
-			 ifStats->interface_id, pkts, ifStats->inPkts, ifStats->outPkts);
       } else {
 	incrementTrafficCounter(&ifStats->inBytes, octets);
 	incrementTrafficCounter(&ifStats->inPkts, pkts);
-	if(0) traceEvent(CONST_TRACE_INFO, "NETFLOW: RCVD ifStats[%d[pkts=%d]] [in=%d][out=%d]",
-			 ifStats->interface_id, pkts, ifStats->inPkts, ifStats->outPkts);
       }
     }
   }
@@ -1237,7 +1227,9 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	    /* Check the template before to handle it */
 	    for(fieldId=0; (fieldId < template.fieldCount)
 		  && (len < template.flowsetLen); fieldId++) {
+#ifdef DEBUG_FLOWS
 	      V9FlowSet *set = (V9FlowSet*)&buffer[displ+sizeof(V9Template)+fieldId*sizeof(V9FlowSet)];
+#endif
 
 	      len += 4; /* Field Type (2) + Field Length (2) */
 #ifdef DEBUG_FLOWS
@@ -1690,7 +1682,7 @@ static void* netflowMainLoop(void* _deviceId) {
   float elapsed;
 #endif
 
-  deviceId = (int)_deviceId;
+  deviceId = (int)((long)_deviceId);
 
   if(!(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket > 0)) return(NULL);
 
