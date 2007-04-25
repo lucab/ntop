@@ -187,9 +187,6 @@
 /* Define to 1 if you have the `mysqlclient_r' library (-lmysqlclient_r). */
 #undef HAVE_LIBMYSQLCLIENT_R
 
-/* Define to 1 if you have the `pcap' library (-lpcap). */
-#undef HAVE_LIBPCAP
-
 /* Define to 1 if you have the `pcre' library (-lpcre). */
 #undef HAVE_LIBPCRE
 
@@ -233,12 +230,6 @@
 /* Define to 1 if the type `long double' works and has more range or precision
    than `double'. */
 #undef HAVE_LONG_DOUBLE_WIDER
-
-/* malloc.h has mallinfo */
-#undef HAVE_MALLINFO_MALLOC_H
-
-/* Define to 1 if you have the <malloc.h> header file. */
-#undef HAVE_MALLOC_H
 
 /* Define to 1 if you have the <math.h> header file. */
 #undef HAVE_MATH_H
@@ -288,9 +279,6 @@
 /* Define to 1 if you have the <netinet/udp.h> header file. */
 #undef HAVE_NETINET_UDP_H
 
-/* Define to 1 if you have the <net/bpf.h> header file. */
-#undef HAVE_NET_BPF_H
-
 /* Define to 1 if you have the <net/ethernet.h> header file. */
 #undef HAVE_NET_ETHERNET_H
 
@@ -330,26 +318,8 @@
 /* Define to 1 if you have the <pcap-bpf.h> header file. */
 #undef HAVE_PCAP_BPF_H
 
-/* libpcap has pcap_findalldevs */
-#undef HAVE_PCAP_FINDALLDEVS
-
-/* libpcap has pcap_freealldevs */
-#undef HAVE_PCAP_FREEALLDEVS
-
-/* libpcap has pcap_freecode */
-#undef HAVE_PCAP_FREECODE
-
 /* Define to 1 if you have the <pcap.h> header file. */
 #undef HAVE_PCAP_H
-
-/* libpcap has pcap_lib_version */
-#undef HAVE_PCAP_LIB_VERSION
-
-/* libpcap has pcap_open_dead */
-#undef HAVE_PCAP_OPEN_DEAD
-
-/* libpcap has pcap_setnonblock */
-#undef HAVE_PCAP_SETNONBLOCK
 
 /* pthread_atfork() exists */
 #undef HAVE_PTHREAD_ATFORK
@@ -491,9 +461,6 @@
 
 /* Define to 1 if you have the <sys/param.h> header file. */
 #undef HAVE_SYS_PARAM_H
-
-/* Define to 1 if you have the <sys/resource.h> header file. */
-#undef HAVE_SYS_RESOURCE_H
 
 /* Define to 1 if you have the <sys/sched.h> header file. */
 #undef HAVE_SYS_SCHED_H

@@ -1220,20 +1220,6 @@ void addDevice(char* deviceName, char* deviceDescr) {
         exit(10); /* Just in case */
       }
 
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-      if(myGlobals.runningPref.setNonBlocking == TRUE) {
-       char errBuf[100];
-       memset(&errBuf, 0, sizeof(errBuf));
-       if(pcap_setnonblock(myGlobals.device[deviceId].pcapPtr, TRUE, errBuf) != 0) {
-         traceEvent(CONST_TRACE_ERROR, "NONBLOCK: pcap_setnonblock(), device %d, failed (%s)", deviceId, errBuf); 
-         traceEvent(CONST_TRACE_WARNING, "NONBLOCK: web server may appear to hang"); 
-       } else {
-         traceEvent(CONST_TRACE_INFO, "NONBLOCK: pcap_setnonblock(), device %d, succeeded", deviceId);
-         traceEvent(CONST_TRACE_WARNING, "NONBLOCK: cpu usage may be high - see man page and FAQ");
-       }
-      }
-#endif
-
       if(myGlobals.runningPref.pcapLog != NULL) {
 	if(strlen(myGlobals.runningPref.pcapLog) > 64)
 	  myGlobals.runningPref.pcapLog[64] = '\0';

@@ -146,8 +146,6 @@ static struct option const long_options[] = {
   { "p3p-cp",                           required_argument, NULL, 137 },
   { "p3p-uri",                          required_argument, NULL, 138 },
 
-  { "set-pcap-nonblocking",             no_argument,       NULL, 139 },
-
   { "instance",                         required_argument, NULL, 140 },
 
   { "disable-stopcap",                  no_argument,       NULL, 142 },
@@ -631,18 +629,6 @@ int parseOptions(int argc, char* argv[]) {
 	free(myGlobals.runningPref.P3Puri);
       myGlobals.runningPref.P3Puri = strdup(optarg);
       break;
-
-#ifndef WIN32
-    case 139:
- #ifdef HAVE_PCAP_SETNONBLOCK
-      printf("WARNING: --set-pcap-nonblocking requested\n");
-      myGlobals.runningPref.setNonBlocking = TRUE;
- #else
-      printf("FATAL ERROR: --set-pcap-nonblocking invalid - pcap_setnonblock() unavailable\n");
-      exit(-1);
- #endif
-      break;
-#endif
 
     case 140: /* instance */
     {
@@ -1250,16 +1236,6 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
   } else if(strcmp(key, NTOP_PREF_NO_ISESS_PURGE) == 0) {
     processBoolPref(NTOP_PREF_NO_ISESS_PURGE, value2bool(value),
 		     &pref->disableInstantSessionPurge, savePref);
-  }
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-  else if(strcmp(key, NTOP_PREF_NOBLOCK) == 0) {
-    processBoolPref(NTOP_PREF_NOBLOCK, value2bool(value),
-		     &pref->setNonBlocking, savePref);
-  }
-#endif
-  else if(strcmp(key, NTOP_PREF_NO_STOPCAP) == 0) {
-    processBoolPref(NTOP_PREF_NO_STOPCAP, value2bool(value),
-		     &pref->disableStopcap, savePref);
   } else if(strcmp(key, NTOP_PREF_NO_TRUST_MAC) == 0) {
     processBoolPref(NTOP_PREF_NO_TRUST_MAC, value2bool(value),
 		     &pref->dontTrustMACaddr, savePref);
@@ -1392,9 +1368,6 @@ void initUserPrefs(UserPref *pref) {
    pref->P3Pcp  = DEFAULT_NTOP_P3PCP;
    pref->P3Puri = DEFAULT_NTOP_P3PURI;
 
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-   pref->setNonBlocking = DEFAULT_NTOP_SETNONBLOCK;
-#endif
    pref->disableStopcap = DEFAULT_NTOP_DISABLE_STOPCAP;
    pref->disableInstantSessionPurge = DEFAULT_NTOP_DISABLE_IS_PURGE;
    pref->printIpOnly = DEFAULT_NTOP_PRINTIPONLY;

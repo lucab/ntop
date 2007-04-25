@@ -1118,9 +1118,6 @@ void addDefaultAdminUser(void) {
    tmpPrefs.disableInstantSessionPurge = tmpPrefs.disableStopcap = 0;
    tmpPrefs.debugMode = tmpPrefs.daemonMode = tmpPrefs.w3c = 0;
    tmpPrefs.numericFlag = tmpPrefs.mergeInterfaces = tmpPrefs.enableL7 = 0;
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-   tmpPrefs.setNonBlocking = 0;
-#endif
    tmpPrefs.dontTrustMACaddr = 0;
    tmpPrefs.enableOtherPacketDump = tmpPrefs.enableSuspiciousPacketDump = 0;
    tmpPrefs.enableSessionHandling = 0;
@@ -1234,16 +1231,6 @@ void addDefaultAdminUser(void) {
    if (advanced_prefs && myGlobals.savedPref.disableInstantSessionPurge &&
        !tmpPrefs.disableInstantSessionPurge) {
      processNtopPref(NTOP_PREF_NO_ISESS_PURGE, FALSE, savePref, &tmpPrefs);
-   }
-
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-   if (advanced_prefs && myGlobals.savedPref.setNonBlocking && !tmpPrefs.setNonBlocking) {
-     processNtopPref(NTOP_PREF_NOBLOCK, FALSE, savePref, &tmpPrefs);
-   }
-#endif
-
-   if (advanced_prefs && myGlobals.savedPref.disableStopcap && !tmpPrefs.disableStopcap) {
-     processNtopPref(NTOP_PREF_NO_STOPCAP, FALSE, savePref, &tmpPrefs);
    }
 
    if (advanced_prefs && myGlobals.savedPref.dontTrustMACaddr && !tmpPrefs.dontTrustMACaddr) {
@@ -1741,18 +1728,6 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		       pref->disableInstantSessionPurge,
 		       "Makes ntop respect the timeouts for completed "
 		       "sessions");
-
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-    CONFIG_RADIO_ENTRY(DARK_BG, "Set Pcap to Nonblocking",
-		       NTOP_PREF_NOBLOCK, pref->setNonBlocking,
-		       "On platforms without independent select().<br>"
-		       "<B>WARNING</B>: Selecting this option will increase "
-		       "CPU usage significantly - see the man page and FAQ.");
-#endif
-    CONFIG_RADIO_ENTRY(DARK_BG, "No web on memory error",
-		       NTOP_PREF_NO_STOPCAP, pref->disableStopcap,
-		       "Change default of having the web interface available "
-		       "albeit with static content until ntop is shutdown");
 
     CONFIG_RADIO_ENTRY(DARK_BG, "Don't Trust MAC Address (-o)",
 		       NTOP_PREF_NO_TRUST_MAC, pref->dontTrustMACaddr,

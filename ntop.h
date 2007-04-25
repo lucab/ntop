@@ -495,10 +495,6 @@ ntop.h
 #include "ntop_win32.h"
 #endif
 
-#ifdef MAKE_WITH_MALLINFO
- #include <malloc.h>
-#endif
-
 /*
  * i18n
  */

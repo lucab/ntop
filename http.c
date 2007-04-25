@@ -1235,7 +1235,8 @@ void printHTMLtrailer(void) {
   }
 
   if(myGlobals.runningPref.rFileName != NULL) {
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "Listening on [%s]\n", CONST_PCAP_NW_INTERFACE_FILE);
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "Listening on [%s]\n", 
+		  CONST_PCAP_NW_INTERFACE_FILE);
   } else {
     buf[0] = '\0';
 

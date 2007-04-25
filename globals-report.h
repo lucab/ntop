@@ -262,7 +262,7 @@ extern void drawVsanStatsGraph (unsigned int deviceId);
 extern void printVSANList(unsigned int deviceId);
 extern void handleNtopConfig (char *url, UserPrefDisplayPage page, int postLen);
 extern void purgeHost(char *serialized_serial);
-extern void printInterfaceStats();
+extern void printInterfaceStats(void);
 extern void findHost(char *key);
 
 /* webInterface.c */

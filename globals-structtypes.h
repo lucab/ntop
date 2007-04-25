@@ -2035,10 +2035,6 @@ typedef struct _userPref {
   char *P3Pcp;                  /* --p3p-cp '137' */
   char *P3Puri;                 /* --p3p-uri '138' */
 
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-  bool setNonBlocking;          /* --set-pcap-nonblocking '139' */
-#endif
-
   char *instance;               /* --instance '140' */
   char *logo;
 
@@ -2296,9 +2292,6 @@ typedef struct ntopGlobals {
   size_t allocatedMemory;
 #endif
 
-#ifdef MAKE_WITH_MALLINFO
-  u_int baseMemoryUsage;
-#endif
   u_int ipTrafficMatrixMemoryUsage;
   u_int fcTrafficMatrixMemoryUsage;
   u_char webInterfaceDisabled;

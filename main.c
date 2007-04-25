@@ -614,20 +614,6 @@ printf("Unable to read serial number\n");
 
   initReports();
 
-  /* If we can, set the base memory HERE */
-#ifdef MAKE_WITH_MALLINFO
-  {
-    struct mallinfo memStats;
-
-    memStats = mallinfo();
-    myGlobals.baseMemoryUsage = memStats.arena + memStats.hblkhd;
-
-    traceEvent(CONST_TRACE_NOISY, "MEMORY: Base memory load is %.2fMB (%d+%d)",
-	       xvertDOT00MB(myGlobals.baseMemoryUsage),
-	       memStats.arena,
-	       memStats.hblkhd);
-  }
-#endif
   traceEvent(CONST_TRACE_NOISY, "MEMORY: Base interface structure (no hashes loaded) is %.2fMB each",
 	     xvertDOT00MB(sizeof(NtopInterface)));
   traceEvent(CONST_TRACE_NOISY, "MEMORY:     or %.2fMB for %d interfaces",

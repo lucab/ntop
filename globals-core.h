@@ -121,17 +121,6 @@ extern char *ntop_strsignal(int sig);
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
    Dummies.  Instead of cluttering ntop with a bunch of #ifdef logic,
    * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-#ifndef HAVE_PCAP_FREECODE
-extern void pcap_freecode(struct bpf_program *pgm);
-#endif
-
-#ifndef HAVE_PCAP_FINDALLDEVS
-extern int pcap_findalldevs(pcap_if_t **alldevsp, char *errbuf);
-#endif
-
-#ifndef HAVE_PCAP_FREEALLDEVS
-extern pcap_freealldevs(pcap_if_t *alldevs);
-#endif
 
 #ifndef WIN32
 /* utildl.c */

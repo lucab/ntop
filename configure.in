@@ -45,12 +45,12 @@ dnl>   Edit the version # in the AC_INIT line to roll the version.
 dnl>   Edit NTOP_VERSION_EXTRA to put something extra (e.g. SourceForge rpm version"
 dnl>       into the stamp.
 dnl>
-AC_INIT([ntop],[3.3rc1])
+AC_INIT([ntop],[3.3rc2])
 
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v3.3rc1-05-03-2007"
+SCRIPTVER="v3.3rc2-05-03-2007"
 
 dnl>
 dnl> generate the config header
@@ -635,49 +635,17 @@ case "${target}" in
 esac
 
 AC_CHECK_HEADERS([pcap.h])
-dnl> libpcap < 0.8
-AC_CHECK_HEADERS([net/bpf.h])
 dnl> libpcap >= 0.8
-AC_CHECK_HEADERS([pcap-bpf.h])
+AC_CHECK_HEADERS([pcap-bpf.h], [], [
+        echo "Error! You have pcap installed but it's either a non development version or too old (< v0.8)."
+        exit -1
+        ])
 
-AC_CHECK_LIB([pcap], [pcap_open_live])
-AC_CHECK_LIB([pcap], [pcap_findalldevs], AC_DEFINE_UNQUOTED(HAVE_PCAP_FINDALLDEVS, 1, [libpcap has pcap_findalldevs]))
 
-if test ".${ac_cv_header_pcap_h}" != ".yes" ||
-   (test ".${ac_cv_header_net_bpf_h}" != ".yes" &&
-    test ".${ac_cv_header_pcap_bpf_h}" != ".yes" ) ||
-   (test ".${ac_cv_lib_pcap_pcap_open_live}" != ".yes") ||
-   (test ".${ac_cv_lib_pcap_pcap_findalldevs}" != ".yes"); then
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* ERROR: pcap header, bpf or library routines are missing"
-    echo "*           (yes means it was found, no means it was not found)"
-    echo "*"
-    echo "*              pcap.h...${ac_cv_header_pcap_h}"
-    echo "*              net/bpf.h...${ac_cv_header_net_bpf_h}"
-    echo "*              pcap-bpf.h...${ac_cv_header_pcap_bpf_h}"
-    echo "*              pcap_open_live() in -lpcap...${ac_cv_lib_pcap_pcap_open_live}"
-    echo "*              pcap_findalldevs() in -lpcap...${ac_cv_lib_pcap_pcap_findalldevs}"
-    echo "*"
-    echo "*  (One of the bpf files is required, but either will do)"
-    echo "*"
-    echo "*>>> No way to proceed."
-    echo "*"
-    echo "*???     1. Install libpcap (http://www.tcpdump.org/)"
-    echo "*???    and Rerun ./configure"
-    echo "*???  or 2. Use the --with-pcap-root= option"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    AC_MSG_ERROR(Unable to continue... aborting ./configure)
-fi
-
-AC_CHECK_LIB([pcap], [pcap_open_dead], AC_DEFINE_UNQUOTED(HAVE_PCAP_OPEN_DEAD, 1, [libpcap has pcap_open_dead]))
-AC_CHECK_LIB([pcap], [pcap_lib_version], AC_DEFINE_UNQUOTED(HAVE_PCAP_LIB_VERSION, 1, [libpcap has pcap_lib_version]))
-AC_CHECK_LIB([pcap], [pcap_freecode], AC_DEFINE_UNQUOTED(HAVE_PCAP_FREECODE, 1, [libpcap has pcap_freecode]))
-AC_CHECK_LIB([pcap], [pcap_freealldevs], AC_DEFINE_UNQUOTED(HAVE_PCAP_FREEALLDEVS, 1, [libpcap has pcap_freealldevs]))
-AC_CHECK_LIB([pcap], [pcap_setnonblock], AC_DEFINE_UNQUOTED(HAVE_PCAP_SETNONBLOCK, 1, [libpcap has pcap_setnonblock]))
+AC_CHECK_LIB([pcap], [], [
+        echo "Error! You have pcap installed but it's too old (< v0.8)."
+        exit -1
+        ])
 
 AC_MSG_CHECKING([for gdbm])
 AC_MSG_RESULT([])
@@ -1049,13 +1017,13 @@ fi
 RRD_LIB="-L${RRD_HOME}/lib -lrrd_th"
 
 if test -f "$RRD_HOME/lib/librrd_th.so"; then
-   AC_MSG_RESULT(Found RRD)
+   AC_MSG_RESULT(checking for rrdtool... yes)
 else
   if test -f "$RRD_HOME/lib/librrd_th.dylib"; then # OSX
-     AC_MSG_RESULT(Found RRD)
+     AC_MSG_RESULT(checking for rrdtool... yes)
   else
      if test -f "$RRD_HOME/lib/librrd_th.a"; then
-       AC_MSG_RESULT(Found RRD)
+       AC_MSG_RESULT(checking for rrdtool... yes)
      else 
        AC_CHECK_LIB([rrd_th], [main])
        if test ".${ac_cv_lib_rrd_th_main}" != ".yes"; then
@@ -1190,10 +1158,7 @@ AC_CHECK_HEADERS([sys/stat.h])
 AC_CHECK_HEADERS([sys/un.h])
 AC_CHECK_HEADERS([sys/wait.h])
 AC_CHECK_HEADERS([zlib.h])
-
-AC_CHECK_HEADERS([malloc.h])
-AC_CHECK_HEADERS([sys/resource.h])
-
+	
 dnl> Multithreading...
 dnl>    pthread.h is required,
 dnl>    sched.h or sys/sched.h are optional, but improves performance
@@ -1386,20 +1351,6 @@ AC_CHECK_FUNCS([uname])
 
 dnl> Test for strtok_r (we have our own defn if it's not available)
 AC_CHECK_FUNCS([strtok_r])
-
-dnl> Check if malloc.h has mallinfo...
-AC_MSG_CHECKING([for mallinfo in malloc.h])
-AC_LANG_CONFTEST(
-[AC_LANG_PROGRAM([[#include <malloc.h>]],
-                 [[struct mallinfo memStats = mallinfo();]])])
-if (eval "$ac_link"); then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE_UNQUOTED(HAVE_MALLINFO_MALLOC_H,
-                           1,
-                           [malloc.h has mallinfo])
-else
-    AC_MSG_RESULT(no)
-fi
 
 dnl> NTOPCONFIGDEBUG_SETTINGS([After all tests])
 

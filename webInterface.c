@@ -28,13 +28,6 @@
 #include <pwd.h>
 #endif
 
-#ifdef MAKE_WITH_MALLINFO
-#include <malloc.h>
-#ifdef HAVE_SYS_RESOURCE_H
-#include <sys/resource.h>
-#endif
-#endif
-
 #ifdef MAKE_WITH_SSLWATCHDOG
 /* Stuff for the watchdog */
 #include <setjmp.h>
@@ -1852,14 +1845,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBPNG",
-#ifdef HAVE_LIBPNG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "HAVE_LIBPOSIX4",
 #ifdef HAVE_LIBPOSIX4
                          "yes"
@@ -2214,70 +2199,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "HAVE_OPENSSL_X509_H",
 #ifdef HAVE_OPENSSL_X509_H
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_BPF_H",
-#ifdef HAVE_PCAP_BPF_H
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_FINDALLDEVS",
-#ifdef HAVE_PCAP_FINDALLDEVS
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_FREEALLDEVS",
-#ifdef HAVE_PCAP_FREEALLDEVS
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_FREECODE",
-#ifdef HAVE_PCAP_FREECODE
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_H",
-#ifdef HAVE_PCAP_H
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_OPEN_DEAD",
-#ifdef HAVE_PCAP_OPEN_DEAD
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_SETNONBLOCK",
-#ifdef HAVE_PCAP_SETNONBLOCK
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_PNG_H",
-#ifdef HAVE_PNG_H
                          "yes"
 #else
                          "no"
@@ -2918,14 +2839,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_JUMBO_FRAMES",
 #ifdef MAKE_WITH_JUMBO_FRAMES
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_MALLINFO",
-#ifdef MAKE_WITH_MALLINFO
                          "yes"
 #else
                          "no"
@@ -3855,12 +3768,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_LEGEND_BOX_SIZE", "undefined");
 #endif
 
-#ifdef CONST_LIBGD_SO
-  printFeatureConfigInfo(textPrintFlag, "CONST_LIBGD_SO", CONST_LIBGD_SO);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_LIBGD_SO", "undefined");
-#endif
-
 #ifdef CONST_LOCALE_TIMESPEC
   printFeatureConfigInfo(textPrintFlag, "CONST_LOCALE_TIMESPEC", CONST_LOCALE_TIMESPEC);
 #else
@@ -4051,12 +3958,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigNum(textPrintFlag, "CONST_PATH_SEP", CONST_PATH_SEP);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_PATH_SEP", "undefined");
-#endif
-
-#ifdef CONST_PCAPNONBLOCKING_SLEEP_TIME
-  printFeatureConfigNum(textPrintFlag, "CONST_PCAPNONBLOCKING_SLEEP_TIME", CONST_PCAPNONBLOCKING_SLEEP_TIME);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_PCAPNONBLOCKING_SLEEP_TIME", "undefined");
 #endif
 
 #ifdef CONST_PCAP_NW_INTERFACE_FILE
@@ -6307,15 +6208,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   unsigned int idx, minLen, maxLen;
   unsigned long totBuckets=0, nonEmptyBuckets=0;
 
-#ifdef MAKE_WITH_MALLINFO
-  struct mallinfo memStats;
-  int totalHostsMonitored = 0;
-
-#ifdef HAVE_SYS_RESOURCE_H
-  struct rlimit rlim;
-#endif
-#endif
-
 #ifdef HAVE_SYS_UTSNAME_H
   struct utsname unameData;
 #endif
@@ -6339,9 +6231,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     }
   }
 
-#ifdef HAVE_PCAP_LIB_VERSION
   printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.tcpdump.org>libpcap</A> Version", (char *)pcap_lib_version());
-#endif
 
   snprintf(buf, sizeof(buf), "%1.4f", rrd_version());
   printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.rrdtool.org/>RRD</A> Version", buf);
@@ -6660,12 +6550,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                            pref->P3Puri,
                            "none");
 
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-  printParameterConfigInfo(textPrintFlag, "--pcap-nonblocking",
-                           pref->setNonBlocking == 1 ? "Yes" : "No",
-                           "No");
-#endif
-
   printParameterConfigInfo(textPrintFlag, "--skip-version-check",
                            pref->skipVersionCheck == 1 ? "Yes" : "No",
                            "No");
@@ -6964,39 +6848,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     }
 #endif
 
-#ifdef MAKE_WITH_MALLINFO
-  printInfoSectionTitle(textPrintFlag, "Memory allocation - data segment");
-
-  memStats = mallinfo();
-
-#ifdef HAVE_SYS_RESOURCE_H
-  getrlimit(RLIMIT_DATA, &rlim);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)rlim.rlim_cur);
-  printFeatureConfigInfo(textPrintFlag, "arena limit, getrlimit(RLIMIT_DATA, ...)", buf);
-#endif
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.ordblks);
-  printFeatureConfigInfo(textPrintFlag, "Allocated blocks (ordblks)", buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.arena);
-  printFeatureConfigInfo(textPrintFlag, "Allocated (arena)", buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.uordblks);
-  printFeatureConfigInfo(textPrintFlag, "Used (uordblks)", buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.fordblks);
-  printFeatureConfigInfo(textPrintFlag, "Free (fordblks)", buf);
-
-  if(memStats.uordblks + memStats.fordblks != memStats.arena)
-    printFeatureConfigInfo(textPrintFlag, "WARNING:", "Used+Free != Allocated");
-
-  printInfoSectionTitle(textPrintFlag, "Memory allocation - mmapped");
-
-  printFeatureConfigNum(textPrintFlag, "Allocated blocks (hblks)", (int)memStats.hblks);
-  printFeatureConfigNum(textPrintFlag, "Allocated bytes (hblkhd)", (int)memStats.hblkhd);
-
-#endif
-
   if(textPrintFlag == TRUE) {
     printInfoSectionTitle(textPrintFlag, "Memory Usage");
 
@@ -7013,32 +6864,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d (%.1f MB)", myGlobals.asMem, (float)myGlobals.asMem/(1024.0*1024.0));
     printFeatureConfigInfo(textPrintFlag, "IP to AS (Autonomous System) number table (bytes)", buf);
-
-#ifdef MAKE_WITH_MALLINFO
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.arena + memStats.hblkhd);
-    printFeatureConfigInfo(textPrintFlag, "Current memory usage", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.baseMemoryUsage);
-    printFeatureConfigInfo(textPrintFlag, "Base memory usage", buf);
-
-    for(i=0; i<myGlobals.numDevices; i++)
-      totalHostsMonitored += myGlobals.device[i].hostsno;
-
-    if(totalHostsMonitored > 0) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d = (%d + %d)",
-		  totalHostsMonitored + myGlobals.hostsCacheLen,
-		  totalHostsMonitored,
-		  myGlobals.hostsCacheLen);
-      printFeatureConfigInfo(textPrintFlag, "Hosts stored (active+cache)", buf);
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.1fKB",
-		  ((float)(memStats.arena + memStats.hblkhd - myGlobals.baseMemoryUsage) /
-		   (float)(totalHostsMonitored + myGlobals.hostsCacheLen) /
-		   1024.0 + 0.05));
-      printFeatureConfigInfo(textPrintFlag, "(very) Approximate memory per host", buf);
-    }
-#endif
   }
 
   printInfoSectionTitle(textPrintFlag, "Host Memory Cache");
