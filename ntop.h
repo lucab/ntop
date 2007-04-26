@@ -335,15 +335,7 @@ ntop.h
  #include "pcap.h"
 #else
 #if !defined(WIN32)
- #ifdef HAVE_NET_BPF_H
-  #include <net/bpf.h>
- #else
-  #ifdef HAVE_PCAP_BPF_H
-   #include <pcap-bpf.h>
-  #else
-   #error Neither net/bpf.h nor pcap-bpf.h found
-  #endif
- #endif
+#include <pcap-bpf.h>
 #endif
 #endif
 
