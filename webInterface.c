@@ -7607,17 +7607,14 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   /* **************************** */
 
-#if !defined(DEBUG) && !defined(WIN32)
-  if(pref->debugMode)
-#endif /* DEBUG or WIN32 */
-    printMutexStatusReport(textPrintFlag);
-
+  printMutexStatusReport(textPrintFlag);
+  
   if(textPrintFlag != TRUE) {
     sendString("<p>[ Click <a  class=tooltip href=\"" CONST_TEXT_INFO_NTOP_HTML "\" title=\"Text version of this page\">"
 	       "here</a> for a more extensive, text version of this page, suitable for "
 	       "inclusion into a bug report ]</p>\n");
   }
-
+  
   sendString(texthtml("</pre>", "</CENTER>\n"));
 }
 

@@ -9,6 +9,9 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # $Log$
+# Revision 2.16  2007/05/01 07:02:49  deri
+# Minor changes: mutex info is now displayed even in non-debug mode
+#
 # Revision 2.15  2007/04/09 20:34:24  deri
 # Added fix for detecting automake 1.10 and above. Thanks to
 # Marco Scandaletti <marco@scanda.it> for reporting it.
@@ -267,7 +270,12 @@ echo "        .... ok"
 
 automakeversion=`$AUTOMAKE --version < /dev/null 2>&1 | grep ^automake | cut -d " " -f 4`
 echo "    automake .... ${automakeversion}"
-automakeversion=`echo ${automakeversion}| cut -c 3-`
+
+if test `echo ${automakeversion}| cut -c 4` == "."; then
+ automakeversion=`echo ${automakeversion}| cut -c 3`
+else
+ automakeversion=`echo ${automakeversion}| cut -c 3-4`
+fi
 
 if  test ${automakeversion} -lt 6; then
     echo ""

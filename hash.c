@@ -778,7 +778,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   u_int32_t the_local_network, the_local_network_mask;
 
   if((hostIpAddress == NULL) && (ether_addr == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "Both Ethernet and IP addresses are NULL in lookupHost()[%s/%d]", file, line);
+    traceEvent(CONST_TRACE_WARNING, "Both Ethernet and IP addresses are NULL in lookupHost()[%s:%d]", file, line);
     return(NULL);
   }
 
@@ -819,7 +819,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   while (el != NULL) {
     if(el->magic != CONST_MAGIC_NUMBER) {
       traceEvent(CONST_TRACE_ERROR,
-                 "Bad magic number (expected=%d/real=%d) [deviceId=%d] lookupHost()[%s/%d]",
+                 "Bad magic number (expected=%d/real=%d) [deviceId=%d] lookupHost()[%s:%d]",
 		 CONST_MAGIC_NUMBER, el->magic, actualDeviceId,
                  file, line);
       break; /* Can't trust this chain ... */
@@ -827,7 +827,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 
     if(el->hostTrafficBucket != idx) {
       traceEvent(CONST_TRACE_WARNING,
-                 "Error: wrong bucketIdx %s/%s (expected=%d/real=%d) [deviceId=%d] lookupHost()[%s/%d]",
+                 "Error: wrong bucketIdx %s/%s (expected=%d/real=%d) [deviceId=%d] lookupHost()[%s:%d]",
 		 el->ethAddressString, el->hostNumIpAddress,
 		 idx, el->hostTrafficBucket, actualDeviceId,
                  file, line);
@@ -1156,7 +1156,6 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     setHostSerial(el);
     handlePluginHostCreationDeletion(el, (u_short)actualDeviceId, 1 /* host creation */);
   }
-
 
   if(el != NULL) {
     el->lastSeen = myGlobals.actTime;

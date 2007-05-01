@@ -33,7 +33,6 @@ static int *servicesMapper = NULL; /* temporary value */
 /* *************************** */
 
 static void printMutexInfo(PthreadMutex *mutexId, char *mutexName) {
-
   traceEvent(CONST_TRACE_INFO, "%s is %s (last lock %s:%d) [max lock time %s:%d (%.6f sec)]",
 	     mutexName,
 	     mutexId->isLocked ? "*locked*" : "unlocked",

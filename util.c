@@ -2279,7 +2279,7 @@ int _unlockHostsHashMutex(HostTraffic *host, char *file, int line) {
       rc = releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket]);
     } else {
       /* myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 0 */
-      traceEvent(CONST_TRACE_WARNING, "Error: attempting to unlock an unlocked mutex from %s(%d)",
+      traceEvent(CONST_TRACE_WARNING, "Error: attempting to unlock an unlocked mutex from %s:%d",
                  file, line);
       rc = 0;
     }

@@ -4800,7 +4800,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 			      myGlobals.device[devIdx].humanFriendlyName,
 			      asStats->as_id);
 		mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
-
+		
 		updateCounter(rrdIfPath, "ifInOctets",   asStats->inBytes.value, 0);
 		updateCounter(rrdIfPath, "ifInPkts",     asStats->inPkts.value, 0);
 		updateCounter(rrdIfPath, "ifOutOctets",  asStats->outBytes.value, 0);
@@ -4822,6 +4822,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
 			  "%s/interfaces/%s/AS/", myGlobals.rrdPath,
 			  myGlobals.device[devIdx].humanFriendlyName);
+	    mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
 	    updateGauge(rrdIfPath, "numAS", totAS, 0);
 	    // traceEvent(CONST_TRACE_WARNING, "numAS=%d", totAS);
 	  }

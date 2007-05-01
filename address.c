@@ -389,10 +389,10 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
              * Treat as NOT FOUND, but use reportedFreaky to put out one message per run.
              * Known to happen under Linux, other OSes uncertain...
              */
-	if (reportedFreaky == FALSE) {
-                reportedFreaky = TRUE;
-		traceEvent(CONST_TRACE_NOISY, "gethost... call returned NULL/NETDB_SUCCESS - "
-			   "this is odd, but apparently normal");
+	if((reportedFreaky == FALSE) && (hp != NULL)) {
+	  reportedFreaky = TRUE;
+	  traceEvent(CONST_TRACE_NOISY, "gethost... call returned NULL/NETDB_SUCCESS - "
+		     "this is odd, but apparently normal");
 	}
 	myGlobals.numDNSErrorHostNotFound++;
 	break;
