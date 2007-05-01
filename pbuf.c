@@ -1476,43 +1476,50 @@ static void processIpPkt(const u_char *bp,
 	    WIN = ntohs(tcp->th_win);  /* TCP window size */
 
 	    if(tcp_data != tcp_opt) { /* there are some tcp_option to be parsed */
-	      u_char *opt_ptr = tcp_opt;
+	      u_char *opt_start = tcp_opt, *opt_end = tcp_data;
+	      u_short num_loops = 0;
 
-	      while(opt_ptr < tcp_data) {
-		switch(*opt_ptr) {
+	      while(opt_start < opt_end) {
+		switch(*opt_start) {
 		case TCPOPT_EOL:        /* end option: exit */
-		  opt_ptr = tcp_data;
+		  opt_start = opt_end;
 		  break;
 		case TCPOPT_NOP:
 		  N = 1;
-		  opt_ptr++;
+		  opt_start++;
 		  break;
 		case TCPOPT_SACKOK:
 		  S = 1;
-		  opt_ptr += 2;
+		  opt_start += 2;
 		  break;
 		case TCPOPT_MAXSEG:
-		  opt_ptr += 2;
-		  MSS = ntohs(ptohs(opt_ptr));
-		  opt_ptr += 2;
+		  opt_start += 2;
+		  MSS = ntohs(ptohs(opt_start));
+		  opt_start += 2;
 		  break;
 		case TCPOPT_WSCALE:
-		  opt_ptr += 2;
-		  WS = *opt_ptr;
-		  opt_ptr++;
+		  opt_start += 2;
+		  WS = *opt_start;
+		  opt_start++;
 		  break;
 		case TCPOPT_TIMESTAMP:
 		  T = 1;
-		  opt_ptr++;
-		  opt_ptr += (*opt_ptr - 1);
+		  opt_start++;
+		  opt_start += (*opt_start - 1);
 		  break;
 		default:
-		  opt_ptr++;
-		  if(*opt_ptr > 0)
-		    opt_ptr += (*opt_ptr - 1);
+		  opt_start++;
+		  if(*opt_start > 0)
+		    opt_start += (*opt_start - 1);
 		  break;
 		}
-	      }
+
+		num_loops++;
+		if(num_loops > 16) {
+		  /* Suspicious packet: maybe the TCP options are wrong */
+		  break;
+		}
+	      }	     
 	    }
 
 	    if(WS == -1)
