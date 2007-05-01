@@ -2210,6 +2210,7 @@ static int returnHTTPPage(char* pageName,
 	if(stat(tmpStr, &statbuf) == 0) {
 	  if((fd = fopen(tmpStr, "rb")) != NULL) {
 	    found = 1;
+	    /* traceEvent(CONST_TRACE_ERROR, "--> %s", tmpStr); */
 	    break;
 	  }
 

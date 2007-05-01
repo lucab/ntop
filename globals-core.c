@@ -549,7 +549,37 @@ void initNtop(char *devices) {
   initGdbm(myGlobals.dbPath, myGlobals.spoolPath, 0);
 
   if(myGlobals.runningPref.daemonMode) {
-    daemonizeUnderUnix();
+    /*
+      Before bacoming a daemon we need o make sure that
+      ntop has been installed properly and that all the 
+      html files are on the right place
+    */
+    
+    int idx, found = 0;
+
+    for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
+      char tmpStr[256];
+      struct stat statbuf;
+
+      if(strcmp(myGlobals.dataFileDirs[idx], ".") /* ignore local paths */ ) {
+	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
+		      "%s/html/%s",
+		      myGlobals.dataFileDirs[idx],
+		      "ntop.gif" /* This file must always exist */);
+	
+	if(stat(tmpStr, &statbuf) == 0) {
+	  found = 1;
+	  break;
+	}
+      }
+    }
+
+    
+    if(!found) {
+      traceEvent(CONST_TRACE_WARNING, "ntop will not become a daemon as it has not been");
+      traceEvent(CONST_TRACE_WARNING, "installed properly (did you do 'make install')");
+    } else
+      daemonizeUnderUnix();
   }
 
   /* Handle local addresses (if any) */
