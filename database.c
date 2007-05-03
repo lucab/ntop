@@ -131,7 +131,6 @@ static void* scanDbLoop(void* notUsed _UNUSED_) {
 
 static int init_database(char *db_host, char* user, char *pw, char *db_name) {
   char sql[2048];
-  my_bool autoreconnect = 1;
 
   mysql_initialized = 0;
   myGlobals.purgeDbThreadId = (pthread_t)-1;
@@ -161,7 +160,14 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
     safe_snprintf(__FILE__, __LINE__, mysql_db_name, sizeof(mysql_db_name), db_name);
   }
 
-  mysql_options(&mysql, MYSQL_OPT_RECONNECT, &autoreconnect);
+#ifdef MYSQL_OPT_RECONNECT
+ {
+   my_bool autoreconnect = 1;
+   
+   mysql_options(&mysql, MYSQL_OPT_RECONNECT, &autoreconnect);
+ }
+#endif
+
   mysql_initialized = 1;
 
   /* *************************************** */

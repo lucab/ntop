@@ -1614,6 +1614,9 @@ if test ".${ac_disable_snmp}" != ".yes"; then
     AC_DEFINE_UNQUOTED(HAVE_SNMP, 1, [SNMP is supported])
     LIBS="${LIBS} `net-snmp-config --libs --agent-libs`"
 dnl    INCS="${INCS} `net-snmp-config --cflags`"
+
+dnl remove unecessary path       
+       LIBS=`echo ${LIBS}|sed -e s,'-R../lib',,g`
   else
     AC_MSG_RESULT("NET-SNMP is not present: SNMP support is disabled")
   fi

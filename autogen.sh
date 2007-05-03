@@ -9,6 +9,9 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # $Log$
+# Revision 2.17  2007/05/03 09:48:04  deri
+# Added configure fixes and MySQL 4.x
+#
 # Revision 2.16  2007/05/01 07:02:49  deri
 # Minor changes: mutex info is now displayed even in non-debug mode
 #
@@ -268,10 +271,10 @@ esac
 echo "        .... ok"
 
 
-automakeversion=`$AUTOMAKE --version < /dev/null 2>&1 | grep ^automake | cut -d " " -f 4`
+automakeversion=`$AUTOMAKE --version < /dev/null 2>&1 | grep '^automake' | cut -d " " -f 4`
 echo "    automake .... ${automakeversion}"
 
-if test `echo ${automakeversion}| cut -c 4` == "."; then
+if test `echo ${automakeversion}| cut -c 4` = "."; then
  automakeversion=`echo ${automakeversion}| cut -c 3`
 else
  automakeversion=`echo ${automakeversion}| cut -c 3-4`
@@ -291,7 +294,7 @@ fi
 echo "        .... ok"
 
 
-autoconfversion=`$AUTOCONF --version < /dev/null 2>&1 | grep ^autoconf | cut -d " " -f 4`
+autoconfversion=`$AUTOCONF --version < /dev/null 2>&1 | grep '^autoconf' | cut -d " " -f 4`
 echo "    autoconf .... ${autoconfversion}"
 
 case "${autoconfversion}" in
