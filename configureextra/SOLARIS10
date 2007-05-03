@@ -1,0 +1,31 @@
+#!/bin/sh
+
+#
+# L.Deri - May 2007
+#
+
+echo "        Setting Solaris 10 specific flag values"
+LDFLAGS="-L/opt/sfw/lib -L/usr/local/lib -R/opt/sfw/lib -R/usr/local/lib ${LDFLAGS}"
+LIBS="-lnsl -lsocket ${LIBS}"
+CPPFLAGS="${CPPFLAGS} -I/usr/local/include -I/opt/sfw/include"
+
+. configureextra/functions
+
+# Test for GNU libiconv (e.g. SunFreeware)
+test_library iconv    iconv_open
+
+echo "*************************************************"
+echo ""
+echo "IMPORTANT IMPORTANT IMPORTANT IMPORTANT IMPORTANT"
+echo ""
+echo "Do not use the static (libpcap.a) library but build"
+echo "the shared library as follows:"
+echo "- cd libpcap-0.X.Y"
+echo "- ./configure"
+echo "- su"
+echo "- make install-shared"
+echo "- cd /usr/local/lib"
+echo "- ln -s libpcap.so.0.X.Y libpcap.so"
+echo "- rm libpcap.a"
+echo ""
+echo "*************************************************"
