@@ -6220,7 +6220,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "ntop Version", version);
   printFeatureConfigInfo(textPrintFlag, "Configured on", configureDate);
   printFeatureConfigInfo(textPrintFlag, "Built on", buildDate);
-  printFeatureConfigInfo(textPrintFlag, "OS", osName);
+  
+  safe_snprintf(__FILE__, __LINE__, formatBuf, sizeof(formatBuf), "%s [%d bit]", 
+	  osName, (sizeof(int) == 4) ? 32 : 64);
+  printFeatureConfigInfo(textPrintFlag, "OS", formatBuf);
 
   if(myGlobals.checkVersionStatus != FLAG_CHECKVERSION_NOTCHECKED) {
     printFeatureConfigInfo(textPrintFlag, "This version of ntop is", reportNtopVersionCheck());
@@ -7807,7 +7810,7 @@ void printNtopProblemReport(void) {
 #endif
 
   raw = 0;
-  for(i=0; i<= myGlobals.numDevices; i++)
+  for(i=0; i< myGlobals.numDevices; i++)
     raw += (unsigned int) (myGlobals.device[i].ethernetBytes.value);
 
 #ifdef PROBLEMREPORTID_DEBUG

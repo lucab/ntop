@@ -2078,6 +2078,8 @@ typedef struct ntopGlobals {
 #ifndef WIN32
   char      *effectiveUserName;
   int       userId, groupId;    /* 'u' */
+#else
+  u_char    useU3;              /* --U3 */
 #endif
   char *dbPath;                 /* 'P' */
   char *spoolPath;              /* 'Q' */

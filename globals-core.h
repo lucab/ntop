@@ -896,7 +896,7 @@ extern int h_errno; /* netdb.h */
 
 #ifdef WIN32
 #ifndef __MINGW32__
-#define strncasecmp(a, b, c) strnicmp(a, b, c)
+#define strncasecmp(a, b, c) _strnicmp(a, b, c)
 #endif
 #define sleep(a /* sec */) waitForNextEvent(1000*a /* ms */)
 #else

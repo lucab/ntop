@@ -153,10 +153,14 @@ static struct option const long_options[] = {
   { "disable-mutexextrainfo",           no_argument,       NULL, 145 },
 
   { "fc-only",                          no_argument,       NULL, 147 },
-  { "no-fc",                            no_argument,       0, 148 },
-  { "no-invalid-lun",                   no_argument,       0, 149 },
+  { "no-fc",                            no_argument,       0, 148    },
+  { "no-invalid-lun",                   no_argument,       0, 149    },
 
-  { "skip-version-check",               no_argument,       NULL, 150 },
+  { "skip-version-check",               required_argument, NULL, 150 },
+
+#ifdef WIN32
+  { "U3",                               required_argument, NULL, 151 },
+#endif
 
   {NULL, 0, NULL, 0}
 };
@@ -213,8 +217,7 @@ void loadPrefs(int argc, char* argv[]) {
 
     case 'P':
       stringSanityCheck(optarg, "-P | --db-file-path");
-      if(myGlobals.dbPath != NULL)
-	free(myGlobals.dbPath);
+      if(myGlobals.dbPath != NULL) free(myGlobals.dbPath);
 
       myGlobals.dbPath = strdup(optarg);
       break;
@@ -272,6 +275,10 @@ int parseOptions(int argc, char* argv[]) {
 #ifdef PARAM_DEBUG
   for(opt_index=0; opt_index<argc; opt_index++)
     traceEvent(CONST_TRACE_NOISY, "PARAM_DEBUG: argv[%d]: %s", opt_index, argv[opt_index]);
+#endif
+
+#ifdef WIN32
+	myGlobals.useU3 = 0;
 #endif
 
   /*
@@ -478,8 +485,8 @@ int parseOptions(int argc, char* argv[]) {
 
     case 'N':
       pathSanityCheck(optarg, "-N | --wwn-map");
-      if (myGlobals.runningPref.fcNSCacheFile != NULL)
-	free (myGlobals.runningPref.fcNSCacheFile);
+      if(myGlobals.runningPref.fcNSCacheFile != NULL)
+	   free(myGlobals.runningPref.fcNSCacheFile);
       myGlobals.runningPref.fcNSCacheFile = strdup (optarg);
       break;
 
@@ -696,6 +703,17 @@ int parseOptions(int argc, char* argv[]) {
     case 150:
       myGlobals.runningPref.skipVersionCheck = TRUE;
       break;
+
+#ifdef WIN32
+	case 151: /* Equivalent to -P and -Q */
+      pathSanityCheck(optarg, " | --U3");
+      if(myGlobals.dbPath != NULL) free(myGlobals.dbPath);
+      if(myGlobals.spoolPath != NULL) free(myGlobals.spoolPath);
+      myGlobals.dbPath = strdup(optarg);
+	  myGlobals.spoolPath = strdup(optarg);
+	  myGlobals.useU3 = 1;
+	break;
+#endif
 
     default:
       printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);

@@ -523,14 +523,24 @@ static void ssiMenu_Head() {
 		  "[\n"
 		  "	[null,'About',null,null,null,\n"
 		  "		[null,'What is ntop?','/" CONST_ABTNTOP_HTML "',null,null],\n"
-		  "		[null,'Show Configuration','/" CONST_INFO_NTOP_HTML "',null,null],\n"
 		  "		[null,'Credits','/" CONST_CREDITS_HTML "',null,null],\n"
+
+
+		  "  [null,'ntop World',null,null,null,\n"
+		  "          [null,'ntop-based Solutions','http://www.ntop.org/solutions.html',null,null],\n"
+		  "          [null,'nMon.net Products','http://www.nmon.net/products.html',null,null],\n"
+		  "          ],\n"
+
+		  "  [null,'Online Documentation',null,null,null,\n"
 		  "		[null,'Man Page','/" CONST_MAN_NTOP_HTML "',null,null],\n"
 		  "		['<img src=\"/help.png\">','Help','/ntop" CONST_NTOP_HELP_HTML "',null,null],\n"
-		  "		['<img src=\"/bug.png\">','Report a Problem','/" CONST_PROBLEMRPT_HTML "',null,null],\n"
 		  "		[null,'FAQ','/faq.html',null,null],\n"
 		  "		['<img src=\"/Risk_high.gif\">','Risk Flags','/" CONST_NTOP_HELP_HTML "',null,null],\n"
-		  "		],\n"
+		  "     ],\n"
+		  "	  [null,'Show Configuration','/" CONST_INFO_NTOP_HTML "',null,null],\n"
+		  "	  ['<img src=\"/bug.png\">','Report a Problem','/" CONST_PROBLEMRPT_HTML "',null,null],\n"
+		  "	],\n"
+
 		  "	[null,'Summary',null,null,null,\n"
 		  "		[null,'Traffic','/" CONST_TRAFFIC_STATS_HTML "',null,null],\n"
 		  "		[null,'Hosts','/" CONST_HOSTS_INFO_HTML "',null,null],\n"

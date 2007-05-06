@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-06 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 2002-07 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -2598,13 +2598,16 @@ static void commonRRDinit(void) {
     dumpDetail  = atoi(value);
   }
 
-  if(fetchPrefsValue("rrd.rrdPath", value, sizeof(value)) == -1) {
+  if((fetchPrefsValue("rrd.rrdPath", value, sizeof(value)) == -1) 
+#ifdef WIN32
+		|| myGlobals.useU3
+#endif
+		){
     char *thePath = "/rrd";
-    int len = strlen(myGlobals.dbPath)+strlen(thePath)+1, idx = 0;
+    int len = strlen(myGlobals.dbPath)+strlen(thePath)+16, idx = 0;
 
     if(myGlobals.rrdPath) free(myGlobals.rrdPath);
     myGlobals.rrdPath = (char*)malloc(len);
-
 
 #ifdef WIN32
     /*
@@ -2613,10 +2616,16 @@ static void commonRRDinit(void) {
     */
 
     if(myGlobals.dbPath[1] == ':') idx = 2; /* e.g. c:/... */
+
+	safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath, len, "%s/%u%s", &myGlobals.dbPath[idx], driveSerial, thePath);
+	revertSlashIfWIN32(myGlobals.rrdPath, 0);
+#else
+    safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath, len, "%s%s", &myGlobals.dbPath[idx], thePath);
 #endif
 
-    safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath, len, "%s%s", &myGlobals.dbPath[idx], thePath);
-
+#ifdef WIN32
+	if(!myGlobals.useU3)
+#endif
     storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
   } else {
     int vlen = strlen(value)+1;
@@ -2624,17 +2633,6 @@ static void commonRRDinit(void) {
     myGlobals.rrdPath  = (char*)malloc(vlen);
     unescape(myGlobals.rrdPath, vlen, value);
   }
-
-#ifdef WIN32
-  {	
-    char buf[256];
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%u", myGlobals.rrdPath, driveSerial);
-    free(myGlobals.rrdPath);
-    myGlobals.rrdPath = strdup(buf);
-    mkdir_p("RRD", myGlobals.rrdPath, 0x777);
-  }
-#endif
 
 #ifndef WIN32
   if(fetchPrefsValue("rrd.permissions", value, sizeof(value)) == -1) {
@@ -4404,6 +4402,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
   for (i=0; i<sizeof(rrd_subdirs)/sizeof(rrd_subdirs[0]); i++) {
     safe_snprintf(__FILE__, __LINE__, dname, sizeof(dname), "%s/%s", myGlobals.rrdPath, rrd_subdirs[i]);
+	revertSlashIfWIN32(dname, 0);
+
     if(_mkdir(dname, myGlobals.rrdDirectoryPermissions) == -1) {
       if(errno != EEXIST) {
 	traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)", errno, dname);

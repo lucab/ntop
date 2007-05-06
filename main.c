@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- * Copyright (C) 1998-2006 Luca Deri <deri@ntop.org>
+ * Copyright (C) 1998-2007 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -129,6 +129,11 @@ void usage(FILE * fp) {
   fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            %sPath for log files in pcap format\n", newLine);
   fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     %sURL (mapper.pl) for displaying host location\n", 
 	  newLine);
+
+#ifdef WIN32
+  fprintf(fp, "    [               | --U3]                                %sU3 path (only when used with U3 devices)\n", newLine);
+#endif
+
   fprintf(fp, "    [-V             | --version]                          %sOutput version information and exit\n", newLine);
   fprintf(fp, "    [-X <max num TCP sessions> ]                          %sMax num. TCP sessions ntop can handle (default %u)\n", 
 	  newLine, myGlobals.runningPref.maxNumSessions);
