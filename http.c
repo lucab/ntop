@@ -1139,7 +1139,6 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   /* ******************************************************* */
 
   if((headerFlags & BITFLAG_HTML_NO_BODY) == 0) {
-
     sendString("<body link=\"blue\" vlink=\"blue\">\n\n");
     ssiMenu_Body();
 
@@ -2763,6 +2762,7 @@ static int returnHTTPPage(char* pageName,
       } else if(strcasecmp(pageName, CONST_VSAN_DISTRIB_HTML) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawVsanStatsGraph(myGlobals.actualReportDeviceId);
+	printTrailer=0;
       } else if(strncasecmp (pageName, CONST_VSAN_DETAIL_HTML, strlen (CONST_VSAN_DETAIL_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printVsanDetailedInfo (vsanId, myGlobals.actualReportDeviceId);
@@ -2801,16 +2801,19 @@ static int returnHTTPPage(char* pageName,
         sscanf (pageName, CONST_PIE_VSAN_CNTL_TRAF_DIST "-%d", &vsanId);
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
         drawVsanSwilsProtoDistribution(vsanId);
+	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_BAR_VSAN_TRAF_DIST_SENT,
 			    strlen(CONST_BAR_VSAN_TRAF_DIST_SENT)) == 0) {
         sscanf (pageName, CONST_BAR_VSAN_TRAF_DIST_SENT "-%d", &vsanId);
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
         drawVsanDomainTrafficDistribution(vsanId, TRUE);
+	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_BAR_VSAN_TRAF_DIST_RCVD,
 			    strlen(CONST_BAR_VSAN_TRAF_DIST_RCVD)) == 0) {
         sscanf (pageName, CONST_BAR_VSAN_TRAF_DIST_RCVD "-%d", &vsanId);
-	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
         drawVsanDomainTrafficDistribution(vsanId, FALSE);
+	printTrailer=0;
 #ifndef EMBEDDED
       } else if(strncasecmp(pageName, CONST_PIE_IP_TRAFFIC, strlen(CONST_PIE_IP_TRAFFIC)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -3232,8 +3235,8 @@ static int returnHTTPPage(char* pageName,
   }
 
   if(domainNameParm != NULL) free(domainNameParm);
-  if(db_key != NULL) free(db_key);
-  if(db_val != NULL) free(db_val);
+  if(db_key != NULL)         free(db_key);
+  if(db_val != NULL)         free(db_val);
 
   if(printTrailer && (postLen == -1)) printHTMLtrailer();
 

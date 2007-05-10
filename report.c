@@ -299,7 +299,7 @@ void printTrafficSummary (int revertOrder) {
     sendString(buf);
   }
 
-  if (myGlobals.runningPref.rFileName == NULL) {
+  if(myGlobals.runningPref.rFileName == NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
 		  ctime(&myGlobals.initialSniffTime),
@@ -421,7 +421,7 @@ void printTrafficSummary (int revertOrder) {
                   /(float)myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value);
     sendString(buf);
 
-    if (!myGlobals.runningPref.printFcOnly) {
+    if(!myGlobals.runningPref.printFcOnly) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Unicast</th>"
 		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
 		    getRowColor(),
@@ -564,12 +564,12 @@ void printTrafficSummary (int revertOrder) {
 
   sendString("</TABLE></CENTER>\n");
 
-  if (!myGlobals.runningPref.printFcOnly) {
+  if(!myGlobals.runningPref.printFcOnly) {
     printProtoTraffic(FALSE);
     sendString("<p>\n");
     printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, FALSE);
   }
-  if (!myGlobals.runningPref.printIpOnly) {
+  if(!myGlobals.runningPref.printIpOnly) {
     sendString("<p>\n");
     printFcTrafficSummary(0);
   }
@@ -680,7 +680,7 @@ void printTrafficStatistics(int revertOrder) {
     sendString(buf);
   }
 
-  if (myGlobals.runningPref.rFileName == NULL) {
+  if(myGlobals.runningPref.rFileName == NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
 		  ctime(&myGlobals.initialSniffTime),
@@ -1389,12 +1389,12 @@ void printTrafficStatistics(int revertOrder) {
 
    sendString("</TABLE></CENTER>\n");
 
-   if (!myGlobals.runningPref.printFcOnly) {
+   if(!myGlobals.runningPref.printFcOnly) {
      printProtoTraffic(TRUE);
      sendString("<p>\n");
      printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, TRUE);
    }
-   if (!myGlobals.runningPref.printIpOnly) {
+   if(!myGlobals.runningPref.printIpOnly) {
      sendString("<p>\n");
      printFcProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, TRUE);
    }
@@ -2799,7 +2799,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 	     sendString(buf);
 	   }
 
-	   if (displaySniffedName) {
+	   if(displaySniffedName) {
 	     if(numAddresses > 0) sendString("/");
 	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", sniffedName);
 	     sendString(buf);
@@ -3021,7 +3021,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 
    /* ************************************ */
 
-   if (found && !foundFcHost) {
+   if(found && !foundFcHost) {
      printHostDetailedInfo(el, actualDeviceId);
      printHostTrafficStats(el, actualDeviceId);
      printHostIcmpStats(el);
@@ -3029,10 +3029,10 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
      printHostContactedPeers(el, actualDeviceId);
      printHostHTTPVirtualHosts(el, actualDeviceId);
      printHostUsedServices(el, actualDeviceId);
-   }
-   else if (foundFcHost) {
+   } else if(foundFcHost) {
+     printHTMLheader("", NULL, 0);
+     printFcHostHeader(el, url, revertOrder, sortedColumn, hostInfoPage);
 
-     printFcHostHeader (el, url, revertOrder, sortedColumn, hostInfoPage);
      switch (hostInfoPage) {
      case showHostMainPage:
        printFcHostDetailedInfo (el, actualDeviceId);
@@ -3040,13 +3040,13 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
        printFcHostContactedPeers(el, actualDeviceId);
        break;
      case showHostLunStats:
-       if (el->fcCounters->devType != SCSI_DEV_INITIATOR) {
+       if(el->fcCounters->devType != SCSI_DEV_INITIATOR) {
 	 printScsiLunStats (el, actualDeviceId, sortedColumn,
 			    revertOrder, pageNum, url);
        }
        break;
      case showHostLunGraphs:
-       if (el->fcCounters->devType != SCSI_DEV_INITIATOR) {
+       if(el->fcCounters->devType != SCSI_DEV_INITIATOR) {
 	 printScsiLunGraphs (el, actualDeviceId);
        }
        break;
@@ -4318,7 +4318,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
        }
 
  #ifndef EMBEDDED
-       if ((numProtosFound > 0) && printGraph) {
+       if((numProtosFound > 0) && printGraph) {
 	 struct stat statbuf;
 
 	 sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=LEFT BGCOLOR=white>"
@@ -4417,7 +4417,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 	 }
 	 free(ipPorts);
 	 sendString("</TABLE>"TABLE_OFF"<P></center>\n");
-	 if (idx >= 32)
+	 if(idx >= 32)
 	   sendString("<p>This extract is just a sample of the packets ntop has seen.</p>");
        } else {
 	 sendString("<p>Note: This report includes broadcast packets.</p>\n");
@@ -4536,7 +4536,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 			myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
    
 #ifndef EMBEDDED
-   if (printGraph) {
+   if(printGraph) {
      sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
 		"<iframe frameborder=0 SRC=\"" CONST_BAR_ALLPROTO_DIST  CHART_FORMAT "\" "
 		"width=650 height=250></iframe>"
@@ -4728,7 +4728,7 @@ void printThptStatsMatrix(int sortedColumn) {
       if(myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].trafficValue == 0)
 	break;
 
-      if (myGlobals.runningPref.rFileName != NULL) {
+      if(myGlobals.runningPref.rFileName != NULL) {
 	tmpTime = myGlobals.lastPktTime.tv_sec-(i*60);
       }
       else {
@@ -4736,7 +4736,7 @@ void printThptStatsMatrix(int sortedColumn) {
       }
       strftime(label, sizeof(label), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
 
-      if (myGlobals.runningPref.rFileName != NULL) {
+      if(myGlobals.runningPref.rFileName != NULL) {
 	tmpTime = myGlobals.lastPktTime.tv_sec -((i+1)*60);
       }
       else {
@@ -4867,7 +4867,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	if(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].trafficValue == 0)
 	  break;
 
-        if (myGlobals.runningPref.rFileName != NULL) {
+        if(myGlobals.runningPref.rFileName != NULL) {
 	  tmpTime = myGlobals.lastPktTime.tv_sec-(i*60*60);
         }
         else {
@@ -4875,7 +4875,7 @@ void printThptStatsMatrix(int sortedColumn) {
         }
 	strftime(label, sizeof(label), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
 
-        if (myGlobals.runningPref.rFileName != NULL) {
+        if(myGlobals.runningPref.rFileName != NULL) {
 	  tmpTime = myGlobals.lastPktTime.tv_sec-((i+1)*60*60);
         }
         else {
@@ -5161,7 +5161,7 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
 
   if(a_ < b_)
     return(1);
-  else if (a_ > b_)
+  else if(a_ > b_)
     return(-1);
   else
     return(0);
@@ -5289,7 +5289,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
     if(totNumClusters == 0) {
       printHTMLheader(buf, NULL, 0);
       printFlagedWarning("<I>Empty cluster list. Jump to <A HREF=/"CONST_EDIT_PREFS">cluster definition</A>.</I>");
-      if (tmpStats != NULL) free(tmpStats);
+      if(tmpStats != NULL) free(tmpStats);
       goto free_clusters;
     }
   }
@@ -5307,7 +5307,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
   stats = (DomainStats**)mallocAndInitWithReportWarn(maxHosts*sizeof(DomainStats*), "printDomainStats(2)");
   if(stats == NULL) {
     /* also free the block of memory allocated a few lines up */
-    if (tmpStats != NULL) free(tmpStats);
+    if(tmpStats != NULL) free(tmpStats);
     goto free_clusters;
     return;
   }
@@ -5765,7 +5765,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 #ifndef EMBEDDED
     /* FIX */
     /* RRDs for domains */
-    if (domain_network_name != NULL) {
+    if(domain_network_name != NULL) {
       struct stat statbufDomain;
 
       /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
@@ -5904,7 +5904,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
    * specific meaning (SCSI Initiator) and so we distinguish the title for
    * FC_Ports
    */
-  if (isFcHost (el)) {
+  if(isFcHost (el)) {
     printSectionTitle("FibreChannel Port Traffic Stats");
   }
   else {
@@ -5937,7 +5937,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
   sendString("<TR "TR_ON"><TH "TH_BG" "DARK_BG">Total</TH>\n");
 
-  if (isFcHost (el)) {
+  if(isFcHost (el)) {
     targetStr = el->fcCounters->hostNumFcAddress;
   }
   else {
@@ -6281,17 +6281,17 @@ void printFcHostsTraffic(int reportType,
        el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
 
     if(el->community && (!isAllowedCommunity(el->community))) continue;
-    if (isFcHost (el)) {
+    if(isFcHost (el)) {
       /* Skip Control VSAN traffic */
-      if (el->fcCounters->vsanId > MAX_USER_VSAN) continue;
+      if(el->fcCounters->vsanId > MAX_USER_VSAN) continue;
 
-      if (((showLocalityMode == showOnlySent) && (el->fcCounters->fcBytesSent.value > 0))
+      if(((showLocalityMode == showOnlySent) && (el->fcCounters->fcBytesSent.value > 0))
 	  || ((showLocalityMode == showOnlyReceived) && (el->fcCounters->fcBytesRcvd.value > 0))
 	  || ((showLocalityMode == showSentReceived) && ((el->fcCounters->fcBytesSent.value > 0) ||
 							 (el->fcCounters->fcBytesRcvd.value > 0)))) {
 	tmpTable[numEntries++]=el;
 
-	if (numEntries >= maxHosts)
+	if(numEntries >= maxHosts)
 	  break;
       }
     }

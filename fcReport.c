@@ -198,8 +198,8 @@ char *makeVsanLink (u_short vsanId, short mode, char *buf, int buflen) {
 
 /* ******************************* */
 
-void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
-                        int column, int hostInfoPage) {
+void printFcHostHeader(HostTraffic *el, char *url, int revertOrder,
+		       int column, int hostInfoPage) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   char theLink[256];
 
@@ -213,14 +213,14 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   case showHostLunStats:
     if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
        (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
 		    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
-		    "[<B>LUN Statistics</B> ]&nbsp;"
+		    "[ <B>LUN Statistics</B> ]&nbsp;"
 		    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
-		    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
-		    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
-		    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
-		    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+		    "[ <A HREF=%s3>SCSI Session (Bytes)</A> ]&nbsp;"
+		    "[ <A HREF=%s4>SCSI Session (Times)</A> ]&nbsp;"
+		    "[ <A HREF=%s5>SCSI Session (Status)</A> ]&nbsp;"
+		    "[ <A HREF=%s6>SCSI Session (Task Mgmt)</A> ]&nbsp;"
 		    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
 		    theLink, theLink, theLink, theLink, theLink, theLink, theLink);
     }
@@ -228,14 +228,14 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   case showHostLunGraphs:
     if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
        (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
 		    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
 		    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
 		    "[ <B>LUN Graphs</B> ]&nbsp;"
-		    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
-		    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
-		    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
-		    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+		    "[ <A HREF=%s3>SCSI Session (Bytes)</A> ]&nbsp;"
+		    "[ <A HREF=%s4>SCSI Session (Times)</A> ]&nbsp;"
+		    "[ <A HREF=%s5>SCSI Session (Status)</A> ]&nbsp;"
+		    "[ <A HREF=%s6>SCSI Session (Task Mgmt)</A> ]&nbsp;"
 		    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
 		    theLink, theLink, theLink, theLink, theLink, theLink, theLink);
     }
@@ -243,24 +243,24 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   case showHostScsiSessionBytes:
     if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
        (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
 		    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
 		    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
 		    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
-		    "[ <B>SCSI Session(Bytes)</B> ]&nbsp;"
-		    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
-		    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
-		    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+		    "[ <B>SCSI Session (Bytes)</B> ]&nbsp;"
+		    "[ <A HREF=%s4>SCSI Session (Times)</A> ]&nbsp;"
+		    "[ <A HREF=%s5>SCSI Session (Status)</A> ]&nbsp;"
+		    "[ <A HREF=%s6>SCSI Session (Task Mgmt)</A> ]&nbsp;"
 		    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
 		    theLink, theLink, theLink, theLink, theLink, theLink, theLink);
     }
     else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
 		    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
-		    "[ <B>SCSI Session(Bytes)</B> ]&nbsp;"
-		    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
-		    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
-		    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+		    "[ <B>SCSI Session (Bytes)</B> ]&nbsp;"
+		    "[ <A HREF=%s4>SCSI Session (Times)</A> ]&nbsp;"
+		    "[ <A HREF=%s5>SCSI Session (Status)</A> ]&nbsp;"
+		    "[ <A HREF=%s6>SCSI Session (Task Mgmt)</A> ]&nbsp;"
 		    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
 		    theLink, theLink, theLink, theLink, theLink);
     }
@@ -268,24 +268,24 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   case showHostScsiSessionTimes:
     if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
        (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
 		    "[ <A HREF=%s0>Main Page</A>]&nbsp;"
 		    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
 		    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
-		    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
-		    "[ <B>SCSI Session(Times)</B> ]&nbsp;"
-		    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
-		    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+		    "[ <A HREF=%s3>SCSI Session (Bytes)</A> ]&nbsp;"
+		    "[ <B>SCSI Session (Times)</B> ]&nbsp;"
+		    "[ <A HREF=%s5>SCSI Session (Status)</A> ]&nbsp;"
+		    "[ <A HREF=%s6>SCSI Session (Task Mgmt)</A> ]&nbsp;"
 		    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
 		    theLink, theLink, theLink, theLink, theLink, theLink, theLink);
     }
     else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
 		    "[ <A HREF=%s0>Main Page</A>]&nbsp;"
-		    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
-		    "[ <B>SCSI Session(Times)</B> ]&nbsp;"
-		    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
-		    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+		    "[ <A HREF=%s3>SCSI Session (Bytes)</A> ]&nbsp;"
+		    "[ <B>SCSI Session (Times)</B> ]&nbsp;"
+		    "[ <A HREF=%s5>SCSI Session (Status)</A> ]&nbsp;"
+		    "[ <A HREF=%s6>SCSI Session (Task Mgmt)</A> ]&nbsp;"
 		    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
 		    theLink, theLink, theLink, theLink, theLink);
     }
@@ -293,24 +293,24 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   case showHostScsiSessionStatus:
     if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
        (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
 		    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
 		    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
 		    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
-		    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
-		    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
-		    "[ <B>SCSI Session(Status)</B> ]&nbsp;"
-		    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+		    "[ <A HREF=%s3>SCSI Session (Bytes)</A> ]&nbsp;"
+		    "[ <A HREF=%s4>SCSI Session (Times)</A> ]&nbsp;"
+		    "[ <B>SCSI Session (Status)</B> ]&nbsp;"
+		    "[ <A HREF=%s6>SCSI Session (Task Mgmt)</A> ]&nbsp;"
 		    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
 		    theLink, theLink, theLink, theLink, theLink, theLink, theLink);
     }
     else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
 		    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
-		    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
-		    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
-		    "[ <B>SCSI Session(Status)</B> ]&nbsp;"
-		    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+		    "[ <A HREF=%s3>SCSI Session (Bytes)</A> ]&nbsp;"
+		    "[ <A HREF=%s4>SCSI Session (Times)</A> ]&nbsp;"
+		    "[ <B>SCSI Session (Status)</B> ]&nbsp;"
+		    "[ <A HREF=%s6>SCSI Session (Task Mgmt)</A> ]&nbsp;"
 		    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
 		    theLink, theLink, theLink, theLink, theLink);
     }
@@ -318,24 +318,24 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   case showHostScsiSessionTMInfo:
     if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
        (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
 		    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
 		    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
 		    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
-		    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
-		    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
-		    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
-		    "[ <B>SCSI Session(Task Mgmt)</B> ]&nbsp;"
+		    "[ <A HREF=%s3>SCSI Session (Bytes)</A> ]&nbsp;"
+		    "[ <A HREF=%s4>SCSI Session (Times)</A> ]&nbsp;"
+		    "[ <A HREF=%s5>SCSI Session (Status)</A> ]&nbsp;"
+		    "[ <B>SCSI Session (Task Mgmt)</B> ]&nbsp;"
 		    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
 		    theLink, theLink, theLink, theLink, theLink, theLink, theLink);
     }
     else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
 		    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
-		    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
-		    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
-		    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
-		    "[ <B>SCSI Session(Task Mgmt)</B> ]&nbsp;"
+		    "[ <A HREF=%s3>SCSI Session (Bytes)</A> ]&nbsp;"
+		    "[ <A HREF=%s4>SCSI Session (Times)</A> ]&nbsp;"
+		    "[ <A HREF=%s5>SCSI Session (Status)</A> ]&nbsp;"
+		    "[ <B>SCSI Session (Task Mgmt)</B> ]&nbsp;"
 		    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
 		    theLink, theLink, theLink, theLink, theLink);
     }
@@ -343,24 +343,24 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   case showHostFcSessions:
     if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
        (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
 		    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
 		    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
 		    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
-		    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
-		    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
-		    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
-		    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+		    "[ <A HREF=%s3>SCSI Session (Bytes)</A> ]&nbsp;"
+		    "[ <A HREF=%s4>SCSI Session (Times)</A> ]&nbsp;"
+		    "[ <A HREF=%s5>SCSI Session (Status)</A> ]&nbsp;"
+		    "[ <A HREF=%s6>SCSI Session (Task Mgmt)</A> ]&nbsp;"
 		    "[ <B>FC Sessions</B> ]&nbsp;</p>",
 		    theLink, theLink, theLink, theLink, theLink, theLink, theLink);
     }
     else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
 		    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
-		    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
-		    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
-		    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
-		    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+		    "[ <A HREF=%s3>SCSI Session (Bytes)</A> ]&nbsp;"
+		    "[ <A HREF=%s4>SCSI Session (Times)</A> ]&nbsp;"
+		    "[ <A HREF=%s5>SCSI Session (Status)</A> ]&nbsp;"
+		    "[ <A HREF=%s6>SCSI Session (Task Mgmt)</A> ]&nbsp;"
 		    "[ <B>FC Sessions</B> ]&nbsp;</p>",
 		    theLink, theLink, theLink, theLink, theLink);
     }
@@ -370,31 +370,30 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
     if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
        (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
-		    "[<B>Main&nbsp;Page</B> ]&nbsp;"
+		    "[ <B>Main&nbsp;Page</B> ]&nbsp;"
 		    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
 		    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
-		    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
-		    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
-		    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
-		    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+		    "[ <A HREF=%s3>SCSI Session (Bytes)</A> ]&nbsp;"
+		    "[ <A HREF=%s4>SCSI Session (Times)</A> ]&nbsp;"
+		    "[ <A HREF=%s5>SCSI Session (Status)</A> ]&nbsp;"
+		    "[ <A HREF=%s6>SCSI Session (Task Mgmt)</A> ]&nbsp;"
 		    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
 		    theLink, theLink, theLink, theLink, theLink, theLink, theLink);
     }
     else {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
-		    "[<B>Main&nbsp;Page</B> ]&nbsp;"
-		    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
-		    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
-		    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
-		    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+		    "[ <B>Main&nbsp;Page</B> ]&nbsp;"
+		    "[ <A HREF=%s3>SCSI Session (Bytes)</A> ]&nbsp;"
+		    "[ <A HREF=%s4>SCSI Session (Times)</A> ]&nbsp;"
+		    "[ <A HREF=%s5>SCSI Session (Status)</A> ]&nbsp;"
+		    "[ <A HREF=%s6>SCSI Session (Task Mgmt)</A> ]&nbsp;"
 		    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
 		    theLink, theLink, theLink, theLink, theLink);
     }
     break;
   }
+
   sendString(buf);
-
-
 }
 
 /* ******************************* */
@@ -1437,7 +1436,8 @@ void printFcHostTrafficStats(HostTraffic *el, int actualDeviceId) {
     totalRcvd = el->fcCounters->fcBytesRcvd.value;
 
     if((totalSent > 0) || (totalRcvd > 0)) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>",
 		    getRowColor());
       sendString(buf);
 
@@ -1630,14 +1630,14 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
   char *vendorName;
   char formatBuf[32], formatBuf1[32], formatBuf2[32];
 
-  accessAddrResMutex("printAllSessionsHTML");
+  accessAddrResMutex("printFcHostDetailedInfo");
 
   buf1[0]=0;
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about %s\n", el->hostResolvedName);
 
   releaseAddrResMutex();
-  printHTMLheader(buf, 0, 0);
+  printSectionTitle(buf);
   sendString("<CENTER>\n");
   sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n");
 
@@ -1910,7 +1910,7 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
     return;
   }
 
-  printHTMLheader("LUN Statistics", 0, 0);
+  printSectionTitle("LUN Statistics");
 
   memset(buf, 0, sizeof(buf));
   memset(sortedLunTbl, 0, sizeof (sortedLunTbl));
@@ -2117,7 +2117,7 @@ void printScsiLunGraphs (HostTraffic *el, int actualDeviceId)
     return;
   }
 
-  printHTMLheader ("LUN Traffic Graphs (Top 25)", 0, 0);
+  //printHTMLheader ("LUN Traffic Graphs (Top 25)", 0, 0);
 
   printSectionTitle("LUN Traffic (Total Bytes)");
 
@@ -2161,7 +2161,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
 
   releaseAddrResMutex();
 
-  printHTMLheader(buf, 0, 0);
+  printSectionTitle(buf);
 
   if((theHash = myGlobals.device[actualDeviceId].vsanHash) == NULL) {
     printNoDataYet ();
@@ -2528,7 +2528,7 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBy
   if(vsanList == NULL) return;
   vsanId = abs(vsanId);
 
-  printHTMLheader("FibreChannel Hosts Information", 0, 0);
+  printSectionTitle("FibreChannel Hosts Information");
 
   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
 
@@ -2784,7 +2784,7 @@ void printFcAccounting(int remoteToLocal, int sortedColumn,
   char *arrowGif, *arrow[8], *theAnchor[8];
   char htmlAnchor[64], htmlAnchor1[64];
 
-  printHTMLheader("FibreChannel Per Port Traffic", 0, 0);
+  printSectionTitle("FibreChannel Per Port Traffic");
 
   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
 
@@ -2948,7 +2948,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
     hostLinkBuf1[LEN_GENERAL_WORK_BUFFER];
   char pageUrl[64];
 
-  printHTMLheader("SCSI Sessions", 0, 0);
+  printSectionTitle("SCSI Sessions");
 
   if(!myGlobals.runningPref.enableSessionHandling) {
     printNotAvailable("-z or --disable-sessions");
@@ -3306,7 +3306,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
   char *arrowGif, *arrow[48], *theAnchor[48];
   char htmlAnchor[64], htmlAnchor1[64], pageUrl[64];
 
-  printHTMLheader("SCSI Sessions: Latencies", 0, 0);
+  printSectionTitle("SCSI Sessions: Latencies");
 
   if(!myGlobals.runningPref.enableSessionHandling) {
     printNotAvailable("-z or --disable-sessions");
@@ -3588,7 +3588,7 @@ int printScsiSessionStatusInfo(int actualDeviceId, int sortedColumn,
   char hostLinkBuf[LEN_GENERAL_WORK_BUFFER],
     hostLinkBuf1[LEN_GENERAL_WORK_BUFFER];
 
-  printHTMLheader("SCSI Sessions: Status Info", 0, 0);
+  printSectionTitle("SCSI Sessions: Status Info");
 
   if(!myGlobals.runningPref.enableSessionHandling) {
     printNotAvailable("-z or --disable-sessions");
@@ -3823,7 +3823,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
   char hostLinkBuf[LEN_GENERAL_WORK_BUFFER],
     hostLinkBuf1[LEN_GENERAL_WORK_BUFFER];
 
-  printHTMLheader("SCSI Sessions: Task Management Info", 0, 0);
+  printSectionTitle("SCSI Sessions: Task Management Info");
 
   if(!myGlobals.runningPref.enableSessionHandling) {
     printNotAvailable("-z or --disable-sessions");
@@ -3972,7 +3972,13 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
 		      "<TH "TH_BG" "DARK_BG">%s1>VSAN%s</A></TH>"
 		      "<TH "TH_BG" "DARK_BG">%s2>Initiator%s</A></TH>"
 		      "<TH "TH_BG" "DARK_BG">%s3>Target%s</A></TH>"
-		      "<TH "TH_BG" "DARK_BG">LUN</TH>"
+		      "<TH "TH_BG" "DARK_BG">LUN</TH>",
+		      theAnchor[1], arrow[1],
+		      theAnchor[2], arrow[2],
+		      theAnchor[3], arrow[3]);
+	sendString (buf);
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf),
 		      "<TH "TH_BG" "DARK_BG">%s33>#&nbsp;Abort Task Set%s</A></TH>"
 		      "<TH "TH_BG" "DARK_BG">%s34>#&nbsp;Clear Task Set%s</A></TH>"
 		      "<TH "TH_BG" "DARK_BG">%s35>#&nbsp;Clear ACA%s</A></TH>"
@@ -3981,9 +3987,6 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
 		      "<TH "TH_BG" "DARK_BG">%s38>Last Target Reset Time%s</A></TH>"
 		      "<TH "TH_BG" "DARK_BG">%s39>Last LUN Reset Time%s</A></TH>"
 		      "</TR>\n",
-		      theAnchor[1], arrow[1],
-		      theAnchor[2], arrow[2],
-		      theAnchor[3], arrow[3],
 		      theAnchor[33], arrow[33],
 		      theAnchor[34], arrow[34],
 		      theAnchor[35], arrow[35],
@@ -4066,7 +4069,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
     hostLinkBuf1[LEN_GENERAL_WORK_BUFFER];
   FCSession **tmpTable, *session;
 
-  printHTMLheader("FibreChannel Sessions", 0, 0);
+  printSectionTitle("FibreChannel Sessions");
 
   if(!myGlobals.runningPref.enableSessionHandling) {
     printNotAvailable("-z or --disable-sessions");
@@ -4456,7 +4459,7 @@ void printFcTrafficMatrix (u_short vsanId, u_char sent)
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "FibreChannel Traffic Matrix For VSAN");
   }
 
-  printHTMLheader(buf, 0);
+  printSectionTitle(buf);
 
   activeHosts = (short*)mallocAndInitWithReportWarn(myGlobals.device[myGlobals.actualReportDeviceId].numHosts*sizeof(short), "printFcTrafficMatrix");
   if(activeHosts == NULL)
@@ -4606,7 +4609,7 @@ void printFcTrafficMatrix (u_short vsanId, u_char sent)
 /* ******************************************* */
 
 void printVSANList(unsigned int deviceId) {
-  printHTMLheader("VSAN Traffic Statistics", 0, 0);
+  printSectionTitle("VSAN Traffic Statistics");
 
   if(deviceId > myGlobals.numDevices) {
     printFlagedWarning("<I>Invalid device specified</I>");
@@ -4633,12 +4636,12 @@ void drawVsanStatsGraph (unsigned int deviceId)
     printFlagedWarning("<I>Invalid device specified</I>");
     return;
   } else if((theHash = myGlobals.device[deviceId].vsanHash) == NULL) {
-    printHTMLheader("VSAN Summary", 0, 0);
+    printSectionTitle("VSAN Summary");
     printNoDataYet();
     return;
   }
 
-  printHTMLheader("Top 10 VSANs", 0, 0);
+  printSectionTitle("Top 10 VSANs");
 
   numVsans = 0;
   memset (tmpTable, 0, sizeof (FcFabricElementHash *)*MAX_ELEMENT_HASH);
@@ -4681,14 +4684,14 @@ void drawVsanStatsGraph (unsigned int deviceId)
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
                 "<iframe frameborder=0 SRC=drawVsanStatsBytesDistribution"CHART_FORMAT"?1 ALT=\"VSAN Bytes Statistics "
-                "VSAN Traffic (Total Bytes)\" width=400 height=250></iframe></TH></TR>" );
+                "VSAN Traffic (Total Bytes)\" width=650 height=250></iframe></TH></TR>" );
   sendString(buf);
 
   printSectionTitle ("VSAN Traffic (Frames)");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
 		"<iframe frameborder=0 SRC=drawVsanStatsPktsDistribution"CHART_FORMAT"?1 ALT=\"VSAN Frames Statistics "
-		"VSAN Traffic (Total Frames)\" width=400 height=250></iframe></TH></TR>");
+		"VSAN Traffic (Total Frames)\" width=650 height=250></iframe></TH></TR>");
   sendString(buf);
 }
 
