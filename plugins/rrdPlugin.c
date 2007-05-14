@@ -2615,7 +2615,7 @@ static void commonRRDinit(void) {
       char is used as separator.
     */
 
-    if(myGlobals.dbPath[1] == ':') idx = 2; /* e.g. c:/... */
+    //if(myGlobals.dbPath[1] == ':') idx = 2; /* e.g. c:/... */
 
 	safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath, len, "%s/%u%s", &myGlobals.dbPath[idx], driveSerial, thePath);
 	revertSlashIfWIN32(myGlobals.rrdPath, 0);

@@ -3172,8 +3172,11 @@ void pathSanityCheck(char* string, char* parm) {
   /* Strip "ed string for test */
   if((string[0] != '"') || (string[strlen(string)-1] != '"') )
     k=1;
+
+	revertSlashIfWIN32(string, 0);
 #endif
 
+  
   for(i=k, j=1; i<strlen(string)-k; i++) {
     int idx = string[i];
 
