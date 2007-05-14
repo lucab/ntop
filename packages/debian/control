@@ -1,0 +1,17 @@
+Source: ntop
+Section: non-free
+Priority: optional
+Maintainer: Luca Deri <deri@ntop.org>
+Standards-Version: 1.0.0
+Build-Depends:
+Build-Conflicts:
+
+Package: ntop
+Architecture: i386
+Depends: debconf (>= 0.2.26)
+Description: display network usage in top-like format
+ ntop is a Network Top program. It displays a summary of network usage by
+ machines on your network in a format reminiscent of the unix top utility.
+ .
+ It can also be run in web mode, which allows the display to be browsed with
+ a web browser.

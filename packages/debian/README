@@ -1,0 +1,12 @@
+This directory contains the files needed to build the package
+named 'ntop' for the Debian GNU/Linux distribution.
+
+To build this package, you'll need this `debian' directory, and
+`ntop-VERSION.tar.gz'. Put it in a directory called
+`ntop-VERSION', and make sure that the `debian/rules' and
+`debian/changelog' refer correctly to VERSION.  Then, you can
+run dpkg-buildpackage, which will automatically unpack the tarballs,
+and start the build.
+
+It is suggested that you also read the `README' and `INSTALL' files in
+the top-level of the ntop source tree.

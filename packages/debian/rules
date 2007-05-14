@@ -1,0 +1,57 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# debian/rules file for ntop
+#
+# GNU copyright 1997 to 1999 by Joey Hess.
+#
+# Made with the aid of dh_make by Rocco Carbone <rocco@ntop.org>
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+
+# This is the debhelper compatability version to use.
+export DH_COMPAT=1
+
+package=ntop
+
+build: build-stamp
+build-stamp:
+	dh_testdir
+
+clean:
+	dh_testdir
+	dh_testroot
+#	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+#	dh_clean -k
+	dh_installdirs
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+#	dh_clean -k
+	dh_installdirs
+	dh_installinit
+	dh_installman
+	dh_installdebconf -n
+	mkdir -p ./debian/usr/local/var/ntop/rrd
+	cp -r ./debian/etc/ ./debian/tmp
+	-find ./debian/tmp -name CVS -exec /bin/rm -rf {} ';'
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_makeshlibs
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-arch
+.PHONY: build clean binary-arch binary install configure
+
