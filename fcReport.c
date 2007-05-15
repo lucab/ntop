@@ -4348,9 +4348,9 @@ void printFcProtocolDistribution(int mode, int revertOrder, int printGraph)
     printSectionTitle("Global FibreChannel Protocol Distribution");
 
     sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=500><TR "TR_ON"><TH "TH_BG" "DARK_BG" WIDTH=150>"
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=660><TR "TR_ON"><TH "TH_BG" "DARK_BG" WIDTH=150>"
 	       "FC&nbsp;Protocol</TH>"
-	       "<TH "TH_BG" WIDTH=50 "DARK_BG">Total&nbsp;Bytes</TH><TH "TH_BG" WIDTH=250 COLSPAN=2 "DARK_BG">"
+	       "<TH "TH_BG" WIDTH=50 "DARK_BG">Total&nbsp;Bytes</TH><TH "TH_BG" COLSPAN=2 "DARK_BG">"
 	       "Percentage</TH></TR>\n");
 
     remainingTraffic = 0;
@@ -4391,7 +4391,6 @@ void printFcProtocolDistribution(int mode, int revertOrder, int printGraph)
 		      CONST_COLOR_1, partialTotal/1024, percentage, 0, 0, 0);
     }
 
-
     partialTotal  = (float)myGlobals.device[myGlobals.actualReportDeviceId].fcIpfcBytes.value;
     if(partialTotal > 0) {
       remainingTraffic += partialTotal;
@@ -4423,7 +4422,7 @@ void printFcProtocolDistribution(int mode, int revertOrder, int printGraph)
       sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
 		 "<iframe frameborder=0 SRC=\"" CONST_BAR_FC_PROTO_DIST CHART_FORMAT "\" "
 		 " class=tooltip alt=\"Global FC protocol distribution chart\""
-		 "width=400 height=250></iframe></TD></TR>\n");
+		 "width=620 height=250></iframe></TD></TR>\n");
     sendString("</TABLE>"TABLE_OFF"<P>\n");
 
     /* *********************** */

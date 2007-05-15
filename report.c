@@ -2391,7 +2391,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
      }
 
      /* Added -c courtesy of Max Waterman <davidmaxwaterman@fastmail.co.uk> */
-     snprintf(path, sizeof(path), "%s -c -Tpng -Goverlap=false %s/ntop.dot -o %s/"CONST_NETWORK_IMAGE_MAP " 2>&1 ",
+     snprintf(path, sizeof(path), "%s -Tpng -Goverlap=false %s/ntop.dot -o %s/"CONST_NETWORK_IMAGE_MAP " 2>&1 ",
 	      dotPath, myGlobals.spoolPath, myGlobals.spoolPath);
      sendString("<!-- dot(generate) command is ");
      sendString(path);
@@ -4438,61 +4438,66 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
    if(total == 0)
      return;
 
-   printSectionTitle("Global Protocol Distribution");
    sendString("<CENTER>\n");
-   sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>Protocol</TH>"
-	      "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
 
-   perc = 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value/
-	       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value);
-   if(perc > 100) perc = 100;
+   if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0) {
+     printSectionTitle("Global Protocol Distribution");
 
-   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" WIDTH=150 ALIGN=LEFT "DARK_BG">IP</TH>"
-		 "<TD "TD_BG" WIDTH=50 ALIGN=RIGHT>%s"
-		 "</td><td align=right WIDTH=50>%.1f%%</TD><TD "TD_BG" WIDTH=200>"
-		 "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\">",
-		 getRowColor(),
-		 formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1,
-			     formatBuf, sizeof(formatBuf)),
-		 perc);
-   sendString(buf);
+     sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>Protocol</TH>"
+		"<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
 
-   printTableEntry(buf, sizeof(buf), "TCP", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/1024,
-		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/
-			myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
-   printTableEntry(buf, sizeof(buf), "UDP", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/1024,
-		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/
-			myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
-   printTableEntry(buf, sizeof(buf), "ICMP", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/1024,
-		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/
-			myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
-   printTableEntry(buf, sizeof(buf), "ICMPv6", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/1024,
-		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/
-			myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+     perc = 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value/
+		 myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value);
+     if(perc > 100) perc = 100;
 
-   {
-     ProtocolsList *protoList = myGlobals.ipProtosList;
-     int idx = 0;
+     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" WIDTH=150 ALIGN=LEFT "DARK_BG">IP</TH>"
+		   "<TD "TD_BG" WIDTH=50 ALIGN=RIGHT>%s"
+		   "</td><td align=right WIDTH=50>%.1f%%</TD><TD "TD_BG" WIDTH=200>"
+		   "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\">",
+		   getRowColor(),
+		   formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1,
+			       formatBuf, sizeof(formatBuf)),
+		   perc);
+     sendString(buf);
 
-     while(protoList != NULL) {
-       printTableEntry(buf, sizeof(buf), protoList->protocolName, CONST_COLOR_1,
-		       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx].value/1024,
-		       100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx].value/
-			    myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
-       idx++, protoList = protoList->next;
+     printTableEntry(buf, sizeof(buf), "TCP", CONST_COLOR_1,
+		     (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/1024,
+		     100*((float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/
+			  myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+     printTableEntry(buf, sizeof(buf), "UDP", CONST_COLOR_1,
+		     (float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/1024,
+		     100*((float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/
+			  myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+     printTableEntry(buf, sizeof(buf), "ICMP", CONST_COLOR_1,
+		     (float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/1024,
+		     100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/
+			  myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+     printTableEntry(buf, sizeof(buf), "ICMPv6", CONST_COLOR_1,
+		     (float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/1024,
+		     100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/
+			  myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+
+     {
+       ProtocolsList *protoList = myGlobals.ipProtosList;
+       int idx = 0;
+
+       while(protoList != NULL) {
+	 printTableEntry(buf, sizeof(buf), protoList->protocolName, CONST_COLOR_1,
+			 (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx].value/1024,
+			 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx].value/
+			      myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+	 idx++, protoList = protoList->next;
+       }
      }
-   }
 
-   printTableEntry(buf, sizeof(buf), "Other&nbsp;IP", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/1024,
-		   ((float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/
-		    myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+     printTableEntry(buf, sizeof(buf), "Other&nbsp;IP", CONST_COLOR_1,
+		     (float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/1024,
+		     ((float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/
+		      myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
 
-   sendString("</TABLE>"TABLE_OFF"</TR>");
+     sendString("</TABLE>"TABLE_OFF"</TR>");
+   } else
+     printGraph = 0;
 
    printTableEntry(buf, sizeof(buf), "(R)ARP", CONST_COLOR_1,
 		   (float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value/1024,
