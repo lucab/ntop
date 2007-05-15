@@ -119,7 +119,7 @@ void initIPServices(void) {
   /* Let's count the entries first */
   numSlots = 0;
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
-    char tmpStr[64];
+    char tmpStr[256];
 
     safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%s/services", myGlobals.configFileDirs[idx]);
     fd = fopen(tmpStr, "r");
@@ -840,7 +840,8 @@ void resetStats(int deviceId) {
 
 /* ******************************* */
 
-void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
+void initSingleGdbm(GDBM_FILE *database,
+		    char *dbName, char *directory,
 		    int doUnlink, struct stat *statbuf) {
   char tmpBuf[200], theDate[48];
   time_t        st_time, now;
@@ -852,7 +853,6 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
      If called with NULL, use the myGlobals.dbPath value instead
      (Minor fix for intop - Burton Strauss (BStrauss@acm.org) - Apr2002)
   */
-
   memset(&tmpBuf, 0, sizeof(tmpBuf));
  
 #ifdef WIN32

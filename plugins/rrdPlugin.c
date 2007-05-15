@@ -2292,7 +2292,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	traceEvent(CONST_TRACE_WARNING, "RRD: rrd_update(%s) error: %s", path, rrdError);
 	traceEvent(CONST_TRACE_NOISY, "RRD: call stack (counter created: %d):", createdCounter);
 	for (x = 0; x < argc; x++)
-	  traceEvent(CONST_TRACE_NOISY, "RRD:   argv[%d]: %s", x, argv[x]);
+	  traceEvent(CONST_TRACE_NOISY, "RRD: argv[%d]: %s", x, argv[x]);
 
 	if(!strcmp(rrdError, "error: illegal attempt to update using time")) {
 	  char errTimeBuf1[32], errTimeBuf2[32], errTimeBuf3[32];

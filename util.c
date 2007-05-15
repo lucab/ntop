@@ -6736,7 +6736,7 @@ void mkdir_p(char *tag, char *path, int permission) {
 #endif
       rc = _mkdir(path, permission);
       if((rc != 0) && (errno != EEXIST) )
-	traceEvent(CONST_TRACE_WARNING, "RRD: %s, error %d %s",
+	traceEvent(CONST_TRACE_WARNING, "RRD: [path=%s][error=%d/%s]",
 		   path,
 		   errno,
 		   strerror(errno));

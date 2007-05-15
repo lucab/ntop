@@ -108,7 +108,7 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
   initSingleGdbm(&myGlobals.addressQueueFile, "addressQueue.db", spoolDirectory, TRUE,  NULL);
   initSingleGdbm(&myGlobals.dnsCacheFile,     "dnsCache.db",     spoolDirectory, -1,    NULL);
   initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, FALSE,  &statbuf);
-  initSingleGdbm(&myGlobals.fingerprintFile,  "fingerprint.db",    spoolDirectory, FALSE,  &statbuf);
+  initSingleGdbm(&myGlobals.fingerprintFile,  "fingerprint.db",  spoolDirectory, FALSE,  &statbuf);
   createVendorTable(&statbuf);
 }
 
@@ -522,6 +522,9 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
 void initNtop(char *devices) {
   char value[32];
+
+  revertSlashIfWIN32(myGlobals.dbPath, 0);
+  revertSlashIfWIN32(myGlobals.spoolPath, 0);
 
   initIPServices();
   handleProtocols();
