@@ -859,17 +859,16 @@ void initSingleGdbm(GDBM_FILE *database,
   {
     unsigned long driveSerial;
   
-	get_serial(&driveSerial);
+    get_serial(&driveSerial);
 
-	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/%u",
-	      directory != NULL ? directory : myGlobals.dbPath, driveSerial);
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/%u",
+		  directory != NULL ? directory : myGlobals.dbPath, driveSerial);
 
-	mkdir_p("DB", tmpBuf, 0x777);
+    mkdir_p("DB", tmpBuf, 0x777);
 
-		safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/%u/%s",
-	      directory != NULL ? directory : myGlobals.dbPath, driveSerial,
-	      dbName);
-
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/%u/%s",
+		  directory != NULL ? directory : myGlobals.dbPath, driveSerial,
+		  dbName);
   }
 #else
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/%s",

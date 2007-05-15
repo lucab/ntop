@@ -2608,7 +2608,6 @@ static void commonRRDinit(void) {
 
     if(myGlobals.rrdPath) free(myGlobals.rrdPath);
     myGlobals.rrdPath = (char*)malloc(len);
-
 #ifdef WIN32
     /*
       RRD does not accept ':' in path names as this
@@ -2617,14 +2616,17 @@ static void commonRRDinit(void) {
 
     //if(myGlobals.dbPath[1] == ':') idx = 2; /* e.g. c:/... */
 
-	safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath, len, "%s/%u%s", &myGlobals.dbPath[idx], driveSerial, thePath);
-	revertSlashIfWIN32(myGlobals.rrdPath, 0);
+    safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath, len, "%s/%u%s", &myGlobals.dbPath[idx], driveSerial, thePath);
+    revertSlashIfWIN32(myGlobals.rrdPath, 0);
 #else
     safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath, len, "%s%s", &myGlobals.dbPath[idx], thePath);
 #endif
+    
+    len = strlen(myGlobals.rrdPath);
+    if(myGlobals.rrdPath[len-1] == '/') myGlobals.rrdPath[len-1] = '\0';
 
 #ifdef WIN32
-	if(!myGlobals.useU3)
+    if(!myGlobals.useU3)
 #endif
     storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
   } else {
