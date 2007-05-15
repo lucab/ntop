@@ -6729,6 +6729,11 @@ void mkdir_p(char *tag, char *path, int permission) {
   /* Start at 1 to skip the root */
   for(i=1; path[i] != '\0'; i++)
     if(path[i] == CONST_PATH_SEP) {
+#ifdef WIN32
+      /* Do not create devices directory */
+      if((i > 1) && (path[i-1] == ':')) continue;
+#endif
+
       path[i] = '\0';
 #if RRD_DEBUG >= 3
       if(strcmp(tag, "RRD") == 0)

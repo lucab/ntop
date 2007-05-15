@@ -2616,10 +2616,12 @@ static void commonRRDinit(void) {
 
     //if(myGlobals.dbPath[1] == ':') idx = 2; /* e.g. c:/... */
 
-    safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath, len, "%s/%u%s", &myGlobals.dbPath[idx], driveSerial, thePath);
+    safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath, len, 
+		  "%s/%u%s", &myGlobals.dbPath[idx], driveSerial, thePath);
     revertSlashIfWIN32(myGlobals.rrdPath, 0);
 #else
-    safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath, len, "%s%s", &myGlobals.dbPath[idx], thePath);
+    safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath,
+		  len, "%s%s", &myGlobals.dbPath[idx], thePath);
 #endif
     
     len = strlen(myGlobals.rrdPath);

@@ -849,10 +849,6 @@ void initSingleGdbm(GDBM_FILE *database,
   int d;
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
-  /* directory is used by intop to specify where to open the files.
-     If called with NULL, use the myGlobals.dbPath value instead
-     (Minor fix for intop - Burton Strauss (BStrauss@acm.org) - Apr2002)
-  */
   memset(&tmpBuf, 0, sizeof(tmpBuf));
  
 #ifdef WIN32
