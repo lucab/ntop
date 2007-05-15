@@ -2544,6 +2544,7 @@ static void printNetFlowConfiguration(int deviceId) {
 
   /* ****************************************************** */
 
+#ifdef HAVE_MYSQL_H
   sendString("<tr><th colspan=\"2\" "DARK_BG">Save Flows<br>into SQL DB</th>\n");
 
   sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
@@ -2567,6 +2568,7 @@ static void printNetFlowConfiguration(int deviceId) {
 	     "SQL database. Note that you can also <A HREF=\"/"CONST_CONFIG_NTOP_HTML"?&showD=7\">configure</A> "
 	     "DB options and records persistency.</p>\n"
 	     "</td>\n</tr>\n");
+#endif
 
 /* ****************************************************** */
 

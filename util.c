@@ -4712,7 +4712,8 @@ int setSpecifiedUser(void) {
     setRunState(FLAG_NTOPSTATE_INITNONROOT);
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Now running as requested user '%s' (%d:%d)",
-             myGlobals.effectiveUserName, myGlobals.userId, myGlobals.groupId);
+             myGlobals.effectiveUserName ? myGlobals.effectiveUserName : "<unknown>", 
+	     myGlobals.userId, myGlobals.groupId);
 
   if((myGlobals.userId != 0) || (myGlobals.groupId != 0)) {
 #if defined(DARWIN) || defined(FREEBSD)

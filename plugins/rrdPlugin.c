@@ -1591,6 +1591,8 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     *rrd_hosts[MAX_NUM_RRD_HOSTS], file_a[32], file_b[32], title_buf[48];
   double ymin,ymax;
 
+  i = strlen(rrdPath); if((i > 1) && (rrdPath[i-1] == '/')) rrdPath[i-1] = '\0';
+
   path[0] = '\0', label = "";
   safe_snprintf(__FILE__, __LINE__, _rrdName, sizeof(_rrdName), "%s", rrdName);
 

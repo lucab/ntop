@@ -757,7 +757,7 @@ char* getIfName(char *hostname, char *community, int ifIdx,
   /*
    * Initialize the SNMP library
    */
-  init_snmp("getIfName");
+  init_snmp("ntop");
 
   /*
    * Initialize a "session" that defines who we're going to talk to
