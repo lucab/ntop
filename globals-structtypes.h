@@ -1362,7 +1362,8 @@ typedef struct sFlowGlobals {
 /* *********************************** */
 
 typedef struct ntopInterface {
-  char *name;                    /* unique interface name */
+  char *name;                    /* Interface name (e.g. eth0) */
+  char *uniqueIfName;            /* Unique interface name used to save data on disk */
   char *humanFriendlyName;       /* Human friendly name of the interface (needed under WinNT and above) */
   int flags;                     /* the status of the interface as viewed by ntop */
 
@@ -1411,7 +1412,7 @@ typedef struct ntopInterface {
    */
   PthreadMutex packetQueueMutex;
   PthreadMutex packetProcessMutex;
-  PacketInformation packetQueue[CONST_PACKET_QUEUE_LENGTH+1];
+  PacketInformation *packetQueue; /* [CONST_PACKET_QUEUE_LENGTH+1]; */
   u_int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;
   ConditionalVariable queueCondvar;
   pthread_t dequeuePacketThreadId;
@@ -1471,7 +1472,7 @@ typedef struct ntopInterface {
   TrafficCounter fcBroadcastBytes;
   TrafficCounter class2Bytes, class3Bytes, classFBytes;
 
-  PortCounter    *ipPorts[MAX_IP_PORT];
+  PortCounter    **ipPorts; /* [MAX_IP_PORT] */
 
   TrafficCounter lastMinEthernetBytes;
   TrafficCounter lastFiveMinsEthernetBytes;
@@ -2076,10 +2077,10 @@ typedef struct ntopGlobals {
   UserPref savedPref;         /* this is what is saved */
   UserPref runningPref;       /* this is what is currently used */
 #ifndef WIN32
-  char      *effectiveUserName;
-  int       userId, groupId;    /* 'u' */
+  char *effectiveUserName;
+  int  userId, groupId;         /* 'u' */
 #else
-  u_char    useU3;              /* --U3 */
+  u_char useU3;                 /* --U3 */
 #endif
   char *dbPath;                 /* 'P' */
   char *spoolPath;              /* 'Q' */

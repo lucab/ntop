@@ -18,36 +18,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* This plugin works only with threads */
-
 /*
-
-Plugin History
-
-1.0     Initial release
-1.0.1   Added Flows
-1.0.2   Added Matrix
-1.0.3
-2.0     Rolled major version due to new interface parameter.
-2.1     Added tests/creates for rrd and subdirectories, fixed timer,
---reuse-rrd-graphics etc.
-2.1.1   Fixed hosts / interface bug (Luca)
-2.1.2   Added status message
-2.2     Version roll (preparatory) for ntop 2.2
-2.2a    Multiple RRAs
-2.2b    Large rrd population option
-2.3     Updates, fixes, etc ... for ntop 2.3
-
-Remember, there are TWO paths into this - one is through the main loop,
-if the plugin is active, the other is through the http function if the
-plugin is NOT active.  So initialize stuff in BOTH places!
-
-
-Aberrant RRD Behavior (http://cricket.sourceforge.net/aberrant/)
-patch courtesy of Dominique Karg <dk@ipsoluciones.com>
-
-2.4     General cleanup
-2.8     Moved to rrdtool 1.2.X
+  Aberrant RRD Behavior (http://cricket.sourceforge.net/aberrant/)
+  patch courtesy of Dominique Karg <dk@ipsoluciones.com>
 */
 
 #include "rrdPlugin.h"
@@ -163,7 +136,7 @@ static void calfree (void) {
   if(calcpr) {
     long i;
 
-    for(i=0;calcpr[i];i++){
+    for(i=0; calcpr[i]; i++){
       if(calcpr[i])
 	free(calcpr[i]);
     }
@@ -311,13 +284,13 @@ static void expandRRDList(char *rrdName,
 
     if((el = findHostByNumIP(ha, 0, myGlobals.actualReportDeviceId)) != NULL) {
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/hosts/%s/%s",
-		    myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		    myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		    (el->ethAddressString[0] != '\0') ? el->ethAddressString : el->hostNumIpAddress,
 		    rrdName);
 
       for(j=strlen(myGlobals.rrdPath)
 	    +strlen("/interfaces/")
-	    +strlen(myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName)
+	    +strlen(myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName)
 	    +strlen("/hosts/"); j<strlen(path)-strlen(CONST_RRD_EXTENSION); j++) 
 	if((path[j] == '.') || (path[j] == ':')) path[j] = '/';
       revertSlashIfWIN32(path, 0);
@@ -443,16 +416,24 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
     closedir(directoryPointer);
 
     if(hasNetFlow) {
-      sendString("<TR><TH "DARK_BG" COLSPAN=2>NetFlow Detail</TH></TR>\n");
-
       for(i=0; i<=2; i++) {
-	sendString("<TR><TD COLSPAN=2 ALIGN=CENTER>");
+	sendString("<TR><TD align=left>");
+
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<IMG SRC=\"/" CONST_PLUGINS_HEADER "%s?action=netflowSummary"
-		      "&graphId=%d&key=%s/&start=%s&end=%s\"></TD></TR>\n",
+		      "&graphId=%d&key=%s/&start=%s&end=%s\">\n",
 		      rrdPluginInfo->pluginURLname,
 		      i, rrdPath, startTime, endTime);
 	sendString(buf);
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		      "</td><td><A HREF=\"/" CONST_PLUGINS_HEADER "%s?"
+		      "mode=zoom&action=netflowIfSummary&graphId=%d&key=%s/&start=%s&end=%s\">\n"
+		      "<IMG valign=top class=tooltip SRC=/graph_zoom.gif border=0></A>\n",
+		      rrdPluginInfo->pluginURLname, i, rrdPath, startTime, endTime);
+	sendString(buf);
+
+	sendString("</TD></TR>\n");
       }
     }
 
@@ -559,7 +540,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 
       if((el = findHostByNumIP(ha, 0, myGlobals.actualReportDeviceId)) != NULL) {
 	safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/hosts/%s",
-		      myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		      myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		      (el->ethAddressString[0] != '\0') ? el->ethAddressString : el->hostNumIpAddress);
 	
 	for(j=strlen(path)-strlen((el->ethAddressString[0] != '\0') ? el->ethAddressString : el->hostNumIpAddress); j<strlen(path); j++) 
@@ -710,8 +691,12 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 
   if(strstr(rrdName, "AS"))
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/AS/%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
-  else
-    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
+  else {
+    if(!strcmp(rrdName, "throughput"))
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.spoolPath, rrdPath, rrdName);
+    else
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
+  }
 
   /* startTime[4] skips the 'now-' */
   safe_snprintf(__FILE__, __LINE__, fname, sizeof(fname), "%s/%s/%s-%s%s%s",
@@ -841,7 +826,8 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
       traceEventRRDebugARGV(0);
 
       if(++graphErrCount < 50) {
-        traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error() ? rrd_get_error() : "");
+        traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", 
+		   rc, rrd_get_error() ? rrd_get_error() : "");
         traceEvent(CONST_TRACE_INFO, "RRD: Failing file in graphCounter() is %s", path);
       }
 
@@ -933,7 +919,10 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
     sendString("<SCRIPT type=\"text/javascript\" src=\"/jscalendar/calendar-setup.js\"></script>\n");
     sendString("<SCRIPT type\"text/javascript\" src=\"/jscalendar/calendar-load.js\"></script>\n");
 
-    sendString("\n<p align=center>\n<FORM action=/plugins/rrdPlugin name=\"form_timespan_selector\" method=\"get\">\n<TABLE width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n<TBODY><TR><TD align=center class=\"textHeader\" nowrap=\"\">\n<b>Presets</b>: <SELECT name=\"predefined_timespan\" onchange=\"window.location=document.form_timespan_selector.predefined_timespan.options[document.form_timespan_selector.predefined_timespan.selectedIndex].value\">\n");
+    sendString("\n<p align=center>\n<FORM action=/plugins/rrdPlugin name=\"form_timespan_selector\" method=\"get\">\n"
+	       "<TABLE width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n<TBODY><TR><TD align=center class=\"textHeader\" nowrap=\"\">\n"
+	       "<b>Presets</b>: <SELECT name=\"predefined_timespan\" onchange=\"window.location=document.form_timespan_selector."
+	       "predefined_timespan.options[document.form_timespan_selector.predefined_timespan.selectedIndex].value\">\n");
 
     option_timespan(the_time-12*3600, "-----", 1);
     option_timespan(the_time-1800, "Last Half Hour", 0);
@@ -985,7 +974,9 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
 	       "<DIV id=\"zoomBox\" style=\"position: absolute; visibility: visible; background-image: initial; background-repeat: initial; "
 	       "background-attachment: initial; background-position-x: initial; background-position-y: initial; background-color: orange; opacity: 0.5;\"></DIV>\n");
 
-    sendString("<DIV id=\"zoomSensitiveZone\" style=\"position:absolute; overflow:none; background-repeat: initial; background-attachment: initial;  background-position-x: initial; background-position-y: initial; visibility:visible; cursor:crosshair; background:blue; filter:alpha(opacity=0); -moz-opacity:0; -khtml-opacity:0; opacity:0;\" oncontextmenu=\"return false\"></DIV>\n");
+    sendString("<DIV id=\"zoomSensitiveZone\" style=\"position:absolute; overflow:none; background-repeat: initial; background-attachment: initial;  "
+	       "background-position-x: initial; background-position-y: initial; visibility:visible; cursor:crosshair; background:blue; "
+	       "filter:alpha(opacity=0); -moz-opacity:0; -khtml-opacity:0; opacity:0;\" oncontextmenu=\"return false\"></DIV>\n");
 
     /*
       NOTE:
@@ -1006,7 +997,8 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
                   endTime);
     sendString(strbuf);
 
-    sendString("\n<SCRIPT type=\"text/javascript\">\n\nvar cURLBase = \"/plugins/rrdPlugin?mode=zoom\";\n\n// Global variables\nvar gZoomGraphName = \"zoomGraphImage\";\n"
+    sendString("\n<SCRIPT type=\"text/javascript\">\n\nvar cURLBase = \"/plugins/rrdPlugin?mode=zoom\";\n\n"
+	       "// Global variables\nvar gZoomGraphName = \"zoomGraphImage\";\n"
 	       "var gZoomGraphObj;\nvar gMouseObj;\nvar gUrlObj;\nvar gBrowserObj;\nvar gGraphWidth;\n"
 	       "var gGraphHeight;\n\n\nwindow.onload = initBonsai;\n\n</SCRIPT>\n");
 
@@ -1069,7 +1061,10 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
   for(i=0, entryId=0; rrds[i] != NULL; i++) {
     struct stat statbuf;
 
-    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrds[i]);
+    if(!strcmp(rrds[i], "throughput"))
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.spoolPath, rrdPath, rrds[i]);
+    else
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrds[i]);
 
     revertSlashIfWIN32(path, 0);
 
@@ -1090,15 +1085,16 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
       safe_snprintf(__FILE__, __LINE__, buf3[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Last\\: %3.1lf%s\\n");
       argv[argc++] = buf3[entryId];
 
-
       entryId++;
+    } else {
+      // traceEvent(CONST_TRACE_WARNING, "RRD: Unable to find file %s", path);
     }
 
     if(entryId >= MAX_NUM_ENTRIES) break;
 
     if(entryId >= CONST_NUM_BAR_COLORS) {
       if(colorWarn == 0) {
-        traceEvent(CONST_TRACE_WARNING, "RRD: Number of defined bar colors less than max entries.  Some graph(s) truncated");
+        traceEvent(CONST_TRACE_WARNING, "RRD: Number of defined bar colors less than max entries. Some graph(s) truncated");
         colorWarn = 1;
       }
       break;
@@ -1112,7 +1108,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
   rrd_clear_error();
   addRrdDelay();
-  rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);
+  rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);  
 
   calfree();
 
@@ -1173,6 +1169,8 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
   case 0:  rrds = (char**)rrd_summary_nf_if_octets; label = "Bit/s"; break;
   default: rrds = (char**)rrd_summary_nf_if_pkts; label = "Pkt/s"; break;
   }
+
+  traceEvent(CONST_TRACE_WARNING,  "-- 0 --> (%s)", "Hello");
 
   if(!strcmp(mode, "zoom")) {
     char strbuf[LEN_GENERAL_WORK_BUFFER];
@@ -1248,14 +1246,17 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
 	       "<DIV id=\"zoomBox\" style=\"position: absolute; visibility: visible; background-image: initial; background-repeat: initial; "
 	       "background-attachment: initial; background-position-x: initial; background-position-y: initial; background-color: orange; opacity: 0.5;\"></DIV>\n");
 
-    sendString("<DIV id=\"zoomSensitiveZone\" style=\"position:absolute; overflow:none; background-repeat: initial; background-attachment: initial;  background-position-x: initial; background-position-y: initial; visibility:visible; cursor:crosshair; background:blue; filter:alpha(opacity=0); -moz-opacity:0; -khtml-opacity:0; opacity:0;\" oncontextmenu=\"return false\"></DIV>\n");
+    sendString("<DIV id=\"zoomSensitiveZone\" style=\"position:absolute; overflow:none; background-repeat: initial; "
+	       "background-attachment: initial;  background-position-x: initial; background-position-y: initial; visibility:visible; "
+	       "cursor:crosshair; background:blue; filter:alpha(opacity=0); -moz-opacity:0; -khtml-opacity:0; opacity:0;"
+	       "\" oncontextmenu=\"return false\"></DIV>\n");
 
     /*
       NOTE:
       If the graph size changes, please update the zoom.js file (search for L.Deri)
     */
     safe_snprintf(__FILE__, __LINE__, strbuf, sizeof(strbuf),
-                  "<img id=zoomGraphImage src=\"/" CONST_PLUGINS_HEADER "%s?action=netflowIfSummary"
+                  "<img id=zoomGraphImage src=\"/" CONST_PLUGINS_HEADER "%s?action=netflowSummary"
 		  "&graphId=%d"
 		  "&key=%s"
 		  "&name=%s"
@@ -1269,7 +1270,8 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
                   endTime);
     sendString(strbuf);
 
-    sendString("\n<SCRIPT type=\"text/javascript\">\n\nvar cURLBase = \"/plugins/rrdPlugin?mode=zoom\";\n\n// Global variables\nvar gZoomGraphName = \"zoomGraphImage\";\n"
+    sendString("\n<SCRIPT type=\"text/javascript\">\n\nvar cURLBase = \"/plugins/rrdPlugin?mode=zoom\";\n\n"
+	       "// Global variables\nvar gZoomGraphName = \"zoomGraphImage\";\n"
 	       "var gZoomGraphObj;\nvar gMouseObj;\nvar gUrlObj;\nvar gBrowserObj;\nvar gGraphWidth;\n"
 	       "var gGraphHeight;\n\n\nwindow.onload = initBonsai;\n\n</SCRIPT>\n");
 
@@ -1357,8 +1359,12 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
   for(i=0, entryId=0; rrds[i] != NULL; i++) {
     struct stat statbuf;
 
-    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/%s/%s.rrd",
-		  myGlobals.rrdPath, rrd_subdirs[2], rrdPath, rrds[i]);
+    if(!strcmp(rrds[i], "throughput"))
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/%s/%s.rrd",
+		    myGlobals.spoolPath, rrd_subdirs[2], rrdPath, rrds[i]);
+    else
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/%s/%s.rrd",
+		    myGlobals.rrdPath, rrd_subdirs[2], rrdPath, rrds[i]);
 
     revertSlashIfWIN32(path, 0);
 
@@ -1387,7 +1393,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
 
     if(entryId >= CONST_NUM_BAR_COLORS) {
       if(colorWarn == 0) {
-        traceEvent(CONST_TRACE_WARNING, "RRD: Number of defined bar colors less than max entries.  Some graph(s) truncated");
+        traceEvent(CONST_TRACE_WARNING, "RRD: Number of defined bar colors less than max entries. Some graph(s) truncated");
         colorWarn = 1;
       }
       break;
@@ -1404,6 +1410,8 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
   rrd_clear_error();
   addRrdDelay();
   rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);
+
+  traceEventRRDebugARGV(3); // FIX
 
   calfree();
 
@@ -1667,7 +1675,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
 	  safe_snprintf(__FILE__, __LINE__, tmpPath, sizeof(tmpPath),
 			"interfaces/%s/hosts/%s",
-			myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+			myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 			the_host);
 	  
 	  for(y=strlen(tmpPath)-strlen(the_host); y<strlen(tmpPath); y++) 
@@ -2600,11 +2608,7 @@ static void commonRRDinit(void) {
     dumpDetail  = atoi(value);
   }
 
-  if((fetchPrefsValue("rrd.rrdPath", value, sizeof(value)) == -1) 
-#ifdef WIN32
-		|| myGlobals.useU3
-#endif
-		){
+  if(fetchPrefsValue("rrd.rrdPath", value, sizeof(value)) == -1) {
     char *thePath = "/rrd";
     int len = strlen(myGlobals.dbPath)+strlen(thePath)+16, idx = 0;
 
@@ -2628,10 +2632,6 @@ static void commonRRDinit(void) {
     
     len = strlen(myGlobals.rrdPath);
     if(myGlobals.rrdPath[len-1] == '/') myGlobals.rrdPath[len-1] = '\0';
-
-#ifdef WIN32
-    if(!myGlobals.useU3)
-#endif
     storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
   } else {
     int vlen = strlen(value)+1;
@@ -2918,7 +2918,11 @@ static void arbitraryAction(char *rrdName,
     memset(&path, 0, sizeof(path));
     memset(&rptTime, 0, sizeof(rptTime));
     memset(&startWorkTime, 0, sizeof(startWorkTime));
-    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdKey, rrdName);
+
+    if(!strcmp(rrdName, "throughput"))
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.spoolPath, rrdKey, rrdName);
+    else
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdKey, rrdName);
 
     if(_which == CONST_ARBITRARY_RRDREQUEST_FETCHME[0]) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -3674,8 +3678,8 @@ static void handleRRDHTTPrequest(char* url) {
 	    continue;
 
 	  safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath),
-			"%s/interfaces/%s/", myGlobals.rrdPath,
-			myGlobals.device[devIdx].humanFriendlyName);
+			"%s/interfaces/%s/", myGlobals.spoolPath,
+			myGlobals.device[devIdx].uniqueIfName);
 
 	  deleteRRD(rrdPath, "throughput");
 	}
@@ -4087,7 +4091,7 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
     adjHostName = dotToSlash(hostKey);
 
     safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
-		  myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
+		  myGlobals.rrdPath, myGlobals.device[devIdx].uniqueIfName,
 		  adjHostName);
     mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
@@ -4180,7 +4184,7 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 
 	safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/IP_",
 		      myGlobals.rrdPath,
-		      myGlobals.device[devIdx].humanFriendlyName,
+		      myGlobals.device[devIdx].uniqueIfName,
 		      adjHostName
 		      );
 
@@ -4236,7 +4240,7 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
     adjHostName = dotToSlash(hostKey);
 
     safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
-		  myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
+		  myGlobals.rrdPath, myGlobals.device[devIdx].uniqueIfName,
 		  adjHostName);
     mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
@@ -4323,8 +4327,9 @@ static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
 	 || (!myGlobals.device[devIdx].activeDevice))
 	continue;
 
-      safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/", myGlobals.rrdPath,
-                    myGlobals.device[devIdx].humanFriendlyName);
+      safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/", 
+		    myGlobals.spoolPath,
+                    myGlobals.device[devIdx].uniqueIfName);
       mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
       updateCounter(rrdPath, "throughput", myGlobals.device[devIdx].ethernetBytes.value*8, 1);
@@ -4492,6 +4497,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
         u_int numEntries = 0;
 
+
+	if(!strcmp(myGlobals.device[devIdx].name, "pcap-file")) continue;
+	if(!strcmp(myGlobals.device[devIdx].name, "none"))      continue;
+
 	/* save this as it may change */
 	maxHosts = myGlobals.device[devIdx].hostsno;
 	tmpStats = (DomainStats*)mallocAndInitWithReportWarn(maxHosts*sizeof(DomainStats), "rrdMainLoop");
@@ -4553,11 +4562,11 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  totBytesSent += el->bytesSent.value;
 	  statsEntry->bytesSent.value += el->bytesSent.value;
 	  statsEntry->bytesRcvd.value += el->bytesRcvd.value;
-	  totBytesRcvd          += el->bytesRcvd.value;
+	  totBytesRcvd                += el->bytesRcvd.value;
 	  statsEntry->tcpSent.value   += el->tcpSentLoc.value + el->tcpSentRem.value;
 	  statsEntry->udpSent.value   += el->udpSentLoc.value + el->udpSentRem.value;
 	  statsEntry->icmpSent.value  += el->icmpSent.value;
-	  statsEntry->icmp6Sent.value  += el->icmp6Sent.value;
+	  statsEntry->icmp6Sent.value += el->icmp6Sent.value;
 	  statsEntry->tcpRcvd.value   += el->tcpRcvdLoc.value + el->tcpRcvdFromRem.value;
 	  statsEntry->udpRcvd.value   += el->udpRcvdLoc.value + el->udpRcvdFromRem.value;
 	  statsEntry->icmpRcvd.value  += el->icmpRcvd.value;
@@ -4578,7 +4587,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    statsEntry = &tmpStats[idx];
 
 	    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/domains/%s/",
-			  myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
+			  myGlobals.rrdPath, myGlobals.device[devIdx].uniqueIfName,
 			  statsEntry->domainHost->dnsDomainValue);
 	    mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
@@ -4647,7 +4656,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  continue;
 
 	safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/", myGlobals.rrdPath,
-		      myGlobals.device[devIdx].humanFriendlyName);
+		      myGlobals.device[devIdx].uniqueIfName);
 	mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
 	updateCounter(rrdPath, "ethernetPkts",  myGlobals.device[devIdx].ethernetPkts.value, 0);
@@ -4764,7 +4773,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
 	  if(myGlobals.device[devIdx].ipProtoStats != NULL) {
 	    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/IP_",
-			  myGlobals.rrdPath,  myGlobals.device[devIdx].humanFriendlyName);
+			  myGlobals.rrdPath,  myGlobals.device[devIdx].uniqueIfName);
 
 	    for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
 	      TrafficCounter ctr;
@@ -4803,7 +4812,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      if(asStats->totPktsSinceLastRRDDump > AS_RRD_DUMP_PKTS_THRESHOLD) {
 		safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
 			      "%s/interfaces/%s/AS/%d/", myGlobals.rrdPath,
-			      myGlobals.device[devIdx].humanFriendlyName,
+			      myGlobals.device[devIdx].uniqueIfName,
 			      asStats->as_id);
 		mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
 		
@@ -4827,7 +4836,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  if(dumpASs) {
 	    safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
 			  "%s/interfaces/%s/AS/", myGlobals.rrdPath,
-			  myGlobals.device[devIdx].humanFriendlyName);
+			  myGlobals.device[devIdx].uniqueIfName);
 	    mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
 	    updateGauge(rrdIfPath, "numAS", totAS, 0);
 	    // traceEvent(CONST_TRACE_WARNING, "numAS=%d", totAS);
@@ -4848,7 +4857,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	    safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
 			  "%s/interfaces/%s/NetFlow/%d/", myGlobals.rrdPath,
-			  myGlobals.device[devIdx].humanFriendlyName, ifStats->interface_id);
+			  myGlobals.device[devIdx].uniqueIfName, ifStats->interface_id);
 	    mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
 
 	    updateCounter(rrdIfPath, "ifInOctets",   ifStats->inBytes.value, 0);
@@ -4874,7 +4883,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	    safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
 			  "%s/interfaces/%s/sFlow/%u/", myGlobals.rrdPath,
-			  myGlobals.device[devIdx].humanFriendlyName, ifName->ifIndex);
+			  myGlobals.device[devIdx].uniqueIfName, ifName->ifIndex);
 	    mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
 
 	    updateCounter(rrdIfPath, "ifInOctets", ifName->ifInOctets, 0);
@@ -4918,7 +4927,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath),
 			      "%s/interfaces/%s/matrix/%s/%s/",
 			      myGlobals.rrdPath,
-			      myGlobals.device[k].humanFriendlyName,
+			      myGlobals.device[k].uniqueIfName,
 			      myGlobals.device[k].ipTrafficMatrixHosts[i]->hostNumIpAddress,
 			      myGlobals.device[k].ipTrafficMatrixHosts[j]->hostNumIpAddress);
 		mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);

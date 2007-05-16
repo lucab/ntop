@@ -228,12 +228,13 @@ void printTrafficSummary (int revertOrder) {
       if(myGlobals.device[i].sflowGlobals || myGlobals.device[i].netflowGlobals)
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
 		      "%s</TD>",
-		      myGlobals.device[i].humanFriendlyName[0] != '\0' ? myGlobals.device[i].humanFriendlyName : "&nbsp;");
+		      myGlobals.device[i].humanFriendlyName[0] != '\0' ?
+		      myGlobals.device[i].humanFriendlyName : "&nbsp;");
       else
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
 		      "%s <A HREF=\""CONST_EDIT_PREFS"?key=device.name.%s\">"
 		      "<img class=tooltip alt=\"Change name\" src=/"CONST_EDIT_IMG" border=\"0\"></A></TD>",
-		      myGlobals.device[i].humanFriendlyName[0] != '\0' ? myGlobals.device[i].humanFriendlyName : "&nbsp;",
+		      myGlobals.device[i].uniqueIfName[0] != '\0' ? myGlobals.device[i].uniqueIfName : "&nbsp;",
 		      myGlobals.device[i].name);
 
 	sendString(buf);
@@ -325,9 +326,8 @@ void printTrafficSummary (int revertOrder) {
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
 		  myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
-    
-    
+		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+        
     revertSlashIfWIN32(buf, 0);
    
     if(stat(buf, &statbuf) != 0) {
@@ -339,7 +339,7 @@ void printTrafficSummary (int revertOrder) {
 		    "%u <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=knownHostsNum&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
 		    "<IMG valign=top class=tooltip SRC=graph.gif border=0></A>"
 		    "</TD></TR>\n", 
-		    i, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(myGlobals.actTime-3600), 
+		    i, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600), 
 		    (unsigned int)myGlobals.actTime, "Active+End+Nodes");
 
     
@@ -609,12 +609,13 @@ void printTrafficStatistics(int revertOrder) {
       if(myGlobals.device[i].sflowGlobals || myGlobals.device[i].netflowGlobals)
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
 		      "%s</TD>",
-		      myGlobals.device[i].humanFriendlyName[0] != '\0' ? myGlobals.device[i].humanFriendlyName : "&nbsp;");
+		      myGlobals.device[i].humanFriendlyName[0] != '\0' ? 
+		      myGlobals.device[i].humanFriendlyName : "&nbsp;");
       else
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
 		      "%s <A HREF=\""CONST_EDIT_PREFS"?key=device.name.%s\">"
 		      "<img class=tooltip alt=\"Change name\" src=/"CONST_EDIT_IMG" border=\"0\"></A></TD>",
-		      myGlobals.device[i].humanFriendlyName[0] != '\0' ? myGlobals.device[i].humanFriendlyName : "&nbsp;",
+		      myGlobals.device[i].uniqueIfName[0] != '\0' ? myGlobals.device[i].uniqueIfName : "&nbsp;",
 		      myGlobals.device[i].name);
       sendString(buf);
 
@@ -705,8 +706,7 @@ void printTrafficStatistics(int revertOrder) {
   if((i = numActiveSenders(myGlobals.actualReportDeviceId)) > 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
 		  myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
-    
+		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);    
     
     revertSlashIfWIN32(buf, 0);
    
@@ -719,7 +719,7 @@ void printTrafficStatistics(int revertOrder) {
 		    "%u <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=knownHostsNum&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
 		    "<IMG valign=top class=tooltip SRC=graph.gif border=0></A>"
 		    "</TD></TR>\n", 
-		    i, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(myGlobals.actTime-3600), 
+		    i, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600), 
 		    (unsigned int)myGlobals.actTime, "Active+End+Nodes");
 
     
@@ -1362,28 +1362,29 @@ void printTrafficStatistics(int revertOrder) {
    /* ********************* */
 
  #ifndef EMBEDDED
-   /* RRD */
-   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
-		 myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-		 myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
+  if(strcmp(myGlobals.device[0].name, "pcap-file")) {
+    /* RRD */
+    /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
+		  myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
+		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
 
+    revertSlashIfWIN32(buf, 0);
 
-   revertSlashIfWIN32(buf, 0);
-
-   if((i = stat(buf, &statbuf)) == 0) {
-     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		   "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
-		   "<TD "TD_BG" align=\"right\">"
-		   "[ <a href=\"/" CONST_PLUGINS_HEADER
-		   "rrdPlugin?action=list&amp;key=interfaces/%s&amp;title=interface%%20%s\">"
-		   "<img class=tooltip valign=\"top\" border=\"0\" src=\"/graph.gif\""
-		   " alt=\"View rrd charts of historical data for this interface\"></a> ]"
-		   "</TD></TR>\n",
-		   getRowColor(), myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
-     sendString(buf);
-   }
+    if((i = stat(buf, &statbuf)) == 0) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
+		    "<TD "TD_BG" align=\"right\">"
+		    "[ <a href=\"/" CONST_PLUGINS_HEADER
+		    "rrdPlugin?action=list&amp;key=interfaces/%s&amp;title=interface%%20%s\">"
+		    "<img class=tooltip valign=\"top\" border=\"0\" src=\"/graph.gif\""
+		    " alt=\"View rrd charts of historical data for this interface\"></a> ]"
+		    "</TD></TR>\n",
+		    getRowColor(), myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+      sendString(buf);
+    }
+  }
  #endif
    /* ********************* */
 
@@ -4321,35 +4322,36 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
        if((numProtosFound > 0) && printGraph) {
 	 struct stat statbuf;
 
-	 sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=LEFT BGCOLOR=white>"
-		    "<iframe  frameborder=0 SRC=\"" CONST_BAR_IPPROTO_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+	 if(strcmp(myGlobals.device[0].name, "pcap-file")) {
+	   sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=LEFT BGCOLOR=white>"
+		      "<iframe  frameborder=0 SRC=\"" CONST_BAR_IPPROTO_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 
-	 /* RRD */
-	 /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
-		       myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-		       myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
+	   /* RRD */
+	   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
+			 myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
+			 myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
 
-     revertSlashIfWIN32(buf, 0);
+	   revertSlashIfWIN32(buf, 0);
 
-	 if((i = stat(buf, &statbuf)) == 0) {
-	   time_t now = time(NULL);
+	   if((i = stat(buf, &statbuf)) == 0) {
+	     time_t now = time(NULL);
 
+	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			   "<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=left BGCOLOR=white>"
+			   "<table border=0><tr><td><IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=4&"
+			   "key=interfaces/%s/&start=now-12h&end=now\" BORDER=0>",
+			   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+	     sendString(buf);
+	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			   "</td><td><A HREF=\"/plugins/rrdPlugin?mode=zoom&action=graphSummary&graphId=4&"
+			   "key=interfaces/%s/&start=%u&end=%u\"><IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></tr></table></TD></TR>",
+			   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, now - 12 * 3600, now);
+	     sendString(buf);
+	   }
 
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			 "<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=left BGCOLOR=white>"
-			 "<table border=0><tr><td><IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=4&"
-			 "key=interfaces/%s/&start=now-12h&end=now\" BORDER=0>",
-			 myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
-	   sendString(buf);
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			 "</td><td><A HREF=\"/plugins/rrdPlugin?mode=zoom&action=graphSummary&graphId=4&"
-			 "key=interfaces/%s/&start=%u&end=%u\"><IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></tr></table></TD></TR>",
-			 myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, now - 12 * 3600, now);
-	   sendString(buf);
+	   sendString("</TD></TR>\n");
 	 }
-
-	 sendString("</TD></TR>\n");
        }
  #endif
        sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=5 ALIGN=LEFT "DARK_BG">"
@@ -4477,7 +4479,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 		     100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/
 			  myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
 
-     {
+     if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList) {
        ProtocolsList *protoList = myGlobals.ipProtosList;
        int idx = 0;
 
@@ -5010,95 +5012,98 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   printHTMLheader("Network Load Statistics", NULL, 0);
 
-  /*
-    if(myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-    printFlagedWarning("<I>Network load statistics are not available for virtual interfaces</I>");
-    return;
+  if(strcmp(myGlobals.device[0].name, "pcap-file")) {
+    /*
+      if(myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
+      printFlagedWarning("<I>Network load statistics are not available for virtual interfaces</I>");
+      return;
+      }
+    */
+
+    /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/interfaces/%s/throughput.rrd",
+		  myGlobals.rrdPath != NULL ? myGlobals.spoolPath : ".",
+		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+
+    revertSlashIfWIN32(tmpBuf, 0);
+
+    if((i = stat(tmpBuf, &statbuf)) != 0) {
+      useRRD = 0;
+      sendString("<p align=left><b>NOTE</b>: this page is not operational when the <A HREF=/plugins/rrdPlugin>RRD plugin</A> "
+		 "is disabled, misconfigured or missing. Please check the ntop log file.</p>");
+
+      return;
     }
-  */
 
-  /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/interfaces/%s/throughput.rrd",
-		myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
+    if(useRRD) {
+      sendString("<CENTER>\n<table border=0>\n");
 
-  revertSlashIfWIN32(tmpBuf, 0);
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
+		    0,
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-600), 
+		    (unsigned int)now, "Last+10+Minutes+Throughput",
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-600), 
+		    (unsigned int)now, "Throughput"
+		    );
+      sendString(tmpBuf);
 
-  if((i = stat(tmpBuf, &statbuf)) != 0) {
-    useRRD = 0;
-	sendString("<p align=left><b>NOTE</b>: this page is not operational when the <A HREF=/plugins/rrdPlugin>RRD plugin</A> is disabled, misconfigured or missing. Please check the ntop log file.</p>");
-
-    return;
-  }
-
-  if(useRRD) {
-    sendString("<CENTER>\n<table border=0>\n");
-
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		  0,
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-600), 
-		  (unsigned int)now, "Last+10+Minutes+Throughput",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-600), 
-		  (unsigned int)now, "Throughput"
-		  );
-    sendString(tmpBuf);
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
+		    formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
+		    formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
+      sendString(tmpBuf);
+    
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
+		    1,
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-3600), 
+		    (unsigned int)now, "Last+Hour+Throughput",
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-3600),
+		    (unsigned int)now, "Throughput");
+      sendString(tmpBuf);
+    } 
 
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
-		  formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
+		  formatTimeStamp(0, 0, 60, formatBuf, sizeof(formatBuf)),
 		  formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
     sendString(tmpBuf);
-    
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		  1,
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-3600), 
-		  (unsigned int)now, "Last+Hour+Throughput",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-3600),
-		  (unsigned int)now, "Throughput");
-    sendString(tmpBuf);
-  } 
 
-  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
-		formatTimeStamp(0, 0, 60, formatBuf, sizeof(formatBuf)),
-		formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
-  sendString(tmpBuf);
+    if(useRRD) {
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
+		    2, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-86400), 
+		    (unsigned int)now, "Current+Day+Throughput",
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-86400), 
+		    (unsigned int)now, "Throughput");
+      sendString(tmpBuf);
+    }
 
-  if(useRRD) {
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		  2, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-86400), 
-		  (unsigned int)now, "Current+Day+Throughput",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(now-86400), 
-		  (unsigned int)now, "Throughput");
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
+		  formatTimeStamp(0, 24, 0, formatBuf, sizeof(formatBuf)),
+		  formatTimeStamp(0,  0, 0, formatBuf1, sizeof(formatBuf1)));
     sendString(tmpBuf);
+
+    if(useRRD) {
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
+		    3, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, 
+		    (unsigned int)(now-86400*30), (unsigned int)now, "Last+Month+Throughput",
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, 
+		    (unsigned int)(now-86400*30), (unsigned int)now, "Throughput");
+      sendString(tmpBuf);
+    }
+
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
+		  formatTimeStamp(30, 0, 0, formatBuf, sizeof(formatBuf)),
+		  formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1)));
+    sendString(tmpBuf);
+
+    sendString("</table></CENTER>\n");
+
+    if(useRRD) {
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<p align=right>"
+		    "[ <A HREF=\"/" CONST_PLUGINS_HEADER"rrdPlugin\">Change Throughput Granularity</A> ]</p>",
+		    formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
+		    formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
+      sendString(tmpBuf);
+    } 
   }
-
-  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
-		formatTimeStamp(0, 24, 0, formatBuf, sizeof(formatBuf)),
-		formatTimeStamp(0,  0, 0, formatBuf1, sizeof(formatBuf1)));
-  sendString(tmpBuf);
-
-  if(useRRD) {
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		  3, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, 
-		  (unsigned int)(now-86400*30), (unsigned int)now, "Last+Month+Throughput",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, 
-		  (unsigned int)(now-86400*30), (unsigned int)now, "Throughput");
-    sendString(tmpBuf);
-  }
-
-  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
-		formatTimeStamp(30, 0, 0, formatBuf, sizeof(formatBuf)),
-		formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1)));
-  sendString(tmpBuf);
-
-  sendString("</table></CENTER>\n");
-
-  if(useRRD) {
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<p align=right>"
-		  "[ <A HREF=\"/" CONST_PLUGINS_HEADER"rrdPlugin\">Change Throughput Granularity</A> ]</p>",
-		  formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
-		  formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
-    sendString(tmpBuf);
-  } 
 
   sendString("<p align=left><b>NOTE</b>: this page is not operational when the <A HREF=/plugins/rrdPlugin>RRD plugin</A> is disabled, misconfigured or missing.</p>");
 }
@@ -5195,7 +5200,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
     hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   u_int32_t localNetworks[MAX_NUM_CLUSTERS][MAX_NUM_NETWORKS][4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
   u_short numLocalNetworks[MAX_NUM_CLUSTERS], totNumClusters=0;
-  u_char *clusterNames[MAX_NUM_CLUSTERS], debug = 1;
+  u_char *clusterNames[MAX_NUM_CLUSTERS], debug = 0;
 
   network_mode_sort = network_mode;
 
@@ -5321,22 +5326,22 @@ void printDomainStats(char* domain_network_name, int network_mode,
     sendString("<center><TABLE BORDER=0 "TABLE_DEFAULTS">");
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<tr><td align=center>"
 		  "<IMG SRC=/plugins/rrdPlugin?action=interfaceSummary&amp;key=%s/AS/%s&amp;graphId=0\">\n",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, domain_network_name);
+		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, domain_network_name);
     sendString(buf);
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "</td><td valign=middle>"
 		  "<A HREF=/plugins/rrdPlugin?mode=zoom&action=interfaceSummary&amp;key=%s/AS/%s&amp;graphId=0\">"
 		  "<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></td></tr>\n",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, domain_network_name);
+		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, domain_network_name);
     sendString(buf);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<tr><td align=center>"
 		  "<IMG SRC=/plugins/rrdPlugin?action=interfaceSummary&amp;key=%s/AS/%s&amp;graphId=1\">\n",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, domain_network_name);
+		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, domain_network_name);
     sendString(buf);
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "</td><td valign=middle>"
 		  "<A HREF=/plugins/rrdPlugin?mode=zoom&action=interfaceSummary&amp;key=%s/AS/%s&amp;graphId=1\">"
 		  "<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></td></tr>\n",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, domain_network_name);
+		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, domain_network_name);
     sendString(buf);
     sendString("</table>\n</center>\n");
   } else {
@@ -5346,19 +5351,19 @@ void printDomainStats(char* domain_network_name, int network_mode,
       struct stat statbuf;
       
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/AS/numAS.rrd", 
-		    myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
+		    myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
       
       if((i = stat(buf, &statbuf)) == 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<center>"
 		      "<IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=numAS&arbiface=%s&start=%u&end=%u&counter=&title=%s\">",
-		      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(myGlobals.actTime-3600), 
+		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600), 
 		      (unsigned int)myGlobals.actTime, "Active+ASs");
 	sendString(buf);
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 		      "<A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=numAS&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
 		      "&nbsp;<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A>",
-		      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, (unsigned int)(myGlobals.actTime-3600), 
+		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600), 
 		      (unsigned int)myGlobals.actTime, "Active+ASs");
 	sendString(buf);
 
@@ -5727,7 +5732,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
       if(sym_as_name[0] != '\0')
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/AS/%s", 
-		      myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName, 
+		      myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, 
 		      sym_as_name);
       
       if((sym_as_name[0] != '\0') && ((i = stat(buf, &statbuf)) == 0)) {
@@ -5776,7 +5781,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
       /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/domains/%s",
 		    myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-		    myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,domain_network_name);
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,domain_network_name);
 
       revertSlashIfWIN32(buf, 0);
 
@@ -5794,7 +5799,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		      "</td>\n"
 		      "</tr></table>\n</center>\n"
 		      "<p>&nbsp;</p>\n",
-		      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		      domain_network_name,domain_network_name);
 	sendString(buf);
       }
@@ -5879,7 +5884,7 @@ void listNetFlows(void) {
     sendString("</CENTER>\n");
   }
 
-  sendString("<p align=left><b>NOTE</b>: Network flows have no relation at all with NetFlow/sFlow protocols.</p>\n");
+  sendString("<p align=left><b>NOTE</b>: Network flows have <u>no relation at all</u> with NetFlow/sFlow protocols.</p>\n");
 
   if(numEntries == 0) {
     sendString("<CENTER><P><H1>No Available/Active Network Flows</H1><p>"

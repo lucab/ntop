@@ -4094,7 +4094,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
 	     myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+	     myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 	     dotToSlash(key));
 
     revertSlashIfWIN32(buf, 0);
@@ -4109,7 +4109,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		    " class=tooltip alt=\"view rrd graphs of historical data for this host\"></a> ]"
                   "</TD></TR>\n",
 		  getRowColor(),
-                  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+                  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
                   dotToSlash(key),
 		  el->hostResolvedName[0] != '\0' ? el->hostResolvedName : el->hostNumIpAddress);
       sendString(buf);
@@ -4322,7 +4322,7 @@ void printTableEntry(char *buf, int bufLen,
   else {
     safe_snprintf(__FILE__, __LINE__, rrdBuf, sizeof(rrdBuf), "%s/interfaces/%s/IP_%sBytes.rrd",
 		  myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		  label);
 
     revertSlashIfWIN32(rrdBuf, 0);
@@ -4336,8 +4336,8 @@ void printTableEntry(char *buf, int bufLen,
 		    "&arbfile=IP_%sBytes&arbiface=%s&arbip=&start=now-12h&end=now&counter=&title=\" BORDER=0></td><td>"
 		    "<A HREF=\"/plugins/rrdPlugin?mode=zoom&action=arbreq&which=graph&arbfile=IP_%sBytes&arbiface=%s&arbip=&start=%d&end=%d&counter=&title=\">"
 		    "&nbsp;<IMG valign=top class=tooltip SRC=graph_zoom.gif border=0></A></td></tr></table>\n",
-		    _label, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		    _label, myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		    _label, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
+		    _label, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		    now-12*3600, now);
     } else {
       rrdBuf[0] = '\0';

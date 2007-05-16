@@ -1068,6 +1068,18 @@ void initDeviceSemaphores(int deviceId) {
 
 /* ******************************* */
 
+void allocDeviceMemory(int deviceId) {
+  if(!myGlobals.device[deviceId].ipPorts)
+    myGlobals.device[deviceId].ipPorts = 
+      (PortCounter**)calloc(sizeof(PortCounter*), MAX_IP_PORT);
+  
+  if(!myGlobals.device[deviceId].packetQueue)
+    myGlobals.device[deviceId].packetQueue = 
+      (PacketInformation*)calloc(sizeof(PacketInformation), (CONST_PACKET_QUEUE_LENGTH+1));
+}
+
+/* ******************************* */
+
 /*
  * Initialize the table of NICs enabled for packet sniffing
  *
@@ -1087,7 +1099,6 @@ void addDevice(char* deviceName, char* deviceDescr) {
   NtopInterface *tmpDevice, *oldDevice;
   char *workDevices = NULL;
   char myName[80], *column = NULL, ebuf[CONST_SIZE_PCAP_ERR_BUF], tmpStr[64];
-
 
   ebuf[0] = '\0', myName[0] = '\0';
 
@@ -1126,8 +1137,11 @@ void addDevice(char* deviceName, char* deviceDescr) {
     else
       myGlobals.device[deviceId].humanFriendlyName = strdup(deviceDescr);
 
-    myGlobals.device[deviceId].name = strdup(deviceName);
+    allocDeviceMemory(deviceId);
+
+    myGlobals.device[deviceId].name         = strdup(deviceName);
     myGlobals.device[deviceId].samplingRate =  myGlobals.runningPref.samplingRate;
+    calculateUniqueInterfaceName(deviceId);
     myGlobals.numDevices++;
 
     if(myGlobals.numDevices >= MAX_NUM_DEVICES) {
@@ -1219,11 +1233,11 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	if(strlen(myGlobals.runningPref.pcapLog) > 64)
 	  myGlobals.runningPref.pcapLog[64] = '\0';
         safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%c%s.%s.pcap",
-                myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-                CONST_PATH_SEP, myGlobals.runningPref.pcapLog,
-                myGlobals.device[deviceId].humanFriendlyName != NULL ?
-                    myGlobals.device[deviceId].humanFriendlyName :
-                    myGlobals.device[deviceId].name);
+		      myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+		      CONST_PATH_SEP, myGlobals.runningPref.pcapLog,
+		      myGlobals.device[deviceId].uniqueIfName != NULL ?
+		      myGlobals.device[deviceId].uniqueIfName :
+		      myGlobals.device[deviceId].name);
 
 	myGlobals.device[deviceId].pcapDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
@@ -1240,8 +1254,8 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	  safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
 			myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 			CONST_PATH_SEP,
-			myGlobals.device[deviceId].humanFriendlyName != NULL ?
-			myGlobals.device[deviceId].humanFriendlyName :
+			myGlobals.device[deviceId].uniqueIfName != NULL ?
+			myGlobals.device[deviceId].uniqueIfName :
 			myGlobals.device[deviceId].name);
 	else
 	  safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.pcap",
@@ -1260,11 +1274,11 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
       if(myGlobals.runningPref.enableOtherPacketDump) {
         safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-other-pkts.%s.pcap",
-                myGlobals.runningPref.pcapLogBasePath,
-                CONST_PATH_SEP,
-                myGlobals.device[deviceId].humanFriendlyName != NULL ?
-                    myGlobals.device[deviceId].humanFriendlyName :
-                    myGlobals.device[deviceId].name);
+		      myGlobals.runningPref.pcapLogBasePath,
+		      CONST_PATH_SEP,
+		      myGlobals.device[deviceId].uniqueIfName != NULL ?
+		      myGlobals.device[deviceId].uniqueIfName :
+		      myGlobals.device[deviceId].name);
 
 	myGlobals.device[deviceId].pcapOtherDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
@@ -1453,12 +1467,14 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	 myGlobals.device[myGlobals.numDevices].virtualDevice = 1;
 	 myGlobals.device[myGlobals.numDevices].activeDevice = 1;
 	 myGlobals.device[myGlobals.numDevices].humanFriendlyName = strdup(tmpDeviceName);
-	  myGlobals.device[myGlobals.numDevices++].name = strdup(tmpDeviceName);
-	  traceEvent(CONST_TRACE_INFO, "Added virtual interface: '%s'", tmpDeviceName);
-          if(myGlobals.numDevices >= MAX_NUM_DEVICES) {
-	    traceEvent(CONST_TRACE_WARNING, "Stopping scan - no room for additional (virtual) interfaces");
-	    break;
-          }
+	 myGlobals.device[myGlobals.numDevices].name = strdup(tmpDeviceName);
+	 calculateUniqueInterfaceName(myGlobals.numDevices);
+	 myGlobals.numDevices++;
+	 traceEvent(CONST_TRACE_INFO, "Added virtual interface: '%s'", tmpDeviceName);
+	 if(myGlobals.numDevices >= MAX_NUM_DEVICES) {
+	   traceEvent(CONST_TRACE_WARNING, "Stopping scan - no room for additional (virtual) interfaces");
+	   break;
+	 }
 	}
       }
     }
@@ -1519,6 +1535,7 @@ void initDevices(char* devices) {
     } else {
       if(myGlobals.device[0].humanFriendlyName != NULL) free(myGlobals.device[0].humanFriendlyName);
       myGlobals.device[0].humanFriendlyName = strdup(myGlobals.runningPref.rFileName);
+      calculateUniqueInterfaceName(0);
     }
 
     resetStats(0);
@@ -1529,8 +1546,8 @@ void initDevices(char* devices) {
 	safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.%s.pcap",
 		      myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 		      CONST_PATH_SEP,
-		      myGlobals.device[0].humanFriendlyName != NULL ?
-		      myGlobals.device[0].humanFriendlyName :
+		      myGlobals.device[0].uniqueIfName != NULL ?
+		      myGlobals.device[0].uniqueIfName :
 		      myGlobals.device[0].name);
       else
 	safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s.ntop-suspicious-pkts.pcap",
@@ -1914,6 +1931,7 @@ u_int createDummyInterface(char *ifName) {
   myGlobals.device[deviceId].virtualDevice = 0;
   myGlobals.device[deviceId].activeDevice  = 0;
   myGlobals.device[deviceId].samplingRate =  myGlobals.runningPref.samplingRate;
+  calculateUniqueInterfaceName(deviceId);
 
   if(myGlobals.otherHostEntry != NULL) {
     myGlobals.device[deviceId].hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;

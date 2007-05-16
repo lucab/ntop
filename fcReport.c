@@ -1852,32 +1852,34 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
 
   /* RRD */
   if(el->fcCounters->hostNumFcAddress[0] != '\0') {
-    struct stat statbuf;
-    char key[128];
+    if(strcmp(myGlobals.device[0].name, "pcap-file")) {
+      struct stat statbuf;
+      char key[128];
 
-    safe_snprintf(__FILE__, __LINE__, key, sizeof (key), "%s-%d",
-		  el->fcCounters->hostNumFcAddress, el->fcCounters->vsanId);
+      safe_snprintf(__FILE__, __LINE__, key, sizeof (key), "%s-%d",
+		    el->fcCounters->hostNumFcAddress, el->fcCounters->vsanId);
 
-    /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
-		  myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		  dotToSlash(key));
+      /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
+		    myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
+		    dotToSlash(key));
 
-    if(stat(buf, &statbuf) == 0) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
-		    "<TD "TD_BG" ALIGN=\"right\">"
-		    "[ <a href=\"/" CONST_PLUGINS_HEADER
-		    "rrdPlugin?action=list&amp;key=interfaces/%s/hosts/%s&amp;title=host%%20%s\">"
-		    "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
-		    " class=tooltip alt=\"view rrd graphs of historical data for this host\"></a> ]"
-		    "</TD></TR>\n",
-		    getRowColor(),
-		    myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		    dotToSlash(key),
-		    el->hostResolvedName[0] != '\0' ? el->hostResolvedName : el->fcCounters->hostNumFcAddress);
-      sendString(buf);
+      if(stat(buf, &statbuf) == 0) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
+		      "<TD "TD_BG" ALIGN=\"right\">"
+		      "[ <a href=\"/" CONST_PLUGINS_HEADER
+		      "rrdPlugin?action=list&amp;key=interfaces/%s/hosts/%s&amp;title=host%%20%s\">"
+		      "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
+		      " class=tooltip alt=\"view rrd graphs of historical data for this host\"></a> ]"
+		      "</TD></TR>\n",
+		      getRowColor(),
+		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
+		      dotToSlash(key),
+		      el->hostResolvedName[0] != '\0' ? el->hostResolvedName : el->fcCounters->hostNumFcAddress);
+	sendString(buf);
+      }
     }
   }
 

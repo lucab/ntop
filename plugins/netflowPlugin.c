@@ -1,5 +1,5 @@
 /*
- *  Copyright(C) 2002-06 Luca Deri <deri@ntop.org>
+ *  Copyright(C) 2002-07 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -991,13 +991,13 @@ static void dumpFlow(char *buffer, int bufferLen, int deviceId) {
       safe_snprintf(__FILE__, __LINE__, nfDumpPath, sizeof(nfDumpPath),
 		    "%s/interfaces/%s/",
 		    myGlobals.device[deviceId].netflowGlobals->dumpPath,
-		    myGlobals.device[deviceId].humanFriendlyName);
+		    myGlobals.device[deviceId].uniqueIfName);
       mkdir_p("NETFLOW", nfDumpPath, 0700 /* CONST_RRD_D_PERMISSIONS_PRIVATE */);
 
       safe_snprintf(__FILE__, __LINE__, nfDumpPath, sizeof(nfDumpPath),
 		    "%s/interfaces/%s/%u.flow",
 		    myGlobals.device[deviceId].netflowGlobals->dumpPath,
-		    myGlobals.device[deviceId].humanFriendlyName, time(NULL));
+		    myGlobals.device[deviceId].uniqueIfName, time(NULL));
 
       myGlobals.device[deviceId].netflowGlobals->dumpFd = fopen(nfDumpPath, "w+");
       if(myGlobals.device[deviceId].netflowGlobals->dumpFd == NULL) {
@@ -1851,6 +1851,8 @@ static void initNetFlowDevice(int deviceId) {
     return;
   }
 
+  allocDeviceMemory(deviceId);
+
   setPluginStatus(NULL);
 
   myGlobals.device[deviceId].netflowGlobals->threadActive = 0;
@@ -2088,7 +2090,7 @@ static void printNetFlowDeviceConfiguration(void) {
     sendString("\" METHOD=GET>\n<input type=hidden name=device size=5 value=0>");
     sendString("<p align=center><INPUT TYPE=submit VALUE=\"Add NetFlow Device\">&nbsp;\n</FORM><p>\n");
   } else {
-    sendString("<p>Please enable the plugin for configuring devices<br>\n");
+    sendString("<p>Please enable the NetFlow plugin first<br>\n");
   }
 
   sendString("</td></TR></TABLE></center>");
@@ -2706,7 +2708,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
       struct in_addr addr;
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/NetFlow/%d/ifInOctets.rrd",
-		    myGlobals.rrdPath, myGlobals.device[deviceId].humanFriendlyName,
+		    myGlobals.rrdPath, myGlobals.device[deviceId].uniqueIfName,
 		    ifStats->interface_id);
       revertSlashIfWIN32(buf, 0);
 
@@ -2714,7 +2716,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 	found = 1;
       else {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/NetFlow/%d/ifOutOctets.rrd",
-		      myGlobals.rrdPath, myGlobals.device[deviceId].humanFriendlyName,
+		      myGlobals.rrdPath, myGlobals.device[deviceId].uniqueIfName,
 		      ifStats->interface_id);
 	revertSlashIfWIN32(buf, 0);
 	if(!stat(buf, &statbuf)) found = 1;
@@ -2722,7 +2724,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 
       if(!found) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<TR " TR_ON ">\n<TH " TH_BG " ALIGN=\"LEFT\" "DARK_BG ">Interface %d</th>\n<td width=\"20%\">",
+		      "<TR " TR_ON ">\n<TH " TH_BG " ALIGN=\"LEFT\" "DARK_BG " NOWRAP>Interface %d</th>\n<td width=\"20%\">",
 		      ifStats->interface_id);
 	sendString(buf);
       } else {
@@ -2732,8 +2734,8 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 		      "<A HREF=\"/plugins/rrdPlugin?action=netflowIfSummary&key=%s/NetFlow/%d&graphId=0&mode=zoom\">&nbsp;"
 		      "<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A>"
 		      "</td>\n<td width=\"20%\">\n",
-		      myGlobals.device[deviceId].humanFriendlyName, ifStats->interface_id,
-		      myGlobals.device[deviceId].humanFriendlyName, ifStats->interface_id);
+		      myGlobals.device[deviceId].uniqueIfName, ifStats->interface_id,
+		      myGlobals.device[deviceId].uniqueIfName, ifStats->interface_id);
 	sendString(buf);
       }
 
@@ -3128,6 +3130,7 @@ static int createNetFlowDevice(int netFlowDeviceId) {
 		       value, sizeof(value)) != -1) {
       free(myGlobals.device[deviceId].humanFriendlyName);
       myGlobals.device[deviceId].humanFriendlyName = strdup(value);
+      calculateUniqueInterfaceName(deviceId);
     }
 
     traceEvent(CONST_TRACE_INFO, "NETFLOW: createNetFlowDevice created device %d",
@@ -3178,19 +3181,19 @@ static int mapNetFlowDeviceToNtopDevice(int netFlowDeviceId) {
 /* ****************************** */
 
 static void flushDevicePrefs(int deviceId) {
-	if(deviceId >= myGlobals.numDevices) return;
-	delPrefsValue(nfValue(deviceId, "netFlowInPort", 1));
-	delPrefsValue(nfValue(deviceId, "ifNetMask", 1));
-	delPrefsValue(nfValue(deviceId, "whiteList", 1));
-	delPrefsValue(nfValue(deviceId, "netFlowDumpPath", 1));
-	delPrefsValue(nfValue(deviceId, "netFlowDumpInterval", 1));
-	delPrefsValue(nfValue(deviceId, "blackList", 1));
-	delPrefsValue(nfValue(deviceId, "enableSessionHandling", 1));
-	delPrefsValue(nfValue(deviceId, "saveFlowsIntoDB", 1));
-	delPrefsValue(nfValue(deviceId, "netFlowAssumeFTP", 1));
-	delPrefsValue(nfValue(deviceId, "netFlowAggregation", 1));
-	delPrefsValue(nfValue(deviceId, "debug", 1));
-	delPrefsValue(nfValue(deviceId, "humanFriendlyName", 1));
+  if(deviceId >= myGlobals.numDevices) return;
+  delPrefsValue(nfValue(deviceId, "netFlowInPort", 1));
+  delPrefsValue(nfValue(deviceId, "ifNetMask", 1));
+  delPrefsValue(nfValue(deviceId, "whiteList", 1));
+  delPrefsValue(nfValue(deviceId, "netFlowDumpPath", 1));
+  delPrefsValue(nfValue(deviceId, "netFlowDumpInterval", 1));
+  delPrefsValue(nfValue(deviceId, "blackList", 1));
+  delPrefsValue(nfValue(deviceId, "enableSessionHandling", 1));
+  delPrefsValue(nfValue(deviceId, "saveFlowsIntoDB", 1));
+  delPrefsValue(nfValue(deviceId, "netFlowAssumeFTP", 1));
+  delPrefsValue(nfValue(deviceId, "netFlowAggregation", 1));
+  delPrefsValue(nfValue(deviceId, "debug", 1));
+  delPrefsValue(nfValue(deviceId, "humanFriendlyName", 1));
 }
 
 /* ****************************** */
@@ -3246,26 +3249,27 @@ static void handleNetflowHTTPrequest(char* _url) {
 	    }
 	  }
 	} else if(strcmp(device, "name") == 0) {
-		char old_name[256], new_name[256];
-		int rc;
-
-		sanitize_rrd_string(value);
-
-		  safe_snprintf(__FILE__, __LINE__, old_name, sizeof(old_name), "%s/interfaces/%s",
-		    myGlobals.rrdPath, myGlobals.device[deviceId].humanFriendlyName);
-			revertSlashIfWIN32(old_name, 0);
-
-		  safe_snprintf(__FILE__, __LINE__, new_name, sizeof(new_name), "%s/interfaces/%s",
-		    myGlobals.rrdPath, value);
-			revertSlashIfWIN32(new_name, 0);
-
-		rc = rename(old_name, new_name);
-
-		// traceEvent(CONST_TRACE_INFO, "NETFLOW: rename(%s -> %s) returned %d", old_name, new_name, rc);
+	  char old_name[256], new_name[256];
+	  int rc;
+	  
+	  sanitize_rrd_string(value);
+		
+	  safe_snprintf(__FILE__, __LINE__, old_name, sizeof(old_name), 
+			"%s/interfaces/%s", myGlobals.rrdPath, 
+			myGlobals.device[deviceId].uniqueIfName);
+	  revertSlashIfWIN32(old_name, 0);
 	  
 	  free(myGlobals.device[deviceId].humanFriendlyName);
 	  myGlobals.device[deviceId].humanFriendlyName = strdup(value);
 	  storePrefsValue(nfValue(deviceId, "humanFriendlyName", 1), value);
+	  calculateUniqueInterfaceName(deviceId);
+
+	  safe_snprintf(__FILE__, __LINE__, new_name, sizeof(new_name),
+			"%s/interfaces/%s", myGlobals.rrdPath, 
+			myGlobals.device[deviceId].uniqueIfName);
+	  revertSlashIfWIN32(new_name, 0);
+	  
+	  rc = rename(old_name, new_name);
 	} else if(strcmp(device, "debug") == 0) {
 	  if(deviceId > 0) {
 	    myGlobals.device[deviceId].netflowGlobals->netFlowDebug = atoi(value);
@@ -3577,8 +3581,8 @@ static void handleNetflowHTTPrequest(char* _url) {
 /* ****************************** */
 
 static void termNetflowDevice(int deviceId) {
-
-  traceEvent(CONST_TRACE_INFO, "NETFLOW: terminating device %s",  myGlobals.device[deviceId].humanFriendlyName);
+  traceEvent(CONST_TRACE_INFO, "NETFLOW: terminating device %s",  
+	     myGlobals.device[deviceId].humanFriendlyName);
 
   if(!pluginActive) return;
 

@@ -61,8 +61,13 @@ static void stopcap(void) {
 
 #undef malloc /* just to be safe */
 
+/* #define COUNT_MALLOCS 1 */
+
 void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   void *thePtr;
+#ifdef COUNT_MALLOCS
+  static u_int num_allocs = 0, tot_allocs = 0;
+#endif
 
 #ifdef DEBUG
   if((sz == 0) || (sz > 32768)) {
@@ -77,6 +82,10 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   thePtr = malloc(sz);
 #else
   thePtr = GC_malloc_atomic(sz);
+#endif
+
+#if COUNT_MALLOCS
+  tot_allocs += sz, num_allocs++; traceEvent(CONST_TRACE_ERROR, "[num_allocs=%u][size=%u][total=%u]", num_allocs, sz, tot_allocs);
 #endif
 
   if(thePtr == NULL) {

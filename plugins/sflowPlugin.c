@@ -3153,6 +3153,7 @@ static void initsFlowDevice(int deviceId) {
   }
 
   setPluginStatus(NULL);
+  allocDeviceMemory(deviceId);
 
   myGlobals.device[deviceId].sflowGlobals->threadActive = 0;
   createMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
@@ -3345,7 +3346,7 @@ static void printsFlowDeviceConfiguration(void) {
     sendString("\" METHOD=GET>\n<input type=hidden name=device size=5 value=0>");
     sendString("<p><INPUT TYPE=submit VALUE=\"Add sFlow Device\">&nbsp;\n</FORM><p>\n");
   } else {
-    sendString("<p>Please enable the plugin for configuring devices<br>\n");
+    sendString("<p>Please enable the sFlow plugin first<br>\n");
   }
 
   sendString("</td></TR></TABLE></center>");
@@ -3860,6 +3861,7 @@ static int createsFlowDevice(int sflowDeviceId) {
     if(fetchPrefsValue(sfValue(deviceId, "humanFriendlyName", 1), value, sizeof(value)) != -1) {
       free(myGlobals.device[deviceId].humanFriendlyName);
       myGlobals.device[deviceId].humanFriendlyName = strdup(value);
+      calculateUniqueInterfaceName(deviceId);
     }
 
     traceEvent(CONST_TRACE_INFO, "SFLOW: createsFlowDevice created device %d",
@@ -4140,23 +4142,28 @@ static void handlesFlowHTTPrequest(char* _url) {
 	    }
 	  }
 	} else if(strcmp(device, "name") == 0) {
-	  		char old_name[256], new_name[256];
-		int rc;
-
-		sanitize_rrd_string(value);
-
-		  safe_snprintf(__FILE__, __LINE__, old_name, sizeof(old_name), "%s/interfaces/%s",
-		    myGlobals.rrdPath, myGlobals.device[deviceId].humanFriendlyName);
-			revertSlashIfWIN32(old_name, 0);
-
-		  safe_snprintf(__FILE__, __LINE__, new_name, sizeof(new_name), "%s/interfaces/%s",
-		    myGlobals.rrdPath, value);
-			revertSlashIfWIN32(new_name, 0);
-
-		rc = rename(old_name, new_name);
+	  char old_name[256], new_name[256];
+	  int rc;
+	  
+	  sanitize_rrd_string(value);
+		
+	  safe_snprintf(__FILE__, __LINE__, old_name, sizeof(old_name), 
+			"%s/interfaces/%s", myGlobals.rrdPath, 
+			myGlobals.device[deviceId].uniqueIfName);
+	  revertSlashIfWIN32(old_name, 0);
+	  
 	  free(myGlobals.device[deviceId].humanFriendlyName);
 	  myGlobals.device[deviceId].humanFriendlyName = strdup(value);
 	  storePrefsValue(sfValue(deviceId, "humanFriendlyName", 1), value);
+
+	  calculateUniqueInterfaceName(deviceId);
+
+	  safe_snprintf(__FILE__, __LINE__, new_name, sizeof(new_name),
+			"%s/interfaces/%s", myGlobals.rrdPath, 
+			myGlobals.device[deviceId].uniqueIfName);
+	  revertSlashIfWIN32(new_name, 0);
+	  
+	  rc = rename(old_name, new_name);
 	} else if(strcmp(device, "debug") == 0) {
 	  if(deviceId > 0) {
 	    myGlobals.device[deviceId].sflowGlobals->sflowDebug = atoi(value);
@@ -4427,8 +4434,8 @@ static void handlesFlowHTTPrequest(char* _url) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center><A HREF=\"/plugins/rrdPlugin?action=list&key="
 		      "interfaces%s%s/sFlow/%u&title=Interface+Id+%u\">"
 		      "<IMG SRC=/graph.gif BORDER=0></A></td></tr>",
-		      (myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName[0] == '/') ? "" : "/",
-		      myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		      (myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName[0] == '/') ? "" : "/",
+		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		      ifName->ifIndex, ifName->ifIndex,
 		      formatPkts(ifName->ifInUnknownProtos, formatBuf, sizeof(formatBuf))); 
 	sendString(buf);

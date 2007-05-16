@@ -444,5 +444,9 @@ void *iface_addr_getinfo(struct iface_addr *ia, void *infobuf);
 #endif /* _IFACE_H_ */
 #endif /* INET6 */
 
+void calculateUniqueInterfaceName(int deviceId);
+
+#ifdef HAVE_SNMP
 extern char* getIfName(char *hostname, char *community, int ifIdx,
 		       char *ifName_buf, u_short ifName_buflen);
+#endif

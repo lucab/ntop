@@ -238,7 +238,7 @@ AC_ARG_ENABLE(snmp,
               else
                   ac_disable_snmp="no"
               fi,
-              ac_disable_snmp="yes")
+              ac_disable_snmp="no")
 
 AC_ARG_ENABLE(i18n,
               [  --enable-i18n               Enable (limited) internationalization [[default=disabled]]],
@@ -1612,7 +1612,10 @@ if test ".${ac_disable_snmp}" != ".yes"; then
   AC_CHECK_TOOL(NETSNMP, net-snmp-config)
   if test "x$ac_cv_prog_ac_ct_NETSNMP" = "xnet-snmp-config"; then
     AC_DEFINE_UNQUOTED(HAVE_SNMP, 1, [SNMP is supported])
-    LIBS="${LIBS} `net-snmp-config --libs --agent-libs`"
+    SNMPLIBS="`net-snmp-config --agent-libs`"
+    SNMPLIBS="`echo ${SNMPLIBS}|sed -e s,'-R../lib',,g`"
+    echo "net-snmp libs: ${SNMPLIBS}"
+    LIBS="${LIBS} ${SNMPLIBS}"
 dnl    INCS="${INCS} `net-snmp-config --cflags`"
 
 dnl remove unecessary path       

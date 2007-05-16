@@ -799,6 +799,9 @@ void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_in
 
   accessMutex(&myGlobals.purgePortsMutex, "updateInterfacePorts");
 
+  if(myGlobals.device[actualDeviceId].ipPorts == NULL)
+    allocDeviceMemory(actualDeviceId);
+
   if(myGlobals.device[actualDeviceId].ipPorts[sport] == NULL) {
     myGlobals.device[actualDeviceId].ipPorts[sport] = (PortCounter*)malloc(sizeof(PortCounter));
     if(myGlobals.device[actualDeviceId].ipPorts[sport] == NULL) return;

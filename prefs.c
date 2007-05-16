@@ -158,10 +158,6 @@ static struct option const long_options[] = {
 
   { "skip-version-check",               required_argument, NULL, 150 },
 
-#ifdef WIN32
-  { "U3",                               required_argument, NULL, 151 },
-#endif
-
   {NULL, 0, NULL, 0}
 };
 
@@ -275,10 +271,6 @@ int parseOptions(int argc, char* argv[]) {
 #ifdef PARAM_DEBUG
   for(opt_index=0; opt_index<argc; opt_index++)
     traceEvent(CONST_TRACE_NOISY, "PARAM_DEBUG: argv[%d]: %s", opt_index, argv[opt_index]);
-#endif
-
-#ifdef WIN32
-	myGlobals.useU3 = 0;
 #endif
 
   /*
@@ -502,6 +494,8 @@ int parseOptions(int argc, char* argv[]) {
       if(myGlobals.dbPath != NULL)
 	free(myGlobals.dbPath);
 
+      if(optarg[strlen(optarg)-1] == '/') optarg[strlen(optarg)-1] = '\0';
+      mkdir_p("dbPath", optarg, 0777);
       myGlobals.dbPath = strdup(optarg);
       break;
 
@@ -509,6 +503,8 @@ int parseOptions(int argc, char* argv[]) {
       pathSanityCheck(optarg, "-Q | --spool-file-path" );
       if(myGlobals.spoolPath != NULL)
 	free(myGlobals.spoolPath);
+      if(optarg[strlen(optarg)-1] == '/') optarg[strlen(optarg)-1] = '\0';
+      mkdir_p("spoolPath", optarg, 0777);
       myGlobals.spoolPath = strdup(optarg);
       break;
 
@@ -703,17 +699,6 @@ int parseOptions(int argc, char* argv[]) {
     case 150:
       myGlobals.runningPref.skipVersionCheck = TRUE;
       break;
-
-#ifdef WIN32
-	case 151: /* Equivalent to -P and -Q */
-      pathSanityCheck(optarg, " | --U3");
-      if(myGlobals.dbPath != NULL) free(myGlobals.dbPath);
-      if(myGlobals.spoolPath != NULL) free(myGlobals.spoolPath);
-      myGlobals.dbPath = strdup(optarg);
-	  myGlobals.spoolPath = strdup(optarg);
-	  myGlobals.useU3 = 1;
-	break;
-#endif
 
     default:
       printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);

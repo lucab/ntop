@@ -889,16 +889,25 @@ void switchNwInterface(int _interface) {
     safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", myGlobals.actualReportDeviceId);
     storePrefsValue("actualReportDeviceId", value);
   } else {
+    u_short do_enable;
     sendString("Available Network Interfaces:</B><P>\n<FORM ACTION=" CONST_SWITCH_NIC_HTML ">\n");
+
+    if(((!myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice) 
+	|| (myGlobals.device[myGlobals.actualReportDeviceId].sflowGlobals)
+	|| (myGlobals.device[myGlobals.actualReportDeviceId].netflowGlobals))
+       &&  myGlobals.device[myGlobals.actualReportDeviceId].activeDevice) {
+      do_enable = 0;
+    } else
+      do_enable = 1;
 
     for(i=0; i<myGlobals.numDevices; i++)
       if(((!myGlobals.device[i].virtualDevice) || (myGlobals.device[i].sflowGlobals)|| (myGlobals.device[i].netflowGlobals))
 	 &&  myGlobals.device[i].activeDevice) {
-	if(myGlobals.actualReportDeviceId == i)
-	  selected="CHECKED";
+	if((myGlobals.actualReportDeviceId == i) || do_enable)
+	  selected = "CHECKED", do_enable = 0;
 	else
 	  selected = "";
-
+	
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s&nbsp;[id=%d]<br>\n",
 		      i+1, selected, myGlobals.device[i].humanFriendlyName, i);
@@ -6464,7 +6473,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printParameterConfigInfo(textPrintFlag, "-N | --wwn-map",
                            pref->fcNSCacheFile,
                            NULL);
-
 
   printParameterConfigInfo(textPrintFlag, "-O | --pcap-file-path",
                            pref->pcapLogBasePath,

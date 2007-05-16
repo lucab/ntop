@@ -6754,6 +6754,7 @@ void mkdir_p(char *tag, char *path, int permission) {
     traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
 #endif
   _mkdir(path, permission);
+
   if((rc != 0) && (errno != EEXIST) )
     traceEvent(CONST_TRACE_WARNING, "%s: mkdir(%s), error %d %s",
                tag,

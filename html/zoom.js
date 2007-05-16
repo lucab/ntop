@@ -652,10 +652,11 @@ function onMouseUpEvent(e) {
 		var  graph_height = gUrlObj.getUrlParameterValue("graph_height");
 
 		if(action == undefined) action = "arbreq";
+		if(action == "netflowSummary") action = "netflowIfSummary";
 		if(typeof arbfile != "undefined")
-			open(urlBase + "&action="+action+"&which=graph&key="+key+"&name="+name+"&arbfile=" + arbfile + "&graphId=" + graphId + "&arbiface=" + arbiface + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom", "_self");
+ 		  open(urlBase + "&action="+action+"&which=graph&key="+key+"&name="+name+"&arbfile=" + arbfile + "&graphId=" + graphId + "&arbiface=" + arbiface + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom", "_self");
 		else
-		open(urlBase + "&action="+action+"&which=graph&key="+key+"&name="+name+"&graphId=" + graphId + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom", "_self");
+		  open(urlBase + "&action="+action+"&which=graph&key="+key+"&name="+name+"&graphId=" + graphId + "&start=" + newGraphStart + "&end=" + newGraphEnd + "&title=" + title + "&graph_width=" + graph_width + "&graph_height=" + graph_height +"&mode=zoom", "_self");
 			}
 		}
 	}

@@ -728,6 +728,31 @@ int iface_getalladdr(int type, int *size, char **addr){
 
 /* ********************************************************************** */
 
+void calculateUniqueInterfaceName(int deviceId) {
+#ifdef WIN32
+  int i;
+#endif
+
+  if(myGlobals.device[deviceId].uniqueIfName) 
+    free(myGlobals.device[deviceId].uniqueIfName);
+
+  myGlobals.device[deviceId].uniqueIfName = strdup(myGlobals.device[deviceId].humanFriendlyName);
+  
+#ifdef WIN32
+  for(i=0; i<strlen(myGlobals.device[deviceId].uniqueIfName); i++) {
+    switch(myGlobals.device[deviceId].uniqueIfName[i]) {
+    case '/':
+    case '\\':
+    case ':':
+      myGlobals.device[deviceId].uniqueIfName[i] = '_';
+      break;
+    }
+  }
+#endif
+}
+
+/* ********************************************************************** */
+
 #ifdef HAVE_SNMP
 
 #include <net-snmp/net-snmp-config.h>
@@ -739,8 +764,7 @@ int iface_getalladdr(int type, int *size, char **addr){
 #endif
 
 char* getIfName(char *hostname, char *community, int ifIdx,
-		char *ifName_buf, u_short ifName_buflen) 
-{
+		char *ifName_buf, u_short ifName_buflen) {
   struct snmp_session session, *ss;
   struct snmp_pdu *pdu;
   struct snmp_pdu *response;
@@ -786,7 +810,10 @@ char* getIfName(char *hostname, char *community, int ifIdx,
 
   snprintf(buf, sizeof(buf), ".1.3.6.1.2.1.31.1.1.1.1.%d", ifIdx);
   read_objid(buf, anOID, &anOID_len); snmp_add_null_var(pdu, anOID, anOID_len);
-  
+
+  traceEvent(CONST_TRACE_NOISY, 
+	     "Reading SNMP interface name: [host=%s][community=%s][%s]",
+	     hostname, community, buf);
   /*
    * Send the Request out.
    */

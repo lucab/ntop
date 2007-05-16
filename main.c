@@ -90,7 +90,7 @@ void usage(FILE * fp) {
 #else
   fprintf(fp, "    [-i <number>    | --interface <number|name>]          %sInterface index number (or name) to monitor\n", newLine);
 #endif
-  fprintf(fp, "    [-j             | --create-other-packets]	         %sCreate file ntop-other-pkts.XXX.pcap file\n", newLine);
+  fprintf(fp, "    [-j             | --create-other-packets]             %sCreate file ntop-other-pkts.XXX.pcap file\n", newLine);
   fprintf(fp, "    [-l <path>      | --pcap-log <path>]                  %sDump packets captured to a file (debug only!)\n", newLine);
   fprintf(fp, "    [-m <addresses> | --local-subnets <addresses>]        %sLocal subnetwork(s) (see man page)\n", newLine);
   fprintf(fp, "    [-n             | --numeric-ip-addresses]             %sNumeric IP addresses - no DNS resolution\n", newLine);
@@ -129,10 +129,6 @@ void usage(FILE * fp) {
   fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            %sPath for log files in pcap format\n", newLine);
   fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     %sURL (mapper.pl) for displaying host location\n", 
 	  newLine);
-
-#ifdef WIN32
-  fprintf(fp, "    [               | --U3]                                %sU3 path (only when used with U3 devices)\n", newLine);
-#endif
 
   fprintf(fp, "    [-V             | --version]                          %sOutput version information and exit\n", newLine);
   fprintf(fp, "    [-X <max num TCP sessions> ]                          %sMax num. TCP sessions ntop can handle (default %u)\n", 
@@ -583,10 +579,10 @@ printf("Unable to read serial number\n");
       char tmpBuf[64];
 
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s%s", 
-                  (i>0) ? "," : "",
-                  (myGlobals.device[i].humanFriendlyName != NULL) ?
-                      myGlobals.device[i].humanFriendlyName :
-                      myGlobals.device[i].name);
+		    (i>0) ? "," : "",
+		    (myGlobals.device[i].humanFriendlyName != NULL) ?
+		    myGlobals.device[i].humanFriendlyName :
+		    myGlobals.device[i].name);
       strncat(ifStr, tmpBuf, sizeof(ifStr)-strlen(ifStr)-1)[sizeof(ifStr)-1] = '\0';
     }
   }

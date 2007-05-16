@@ -595,7 +595,8 @@ static void purgeIpPorts(int theDevice) {
   traceEvent(CONST_TRACE_INFO, "Calling purgeIpPorts(%d)", theDevice);
 #endif
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].numHosts == 0) return;
+  if(myGlobals.device[theDevice].numHosts == 0)   return;
+  if(myGlobals.device[theDevice].ipPorts == NULL) return;
 
   accessMutex(&myGlobals.purgePortsMutex, "purgeIpPorts");
 
@@ -773,7 +774,8 @@ static void cleanupThreadIs(char *buf, int sizeofbuf) {
     for(i=0; i<myGlobals.numDevices; i++) {
       if((myGlobals.device[i].netflowGlobals != NULL) &&
          (pthread_self() == myGlobals.device[i].netflowGlobals->netFlowThread)) {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "NF(%s)", myGlobals.device[i].humanFriendlyName);
+        safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "NF(%s)", 
+		      myGlobals.device[i].humanFriendlyName);
         break;
       }
     }
@@ -783,7 +785,8 @@ static void cleanupThreadIs(char *buf, int sizeofbuf) {
     for(i=0; i<myGlobals.numDevices; i++) {
       if((myGlobals.device[i].sflowGlobals != NULL) &&
          (pthread_self() == myGlobals.device[i].sflowGlobals->sflowThread)) {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "SF(%s)", myGlobals.device[i].humanFriendlyName);
+        safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "SF(%s)", 
+		      myGlobals.device[i].humanFriendlyName);
         break;
       }
     }
@@ -1122,12 +1125,19 @@ RETSIGTYPE cleanup(int signo) {
 	  free(myGlobals.device[i].ipPorts[port]);
     }
 
+    if(myGlobals.device[i].ipPorts)    
+      free(myGlobals.device[i].ipPorts);
+
+    if(myGlobals.device[i].packetQueue) 
+      free(myGlobals.device[i].packetQueue);
+
     accessMutex(&myGlobals.tcpSessionsMutex, "cleanup");
     if(myGlobals.device[i].tcpSession != NULL)
       free(myGlobals.device[i].tcpSession);
     releaseMutex(&myGlobals.tcpSessionsMutex);
 
     free(myGlobals.device[i].humanFriendlyName);
+    free(myGlobals.device[i].uniqueIfName);
     free(myGlobals.device[i].name);
 
     if(myGlobals.device[i].pcapDumper != NULL)

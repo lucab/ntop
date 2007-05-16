@@ -247,6 +247,7 @@ extern void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 			   int doUnlink, struct stat *statbuf);
 extern void initGdbm(char *prefDirectory, char *spoolDirectory, int initPrefsOnly);
 extern void addDevice(char* deviceName, char* deviceDescr);
+extern void allocDeviceMemory(int deviceId);
 
 /* leaks.c */
 
