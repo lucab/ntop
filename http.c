@@ -1072,12 +1072,12 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
       } else if(errno == EBADF /* Bad file descriptor: a
 				  disconnected client is still sending */) {
         traceEvent(CONST_TRACE_INFO, "EBADF during sending of page to web client");
-      } else {
+      } else if(errno != 0) {
         traceEvent(CONST_TRACE_INFO, "errno %d during sending of page to web client", errno);
       }
 
       // traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes, '%s'", strlen(theString), theString);
-      traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes", (int)strlen(theString));
+      if(errno != 0) traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes", (int)strlen(theString));
       closeNwSocket(&myGlobals.newSock);
       return;
     } else {

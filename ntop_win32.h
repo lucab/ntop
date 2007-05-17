@@ -422,6 +422,8 @@ extern void sniffSinglePacket(void(*pbuf_process)(u_char *unused,
 		  const struct pcap_pkthdr *h, 
 		  const u_char *p));
 
+extern char* strptime(const char *buf, const char *fmt, struct tm *tm);
+
 /* ********************************************* */
 
 // Max number of packets handled by the public version

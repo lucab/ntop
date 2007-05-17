@@ -1721,6 +1721,8 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	label = "Pkt/s";
       else if(strstr(rrdName, "Peers"))
 	label = "Contacted Peers";
+      else if(strstr(rrdName, "knownHosts"))
+	label = "Hosts";
       else
 	label = "Bytes/s";
     }

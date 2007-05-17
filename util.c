@@ -2681,9 +2681,9 @@ void traceEvent(int eventTraceLevel, char* file,
       mFile = strdup(file);
 
       if(mFile) {
-#if 0
+#ifdef WIN32
 	for(beginFileIdx=strlen(mFile)-1; beginFileIdx>0; beginFileIdx--) {
-	  if(mFile[beginFileIdx] == '.') mFile[beginFileIdx] = '\0'; /* Strip off .c */
+	  // if(mFile[beginFileIdx] == '.') mFile[beginFileIdx] = '\0'; /* Strip off .c */
 #if defined(WIN32)
 	  if(mFile[beginFileIdx-1] == '\\') break;  /* Start after \ (Win32)  */
 #else
@@ -2704,6 +2704,7 @@ void traceEvent(int eventTraceLevel, char* file,
 			&mFile[beginFileIdx], line);
 #endif
 
+#if 0
 	  /* Hash the message format into an id */
 	  for (i=0; i<=strlen(format); i++) {
 	    messageid = (messageid << 1) ^ max(0,format[i]-32);
@@ -2712,6 +2713,7 @@ void traceEvent(int eventTraceLevel, char* file,
 	  /* 1st chars of file name for uniqueness */
 	  messageid += (file[0]-32) * 256 + file[1]-32;
 	  safe_snprintf(__FILE__, __LINE__, bufMsgID, sizeof(bufMsgID), "[MSGID%07d]", (messageid & 0x8fffff));
+#endif
 	}
 
 	free(mFile);
