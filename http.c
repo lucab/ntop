@@ -2234,7 +2234,6 @@ static int returnHTTPPage(char* pageName,
 	      } else {
 		char theDate[48];
 		time_t  theTime = myGlobals.actTime - (time_t)myGlobals.thisZone;
-		struct tm t;
 
 		sendString("HTTP/1.1 304 Not Modified\r\n");
 		strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, localtime_r(&theTime, &t));

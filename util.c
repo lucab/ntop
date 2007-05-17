@@ -6718,7 +6718,7 @@ char* vlan2name(u_int16_t vlanId, char *buf, int buf_len) {
 /* ******************************************* */
 
 void mkdir_p(char *tag, char *path, int permission) {
-  int i, rc;
+  int i, rc = 0;
 
   if(path == NULL) {
     traceEvent(CONST_TRACE_ERROR, "%s: mkdir(null) skipped", tag);

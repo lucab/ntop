@@ -131,6 +131,11 @@ ntop.h
 #endif
 
 #include <string.h>
+
+#if defined(__linux__)
+#define _XOPEN_SOURCE /* glibc2 needs this */
+#endif
+
 #include <time.h>
 #include <signal.h>
 #include <fcntl.h>
