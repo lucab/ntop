@@ -1,8 +1,9 @@
 /*
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ *
  *                          http://www.ntop.org
  *
- * Copyright (C) 1998-2006 Luca Deri <deri@ntop.org>
+ * Copyright (C) 1998-2007 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -26,8 +27,8 @@
 
 
 #if 0
-#define URL_DEBUG 
-#define HTTP_DEBUG 
+#define URL_DEBUG
+#define HTTP_DEBUG
 #endif
 
 /* Private structure definitions */
@@ -93,6 +94,7 @@ struct _HTTPstatus HTTPstatus[] = {
 */
 #define BITFLAG_HTTP_STATUS_200	( 0<<8)
 #define BITFLAG_HTTP_STATUS_302	(11<<8)
+#define BITFLAG_HTTP_STATUS_304	(13<<8)
 #define BITFLAG_HTTP_STATUS_400	(15<<8)
 #define BITFLAG_HTTP_STATUS_401	(16<<8)
 #define BITFLAG_HTTP_STATUS_403	(18<<8)
@@ -113,16 +115,13 @@ static HostAddr *requestFrom;
 /* ************************* */
 
 /* Forward */
-static int readHTTPheader(char* theRequestedURL,
-                          int theRequestedURLLen,
-                          char *thePw,
-                          int thePwLen,
-                          char *theAgent,
-                          int theAgentLen,
-                          char *theReferer,
-                          int theRefererLen,
-                          char *theLanguage,
-                          int theLanguageLen, int *isPostMethod);
+static int readHTTPheader(char* theRequestedURL, int theRequestedURLLen,
+                          char *thePw,       int thePwLen,
+                          char *theAgent,    int theAgentLen,
+                          char *theReferer,  int theRefererLen,
+                          char *theLanguage, int theLanguageLen,
+			  char *ifModificedSince, int ifModificedSinceLen,
+			  int *isPostMethod);
 static int returnHTTPPage(char* pageName,
                           int postLen,
                           HostAddr *from,
@@ -131,7 +130,9 @@ static int returnHTTPPage(char* pageName,
                           char *agent,
                           char *referer,
                           char *requestedLanguage[],
-                          int numLang, int isPostMethod);
+                          int numLang,
+			  char *ifModificedSince,
+			  int isPostMethod);
 
 static int generateNewInternalPages(char* pageName);
 static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize);
@@ -172,6 +173,7 @@ static int readHTTPheader(char* theRequestedURL,
                           char *theAgent, int theAgentLen,
                           char *theReferer, int theRefererLen,
                           char *theLanguage, int theLanguageLen,
+                          char *ifModificedSince, int ifModificedSinceLen,
                           int *isPostMethod) {
 #ifdef HAVE_OPENSSL
   SSL* ssl = getSSLsocket(-myGlobals.newSock);
@@ -293,7 +295,7 @@ static int readHTTPheader(char* theRequestedURL,
 	    {
 	      int y;
 
-	      for(y=0; y<idxChar; y++) 
+	      for(y=0; y<idxChar; y++)
 		traceEvent(CONST_TRACE_INFO, "URL_DEBUG: lineStr[%d]='%c'", y, lineStr[y]);
 	    }
 #endif
@@ -371,6 +373,9 @@ static int readHTTPheader(char* theRequestedURL,
 #ifdef URL_DEBUG
 	  traceEvent(CONST_TRACE_INFO, "URL_DEBUG: len=%d [%s/%s]", contentLen, lineStr, &lineStr[16]);
 #endif
+	} else if((idxChar >= 19)
+		  && (strncasecmp(lineStr, "If-Modified-Since: ", 19) == 0)) {
+	  strncpy(ifModificedSince, &lineStr[19], ifModificedSinceLen-1)[ifModificedSinceLen-1] = '\0';
 	} else if((idxChar >= 12)
 		  && (strncasecmp(lineStr, "User-Agent: ", 12) == 0)) {
 	  strncpy(theAgent, &lineStr[12], theAgentLen-1)[theAgentLen-1] = '\0';
@@ -404,7 +409,7 @@ char* encodeString(char* in, char* out, u_int out_len) {
   int i, out_idx;
 
   out[0] = '\0';
-  
+
   for(i = out_idx = 0; i < strlen(in); i++) {
     if(isalnum(in[i])) {
       out[out_idx++] = in[i];
@@ -425,7 +430,7 @@ char* encodeString(char* in, char* out, u_int out_len) {
       if(out_idx >= out_len) return(out);
     }
   }
-  
+
   out[out_idx++] = '\0';
   return(out);
 }
@@ -602,14 +607,14 @@ static void ssiMenu_Head() {
 		    "				[null,'Activity','/" CONST_FC_ACTIVITY_HTML "',null,null],\n"
 		    "				[null,'Hosts','/" CONST_FC_HOSTS_INFO_HTML "',null,null],\n"
 		    "				[null,'Traffic Per Port','/" CONST_FC_TRAFFIC_HTML "',null,null],\n");
-    if(myGlobals.runningPref.enableSessionHandling) 
+    if(myGlobals.runningPref.enableSessionHandling)
       sendStringWOssi(
 		      "				[null,'Sessions','/" CONST_FC_SESSIONS_HTML "',null,null],\n");
     sendStringWOssi(
 		    "				[null,'VSANs','/" CONST_VSAN_LIST_HTML "',null,null],\n"
 		    "				[null,'VSAN Summary','/" CONST_VSAN_DISTRIB_HTML "',null,null],\n"
 		    "		],\n");
-    if(myGlobals.runningPref.enableSessionHandling) 
+    if(myGlobals.runningPref.enableSessionHandling)
       sendStringWOssi(
 		      "		[null,'SCSI Sessions',null,null,null,\n"
 		      "				[null,'Bytes','/" CONST_SCSI_BYTES_HTML "',null,null],\n"
@@ -634,12 +639,12 @@ static void ssiMenu_Head() {
         foundAplugin = 1;
       }
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "		[null,'%s',null,null,null,\n",
 		    flows->pluginStatus.pluginPtr->pluginName);
       sendStringWOssi(buf);
-   
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "				[null,'%sctivate','/" CONST_SHOW_PLUGINS_HTML "?%s=%d',null,null],\n",
 		    flows->pluginStatus.activePlugin ? "Dea" : "A",
 		    flows->pluginStatus.pluginPtr->pluginURLname,
@@ -677,14 +682,14 @@ static void ssiMenu_Head() {
 	break;
       }
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "				[null,'Describe','/" CONST_SHOW_PLUGINS_HTML "?%s',null,null],\n",
 		    flows->pluginStatus.pluginPtr->pluginURLname);
       sendStringWOssi(buf);
 
       ep = flows->pluginStatus.pluginPtr->extraPages;
       while((ep != NULL) && (ep->url != NULL)) {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "				[%s%s%s,'%s','/" CONST_PLUGINS_HEADER "%s/%s',null,null],\n",
 		      ep->icon != NULL ? "'<img src=\"/" : "",
 		      ep->icon != NULL ? ep->icon : "null",
@@ -728,7 +733,7 @@ static void ssiMenu_Head() {
 }
 
 static void ssiMenu_Body() {
-    
+
   sendStringWOssi(
 		  "<table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
 		  " <tr>\n"
@@ -859,7 +864,7 @@ static void processSSI(const char *ssiRequest) {
 	((ssiURIend[0] == ' ') ||
 	 (ssiURIend[0] == '\n') ||
 	 (ssiURIend[0] == '\r') ||
-	 (ssiURIend[0] == '\t'))) { 
+	 (ssiURIend[0] == '\t'))) {
     ssiURIend[0] = '\0';
     ssiURIend--;
   }
@@ -919,7 +924,7 @@ static void processSSI(const char *ssiRequest) {
 
   myGlobals.numHandledSSIRequests++;
 }
-  
+
 /* ************************* */
 
 void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
@@ -943,11 +948,11 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
       ssiEnd = &ssiEnd[strlen("-->")];
 
       /*
-       * If we've found an SSI, we need to process the thirds - 
+       * If we've found an SSI, we need to process the thirds -
        * before, the SSI itself and after. Either end can be empty.
        * Plus the SSI might be incomplete...
        *
-       * theString:  ...<!--#include ... -->... 
+       * theString:  ...<!--#include ... -->...
        *                ^ssiStart           ^ssiEnd
        */
 
@@ -1050,7 +1055,7 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
 	bytesSent += rc;
 	retries++;
 	goto RESEND;
-      } 
+      }
 
       if(errno == EPIPE /* Broken pipe: the  client has disconnected */) {
         traceEvent(CONST_TRACE_INFO, "EPIPE during sending of page to web client");
@@ -1059,9 +1064,9 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
         static int econnresetcount=0;
         econnresetcount++;
         if(econnresetcount < 10)
-          traceEvent(CONST_TRACE_WARNING, "ECONNRESET during sending of page to web client");
+          traceEvent(CONST_TRACE_INFO, "ECONNRESET during sending of page to web client");
         else if(econnresetcount == 10)
-          traceEvent(CONST_TRACE_WARNING, 
+          traceEvent(CONST_TRACE_INFO,
                      "ECONNRESET during sending of page to web client (skipping further warnings)");
 #endif
       } else if(errno == EBADF /* Bad file descriptor: a
@@ -1185,9 +1190,9 @@ void printHTMLtrailer(void) {
 	       "</B></FONT></CENTER>");
     break;
   }
-  
+
   sendString("\n<hr>\n<h5><font face=\"Helvetica, Arial, Sans Serif\" size=\"-1\"><b>\n");
-  
+
   safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "Report created on %s ",
 		ctime(&myGlobals.actTime));
   sendString(buf);
@@ -1244,7 +1249,7 @@ void printHTMLtrailer(void) {
   }
 
   if(myGlobals.runningPref.rFileName != NULL) {
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "Listening on [%s]\n", 
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "Listening on [%s]\n",
 		  CONST_PCAP_NW_INTERFACE_FILE);
   } else {
     buf[0] = '\0';
@@ -1450,7 +1455,7 @@ static void returnHTTPspecialStatusCode(int statusFlag, char *additionalText) {
   }
 
   if(additionalText != NULL)
-    sendString(additionalText);  
+    sendString(additionalText);
 
   logHTTPaccess(HTTPstatus[statusIdx].statusCode, NULL, 0);
 }
@@ -1512,7 +1517,7 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
 
   if(headerFlags & BITFLAG_HTTP_IS_CACHEABLE) {
     sendString("Cache-Control: max-age=3600, must-revalidate, public\r\n");
-    
+
     theTime += 3600;
     strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, localtime_r(&theTime, &t));
     theDate[sizeof(theDate)-1] = '\0';
@@ -1580,8 +1585,8 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
 #endif
   }
 
-  if((mimeType == MIME_TYPE_CHART_FORMAT) 
-     || (mimeType == FLAG_HTTP_TYPE_JSON) 
+  if((mimeType == MIME_TYPE_CHART_FORMAT)
+     || (mimeType == FLAG_HTTP_TYPE_JSON)
      || (mimeType == FLAG_HTTP_TYPE_TEXT) /* FIX */) {
     compressFile = 0;
     if(myGlobals.newSock < 0 /* SSL */) acceptGzEncoding = 0;
@@ -1641,7 +1646,7 @@ static int checkURLsecurity(char *url) {
     return(0);
 
   if(strlen(url) >= MAX_LEN_URL) {
-    traceEvent(CONST_TRACE_NOISY, "URL security(2): URL too long (len=%d)", 
+    traceEvent(CONST_TRACE_NOISY, "URL security(2): URL too long (len=%d)",
 	       (int)strlen(url));
     return(2);
   }
@@ -1923,7 +1928,7 @@ static int generateNewInternalPages(char* pageName) {
    *TODO: This stuff is just to warn the user ... and both chunks should probably be
    * removed around 3.4...
    */
- 
+
   if((strcasecmp(pageName, CONST_INDEX_INNER_HTML) == 0) ||
      (strcasecmp(pageName, CONST_LEFTMENU_HTML) == 0) ||
      (strcasecmp(pageName, CONST_LEFTMENU_NOJS_HTML) == 0) ||
@@ -2001,7 +2006,9 @@ static int returnHTTPPage(char* pageName,
                           char *agent,
                           char *referer,
                           char *requestedLanguage[],
-                          int numLang, int isPostMethod) {
+                          int numLang,
+			  char *ifModificedSince,
+			  int isPostMethod) {
   char *questionMark, *pageURI, *token;
   int sortedColumn = 0, printTrailer=1, idx, networkMode = 0;
   int errorCode=0, pageNum = 0, found=0, portNr=0;
@@ -2195,6 +2202,7 @@ static int returnHTTPPage(char* pageName,
 	  if(requestedLanguage[lang] == NULL) {
 	    continue;
 	  }
+
 	  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 			"%s/html_%s/%s",
 			myGlobals.dataFileDirs[idx],
@@ -2217,6 +2225,28 @@ static int returnHTTPPage(char* pageName,
 #endif
 
 	if(stat(tmpStr, &statbuf) == 0) {
+	  if(ifModificedSince[0] != '\0') {
+	    struct tm modified;
+
+	    if(strptime(ifModificedSince, CONST_RFC1945_TIMESPEC, &modified) != NULL) {
+	      if(mktime(&statbuf.st_mtime) >= mktime(&modified)) {
+		/* The file has been modified */
+	      } else {
+		char theDate[48];
+		time_t  theTime = myGlobals.actTime - (time_t)myGlobals.thisZone;
+		struct tm t;
+
+		sendString("HTTP/1.1 304 Not Modified\r\n");
+		strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, localtime_r(&theTime, &t));
+		theDate[sizeof(theDate)-1] = '\0';
+		safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Date: %s\r\n", theDate);
+		sendString(tmpStr);
+		sendString("Connection: close\r\n");
+		return;
+	      }
+	    }
+	  }
+
 	  if((fd = fopen(tmpStr, "rb")) != NULL) {
 	    found = 1;
 	    /* traceEvent(CONST_TRACE_ERROR, "--> %s", tmpStr); */
@@ -2231,7 +2261,7 @@ static int returnHTTPPage(char* pageName,
 #endif
     }
   }
-   
+
 
 #ifdef URL_DEBUG
   traceEvent(CONST_TRACE_INFO, "URL_DEBUG: tmpStr=%s - fd=0x%x", tmpStr, fd);
@@ -2280,15 +2310,15 @@ static int returnHTTPPage(char* pageName,
 
     //traceEvent(CONST_TRACE_INFO, "++++++++++= '%s'", &pageURI[len-5]);
 
-    if((strlen(pageURI) > 5) && strcasecmp(&pageURI[len-5], ".html")) { 
+    if((strlen(pageURI) > 5) && strcasecmp(&pageURI[len-5], ".html")) {
       /*
 	We should not send information about page length as in case
 	of SSI (embedded into .html pages), the page will be actually
-	longer than the file size and the browse will close the 
+	longer than the file size and the browse will close the
 	connection before we sent the whole page
       */
       sendString("Accept-Ranges: bytes\n");
-      
+
       fseek(fd, 0, SEEK_END);
       safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Content-Length: %d\r\n", (len = ftell(fd)));
       fseek(fd, 0, SEEK_SET);
@@ -3089,7 +3119,7 @@ static int returnHTTPPage(char* pageName,
 	  } else {
 	    if(el->community && (!isAllowedCommunity(el->community))) {
 	      returnHTTPpageBadCommunity();
-	    } else {	    
+	    } else {
 	      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
 	      switch(idx) {
@@ -3132,10 +3162,10 @@ static int returnHTTPPage(char* pageName,
 	sendString("<p>The current release is very different from the initial one as it includes");
 	sendString("many features and much additional media support.</p>");
 	sendString("<p><b>ntop</b> has definitively more than one author:</p>");
-	/* 
+	/*
 	 * Addresses are blinded to prevent easy spam harvest -
 	 *   see http://www.wbwip.com/wbw/emailencoder.html
-	 */	
+	 */
 	sendString("<ul><li>" CONST_MAILTO_STEFANO " has contributed several ideas and comments</li>");
 	sendString("<li>" CONST_MAILTO_ABDELKADER " and " CONST_MAILTO_OLIVIER " provided IPv6 support</li>");
 	sendString("<li>" CONST_MAILTO_DINESH " for SCSI & FiberChannel support</li>");
@@ -3254,8 +3284,8 @@ static int returnHTTPPage(char* pageName,
   }
 #endif /* FORK_CHILD */
 
-  if(pageName && (strncasecmp(pageName, 
-			      CONST_SHUTDOWNNOW_NTOP_IMG, 
+  if(pageName && (strncasecmp(pageName,
+			      CONST_SHUTDOWNNOW_NTOP_IMG,
 			      strlen(CONST_SHUTDOWNNOW_NTOP_IMG)) == 0)) {
     /* Processed the page, it's time to flag this for the web server to shutdown... */
     termAccessLog();
@@ -3450,9 +3480,9 @@ static int checkHTTPpassword(char *theRequestedURL,
 
   if(strcmp(theHttpUser, theLastHttpUser)) {
     char prefKey[64], *item, *strtokState;
-      
+
     strcpy(theLastHttpUser, theHttpUser);
-      
+
     snprintf(prefKey, sizeof(prefKey), "%s%s", COMMUNITY_PREFIX, theHttpUser);
     fetchPwValue(prefKey, allowedCommunities, sizeof(allowedCommunities));
     // traceEvent(CONST_TRACE_INFO, "++++++++++++> '%s'", allowedCommunities);
@@ -3461,7 +3491,7 @@ static int checkHTTPpassword(char *theRequestedURL,
     for(i=0; (item != NULL) && (i < sizeof(allowedCommunities)-1); i++) {
       listAllowedCommunities[i] = item;
       item = strtok_r(NULL, "&", &strtokState);
-    }     
+    }
   }
 
   if(rc == 0) {
@@ -3534,7 +3564,8 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
 void handleHTTPrequest(HostAddr from) {
   int rc, i, skipLeading, postLen, usedFork = 0, numLang = 0;
-  char requestedURL[MAX_LEN_URL], pw[64], agent[256], referer[256], workLanguage[256], *requestedURLCopy=NULL;
+  char requestedURL[MAX_LEN_URL], pw[64], agent[256], referer[256],
+    workLanguage[256], ifModificedSince[48], *requestedURLCopy=NULL;
   struct timeval httpRequestedAt;
   u_int gzipBytesSent = 0;
   char *requestedLanguage[MAX_LANGUAGES_REQUESTED];
@@ -3551,7 +3582,7 @@ void handleHTTPrequest(HostAddr from) {
     closelog(); /* just in case */
     if(myGlobals.runningPref.instance != NULL)
       openlog(myGlobals.runningPref.instance, LOG_PID, deny_severity);
-    else 
+    else
       openlog(CONST_DAEMONNAME, LOG_PID, deny_severity);
     syslog(deny_severity, "refused connect from %s", eval_client(&req));
     myGlobals.numHandledBadrequests[myGlobals.newSock > 0]++;
@@ -3601,6 +3632,7 @@ void handleHTTPrequest(HostAddr from) {
   memset(pw, 0, sizeof(pw));
   memset(agent, 0, sizeof(agent));
   memset(referer, 0, sizeof(referer));
+  memset(ifModificedSince, 0, sizeof(ifModificedSince));
 
 #ifdef MAKE_WITH_I18N
   memset(requestedLanguage, 0, sizeof(requestedLanguage));
@@ -3622,6 +3654,8 @@ void handleHTTPrequest(HostAddr from) {
 			   sizeof(referer),
 			   workLanguage,
 			   sizeof(workLanguage),
+			   ifModificedSince,
+			   sizeof(ifModificedSince),
 			   &isPostMethod);
 
 #if defined(HTTP_DEBUG) || defined(I18N_DEBUG) || defined(URL_DEBUG)
@@ -3779,7 +3813,8 @@ void handleHTTPrequest(HostAddr from) {
                       agent,
                       referer,
                       requestedLanguage,
-                      numLang, isPostMethod);
+                      numLang, ifModificedSince,
+		      isPostMethod);
 
 #ifdef MAKE_WITH_I18N
   for (i=numLang-1; i>=0; i--) {

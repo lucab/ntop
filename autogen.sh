@@ -5,11 +5,18 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # Copyright (C) 2004-06 Rocco Carbone <rocco@ntop.org>
+#               2006-07 Luca Deri <deri@ntop.org>
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # $Log$
+# Revision 2.18  2007/05/17 15:30:08  deri
+# Added supoport for HTTP 304 that should reduce the amount of traffic exchanged
+# between ntop and web clients.
+# Updated copyright date
+#
 # Revision 2.17  2007/05/03 09:48:04  deri
+#
 # Added configure fixes and MySQL 4.x
 #
 # Revision 2.16  2007/05/01 07:02:49  deri
