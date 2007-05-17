@@ -3747,7 +3747,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 #endif
 {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-	     "NETFLOW: Welcome to %s.(C) 2002-06 by Luca Deri",
+	     "NETFLOW: Welcome to %s.(C) 2002-07 by Luca Deri",
 	     netflowPluginInfo->pluginName);
 
   return(netflowPluginInfo);

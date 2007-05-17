@@ -547,6 +547,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	theSession = nextSession;
       }
     } /* while */
+
     releaseMutex(&myGlobals.tcpSessionsMutex);
   } /* end for */
 
@@ -1940,6 +1941,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 		   myGlobals.runningPref.maxNumSessions);
       }
 
+      releaseMutex(&myGlobals.tcpSessionsMutex);
       return(NULL);
     }
 
@@ -1964,7 +1966,10 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     } else
 #endif
 
-      if((theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) return(NULL);
+      if((theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) {
+	releaseMutex(&myGlobals.tcpSessionsMutex);
+	return(NULL);
+      }
 
     memset(theSession, 0, sizeof(IPSession));
     addedNewEntry = 1;

@@ -3794,6 +3794,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 	 printedSessions++;
        }
      }
+     
      releaseMutex(&myGlobals.tcpSessionsMutex);
    }
 

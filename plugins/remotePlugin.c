@@ -1,6 +1,6 @@
 /*
  * 
- *  Copyright (C) 2006 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 2006-07 Luca Deri <deri@ntop.org>
  *                      
  *                 http://www.ntop.org/
  *                      
@@ -63,7 +63,8 @@ PluginInfo* remotePluginEntryFctn(void)
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Remote: Welcome to %s. (C) 2006 by L.Deri",  
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
+	     "Remote: Welcome to %s. (C) 2006-07 by L.Deri",  
 	     RemotepluginInfo->pluginName);
   
   return(RemotepluginInfo);
