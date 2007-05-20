@@ -2230,8 +2230,12 @@ static int returnHTTPPage(char* pageName,
 
 	    if(strptime(ifModificedSince, CONST_RFC1945_TIMESPEC, &modified) != NULL) {
 	      struct tm *_tm = localtime(&statbuf.st_mtime);
+	      time_t t_modified, t_if_modified_since;
 
-	      if(mktime(_tm) >= mktime(&modified)) {
+	      t_modified = mktime(_tm)-(time_t)myGlobals.thisZone;
+	      t_if_modified_since = mktime(&modified);
+
+	      if(t_modified > t_if_modified_since) {
 		/* The file has been modified */
 	      } else {
 		char theDate[48];
