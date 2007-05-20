@@ -4765,10 +4765,14 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  updateCounter(rrdPath, "badChecksumPkts", myGlobals.device[devIdx].rcvdPktStats.badChecksum.value, 0);
 	  updateCounter(rrdPath, "tooLongPkts", myGlobals.device[devIdx].rcvdPktStats.tooLong.value, 0);
 
-	  protoList = myGlobals.ipProtosList, idx=0;
-	  while(protoList != NULL) {
-	    updateCounter(rrdPath, protoList->protocolName, myGlobals.device[devIdx].ipProtosList[idx].value, 0);
-	    idx++, protoList = protoList->next;
+	  if(myGlobals.device[devIdx].ipProtosList != NULL) {
+	    protoList = myGlobals.ipProtosList, idx=0;
+	    while(protoList != NULL) {
+	      Counter c = myGlobals.device[devIdx].ipProtosList[idx].value;
+	      
+	      if(c > 0) updateCounter(rrdPath, protoList->protocolName, c, 0);
+	      idx++, protoList = protoList->next;
+	    }
 	  }
 	}
 

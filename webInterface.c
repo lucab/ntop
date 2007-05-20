@@ -849,11 +849,17 @@ char* getActualRowColor(void) {
 /* ******************************* */
 
 void switchNwInterface(int _interface) {
-  int i, mwInterface=_interface-1;
+  int i, mwInterface=_interface-1, found = 0;
   char buf[LEN_GENERAL_WORK_BUFFER], *selected;
 
   printHTMLheader("Network Interface Switch", NULL, BITFLAG_HTML_NO_REFRESH);
   sendString("<HR>\n");
+
+  for(i=0; i<myGlobals.numDevices; i++)
+    if(myGlobals.device[i].activeDevice) {
+      found = 1;
+      break;
+    }
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\">Note that "
 	      "the NetFlow and sFlow plugins - if enabled - force -M to be set (i.e. "
@@ -870,11 +876,11 @@ void switchNwInterface(int _interface) {
 	    ((mwInterface >= myGlobals.numDevices) || myGlobals.device[mwInterface].virtualDevice)) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sorry, invalid interface selected.");
     sendString(buf);
-  } else if(myGlobals.numDevices == 1) {
+  } else if((myGlobals.numDevices == 1) || (!found)) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sorry, you are currently capturing traffic from only a "
-		"single interface [%s].<br><br>"
+		"single/dummy interface [%s].<br><br>"
                 "</b> This interface switch feature is meaningful only when your ntop "
-                "instance captures traffic from multiple interfaces. You must specify "
+                "instance captures traffic from multiple interfaces. <br>You must specify "
                 "additional interfaces via the -i command line switch at run time.<b>",
 		myGlobals.device[myGlobals.actualReportDeviceId].name);
     sendString(buf);
@@ -6193,10 +6199,10 @@ void printMutexStatusReport(int textPrintFlag) {
   if(myGlobals.runningPref.numericFlag == 0)
     printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
 
-  printMutexStatus(textPrintFlag, &myGlobals.hostsHashLockMutex,   "hostsHashLockMutex");
-  printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
-  printMutexStatus(textPrintFlag, &myGlobals.purgePortsMutex,  "purgePortsMutex");
-  printMutexStatus(textPrintFlag, &myGlobals.securityItemsMutex,  "securityItemsMutex");
+  printMutexStatus(textPrintFlag, &myGlobals.hostsHashLockMutex, "hostsHashLockMutex");
+  printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex,   "tcpSessionsMutex");
+  printMutexStatus(textPrintFlag, &myGlobals.purgePortsMutex,    "purgePortsMutex");
+  printMutexStatus(textPrintFlag, &myGlobals.securityItemsMutex, "securityItemsMutex");
 
   sendString(texthtml("\n\n", "</table>"TABLE_OFF"</p>\n"));
 }
@@ -6204,7 +6210,6 @@ void printMutexStatusReport(int textPrintFlag) {
 /* ******************************** */
 
 static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
-
   /* This prints either as text or html, but no header so it can be included in bug reports */
 
   char buf[2*LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];

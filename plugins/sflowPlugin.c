@@ -19,11 +19,11 @@
  */
 
 /*
-   ntop includes sFlow(TM), freely available from http://www.inmon.com/".
+  ntop includes sFlow(TM), freely available from http://www.inmon.com/".
 
-   Some code has been copied from the InMon sflowtool
+  Some code has been copied from the InMon sflowtool
 
-   This plugin works only with threads
+  This plugin works only with threads
 */
 
 #include "ntop.h"
@@ -965,8 +965,8 @@ typedef struct _INMCounters_sample {
 } INMCounters_sample;
 
 enum INMSample_types {
-   FLOWSAMPLE  = 1,
-   COUNTERSSAMPLE = 2
+  FLOWSAMPLE  = 1,
+  COUNTERSSAMPLE = 2
 };
 
 typedef union _INMSample_type {
@@ -1291,7 +1291,7 @@ static char* sfValue(int deviceId, char *name, int appendDeviceId) {
 
   if(appendDeviceId) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "sflow.%d.%s",
-		myGlobals.device[deviceId].sflowGlobals->sflowDeviceId, name);
+		  myGlobals.device[deviceId].sflowGlobals->sflowDeviceId, name);
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "sflow.%s", name);
   }
@@ -1356,8 +1356,8 @@ static int setsFlowInSocket(int deviceId) {
     createThread(&myGlobals.device[deviceId].sflowGlobals->sflowThread,
 		 sflowMainLoop, (void*)((long)deviceId));
     traceEvent(CONST_TRACE_INFO, "THREADMGMT: SFLOW: Started thread (%lu) for receiving flows on port %d",
-                 (long)myGlobals.device[deviceId].sflowGlobals->sflowThread,
-                 myGlobals.device[deviceId].sflowGlobals->sflowInPort);
+	       (long)myGlobals.device[deviceId].sflowGlobals->sflowThread,
+	       myGlobals.device[deviceId].sflowGlobals->sflowInPort);
   }
 
   return(0);
@@ -2958,33 +2958,33 @@ RETSIGTYPE sflowcleanup(int signo) {
 
   if(msgSent<10) {
     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_FATALERROR, "SFLOW: caught signal %d %s", signo,
-               signo == SIGHUP ? "SIGHUP" :
-               signo == SIGINT ? "SIGINT" :
-               signo == SIGQUIT ? "SIGQUIT" :
-               signo == SIGILL ? "SIGILL" :
-               signo == SIGABRT ? "SIGABRT" :
-               signo == SIGFPE ? "SIGFPE" :
-               signo == SIGKILL ? "SIGKILL" :
-               signo == SIGSEGV ? "SIGSEGV" :
-               signo == SIGPIPE ? "SIGPIPE" :
-               signo == SIGALRM ? "SIGALRM" :
-               signo == SIGTERM ? "SIGTERM" :
-               signo == SIGUSR1 ? "SIGUSR1" :
-               signo == SIGUSR2 ? "SIGUSR2" :
-               signo == SIGCHLD ? "SIGCHLD" :
+					 signo == SIGHUP ? "SIGHUP" :
+					 signo == SIGINT ? "SIGINT" :
+					 signo == SIGQUIT ? "SIGQUIT" :
+					 signo == SIGILL ? "SIGILL" :
+					 signo == SIGABRT ? "SIGABRT" :
+					 signo == SIGFPE ? "SIGFPE" :
+					 signo == SIGKILL ? "SIGKILL" :
+					 signo == SIGSEGV ? "SIGSEGV" :
+					 signo == SIGPIPE ? "SIGPIPE" :
+					 signo == SIGALRM ? "SIGALRM" :
+					 signo == SIGTERM ? "SIGTERM" :
+					 signo == SIGUSR1 ? "SIGUSR1" :
+					 signo == SIGUSR2 ? "SIGUSR2" :
+					 signo == SIGCHLD ? "SIGCHLD" :
 #ifdef SIGCONT
-               signo == SIGCONT ? "SIGCONT" :
+					 signo == SIGCONT ? "SIGCONT" :
 #endif
 #ifdef SIGSTOP
-               signo == SIGSTOP ? "SIGSTOP" :
+					 signo == SIGSTOP ? "SIGSTOP" :
 #endif
 #ifdef SIGBUS
-               signo == SIGBUS ? "SIGBUS" :
+					 signo == SIGBUS ? "SIGBUS" :
 #endif
 #ifdef SIGSYS
-               signo == SIGSYS ? "SIGSYS"
+					 signo == SIGSYS ? "SIGSYS"
 #endif
-               : "other");
+					 : "other");
     msgSent++;
   }
 
@@ -3073,9 +3073,9 @@ static void* sflowMainLoop(void* _deviceId) {
     FD_SET(myGlobals.device[deviceId].sflowGlobals->sflowInSocket, &sflowMask);
 
     wait_time.tv_sec = 3, wait_time.tv_usec = 0;
-	if(!myGlobals.device[deviceId].activeDevice) break;
-	rc = select(maxSock+1, &sflowMask, NULL, NULL, &wait_time);
-	if(!myGlobals.device[deviceId].activeDevice) break;
+    if(!myGlobals.device[deviceId].activeDevice) break;
+    rc = select(maxSock+1, &sflowMask, NULL, NULL, &wait_time);
+    if(!myGlobals.device[deviceId].activeDevice) break;
 
     if(rc > 0) {
       if(FD_ISSET(myGlobals.device[deviceId].sflowGlobals->sflowInSocket, &sflowMask)){
@@ -3087,7 +3087,7 @@ static void* sflowMainLoop(void* _deviceId) {
 #ifdef DEBUG_FLOWS
       if(0)
 	if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: Received sFlow packet(len=%d)(deviceId=%d)",
-		   rc,  deviceId);
+					     rc,  deviceId);
 #endif
 
       if(rc > 0) {
@@ -3121,7 +3121,7 @@ static void* sflowMainLoop(void* _deviceId) {
     } else {
       if(rc < 0) {
 	if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_ERROR, "SFLOW: select() failed(%d, %s), terminating sflow",
-		   errno, strerror(errno));
+					     errno, strerror(errno));
 	break;
       }
     }
@@ -3197,7 +3197,7 @@ static void initsFlowDevice(int deviceId) {
   myGlobals.device[deviceId].sflowGlobals->sflowWhiteList = strdup(workList);
   releaseMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "SFLOW: White list initialized to '%s'",
-	     myGlobals.device[deviceId].sflowGlobals->sflowWhiteList);
+				       myGlobals.device[deviceId].sflowGlobals->sflowWhiteList);
 
   if(fetchPrefsValue(sfValue(deviceId, "blackList", 1), value, sizeof(value)) == -1) {
     storePrefsValue(sfValue(deviceId, "blackList", 1), "");
@@ -3215,7 +3215,7 @@ static void initsFlowDevice(int deviceId) {
   myGlobals.device[deviceId].sflowGlobals->sflowBlackList = strdup(workList);
   releaseMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "SFLOW: Black list initialized to '%s'",
-	     myGlobals.device[deviceId].sflowGlobals->sflowBlackList);
+				       myGlobals.device[deviceId].sflowGlobals->sflowBlackList);
 
   if(fetchPrefsValue(sfValue(deviceId, "sflowAggregation", 1), value, sizeof(value)) == -1)
     storePrefsValue(sfValue(deviceId, "sflowAggregation", 1), "0" /* noAggregation */);
@@ -3298,7 +3298,7 @@ static void printsFlowDeviceConfiguration(void) {
   char buf[512], value[128];
   int i = 0;
 
-  sendString("<center><table width=\"80%\" border=\"1\" "TABLE_DEFAULTS">\n");
+  sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
   sendString("<tr><th "DARK_BG">Available sFlow Devices</th></tr>\n");
   sendString("<tr><td align=left>\n");
 
@@ -3320,7 +3320,7 @@ static void printsFlowDeviceConfiguration(void) {
       else
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=device VALUE=%s %s>%s\n",
 		      dev, i == 0 ? "CHECKED" : "", myGlobals.device[id].humanFriendlyName);
-      	sendString(buf);
+      sendString(buf);
 
       if(pluginActive) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"/plugins/%s?device=-%s\" "
@@ -3344,9 +3344,11 @@ static void printsFlowDeviceConfiguration(void) {
     sendString("<FORM ACTION=\"/plugins/");
     sendString(sflowPluginInfo->pluginURLname);
     sendString("\" METHOD=GET>\n<input type=hidden name=device size=5 value=0>");
-    sendString("<p><INPUT TYPE=submit VALUE=\"Add sFlow Device\">&nbsp;\n</FORM><p>\n");
+    sendString("<p align=center><INPUT TYPE=submit VALUE=\"Add sFlow Device\">&nbsp;\n</FORM><p>\n");
   } else {
-    sendString("<p>Please enable the sFlow plugin first<br>\n");
+    sendString("<p>Please <A HREF=\"/"CONST_SHOW_PLUGINS_HTML"?");
+    sendString(sflowPluginInfo->pluginURLname);
+    sendString("=1\">enable</A> the sFlow plugin first<br>\n");
   }
 
   sendString("</td></TR></TABLE></center>");
@@ -3380,7 +3382,7 @@ static void printsFlowConfiguration(int deviceId) {
   sendString("\"> <input type=\"submit\" value=\"Set Interface Name\">");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), " [ <A HREF=\"/plugins/%s\"/>List sFlow Interfaces</A> ]</p>\n</form>",
-	      sflowPluginInfo->pluginName);
+		sflowPluginInfo->pluginName);
   sendString(buf);
   sendString("</td></tr>\n");
 
@@ -3396,7 +3398,7 @@ static void printsFlowConfiguration(int deviceId) {
   sendString("\" method=GET>\n<p>");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
+		myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
   sendString(buf);
 
   sendString("<input name=\"port\" size=\"5\" value=\"");
@@ -3427,13 +3429,13 @@ static void printsFlowConfiguration(int deviceId) {
   sendString("\" method=GET>\n");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
+		myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
   sendString(buf);
 
   sendString(" <input name=\"ifNetMask\" size=\"32\" value=\"");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%s",
-	      _intoa(myGlobals.device[deviceId].sflowGlobals->sflowIfAddress, buf1, sizeof(buf1)),
-	      _intoa(myGlobals.device[deviceId].sflowGlobals->sflowIfMask, buf2, sizeof(buf2)));
+		_intoa(myGlobals.device[deviceId].sflowGlobals->sflowIfAddress, buf1, sizeof(buf1)),
+		_intoa(myGlobals.device[deviceId].sflowGlobals->sflowIfMask, buf2, sizeof(buf2)));
   sendString(buf);
   sendString("\"> ");
   sendString("<input type=\"submit\" value=\"Set Interface Address\"></p>\n</form>\n");
@@ -3461,12 +3463,12 @@ static void printsFlowConfiguration(int deviceId) {
   sendString("\" method=GET>\n");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
+		myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
   sendString(buf);
 
   sendString("<input name=\"whiteList\" size=\"60\" value=\"");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
-              myGlobals.device[deviceId].sflowGlobals->sflowWhiteList == NULL ?
+		myGlobals.device[deviceId].sflowGlobals->sflowWhiteList == NULL ?
 		" " : myGlobals.device[deviceId].sflowGlobals->sflowWhiteList);
   sendString(buf);
   sendString("\"> <input type=\"submit\" value=\"Set White List\"></p>\n</form>\n"
@@ -3480,12 +3482,12 @@ static void printsFlowConfiguration(int deviceId) {
   sendString("\" method=GET>");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
+		myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
   sendString(buf);
 
   sendString("<input name=\"blackList\" size=\"60\" value=\"");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
-              myGlobals.device[deviceId].sflowGlobals->sflowBlackList == NULL ?
+		myGlobals.device[deviceId].sflowGlobals->sflowBlackList == NULL ?
 		" " : myGlobals.device[deviceId].sflowGlobals->sflowBlackList);
   sendString(buf);
   sendString("\"> <input type=\"submit\" value=\"Set Black List\"></p>\n</form>\n"
@@ -3527,7 +3529,7 @@ static void printsFlowConfiguration(int deviceId) {
   sendString("\" method=GET>\n<p>");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
+		myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
   sendString(buf);
 
   if(myGlobals.device[deviceId].sflowGlobals->sflowDebug) {
@@ -3576,61 +3578,61 @@ static void printsFlowStatisticsRcvd(int deviceId) {
     if(myGlobals.device[deviceId].sflowGlobals->probeList[i].probeAddr.s_addr == 0) break;
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s [%s pkts]<br>\n",
-                _intoa(myGlobals.device[deviceId].sflowGlobals->probeList[i].probeAddr, buf, sizeof(buf)),
-                formatPkts(myGlobals.device[deviceId].sflowGlobals->probeList[i].pkts, formatBuf, sizeof(formatBuf)));
+		  _intoa(myGlobals.device[deviceId].sflowGlobals->probeList[i].probeAddr, buf, sizeof(buf)),
+		  formatPkts(myGlobals.device[deviceId].sflowGlobals->probeList[i].pkts, formatBuf, sizeof(formatBuf)));
     sendString(buf);
   }
   sendString("&nbsp;</td>\n</tr>\n");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Packets Rcvd</th>\n"
-              "<td " TD_BG " align=\"right\">%s</td>\n"
-              "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd, formatBuf, sizeof(formatBuf)));
+		"<tr " TR_ON ">\n"
+		"<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Packets Rcvd</th>\n"
+		"<td " TD_BG " align=\"right\">%s</td>\n"
+		"</tr>\n",
+		formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Packets with Bad Version</th>\n"
-              "<td " TD_BG " align=\"right\">%s</td>\n"
-              "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].sflowGlobals->numBadsFlowsVersionsRcvd, formatBuf, sizeof(formatBuf)));
+		"<tr " TR_ON ">\n"
+		"<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Packets with Bad Version</th>\n"
+		"<td " TD_BG " align=\"right\">%s</td>\n"
+		"</tr>\n",
+		formatPkts(myGlobals.device[deviceId].sflowGlobals->numBadsFlowsVersionsRcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Packets Processed</th>\n"
-              "<td " TD_BG " align=\"right\">%s</td>\n"
-              "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd -
-                         myGlobals.device[deviceId].sflowGlobals->numBadsFlowsVersionsRcvd,
-			 formatBuf, sizeof(formatBuf)));
+		"<tr " TR_ON ">\n"
+		"<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Packets Processed</th>\n"
+		"<td " TD_BG " align=\"right\">%s</td>\n"
+		"</tr>\n",
+		formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd -
+			   myGlobals.device[deviceId].sflowGlobals->numBadsFlowsVersionsRcvd,
+			   formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of v2 Flows Rcvd</th>\n"
-              "<td " TD_BG " align=\"right\">%s</td>\n"
-              "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsV2Rcvd,
-			 formatBuf, sizeof(formatBuf)));
+		"<tr " TR_ON ">\n"
+		"<th " TH_BG " align=\"left\" "DARK_BG ">Number of v2 Flows Rcvd</th>\n"
+		"<td " TD_BG " align=\"right\">%s</td>\n"
+		"</tr>\n",
+		formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsV2Rcvd,
+			   formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of v4 Flows Rcvd</th>\n"
-              "<td " TD_BG " align=\"right\">%s</td>\n"
-              "</tr>\n",
+		"<tr " TR_ON ">\n"
+		"<th " TH_BG " align=\"left\" "DARK_BG ">Number of v4 Flows Rcvd</th>\n"
+		"<td " TD_BG " align=\"right\">%s</td>\n"
+		"</tr>\n",
 		formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsV4Rcvd, 
 			   formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of v5 Flows Rcvd</th>\n"
-              "<td " TD_BG " align=\"right\">%s</td>\n"
-              "</tr>\n",
+		"<tr " TR_ON ">\n"
+		"<th " TH_BG " align=\"left\" "DARK_BG ">Number of v5 Flows Rcvd</th>\n"
+		"<td " TD_BG " align=\"right\">%s</td>\n"
+		"</tr>\n",
 		formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsV5Rcvd,
 			   formatBuf, sizeof(formatBuf)));
   sendString(buf);
@@ -3642,21 +3644,21 @@ static void printsFlowStatisticsRcvd(int deviceId) {
              "</tr>\n");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Bad Data</th>\n"
-              "<td " TD_BG " align=\"right\">%s</td>\n"
-              "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].sflowGlobals->numBadFlowReality,
-			 formatBuf, sizeof(formatBuf)));
+		"<tr " TR_ON ">\n"
+		"<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Bad Data</th>\n"
+		"<td " TD_BG " align=\"right\">%s</td>\n"
+		"</tr>\n",
+		formatPkts(myGlobals.device[deviceId].sflowGlobals->numBadFlowReality,
+			   formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Total Number of Flows Processed</th>\n"
-              "<td " TD_BG " align=\"right\">%s</td>\n"
-              "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsProcessed,
-			 formatBuf, sizeof(formatBuf)));
+		"<tr " TR_ON ">\n"
+		"<th " TH_BG " align=\"left\" "DARK_BG ">Total Number of Flows Processed</th>\n"
+		"<td " TD_BG " align=\"right\">%s</td>\n"
+		"</tr>\n",
+		formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsProcessed,
+			   formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   if((myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedWhiteList +
@@ -3674,51 +3676,51 @@ static void printsFlowStatisticsRcvd(int deviceId) {
                "</tr>\n");
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                "<tr " TR_ON ">\n"
-                "<th " TH_BG " align=\"left\" "DARK_BG ">Rejected - Black list</th>\n"
-                "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
-                "</tr>\n",
-                formatPkts(myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedBlackList,
-                           formatBuf, sizeof(formatBuf)),
-                formatPkts(myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryFailedBlackList,
-                           formatBuf2, sizeof(formatBuf2)));
+		  "<tr " TR_ON ">\n"
+		  "<th " TH_BG " align=\"left\" "DARK_BG ">Rejected - Black list</th>\n"
+		  "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
+		  "</tr>\n",
+		  formatPkts(myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedBlackList,
+			     formatBuf, sizeof(formatBuf)),
+		  formatPkts(myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryFailedBlackList,
+			     formatBuf2, sizeof(formatBuf2)));
     sendString(buf);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                "<tr " TR_ON ">\n"
-                "<th " TH_BG " align=\"left\" "DARK_BG ">Rejected - White list</th>\n"
-                "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
-                "</tr>\n",
-                formatPkts(myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedWhiteList,
-                           formatBuf, sizeof(formatBuf)),
-                formatPkts(myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryFailedWhiteList,
-                           formatBuf2, sizeof(formatBuf2)));
+		  "<tr " TR_ON ">\n"
+		  "<th " TH_BG " align=\"left\" "DARK_BG ">Rejected - White list</th>\n"
+		  "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
+		  "</tr>\n",
+		  formatPkts(myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedWhiteList,
+			     formatBuf, sizeof(formatBuf)),
+		  formatPkts(myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryFailedWhiteList,
+			     formatBuf2, sizeof(formatBuf2)));
     sendString(buf);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                "<tr " TR_ON ">\n"
-                "<th " TH_BG " align=\"left\" "DARK_BG ">Accepted</th>\n"
-                "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
-                "</tr>\n",
-                formatPkts(myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryAccepted,
-                           formatBuf, sizeof(formatBuf)),
-                formatPkts(myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryAccepted,
-                           formatBuf2, sizeof(formatBuf2)));
+		  "<tr " TR_ON ">\n"
+		  "<th " TH_BG " align=\"left\" "DARK_BG ">Accepted</th>\n"
+		  "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
+		  "</tr>\n",
+		  formatPkts(myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryAccepted,
+			     formatBuf, sizeof(formatBuf)),
+		  formatPkts(myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryAccepted,
+			     formatBuf2, sizeof(formatBuf2)));
     sendString(buf);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                "<tr " TR_ON ">\n"
-		"<th " TH_BG " align=\"left\" "DARK_BG ">Total</th>\n"
-                "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
-                "</tr>\n",
-                formatPkts(myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedBlackList +
-                           myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedWhiteList +
-                           myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryAccepted,
-                           formatBuf, sizeof(formatBuf)),
-                formatPkts(myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryFailedBlackList +
-                           myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryFailedWhiteList +
-                           myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryAccepted,
-                           formatBuf2, sizeof(formatBuf2)));
+		  "<tr " TR_ON ">\n"
+		  "<th " TH_BG " align=\"left\" "DARK_BG ">Total</th>\n"
+		  "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
+		  "</tr>\n",
+		  formatPkts(myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedBlackList +
+			     myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryFailedWhiteList +
+			     myGlobals.device[deviceId].sflowGlobals->numSrcsFlowsEntryAccepted,
+			     formatBuf, sizeof(formatBuf)),
+		  formatPkts(myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryFailedBlackList +
+			     myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryFailedWhiteList +
+			     myGlobals.device[deviceId].sflowGlobals->numDstsFlowsEntryAccepted,
+			     formatBuf2, sizeof(formatBuf2)));
     sendString(buf);
   }
 
@@ -3728,21 +3730,21 @@ static void printsFlowStatisticsRcvd(int deviceId) {
              "</tr>\n");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Samples Rcvd</th>\n"
-              "<td " TD_BG " align=\"right\">%s</td>\n"
-              "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsSamples, 
-			 formatBuf, sizeof(formatBuf)));
+		"<tr " TR_ON ">\n"
+		"<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Samples Rcvd</th>\n"
+		"<td " TD_BG " align=\"right\">%s</td>\n"
+		"</tr>\n",
+		formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowsSamples, 
+			   formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "<tr " TR_ON ">\n"
-              "<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Counter Updates Rcvd</th>\n"
-              "<td " TD_BG " align=\"right\">%s</td>\n"
-              "</tr>\n",
-		 formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowCounterUpdates, 
-			    formatBuf, sizeof(formatBuf)));
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		"<tr " TR_ON ">\n"
+		"<th " TH_BG " align=\"left\" "DARK_BG ">Number of sFlow Counter Updates Rcvd</th>\n"
+		"<td " TD_BG " align=\"right\">%s</td>\n"
+		"</tr>\n",
+		formatPkts(myGlobals.device[deviceId].sflowGlobals->numsFlowCounterUpdates, 
+			   formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
 
@@ -3764,25 +3766,25 @@ static void printsFlowStatisticsRcvd(int deviceId) {
 
     for(i=0; i<myGlobals.device[deviceId].sflowGlobals->numWhiteNets; i++) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                  "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
-                  "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
-                  i,
+		    "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
+		    "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
+		    i,
 		    myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][0],
-                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][0] >> 24) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][0] >> 16) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][0] >>  8) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][0]      ) & 0xff),
-                  myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1],
-                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1] >> 24) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1] >> 16) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1] >>  8) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1]      ) & 0xff),
-                  myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2],
-                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2] >> 24) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2] >> 16) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2] >>  8) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2]      ) & 0xff)
-                  );
+		    ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][0] >> 24) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][0] >> 16) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][0] >>  8) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][0]      ) & 0xff),
+		    myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1],
+		    ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1] >> 24) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1] >> 16) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1] >>  8) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][1]      ) & 0xff),
+		    myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2],
+		    ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2] >> 24) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2] >> 16) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2] >>  8) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->whiteNetworks[i][2]      ) & 0xff)
+		    );
       sendString(buf);
       if(i<myGlobals.device[deviceId].sflowGlobals->numWhiteNets) sendString("<br>\n");
     }
@@ -3803,25 +3805,25 @@ static void printsFlowStatisticsRcvd(int deviceId) {
 
     for(i=0; i<myGlobals.device[deviceId].sflowGlobals->numBlackNets; i++) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                  "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
-                  "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
-                  i,
-                  myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0],
-                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0] >> 24) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0] >> 16) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0] >>  8) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0]      ) & 0xff),
-                  myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1],
-                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1] >> 24) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1] >> 16) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1] >>  8) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1]      ) & 0xff),
-                  myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2],
-                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2] >> 24) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2] >> 16) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2] >>  8) & 0xff),
-                  ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2]      ) & 0xff)
-                  );
+		    "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
+		    "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
+		    i,
+		    myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0],
+		    ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0] >> 24) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0] >> 16) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0] >>  8) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][0]      ) & 0xff),
+		    myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1],
+		    ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1] >> 24) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1] >> 16) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1] >>  8) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][1]      ) & 0xff),
+		    myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2],
+		    ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2] >> 24) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2] >> 16) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2] >>  8) & 0xff),
+		    ((myGlobals.device[deviceId].sflowGlobals->blackNetworks[i][2]      ) & 0xff)
+		    );
       sendString(buf);
       if(i<myGlobals.device[deviceId].sflowGlobals->numBlackNets) sendString("<br>\n");
     }
@@ -3865,7 +3867,7 @@ static int createsFlowDevice(int sflowDeviceId) {
     }
 
     traceEvent(CONST_TRACE_INFO, "SFLOW: createsFlowDevice created device %d",
-	     deviceId);
+	       deviceId);
   } else
     traceEvent(CONST_TRACE_ERROR, "SFLOW: createDummyInterface failed");
 
@@ -3879,6 +3881,7 @@ static int mapsFlowDeviceToNtopDevice(int sflowDeviceId) {
 
   for(i=0; i<myGlobals.numDevices; i++)
     if((myGlobals.device[i].sflowGlobals != NULL)
+       && myGlobals.device[i].activeDevice
        && (myGlobals.device[i].sflowGlobals->sflowDeviceId == sflowDeviceId)) {
 #ifdef DEBUG
       traceEvent(CONST_TRACE_INFO, "SFLOW: mapsFlowDeviceToNtopDevice(%d) = %d",
@@ -4083,16 +4086,16 @@ static char *ifStatus(u_int32_t interface_status) {
 /* ****************************** */
 
 static void flushDevicePrefs(int deviceId) {
-	if(deviceId >= myGlobals.numDevices) return;
-	delPrefsValue(sfValue(deviceId, "ifNetMask", 1));
-	delPrefsValue(sfValue(deviceId, "whiteList", 1));
-	delPrefsValue(sfValue(deviceId, "sflowInPort", 1));
-	delPrefsValue(sfValue(deviceId, "blackList", 1));
-	delPrefsValue(sfValue(deviceId, "enableSessionHandling", 1));
-	delPrefsValue(sfValue(deviceId, "sflowAssumeFTP", 1));
-	delPrefsValue(sfValue(deviceId, "sflowAggregation", 1));
-	delPrefsValue(sfValue(deviceId, "debug", 1));
-	delPrefsValue(sfValue(deviceId, "humanFriendlyName", 1));
+  if(deviceId >= myGlobals.numDevices) return;
+  delPrefsValue(sfValue(deviceId, "ifNetMask", 1));
+  delPrefsValue(sfValue(deviceId, "whiteList", 1));
+  delPrefsValue(sfValue(deviceId, "sflowInPort", 1));
+  delPrefsValue(sfValue(deviceId, "blackList", 1));
+  delPrefsValue(sfValue(deviceId, "enableSessionHandling", 1));
+  delPrefsValue(sfValue(deviceId, "sflowAssumeFTP", 1));
+  delPrefsValue(sfValue(deviceId, "sflowAggregation", 1));
+  delPrefsValue(sfValue(deviceId, "debug", 1));
+  delPrefsValue(sfValue(deviceId, "humanFriendlyName", 1));
 }
 
 /* ****************************** */
@@ -4298,11 +4301,12 @@ static void handlesFlowHTTPrequest(char* _url) {
       storePrefsValue(sfValue(deviceId, "knownDevices", 0), value1);
     }
 
-	myGlobals.device[readDeviceId].activeDevice = 0; // Terminate thread
- 	flushDevicePrefs(readDeviceId);
+    myGlobals.device[readDeviceId].activeDevice = 0; // Terminate thread
+    flushDevicePrefs(readDeviceId);
 
     // termsFlowDevice(readDeviceId);
 
+    checkReportDevice();
     printHTMLheader("sFlow Device Configuration", NULL, 0);
     printsFlowDeviceConfiguration();
     return;
@@ -4576,8 +4580,8 @@ static void termsFlowFunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
 #ifdef DEBUG_FLOWS
 
 static void handlesFlowPacket(u_char *_deviceId,
-				const struct pcap_pkthdr *h,
-				const u_char *p) {
+			      const struct pcap_pkthdr *h,
+			      const u_char *p) {
   int sampledPacketSize;
   int deviceId, rc;
 
@@ -4627,7 +4631,7 @@ static void handlesFlowPacket(u_char *_deviceId,
 #ifdef DEBUG_FLOWS
 	if(0)
 	  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect [deviceId=%d][sender=%s][proto=%d][len=%d][hlen=%d]",
-		     deviceId, intoa(ip.ip_src), ip.ip_p, plen, hlen);
+					       deviceId, intoa(ip.ip_src), ip.ip_p, plen, hlen);
 #endif
 
 	if(ip.ip_p == IPPROTO_UDP) {
@@ -4639,7 +4643,7 @@ static void handlesFlowPacket(u_char *_deviceId,
 #ifdef DEBUG_FLOWS
 	    if(0)
 	      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "Rcvd from from %s [sflowGlobals=%x]", intoa(ip.ip_src),
-			 myGlobals.device[deviceId].sflowGlobals);
+						   myGlobals.device[deviceId].sflowGlobals);
 #endif
 
 	    myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd++;

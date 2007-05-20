@@ -931,8 +931,7 @@ void drawGlobalProtoDistribution(void) {
   if(myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value; lbl[idx] = "Other"; idx++; }
 
-
-  {
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList) {
     ProtocolsList *protoList = myGlobals.ipProtosList;
     int idx1 = 0;
 
@@ -969,27 +968,29 @@ void drawGlobalIpProtoDistribution(void) {
 
   total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
 
-  while(protoList != NULL) {
-    if(total > (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value)
-      total -= (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value;
-    else
-      total = 0;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList) {
+    while(protoList != NULL) {
+      if(total > (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value)
+	total -= (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value;
+      else
+	total = 0;
 
-    idx1++, protoList = protoList->next;
-  }
-
-  for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-    p[idx]  = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local.value
-      +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote.value;
-    p[idx] += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value
-      +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value;
-    if((p[idx] > 0) && ((p[idx]*100/total) > 1 /* the proto is at least 1% */)) {
-      partialTotal += p[idx];
-      lbl[idx] = myGlobals.ipTrafficProtosNames[i];
-      idx++;
+      idx1++, protoList = protoList->next;
     }
 
-    if(idx >= maxNumDisplayProto) break;
+    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+      p[idx]  = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local.value
+	+myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote.value;
+      p[idx] += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value
+	+myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value;
+      if((p[idx] > 0) && ((p[idx]*100/total) > 1 /* the proto is at least 1% */)) {
+	partialTotal += p[idx];
+	lbl[idx] = myGlobals.ipTrafficProtosNames[i];
+	idx++;
+      }
+
+      if(idx >= maxNumDisplayProto) break;
+    }
   }
 
   if(total == 0) total = 1;

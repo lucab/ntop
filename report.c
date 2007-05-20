@@ -58,11 +58,9 @@ void printBandwidthFooter(void) {
 
 /* ******************************* */
 
-void initReports(void) {
+void checkReportDevice(void) {
   int i;
   char value[LEN_SMALL_WORK_BUFFER];
-
-  myGlobals.columnSort = 0;
 
   /* Show device table */
   for(i=0; i<myGlobals.numDevices; i++) {
@@ -112,6 +110,14 @@ void initReports(void) {
       }
     }
   }
+}
+
+/* **************************************** */
+
+void initReports(void) {
+  myGlobals.columnSort = 0;
+
+  checkReportDevice();
 
   traceEvent(CONST_TRACE_INFO,
 	     "Note: Reporting device initally set to %d [%s]%s",
@@ -120,7 +126,6 @@ void initReports(void) {
 	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName :
 	     myGlobals.device[myGlobals.actualReportDeviceId].name,
 	     myGlobals.runningPref.mergeInterfaces ? " (merged)" : "");
-
 }
 
 /* **************************************** */
@@ -4250,7 +4255,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
    } else {
      total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
 
-     {
+     if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList) {
        ProtocolsList *protoList = myGlobals.ipProtosList;
        int idx1 = 0;
 

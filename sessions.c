@@ -2287,7 +2287,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     }
   } /* len > 0 */
 
-    /* ***************************************** */
+  /* ***************************************** */
 
   if((theSession->minWindow > tcpWin) || (theSession->minWindow == 0))
     theSession->minWindow = tcpWin;
@@ -2376,7 +2376,6 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	hostToUpdate->maxLatency.tv_sec  = theSession->nwLatency.tv_sec;
       }
     }
-
   } else if ((addedNewEntry == 0)
 	     && ((theSession->sessionState == FLAG_STATE_SYN)
 		 || (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK))
@@ -2432,9 +2431,9 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
    * - Counting packets & bytes based on certain invalid TCP Flag combos
    * - Checking if a known protocol is running at a not well-known port
    */
-  tcpSessionSecurityChecks (h, srcHost, sport, dstHost, dport, tp,
-			    packetDataLength, packetData, addedNewEntry,
-			    theSession, actualDeviceId);
+  tcpSessionSecurityChecks(h, srcHost, sport, dstHost, dport, tp,
+			   packetDataLength, packetData, addedNewEntry,
+			   theSession, actualDeviceId);
   /*
    *
    * In this case the session is over hence the list of
@@ -2635,8 +2634,8 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     return(NULL);
   }
 
-  releaseMutex(&myGlobals.tcpSessionsMutex);
 
+  releaseMutex(&myGlobals.tcpSessionsMutex);
   return(theSession);
 }
 

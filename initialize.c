@@ -273,7 +273,6 @@ void createDeviceIpProtosList(int devIdx) {
   size_t len = (size_t)myGlobals.numIpProtosList*sizeof(TrafficCounter);
 
   if(len > 0) {
-
     if(myGlobals.device[devIdx].ipProtosList != NULL)
       free(myGlobals.device[devIdx].ipProtosList);
     if((myGlobals.device[devIdx].ipProtosList = (TrafficCounter*)malloc(len)) == NULL)

@@ -2229,7 +2229,9 @@ static int returnHTTPPage(char* pageName,
 	    struct tm modified;
 
 	    if(strptime(ifModificedSince, CONST_RFC1945_TIMESPEC, &modified) != NULL) {
-	      if(mktime(&statbuf.st_mtime) >= mktime(&modified)) {
+	      struct tm *_tm = localtime(&statbuf.st_mtime);
+
+	      if(mktime(_tm) >= mktime(&modified)) {
 		/* The file has been modified */
 	      } else {
 		char theDate[48];

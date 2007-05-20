@@ -111,7 +111,7 @@ static PluginInfo netflowPluginInfo[] = {
     "<a href=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     0, /* Active by default */
-    ConfigureOnly,
+    ViewConfigure,
     1, /* Inactive setup */
     initNetFlowFunct, /* InitFunc */
     termNetflowFunct, /* TermFunc */
@@ -133,14 +133,14 @@ static PluginInfo netflowPluginInfo[] = {
 };
 
 #ifdef MAX_NETFLOW_FLOW_BUFFER
-  static float netflowflowBuffer[MAX_NETFLOW_FLOW_BUFFER];
-  static int netflowflowBufferCount;
-  static float netflowfmaxTime;
+static float netflowflowBuffer[MAX_NETFLOW_FLOW_BUFFER];
+static int netflowflowBufferCount;
+static float netflowfmaxTime;
 #endif
 #ifdef MAX_NETFLOW_PACKET_BUFFER
-  static float netflowpacketBuffer[MAX_NETFLOW_PACKET_BUFFER];
-  static int netflowpacketBufferCount;
-  static float netflowpmaxTime;
+static float netflowpacketBuffer[MAX_NETFLOW_PACKET_BUFFER];
+static int netflowpacketBufferCount;
+static float netflowpmaxTime;
 #endif
 
 /* ****************************** */
@@ -150,7 +150,7 @@ static char* nfValue(int deviceId, char *name, int appendDeviceId) {
 
   if(appendDeviceId) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "netflow.%d.%s",
-		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId, name);
+		  myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId, name);
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "netflow.%s", name);
   }
@@ -308,8 +308,8 @@ static int setNetFlowInSocket(int deviceId) {
 		 netflowUtilsLoop, (void*)((long)deviceId));
 #endif
     traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: Started thread for receiving flows on port %d",
-                 (long)myGlobals.device[deviceId].netflowGlobals->netFlowThread,
-                 myGlobals.device[deviceId].netflowGlobals->netFlowInPort);
+	       (long)myGlobals.device[deviceId].netflowGlobals->netFlowThread,
+	       myGlobals.device[deviceId].netflowGlobals->netFlowInPort);
   }
 
   return(0);
@@ -467,7 +467,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 #ifdef MAX_NETFLOW_FLOW_BUFFER
   float elapsed;
   struct timeval netflowStartOfFlowProcessing,
-                 netflowEndOfFlowProcessing;
+    netflowEndOfFlowProcessing;
 
   gettimeofday(&netflowStartOfFlowProcessing, NULL);
 #endif
@@ -1179,7 +1179,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
     if(handle_ipfix) {
       numEntries = ntohs(the5Record.flowHeader.count), displ = sizeof(V9FlowHeader);
 #ifdef DEBUG_FLOWS
-	traceEvent(CONST_TRACE_INFO, "Num IPFIX Entries: %d", numEntries);
+      traceEvent(CONST_TRACE_INFO, "Num IPFIX Entries: %d", numEntries);
 #endif
 
     } else {
@@ -1537,7 +1537,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 #endif
 
     /* Lock white/black lists for duration of this flow packet */
-      accessMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex, "flowPacket");
+    accessMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex, "flowPacket");
 
     /*
       Reset the record so that fields that are not contained
@@ -1678,7 +1678,7 @@ static void* netflowMainLoop(void* _deviceId) {
 
 #ifdef MAX_NETFLOW_PACKET_BUFFER
   struct timeval netflowStartOfRecordProcessing,
-                 netflowEndOfRecordProcessing;
+    netflowEndOfRecordProcessing;
   float elapsed;
 #endif
 
@@ -1740,9 +1740,9 @@ static void* netflowMainLoop(void* _deviceId) {
     }
 #endif
 
-	if(!myGlobals.device[deviceId].activeDevice) break;
+    if(!myGlobals.device[deviceId].activeDevice) break;
     wait_time.tv_sec = 3, wait_time.tv_usec = 0;
-	rc = select(maxSock+1, &netflowMask, NULL, NULL, &wait_time);
+    rc = select(maxSock+1, &netflowMask, NULL, NULL, &wait_time);
     if(!myGlobals.device[deviceId].activeDevice) break;
 
     if(rc > 0) {
@@ -2090,7 +2090,9 @@ static void printNetFlowDeviceConfiguration(void) {
     sendString("\" METHOD=GET>\n<input type=hidden name=device size=5 value=0>");
     sendString("<p align=center><INPUT TYPE=submit VALUE=\"Add NetFlow Device\">&nbsp;\n</FORM><p>\n");
   } else {
-    sendString("<p>Please enable the NetFlow plugin first<br>\n");
+    sendString("<p>Please <A HREF=\"/"CONST_SHOW_PLUGINS_HTML"?");
+    sendString(netflowPluginInfo->pluginURLname);
+    sendString("=1\">enable</A> the NetFlow plugin first<br>\n");
   }
 
   sendString("</td></TR></TABLE></center>");
@@ -2108,11 +2110,11 @@ static void printNetFlowStatistics(void) {
 
 #ifdef MAX_NETFLOW_PACKET_BUFFER
   float rminTime=99999.0, rmaxTime=0.0,
-        /*stddev:*/ rM, rT, rQ, rR, rSD, rXBAR;
+    /*stddev:*/ rM, rT, rQ, rR, rSD, rXBAR;
 #endif
 #ifdef MAX_NETFLOW_FLOW_BUFFER
   float fminTime=99999.0, fmaxTime=0.0,
-        /*stddev:*/ fM, fT, fQ, fR, fSD, fXBAR;
+    /*stddev:*/ fM, fT, fQ, fR, fSD, fXBAR;
 #endif
 
   memset(&buf, 0, sizeof(buf));
@@ -2146,16 +2148,16 @@ static void printNetFlowStatistics(void) {
              "packet and each individual flow.  The computations are based only on the most "
              "recent");
 
- #ifdef MAX_NETFLOW_FLOW_BUFFER
+#ifdef MAX_NETFLOW_FLOW_BUFFER
   sendString(" " xstr(MAX_NETFLOW_FLOW_BUFFER) " flows");
-  #ifdef MAX_NETFLOW_PACKET_BUFFER
+#ifdef MAX_NETFLOW_PACKET_BUFFER
   sendString(" and");
-  #endif
- #endif
+#endif
+#endif
 
- #ifdef MAX_NETFLOW_PACKET_BUFFER
+#ifdef MAX_NETFLOW_PACKET_BUFFER
   sendString(" " xstr(MAX_NETFLOW_PACKET_BUFFER) " flow packets");
- #endif
+#endif
 
   sendString(" processed.</p>\n"
              "<p>Errors may cause processing to be abandoned and those flows (flow packets) "
@@ -2218,9 +2220,9 @@ static void printNetFlowStatistics(void) {
   } else {
     printNoDataYet();
   }
- #ifdef MAX_NETFLOW_PACKET_BUFFER
+#ifdef MAX_NETFLOW_PACKET_BUFFER
   sendString("<p>&nbsp;</p>\n");
- #endif
+#endif
 #endif /* MAX_NETFLOW_FLOW_BUFFER */
 
 #ifdef MAX_NETFLOW_PACKET_BUFFER
@@ -2289,9 +2291,9 @@ static void printNetFlowConfiguration(int deviceId) {
   char buf[512], buf1[32], buf2[32];
 
 #ifdef HAVE_SCPT
- #define UDPSLASHSCPT "UDP/SCTP"
+#define UDPSLASHSCPT "UDP/SCTP"
 #else
- #define UDPSLASHSCPT "UDP"
+#define UDPSLASHSCPT "UDP"
 #endif
 
   sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
@@ -2312,7 +2314,7 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString("\"> <input type=\"submit\" value=\"Set Interface Name\">");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), " [ <A HREF=\"/plugins/%s\"/>List NetFlow Interfaces</A> ]</p>\n</form>",
-	      netflowPluginInfo->pluginName);
+		netflowPluginInfo->pluginName);
   sendString(buf);
   sendString("</td></tr>\n");
 
@@ -2325,7 +2327,7 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString("\" method=GET>\n<p>");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString("<input name=\"port\" size=\"5\" value=\"");
@@ -2355,13 +2357,13 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString("\" method=GET>\n");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString(" <input name=\"ifNetMask\" size=\"32\" value=\"");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%s",
-	      _intoa(myGlobals.device[deviceId].netflowGlobals->netFlowIfAddress, buf1, sizeof(buf1)),
-	      _intoa(myGlobals.device[deviceId].netflowGlobals->netFlowIfMask, buf2, sizeof(buf2)));
+		_intoa(myGlobals.device[deviceId].netflowGlobals->netFlowIfAddress, buf1, sizeof(buf1)),
+		_intoa(myGlobals.device[deviceId].netflowGlobals->netFlowIfMask, buf2, sizeof(buf2)));
   sendString(buf);
   sendString("\"> ");
   sendString("<input type=\"submit\" value=\"Set Interface Address\"></p>\n</form>\n");
@@ -2387,39 +2389,39 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString("\" method=GET>\n");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString("<p><SELECT NAME=netFlowAggregation>");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
-              noAggregation,
-              (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == noAggregation) ? " SELECTED" : "",
-              "None (no aggregation)");
+		noAggregation,
+		(myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == noAggregation) ? " SELECTED" : "",
+		"None (no aggregation)");
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
-              portAggregation,
-              (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == portAggregation) ? " SELECTED" : "",
-              "TCP/UDP Port");
+		portAggregation,
+		(myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == portAggregation) ? " SELECTED" : "",
+		"TCP/UDP Port");
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
-              hostAggregation,
-              (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == hostAggregation) ? " SELECTED" : "",
-              "Host");
+		hostAggregation,
+		(myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == hostAggregation) ? " SELECTED" : "",
+		"Host");
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
-              protocolAggregation,
-              (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == protocolAggregation) ? " SELECTED" : "",
-              "Protocol (TCP, UDP, ICMP)");
+		protocolAggregation,
+		(myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == protocolAggregation) ? " SELECTED" : "",
+		"Protocol (TCP, UDP, ICMP)");
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
-              asAggregation,
-              (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == asAggregation) ? " SELECTED" : "",
-              "AS");
+		asAggregation,
+		(myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == asAggregation) ? " SELECTED" : "",
+		"AS");
   sendString(buf);
 
   sendString("</select>");
@@ -2459,12 +2461,12 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString("\" method=GET>\n");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString("<input name=\"whiteList\" size=\"60\" value=\"");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
-              myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList == NULL ?
+		myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList == NULL ?
 		" " : myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList);
   sendString(buf);
   sendString("\"> <input type=\"submit\" value=\"Set White List\"></p>\n</form>\n"
@@ -2478,12 +2480,12 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString("\" method=GET>");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString("<input name=\"blackList\" size=\"60\" value=\"");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
-              myGlobals.device[deviceId].netflowGlobals->netFlowBlackList == NULL ? " " :
+		myGlobals.device[deviceId].netflowGlobals->netFlowBlackList == NULL ? " " :
 		myGlobals.device[deviceId].netflowGlobals->netFlowBlackList);
   sendString(buf);
   sendString("\"> <input type=\"submit\" value=\"Set Black List\"></p>\n</form>\n"
@@ -2526,7 +2528,7 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString("\" method=GET>\n<p>");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling) {
@@ -2554,7 +2556,7 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString("\" method=GET>\n<p>");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   if(myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB) {
@@ -2572,7 +2574,7 @@ static void printNetFlowConfiguration(int deviceId) {
 	     "</td>\n</tr>\n");
 #endif
 
-/* ****************************************************** */
+  /* ****************************************************** */
 
   sendString("<tr><th colspan=\"2\" "DARK_BG">Assume FTP</th>\n");
 
@@ -2581,7 +2583,7 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString("\" method=GET>\n<p>");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
@@ -2618,7 +2620,7 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString("\" method=GET>\n");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
   sendString("<input name=\"netFlowDumpInterval\" size=\"5\" value=\"");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",
@@ -2635,7 +2637,7 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString("\" method=GET>\n");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
   sendString("<input name=\"netFlowDumpPath\" size=\"60\" value=\"");
   sendString(myGlobals.device[deviceId].netflowGlobals->dumpPath == NULL ?
@@ -2659,7 +2661,7 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString("\" method=GET>\n<p>");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   if(myGlobals.device[deviceId].netflowGlobals->netFlowDebug) {
@@ -3134,7 +3136,7 @@ static int createNetFlowDevice(int netFlowDeviceId) {
     }
 
     traceEvent(CONST_TRACE_INFO, "NETFLOW: createNetFlowDevice created device %d",
-	     deviceId);
+	       deviceId);
   } else
     traceEvent(CONST_TRACE_ERROR, "NETFLOW: createDummyInterface failed");
 
@@ -3149,7 +3151,8 @@ static int mapNetFlowDeviceToNtopDevice(int netFlowDeviceId) {
 
   for(i=0; i<myGlobals.numDevices; i++)
     if(myGlobals.device[i].netflowGlobals != NULL) {
-      if(myGlobals.device[i].netflowGlobals->netFlowDeviceId == netFlowDeviceId) {
+      if(myGlobals.device[i].activeDevice
+	 && (myGlobals.device[i].netflowGlobals->netFlowDeviceId == netFlowDeviceId)) {
 #ifdef DEBUG_FLOWS
 	traceEvent(CONST_TRACE_INFO, "NETFLOW: mapNetFlowDeviceToNtopDevice(%d) = %d",
 		   netFlowDeviceId, i);
@@ -3436,11 +3439,16 @@ static void handleNetflowHTTPrequest(char* _url) {
       storePrefsValue(nfValue(deviceId, "knownDevices", 0), value1);
     }
 
-	myGlobals.device[readDeviceId].activeDevice = 0; // Terminate thread
-	flushDevicePrefs(readDeviceId);
+    myGlobals.device[readDeviceId].activeDevice = 0; // Terminate thread
 
+    flushDevicePrefs(readDeviceId);
+
+    traceEvent(CONST_TRACE_INFO, "NETFLOW: Device [deviceId=%d][active=%d]",
+	       readDeviceId, myGlobals.device[readDeviceId].activeDevice);
+    
     // termNetflowDevice(readDeviceId);
 
+    checkReportDevice();
     printHTMLheader("NetFlow Device Configuration", NULL, 0);
     printNetFlowDeviceConfiguration();
     return;
@@ -3741,9 +3749,9 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 
 /* Plugin entry fctn */
 #ifdef MAKE_STATIC_PLUGIN
-  PluginInfo* netflowPluginEntryFctn(void)
+PluginInfo* netflowPluginEntryFctn(void)
 #else
-  PluginInfo* PluginEntryFctn(void)
+     PluginInfo* PluginEntryFctn(void)
 #endif
 {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY,

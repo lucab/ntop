@@ -186,6 +186,7 @@ extern int readHTTPpostData(int len, char *buf, int buflen);
 /* report.c */
 extern void printBandwidthFooter(void);
 extern void initReports(void);
+extern void checkReportDevice(void);
 extern int reportValues(time_t *lastTime);
 extern void addPageIndicator(char *url, u_int beginIdx,
 			     u_int numEntries, u_int linesPerPage,

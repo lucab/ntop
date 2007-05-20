@@ -159,7 +159,7 @@ extern u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
                                  DNSHostInfo *hostPtr, short length,
                                  short *isRequest, short *positiveReply);
 extern void checkSpoofing(HostTraffic *el, int actualDeviceId);
-extern void cleanupHostEntries();
+extern void cleanupHostEntries(void);
 extern char* host2networkName(HostTraffic *el, char *buf, u_short buf_len);
 
 /* admin.c */
@@ -674,8 +674,8 @@ extern void addPassiveSessionInfo(HostAddr *theHost, u_short thePort, char *note
 extern int isPassiveSession(HostAddr *theHost, u_short thePort, char **notes);
 extern void addVoIPSessionInfo(HostAddr *theHost, u_short thePort, char *notes);
 extern int isVoIPSession(HostAddr *theHost, u_short thePort, char **notes);
-extern void initPassiveSessions();
-extern void termPassiveSessions();
+extern void initPassiveSessions(void);
+extern void termPassiveSessions(void);
 extern int getPortByName(ServiceEntry **theSvc, char* portName);
 extern char *getPortByNumber(ServiceEntry **theSvc, int port);
 extern char *getPortByNum(int port, int type);
@@ -805,7 +805,7 @@ extern char* getSpecialMacInfo(HostTraffic* el, short encodeString);
 extern void createVendorTable(struct stat *statbuf);
 
 /* l7.c */
-extern void initl7();
+extern void initl7(void);
 extern void l7SessionProtoDetection(IPSession *theSession, 
 				    u_int packetDataLength, 
 				    u_char* packetData);
@@ -858,9 +858,9 @@ extern int updateFcFabricElementHash(FcFabricElementHash **theHash, u_short vsan
 extern void processFcNSCacheFile(char *filename);
 
 extern u_int32_t num_db_insert, num_db_insert_failed;
-extern int is_db_enabled();
-extern void initDB();
-extern void termDB();
+extern int is_db_enabled(void);
+extern void initDB(void);
+extern void termDB(void);
 extern int dump_session_to_db(IPSession *sess);
 extern int insert_flow_record(u_int16_t probeId,
 			      u_int32_t srcAddr, u_int32_t dstAddr,
