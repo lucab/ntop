@@ -233,7 +233,7 @@ void printPdaSummaryData(void) {
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),"<tr><td>Sampling Time</td>"
 	      "<td>%s</td></tr>\n",
-	      formatSeconds(myGlobals.actTime-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
+	      formatSeconds((long)(myGlobals.actTime-myGlobals.initialSniffTime), formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   /** **/

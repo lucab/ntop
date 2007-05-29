@@ -6742,7 +6742,7 @@ void mkdir_p(char *tag, char *path, int permission) {
       if(strcmp(tag, "RRD") == 0)
         traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
 #endif
-      rc = _mkdir(path, permission);
+      rc = ntop_mkdir(path, permission);
       if((rc != 0) && (errno != EEXIST) )
 	traceEvent(CONST_TRACE_WARNING, "RRD: [path=%s][error=%d/%s]",
 		   path,
@@ -6755,7 +6755,7 @@ void mkdir_p(char *tag, char *path, int permission) {
   if(strcmp(tag, "RRD") == 0)
     traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
 #endif
-  _mkdir(path, permission);
+  ntop_mkdir(path, permission);
 
   if((rc != 0) && (errno != EEXIST) )
     traceEvent(CONST_TRACE_WARNING, "%s: mkdir(%s), error %d %s",

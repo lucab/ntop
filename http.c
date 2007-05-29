@@ -2533,7 +2533,7 @@ static int returnHTTPPage(char* pageName,
       if(domainNameParm != NULL) free(domainNameParm);
       if(db_key != NULL) free(db_key);
       if(db_val != NULL) free(db_val);
-      return (0);
+      return(0);
     }
 
     /*
@@ -2557,7 +2557,7 @@ static int returnHTTPPage(char* pageName,
       if(domainNameParm != NULL) free(domainNameParm);
       if(db_key != NULL) free(db_key);
       if(db_val != NULL) free(db_val);
-      return (0);
+      return(0);
     }
 
 #if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))

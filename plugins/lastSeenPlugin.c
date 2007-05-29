@@ -121,7 +121,7 @@ static void handleLsPacket(u_char *_deviceId,
   HostI.LastUpdated = myGlobals.actTime;
 
   safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%u", (unsigned) ip.ip_src.s_addr);
-  key_data.dptr = tmpStr; key_data.dsize = strlen(key_data.dptr)+1;
+  key_data.dptr = tmpStr; key_data.dsize = (int)strlen(key_data.dptr)+1;
   data_data.dptr = (char *)&HostI;
   data_data.dsize = sizeof(HostI)+1;
 
@@ -230,7 +230,7 @@ static void processHTMLrequest(char* url) {
     safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "N_%u", (unsigned)tablehost[entry].HostIpAddress.Ip4Address.s_addr);
 
     key_data.dptr = tmpStr;
-    key_data.dsize = strlen(key_data.dptr)+1;
+    key_data.dsize = (int)strlen(key_data.dptr)+1;
 		
     content = gdbm_fetch(LsDB,key_data);
     strncpy(HostN.note, no_note, sizeof(HostN.note));	
@@ -316,7 +316,7 @@ static void addNotes(char *addr, char *PostNotes) {
   safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "N_%s",addr);
 
   key_data.dptr = tmpStr;
-  key_data.dsize = strlen(key_data.dptr)+1;
+  key_data.dsize = (int)strlen(key_data.dptr)+1;
   data_data.dptr = (char *)&HostN;
   data_data.dsize = sizeof(HostN)+1;
 
@@ -340,7 +340,7 @@ static void NotesURL(char *addr, char *ip_addr) {
 
   safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "N_%s",addr);
   key_data.dptr = tmpStr;
-  key_data.dsize = strlen(key_data.dptr)+1;
+  key_data.dsize = (int)strlen(key_data.dptr)+1;
 
   content = gdbm_fetch(LsDB,key_data);
 
@@ -374,11 +374,11 @@ static void deletelastSeenURL( char *addr ) {
   safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "N_%s",addr);
 
   key_data.dptr = addr;
-  key_data.dsize = strlen(key_data.dptr)+1;
+  key_data.dsize = (int)strlen(key_data.dptr)+1;
 
   gdbm_delete(LsDB,key_data);  /* Record */
   key_data.dptr = tmpStr;
-  key_data.dsize = strlen(key_data.dptr)+1;
+  key_data.dsize = (int)strlen(key_data.dptr)+1;
   gdbm_delete(LsDB,key_data);  /* Notes */
 }
 

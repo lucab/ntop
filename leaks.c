@@ -191,10 +191,14 @@ void ntop_safefree(void **ptr, char* file, int line) {
 char* ntop_safestrdup(char *ptr, char* file, int line) {  
   if(ptr == NULL) {
     traceEvent(CONST_TRACE_WARNING, "strdup of NULL pointer @ %s:%d", file, line);
-    return(strdup(""));
+#ifdef WIN32
+	return(_strdup(""));
+#else
+	return(strdup(""));
+#endif
   } else {
     char* theOut;
-    int len = strlen(ptr);
+    int len = (int)strlen(ptr);
     
 #ifndef USE_GC
     theOut = (char*)malloc((len+1)*sizeof(char));

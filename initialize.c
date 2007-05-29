@@ -1107,13 +1107,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
   }
 
   /* Remove unwanted characters */
-  for(i=0; i<strlen(deviceDescr); i++)
-    switch(deviceDescr[i]) {
-    case ':':
-    case '/':
-    case '\\':
-      deviceDescr[i] = '_';
-    }
+ sanitizeIfName(deviceName);
 
   traceEvent(CONST_TRACE_NOISY, "Adding network device %s", deviceName);
 

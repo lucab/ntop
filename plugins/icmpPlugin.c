@@ -614,7 +614,7 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
       sendString("</TR>\n");
 
       /* Avoid huge tables */
-      if(printedEntries++ > myGlobals.runningPref.maxNumLines)
+      if(printedEntries++ > (u_int)myGlobals.runningPref.maxNumLines)
 	break;
     }
 
@@ -632,9 +632,6 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   char  **lbls, *strtokState;
   float *s, *r;  
   int icmpColumnSort = 0;
-#ifdef WIN32
-  char fileName[256];
-#endif
 
   i = sizeof(float)*myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
   s = (float*)malloc(i); r = (float*)malloc(i);
@@ -678,64 +675,6 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
   } else /* host=3240847503&icmp=3 */ {
     char *tmpStr;
-
-#ifndef EMBEDDED
-#ifdef CFG_USE_GRAPHICS
-    if(strncmp(url, "chart", strlen("chart")) == 0) {
-
-      /* Avoid to draw too many entries */
-      if(num > myGlobals.runningPref.maxNumLines) num = myGlobals.runningPref.maxNumLines;
-
-      if(icmpColumnSort<0) icmpColumnSort=0;
-      if(icmpColumnSort>cmpFctnICMPmax) icmpColumnSort=0;
-
-      qsort(hosts, num, sizeof(HostTraffic **), cmpFctnICMP[icmpColumnSort]);
-
-      for(i=0; i<num; i++) {
-	if(hosts[i] != NULL) {
-	  int j;
-
-	  s[tot] = 0, r[tot] = 0;
-
-	  for(j=0; j<ICMP_MAXTYPE; j++) {
-#ifdef DEBUG
-	    traceEvent(CONST_TRACE_INFO, "idx=%d/type=%d: %d/%d", i, j,
-		       hosts[i]->icmpInfo->icmpMsgSent[j].value,
-		       hosts[i]->icmpInfo->icmpMsgRcvd[j].value);
-#endif
-	    s[tot] += (float)(hosts[i]->icmpInfo->icmpMsgSent[j].value);
-	    r[tot] += (float)(hosts[i]->icmpInfo->icmpMsgRcvd[j].value);
-	  }
-
-	  lbls[tot++] = hosts[i]->hostResolvedName;
-	}
-      }
-
-      /* traceEvent(CONST_TRACE_INFO, "file=%s", fileName); */
-
-      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0, 1);
-
-#ifndef WIN32
-      fd = fdopen(abs(myGlobals.newSock), "ab");
-#else
-      fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
-      drawBar(600, 450,           /* width, height           */
-	      fd,                 /* open FILE pointer       */
-	      tot,                /* num points per data set */
-	      lbls,               /* X labels array of char* */
-	      s);                /* dataset 2               */
-
-      fclose(fd);
-
-#ifdef WIN32
-      sendGraphFile(fileName, 0);
-#endif
-      return;
-    }
-#endif
-#endif /* EMBEDDED */
 
     strtok_r(url, "=", &strtokState);
 

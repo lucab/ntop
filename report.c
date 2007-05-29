@@ -4352,7 +4352,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 			   "</td><td><A HREF=\"/plugins/rrdPlugin?mode=zoom&action=graphSummary&graphId=4&"
 			   "key=interfaces/%s/&start=%u&end=%u\"><IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></tr></table></TD></TR>",
-			   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, now - 12 * 3600, now);
+			   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (u_int)(now - 12 * 3600), (u_int)now);
 	     sendString(buf);
 	   }
 
@@ -6123,21 +6123,21 @@ void printVLANList(unsigned int deviceId) {
 /* ******************************************* */
 
 static int recentlyUsedPort(HostTraffic *el, int portNr, int serverPort) {
-  int i;
+	int i;
 
-  if(el == NULL) return(0);
+	if(el == NULL) return(0);
 
-  for(i=0; i<MAX_NUM_RECENT_PORTS; i++) {
-    if(serverPort) {
-      if(el->recentlyUsedServerPorts[i] == portNr)
-	return(1);
-    } else {
-      if(el->recentlyUsedClientPorts[i] == portNr)
-	return(1);
-    }
-  }
+	for(i=0; i<MAX_NUM_RECENT_PORTS; i++) {
+		if(serverPort) {
+			if(el->recentlyUsedServerPorts[i] == portNr)
+				return(1);
+		} else {
+			if(el->recentlyUsedClientPorts[i] == portNr)
+				return(1);
+		}
+	}
 
-  return(0);
+	return(0);
 }
 
 /* ******************************************* */
@@ -6198,9 +6198,9 @@ void showPortTraffic(u_short portNr) {
   recentlyUsedPortRcvd:
     if(recentlyUsedPort(el, portNr, 1)) {
       if(numRecords == 0) {
-	sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "DARK_BG"><TH>Client</TH><TH>Server</TH></TR>\n");
-	sendString("<TR>\n<TD>\n");
-	sendString("\n&nbsp;\n</TD><TD nowrap><ul>\n");
+		sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "DARK_BG"><TH>Client</TH><TH>Server</TH></TR>\n");
+		sendString("<TR>\n<TD>\n");
+		sendString("\n&nbsp;\n</TD><TD nowrap><ul>\n");
       }
 
       sendString("\n<LI> ");
@@ -6219,7 +6219,13 @@ void showPortTraffic(u_short portNr) {
   }
 
   if(numRecords == 0) {
-    sendString("<P>No hosts found: the information for this port has been purged in the meantime</CENTER><P>\n");
+	  safe_snprintf(__FILE__, __LINE__, hostLinkBuf, sizeof(hostLinkBuf),
+		  "<P>No hosts found: the information for this port "
+		  "has been purged in the meantime <br>"
+		  "as each host keeps the last %d server/client ports only.</CENTER><P>\n",
+		  MAX_NUM_RECENT_PORTS);
+
+		  sendString(hostLinkBuf);
   } else
     sendString("\n&nbsp;\n</ul></TD>\n</TR>\n</TABLE>\n</CENTER>");
 

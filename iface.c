@@ -728,6 +728,24 @@ int iface_getalladdr(int type, int *size, char **addr){
 
 /* ********************************************************************** */
 
+void sanitizeIfName(char *deviceDescr) {
+#ifdef WIN32
+	int i;
+
+	for(i=0; i<strlen(deviceDescr); i++)
+    switch(deviceDescr[i]) {
+    case ':':
+    case '/':
+    case '\\':
+	case '.':
+	case ' ':
+      deviceDescr[i] = '_';
+    }
+#endif
+}
+
+/* ********************************************************************** */
+
 void calculateUniqueInterfaceName(int deviceId) {
 #ifdef WIN32
   int i;
@@ -737,18 +755,7 @@ void calculateUniqueInterfaceName(int deviceId) {
     free(myGlobals.device[deviceId].uniqueIfName);
 
   myGlobals.device[deviceId].uniqueIfName = strdup(myGlobals.device[deviceId].humanFriendlyName);
-  
-#ifdef WIN32
-  for(i=0; i<strlen(myGlobals.device[deviceId].uniqueIfName); i++) {
-    switch(myGlobals.device[deviceId].uniqueIfName[i]) {
-    case '/':
-    case '\\':
-    case ':':
-      myGlobals.device[deviceId].uniqueIfName[i] = '_';
-      break;
-    }
-  }
-#endif
+  sanitizeIfName(myGlobals.device[deviceId].uniqueIfName);
 }
 
 /* ********************************************************************** */

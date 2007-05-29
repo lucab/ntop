@@ -1954,9 +1954,9 @@ typedef enum {
 #endif
 
 #ifdef WIN32
-#define _mkdir(a, b) mkdir(a)
+#define ntop_mkdir(a, b) _mkdir(a)
 #else
-#define _mkdir(a, b) mkdir(a, b)
+#define ntop_mkdir(a, b) mkdir(a, b)
 #endif
 
 

@@ -59,6 +59,9 @@ typedef int NDIS_STATUS, *PNDIS_STATUS;
 extern int getopt(int num, char *const *argv, const char *opts);
 #define getopt getopt____
 
+#define unlink(a) _unlink(a)
+#define close(a) _close(a)
+
 #if defined(__GNUC__)
 /* on mingw, struct timezone isn't defined so s/struct timezone/void/ - Scott Renfro <scott@renfro.org> */
 extern int gettimeofday(struct timeval*, void*);

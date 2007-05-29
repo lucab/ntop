@@ -667,6 +667,26 @@ static void sendGraphFile(char* fileName, int doNotUnlink) {
   }
 }
 
+/* ******************************* */
+
+static char* sanitizeRrdPath(char *in_path) {
+#ifdef WIN32
+	if(in_path[1] == ':') {
+		char *tmpStr;
+
+		tmpStr = (char*)malloc(strlen(in_path)+2);
+		if(tmpStr) {
+			tmpStr[0] = in_path[0];
+			tmpStr[1] = '\\';
+			strcpy(&tmpStr[2], &in_path[1]);
+			strcpy(in_path, tmpStr);
+			free(tmpStr);
+		}
+	}
+#endif
+	return(in_path);
+}
+
 /* ******************************************* */
 
 static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdCounter,
@@ -777,6 +797,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 #endif
 #endif
     revertDoubleColumnIfWIN32(path);
+	sanitizeRrdPath(path);
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "DEF:ctr=%s:counter:AVERAGE", path);
     argv[argc++] = buf;
     safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "AREA:ctr#00a000:%s",
@@ -1917,7 +1938,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	char metric_name[32];
 
 	safe_snprintf(__FILE__, __LINE__, buf0[entryId], 2*MAX_BUF_LEN,
-		      "DEF:ctr%d=%s:counter:AVERAGE", entryId, path);
+		      "DEF:ctr%d=%s:counter:AVERAGE", entryId, sanitizeRrdPath(path));
 	argv[argc++] = buf0[entryId];	
 	safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
 		      "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
@@ -2716,14 +2737,22 @@ static void arbitraryAction(char *rrdName,
                             char _which,
 			    char *mode) {
   int i, len, rc=0, argc = 0, argc1 = 0, countOK=0, countZERO=0;
-  char buf[LEN_GENERAL_WORK_BUFFER], rrdKey[64], *startTime, *endTime;
+  char buf[LEN_GENERAL_WORK_BUFFER], rrdKey[64], *startTime, *endTime, time_buf[32];
   time_t the_time;
   struct tm *the_tm;
 
   startTime = _startTime, endTime = _endTime;
+
+  if(atol(endTime) == 0) {
+	  snprintf(time_buf, sizeof(time_buf), "%u", (u_int)time(NULL));
+	  endTime = time_buf;
+  }
+
   if(atol(startTime) > atol(endTime)) {
     startTime = endTime;
   }
+
+
 
   if(!strcmp(mode, "zoom")) {
     char buf1[LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
@@ -4401,7 +4430,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   active = 1; /* Show we are running */
 
   safe_snprintf(__FILE__, __LINE__, dname, sizeof(dname), "%s", myGlobals.rrdPath);
-  if(_mkdir(dname, myGlobals.rrdDirectoryPermissions) == -1) {
+  if(ntop_mkdir(dname, myGlobals.rrdDirectoryPermissions) == -1) {
     if(errno != EEXIST) {
       traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create base directory (err %d, %s)",
 		 errno, dname);
@@ -4417,7 +4446,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     safe_snprintf(__FILE__, __LINE__, dname, sizeof(dname), "%s/%s", myGlobals.rrdPath, rrd_subdirs[i]);
 	revertSlashIfWIN32(dname, 0);
 
-    if(_mkdir(dname, myGlobals.rrdDirectoryPermissions) == -1) {
+    if(ntop_mkdir(dname, myGlobals.rrdDirectoryPermissions) == -1) {
       if(errno != EEXIST) {
 	traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)", errno, dname);
         setPluginStatus("Disabled - unable to create rrd subdirectory.");
