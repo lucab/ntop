@@ -53,6 +53,7 @@ static struct sockaddr_in cliAddr, remoteServAddr;
 
 #ifdef WIN32
 int optind, opterr;
+unsigned long driveSerial;
 #else
 static u_short dumpPermissions;
 #endif
@@ -712,9 +713,13 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   if(strstr(rrdName, "AS"))
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/AS/%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
   else {
-    if(!strcmp(rrdName, "throughput"))
+	  if(!strcmp(rrdName, "throughput")) {
+#ifdef WIN32
+	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd", myGlobals.spoolPath, driveSerial, rrdPath, rrdName);
+#else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.spoolPath, rrdPath, rrdName);
-    else
+#endif
+	  } else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
   }
 
@@ -1082,9 +1087,13 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
   for(i=0, entryId=0; rrds[i] != NULL; i++) {
     struct stat statbuf;
 
-    if(!strcmp(rrds[i], "throughput"))
+	if(!strcmp(rrds[i], "throughput")) {
+#ifdef WIN32
+	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd", myGlobals.spoolPath, driveSerial, rrdPath, rrds[i]);
+#else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.spoolPath, rrdPath, rrds[i]);
-    else
+#endif
+	} else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrds[i]);
 
     revertSlashIfWIN32(path, 0);
@@ -1380,10 +1389,15 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
   for(i=0, entryId=0; rrds[i] != NULL; i++) {
     struct stat statbuf;
 
-    if(!strcmp(rrds[i], "throughput"))
+	if(!strcmp(rrds[i], "throughput")) {
+#ifdef WIN32
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s/%s/%s.rrd",
+		    myGlobals.spoolPath, driveSerial, rrd_subdirs[2], rrdPath, rrds[i]);
+#else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/%s/%s.rrd",
 		    myGlobals.spoolPath, rrd_subdirs[2], rrdPath, rrds[i]);
-    else
+#endif
+	} else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/%s/%s.rrd",
 		    myGlobals.rrdPath, rrd_subdirs[2], rrdPath, rrds[i]);
 
@@ -2471,9 +2485,7 @@ static void setGlobalPermissions(int permissionsFlag) {
 static void commonRRDinit(void) {
   char value[1024];
 
-#ifdef WIN32
-  unsigned long driveSerial;
-  
+#ifdef WIN32  
   get_serial(&driveSerial);
 #endif
 
@@ -2638,13 +2650,6 @@ static void commonRRDinit(void) {
     if(myGlobals.rrdPath) free(myGlobals.rrdPath);
     myGlobals.rrdPath = (char*)malloc(len);
 #ifdef WIN32
-    /*
-      RRD does not accept ':' in path names as this
-      char is used as separator.
-    */
-
-    //if(myGlobals.dbPath[1] == ':') idx = 2; /* e.g. c:/... */
-
     safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath, len, 
 		  "%s/%u%s", &myGlobals.dbPath[idx], driveSerial, thePath);
     revertSlashIfWIN32(myGlobals.rrdPath, 0);
@@ -2950,9 +2955,13 @@ static void arbitraryAction(char *rrdName,
     memset(&rptTime, 0, sizeof(rptTime));
     memset(&startWorkTime, 0, sizeof(startWorkTime));
 
-    if(!strcmp(rrdName, "throughput"))
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.spoolPath, rrdKey, rrdName);
-    else
+	if(!strcmp(rrdName, "throughput")) {
+#ifdef WIN32
+        safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd", myGlobals.spoolPath, driveSerial, rrdKey, rrdName);
+#else
+		safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.spoolPath, rrdKey, rrdName);
+#endif
+	} else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdKey, rrdName);
 
     if(_which == CONST_ARBITRARY_RRDREQUEST_FETCHME[0]) {
@@ -3636,16 +3645,6 @@ static void handleRRDHTTPrequest(char* url) {
 	} else if(strcmp(key, "rrdPath") == 0) {
 	  int vlen = strlen(value)+1;
           idx = 0;
-
-#ifdef WIN32
-	  /*
-	    RRD does not accept ':' in path names as this
-	    char is used as separator.
-	  */
-
-	  if(value[1] == ':') idx = 2; /* e.g. c:/... */
-#endif
-
 	  vlen -= idx;
 	  if(myGlobals.rrdPath != NULL) free(myGlobals.rrdPath);
 	  myGlobals.rrdPath  = (char*)malloc(vlen);
@@ -4358,9 +4357,15 @@ static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
 	 || (!myGlobals.device[devIdx].activeDevice))
 	continue;
 
+#ifdef WIN32
+      safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/%u/interfaces/%s/", 
+		    myGlobals.spoolPath, driveSerial,
+                    myGlobals.device[devIdx].uniqueIfName);
+#else
       safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/", 
 		    myGlobals.spoolPath,
                     myGlobals.device[devIdx].uniqueIfName);
+#endif
       mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
       updateCounter(rrdPath, "throughput", myGlobals.device[devIdx].ethernetBytes.value*8, 1);

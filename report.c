@@ -5027,9 +5027,21 @@ void printThptStats(int sortedColumn _UNUSED_) {
     */
 
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+#ifdef WIN32
+	  {
+		  unsigned long driveSerial;
+
+		  get_serial(&driveSerial);
+
+		  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/%u/interfaces/%s/throughput.rrd",
+			  myGlobals.rrdPath != NULL ? myGlobals.spoolPath : ".", driveSerial,
+			  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+	  }
+#else
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/interfaces/%s/throughput.rrd",
 		  myGlobals.rrdPath != NULL ? myGlobals.spoolPath : ".",
 		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+#endif
 
     revertSlashIfWIN32(tmpBuf, 0);
 
