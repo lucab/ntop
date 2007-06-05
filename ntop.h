@@ -338,10 +338,6 @@ ntop.h
 #if defined(WIN32) && defined(__GNUC__)
  #include "bpf.h"
  #include "pcap.h"
-#else
-#if !defined(WIN32)
-#include <pcap-bpf.h>
-#endif
 #endif
 
 /* **************************************************************************************
@@ -562,10 +558,6 @@ void          rewinddir(DIR *);
 /* *************************************************************** */
 
 #define HAVE_RRD
-
-#ifdef FREEBSD
-#define HANDLE_DIED_CHILD
-#endif
 
 #include "iface.h"
 

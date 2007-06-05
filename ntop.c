@@ -120,7 +120,6 @@ void* pcapDispatch(void *_i) {
 /* **************************************** */
 
 #ifndef WIN32
-#ifdef HANDLE_DIED_CHILD
 RETSIGTYPE handleDiedChild(int sig _UNUSED_) {
   int status;
   pid_t pidId;
@@ -136,11 +135,8 @@ RETSIGTYPE handleDiedChild(int sig _UNUSED_) {
 #endif
   }
 
-#ifdef HANDLE_DIED_CHILD
   signal(SIGCHLD, handleDiedChild);
-#endif
 }
-#endif
 #endif
 
 /* **************************************** */

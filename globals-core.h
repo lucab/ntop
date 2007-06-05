@@ -358,13 +358,10 @@ extern void  ntop_gdbm_close(GDBM_FILE g, char* theFile, int theLine);
 /* ntop.c */
 #ifndef WIN32
 extern void handleSigHup(int signalId);
-#endif
-extern void *pcapDispatch(void *_i);
-#ifndef WIN32
-#ifdef HANDLE_DIED_CHILD
 extern RETSIGTYPE handleDiedChild(int);
 #endif
-#endif
+
+extern void *pcapDispatch(void *_i);
 extern void daemonizeUnderUnix(void);
 extern void detachFromTerminalUnderUnix(int);
 extern void createPortHash(void);

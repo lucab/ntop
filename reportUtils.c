@@ -5009,17 +5009,20 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
     return;
   memset(bufAttempt, 0, sizeof(bufAttempt));
   if(mutexId->attempt.time.tv_sec > 0) {
-    strftime(bufAttempt, sizeof(bufAttempt), CONST_LOCALE_TIMESPEC, localtime_r(&mutexId->attempt.time.tv_sec, &t));
+    strftime(bufAttempt, sizeof(bufAttempt), CONST_LOCALE_TIMESPEC, 
+	     localtime_r((const time_t*)&mutexId->attempt.time.tv_sec, &t));
     strncat(bufAttempt, "<br>\n", (sizeof(bufAttempt) - strlen(bufAttempt) - 1));
   }
   memset(bufLock, 0, sizeof(bufLock));
   if(mutexId->lock.time.tv_sec > 0) {
-    strftime(bufLock, sizeof(bufLock), CONST_LOCALE_TIMESPEC, localtime_r(&mutexId->lock.time.tv_sec, &t));
+    strftime(bufLock, sizeof(bufLock), CONST_LOCALE_TIMESPEC,
+	     localtime_r((const time_t*)&mutexId->lock.time.tv_sec, &t));
     strncat(bufLock, "<br>\n", (sizeof(bufLock) - strlen(bufLock) - 1));
   }
   memset(bufUnlock, 0, sizeof(bufUnlock));
   if(mutexId->unlock.time.tv_sec > 0) {
-    strftime(bufUnlock, sizeof(bufUnlock), CONST_LOCALE_TIMESPEC, localtime_r(&mutexId->unlock.time.tv_sec, &t));
+    strftime(bufUnlock, sizeof(bufUnlock), CONST_LOCALE_TIMESPEC, 
+	     localtime_r((const time_t*)&mutexId->unlock.time.tv_sec, &t));
     strncat(bufUnlock, "<br>\n", (sizeof(bufUnlock) - strlen(bufUnlock) - 1));
   }
   if(textPrintFlag == TRUE) {

@@ -56,11 +56,11 @@ static char __see__ []    =
    * ('P' option) and so these are processed separately.
    */
 #ifdef WIN32
-static char*  short_options = "4:6:a:bce:f:ghi:jl:m:nop:qr:st:w:x:zAB:C:D:F:MN:O:P:Q:S:U:VX:W:";
+static char*  short_options = "46a:bce:f:ghi:jl:m:nop:qr:st:w:x:zAB:C:D:F:MN:O:P:Q:S:U:VX:W:";
 #elif defined(MAKE_WITH_SYSLOG)
-static char*  short_options = "4:6:a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKLMN:O:P:Q:S:U:VX:W:";
+static char*  short_options = "46a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKLMN:O:P:Q:S:U:VX:W:";
 #else
-static char*  short_options = "4:6:a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKMN:O:P:Q:S:U:VX:W:";
+static char*  short_options = "46a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKMN:O:P:Q:S:U:VX:W:";
 #endif
 
 static struct option const long_options[] = {

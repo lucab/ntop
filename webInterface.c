@@ -8177,6 +8177,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 #else
   rc = bind(*sock, (struct sockaddr *)&sockIn, sizeof(sockIn));
 #endif
+
   if((rc < 0) || (errno != 0)) {
     closeNwSocket(&myGlobals.sock);
     traceEvent(CONST_TRACE_ERROR,

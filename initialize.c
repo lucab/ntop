@@ -1822,10 +1822,6 @@ static void ignoreThisSignal(int signalId) {
 
 /* ******************************* */
 
-#ifdef HANDLE_DIED_CHILD
-extern RETSIGTYPE handleDiedChild(int sig _UNUSED_); /*FreeBSD hack: to remove */
-#endif
-
 void initSignals(void) {
   /*
     The handler below has been restored due
@@ -1833,11 +1829,7 @@ void initSignals(void) {
     Courtesy of Martin Lucina <mato@kotelna.sk>
   */
 #ifndef WIN32
-#ifdef HANDLE_DIED_CHILD
   signal(SIGCHLD, handleDiedChild);
-#else
-  signal(SIGCHLD, SIG_IGN);
-#endif
 #endif
 
 #ifndef WIN32

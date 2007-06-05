@@ -35,7 +35,7 @@ INCS      = @INCS@
 
 INCLUDES  = -I. $(INCS) ${RRD_INC}
 LIBS      = 
-BASE_LIBS = @LIBS@ ${RRD_LIB}
+BASE_LIBS = @LIBS@ @CORELIBS@ ${RRD_LIB}
 AS        = @AS@
 AWK       = @AWK@
 CC        = @CC@

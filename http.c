@@ -529,6 +529,7 @@ static void ssiMenu_Head() {
 		  "	[null,'About',null,null,null,\n"
 		  "		[null,'What is ntop?','/" CONST_ABTNTOP_HTML "',null,null],\n"
 		  "		[null,'Credits','/" CONST_CREDITS_HTML "',null,null],\n"
+		  "		[null,'Make a Donation', 'http://shop.ntop.org/',null,null],\n"
 
 
 		  "  [null,'ntop World',null,null,null,\n"
@@ -2562,13 +2563,7 @@ static int returnHTTPPage(char* pageName,
 
 #if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
     if(!myGlobals.runningPref.debugMode) {
-#ifdef HANDLE_DIED_CHILD
-      handleDiedChild(0); /*
-			    Workaround because on this OpenBSD and
-			    other platforms signal handling is broken as the system
-			    creates zombies although we decided to ignore SIGCHLD
-			  */
-#endif /* HANDLE_DIED_CHILD */
+      handleDiedChild(0);
 
 #if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
       /* Child processes must log to syslog.
