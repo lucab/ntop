@@ -23,9 +23,6 @@
 #ifdef MAKE_STATIC_PLUGIN
 extern PluginInfo* icmpPluginEntryFctn(void);
 extern PluginInfo* sflowPluginEntryFctn(void);
-#ifdef HAVE_SNMP
-extern PluginInfo *snmpPluginEntryFctn(void);
-#endif
 #ifndef EMBEDDED
 extern PluginInfo* rrdPluginEntryFctn(void);
 #endif
@@ -89,10 +86,6 @@ static void loadPlugin(char* dirName, char* pluginName) {
     pluginInfo = sflowPluginEntryFctn();
   else if(strcmp(pluginName, "netflowPlugin") == 0)
     pluginInfo = netflowPluginEntryFctn();
-#ifdef HAVE_SNMP
-  else if(strcmp(pluginName, "snmpPlugin") == 0)
-    pluginInfo = snmpPluginEntryFctn();
-#endif
 #ifndef EMBEDDED
   else if(strcmp(pluginName, "rrdPlugin") == 0)
     pluginInfo = rrdPluginEntryFctn();
