@@ -560,20 +560,6 @@ case "${target}:${CC}" in
         ;;
 esac
 
-
-
-
-dnl> Specific compiler feature tests
-AC_C_CONST
-AC_C_VOLATILE
-AC_C_INLINE
-AC_C_CHAR_UNSIGNED
-AC_C_LONG_DOUBLE  
-
-AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(CFG_BIG_ENDIAN, 1, [ntop built for big endian machine])],
-               [AC_DEFINE_UNQUOTED(CFG_LITTLE_ENDIAN, 1,  [ntop built for little endian machine])],
-               [AC_DEFINE_UNQUOTED(CFG_UNKNOWN_ENDIAN, 1, [ntop built for unknown machine])])
-
 dnl> Presets for the make flags go here...
 CFLAGS="${CFLAGS}"
 CPPFLAGS="${CPPFLAGS}"
@@ -645,28 +631,14 @@ elif test -r /usr/lib/libpcap.a &&
        INCS="${INCS} -I/usr/include/pcap"
        AC_MSG_RESULT([found in $PCAP_ROOT])
 else
-     AC_CHECK_LIB(pcap, pcap_lookupdev)
-     if test "$ac_tr_lib" != "HAVE_LIBPCAP"; then
-       AC_MSG_RESULT([not found!])
+     AC_CHECK_LIB(pcap, pcap_lookupdev, , [
        AC_MSG_RESULT([             *** FATAL ERROR ***             ])
        AC_MSG_RESULT([ It looks that you don't have the libpcap distribution installed.])
        AC_MSG_RESULT([ Download, compile and, optionally, install it.])
        AC_MSG_RESULT([ When finished please re-run this program.])
        AC_MSG_RESULT([ You can download the latest source tarball at http://www.tcpdump.org/])
        AC_MSG_ERROR([ The LBL Packet Capture Library, libpcap, was not found! ])
-     else
-	if test -r /usr/include/pcap/pcap.h; then
-	       INCS="${INCS} -I/usr/include/pcap"
-	       PCAP_ROOT="standard installation"
-	else
-       AC_MSG_RESULT([             *** FATAL ERROR ***             ])
-       AC_MSG_RESULT([ It looks that you don't have the libpcap distribution installed.])
-       AC_MSG_RESULT([ Download, compile and, optionally, install it.])
-       AC_MSG_RESULT([ When finished please re-run this program.])
-       AC_MSG_RESULT([ You can download the latest source tarball at http://www.tcpdump.org/])
-       AC_MSG_ERROR([ The LBL Packet Capture Library, libpcap, was not found! ])
-	fi
-     fi
+       		     ])
 fi
 AC_CHECK_LIB([pcap], [pcap_next_ex], AC_DEFINE_UNQUOTED(HAVE_PCAP_NEXT_EX, 1, [pcap has pcap_next_ex]))
 
@@ -997,6 +969,18 @@ if test ".${LOCALEDIR}" != "." &&
     echo
     HAS_WARNING="yes"
 fi
+
+dnl> Specific compiler feature tests
+AC_C_CONST
+AC_C_VOLATILE
+AC_C_INLINE
+AC_C_CHAR_UNSIGNED
+AC_C_LONG_DOUBLE  
+
+AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(CFG_BIG_ENDIAN, 1, [ntop built for big endian machine])],
+               [AC_DEFINE_UNQUOTED(CFG_LITTLE_ENDIAN, 1,  [ntop built for little endian machine])],
+               [AC_DEFINE_UNQUOTED(CFG_UNKNOWN_ENDIAN, 1, [ntop built for unknown machine])])
+
 
 dnl> NTOPCONFIGDEBUG_SETTINGS([After libraries])
 
@@ -1626,16 +1610,15 @@ if test ".${ac_disable_snmp}" != ".yes"; then
   AC_CHECK_TOOL(NETSNMP, net-snmp-config)
   if test "x$ac_cv_prog_ac_ct_NETSNMP" = "xnet-snmp-config"; then
     AC_DEFINE_UNQUOTED(HAVE_SNMP, 1, [SNMP is supported])
-    SNMPLIBS="`net-snmp-config --agent-libs`"
+    SNMPLIBS="`net-snmp-config --libs`"
     SNMPLIBS="`echo ${SNMPLIBS}|sed -e s,'-R../lib',,g`"
     echo "net-snmp libs: ${SNMPLIBS}"
     LIBS="${LIBS} ${SNMPLIBS}"
-dnl    INCS="${INCS} `net-snmp-config --cflags`"
-
 dnl remove unecessary path       
-       LIBS=`echo ${LIBS}|sed -e s,'-R../lib',,g`
+    LIBS=`echo ${LIBS}|sed -e s,'-R../lib',,g`
+    INCS="${INCS} `net-snmp-config --cflags`"
   else
-    AC_MSG_RESULT("NET-SNMP is not present: SNMP support is disabled")
+    AC_MSG_RESULT(NET-SNMP is not present: SNMP support is disabled)
   fi
 fi
 

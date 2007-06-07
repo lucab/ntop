@@ -49,7 +49,6 @@ noinst_PROGRAMS = \
                   pdaPlugin.so \
                   remotePlugin.so \
                   rrdPlugin.so \
-                  snmpPlugin.so \
                   sflowPlugin.so
 
 lib_LTLIBRARIES = \
@@ -59,7 +58,6 @@ lib_LTLIBRARIES = \
                   libpdaPlugin.la \
                   libremotePlugin.la \
                   librrdPlugin.la \
-                  libsnmpPlugin.la \
                   libsflowPlugin.la
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
@@ -86,11 +84,6 @@ librrdPlugin_la_SOURCES = rrdPlugin.c
 librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 librrdPlugin_la_LIBADD = ${RRD_LIB}
 librrdPlugin_la_CFLAGS = $(AM_CFLAGS)
-
-libsnmpPlugin_la_SOURCES = snmpPlugin.c
-libsnmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-libsnmpPlugin_la_LIBADD = @SNMP_LIBS@
-libsnmpPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 libsflowPlugin_la_SOURCES = sflowPlugin.c
 libsflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
@@ -171,18 +164,6 @@ remotePlugin.so$(EXEEXT): .libs/libremotePlugin.so@SO_VERSION_PATCH@
 
 rrdPlugin.so$(EXEEXT): .libs/librrdPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/librrdPlugin.so rrdPlugin.so
-
-###############
-
-.libs/libsnmpPlugin.so@SO_VERSION_PATCH@:
-	@if test -f libsnmpPlugin_la-snmpPlugin.o; then \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libsnmpPlugin.so@SO_VERSION_PATCH@ libsnmpPlugin_la-snmpPlugin.o; \
-	else \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libsnmpPlugin.so@SO_VERSION_PATCH@ snmpPlugin.o; \
-	fi
-
-snmpPlugin.so$(EXEEXT): .libs/libsnmpPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/libsnmpPlugin.so snmpPlugin.so
 
 ###############
 
