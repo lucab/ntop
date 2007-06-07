@@ -10,6 +10,9 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # $Log$
+# Revision 2.19  2007/06/07 22:28:19  deri
+# FreeBSD fixes
+#
 # Revision 2.18  2007/05/17 15:30:08  deri
 # Added supoport for HTTP 304 that should reduce the amount of traffic exchanged
 # between ntop and web clients.
@@ -368,7 +371,9 @@ echo ""
 # 4. run 'aclocal' to create aclocal.m4 from configure.in (optionally acinclude.m4)
 #
 echo "4. Running aclocal to create aclocal.m4 ..."
-aclocal $ACLOCAL_FLAGS
+
+ACLOCAL=`find_command 'aclocal*'`
+$ACLOCAL $ACLOCAL_FLAGS
 echo "        .... done"
 echo ""
 
