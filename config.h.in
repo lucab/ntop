@@ -45,6 +45,10 @@
 /* Define to 1 if you have the <crypt.h> header file. */
 #undef HAVE_CRYPT_H
 
+/* Define to 1 if you have the declaration of `tzname', and to 0 if you don't.
+   */
+#undef HAVE_DECL_TZNAME
+
 /* Define to 1 if you have the <dirent.h> header file. */
 #undef HAVE_DIRENT_H
 
@@ -84,9 +88,6 @@
 /* Define to 1 if you have the <gdbm.h> header file. */
 #undef HAVE_GDBM_H
 
-/* Define to 1 if you have the <gdome.h> header file. */
-#undef HAVE_GDOME_H
-
 /* Define to 1 if you have the `gethostbyaddr' function. */
 #undef HAVE_GETHOSTBYADDR
 
@@ -110,12 +111,6 @@
 
 /* Define to 1 if you have the `gettimeofday' function. */
 #undef HAVE_GETTIMEOFDAY
-
-/* Define to 1 if you have the <glibconfig.h> header file. */
-#undef HAVE_GLIBCONFIG_H
-
-/* Define to 1 if you have the <glib.h> header file. */
-#undef HAVE_GLIB_H
 
 /* Define to 1 if you have the <icmp6.h> header file. */
 #undef HAVE_ICMP6_H
@@ -222,9 +217,13 @@
 /* Define to 1 if you have the `localtime_r' function. */
 #undef HAVE_LOCALTIME_R
 
-/* Define to 1 if long double works and has more range or precision than
-   double. */
+/* Define to 1 if the type `long double' works and has more range or precision
+   than `double'. */
 #undef HAVE_LONG_DOUBLE
+
+/* Define to 1 if the type `long double' works and has more range or precision
+   than `double'. */
+#undef HAVE_LONG_DOUBLE_WIDER
 
 /* Define to 1 if you have the <math.h> header file. */
 #undef HAVE_MATH_H
@@ -623,7 +622,7 @@
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t
 
-/* Define to `unsigned' if <sys/types.h> does not define. */
+/* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
 
 /* Define as `fork' if `vfork' does not work. */

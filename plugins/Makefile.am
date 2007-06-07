@@ -50,8 +50,7 @@ noinst_PROGRAMS = \
                   remotePlugin.so \
                   rrdPlugin.so \
                   snmpPlugin.so \
-                  sflowPlugin.so \
-                  xmldumpPlugin.so
+                  sflowPlugin.so
 
 lib_LTLIBRARIES = \
                   libicmpPlugin.la \
@@ -61,8 +60,7 @@ lib_LTLIBRARIES = \
                   libremotePlugin.la \
                   librrdPlugin.la \
                   libsnmpPlugin.la \
-                  libsflowPlugin.la \
-                  libxmldumpPlugin.la
+                  libsflowPlugin.la
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
@@ -97,10 +95,6 @@ libsnmpPlugin_la_CFLAGS = $(AM_CFLAGS)
 libsflowPlugin_la_SOURCES = sflowPlugin.c
 libsflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 libsflowPlugin_la_CFLAGS = $(AM_CFLAGS)
-
-libxmldumpPlugin_la_SOURCES = xmldumpPlugin.c
-libxmldumpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-libxmldumpPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 #
 # Dependencies to allow ntop loading plugins on-place

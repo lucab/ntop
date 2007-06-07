@@ -1222,10 +1222,6 @@ AC_CHECK_FUNCS(isinf, ,
     AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]], [[float f = 0.0; isinf(f)]])],[AC_MSG_RESULT(yes)
       AC_DEFINE(HAVE_ISINF,1,we have the isinf function)],[AC_MSG_RESULT(no)])])
 
-dnl> XML dump (plugin)
-AC_CHECK_HEADERS(glib.h glibconfig.h)
-AC_CHECK_HEADERS(gdome.h)
-
 AC_TYPE_PID_T
 dnl> Autoconf2: AC_CHECK_TYPE(pid_t, int)
 AC_TYPE_SIZE_T
@@ -1327,11 +1323,6 @@ dnl>  This is a problem - the test sets HAVE_LIBWRAP, which is the flag in ntop
 dnl>  But we haven't processed --with-tcpwrap yet. So we dummy this out until
 dnl>  such time as we can fix the internal flag in ntop...
 dnl>AC_CHECK_LIB([wrap], [hosts_access])
-
-dnl> XML dump (plugin)
-AC_CHECK_LIB([glib-2.0], [g_date_get_julian], [:])
-AC_CHECK_LIB([xml2], [xmlCheckVersion], [:])
-AC_CHECK_LIB([gdome], [gdome_di_saveDocToFile], [:])
 
 dnl> Functions and types
 AC_FUNC_FORK
@@ -1732,45 +1723,6 @@ if test ".${ac_enable_tcpwrap}" = ".yes"; then
         HAS_WARNING="yes"
     fi
 fi
-
-dnl> xmldump:
-AC_MSG_CHECKING([for xmldump])
-if test ".${ac_cv_header_glib_h}" = ".yes"            &&
-   test ".${ac_cv_header_glibconfig_h}" = ".yes"      &&
-   test ".${ac_cv_header_gdome_h}" = ".yes"           &&
-   test ".${ac_cv_lib_glib_2_0_g_date_get_julian}" = ".yes"   &&
-   test ".${ac_cv_lib_xml2_xmlCheckVersion}" = ".yes" &&
-   test ".${ac_cv_lib_gdome_gdome_di_saveDocToFile}" = ".yes"; then
-    AC_MSG_RESULT(ok)
-else
-    AC_MSG_WARN(error)
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* WARNING:  One or more items required for the xmldump plugin are "
-    echo "*           missing:"
-    echo "*"
-    echo "*                  libxml2.so or libxml2.a...${ac_cv_lib_xml2_xmlCheckVersion}"
-    echo "*                  gdome.h...${ac_cv_header_gdome_h}"
-    echo "*                  libgdome.so or libgdome.a...${ac_cv_lib_gdome_gdome_di_saveDocToFile}"
-    echo "*                  glib.h...${ac_cv_header_glib_h}"
-    echo "*                  libglib.so or libglib.a...${ac_cv_lib_glib_2_0_g_date_get_julian}"
-    echo "*                  glibconfig.h...${ac_cv_header_glibconfig_h}"
-    echo "*"
-    echo "*           (yes means it was found, no means it was not found)"
-    echo "*"
-    echo "*       ntop will run just fine without this plugin."
-    echo "*"
-    echo "*>>>    If you want to use the xmldump plugin,"
-    echo "*"
-    echo "*???     1. Install the necessary headers and libraries."
-    echo "*???    and rerun ./configure"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    HAS_WARNING="yes"
-fi
-
 
 dnl> Test for pthread_atfork()
 if test ".${ac_cv_header_pthread_h}" = ".yes"; then
