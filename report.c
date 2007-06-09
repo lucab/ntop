@@ -4325,40 +4325,63 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
        }
 
  #ifndef EMBEDDED
-       if((numProtosFound > 0) && printGraph) {
-	 struct stat statbuf;
+	   if((numProtosFound > 0) && printGraph) {
+		   struct stat statbuf;
 
-	 if(strcmp(myGlobals.device[0].name, "pcap-file")) {
-	   sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=LEFT BGCOLOR=white>"
-		      "<iframe  frameborder=0 SRC=\"" CONST_BAR_IPPROTO_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+		   if(strcmp(myGlobals.device[0].name, "pcap-file")) {
+			   sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=LEFT BGCOLOR=white>"
+				   "<iframe  frameborder=0 SRC=\"" CONST_BAR_IPPROTO_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 
-	   /* RRD */
-	   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
-			 myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-			 myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+			   /* RRD */
+			   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+			   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
+				   myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
+				   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
 
-	   revertSlashIfWIN32(buf, 0);
+			   revertSlashIfWIN32(buf, 0);
 
-	   if((i = stat(buf, &statbuf)) == 0) {
-	     time_t now = time(NULL);
+			   if((i = stat(buf, &statbuf)) == 0) {
+				   time_t now = time(NULL);
+				   u_char found = 0;
 
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			   "<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=left BGCOLOR=white>"
-			   "<table border=0><tr><td><IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=4&"
-			   "key=interfaces/%s/&start=now-12h&end=now\" BORDER=0>",
-			   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
-	     sendString(buf);
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			   "</td><td><A HREF=\"/plugins/rrdPlugin?mode=zoom&action=graphSummary&graphId=4&"
-			   "key=interfaces/%s/&start=%u&end=%u\"><IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></tr></table></TD></TR>",
-			   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (u_int)(now - 12 * 3600), (u_int)now);
-	     sendString(buf);
+				   /* We need to check whether there are interesting rrd files in the directory */
+				   DIR* directoryPointer = opendir(buf);
+
+				   if(directoryPointer != NULL) {
+					   struct dirent* dp;
+
+					   i = 0;
+
+					   while((dp = readdir(directoryPointer)) != NULL) {
+						   int len = strlen(dp->d_name);
+
+						   if(dp->d_name[0] == '.') continue;
+						   else if(len < 7 /* IP_ + .rrd */ ) continue;
+						   else if(strncmp(dp->d_name, "IP_", 3)) continue;
+						   else if(strstr(dp->d_name, "Flows")) continue;
+						   else found = 1;
+					   }
+				   }
+
+				   if(found) {
+					   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+						   "<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=left BGCOLOR=white>"
+						   "<table border=0><tr><td><IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=4&"
+						   "key=interfaces/%s/&start=now-12h&end=now\" BORDER=0>",
+						   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+					   sendString(buf);
+
+					   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+						   "</td><td><A HREF=\"/plugins/rrdPlugin?mode=zoom&action=graphSummary&graphId=4&"
+						   "key=interfaces/%s/&start=%u&end=%u\"><IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></tr></table></TD></TR>",
+						   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (u_int)(now - 12 * 3600), (u_int)now);
+					   sendString(buf);
+				   }
+
+				   sendString("</TD></TR>\n");
+			   }
+		   }
 	   }
-
-	   sendString("</TD></TR>\n");
-	 }
-       }
  #endif
        sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=5 ALIGN=LEFT "DARK_BG">"
 		  "Note:\n"
