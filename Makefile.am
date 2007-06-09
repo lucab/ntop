@@ -122,11 +122,6 @@ ntop_LDADD         = libntopreport.la libntop.la $(BASE_LIBS)
 ntop_LDFLAGS       = $(AM_LDFLAGS)
 ntop_CFLAGS        = 
 
-ntops_SOURCES      = $(ntop_SOURCES)
-ntops_DEPENDENCIES = $(ntop_DEPENDENCIES)
-ntops_LDADD        = $(ntop_LDADD)
-ntops_LDFLAGS      = $(ntop_LDFLAGS) -static
-
 noinst_HEADERS     =  getopt.h globals-core.h globals-report.h ntop.h
 
 # all the Archives
@@ -153,7 +148,7 @@ libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
                            webInterface.c
 
 
-libntopreport_la_DEPENDENCIES = libntop.la $(BASE_LIBS)
+libntopreport_la_DEPENDENCIES = libntop.la
 libntopreport_la_LIBADD       = libntop.la $(BASE_LIBS)
 libntopreport_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 
