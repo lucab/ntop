@@ -5,33 +5,33 @@
 %define         registry_uid   %nil
 %define         registry_name  ntop
 
+%define         cvsversion     20070608cvs
+
 Name:           ntop
 Version:        3.3
-Release:        0.5.20060227cvs%{?dist}%{?repotag:.%{repotag}}
+Release:        0.13.%{cvsversion}%{?dist}
 Summary:        A network traffic probe similar to the UNIX top command
 
 Group:          Applications/Internet
 License:        GPL
 URL:            http://www.ntop.org
 #Source0:        http://downloads.sourceforge.net/ntop/ntop-3.3.tgz
-# This source comes from the ntop cvs.  It was taken on 2006-Feb-27.  You
-# can recreate this tarball with the following commands:
+# This source comes from the ntop cvs.  It is a pre-release of the 3.3 source.
+# It was taken on 2007-Jun-08.  You can recreate this tarball with the
+# following commands:
 #   CVSROOT=:pserver:anonymous@cvs.ntop.org:/export/home/ntop
 #   cvs login               (enter 'ntop' as password)
-#   cvs checkout -D "2007-02-27 23:59:59 GMT" ntop
-#   tar -cvzf ntop-20060227cvs.tar.gz ntop
-Source0:        ntop-20060227cvs.tar.gz
+#   cvs checkout -D "2007-06-08 00:00:00 UTC" ntop
+#   tar -cvzf ntop-20070608cvs.tar.gz ntop
+Source0:        ntop-%{cvsversion}.tar.gz
 Source1:        ntop.init
-Source2:        ntop.logrotate
-Source3:        ntop.conf
 
 Patch0:         ntop-conf.patch
-Patch1:         ntop-nolibs.patch
-Patch2:         ntop-config.patch
-Patch3:         ntop-am.patch
-Patch4:         ntop-running-user.patch
-Patch5:         ntop-shrext.patch
-Patch6:         ntop-remove-rc0.patch
+Patch1:         ntop-am.patch
+Patch2:         ntop-running-user.patch
+Patch3:         ntop-dbfile-default-dir.patch
+Patch4:         ntop-remove-rc.patch
+Patch10:        ntop-shrext.patch
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -46,10 +46,7 @@ BuildRequires:  tcp_wrappers-devel
 BuildRequires:  tcp_wrappers
 %endif
 
-# For xmldump plugin
-BuildRequires:  gdome2-devel
-
-Requires:       logrotate, initscripts, mysql
+Requires:       initscripts
 Requires(post): /sbin/chkconfig       
 Requires(preun):/sbin/chkconfig       
 %{?FE_USERADD_REQ}
@@ -87,27 +84,28 @@ find . -type d -name CVS | xargs rm -rf
 # %%{_sysconfdir}/ntop and %%{_datadir}, and some debug source files.  Remove
 # the execute bits - in the build directory
 find . \( -name \*\.gz -o -name \*\.c -o -name \*\.h -o -name \*\.pdf \
-     -o -name \*\.dtd -o -name \*\.html \) -print | xargs chmod a-x
+     -o -name \*\.dtd -o -name \*\.html -o -name \*\.js \) -print     \
+     | xargs chmod a-x
 
 %patch0 -p1 -b .conf
-%patch1 -p1 -b .nolibs
-%patch2 -p1 -b .config
-%patch3 -p1 -b .am
-%patch4 -p1 -b .user
-# back out this part of the CVS update
-%patch5 -R -p1 -b .shrext
-%patch6 -p1 -b .remove-rc0
+%patch1 -p1 -b .am
+%patch2 -p1 -b .user
+%patch3 -p1 -b .dbfile-default-dir
+%patch4 -p1 -b .remove-rc
+%patch10 -R -p1 -b .shrext
 
 
 %build
 autoreconf -i -f
 
-%{configure} --enable-optimize \
-             --with-tcpwrap \
-             --enable-largerrdpop \
-             --enable-sslv3 \
-             --enable-i18n \
-             --enable-snmp \
+#export CFLAGS="%{optflags} -DDEBUG"
+%{configure} --enable-optimize                         \
+             --with-tcpwrap                            \
+             --enable-largerrdpop                      \
+             --enable-sslv3                            \
+             --enable-i18n                             \
+             --enable-snmp                             \
+             --enable-mysql                            \
              --disable-static
 
 %{__make} %{?_smp_mflags} faq.html ntop.txt ntop.html all
@@ -117,12 +115,10 @@ autoreconf -i -f
 %{__rm} -rf $RPM_BUILD_ROOT
 %{__make} install install-data-local install-data-as DESTDIR=$RPM_BUILD_ROOT
 
-# Now add init, logrotate, etc
+# Now add init, etc
 %{__install} -d $RPM_BUILD_ROOT/%{_initrddir}
-%{__install} -d $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d
 %{__install} -p -m 0755 %SOURCE1 $RPM_BUILD_ROOT/%{_initrddir}/ntop
-%{__install} -p -m 0644 %SOURCE2 $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d/ntop
-%{__install} -p -m 0644 %SOURCE3 $RPM_BUILD_ROOT/%{_sysconfdir}/ntop.conf
+%{__install} -p -m 0644 packages/RedHat/ntop.conf.sample $RPM_BUILD_ROOT/%{_sysconfdir}/ntop.conf
 
 # remove libtool archives and -devel type stuff (but leave dlopened modules)
 #find $RPM_BUILD_ROOT -name \*\.la -print -o -name \*\.a -print | xargs rm -f
@@ -139,30 +135,39 @@ for file in $RPM_BUILD_ROOT/%{_libdir}/%{name}/plugins/*so; do
 done
 
 # Create files to be %ghost'ed - %ghost'ed files must exist in the buildroot
-%{__install} -d $RPM_BUILD_ROOT/%{_localstatedir}/ntop/rrd/{flows,graphics}
-%{__install} -d $RPM_BUILD_ROOT/%{_localstatedir}/ntop/rrd/interfaces
-touch $RPM_BUILD_ROOT/%{_localstatedir}/ntop/{addressQueue,dnsCache,fingerprint,LsWatch,macPrefix,ntop_pw,prefsCache}.db
+%{__install} -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/ntop/rrd/{flows,graphics}
+%{__install} -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/ntop/rrd/interfaces
+touch $RPM_BUILD_ROOT/%{_localstatedir}/lib/ntop/{addressQueue,dnsCache,fingerprint,LsWatch,macPrefix,ntop_pw,prefsCache}.db
 
 %clean
 %{__rm} -rf $RPM_BUILD_ROOT
 
 %pre
-%{__fe_groupadd} %{registry_uid} -r ntop &>/dev/null || :
-%{__fe_useradd}  %{registry_uid} -r -s /sbin/nologin  \
-                 -d %{_localstatedir}/ntop -M -c 'ntop' \
-                 -g %{registry_name} %{registry_name} &> /dev/null || :
+if [ $1 = 1 ]; then
+  %{__fe_groupadd} %{registry_uid} -r ntop &> /dev/null || :
+  %{__fe_useradd}  %{registry_uid} -r -s /sbin/nologin  \
+                   -d %{_localstatedir}/lib/ntop -M -c 'ntop' \
+                   -g %{registry_name} %{registry_name} &> /dev/null || :
+fi
 
 %post
-/sbin/chkconfig --add %{name} 2>&1 > /dev/null
+if [ $1 = 1 ]; then
+  /sbin/chkconfig --add %{name} &> /dev/null || :
+fi
 
 %preun
-test "$1" != 0 || %{_initrddir}/%{name} stop &> /dev/null || :
-test "$1" != 0 || /sbin/chkconfig --del %{name}
+if [ $1 = 0 ]; then
+  /sbin/service %{name} stop    &> /dev/null || :
+  /sbin/chkconfig --del %{name} &> /dev/null || :
+fi
 
 %postun
-test "$1" != 0 || %{__fe_userdel}  %{registry_name} &> /dev/null || :
-test "$1" != 0 || %{__fe_groupdel} %{registry_name} &> /dev/null || :
-test "$1"  = 0 || %{_initrddir}/%{name} condrestart > /dev/null || :
+if [ "$1" -ge "1" ]; then
+  /sbin/service %{name} condrestart &> /dev/null || :
+else
+  %{__fe_userdel}  %{registry_name} &> /dev/null || :
+  %{__fe_groupdel} %{registry_name} &> /dev/null || :
+fi
 
 %files
 %defattr(-,root,root,-)
@@ -172,29 +177,69 @@ test "$1"  = 0 || %{_initrddir}/%{name} condrestart > /dev/null || :
 %doc docs/1STRUN.txt NEWS README SUPPORT_NTOP.txt THANKS
 %config(noreplace) %{_sysconfdir}/ntop.conf
 %config(noreplace) %{_sysconfdir}/ntop
-%config(noreplace) %{_sysconfdir}/logrotate.d/ntop
 %{_initrddir}/ntop
 %{_sbindir}/*
 %{_libdir}/lib*%{version}*.so
 %{_libdir}/ntop
 %{_mandir}/man8/*
 %{_datadir}/ntop
-%dir %{_localstatedir}/ntop
+%dir %{_localstatedir}/lib/ntop
 %defattr(0640,root,root,-)
-%ghost %{_localstatedir}/ntop/addressQueue.db
-%ghost %{_localstatedir}/ntop/dnsCache.db
-%ghost %{_localstatedir}/ntop/fingerprint.db
-%ghost %{_localstatedir}/ntop/LsWatch.db
-%ghost %{_localstatedir}/ntop/macPrefix.db
-%ghost %{_localstatedir}/ntop/ntop_pw.db
-%ghost %{_localstatedir}/ntop/prefsCache.db
+%ghost %{_localstatedir}/lib/ntop/addressQueue.db
+%ghost %{_localstatedir}/lib/ntop/dnsCache.db
+%ghost %{_localstatedir}/lib/ntop/fingerprint.db
+%ghost %{_localstatedir}/lib/ntop/LsWatch.db
+%ghost %{_localstatedir}/lib/ntop/macPrefix.db
+%ghost %{_localstatedir}/lib/ntop/ntop_pw.db
+%ghost %{_localstatedir}/lib/ntop/prefsCache.db
 # This will catch all the directories in rrd.  If %ghost'ed files are added
 # under rrd, this will have to be changed to %dir and more directives for
 # directories under rrd will have to be added.
 %defattr(0770,root,ntop,-)
-%{_localstatedir}/ntop/rrd
+%{_localstatedir}/lib/ntop/rrd
 
 %changelog
+* Wed Jun 08 2007 Bernard Johnson <bjohnson@symetrix.com> - 3.3-0.13.20070608cvs
+- update to 20070608cvs
+- update patch to remove rc version
+- remove remove-gd-version-guess.patch (not needed anymore)
+- remove xmldump plugin dependencies since it has been disabled (broken) in
+  default ntop installation
+
+* Fri Apr 06 2007 Bernard Johnson <bjohnson@symetrix.com> - 3.3-0.12.20070407cvs
+- update to 20070407cvs
+- compile with -DDEBUG for now to check for problems
+- rework ntop-am.patch with recent changes
+- patch to remove gdVersionGuessValue from plugin
+- repatch with shrext patch
+
+* Mon Mar 19 2007 Bernard Johnson <bjohnson@symetrix.com> - 3.3-0.11.20070319cvs
+- update to 20070319cvs
+- remove patches that have been added upstream
+
+* Fri Mar 16 2007 Bernard Johnson <bjohnson@symetrix.com> - 3.3-0.10.20070314cvs
+- fix rpmlint warning for initfile
+- include 2 of Patrice's patches to cleanup builds
+- remove repotag
+
+* Fri Mar 16 2007 Bernard Johnson <bjohnson@symetrix.com> - 3.3-0.9.20070314cvs
+- update to 20070314cvs
+- add additional mysql patch from Patrice
+- remove all of unused logrotate pieces
+- use /sbin/service to start/stop services
+- update scriptlets to be easier to read
+- Better description to initfile summary
+- add LSB bits to initfile
+
+* Mon Mar 07 2007 Bernard Johnson <bjohnson@symetrix.com> - 3.3-0.8.20070307cvs
+- update to 20070307cvs
+- move database files to %%{_localstatedir}/lib/ntop
+- fix javascript files not being installed
+- remove x bit from additional javascript files
+
+* Sat Mar 03 2007 Bernard Johnson <bjohnson@symetrix.com> - 3.3-0.6.20060207cvs
+- add --enable-mysql to compile mysql support
+
 * Sat Mar 03 2007 Bernard Johnson <bjohnson@symetrix.com> - 3.3-0.5.20060207cvs
 - prefix patches with ntop-
 - explanation on how to retrieve cvs source
