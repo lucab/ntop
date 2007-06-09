@@ -966,10 +966,8 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
       }
 
       /* process SSI */
-#if 0
       temp = ssiEnd[0];
       ssiEnd[0] = '\0';
-#endif
       processSSI(ssiStart);
       ssiEnd[0] = temp;
 

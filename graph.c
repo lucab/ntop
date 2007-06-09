@@ -145,6 +145,11 @@ static void build_chart(u_char is_pie, char *the_type, int num, float *p,
     }
   }
 
+  if((num_printed == 1) && (p[0] == 100)) {
+	  /* Workaround for an Internet Explorer bug */
+      sendString(", [1, 0.01]");
+  }
+
   send_graph_footer(the_type, width, height);
 }
 
