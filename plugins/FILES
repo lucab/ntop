@@ -4,7 +4,7 @@ plugins/Makefile.in
 plugins/icmpPlugin.c
 plugins/lastSeenPlugin.c
 plugins/netflowPlugin.c
-plugins/nfsPlugin.c
 plugins/pdaPlugin.c
 plugins/sflowPlugin.c
-
+plugins/rrdPlugin.c
+plugins/remotePlugin.c
