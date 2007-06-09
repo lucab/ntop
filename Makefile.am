@@ -153,7 +153,7 @@ libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
                            webInterface.c
 
 
-libntopreport_la_DEPENDENCIES = config.h libntop.la
+libntopreport_la_DEPENDENCIES = libntop.la $(BASE_LIBS)
 libntopreport_la_LIBADD       = libntop.la $(BASE_LIBS)
 libntopreport_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 

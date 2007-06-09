@@ -608,7 +608,7 @@ static void checkNetworkRouter(HostTraffic *srcHost, HostTraffic *dstHost,
     incrementUsageCounter(&srcHost->contactedRouters, router, actualDeviceId);
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "(%s/%s/%s) -> (%s/%s/%s) routed by [idx=%d/%s/%s/%s]",
+    traceEvent(CONST_TRACE_INFO, "(%s/%s/%s) -> (%s/%s/%s) routed by [%s/%s/%s]",
 	       srcHost->ethAddressString, srcHost->hostNumIpAddress, srcHost->hostResolvedName,
 	       dstHost->ethAddressString, dstHost->hostNumIpAddress, dstHost->hostResolvedName,
 	       router->ethAddressString,
