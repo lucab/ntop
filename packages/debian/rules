@@ -40,6 +40,7 @@ binary-arch: build install
 	dh_installdebconf -n
 	mkdir -p ./debian/usr/local/var/ntop/rrd
 	cp -r ./debian/etc/ ./debian/tmp
+	cp -r ./debian/usr/ ./debian/tmp
 	-find ./debian/tmp -name CVS -exec /bin/rm -rf {} ';'
 	dh_link
 	dh_strip
