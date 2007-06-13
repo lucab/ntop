@@ -21,6 +21,6 @@ update-rc.d ntop defaults 93 >/dev/null
 /etc/init.d/ntop defaults
 chown -R nobody /usr/local/var/ntop/rrd
 /etc/init.d/ntop start
-
+/sbin/ldconfig
 
 exit 0
