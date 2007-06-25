@@ -2246,7 +2246,7 @@ static int returnHTTPPage(char* pageName,
 		safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Date: %s\r\n", theDate);
 		sendString(tmpStr);
 		sendString("Connection: close\r\n");
-		return;
+		return(0);
 	      }
 	    }
 	  }

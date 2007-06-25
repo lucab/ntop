@@ -710,7 +710,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   memset(&bufa2, 0, sizeof(bufa2));
   memset(&bufa3, 0, sizeof(bufa3));
 
-  if(strstr(rrdName, "AS"))
+  if(strstr(rrdName, "/AS"))
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/AS/%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
   else {
 	  if(!strcmp(rrdName, "throughput")) {
