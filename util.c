@@ -926,136 +926,28 @@ unsigned short isPrivateAddress(HostAddr *addr,
   }
 }
 
-
-/* **********************************************
- *
- * Description:
- *
- *  It converts an integer in the range
- *  from  0 to 255 in number of bits
- *  useful for netmask  calculation.
- *  The conmyGlobals.version is  valid if there
- *  is an uninterrupted sequence of
- *  bits set to 1 at the most signi-
- *  ficant positions. Example:
- *
- *     1111 1000 -> valid
- *     1110 1000 -> invalid
- *
- * Return values:
- *     0 - 8 (number of subsequent
- *            bits set to 1)
- *    -1     (CONST_INVALIDNETMASK)
- *
- *
- * Courtesy of Antonello Maiorca <marty@tai.it>
- *
- *********************************************** */
-
-static int int2bits(int number) {
-  int bits = 8;
-  int test;
-
-  if((number > 255) || (number < 0))
-    {
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: int2bits (%3d) = %d", number, CONST_INVALIDNETMASK);
-#endif
-      return(CONST_INVALIDNETMASK);
-    }
-  else
-    {
-      test = ~number & 0xff;
-      while (test & 0x1)
-	{
-	  bits --;
-	  test = test >> 1;
-	}
-      if(number != ((~(0xff >> bits)) & 0xff))
-	{
-#ifdef DEBUG
-	  traceEvent(CONST_TRACE_INFO, "DEBUG: int2bits (%3d) = %d", number, CONST_INVALIDNETMASK);
-#endif
-	  return(CONST_INVALIDNETMASK);
-	}
-      else
-	{
-#ifdef DEBUG
-	  traceEvent(CONST_TRACE_INFO, "DEBUG: int2bits (%3d) = %d", number, bits);
-#endif
-	  return(bits);
-	}
-    }
-}
-
-/* ***********************************************
- *
- * Description:
- *
- *  Converts a dotted quad notation
- *  netmask  specification  to  the
- *  equivalent number of bits.
- *  from  0 to 255 in number of bits
- *  useful for netmask  calculation.
- *  The converion is  valid if there
- *  is an  uninterrupted sequence of
- *  bits set to 1 at the most signi-
- *  ficant positions. Example:
- *
- *     1111 1000 -> valid
- *     1110 1000 -> invalid
- *
- * Return values:
- *     0 - 32 (number of subsequent
- *             bits set to 1)
- *    -1      (CONST_INVALIDNETMASK)
- *
- *
- * Courtesy of Antonello Maiorca <marty@tai.it>
- *
- *********************************************** */
+/* ************************************************ */
 
 int dotted2bits(char *mask) {
-  int		fields[4];
-  int		fields_num, field_bits;
-  int		bits = 0;
-  int		i;
-
+  u_int8_t fields[4], fields_num;
+  
   fields_num = sscanf(mask, "%d.%d.%d.%d",
 		      &fields[0], &fields[1], &fields[2], &fields[3]);
-  if((fields_num == 1) && (fields[0] <= 32) && (fields[0] >= 0))
-    {
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: dotted2bits (%s) = %d", mask, fields[0]);
-#endif
-      return(fields[0]);
-    }
-  for (i=0; i < fields_num; i++)
-    {
-      /* We are in a dotted quad notation. */
-      field_bits = int2bits (fields[i]);
-      switch (field_bits)
-	{
-	case CONST_INVALIDNETMASK:
-	  return(CONST_INVALIDNETMASK);
 
-	case 0:
-	  /* whenever a 0 bits field is reached there are no more */
-	  /* fields to scan                                       */
+  if(fields_num != 4) {
 #ifdef DEBUG
-	  traceEvent(CONST_TRACE_INFO, "DEBUG: dotted2bits (%15s) = %d", mask, bits);
+    traceEvent(CONST_TRACE_INFO, "DEBUG: dotted2bits (%s) = %d", mask, fields[0]);
 #endif
-	  /* In this case we are in a bits (not dotted quad) notation */
-	  return(bits /* fields[0] - L.Deri 08/2001 */);
+    return(atoi(mask));
+  } else {
+    u_int8_t i, j, bits = 0;
+      
+    for(i = 8; i <= 8; i--)
+      for(j=0; j<4; j++)
+	if ((fields[j] & (1 << i)) != 0) bits++;	
 
-	default:
-	  bits += field_bits;
-	}
-    }
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: dotted2bits (%15s) = %d", mask, bits);
-#endif
-  return(bits);
+    return(bits);
+  }
 }
 
 /* ********************************* */
@@ -1122,7 +1014,7 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
       continue;
     }
 
-    network     = ((a & 0xff) << 24) + ((b & 0xff) << 16) + ((c & 0xff) << 8) + (d & 0xff);
+    network = ((a & 0xff) << 24) + ((b & 0xff) << 16) + ((c & 0xff) << 8) + (d & 0xff);
     /* Special case the /32 mask - yeah, we could probably do it with some fancy
        u long long stuff, but this is simpler...
        Burton Strauss <Burton@ntopsupport.com> Jun2002

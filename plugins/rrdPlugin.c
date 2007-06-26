@@ -61,7 +61,7 @@ static u_short dumpPermissions;
 static PthreadMutex rrdMutex;
 static pthread_t rrdThread, rrdTrafficThread;
 
-static unsigned short initialized = 0, active = 0, colorWarn = 0, graphErrCount = 0, 
+static unsigned short initialized = 0, active = 0, colorWarn = 0, graphErrCount = 0,
   dumpInterval, dumpShortInterval, dumpDetail;
 static unsigned short dumpDays, dumpHours, dumpMonths, dumpDelay;
 static char *hostsFilter = NULL;
@@ -222,7 +222,7 @@ static void createMultihostGraph(char *rrdName,
 				 char *startTime, char* endTime) {
   char buf[512], hosts[512] = { '\0' };
   int i;
-  
+
   for(i=0; i<numRrdHosts; i++) {
     char *host_ip;
 
@@ -235,7 +235,7 @@ static void createMultihostGraph(char *rrdName,
       strcat(hosts, rrdHosts[i]->hostResolvedName);
     }
   }
- 
+
   /*
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
     "<A HREF=\"/" CONST_PLUGINS_HEADER "%s?mode=zoom&action=graphSummary&graphId=98&name=%s&start=%s&end=%s&key=%s\">",
@@ -278,28 +278,43 @@ static void expandRRDList(char *rrdName,
     struct stat statbuf;
     HostTraffic *el;
     HostAddr ha;
-    int j;
+    u_int j, num_hosts, offset;
+    char addr_buf[32], *str;
 
     ha.hostFamily = AF_INET;
-    ha.addr._hostIp4Address.s_addr = localNetworks[i][0]; /* FIX: expand network */
 
-    if((el = findHostByNumIP(ha, 0, myGlobals.actualReportDeviceId)) != NULL) {
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/hosts/%s/%s",
-		    myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
-		    (el->ethAddressString[0] != '\0') ? el->ethAddressString : el->hostNumIpAddress,
-		    rrdName);
+    if(localNetworks[i][CONST_NETMASK_V6_ENTRY] < 16)
+      localNetworks[i][CONST_NETMASK_V6_ENTRY] = 16; /* We assume a /16 */
+    if(localNetworks[i][CONST_NETMASK_V6_ENTRY] > 32)
+      localNetworks[i][CONST_NETMASK_V6_ENTRY] = 32; /* Sanity check */
 
-      for(j=strlen(myGlobals.rrdPath)
-	    +strlen("/interfaces/")
-	    +strlen(myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName)
-	    +strlen("/hosts/"); j<strlen(path)-strlen(CONST_RRD_EXTENSION); j++) 
+    if(localNetworks[i][CONST_NETMASK_V6_ENTRY] == 32)
+      num_hosts = 1;
+    else
+      num_hosts = (1 << (32 - localNetworks[i][CONST_NETMASK_V6_ENTRY])) - 1;
+
+    for(offset = 0; offset<num_hosts; offset++) {
+      ha.addr._hostIp4Address.s_addr = localNetworks[i][0] + offset;
+
+      if((el = findHostByNumIP(ha, 0, myGlobals.actualReportDeviceId)) != NULL) {
+	str = (el->ethAddressString[0] != '\0') ? el->ethAddressString : el->hostNumIpAddress;
+	snprintf(addr_buf, sizeof(addr_buf), "%s", str);
+      } else {
+	continue;
+      }
+
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/hosts/%s",
+		    myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, str);
+
+      for(j=strlen(path)-strlen(str); j<strlen(path); j++)
 	if((path[j] == '.') || (path[j] == ':')) path[j] = '/';
+
       revertSlashIfWIN32(path, 0);
 
       if(debug) traceEvent(CONST_TRACE_WARNING, "RRD: expandRRDList(%s): %s", rrdName, path);
 
       if(stat(path, &statbuf) == 0) {
-	if(debug) traceEvent(CONST_TRACE_WARNING, "RRD: ---> %s [%u]", 
+	if(debug) traceEvent(CONST_TRACE_WARNING, "RRD: ---> %s [%u]",
 			     path, num_network_bits(localNetworks[i][1]));
 	rrdHosts[numRrdHosts++] = el;
       }
@@ -427,7 +442,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 		      i, rrdPath, startTime, endTime);
 	sendString(buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "</td><td><A HREF=\"/" CONST_PLUGINS_HEADER "%s?"
 		      "mode=zoom&action=netflowIfSummary&graphId=%d&key=%s/&start=%s&end=%s\">\n"
 		      "<IMG valign=top class=tooltip SRC=/graph_zoom.gif border=0></A>\n",
@@ -445,7 +460,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
       printFlagedWarning(buf);
       sendString("</CENTER>");
       printHTMLtrailer();
-      return; 
+      return;
     } else {
       // traceEvent(CONST_TRACE_WARNING, "RRD: reading directory %s", path); /* FIX */
     }
@@ -516,7 +531,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
     } /* while */
 
     closedir(directoryPointer);
-  } else { 
+  } else {
     /* Cluster */
     char clusterAddresses[256] = { '\0' }, localAddresses[1024] = { '\0' };
     u_int32_t localNetworks[MAX_NUM_NETWORKS][4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
@@ -534,17 +549,35 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
     for(i=0; i<numLocalNetworks; i++) {
       HostTraffic *el;
       HostAddr ha;
-      int j;
+      u_int j, num_hosts, offset;
+      char addr_buf[32], *str;
 
       ha.hostFamily = AF_INET;
-      ha.addr._hostIp4Address.s_addr = localNetworks[i][0];
 
-      if((el = findHostByNumIP(ha, 0, myGlobals.actualReportDeviceId)) != NULL) {
+      if(localNetworks[i][CONST_NETMASK_V6_ENTRY] < 16)
+	localNetworks[i][CONST_NETMASK_V6_ENTRY] = 16; /* We assume a /16 */
+      if(localNetworks[i][CONST_NETMASK_V6_ENTRY] > 32)
+	localNetworks[i][CONST_NETMASK_V6_ENTRY] = 32; /* Sanity check */
+
+      if(localNetworks[i][CONST_NETMASK_V6_ENTRY] == 32)
+	num_hosts = 1;
+      else
+	num_hosts = (1 << (32 - localNetworks[i][CONST_NETMASK_V6_ENTRY])) - 1;
+
+      for(offset = 0; offset<num_hosts; offset++) {
+	ha.addr._hostIp4Address.s_addr = localNetworks[i][0] + offset;
+
+	if((el = findHostByNumIP(ha, 0, myGlobals.actualReportDeviceId)) != NULL) {
+	  str = (el->ethAddressString[0] != '\0') ? el->ethAddressString : el->hostNumIpAddress;
+	  snprintf(addr_buf, sizeof(addr_buf), "%s", str);
+	} else {
+	  continue;
+	}
+
 	safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/hosts/%s",
-		      myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
-		      (el->ethAddressString[0] != '\0') ? el->ethAddressString : el->hostNumIpAddress);
-	
-	for(j=strlen(path)-strlen((el->ethAddressString[0] != '\0') ? el->ethAddressString : el->hostNumIpAddress); j<strlen(path); j++) 
+		      myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, str);
+
+	for(j=strlen(path)-strlen(str); j<strlen(path); j++)
 	  if((path[j] == '.') || (path[j] == ':')) path[j] = '/';
 
 	revertSlashIfWIN32(path, 0);
@@ -557,7 +590,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 	      continue;
 	    else {
 	      int duplicated = 0;
-	      
+
 	      found = 1;
 
 	      for(k=0; k<num_rrds; k++)
@@ -566,8 +599,10 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 		  break;
 		}
 
-	      if((!duplicated) && (num_rrds < (MAX_NUM_RRDS-1)))
+	      if((!duplicated) && (num_rrds < (MAX_NUM_RRDS-1))) {
+		// traceEvent(CONST_TRACE_INFO, "RRD: -->  %s [%d][%s]", path, num_rrds, dp->d_name);
 		keys[num_rrds++] = strdup(dp->d_name);
+	      }
 	    }
 	  }
 
@@ -578,7 +613,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
     }
 
     qsort(keys, num_rrds, sizeof(char*), cmpStrings);
-    
+
     sendString("<table border=0>\n");
 
     for(k=0; k<num_rrds; k++) {
@@ -600,7 +635,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 	sendString("Image</td><td>Link");
       else
 	expandRRDList(keys[k], localNetworks, numLocalNetworks, startTime, endTime);
-      
+
       if(strstr(keys[k], "Rcvd"))
 	sendString("</td>");
       else if(strstr(keys[k], "Sent"))
@@ -852,7 +887,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
       traceEventRRDebugARGV(0);
 
       if(++graphErrCount < 50) {
-        traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", 
+        traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s",
 		   rc, rrd_get_error() ? rrd_get_error() : "");
         traceEvent(CONST_TRACE_INFO, "RRD: Failing file in graphCounter() is %s", path);
       }
@@ -1138,7 +1173,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
   rrd_clear_error();
   addRrdDelay();
-  rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);  
+  rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);
 
   calfree();
 
@@ -1619,9 +1654,9 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
 /* ******************************* */
 
 #define MAX_NUM_RRD_ENTRIES     3
-#define MAX_NUM_RRD_HOSTS      32 
+#define MAX_NUM_RRD_HOSTS      32
 
-static void graphSummary(char *rrdPath, char *rrdName, int graphId, 
+static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 			 char *startTime, char* endTime, char *rrdPrefix, char *mode) {
   char path[512], *argv[6*MAX_NUM_ENTRIES], tmpStr[32], fname[384], *label, rrdPath_copy[512];
   char buf0[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf1[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
@@ -1630,7 +1665,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
   int argc = 0, rc, x, y, i, entryId=0, num_rrd_hosts_path = 0, j;
   DIR* directoryPointer;
-  char *rrd_custom[MAX_NUM_RRD_ENTRIES], *rrd_hosts_path[MAX_NUM_RRD_HOSTS], 
+  char *rrd_custom[MAX_NUM_RRD_ENTRIES], *rrd_hosts_path[MAX_NUM_RRD_HOSTS],
     *rrd_hosts[MAX_NUM_RRD_HOSTS], file_a[32], file_b[32], title_buf[48];
   double ymin,ymax;
 
@@ -1682,7 +1717,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   case 5: rrds = (char**)rrd_summary_local_remote_ip_bytes; label = "Bytes/s"; break;
   case 6: rrds = (char**)rrd_summary_host_sentRcvd_packets; label = "Pkt/s"; break;
   case 7: rrds = (char**)rrd_summary_host_sentRcvd_bytes; label = "Bytes/s"; break;
-    
+
   case 98:
     {
       char *host, *strTokPos;
@@ -1690,7 +1725,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
       rrd_custom[0] = rrdName;
       rrd_custom[1] = NULL;
       rrds = (char**)rrd_custom;
-      
+
       safe_snprintf(__FILE__, __LINE__, rrdPath_copy, sizeof(rrdPath_copy), "%s", rrdPath);
       host = strtok_r(rrdPath_copy, ",", &strTokPos);
       if(host) {
@@ -1712,11 +1747,11 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 			"interfaces/%s/hosts/%s",
 			myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 			the_host);
-	  
-	  for(y=strlen(tmpPath)-strlen(the_host); y<strlen(tmpPath); y++) 
+
+	  for(y=strlen(tmpPath)-strlen(the_host); y<strlen(tmpPath); y++)
 	    if((path[y] == '.') || (path[y] == ':')) path[y] = '/';
 
-	  rrd_hosts_path[num_rrd_hosts_path++] = strdup(tmpPath);	 
+	  rrd_hosts_path[num_rrd_hosts_path++] = strdup(tmpPath);
 	  host = strtok_r(NULL, ",", &strTokPos);
 	}
       }
@@ -1953,7 +1988,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
 	safe_snprintf(__FILE__, __LINE__, buf0[entryId], 2*MAX_BUF_LEN,
 		      "DEF:ctr%d=%s:counter:AVERAGE", entryId, sanitizeRrdPath(path));
-	argv[argc++] = buf0[entryId];	
+	argv[argc++] = buf0[entryId];
 	safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
 		      "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
 		      entryId, rrd_colors[entryId],
@@ -1982,7 +2017,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
       if(entryId >= CONST_NUM_BAR_COLORS) {
 	if(colorWarn == 0) {
-	  traceEvent(CONST_TRACE_ERROR, 
+	  traceEvent(CONST_TRACE_ERROR,
 		     "RRD: Number of defined bar colors less than max entries.  Graphs may be truncated");
 	  colorWarn = 1;
 	}
@@ -2485,7 +2520,7 @@ static void setGlobalPermissions(int permissionsFlag) {
 static void commonRRDinit(void) {
   char value[1024];
 
-#ifdef WIN32  
+#ifdef WIN32
   get_serial(&driveSerial);
 #endif
 
@@ -2650,14 +2685,14 @@ static void commonRRDinit(void) {
     if(myGlobals.rrdPath) free(myGlobals.rrdPath);
     myGlobals.rrdPath = (char*)malloc(len);
 #ifdef WIN32
-    safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath, len, 
+    safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath, len,
 		  "%s/%u%s", &myGlobals.dbPath[idx], driveSerial, thePath);
     revertSlashIfWIN32(myGlobals.rrdPath, 0);
 #else
     safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath,
 		  len, "%s%s", &myGlobals.dbPath[idx], thePath);
 #endif
-    
+
     len = strlen(myGlobals.rrdPath);
     if(myGlobals.rrdPath[len-1] == '/') myGlobals.rrdPath[len-1] = '\0';
     storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
@@ -3480,7 +3515,7 @@ static time_t parse_date(char* value) {
   struct tm _tm;
 
   memset(&_tm, 0, sizeof(_tm));
-  if(sscanf(value, "%d-%d-%d %d:%d", 
+  if(sscanf(value, "%d-%d-%d %d:%d",
 	    &_tm.tm_year, &_tm.tm_mon, &_tm.tm_mday, &_tm.tm_hour, &_tm.tm_min) == 5) {
     --_tm.tm_mon, _tm.tm_year -= 1900;
 
@@ -4087,7 +4122,7 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
   /* ********************************************* */
 
   numLocalNets = 0;
-  /* Avoids strtok to blanks into hostsFilter */
+ /* Avoids strtok to blanks into hostsFilter */
   safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s", hostsFilter);
   handleAddressLists(rrdPath, networks, &numLocalNets, value, sizeof(value), CONST_HANDLEADDRESSLISTS_RRD);
 
@@ -4358,11 +4393,11 @@ static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
 	continue;
 
 #ifdef WIN32
-      safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/%u/interfaces/%s/", 
+      safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/%u/interfaces/%s/",
 		    myGlobals.spoolPath, driveSerial,
                     myGlobals.device[devIdx].uniqueIfName);
 #else
-      safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/", 
+      safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/",
 		    myGlobals.spoolPath,
                     myGlobals.device[devIdx].uniqueIfName);
 #endif
@@ -4803,7 +4838,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    protoList = myGlobals.ipProtosList, idx=0;
 	    while(protoList != NULL) {
 	      Counter c = myGlobals.device[devIdx].ipProtosList[idx].value;
-	      
+
 	      if(c > 0) updateCounter(rrdPath, protoList->protocolName, c, 0);
 	      idx++, protoList = protoList->next;
 	    }
@@ -4855,7 +4890,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 			      myGlobals.device[devIdx].uniqueIfName,
 			      asStats->as_id);
 		mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
-		
+
 		updateCounter(rrdIfPath, "ifInOctets",   asStats->inBytes.value, 0);
 		updateCounter(rrdIfPath, "ifInPkts",     asStats->inPkts.value, 0);
 		updateCounter(rrdIfPath, "ifOutOctets",  asStats->outBytes.value, 0);
@@ -4917,7 +4952,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	if(myGlobals.device[devIdx].sflowGlobals) {
 	  IfCounters *ifName = myGlobals.device[devIdx].sflowGlobals->ifCounters;
-	  	  
+
 	  while(ifName != NULL) {
 	    char rrdIfPath[512];
 
