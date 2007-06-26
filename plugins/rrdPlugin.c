@@ -631,10 +631,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 	  sendString("<td>");
       }
 
-      if(0)
-	sendString("Image</td><td>Link");
-      else
-	expandRRDList(keys[k], localNetworks, numLocalNetworks, startTime, endTime);
+    expandRRDList(keys[k], localNetworks, numLocalNetworks, startTime, endTime);
 
       if(strstr(keys[k], "Rcvd"))
 	sendString("</td>");
@@ -3528,7 +3525,7 @@ static time_t parse_date(char* value) {
 
 static void handleRRDHTTPrequest(char* url) {
   char buf[1024], *strtokState, *mainState, *urlPiece,
-    rrdKey[64], rrdName[64], rrdTitle[128], rrdCounter[64], startTime[32], endTime[32],
+    rrdKey[512], rrdName[64], rrdTitle[128], rrdCounter[64], startTime[32], endTime[32],
     rrdPrefix[32], rrdIP[32], rrdInterface[64], rrdPath[512], mode[32], cluster[32];
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
