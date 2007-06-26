@@ -220,7 +220,7 @@ static void createMultihostGraph(char *rrdName,
 				 HostTraffic *rrdHosts[MAX_NUM_NETWORKS],
 				 u_int32_t numRrdHosts,
 				 char *startTime, char* endTime) {
-  char buf[512], hosts[512] = { '\0' };
+  char buf[1024], hosts[512] = { '\0' };
   int i;
 
   for(i=0; i<numRrdHosts; i++) {
@@ -228,7 +228,7 @@ static void createMultihostGraph(char *rrdName,
 
     host_ip = (rrdHosts[i]->ethAddressString[0] != '\0') ? rrdHosts[i]->ethAddressString : rrdHosts[i]->hostNumIpAddress;
 
-    if((strlen(hosts) + strlen(host_ip)) < sizeof(hosts)) {
+    if((strlen(hosts) + strlen(host_ip) + 2 + strlen(rrdHosts[i]->hostResolvedName)) < sizeof(hosts)) {
       if(i > 0) strcat(hosts, ",");
       strcat(hosts, host_ip);
       strcat(hosts, "@");
@@ -283,8 +283,8 @@ static void expandRRDList(char *rrdName,
 
     ha.hostFamily = AF_INET;
 
-    if(localNetworks[i][CONST_NETMASK_V6_ENTRY] < 16)
-      localNetworks[i][CONST_NETMASK_V6_ENTRY] = 16; /* We assume a /16 */
+    if(localNetworks[i][CONST_NETMASK_V6_ENTRY] < MAX_NETWORK_EXPANSION)
+      localNetworks[i][CONST_NETMASK_V6_ENTRY] = MAX_NETWORK_EXPANSION;
     if(localNetworks[i][CONST_NETMASK_V6_ENTRY] > 32)
       localNetworks[i][CONST_NETMASK_V6_ENTRY] = 32; /* Sanity check */
 
@@ -554,15 +554,15 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 
       ha.hostFamily = AF_INET;
 
-      if(localNetworks[i][CONST_NETMASK_V6_ENTRY] < 16)
-	localNetworks[i][CONST_NETMASK_V6_ENTRY] = 16; /* We assume a /16 */
+      if(localNetworks[i][CONST_NETMASK_V6_ENTRY] < MAX_NETWORK_EXPANSION)
+		localNetworks[i][CONST_NETMASK_V6_ENTRY] = MAX_NETWORK_EXPANSION;
       if(localNetworks[i][CONST_NETMASK_V6_ENTRY] > 32)
-	localNetworks[i][CONST_NETMASK_V6_ENTRY] = 32; /* Sanity check */
+		localNetworks[i][CONST_NETMASK_V6_ENTRY] = 32; /* Sanity check */
 
       if(localNetworks[i][CONST_NETMASK_V6_ENTRY] == 32)
-	num_hosts = 1;
+		num_hosts = 1;
       else
-	num_hosts = (1 << (32 - localNetworks[i][CONST_NETMASK_V6_ENTRY])) - 1;
+		num_hosts = (1 << (32 - localNetworks[i][CONST_NETMASK_V6_ENTRY])) - 1;
 
       for(offset = 0; offset<num_hosts; offset++) {
 	ha.addr._hostIp4Address.s_addr = localNetworks[i][0] + offset;

@@ -23,6 +23,7 @@
 
 #include <rrd.h>
 
+#define MAX_NETWORK_EXPANSION   24 /* /24 */
 /*
  * Extra pages
  */
