@@ -2838,6 +2838,7 @@ void processPacket(u_char *_deviceId,
     float elapsed;
     gettimeofday(&pktStartOfProcessing, NULL);
     elapsed = timeval_subtract(pktStartOfProcessing, h->ts);
+    if(elapsed < 0) elapsed = 0;
     myGlobals.queueBuffer[++myGlobals.queueBufferCount & (MAX_PROCESS_BUFFER - 1)] = elapsed;
     if((myGlobals.device[actualDeviceId].ethernetPkts.value > 100) && (elapsed > myGlobals.qmaxDelay))
       myGlobals.qmaxDelay = elapsed;

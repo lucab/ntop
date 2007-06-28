@@ -1583,6 +1583,11 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		     pref->localAddresses,
 		     "Local subnets in ntop reports (use , to separate them). Mandatory for packet capture files");
 
+    CONFIG_STR_ENTRY(DARK_BG, "Known Subnet Address (-m)",
+		     NTOP_PREF_KNOWNSUBNETS, 50,
+		     pref->knownSubnets,
+		     "Known subnets in ntop reports (use , to separate them). Mandatory for packet capture files");
+
     CONFIG_RADIO_ENTRY(DARK_BG, "Sticky Hosts (-c)",
 		       NTOP_PREF_STICKY_HOSTS, pref->stickyHosts,
 		       "Don't purge idle hosts from memory");

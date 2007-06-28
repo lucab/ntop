@@ -157,6 +157,7 @@ static struct option const long_options[] = {
   { "no-invalid-lun",                   no_argument,       0, 149    },
 
   { "skip-version-check",               required_argument, NULL, 150 },
+  { "known-subnets",                    required_argument, NULL, 151 },
 
   {NULL, 0, NULL, 0}
 };
@@ -700,6 +701,11 @@ int parseOptions(int argc, char* argv[]) {
       myGlobals.runningPref.skipVersionCheck = TRUE;
       break;
 
+    case 151:
+      stringSanityCheck(optarg, "--known-subnets");
+      myGlobals.runningPref.knownSubnets = strdup(optarg);
+      break;
+
     default:
       printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);
 #ifdef DEBUG
@@ -930,7 +936,7 @@ void delPwValue(char *key) {
 
 /* ******************************** */
 
-void processStrPref (char *key, char *value, char **globalVar, bool savePref)
+void processStrPref(char *key, char *value, char **globalVar, bool savePref)
 {
   if (key == NULL) return;
 
@@ -977,7 +983,7 @@ void processStrPref (char *key, char *value, char **globalVar, bool savePref)
 
 /* ******************************** */
 
-void processIntPref (char *key, char *value, int *globalVar, bool savePref)
+void processIntPref(char *key, char *value, int *globalVar, bool savePref)
 {
   char buf[512];
 
@@ -994,7 +1000,7 @@ void processIntPref (char *key, char *value, int *globalVar, bool savePref)
 
 /* ******************************** */
 
-void processBoolPref (char *key, bool value, bool *globalVar, bool savePref)
+void processBoolPref(char *key, bool value, bool *globalVar, bool savePref)
 {
   char buf[512];
 
@@ -1020,7 +1026,7 @@ static bool value2bool(char* value) {
 
 /* ******************************** */
 
-bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
+bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
   bool startCap = FALSE;
   char buf[16], *tmpStr = NULL;
   int tmpInt;
@@ -1035,19 +1041,19 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
     }
 
     if((pref->devices == NULL) || (strstr(pref->devices, value) == NULL))
-      processStrPref (NTOP_PREF_DEVICES, value, &pref->devices, savePref);
+      processStrPref(NTOP_PREF_DEVICES, value, &pref->devices, savePref);
   } else if(strcmp(key, NTOP_PREF_CAPFILE) == 0) {
     if(((value != NULL) &&
 	 (((pref->rFileName != NULL) && (strcmp(pref->rFileName, value)))))
 	|| ((value != NULL) && ((pref->rFileName == NULL)))) {
       startCap = TRUE;
     }
-    processStrPref (NTOP_PREF_CAPFILE, value, &pref->rFileName, savePref);
+    processStrPref(NTOP_PREF_CAPFILE, value, &pref->rFileName, savePref);
   } else if(strcmp(key, NTOP_PREF_FILTER) == 0) {
-    processStrPref (NTOP_PREF_FILTER, value, &pref->currentFilterExpression, savePref);
+    processStrPref(NTOP_PREF_FILTER, value, &pref->currentFilterExpression, savePref);
   } else if(strcmp(key, NTOP_PREF_SAMPLING) == 0) {
     int sampleRate;
-    processIntPref (NTOP_PREF_SAMPLING, value, &sampleRate, savePref);
+    processIntPref(NTOP_PREF_SAMPLING, value, &sampleRate, savePref);
     pref->samplingRate = (u_short)sampleRate;
   } else if(strcmp(key, NTOP_PREF_WEBPORT) == 0) {
     if(value != NULL) {
@@ -1069,13 +1075,13 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
 	pref->webAddr = strdup (value);
       }
       else {
-	processIntPref (NTOP_PREF_WEBPORT, value, &pref->webPort, savePref);
+	processIntPref(NTOP_PREF_WEBPORT, value, &pref->webPort, savePref);
       }
     } else {
       safe_snprintf (__FILE__, __LINE__, buf, sizeof(buf), "%d",
 		     DEFAULT_NTOP_WEB_PORT);
       value = buf;
-      processIntPref (NTOP_PREF_WEBPORT, value, &pref->webPort, savePref);
+      processIntPref(NTOP_PREF_WEBPORT, value, &pref->webPort, savePref);
     }
   }
 #ifdef HAVE_OPENSSL
@@ -1099,7 +1105,7 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
 	pref->sslPort = atoi(pref->sslAddr+1);
 	pref->sslAddr = value;
       } else {
-	processIntPref (NTOP_PREF_SSLPORT, value, &pref->sslPort, savePref);
+	processIntPref(NTOP_PREF_SSLPORT, value, &pref->sslPort, savePref);
       }
       free(tmpStr);
     }
@@ -1107,32 +1113,35 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
       safe_snprintf (__FILE__, __LINE__, buf, sizeof(buf), "%d",
 		     DEFAULT_NTOP_WEB_PORT);
       value = buf;
-      processIntPref (NTOP_PREF_SSLPORT, value, &pref->sslPort, savePref);
+      processIntPref(NTOP_PREF_SSLPORT, value, &pref->sslPort, savePref);
     }
   }
 #endif
   else if(strcmp(key, NTOP_PREF_EN_SESSION) == 0) {
-    processBoolPref (NTOP_PREF_EN_SESSION, value2bool(value),
+    processBoolPref(NTOP_PREF_EN_SESSION, value2bool(value),
 		     &pref->enableSessionHandling, savePref);
   } else if(strcmp(key, NTOP_PREF_EN_PROTO_DECODE) == 0) {
-    processBoolPref (NTOP_PREF_EN_PROTO_DECODE, value2bool(value),
+    processBoolPref(NTOP_PREF_EN_PROTO_DECODE, value2bool(value),
 		     &pref->enablePacketDecoding, savePref);
   } else if(strcmp(key, NTOP_PREF_FLOWSPECS) == 0) {
-    processStrPref (NTOP_PREF_FLOWSPECS, value, &pref->flowSpecs, savePref);
+    processStrPref(NTOP_PREF_FLOWSPECS, value, &pref->flowSpecs, savePref);
   } else if(strcmp(key, NTOP_PREF_LOCALADDR) == 0) {
-    processStrPref (NTOP_PREF_LOCALADDR, value, &pref->localAddresses,
+    processStrPref(NTOP_PREF_LOCALADDR, value, &pref->localAddresses,
+		    savePref);
+  } else if(strcmp(key, NTOP_PREF_KNOWNSUBNETS) == 0) {
+    processStrPref(NTOP_PREF_KNOWNSUBNETS, value, &pref->knownSubnets,
 		    savePref);
   } else if(strcmp(key, NTOP_PREF_STICKY_HOSTS) == 0) {
-    processBoolPref (NTOP_PREF_STICKY_HOSTS, value2bool(value), &pref->stickyHosts,
+    processBoolPref(NTOP_PREF_STICKY_HOSTS, value2bool(value), &pref->stickyHosts,
 		     savePref);
   } else if(strcmp(key, NTOP_PREF_TRACK_LOCAL) == 0) {
-    processBoolPref (NTOP_PREF_TRACK_LOCAL, value2bool(value),
+    processBoolPref(NTOP_PREF_TRACK_LOCAL, value2bool(value),
 		     &pref->trackOnlyLocalHosts, savePref);
   } else if(strcmp(key, NTOP_PREF_NO_PROMISC) == 0) {
-    processBoolPref (NTOP_PREF_NO_PROMISC, value2bool(value),
+    processBoolPref(NTOP_PREF_NO_PROMISC, value2bool(value),
 		     &pref->disablePromiscuousMode, savePref);
   } else if(strcmp(key, NTOP_PREF_DAEMON) == 0) {
-    processBoolPref (NTOP_PREF_DAEMON, value2bool(value), &pref->daemonMode,
+    processBoolPref(NTOP_PREF_DAEMON, value2bool(value), &pref->daemonMode,
 		     savePref);
   } else if(strcmp(key, NTOP_PREF_REFRESH_RATE) == 0) {
     if(value == NULL) {
@@ -1140,7 +1149,7 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
 		     DEFAULT_NTOP_AUTOREFRESH_INTERVAL);
       value = buf;
     }
-    processIntPref (NTOP_PREF_REFRESH_RATE, value, &pref->refreshRate,
+    processIntPref(NTOP_PREF_REFRESH_RATE, value, &pref->refreshRate,
 		    savePref);
   } else if(strcmp(key, NTOP_PREF_MAXLINES) == 0) {
     if(value == NULL) {
@@ -1148,7 +1157,7 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
 		     CONST_NUM_TABLE_ROWS_PER_PAGE);
       value = buf;
     }
-    processIntPref (NTOP_PREF_MAXLINES, value, &pref->maxNumLines,
+    processIntPref(NTOP_PREF_MAXLINES, value, &pref->maxNumLines,
 		    savePref);
   } else if(strcmp(key, NTOP_PREF_PRINT_FCORIP) == 0) {
     tmpInt = atoi (value);
@@ -1160,33 +1169,33 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
       pref->printIpOnly = FALSE, pref->printFcOnly = FALSE;
     }
 
-    processIntPref (NTOP_PREF_PRINT_FCORIP, value, &tmpInt, savePref);
+    processIntPref(NTOP_PREF_PRINT_FCORIP, value, &tmpInt, savePref);
   } else if(strcmp(key, NTOP_PREF_NO_INVLUN) == 0) {
-    processBoolPref (NTOP_PREF_NO_INVLUN, value2bool(value),
+    processBoolPref(NTOP_PREF_NO_INVLUN, value2bool(value),
 		     &pref->noInvalidLunDisplay, savePref);
   } else if(strcmp(key, NTOP_PREF_W3C) == 0) {
-    processBoolPref (NTOP_PREF_W3C, value2bool(value), &pref->w3c, savePref);
+    processBoolPref(NTOP_PREF_W3C, value2bool(value), &pref->w3c, savePref);
   } else if(strcmp(key, NTOP_PREF_IPV4V6) == 0) {
-    processIntPref (NTOP_PREF_IPV4V6, value, &pref->ipv4or6, savePref);
+    processIntPref(NTOP_PREF_IPV4V6, value, &pref->ipv4or6, savePref);
   } else if(strcmp(key, NTOP_PREF_DOMAINNAME) == 0) {
-    processStrPref (NTOP_PREF_DOMAINNAME, value, &tmpStr,
+    processStrPref(NTOP_PREF_DOMAINNAME, value, &tmpStr,
 		    savePref);
     if(tmpStr != NULL) {
       strncpy (pref->domainName, tmpStr, sizeof(pref->domainName));
       free (tmpStr);      /* alloc'd in processStrPref() */
     }
   } else if(strcmp(key, NTOP_PREF_NUMERIC_IP) == 0) {
-    processBoolPref (NTOP_PREF_NUMERIC_IP, value2bool(value), &pref->numericFlag,
+    processBoolPref(NTOP_PREF_NUMERIC_IP, value2bool(value), &pref->numericFlag,
 		     savePref);
   } else if(strcmp(key, NTOP_PREF_PROTOSPECS) == 0) {
-    processStrPref (NTOP_PREF_PROTOSPECS, value, &pref->protoSpecs,
+    processStrPref(NTOP_PREF_PROTOSPECS, value, &pref->protoSpecs,
 		    savePref);
   } else if(strcmp(key, NTOP_PREF_P3PCP) == 0) {
-    processStrPref (NTOP_PREF_P3PCP, value, &pref->P3Pcp, savePref);
+    processStrPref(NTOP_PREF_P3PCP, value, &pref->P3Pcp, savePref);
   } else if(strcmp(key, NTOP_PREF_P3PURI) == 0) {
-    processStrPref (NTOP_PREF_P3PURI, value, &pref->P3Puri, savePref);
+    processStrPref(NTOP_PREF_P3PURI, value, &pref->P3Puri, savePref);
   } else if(strcmp(key, NTOP_PREF_WWN_MAP) == 0) {
-    processStrPref (NTOP_PREF_WWN_MAP, value, &pref->fcNSCacheFile,
+    processStrPref(NTOP_PREF_WWN_MAP, value, &pref->fcNSCacheFile,
 		    savePref);
   } else if(strcmp(key, NTOP_PREF_MAXHASH) == 0) {
     if(value == NULL) {
@@ -1197,7 +1206,7 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
     processIntPref(NTOP_PREF_MAXHASH, value,
 		   (int*)&pref->maxNumHashEntries, savePref);
   } else if(strcmp(key, NTOP_PREF_SQL_DB_CONFIG) == 0) {
-    processStrPref (NTOP_PREF_SQL_DB_CONFIG, value, &tmpStr, savePref);
+    processStrPref(NTOP_PREF_SQL_DB_CONFIG, value, &tmpStr, savePref);
     if(tmpStr != NULL) {
       strncpy(pref->sqlDbConfig, tmpStr, sizeof(pref->sqlDbConfig));
       free(tmpStr);      /* alloc'd in processStrPref() */
@@ -1225,16 +1234,16 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
 		     -1);
       value = buf;
     }
-    processIntPref (NTOP_PREF_MAXSESSIONS, value,
+    processIntPref(NTOP_PREF_MAXSESSIONS, value,
 		    (int*)&pref->maxNumSessions, savePref);
   } else if(strcmp(key, NTOP_PREF_MERGEIF) == 0) {
-    processBoolPref (NTOP_PREF_MERGEIF, value2bool(value),
+    processBoolPref(NTOP_PREF_MERGEIF, value2bool(value),
 		     &pref->mergeInterfaces, savePref);
   } else if(strcmp(key, NTOP_PREF_MERGEIF) == 0) {
-    processBoolPref (NTOP_PREF_MERGEIF, value2bool(value),
+    processBoolPref(NTOP_PREF_MERGEIF, value2bool(value),
 		     &pref->mergeInterfaces, savePref);
   } else if(strcmp(key, NTOP_PREF_ENABLE_L7PROTO) == 0) {
-    processBoolPref (NTOP_PREF_ENABLE_L7PROTO, value2bool(value),
+    processBoolPref(NTOP_PREF_ENABLE_L7PROTO, value2bool(value),
 		     &pref->enableL7, savePref);
   } else if(strcmp(key, NTOP_PREF_NO_ISESS_PURGE) == 0) {
     processBoolPref(NTOP_PREF_NO_ISESS_PURGE, value2bool(value),
@@ -1243,7 +1252,7 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
     processBoolPref(NTOP_PREF_NO_TRUST_MAC, value2bool(value),
 		     &pref->dontTrustMACaddr, savePref);
   } else if(strcmp(key, NTOP_PREF_PCAP_LOGBASE) == 0) {
-    processStrPref (NTOP_PREF_PCAP_LOGBASE, value,
+    processStrPref(NTOP_PREF_PCAP_LOGBASE, value,
 		    &pref->pcapLogBasePath, savePref);
   }
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
@@ -1261,7 +1270,7 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
 		     DEFAULT_TRACE_LEVEL);
       value = buf;
     }
-    processIntPref (NTOP_PREF_TRACE_LVL, value, &pref->traceLevel,
+    processIntPref(NTOP_PREF_TRACE_LVL, value, &pref->traceLevel,
 		    savePref);
   } else if(strcmp(key, NTOP_PREF_DUMP_OTHER) == 0) {
     processBoolPref(NTOP_PREF_DUMP_OTHER, value2bool(value),
@@ -1270,7 +1279,7 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
     processBoolPref(NTOP_PREF_DUMP_SUSP, value2bool(value),
 		     &pref->enableSuspiciousPacketDump, savePref);
   } else if(strcmp(key, NTOP_PREF_ACCESS_LOG) == 0) {
-    processStrPref (NTOP_PREF_ACCESS_LOG, value,
+    processStrPref(NTOP_PREF_ACCESS_LOG, value,
 		    &pref->accessLogFile,
 		    savePref);
   }
@@ -1281,12 +1290,12 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
 		     DEFAULT_NTOP_SYSLOG);
       value = buf;
     }
-    processIntPref (NTOP_PREF_USE_SYSLOG, value,
+    processIntPref(NTOP_PREF_USE_SYSLOG, value,
 		    &pref->useSyslog, savePref);
   }
 #endif
   else if(strcmp(key, NTOP_PREF_PCAP_LOG) == 0) {
-    processStrPref (NTOP_PREF_PCAP_LOG, value, &pref->pcapLog, savePref);
+    processStrPref(NTOP_PREF_PCAP_LOG, value, &pref->pcapLog, savePref);
   } else if(strcmp(key, NTOP_PREF_NO_MUTEX_EXTRA) == 0) {
     processBoolPref(NTOP_PREF_NO_MUTEX_EXTRA, value2bool(value),
 		     &pref->disableMutexExtraInfo, savePref);

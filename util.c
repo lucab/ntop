@@ -763,14 +763,15 @@ unsigned short in_isMulticastAddress(struct in_addr *addr,
 /* ********************************* */
 
 u_int8_t num_network_bits(u_int32_t addr) {
-  int num_bits;
+  u_int8_t i, j, bits = 0, fields[4];
 
-  for(num_bits=0; addr > 0; num_bits++)
-    addr = addr >> 2;
-
-  /* traceEvent(CONST_TRACE_WARNING, "-> num_bits=%d", num_bits); */
-
-  return(num_bits);
+  memcpy(fields, &addr, 4);
+  
+  for(i = 8; i <= 8; i--)
+    for(j=0; j<4; j++)
+      if ((fields[j] & (1 << i)) != 0) bits++;	
+  
+    return(bits);
 }
 
 /* ********************************* */
@@ -939,15 +940,13 @@ int dotted2bits(char *mask) {
     traceEvent(CONST_TRACE_INFO, "DEBUG: dotted2bits (%s) = %d", mask, fields[0]);
 #endif
     return(atoi(mask));
-  } else {
-    u_int8_t i, j, bits = 0;
-      
-    for(i = 8; i <= 8; i--)
-      for(j=0; j<4; j++)
-	if ((fields[j] & (1 << i)) != 0) bits++;	
-
-    return(bits);
-  }
+  } else
+    return(num_network_bits(
+			    ((fields[0] & 0xff) << 24) 
+			    + ((fields[1] & 0xff) << 16)
+			    + ((fields[2] & 0xff) << 8) 
+			    + (fields[3] & 0xff)
+			    ));
 }
 
 /* ********************************* */
@@ -1155,6 +1154,23 @@ void handleLocalAddresses(char* addresses) {
 
   if(localAddresses[0]  != '\0')
     myGlobals.runningPref.localAddresses = strdup(localAddresses);
+}
+
+/* ********************************* */
+
+void handleKnownAddresses(char* addresses) {
+  char knownSubnets[1024];
+
+  knownSubnets[0] = '\0';
+
+  handleAddressLists(addresses, myGlobals.knownSubnets, &myGlobals.numKnownSubnets,
+                     knownSubnets, sizeof(knownSubnets), CONST_HANDLEADDRESSLISTS_MAIN);
+
+  /* Not used anymore */
+  if(myGlobals.runningPref.knownSubnets != NULL) free(myGlobals.runningPref.knownSubnets);
+
+  if(knownSubnets[0]  != '\0')
+    myGlobals.runningPref.knownSubnets = strdup(knownSubnets);
 }
 
 /* ********************************* */

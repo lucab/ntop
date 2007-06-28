@@ -588,6 +588,9 @@ void initNtop(char *devices) {
   /* Handle local addresses (if any) */
   handleLocalAddresses(myGlobals.runningPref.localAddresses);
 
+  /* Handle known subnetworks (if any) */
+  handleKnownAddresses(myGlobals.runningPref.knownSubnets);
+  
   if((myGlobals.runningPref.rFileName != NULL) &&
      ((myGlobals.runningPref.localAddresses == NULL) &&
       !myGlobals.runningPref.printFcOnly)) {

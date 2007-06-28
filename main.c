@@ -152,6 +152,7 @@ void usage(FILE * fp) {
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   fprintf(fp, "    [--ssl-watchdog]                                      %sUse ssl watchdog (NS6 problem)\n", newLine);
 #endif
+  fprintf(fp, "    [--known-subnets]                                     %sList of known subnets (separated by ,)\n", newLine);
 
  fprintf(fp, "\n"
 	 "NOTE\n"

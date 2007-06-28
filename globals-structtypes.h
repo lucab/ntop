@@ -2048,6 +2048,8 @@ typedef struct _userPref {
   bool disableMutexExtraInfo;   /* --disable-mutexextrainfo '145' */
 
   bool skipVersionCheck;        /* --skip-version-check '150' */
+
+  char *knownSubnets;         /* --known-subnets */
 } UserPref;
 
 typedef struct ntopGlobals {
@@ -2290,6 +2292,10 @@ typedef struct ntopGlobals {
   /* (Pseudo) Local Networks */
   u_int32_t localNetworks[MAX_NUM_NETWORKS][4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
   u_short numLocalNetworks;
+
+  /* All known Networks */
+  u_int32_t knownSubnets[MAX_NUM_NETWORKS][4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
+  u_short numKnownSubnets;
 
 #if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
   size_t allocatedMemory;

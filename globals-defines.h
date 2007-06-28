@@ -834,7 +834,7 @@
  * It MUST be big enough to hold all of the addresses assigned to each interface, plus
  * any additional values set by -m.  Don't be stingy - it's 3 32bit integers per entry.
  */
-#define MAX_NUM_NETWORKS                    32
+#define MAX_NUM_NETWORKS                    64
 
 /*
  * This defines the # of entries in hostsCache[] in myGlobals.
@@ -2827,6 +2827,7 @@ struct ip6_hdr
 #define NTOP_PREF_EN_PROTO_DECODE        "ntop.enablePacketDecoding"
 #define NTOP_PREF_FLOWSPECS              "ntop.flowSpecs"
 #define NTOP_PREF_LOCALADDR              "ntop.localAddresses"
+#define NTOP_PREF_KNOWNSUBNETS           "ntop.knownSubnetworks"
 #define NTOP_PREF_SPOOLPATH              "ntop.spoolPath"
 #define NTOP_PREF_STICKY_HOSTS           "ntop.stickyHosts"
 #define NTOP_PREF_TRACK_LOCAL            "ntop.trackOnlyLocalHosts"

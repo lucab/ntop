@@ -2618,25 +2618,26 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
        for(i=0; i<MAX_INTERFACE; i++)
 	 if(ifList[i] == 1) {
 	   if(i == ifId)
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>%d</b> ] ", i), found = 1;
+	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[&nbsp;<b>%d</b>&nbsp;] ", i), found = 1;
 	   else
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"/%s?unit=%d&if=%d\">%d</A> ] ",
+	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[&nbsp;<A HREF=\"/%s?unit=%d&if=%d\">%d</A>&nbsp;] ",
 			   CONST_HOSTS_INFO_HTML, showBytes, i, i);
 
 	   sendString(buf);
 	 }
 
        if(!found)
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>All</b> ] ");
+	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[&nbsp;<b>All</b>&nbsp;] ");
        else
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"/%s?unit=%d\">All</A> ] ",
+	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[&nbsp;<A HREF=\"/%s?unit=%d\">All</A>&nbsp;] ",
 		       CONST_HOSTS_INFO_HTML, showBytes);
 
        sendString(buf);
      }
 
      if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
+       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		     "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
 		     "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
 		     "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
 		     "<TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
@@ -2649,7 +2650,6 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 		     "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
 		     "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
 		     "<TH "TH_BG">%s10\">AS%s</A></TH>\n"
-
 		     "</TR>\n",
 		     theAnchor[1], arrow[1],
 		     theAnchor[0], arrow[0],

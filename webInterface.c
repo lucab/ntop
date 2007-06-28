@@ -1000,13 +1000,22 @@ static void printFeatureConfigNum(int textPrintFlag, char* feature, int value) {
   sendString(texthtml("\n", "</td></tr>\n"));
 }
 
+static void printFeatureConfigInfoHeader(int textPrintFlag, char *feature) {
+  sendString(texthtml("", "<tr><th "DARK_BG" "TH_BG" ALIGN=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
+  sendString(feature);
+  sendString(texthtml(".....", "</th>\n<td class=\"wrap\" "TD_BG" ALIGN=\"right\" colspan=\"2\" width=\"" xstr(CONST_INFOHTML_COL23_WIDTH) "\">"));
+}  
+
+static void printFeatureConfigInfoFooter(int textPrintFlag) {
+  sendString(texthtml("\n", "</td></tr>\n"));
+}
+
 static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* status) {
   char *tmpStr, tmpBuf[LEN_GENERAL_WORK_BUFFER];
   char *strtokState;
 
-  sendString(texthtml("", "<tr><th "DARK_BG" "TH_BG" ALIGN=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
-  sendString(feature);
-  sendString(texthtml(".....", "</th>\n<td class=\"wrap\" "TD_BG" ALIGN=\"right\" colspan=\"2\" width=\"" xstr(CONST_INFOHTML_COL23_WIDTH) "\">"));
+  printFeatureConfigInfoHeader(textPrintFlag, feature);
+
   if((status == NULL) || (status[0] == '\0')) {
     sendString("(nil)");
   } else {
@@ -1020,7 +1029,8 @@ static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* statu
       }
     }
   }
-  sendString(texthtml("\n", "</td></tr>\n"));
+
+  printFeatureConfigInfoFooter(textPrintFlag);
 }
 
 static void printFeatureConfigTitle3Col(int textPrintFlag,
@@ -1029,11 +1039,11 @@ static void printFeatureConfigTitle3Col(int textPrintFlag,
   if(textPrintFlag == TRUE) {
     sendString(textTitle);
   } else {
-    sendString("<tr><th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">");
+    sendString("<tr><th "DARK_BG" "TH_BG" align=\"center\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">");
     sendString(c1);
-    sendString("</th>\n<th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL2_WIDTH) "\">");
+    sendString("</th>\n<th "DARK_BG" "TH_BG" align=\"center\" width=\"" xstr(CONST_INFOHTML_COL2_WIDTH) "\">");
     sendString(c2);
-    sendString("</th>\n<th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL3_WIDTH) "\">");
+    sendString("</th>\n<th "DARK_BG" "TH_BG" align=\"center\" width=\"" xstr(CONST_INFOHTML_COL3_WIDTH) "\">");
     sendString(c3);
     sendString("</th>\n</tr>\n");
   }
@@ -5515,6 +5525,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "NTOP_PREF_LOCALADDR", "undefined");
 #endif
 
+#ifdef NTOP_PREF_KNOWNADDR
+  printFeatureConfigInfo(textPrintFlag, "NTOP_PREF_KNOWNADDR", NTOP_PREF_KNOWNADDR);
+#else
+  printFeatureConfigInfo(textPrintFlag, "NTOP_PREF_KNOWNADDR", "undefined");
+#endif
+
 #ifdef NTOP_PREF_MAPPERURL
   printFeatureConfigInfo(textPrintFlag, "NTOP_PREF_MAPPERURL", NTOP_PREF_MAPPERURL);
 #else
@@ -6286,7 +6302,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   /* *************************** */
 
-  printInfoSectionTitle(textPrintFlag, "Command line");
+  printInfoSectionTitle(textPrintFlag, "Command Line");
 
   strncpy(buf, myGlobals.startedAs, sizeof(buf)-1);
   printFeatureConfigInfo(textPrintFlag, "Started as....", buf);
@@ -6299,7 +6315,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   }
   printFeatureConfigInfo(textPrintFlag, "Resolved to....", buf);
 
-  printInfoSectionTitle(textPrintFlag, "Preferences used");
+  printInfoSectionTitle(textPrintFlag, "Preferences Used");
 
   printInfoSectionNote(textPrintFlag,
                    CONST_REPORT_ITS_EFFECTIVE "   means that "
@@ -6641,10 +6657,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "zlib version", "disabled via --without-zlib");
 #endif
 
-#ifdef MAKE_WITH_XMLDUMP
-  printFeatureConfigInfo(textPrintFlag, "XML dump (plugins/xmldump)", "Supported");
-#endif
-
   /* *************************** */
 
   printFeatureConfigInfo(textPrintFlag, "Protocol Decoders",    pref->enablePacketDecoding == 1 ? "Enabled" : "Disabled");
@@ -6692,32 +6704,63 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   }
 
 
-  /* ******************** */
-  buf[0] = '\0';
-  for(i=0; i<myGlobals.numLocalNetworks; i++) {
-    struct in_addr addr1, addr2;
-    char buf1[64];
+  /* *************************** */
 
-    addr1.s_addr = myGlobals.localNetworks[i][CONST_NETWORK_ENTRY];
-    addr2.s_addr = myGlobals.localNetworks[i][CONST_NETMASK_ENTRY];
-
-    safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "%s/%s [all devices]\n",
-		_intoa(addr1, buf1, sizeof(buf1)),
-		_intoa(addr2, buf2, sizeof(buf2)));
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%s", buf, buf1);
+  if(myGlobals.numLocalNetworks > 0) {
+    printFeatureConfigInfoHeader(textPrintFlag, "Local Networks");
+    
+    for(i=0; i<myGlobals.numLocalNetworks; i++) {
+      struct in_addr addr;
+      char addr_buf[32];
+      
+      addr.s_addr = myGlobals.localNetworks[i][CONST_NETWORK_ENTRY];
+      
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "%s/%d<br>", _intoa(addr, addr_buf, sizeof(addr_buf)),
+		    myGlobals.localNetworks[i][CONST_NETMASK_V6_ENTRY]);
+      sendString(buf);
+    }
+    
+    printFeatureConfigInfoFooter(textPrintFlag);
   }
+
+  /* *************************** */
+
+  printInfoSectionTitle(textPrintFlag, "Networks");
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    if(myGlobals.device[i].activeDevice) {
-      char buf1[128], buf3[64];
-      safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "%s/%s [device %s]\n",
-		  _intoa(myGlobals.device[i].network, buf2, sizeof(buf2)),
-		  _intoa(myGlobals.device[i].netmask, buf3, sizeof(buf3)),
-		  myGlobals.device[i].humanFriendlyName);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%s", buf, buf1);
+    char addr_buf[32], mask_buf[32], adapter_buf[64];
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%d", 
+		  _intoa(myGlobals.device[i].network, addr_buf, sizeof(addr_buf)),
+		  num_network_bits(myGlobals.device[i].netmask.s_addr));
+
+    safe_snprintf(__FILE__, __LINE__, adapter_buf, sizeof(adapter_buf),
+		  "%s Local Network", myGlobals.device[i].name);
+    printFeatureConfigInfo(textPrintFlag, adapter_buf, buf);
+  }    
+
+  /* ******************** */
+
+  if(myGlobals.numKnownSubnets > 0) {
+    printFeatureConfigInfoHeader(textPrintFlag, "Known Networks");
+    
+    for(i=0; i<myGlobals.numKnownSubnets; i++) {
+      struct in_addr addr;
+      char addr_buf[32];
+      
+      addr.s_addr = myGlobals.knownSubnets[i][CONST_NETWORK_ENTRY];
+      
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "%s/%d<br>", _intoa(addr, addr_buf, sizeof(addr_buf)),
+		    myGlobals.knownSubnets[i][CONST_NETMASK_V6_ENTRY]);
+      sendString(buf);
     }
+    
+    printFeatureConfigInfoFooter(textPrintFlag);
   }
+
+  /* ******************** */
 
   printInfoSectionTitle(textPrintFlag, "ntop Web Server");
 
@@ -6975,8 +7018,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   if(myGlobals.queueBufferCount >= MAX_PROCESS_BUFFER) {
 
     for(i=0; i<MAX_PROCESS_BUFFER; i++) {
-      if(myGlobals.queueBuffer[i] > qmaxDelay) qmaxDelay = myGlobals.queueBuffer[i];
-      if(myGlobals.queueBuffer[i] < qminDelay) qminDelay = myGlobals.queueBuffer[i];
+      if(myGlobals.queueBuffer[i] > qmaxDelay)   qmaxDelay = myGlobals.queueBuffer[i];
+      if(myGlobals.queueBuffer[i] < qminDelay)   qminDelay = myGlobals.queueBuffer[i];
       if(myGlobals.processBuffer[i] > pmaxDelay) pmaxDelay = myGlobals.processBuffer[i];
       if(myGlobals.processBuffer[i] < pminDelay) pminDelay = myGlobals.processBuffer[i];
 
@@ -7006,27 +7049,27 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                                 "Packet Processing", "Queue (pre-process)", "Processing");
 
     printFeatureConfigInfo3ColFlt6(textPrintFlag,
-                                  "Minimum",
-                                  TRUE, qminDelay, TRUE, pminDelay,
-                                  TRUE);
+				   "Minimum",
+				   TRUE, qminDelay, TRUE, pminDelay,
+				   TRUE);
     printFeatureConfigInfo3ColFlt6(textPrintFlag,
-                                  "Average",
-                                  TRUE, qXBAR, TRUE, pXBAR,
-                                  TRUE);
+				   "Average",
+				   TRUE, qXBAR, TRUE, pXBAR,
+				   TRUE);
     printFeatureConfigInfo3ColFlt6(textPrintFlag,
-                                  "Maximum",
-                                  TRUE, qmaxDelay, TRUE, pmaxDelay,
-                                  TRUE);
+				   "Maximum",
+				   TRUE, qmaxDelay, TRUE, pmaxDelay,
+				   TRUE);
     printFeatureConfigInfo3ColFlt6(textPrintFlag,
-                                  "Standard Deviation",
-                                  TRUE, qSD, TRUE, pSD,
-                                  TRUE);
-
+				   "Standard Deviation",
+				   TRUE, qSD, TRUE, pSD,
+				   TRUE);
+    
     printFeatureConfigInfo3ColFlt6(textPrintFlag,
-                                  "Maximum ever",
-                                  TRUE, myGlobals.qmaxDelay, TRUE, myGlobals.pmaxDelay,
+				   "Maximum ever",
+				   TRUE, myGlobals.qmaxDelay, TRUE, myGlobals.pmaxDelay,
                                   TRUE);
-
+    
     sendString(texthtml("", "<tr><th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
     sendString("Throughput (pps) min/avg/max");
 
@@ -7042,17 +7085,22 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     if(qmaxDelay+pmaxDelay > 0.0) {
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.1f", 1.0/(qmaxDelay+pmaxDelay));
       sendString(tmpBuf);
-    }
+    } else
+      sendString("0");
+
     sendString(texthtml("/", "&nbsp;/&nbsp;"));
     if(qXBAR+pXBAR > 0.0) {
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.1f", 1.0/(qXBAR+pXBAR));
       sendString(tmpBuf);
-    }
+    } else
+      sendString("0");
+
     sendString(texthtml("/", "&nbsp;/&nbsp;"));
     if(qminDelay+pminDelay > 0.0) {
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.1f", 1.0/(qminDelay+pminDelay));
       sendString(tmpBuf);
-    }
+    } else
+      sendString("0");
 
     sendString(texthtml("\n", "</td></tr>\n"));
 
@@ -7269,7 +7317,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     }
   }
 
-  printInfoSectionTitle(textPrintFlag, "DNS Lookup Calls:");
+  printInfoSectionTitle(textPrintFlag, "DNS Lookup Calls");
 
   printFeatureConfigNum(textPrintFlag, "DNS resolution attempts", (int)myGlobals.numAttemptingResolutionWithDNS);
   printFeatureConfigNum(textPrintFlag, "....Success: Resolved", (int)myGlobals.numResolvedWithDNSAddresses);

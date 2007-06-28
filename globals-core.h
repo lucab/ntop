@@ -563,6 +563,7 @@ extern unsigned short isLocalAddress(HostAddr *addr, u_int actualDeviceId,
 				     u_int32_t *the_local_network_mask);
 extern int dotted2bits(char *mask);
 extern void handleLocalAddresses(char* addresses);
+extern void handleKnownAddresses(char* addresses);
 extern unsigned short isPseudoLocalAddress(HostAddr *addr, u_int actualDeviceId,
 					   u_int32_t *the_local_network, 
 					   u_int32_t *the_local_network_mask);
