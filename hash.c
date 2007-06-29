@@ -1127,6 +1127,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
 
       setResolvedName(el, el->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
+      updateHostKnownSubnet(el);
 
       /* Trick to fill up the address cache */
       if(myGlobals.runningPref.numericFlag == 0)

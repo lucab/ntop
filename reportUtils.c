@@ -3654,6 +3654,19 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     sendString(buf);
   }
 
+  if(el->known_subnet_id != UNKNOWN_SUBNET_ID) {
+    struct in_addr addr;
+    char addr_buf[32];
+
+    addr.s_addr = myGlobals.knownSubnets[el->known_subnet_id][CONST_NETWORK_ENTRY];
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "%s/%d</TD></TR>\n", getRowColor(),
+		  "Subnet", _intoa(addr, addr_buf, sizeof(addr_buf)),
+		  myGlobals.knownSubnets[el->known_subnet_id][CONST_NETMASK_V6_ENTRY]);
+    sendString(buf);
+  }
+
   if(el->dnsDomainValue && (el->dnsDomainValue[0] != '\0')) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%s</TD></TR>\n", getRowColor(),

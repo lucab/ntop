@@ -1846,3 +1846,50 @@ char* host2networkName(HostTraffic *el, char *buf, u_short buf_len) {
   
   return(buf);
 }
+
+/* **************************************** */
+
+void addDeviceNetworkToKnownSubnetList(NtopInterface *device) {
+  int i;
+
+  for(i=0; i<myGlobals.numKnownSubnets; i++) {
+    if((device->network.s_addr == myGlobals.knownSubnets[i][CONST_NETWORK_ENTRY])
+       && (device->netmask.s_addr == myGlobals.knownSubnets[i][CONST_NETMASK_ENTRY]))
+       return; /* Already present */
+  }
+
+  /* Not present: we add it to the list */
+  if(myGlobals.numKnownSubnets >= (MAX_NUM_NETWORKS-1)) {
+    traceEvent(CONST_TRACE_WARNING, "Too many known subnets defined (%d)",
+	       myGlobals.numKnownSubnets);
+    return;
+  } else {
+    i = myGlobals.numKnownSubnets;
+    myGlobals.knownSubnets[i][CONST_NETWORK_ENTRY]    = device->network.s_addr;
+    myGlobals.knownSubnets[i][CONST_NETMASK_ENTRY]    = device->netmask.s_addr;
+    myGlobals.knownSubnets[i][CONST_NETMASK_V6_ENTRY] = num_network_bits(device->netmask.s_addr);
+    myGlobals.knownSubnets[i][CONST_BROADCAST_ENTRY]  = device->network.s_addr | (~device->netmask.s_addr);
+    myGlobals.numKnownSubnets++;
+  }
+}
+
+/* **************************************** */
+
+void updateHostKnownSubnet(HostTraffic *el) {
+  int i;
+
+  if(el->hostIpAddress.hostFamily != AF_INET /* v4 */) return;
+
+  for(i=0; i<myGlobals.numKnownSubnets; i++) {
+    struct in_addr addr;
+    char addr_buf[32];
+
+    if((el->hostIpAddress.addr._hostIp4Address.s_addr & myGlobals.knownSubnets[i][CONST_NETMASK_ENTRY])
+       == myGlobals.knownSubnets[i][CONST_NETWORK_ENTRY]) {
+      el->known_subnet_id = i;
+      return;
+    }
+  }
+
+  el->known_subnet_id = UNKNOWN_SUBNET_ID;
+}

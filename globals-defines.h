@@ -2879,3 +2879,5 @@ struct ip6_hdr
 #define NTOP_PREF_VALUE_AF_BOTH      AF_UNSPEC
 
 #define COMMUNITY_PREFIX             "community."
+
+#define UNKNOWN_SUBNET_ID ((int8_t)-1)

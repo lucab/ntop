@@ -2384,14 +2384,16 @@ void resetHostsVariables(HostTraffic* el) {
   resetUsageCounter(&el->contactedRcvdPeers);
   resetUsageCounter(&el->contactedRouters);
 
-  el->vlanId = NO_VLAN;
-  el->ifId = NO_INTERFACE;
+  el->vlanId          = NO_VLAN;
+  el->ifId            = NO_INTERFACE;
+  el->known_subnet_id = UNKNOWN_SUBNET_ID;
+
   el->hostAS = 0;
   if (el->dnsDomainValue != NULL)      free(el->dnsDomainValue);
   el->dnsDomainValue = NULL;
-  if (el->dnsTLDValue != NULL)      free(el->dnsTLDValue);
+  if (el->dnsTLDValue != NULL)         free(el->dnsTLDValue);
   el->dnsTLDValue = NULL;
-  if (el->ip2ccValue != NULL)       free(el->ip2ccValue);
+  if (el->ip2ccValue != NULL)          free(el->ip2ccValue);
   el->ip2ccValue = NULL;
   el->hostResolvedName[0] = '\0';
   el->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_NONE;

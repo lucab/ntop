@@ -1308,6 +1308,8 @@ void addDevice(char* deviceName, char* deviceDescr) {
       myGlobals.device[deviceId].netmask.s_addr = 0xFFFFFF00; /* dummy */
     }
 
+    addDeviceNetworkToKnownSubnetList(&myGlobals.device[deviceId]);
+
     if((myGlobals.device[deviceId].network.s_addr == 0) &&
        (myGlobals.device[deviceId].netmask.s_addr == 0xFFFFFFFF) ) {
       /* Unnumbered interface... */

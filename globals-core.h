@@ -161,6 +161,8 @@ extern u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
 extern void checkSpoofing(HostTraffic *el, int actualDeviceId);
 extern void cleanupHostEntries(void);
 extern char* host2networkName(HostTraffic *el, char *buf, u_short buf_len);
+extern void updateHostKnownSubnet(HostTraffic *el);
+extern void addDeviceNetworkToKnownSubnetList(NtopInterface *device);
 
 /* admin.c */
 extern void showUsers(void);

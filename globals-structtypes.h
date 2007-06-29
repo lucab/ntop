@@ -791,9 +791,9 @@ typedef struct hostTraffic {
   u_char           lastEthAddress[LEN_ETHERNET_ADDRESS]; /* used for remote addresses */
   char             ethAddressString[LEN_ETHERNET_ADDRESS_DISPLAY];
   char             hostNumIpAddress[20] /* xxx.xxx.xxx.xxx */, *dnsDomainValue, *dnsTLDValue;
-  u_char           network_mask; /* IPv6 notation e.g. /24 */
-  char             *hwModel, *description, *community;
-  char             *ip2ccValue, *fingerprint;
+  u_int8_t         network_mask; /* IPv6 notation e.g. /24 */
+  int8_t           known_subnet_id;    /* -1 if the host does not belong to a known subnet */
+  char             *hwModel, *description, *community, *ip2ccValue, *fingerprint;
   char             hostResolvedName[MAX_LEN_SYM_HOST_NAME];
   short            hostResolvedNameType;
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
@@ -2038,7 +2038,6 @@ typedef struct _userPref {
 
   char *instance;               /* --instance '140' */
   char *logo;
-
   bool disableStopcap;          /* --disable-stopcap '142' */
 
   bool disableInstantSessionPurge; /* --disable-instantsessionpurge '144' */
@@ -2046,10 +2045,8 @@ typedef struct _userPref {
   bool printIpOnly;             /* --no-fc '148' */
   bool noInvalidLunDisplay;     /* --no-invalid-lun '149' */
   bool disableMutexExtraInfo;   /* --disable-mutexextrainfo '145' */
-
   bool skipVersionCheck;        /* --skip-version-check '150' */
-
-  char *knownSubnets;         /* --known-subnets */
+  char *knownSubnets;           /* --known-subnets '151' */
 } UserPref;
 
 typedef struct ntopGlobals {
@@ -2101,7 +2098,7 @@ typedef struct ntopGlobals {
   /* Physical and Logical network interfaces */
 
   u_short numDevices;      /* total network interfaces */
-  NtopInterface *device;   /* pointer to the table of Network interfaces */
+  NtopInterface *device;   /* pointer to the network interfaces table */
 
   /* Database */
   GDBM_FILE dnsCacheFile, pwFile, addressQueueFile, prefsFile, macPrefixFile, fingerprintFile;
