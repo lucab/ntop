@@ -930,7 +930,7 @@ unsigned short isPrivateAddress(HostAddr *addr,
 /* ************************************************ */
 
 int dotted2bits(char *mask) {
-  u_int8_t fields[4], fields_num;
+  int fields[4], fields_num;
   
   fields_num = sscanf(mask, "%d.%d.%d.%d",
 		      &fields[0], &fields[1], &fields[2], &fields[3]);
@@ -941,12 +941,10 @@ int dotted2bits(char *mask) {
 #endif
     return(atoi(mask));
   } else
-    return(num_network_bits(
-			    ((fields[0] & 0xff) << 24) 
+    return(num_network_bits(((fields[0] & 0xff) << 24) 
 			    + ((fields[1] & 0xff) << 16)
 			    + ((fields[2] & 0xff) << 8) 
-			    + (fields[3] & 0xff)
-			    ));
+			    + (fields[3] & 0xff)));
 }
 
 /* ********************************* */
@@ -1044,10 +1042,10 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
       /* correcting network numbers as specified in the netmask */
       network &= networkMask;
 
-      a = (int) ((network >> 24) & 0xff);
-      b = (int) ((network >> 16) & 0xff);
-      c = (int) ((network >>  8) & 0xff);
-      d = (int) ((network >>  0) & 0xff);
+      a = (int)((network >> 24) & 0xff);
+      b = (int)((network >> 16) & 0xff);
+      c = (int)((network >>  8) & 0xff);
+      d = (int)((network >>  0) & 0xff);
 
       traceEvent(CONST_TRACE_NOISY, "Assuming %d.%d.%d.%d/%d [0x%08x/0x%08x]",
 		 a, b, c, d, bits, network, networkMask);
@@ -1060,10 +1058,10 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
     broadcast = network | (~networkMask);
 
 #ifdef DEBUG
-    a = (int) ((broadcast >> 24) & 0xff);
-    b = (int) ((broadcast >> 16) & 0xff);
-    c = (int) ((broadcast >>  8) & 0xff);
-    d = (int) ((broadcast >>  0) & 0xff);
+    a = (int)((broadcast >> 24) & 0xff);
+    b = (int)((broadcast >> 16) & 0xff);
+    c = (int)((broadcast >>  8) & 0xff);
+    d = (int)((broadcast >>  0) & 0xff);
 
     traceEvent(CONST_TRACE_INFO, "DEBUG: Broadcast: [net=0x%08x] [broadcast=%d.%d.%d.%d]",
 	       network, a, b, c, d);
@@ -1076,13 +1074,13 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
        * the local address is valid, it's NOT assumed.
        */
       if (flagWhat == CONST_HANDLEADDRESSLISTS_MAIN) {
-	for(i=0; i<myGlobals.numDevices; i++) {
+	for(i = 0; i < myGlobals.numDevices; i++) {
 	  if((network == myGlobals.device[i].network.s_addr) &&
 	     (myGlobals.device[i].netmask.s_addr == networkMask)) {
-	    a = (int) ((network >> 24) & 0xff);
-	    b = (int) ((network >> 16) & 0xff);
-	    c = (int) ((network >>  8) & 0xff);
-	    d = (int) ((network >>  0) & 0xff);
+	    a = (int)((network >> 24) & 0xff);
+	    b = (int)((network >> 16) & 0xff);
+	    c = (int)((network >>  8) & 0xff);
+	    d = (int)((network >>  0) & 0xff);
 
 	    traceEvent(CONST_TRACE_INFO,
 		       "-m: Discarded unnecessary parameter %d.%d.%d.%d/%d - this is the local network",
@@ -1098,10 +1096,10 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 	theNetworks[(*numNetworks)][CONST_NETMASK_V6_ENTRY] = bits;
 	theNetworks[(*numNetworks)][CONST_BROADCAST_ENTRY]  = broadcast;
 
-	a = (int) ((network >> 24) & 0xff);
-	b = (int) ((network >> 16) & 0xff);
-	c = (int) ((network >>  8) & 0xff);
-	d = (int) ((network >>  0) & 0xff);
+	a = (int)((network >> 24) & 0xff);
+	b = (int)((network >> 16) & 0xff);
+	c = (int)((network >>  8) & 0xff);
+	d = (int)((network >>  0) & 0xff);
 
 	laBufferUsed = safe_snprintf(__FILE__, __LINE__,
 				     &localAddresses[laBufferPosition],
@@ -1119,10 +1117,10 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 
       }
     } else {
-      a = (int) ((network >> 24) & 0xff);
-      b = (int) ((network >> 16) & 0xff);
-      c = (int) ((network >>  8) & 0xff);
-      d = (int) ((network >>  0) & 0xff);
+      a = (int)((network >> 24) & 0xff);
+      b = (int)((network >> 16) & 0xff);
+      c = (int)((network >>  8) & 0xff);
+      d = (int)((network >>  0) & 0xff);
 
       traceEvent(CONST_TRACE_ERROR,
 		 "%s: %d.%d.%d.%d/%d - Too many networks (limit %d) - discarded",
@@ -1143,11 +1141,17 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 
 void handleLocalAddresses(char* addresses) {
   char localAddresses[1024];
-
+  
   localAddresses[0] = '\0';
 
-  handleAddressLists(addresses, myGlobals.localNetworks, &myGlobals.numLocalNetworks,
-                     localAddresses, sizeof(localAddresses), CONST_HANDLEADDRESSLISTS_MAIN);
+  if(addresses != NULL) {
+    char *addresses_copy = strdup(addresses);
+    
+    handleAddressLists(addresses_copy, myGlobals.localNetworks, &myGlobals.numLocalNetworks,
+		       localAddresses, sizeof(localAddresses), CONST_HANDLEADDRESSLISTS_MAIN);
+    
+    free(addresses_copy);
+  }
 
   /* Not used anymore */
   if(myGlobals.runningPref.localAddresses != NULL) free(myGlobals.runningPref.localAddresses);
@@ -1163,8 +1167,14 @@ void handleKnownAddresses(char* addresses) {
 
   knownSubnets[0] = '\0';
 
-  handleAddressLists(addresses, myGlobals.knownSubnets, &myGlobals.numKnownSubnets,
-                     knownSubnets, sizeof(knownSubnets), CONST_HANDLEADDRESSLISTS_MAIN);
+  if(addresses != NULL) {
+    char *addresses_copy = strdup(addresses);
+    
+    handleAddressLists(addresses_copy, myGlobals.knownSubnets, &myGlobals.numKnownSubnets,
+		       knownSubnets, sizeof(knownSubnets), CONST_HANDLEADDRESSLISTS_MAIN);
+    
+    free(addresses_copy);
+  }
 
   /* Not used anymore */
   if(myGlobals.runningPref.knownSubnets != NULL) free(myGlobals.runningPref.knownSubnets);
@@ -1721,7 +1731,7 @@ int getLocalHostAddress(struct in_addr *hostAddress, u_int8_t *netmask_v6, char*
 /* *********** MULTITHREAD STUFF *********** */
 
 int createThread(pthread_t *threadId,
-		 void *(*__start_routine) (void *),
+		 void *(*__start_routine)(void *),
 		 char* userParm) {
   int rc;
 
@@ -6536,10 +6546,10 @@ void revertDoubleColumnIfWIN32(char *str) {
 /* Subtract the `struct timeval' values X and Y */
 
 float timeval_subtract (struct timeval x, struct timeval y) {
-  return((float) ((long int) x.tv_sec * 1000000 +
-		  (long int) x.tv_usec -
-		  (long int) y.tv_sec * 1000000 -
-		  (long int) y.tv_usec) / 1000000.0);
+  return((float)((long int) x.tv_sec * 1000000 +
+		 (long int) x.tv_usec -
+		 (long int) y.tv_sec * 1000000 -
+		 (long int) y.tv_usec) / 1000000.0);
 }
 
 /* ************************************ */

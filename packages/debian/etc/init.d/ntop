@@ -1,60 +1,50 @@
 #! /bin/sh
-#
-# ntop script
-#
-# NOTE: Copy this script in /etc/init.d/ntop
-#
-# Author:
-# Paul Mansfield <paul.mansfield@uk.worldpay.com>
-# Worldpay - 20020218
-#
-# Fixed by L.Deri - May 2007
-#
-
 set -e
+#
+# (C) 2003 - Luca Deri <deri@ntop.org>
+# (C) 2007 - Massimo Torquati <torquati@ntop.org>
+#
 
-NAME=ntop
-DAEMON=/usr/local/bin/ntop
-test -x $DAEMON || exit 0
+APPNAME=ntop
+
+####################
 
 start_ntop() {
-    echo -n "Starting ntop "
-    $DAEMON -u nobody > /var/log/ntop.out &
-    echo " ...done"
+   if test -f /etc/ntop/ntop.start; then
+      start-stop-daemon --start --quiet --name $APPNAME --background --exec /usr/local/bin/ntop @/etc/ntop/ntop.conf > /dev/null
+   fi
 }
 
-stop_ntop() {
-    echo -n "Stopping ntop "
-    if test -f /var/run/ntop.pid ; then
-	kill `cat /var/run/ntop.pid`
-	echo -n " killed pid `cat /var/run/ntop.pid`"
-	rm /var/run/ntop.pid
-    fi
-    echo " ...done"
+####################
+
+stop_ntop() { 
+    start-stop-daemon --stop --oknodo --name $APPNAME --retry 9
 }
+
+########
 
 case "$1" in
   start)
-    start_ntop
-    ;;
-
+	echo -n "Starting ntop "
+	start_ntop;
+	echo " Done."
+	;;
   stop)
-    stop_ntop
-    ;;
+        echo -n "Stopping ntop "
+       	stop_ntop;
+	echo " Done."
+	;;
 
   restart)
-    stop_ntop
-    start_ntop
-    ;;
-
-  defaults)
-    $DAEMON -u nobody --set-admin-password=admin
-    ;;
+        echo -n "Restarting ntop "
+	stop_ntop;
+	start_ntop;
+	echo " Done."
+	;;
 
   *)
-    echo "Usage: /etc/init.d/$NAME {start|stop|restart|install}"
-    exit 1
-    ;;
+	echo "Usage: /etc/init.d/ntop {start|stop|restart}"
+	exit 1
 esac
 
 exit 0
