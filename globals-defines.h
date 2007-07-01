@@ -2881,3 +2881,4 @@ struct ip6_hdr
 #define COMMUNITY_PREFIX             "community."
 
 #define UNKNOWN_SUBNET_ID ((int8_t)-1)
+#define ALL_SUBNET_IDS    ((int8_t)-2)

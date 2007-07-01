@@ -2467,7 +2467,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
    char htmlAnchor[64], htmlAnchor1[64];
    char formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
    u_char *vlanList, foundVlan = 0, vlanStr[16], ifStr[16], foundIf = 0, *ifList;
-   u_int8_t knownSubnets[MAX_NUM_NETWORKS] = { 0 }, foundSubnet = 0;
+   u_int8_t *knownSubnets, foundSubnet = 0;
 
    vlanList = calloc(1, MAX_VLAN);
    if(vlanList == NULL) {
@@ -2479,8 +2479,18 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
    ifList = calloc(1, MAX_INTERFACE);
    if(ifList == NULL) {
      traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for if list");
+     free(vlanList);
      return;
    }
+   ifId = abs(ifId);
+
+   knownSubnets = calloc(sizeof(u_int8_t), myGlobals.numKnownSubnets);
+   if(ifList == NULL) {
+     traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for if list");
+     free(vlanList); free(ifList);
+     return;
+   }
+
    ifId = abs(ifId);
 
    printHTMLheader("Host Information", NULL, 0);
@@ -2490,7 +2500,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 
    tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "printHostsInfo");
    if(tmpTable == NULL) {
-     free(vlanList); free(ifList);
+     free(vlanList); free(ifList); free(knownSubnets);
      return;
    }
 
@@ -2511,8 +2521,12 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
      if((el->vlanId != NO_VLAN) && (el->vlanId < MAX_VLAN))       { vlanList[el->vlanId] = 1, foundVlan = 1; }
      if((vlanId != NO_VLAN) && (el->vlanId != vlanId)) continue;
 
-     if(el->known_subnet_id != UNKNOWN_SUBNET_ID)  foundSubnet = 1, knownSubnets[el->known_subnet_id] = 1;
-     if((knownSubnetId != UNKNOWN_SUBNET_ID)  && (el->known_subnet_id != knownSubnetId)) continue;
+     if(el->known_subnet_id != UNKNOWN_SUBNET_ID) foundSubnet = 1, knownSubnets[el->known_subnet_id] = 1;
+     if((knownSubnetId != UNKNOWN_SUBNET_ID) && (knownSubnetId != ALL_SUBNET_IDS)
+	&& (el->known_subnet_id != knownSubnetId)) 
+       continue;
+
+     if((knownSubnetId == UNKNOWN_SUBNET_ID) && (el->known_subnet_id != UNKNOWN_SUBNET_ID)) continue;
 
      if((el->ifId != NO_INTERFACE) && (el->ifId < MAX_INTERFACE)) { ifList[el->ifId] = 1, foundIf = 1; }
      if((ifId != NO_INTERFACE) && (el->ifId != ifId)) continue;
@@ -2596,82 +2610,119 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 
      if(foundVlan) {
        u_char found = 0, tmpBuf[64];
+       u_int8_t selected;
 
-       sendString("<p><b>VLAN</b>: ");
+       sendString("<p><form action=\"../\">\n<b>VLAN</b>:"
+                  "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
 
        for(i=0; i<MAX_VLAN; i++)
 	 if(vlanList[i] == 1) {
 	   if(i == vlanId)
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>%s</b> ] ",
-			   vlan2name(i, (char*)tmpBuf, sizeof(tmpBuf))), found = 1;
+	     selected = 1;
 	   else
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			   "[ <A HREF=\"/%s?unit=%d&vlan=%d\">%s</A> ] ",
-			   CONST_HOSTS_INFO_HTML, showBytes, i,
-			   vlan2name(i, (char*)tmpBuf, sizeof(tmpBuf)));
+	     selected = 0;
+
+	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			 "<option value=\"/%s?unit=%d&vlan=%d\"%s>%s</option>\n",
+			 CONST_HOSTS_INFO_HTML, showBytes, i,
+			 selected ? " selected" : "",
+			 vlan2name(i, (char*)tmpBuf, sizeof(tmpBuf)));
 
 	   sendString(buf);
 	 }
+
+       if(vlanId == NO_VLAN)
+	 selected = 1;
+       else
+	 selected = 0;
+
+       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		     "<option value=\"/%s?unit=%d\"%s>All</option>\n",
+		     CONST_HOSTS_INFO_HTML, showBytes,
+		     selected ? " selected" : "");
+       
+       sendString(buf);
+
+       sendString("</select>\n</form>\n");
      }
 
      if(foundSubnet) {
        u_char found = 0, tmpBuf[64];
+       u_int8_t selected;
 
-       sendString("<p><b>Subnet</b>: ");
+       sendString("<p><form action=\"../\">\n<b>Subnet</b>:"
+		  "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
 
        for(i=0; i<myGlobals.numKnownSubnets; i++)
 	 if(knownSubnets[i] == 1) {
 	   struct in_addr addr;
 	   char addr_buf[32];
-      
+
 	   addr.s_addr = myGlobals.knownSubnets[i][CONST_NETWORK_ENTRY];
 
 	   if((knownSubnetId != UNKNOWN_SUBNET_ID) && (i == knownSubnetId))
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>%s/%d</b> ] ",
-			   _intoa(addr, addr_buf, sizeof(addr_buf)),
-			   myGlobals.knownSubnets[i][CONST_NETMASK_V6_ENTRY]);
+	     selected = 1;
 	   else
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			   "[ <A HREF=\"/%s?unit=%d&subnet=%d\">%s/%d</A> ] ",
-			   CONST_HOSTS_INFO_HTML, showBytes, i,
-			   _intoa(addr, addr_buf, sizeof(addr_buf)),
-                           myGlobals.knownSubnets[i][CONST_NETMASK_V6_ENTRY]);
+	     selected = 0;
+	   
+	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			 "<option value=\"/%s?unit=%d&subnet=%d\"%s>%s/%d</option>\n",
+			 CONST_HOSTS_INFO_HTML, showBytes, i,
+			 selected ? " selected" : "",
+			 _intoa(addr, addr_buf, sizeof(addr_buf)),
+			 myGlobals.knownSubnets[i][CONST_NETMASK_V6_ENTRY]);
 
 	   sendString(buf);
 	 }
+       
+       if(knownSubnetId == UNKNOWN_SUBNET_ID) selected = 1; else selected = 0;
+       
+       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		     "<option value=\"/%s?unit=%d&subnet=%d\"%s>Unknown Subnets</option>\n",
+		     CONST_HOSTS_INFO_HTML, showBytes, UNKNOWN_SUBNET_ID,
+		     selected ? " selected" : "");
+       
+       sendString(buf);
 
-       if(knownSubnetId == UNKNOWN_SUBNET_ID)
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>All</b> ] ");
-       else
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		       "[ <A HREF=\"/%s?unit=%d&subnet=%d\">All</A> ] ",
-		       CONST_HOSTS_INFO_HTML, showBytes, UNKNOWN_SUBNET_ID);
+       if(knownSubnetId == ALL_SUBNET_IDS) selected = 1; else selected = 0;
+       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		     "<option value=\"/%s?unit=%d&subnet=%d\"%s>All</option>\n"
+		     "</select></form>\n<p>\n",
+		     CONST_HOSTS_INFO_HTML, showBytes, ALL_SUBNET_IDS,
+		     selected ? " selected" : "");
        
        sendString(buf);
      }
 
-
      if(foundIf) {
        u_char found = 0;
+       u_int8_t selected;
 
-       sendString("<p><b>Interface Id</b>: ");
+       sendString("<p><form action=\"../\">\n<b>Interface Id</b>:"
+		  "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
 
        for(i=0; i<MAX_INTERFACE; i++)
 	 if(ifList[i] == 1) {
 	   if(i == ifId)
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[&nbsp;<b>%d</b>&nbsp;] ", i), found = 1;
+	     selected = 1, found = 1;
 	   else
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[&nbsp;<A HREF=\"/%s?unit=%d&if=%d\">%d</A>&nbsp;] ",
-			   CONST_HOSTS_INFO_HTML, showBytes, i, i);
+	     selected = 0;
+
+	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"/%s?unit=%d&if=%d\"%s>%d</option>\n",
+			 CONST_HOSTS_INFO_HTML, showBytes, i,
+			 selected ? " selected" : "", i);
 
 	   sendString(buf);
 	 }
 
        if(!found)
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[&nbsp;<b>All</b>&nbsp;] ");
+	 selected = 1;
        else
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[&nbsp;<A HREF=\"/%s?unit=%d\">All</A>&nbsp;] ",
-		       CONST_HOSTS_INFO_HTML, showBytes);
+	 selected = 0;
+
+       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"/%s?unit=%d\"%s>All</option>\n"
+		     "</select>\n</form>\n",
+		     CONST_HOSTS_INFO_HTML, showBytes, selected ? " selected" : "", i);
 
        sendString(buf);
      }
@@ -2994,6 +3045,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
    free(tmpTable);
    free(vlanList);
    free(ifList);
+   free(knownSubnets);
  }
 
  /* ************************************ */
@@ -6751,17 +6803,17 @@ void findHost(char *key) {
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     u_char do_add = 0;
 
-    if((el == myGlobals.broadcastEntry) || (el->hostNumIpAddress == NULL)) continue;
+    if(el == myGlobals.broadcastEntry) continue;
     
     if((key == NULL) || (key == "")) do_add = 1;
-    else if(strstr(el->hostNumIpAddress, key)) do_add = 1;
+    else if(el->hostNumIpAddress && strstr(el->hostNumIpAddress, key)) do_add = 1;
     else if(strstr(el->ethAddressString, key)) do_add = 1;
     else if(strstr(el->hostResolvedName, key)) do_add = 1;
-    
+
     if(do_add) {      
       char *str;
 
-      if(el->hostResolvedName) str = el->hostResolvedName;
+      if(el->hostResolvedName[0] != '\0')      str = el->hostResolvedName;
       else if(el->ethAddressString[0] != '\0') str = el->ethAddressString;
       else str = "";
 

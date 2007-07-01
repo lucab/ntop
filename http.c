@@ -2015,7 +2015,7 @@ static int returnHTTPPage(char* pageName,
   FILE *fd = NULL;
   char tmpStr[512], *domainNameParm = NULL, *minus;
   char *db_key = NULL, *db_val = NULL;
-  int revertOrder=0, vlanId=NO_VLAN, ifId=NO_INTERFACE, subnetId = UNKNOWN_SUBNET_ID;
+  int revertOrder=0, vlanId=NO_VLAN, ifId=NO_INTERFACE, subnetId = ALL_SUBNET_IDS;
   struct tm t;
   HostsDisplayPolicy showHostsMode = myGlobals.hostsDisplayPolicy;
   LocalityDisplayPolicy showLocalityMode = myGlobals.localityDisplayPolicy;
