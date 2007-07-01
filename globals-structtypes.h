@@ -792,7 +792,7 @@ typedef struct hostTraffic {
   char             ethAddressString[LEN_ETHERNET_ADDRESS_DISPLAY];
   char             hostNumIpAddress[20] /* xxx.xxx.xxx.xxx */, *dnsDomainValue, *dnsTLDValue;
   u_int8_t         network_mask; /* IPv6 notation e.g. /24 */
-  int8_t           known_subnet_id;    /* -1 if the host does not belong to a known subnet */
+  int8_t           known_subnet_id;    /* UNKNOWN_SUBNET_ID if the host does not belong to a known subnet */
   char             *hwModel, *description, *community, *ip2ccValue, *fingerprint;
   char             hostResolvedName[MAX_LEN_SYM_HOST_NAME];
   short            hostResolvedNameType;

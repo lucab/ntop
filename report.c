@@ -2456,7 +2456,8 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 
  /* ******************************* */
 
- void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, int vlanId, int ifId) {
+ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, 
+		     int vlanId, int ifId, int knownSubnetId) {
    u_int idx, numEntries=0, maxHosts;
    int printedEntries=0;
    unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
@@ -2466,6 +2467,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
    char htmlAnchor[64], htmlAnchor1[64];
    char formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
    u_char *vlanList, foundVlan = 0, vlanStr[16], ifStr[16], foundIf = 0, *ifList;
+   u_int8_t knownSubnets[MAX_NUM_NETWORKS] = { 0 }, foundSubnet = 0;
 
    vlanList = calloc(1, MAX_VLAN);
    if(vlanList == NULL) {
@@ -2508,6 +2510,9 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 
      if((el->vlanId != NO_VLAN) && (el->vlanId < MAX_VLAN))       { vlanList[el->vlanId] = 1, foundVlan = 1; }
      if((vlanId != NO_VLAN) && (el->vlanId != vlanId)) continue;
+
+     if(el->known_subnet_id != UNKNOWN_SUBNET_ID)  foundSubnet = 1, knownSubnets[el->known_subnet_id] = 1;
+     if((knownSubnetId != UNKNOWN_SUBNET_ID)  && (el->known_subnet_id != knownSubnetId)) continue;
 
      if((el->ifId != NO_INTERFACE) && (el->ifId < MAX_INTERFACE)) { ifList[el->ifId] = 1, foundIf = 1; }
      if((ifId != NO_INTERFACE) && (el->ifId != ifId)) continue;
@@ -2607,8 +2612,44 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 
 	   sendString(buf);
 	 }
-
      }
+
+     if(foundSubnet) {
+       u_char found = 0, tmpBuf[64];
+
+       sendString("<p><b>Subnet</b>: ");
+
+       for(i=0; i<myGlobals.numKnownSubnets; i++)
+	 if(knownSubnets[i] == 1) {
+	   struct in_addr addr;
+	   char addr_buf[32];
+      
+	   addr.s_addr = myGlobals.knownSubnets[i][CONST_NETWORK_ENTRY];
+
+	   if((knownSubnetId != UNKNOWN_SUBNET_ID) && (i == knownSubnetId))
+	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>%s/%d</b> ] ",
+			   _intoa(addr, addr_buf, sizeof(addr_buf)),
+			   myGlobals.knownSubnets[i][CONST_NETMASK_V6_ENTRY]);
+	   else
+	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			   "[ <A HREF=\"/%s?unit=%d&subnet=%d\">%s/%d</A> ] ",
+			   CONST_HOSTS_INFO_HTML, showBytes, i,
+			   _intoa(addr, addr_buf, sizeof(addr_buf)),
+                           myGlobals.knownSubnets[i][CONST_NETMASK_V6_ENTRY]);
+
+	   sendString(buf);
+	 }
+
+       if(knownSubnetId == UNKNOWN_SUBNET_ID)
+	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>All</b> ] ");
+       else
+	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		       "[ <A HREF=\"/%s?unit=%d&subnet=%d\">All</A> ] ",
+		       CONST_HOSTS_INFO_HTML, showBytes, UNKNOWN_SUBNET_ID);
+       
+       sendString(buf);
+     }
+
 
      if(foundIf) {
        u_char found = 0;

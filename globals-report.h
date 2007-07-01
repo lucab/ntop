@@ -205,7 +205,7 @@ extern void printMulticastStats(int sortedColumn /* ignored so far */,
                                 int revertOrder, int pageNum);
 extern void printVSANList(unsigned int deviceId);
 extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, 
-			   int showBytes, int vlanId, int ifId);
+			   int showBytes, int vlanId, int ifId, int knownSubnetId);
 extern void makeDot(void);
 extern void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, int vsanId);
 extern void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,

@@ -1,10 +1,18 @@
 #! /bin/sh
 # Configuration validation subroutine script.
 #   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
+<<<<<<< config.sub
+#   2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+=======
 #   2000, 2001, 2002, 2003, 2004, 2005, 2006 Free Software Foundation,
 #   Inc.
+>>>>>>> 2.40
 
+<<<<<<< config.sub
+timestamp='2005-12-11'
+=======
 timestamp='2006-07-02'
+>>>>>>> 2.40
 
 # This file is (in principle) common to ALL GNU software.
 # The presence of a machine in this file suggests that SOME GNU software
@@ -240,17 +248,28 @@ case $basic_machine in
 	| a29k \
 	| alpha | alphaev[4-8] | alphaev56 | alphaev6[78] | alphapca5[67] \
 	| alpha64 | alpha64ev[4-8] | alpha64ev56 | alpha64ev6[78] | alpha64pca5[67] \
+<<<<<<< config.sub
+	| am33_2.0 \
+	| arc | arm | arm[bl]e | arme[lb] | armv[2345] | armv[345][lb] | avr \
+	| bfin \
+=======
 	| am33_2.0 \
 	| arc | arm | arm[bl]e | arme[lb] | armv[2345] | armv[345][lb] | avr | avr32 \
 	| bfin \
+>>>>>>> 2.40
 	| c4x | clipper \
 	| d10v | d30v | dlx | dsp16xx \
 	| fr30 | frv \
 	| h8300 | h8500 | hppa | hppa1.[01] | hppa2.0 | hppa2.0[nw] | hppa64 \
 	| i370 | i860 | i960 | ia64 \
+<<<<<<< config.sub
+	| ip2k | iq2000 \
+	| m32r | m32rle | m68000 | m68k | m88k | maxq | mcore \
+=======
 	| ip2k | iq2000 \
 	| m32c | m32r | m32rle | m68000 | m68k | m88k \
 	| maxq | mb | microblaze | mcore \
+>>>>>>> 2.40
 	| mips | mipsbe | mipseb | mipsel | mipsle \
 	| mips16 \
 	| mips64 | mips64el \
@@ -276,16 +295,29 @@ case $basic_machine in
 	| pdp10 | pdp11 | pj | pjl \
 	| powerpc | powerpc64 | powerpc64le | powerpcle | ppcbe \
 	| pyramid \
+<<<<<<< config.sub
+	| sh | sh[1234] | sh[24]a | sh[23]e | sh[34]eb | shbe | shle | sh[1234]le | sh3ele \
+=======
 	| sh | sh[1234] | sh[24]a | sh[23]e | sh[34]eb | sheb | shbe | shle | sh[1234]le | sh3ele \
+>>>>>>> 2.40
 	| sh64 | sh64le \
+<<<<<<< config.sub
+	| sparc | sparc64 | sparc64b | sparc86x | sparclet | sparclite \
+	| sparcv8 | sparcv9 | sparcv9b \
+	| strongarm \
+=======
 	| sparc | sparc64 | sparc64b | sparc64v | sparc86x | sparclet | sparclite \
 	| sparcv8 | sparcv9 | sparcv9b | sparcv9v \
 	| spu | strongarm \
+>>>>>>> 2.40
 	| tahoe | thumb | tic4x | tic80 | tron \
 	| v850 | v850e \
 	| we32k \
 	| x86 | xscale | xscalee[bl] | xstormy16 | xtensa \
 	| z8k)
+		basic_machine=$basic_machine-unknown
+		;;
+	m32c)
 		basic_machine=$basic_machine-unknown
 		;;
 	m6811 | m68hc11 | m6812 | m68hc12)
@@ -317,8 +349,13 @@ case $basic_machine in
 	| alpha64-* | alpha64ev[4-8]-* | alpha64ev56-* | alpha64ev6[78]-* \
 	| alphapca5[67]-* | alpha64pca5[67]-* | arc-* \
 	| arm-*  | armbe-* | armle-* | armeb-* | armv*-* \
+<<<<<<< config.sub
+	| avr-* \
+	| bfin-* | bs2000-* \
+=======
 	| avr-* | avr32-* \
 	| bfin-* | bs2000-* \
+>>>>>>> 2.40
 	| c[123]* | c30-* | [cjt]90-* | c4x-* | c54x-* | c55x-* | c6x-* \
 	| clipper-* | craynv-* | cydra-* \
 	| d10v-* | d30v-* | dlx-* \
@@ -327,8 +364,13 @@ case $basic_machine in
 	| h8300-* | h8500-* \
 	| hppa-* | hppa1.[01]-* | hppa2.0-* | hppa2.0[nw]-* | hppa64-* \
 	| i*86-* | i860-* | i960-* | ia64-* \
+<<<<<<< config.sub
+	| ip2k-* | iq2000-* \
+	| m32r-* | m32rle-* \
+=======
 	| ip2k-* | iq2000-* \
 	| m32c-* | m32r-* | m32rle-* \
+>>>>>>> 2.40
 	| m68000-* | m680[012346]0-* | m68360-* | m683?2-* | m68k-* \
 	| m88110-* | m88k-* | maxq-* | mcore-* \
 	| mips-* | mipsbe-* | mipseb-* | mipsel-* | mipsle-* \
@@ -350,18 +392,32 @@ case $basic_machine in
 	| mmix-* \
 	| mt-* \
 	| msp430-* \
+<<<<<<< config.sub
+	| none-* | np1-* | ns16k-* | ns32k-* \
+=======
 	| nios-* | nios2-* \
 	| none-* | np1-* | ns16k-* | ns32k-* \
+>>>>>>> 2.40
 	| orion-* \
 	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
 	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* | ppcbe-* \
 	| pyramid-* \
 	| romp-* | rs6000-* \
+<<<<<<< config.sub
+	| sh-* | sh[1234]-* | sh[24]a-* | sh[23]e-* | sh[34]eb-* | shbe-* \
+=======
 	| sh-* | sh[1234]-* | sh[24]a-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
+>>>>>>> 2.40
 	| shle-* | sh[1234]le-* | sh3ele-* | sh64-* | sh64le-* \
+<<<<<<< config.sub
+	| sparc-* | sparc64-* | sparc64b-* | sparc86x-* | sparclet-* \
+	| sparclite-* \
+	| sparcv8-* | sparcv9-* | sparcv9b-* | strongarm-* | sv1-* | sx?-* \
+=======
 	| sparc-* | sparc64-* | sparc64b-* | sparc64v-* | sparc86x-* | sparclet-* \
 	| sparclite-* \
 	| sparcv8-* | sparcv9-* | sparcv9b-* | sparcv9v-* | strongarm-* | sv1-* | sx?-* \
+>>>>>>> 2.40
 	| tahoe-* | thumb-* \
 	| tic30-* | tic4x-* | tic54x-* | tic55x-* | tic6x-* | tic80-* \
 	| tron-* \
@@ -371,6 +427,8 @@ case $basic_machine in
 	| xstormy16-* | xtensa-* \
 	| ymp-* \
 	| z8k-*)
+		;;
+	m32c-*)
 		;;
 	# Recognize the various machine names and aliases which stand
 	# for a CPU type and a company and sometimes even an OS.
@@ -1125,7 +1183,11 @@ case $basic_machine in
 	sh[1234] | sh[24]a | sh[34]eb | sh[1234]le | sh[23]ele)
 		basic_machine=sh-unknown
 		;;
+<<<<<<< config.sub
+	sparc | sparcv8 | sparcv9 | sparcv9b)
+=======
 	sparc | sparcv8 | sparcv9 | sparcv9b | sparcv9v)
+>>>>>>> 2.40
 		basic_machine=sparc-sun
 		;;
 	cydra)
@@ -1198,10 +1260,16 @@ case $os in
 	      | -aos* \
 	      | -nindy* | -vxsim* | -vxworks* | -ebmon* | -hms* | -mvs* \
 	      | -clix* | -riscos* | -uniplus* | -iris* | -rtu* | -xenix* \
+<<<<<<< config.sub
+	      | -hiux* | -386bsd* | -knetbsd* | -mirbsd* | -netbsd* | -openbsd* \
+	      | -ekkobsd* | -kfreebsd* | -freebsd* | -riscix* | -lynxos* \
+	      | -bosx* | -nextstep* | -cxux* | -aout* | -elf* | -oabi* \
+=======
 	      | -hiux* | -386bsd* | -knetbsd* | -mirbsd* | -netbsd* \
 	      | -openbsd* | -solidbsd* \
 	      | -ekkobsd* | -kfreebsd* | -freebsd* | -riscix* | -lynxos* \
 	      | -bosx* | -nextstep* | -cxux* | -aout* | -elf* | -oabi* \
+>>>>>>> 2.40
 	      | -ptx* | -coff* | -ecoff* | -winnt* | -domain* | -vsta* \
 	      | -udi* | -eabi* | -lites* | -ieee* | -go32* | -aux* \
 	      | -chorusos* | -chorusrdb* \
@@ -1213,8 +1281,13 @@ case $os in
 	      | -storm-chaos* | -tops10* | -tenex* | -tops20* | -its* \
 	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
+<<<<<<< config.sub
+	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+	      | -skyos* | -haiku* | -rdos*)
+=======
 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
 	      | -skyos* | -haiku* | -rdos* | -toppers*)
+>>>>>>> 2.40
 	# Remember, each alternative MUST END IN *, to match a version number.
 		;;
 	-qnx*)
@@ -1378,9 +1451,15 @@ case $basic_machine in
 	arm*-semi)
 		os=-aout
 		;;
+<<<<<<< config.sub
+    c4x-* | tic4x-*)
+        os=-coff
+        ;;
+=======
         c4x-* | tic4x-*)
         	os=-coff
 		;;
+>>>>>>> 2.40
 	# This must come before the *-dec entry.
 	pdp10-*)
 		os=-tops20

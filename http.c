@@ -2015,7 +2015,7 @@ static int returnHTTPPage(char* pageName,
   FILE *fd = NULL;
   char tmpStr[512], *domainNameParm = NULL, *minus;
   char *db_key = NULL, *db_val = NULL;
-  int revertOrder=0, vlanId=NO_VLAN, ifId=NO_INTERFACE;
+  int revertOrder=0, vlanId=NO_VLAN, ifId=NO_INTERFACE, subnetId = UNKNOWN_SUBNET_ID;
   struct tm t;
   HostsDisplayPolicy showHostsMode = myGlobals.hostsDisplayPolicy;
   LocalityDisplayPolicy showLocalityMode = myGlobals.localityDisplayPolicy;
@@ -2068,6 +2068,8 @@ static int returnHTTPPage(char* pageName,
 	showBytes = atoi(&tkn[5]);
       } else if(strncmp(tkn, "vlan=", 5) == 0) {
 	vlanId = atoi(&tkn[5]);
+      } else if(strncmp(tkn, "subnet=", 7) == 0) {
+	subnetId = atoi(&tkn[7]);
       } else if(strncmp(tkn, "if=", 3) == 0) {
 	ifId = atoi(&tkn[3]);
       } else if(strncmp(tkn, "vsan=", 5) == 0) {
@@ -2672,7 +2674,7 @@ static int returnHTTPPage(char* pageName,
 	printThptStatsMatrix(sortedColumn);
       } else if(strncasecmp(pageName, CONST_HOSTS_INFO_HTML, strlen(CONST_HOSTS_INFO_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vlanId, ifId);
+	printHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vlanId, ifId, subnetId);
       } else if(strncasecmp(pageName, CONST_FC_HOSTS_INFO_HTML,
 			    strlen(CONST_FC_HOSTS_INFO_HTML)) == 0) {
         printFcHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vsanId);
