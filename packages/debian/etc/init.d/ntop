@@ -21,17 +21,33 @@ stop_ntop() {
     start-stop-daemon --stop --oknodo --name $APPNAME --retry 9
 }
 
+####################
+
+default_ntop() { 
+    chown -R nobody /usr/local/var/ntop/rrd
+    if [ ! -f /usr/local/share/ntop/ntop_pw.db ]; then
+	/usr/local/bin/ntop -P /usr/local/share/ntop -Q /var/log/ntop --set-admin-password=admin
+    fi
+}
+
 ########
 
 case "$1" in
   start)
 	echo -n "Starting ntop "
+	default_ntop;
 	start_ntop;
 	echo " Done."
 	;;
   stop)
         echo -n "Stopping ntop "
        	stop_ntop;
+	echo " Done."
+	;;
+
+  default)
+        echo -n "Defaulting ntop "
+       	default_ntop;
 	echo " Done."
 	;;
 
@@ -43,7 +59,7 @@ case "$1" in
 	;;
 
   *)
-	echo "Usage: /etc/init.d/ntop {start|stop|restart}"
+	echo "Usage: /etc/init.d/ntop {start|stop|restart|default}"
 	exit 1
 esac
 
