@@ -3838,6 +3838,8 @@ void processPacket(u_char *_deviceId,
 		  FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &srcHost->flags);
 		}
 
+		updateHostKnownSubnet(srcHost);
+
 		if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) {
 		  if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 		  if(srcHost->nonIPTraffic == NULL) return;

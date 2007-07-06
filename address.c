@@ -1835,15 +1835,22 @@ void checkSpoofing(HostTraffic *hostToCheck, int actualDeviceId) {
 /* **************************************** */
 
 char* host2networkName(HostTraffic *el, char *buf, u_short buf_len) {
-  struct in_addr addr = el->hostIpAddress.Ip4Address;
+  struct in_addr addr;
   char buf1[64];
       
-  addr.s_addr = addr.s_addr & (0xFFFFFFFF << (32-el->network_mask));
 
-  safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s/%d",
-		_intoa(addr, buf1, sizeof(buf1)), 
-		el->network_mask);
-  
+  if((el->known_subnet_id == UNKNOWN_SUBNET_ID)
+     || (el->known_subnet_id < 0)
+     || (el->known_subnet_id > myGlobals.numKnownSubnets))
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "0.0.0.0/0");
+  else {
+    addr.s_addr = myGlobals.knownSubnets[el->known_subnet_id][CONST_NETWORK_ENTRY];
+    
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s/%d",
+		  _intoa(addr, buf1, sizeof(buf1)), 
+		  myGlobals.knownSubnets[el->known_subnet_id][CONST_NETMASK_V6_ENTRY]);
+  }
+
   return(buf);
 }
 

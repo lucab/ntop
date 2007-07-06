@@ -5520,7 +5520,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
       if(network_mode) {
 	if(network_mode == NETWORK_VIEW) {
-	  if((el->network_mask == 0) || (el->network_mask == 32))
+	  if(el->known_subnet_id == UNKNOWN_SUBNET_ID)
 	    continue;
 	  else if((domain_network_name != NULL) && (domain_network_name[0] != '\0')) {
 	    char *nw_name = host2networkName(el, buf1, sizeof(buf1));

@@ -1039,7 +1039,8 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 
 	  FD_CLR(FLAG_SUBNET_LOCALHOST, &el->flags);
 
-	  if(isPrivateAddress(hostIpAddress, &the_local_network, &the_local_network_mask)) FD_SET(FLAG_PRIVATE_IP_ADDRESS, &el->flags);
+	  if(isPrivateAddress(hostIpAddress, &the_local_network, &the_local_network_mask))
+	    FD_SET(FLAG_PRIVATE_IP_ADDRESS, &el->flags);
 
 	  if(!isBroadcastAddress(hostIpAddress, &the_local_network, &the_local_network_mask)) {
 	    if(isPseudoLocalAddress(hostIpAddress, actualDeviceId, &the_local_network, &the_local_network_mask))
@@ -1052,6 +1053,8 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	FD_CLR(FLAG_SUBNET_LOCALHOST, &el->flags);
 	FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
       }
+
+      updateHostKnownSubnet(el);
 
       if(strncmp(el->ethAddressString, "FF:", 3) == 0) {
 	/*
