@@ -473,7 +473,7 @@ extern void initUserPrefs(UserPref *pref);
 
 /* util.c */
 extern void setEmptySerial(HostSerial *a);
-extern void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][4],
+extern void handleAddressLists(char* addresses, NetworkStats theNetworks[MAX_NUM_NETWORKS],
 			       u_short *numNetworks, char *localAddresses,
 			       int localAddressesLen, int flagWhat);
 extern void handleFlowsSpecs(void);
@@ -573,13 +573,13 @@ extern unsigned short _pseudoLocalAddress(HostAddr *addr,
 					  u_int32_t *the_local_network, 
 					  u_int32_t *the_local_network_mask);
 extern unsigned short __pseudoLocalAddress(struct in_addr *addr,
-					   u_int32_t theNetworks[MAX_NUM_NETWORKS][4],
+					   NetworkStats theNetworks[MAX_NUM_NETWORKS],
 					   u_short numNetworks,
 					   u_int32_t *the_local_network, 
 					   u_int32_t *the_local_network_mask);
 extern unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId,
-					   u_int32_t *the_local_network, 
-					   u_int32_t *the_local_network_mask);
+					 u_int32_t *the_local_network, 
+					 u_int32_t *the_local_network_mask);
 extern unsigned short isPseudoBroadcastAddress(HostAddr *addr,
 					       u_int32_t *the_local_network, 
 					       u_int32_t *the_local_network_mask);
@@ -781,12 +781,13 @@ extern char **buildargv(const char *argv);
 #ifndef HAVE_FREEARGV
 extern void freeargv(char **argv);
 #endif
-extern void handleWhiteBlackListAddresses(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][4],
+extern void handleWhiteBlackListAddresses(char* addresses, 
+					  NetworkStats theNetworks[MAX_NUM_NETWORKS],
 					  u_short *numNets, char* outAddresses,
 					  int outAddressesLen);
 extern unsigned short isOKtoSave(u_int32_t addr,
-				 u_int32_t whiteNetworks[MAX_NUM_NETWORKS][4],
-				 u_int32_t blackNetworks[MAX_NUM_NETWORKS][4],
+				 NetworkStats whiteNetworks[MAX_NUM_NETWORKS],
+				 NetworkStats blackNetworks[MAX_NUM_NETWORKS],
 				 u_short numWhiteNets, u_short numBlackNets);
 extern float timeval_subtract(struct timeval x, struct timeval y);
 extern void freePortsUsage(HostTraffic *el);

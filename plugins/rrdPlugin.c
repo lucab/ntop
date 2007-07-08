@@ -263,7 +263,7 @@ static void createMultihostGraph(char *rrdName,
 /* ******************************************* */
 
 static void expandRRDList(char *rrdName,
-			  u_int32_t localNetworks[MAX_NUM_NETWORKS][4], /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
+			  NetworkStats localNetworks[MAX_NUM_NETWORKS], /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
 			  u_short numLocalNetworks, char *startTime, char* endTime) {
   char path[256], rrdName_copy[64], debug=0;
   u_int32_t numRrdHosts = 0, i;
@@ -283,18 +283,18 @@ static void expandRRDList(char *rrdName,
 
     ha.hostFamily = AF_INET;
 
-    if(localNetworks[i][CONST_NETMASK_V6_ENTRY] < MAX_NETWORK_EXPANSION)
-      localNetworks[i][CONST_NETMASK_V6_ENTRY] = MAX_NETWORK_EXPANSION;
-    if(localNetworks[i][CONST_NETMASK_V6_ENTRY] > 32)
-      localNetworks[i][CONST_NETMASK_V6_ENTRY] = 32; /* Sanity check */
+    if(localNetworks[i].address[CONST_NETMASK_V6_ENTRY] < MAX_NETWORK_EXPANSION)
+      localNetworks[i].address[CONST_NETMASK_V6_ENTRY] = MAX_NETWORK_EXPANSION;
+    if(localNetworks[i].address[CONST_NETMASK_V6_ENTRY] > 32)
+      localNetworks[i].address[CONST_NETMASK_V6_ENTRY] = 32; /* Sanity check */
 
-    if(localNetworks[i][CONST_NETMASK_V6_ENTRY] == 32)
+    if(localNetworks[i].address[CONST_NETMASK_V6_ENTRY] == 32)
       num_hosts = 1;
     else
-      num_hosts = (1 << (32 - localNetworks[i][CONST_NETMASK_V6_ENTRY])) - 1;
+      num_hosts = (1 << (32 - localNetworks[i].address[CONST_NETMASK_V6_ENTRY])) - 1;
 
     for(offset = 0; offset<num_hosts; offset++) {
-      ha.addr._hostIp4Address.s_addr = localNetworks[i][0] + offset;
+      ha.addr._hostIp4Address.s_addr = localNetworks[i].address[0] + offset;
 
       if((el = findHostByNumIP(ha, 0, myGlobals.actualReportDeviceId)) != NULL) {
 	str = (el->ethAddressString[0] != '\0') ? el->ethAddressString : el->hostNumIpAddress;
@@ -315,7 +315,7 @@ static void expandRRDList(char *rrdName,
 
       if(stat(path, &statbuf) == 0) {
 	if(debug) traceEvent(CONST_TRACE_WARNING, "RRD: ---> %s [%u]",
-			     path, num_network_bits(localNetworks[i][1]));
+			     path, num_network_bits(localNetworks[i].address[1]));
 	rrdHosts[numRrdHosts++] = el;
       }
     }
@@ -534,7 +534,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
   } else {
     /* Cluster */
     char clusterAddresses[256] = { '\0' }, localAddresses[1024] = { '\0' };
-    u_int32_t localNetworks[MAX_NUM_NETWORKS][4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
+    NetworkStats localNetworks[MAX_NUM_NETWORKS]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
     u_short numLocalNetworks = 0, found = 0, num_rrds = 0;
     char *keys[MAX_NUM_RRDS];
     int k;
@@ -554,18 +554,18 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 
       ha.hostFamily = AF_INET;
 
-      if(localNetworks[i][CONST_NETMASK_V6_ENTRY] < MAX_NETWORK_EXPANSION)
-		localNetworks[i][CONST_NETMASK_V6_ENTRY] = MAX_NETWORK_EXPANSION;
-      if(localNetworks[i][CONST_NETMASK_V6_ENTRY] > 32)
-		localNetworks[i][CONST_NETMASK_V6_ENTRY] = 32; /* Sanity check */
+      if(localNetworks[i].address[CONST_NETMASK_V6_ENTRY] < MAX_NETWORK_EXPANSION)
+		localNetworks[i].address[CONST_NETMASK_V6_ENTRY] = MAX_NETWORK_EXPANSION;
+      if(localNetworks[i].address[CONST_NETMASK_V6_ENTRY] > 32)
+		localNetworks[i].address[CONST_NETMASK_V6_ENTRY] = 32; /* Sanity check */
 
-      if(localNetworks[i][CONST_NETMASK_V6_ENTRY] == 32)
+      if(localNetworks[i].address[CONST_NETMASK_V6_ENTRY] == 32)
 		num_hosts = 1;
       else
-		num_hosts = (1 << (32 - localNetworks[i][CONST_NETMASK_V6_ENTRY])) - 1;
+		num_hosts = (1 << (32 - localNetworks[i].address[CONST_NETMASK_V6_ENTRY])) - 1;
 
       for(offset = 0; offset<num_hosts; offset++) {
-	ha.addr._hostIp4Address.s_addr = localNetworks[i][0] + offset;
+	ha.addr._hostIp4Address.s_addr = localNetworks[i].address[0] + offset;
 
 	if((el = findHostByNumIP(ha, 0, myGlobals.actualReportDeviceId)) != NULL) {
 	  str = (el->ethAddressString[0] != '\0') ? el->ethAddressString : el->hostNumIpAddress;
@@ -600,7 +600,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 		}
 
 	      if((!duplicated) && (num_rrds < (MAX_NUM_RRDS-1))) {
-		// traceEvent(CONST_TRACE_INFO, "RRD: -->  %s [%d][%s]", path, num_rrds, dp->d_name);
+		// traceEvent(CONST_TRACE_INFO, "RRD: -->  %s [%d].address[%s]", path, num_rrds, dp->d_name);
 		keys[num_rrds++] = strdup(dp->d_name);
 	      }
 	    }
@@ -631,7 +631,7 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 	  sendString("<td>");
       }
 
-    expandRRDList(keys[k], localNetworks, numLocalNetworks, startTime, endTime);
+      expandRRDList(keys[k], localNetworks, numLocalNetworks, startTime, endTime);
 
       if(strstr(keys[k], "Rcvd"))
 	sendString("</td>");
@@ -2642,8 +2642,8 @@ static void commonRRDinit(void) {
     value[0] = '\0';
     for(i=0; i<myGlobals.numLocalNetworks; i++) {
       char buf[64];
-      u_int32_t network = myGlobals.localNetworks[i][CONST_NETWORK_ENTRY];
-      u_int32_t netmask = myGlobals.localNetworks[i][CONST_NETMASK_ENTRY];
+      u_int32_t network = myGlobals.localNetworks[i].address[CONST_NETWORK_ENTRY];
+      u_int32_t netmask = myGlobals.localNetworks[i].address[CONST_NETMASK_ENTRY];
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "%d.%d.%d.%d/%d.%d.%d.%d",
@@ -4101,7 +4101,7 @@ RETSIGTYPE rrdcleanup(int signo) {
 
 static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
   char value[512 /* leave it big for hosts filter */];
-  u_int32_t networks[32][4];
+  NetworkStats networks[32];
   u_short numLocalNets;
   int idx;
   char rrdPath[512];
@@ -4421,7 +4421,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     dname[256],
     endTime[32];
   int i, j, sleep_tm, devIdx, idx;
-  u_int32_t networks[32][4];
+  NetworkStats networks[32];
   u_short numLocalNets;
   ProtocolsList *protoList;
   struct tm workT;
@@ -4588,8 +4588,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	}
 
 	/* walk through all hosts, getting their domain names and counting stats */
-	for (el = getFirstHost(devIdx);
-	     el != NULL; el = getNextHost(devIdx, el)) {
+	for(el = getFirstHost(devIdx); el != NULL; el = getNextHost(devIdx, el)) {
 	  if (el->l2Family != FLAG_HOST_TRAFFIC_AF_ETH)
 	    continue;
 

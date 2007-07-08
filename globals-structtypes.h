@@ -1234,6 +1234,11 @@ typedef struct astats {
   struct astats *next;
 } AsStats;
 
+typedef struct {
+  u_int32_t address[4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */  
+} NetworkStats;
+
+
 #define MAX_INTERFACE_STATS_QUEUE_LEN  32
 
 typedef struct netFlowGlobals {
@@ -1270,7 +1275,7 @@ typedef struct netFlowGlobals {
   /* Stats */
   ProbeInfo probeList[MAX_NUM_PROBES];
   InterfaceStats *ifStats;
-  u_int32_t whiteNetworks[MAX_NUM_NETWORKS][4], blackNetworks[MAX_NUM_NETWORKS][4];
+  NetworkStats whiteNetworks[MAX_NUM_NETWORKS], blackNetworks[MAX_NUM_NETWORKS];
   u_short numWhiteNets, numBlackNets;
   u_int32_t flowProcessed;
   Counter flowProcessedBytes;
@@ -1344,7 +1349,7 @@ typedef struct sFlowGlobals {
 
   /* Stats */
   ProbeInfo probeList[MAX_NUM_PROBES];
-  u_int32_t whiteNetworks[MAX_NUM_NETWORKS][4], blackNetworks[MAX_NUM_NETWORKS][4];
+  NetworkStats whiteNetworks[MAX_NUM_NETWORKS], blackNetworks[MAX_NUM_NETWORKS];
   u_short numWhiteNets, numBlackNets;
   u_int32_t flowProcessed;
   Counter flowProcessedBytes;
@@ -2049,8 +2054,8 @@ typedef struct _userPref {
   char *knownSubnets;           /* --known-subnets '151' */
 } UserPref;
 
-typedef struct ntopGlobals {
 
+typedef struct ntopGlobals {
   /* How is ntop run? */
 
   char *program_name;      /* The name the program was run with, stripped of any leading path */
@@ -2287,12 +2292,12 @@ typedef struct ntopGlobals {
   u_short *mtuSize, *headerSize;
 
   /* (Pseudo) Local Networks */
-  u_int32_t localNetworks[MAX_NUM_NETWORKS][4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
+  NetworkStats localNetworks[MAX_NUM_NETWORKS];
   u_short numLocalNetworks;
 
   /* All known Networks */
-  u_int32_t knownSubnets[MAX_NUM_NETWORKS][4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
-  u_short numKnownSubnets;
+  NetworkStats subnetStats[MAX_NUM_NETWORKS];
+  u_short numKnownSubnets;  
 
 #if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)
   size_t allocatedMemory;
@@ -2414,6 +2419,5 @@ typedef struct ntopGlobals {
 #ifdef PARM_ENABLE_EXPERIMENTAL
   u_short experimentalFlagSet;  /* Is the 'experimental' flag set? */
 #endif
-
 } NtopGlobals;
 

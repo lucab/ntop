@@ -6713,11 +6713,11 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
       struct in_addr addr;
       char addr_buf[32];
       
-      addr.s_addr = myGlobals.localNetworks[i][CONST_NETWORK_ENTRY];
+      addr.s_addr = myGlobals.localNetworks[i].address[CONST_NETWORK_ENTRY];
       
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "%s/%d<br>", _intoa(addr, addr_buf, sizeof(addr_buf)),
-		    myGlobals.localNetworks[i][CONST_NETMASK_V6_ENTRY]);
+		    myGlobals.localNetworks[i].address[CONST_NETMASK_V6_ENTRY]);
       sendString(buf);
     }
     
@@ -6749,11 +6749,11 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
       struct in_addr addr;
       char addr_buf[32];
       
-      addr.s_addr = myGlobals.knownSubnets[i][CONST_NETWORK_ENTRY];
+      addr.s_addr = myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY];
       
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "%s/%d<br>", _intoa(addr, addr_buf, sizeof(addr_buf)),
-		    myGlobals.knownSubnets[i][CONST_NETMASK_V6_ENTRY]);
+		    myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY]);
       sendString(buf);
     }
     

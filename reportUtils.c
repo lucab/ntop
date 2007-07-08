@@ -3655,15 +3655,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if(el->known_subnet_id != UNKNOWN_SUBNET_ID) {
-    struct in_addr addr;
-    char addr_buf[32];
+    char addr_buf[32], subnet_buf[48];
 
-    addr.s_addr = myGlobals.knownSubnets[el->known_subnet_id][CONST_NETWORK_ENTRY];
+    host2networkName(el, subnet_buf, sizeof(subnet_buf));
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		  "%s/%d</TD></TR>\n", getRowColor(),
-		  "Subnet", _intoa(addr, addr_buf, sizeof(addr_buf)),
-		  myGlobals.knownSubnets[el->known_subnet_id][CONST_NETMASK_V6_ENTRY]);
+		  "<A HREF=\""CONST_DOMAIN_STATS_HTML"?dom=%s&netmode=1\">%s</A></TD></TR>\n", getRowColor(),
+		  "Subnet", subnet_buf, subnet_buf);
     sendString(buf);
   }
 
@@ -3784,11 +3782,11 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       if(el->nonIPTraffic->nbAccountName) {
 	if(el->nonIPTraffic->nbDomainName != NULL) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		      "%s@%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
-		      getRowColor(), "NetBios&nbsp;Name",
-		      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName,
-		      getNbNodeType(el->nonIPTraffic->nbNodeType),
-		      el->nonIPTraffic->nbDescr ? el->nonIPTraffic->nbDescr : "");
+			"%s@%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
+			getRowColor(), "NetBios&nbsp;Name",
+			el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName,
+			getNbNodeType(el->nonIPTraffic->nbNodeType),
+			el->nonIPTraffic->nbDescr ? el->nonIPTraffic->nbDescr : "");
 	} else {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		      "%s@%s (%s) %s</TD></TR>\n",

@@ -2657,8 +2657,8 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 	 if(knownSubnets[i] == 1) {
 	   struct in_addr addr;
 	   char addr_buf[32];
-
-	   addr.s_addr = myGlobals.knownSubnets[i][CONST_NETWORK_ENTRY];
+	   
+	   addr.s_addr = myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY];
 
 	   if((knownSubnetId != UNKNOWN_SUBNET_ID) && (i == knownSubnetId))
 	     selected = 1;
@@ -2670,7 +2670,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 			 CONST_HOSTS_INFO_HTML, showBytes, i,
 			 selected ? " selected" : "",
 			 _intoa(addr, addr_buf, sizeof(addr_buf)),
-			 myGlobals.knownSubnets[i][CONST_NETMASK_V6_ENTRY]);
+			 myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY]);
 
 	   sendString(buf);
 	 }
@@ -5332,7 +5332,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32], formatBuf4[32],
     formatBuf5[32], formatBuf6[32], formatBuf7[32], formatBuf8[32], formatBuf9[32],
     hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-  u_int32_t localNetworks[MAX_NUM_CLUSTERS][MAX_NUM_NETWORKS][4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
+  NetworkStats localNetworks[MAX_NUM_CLUSTERS][MAX_NUM_NETWORKS]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
   u_short numLocalNetworks[MAX_NUM_CLUSTERS], totNumClusters=0;
   u_char *clusterNames[MAX_NUM_CLUSTERS], debug = 0;
 

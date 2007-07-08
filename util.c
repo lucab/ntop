@@ -951,7 +951,7 @@ int dotted2bits(char *mask) {
 
 /* Example: "131.114.0.0/16,193.43.104.0/255.255.255.0" */
 
-void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][4],
+void handleAddressLists(char* addresses, NetworkStats theNetworks[MAX_NUM_NETWORKS],
 			u_short *numNetworks, char *localAddresses,
 			int localAddressesLen, int flagWhat) {
   char *strtokState, *address;
@@ -1091,10 +1091,10 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
       }
 
       if(found == 0) {
-	theNetworks[(*numNetworks)][CONST_NETWORK_ENTRY]    = network;
-	theNetworks[(*numNetworks)][CONST_NETMASK_ENTRY]    = networkMask;
-	theNetworks[(*numNetworks)][CONST_NETMASK_V6_ENTRY] = bits;
-	theNetworks[(*numNetworks)][CONST_BROADCAST_ENTRY]  = broadcast;
+	theNetworks[(*numNetworks)].address[CONST_NETWORK_ENTRY]    = network;
+	theNetworks[(*numNetworks)].address[CONST_NETMASK_ENTRY]    = networkMask;
+	theNetworks[(*numNetworks)].address[CONST_NETMASK_V6_ENTRY] = bits;
+	theNetworks[(*numNetworks)].address[CONST_BROADCAST_ENTRY]  = broadcast;
 
 	a = (int)((network >> 24) & 0xff);
 	b = (int)((network >> 16) & 0xff);
@@ -1170,7 +1170,7 @@ void handleKnownAddresses(char* addresses) {
   if(addresses != NULL) {
     char *addresses_copy = strdup(addresses);
     
-    handleAddressLists(addresses_copy, myGlobals.knownSubnets, &myGlobals.numKnownSubnets,
+    handleAddressLists(addresses_copy, myGlobals.subnetStats, &myGlobals.numKnownSubnets,
 		       knownSubnets, sizeof(knownSubnets), CONST_HANDLEADDRESSLISTS_MAIN);
     
     free(addresses_copy);
@@ -1203,7 +1203,7 @@ unsigned short in6_pseudoLocalAddress(struct in6_addr *addr,
 /* ******************************************************* */
 
 unsigned short __pseudoLocalAddress(struct in_addr *addr,
-				    u_int32_t theNetworks[MAX_NUM_NETWORKS][4],
+				    NetworkStats theNetworks[MAX_NUM_NETWORKS],
 				    u_short numNetworks,
 				    u_int32_t *the_local_network,
 				    u_int32_t *the_local_network_mask) {
@@ -1217,21 +1217,21 @@ unsigned short __pseudoLocalAddress(struct in_addr *addr,
     char buf[32], buf1[32], buf2[32];
     struct in_addr addr1, addr2;
 
-    addr1.s_addr = theNetworks[i][CONST_NETWORK_ENTRY];
-    addr2.s_addr = theNetworks[i][CONST_NETMASK_ENTRY];
+    addr1.s_addr = theNetworks[i].address[CONST_NETWORK_ENTRY];
+    addr2.s_addr = theNetworks[i].address[CONST_NETMASK_ENTRY];
 
     traceEvent(CONST_TRACE_INFO, "DEBUG: %s comparing [%s/%s]",
 	       _intoa(*addr, buf, sizeof(buf)),
 	       _intoa(addr1, buf1, sizeof(buf1)),
 	       _intoa(addr2, buf2, sizeof(buf2)));
 #endif
-    if((addr->s_addr & theNetworks[i][CONST_NETMASK_ENTRY]) == theNetworks[i][CONST_NETWORK_ENTRY]) {
+    if((addr->s_addr & theNetworks[i].address[CONST_NETMASK_ENTRY]) == theNetworks[i].address[CONST_NETWORK_ENTRY]) {
 #ifdef ADDRESS_DEBUG
       traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %s is pseudolocal", intoa(*addr));
 #endif
       if(the_local_network && the_local_network_mask) {
-	(*the_local_network)      = theNetworks[i][CONST_NETWORK_ENTRY];
-	(*the_local_network_mask) = theNetworks[i][CONST_NETMASK_V6_ENTRY];
+	(*the_local_network)      = theNetworks[i].address[CONST_NETWORK_ENTRY];
+	(*the_local_network_mask) = theNetworks[i].address[CONST_NETMASK_V6_ENTRY];
       }
       return(1);
     } else {
@@ -1383,7 +1383,7 @@ unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr,
 #endif
 
   for(i=0; i<myGlobals.numLocalNetworks; i++) {
-    if(addr->s_addr == myGlobals.localNetworks[i][CONST_BROADCAST_ENTRY]) {
+    if(addr->s_addr == myGlobals.localNetworks[i].address[CONST_BROADCAST_ENTRY]) {
 #ifdef ADDRESS_DEBUG
       traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: --> %8X is pseudo broadcast", addr->s_addr);
 #endif
@@ -4561,7 +4561,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
  * ****************************************** */
 
 void handleWhiteBlackListAddresses(char* addresses,
-                                   u_int32_t theNetworks[MAX_NUM_NETWORKS][4],
+                                   NetworkStats theNetworks[MAX_NUM_NETWORKS],
                                    u_short *numNets,
                                    char* outAddresses,
                                    int outAddressesLen) {
@@ -4595,8 +4595,8 @@ void handleWhiteBlackListAddresses(char* addresses,
  *  So we have to flip the whitelist code
  */
 unsigned short isOKtoSave(u_int32_t addr,
-			  u_int32_t whiteNetworks[MAX_NUM_NETWORKS][4],
-			  u_int32_t blackNetworks[MAX_NUM_NETWORKS][4],
+			  NetworkStats whiteNetworks[MAX_NUM_NETWORKS],
+			  NetworkStats blackNetworks[MAX_NUM_NETWORKS],
 			  u_short numWhiteNets, u_short numBlackNets) {
   int rc;
   struct in_addr workAddr;

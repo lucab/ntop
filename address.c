@@ -1844,11 +1844,11 @@ char* host2networkName(HostTraffic *el, char *buf, u_short buf_len) {
      || (el->known_subnet_id > myGlobals.numKnownSubnets))
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "0.0.0.0/0");
   else {
-    addr.s_addr = myGlobals.knownSubnets[el->known_subnet_id][CONST_NETWORK_ENTRY];
+    addr.s_addr = myGlobals.subnetStats[el->known_subnet_id].address[CONST_NETWORK_ENTRY];
     
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s/%d",
 		  _intoa(addr, buf1, sizeof(buf1)), 
-		  myGlobals.knownSubnets[el->known_subnet_id][CONST_NETMASK_V6_ENTRY]);
+		  myGlobals.subnetStats[el->known_subnet_id].address[CONST_NETMASK_V6_ENTRY]);
   }
 
   return(buf);
@@ -1860,8 +1860,8 @@ void addDeviceNetworkToKnownSubnetList(NtopInterface *device) {
   int i;
 
   for(i=0; i<myGlobals.numKnownSubnets; i++) {
-    if((device->network.s_addr == myGlobals.knownSubnets[i][CONST_NETWORK_ENTRY])
-       && (device->netmask.s_addr == myGlobals.knownSubnets[i][CONST_NETMASK_ENTRY]))
+    if((device->network.s_addr == myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY])
+       && (device->netmask.s_addr == myGlobals.subnetStats[i].address[CONST_NETMASK_ENTRY]))
        return; /* Already present */
   }
 
@@ -1872,10 +1872,10 @@ void addDeviceNetworkToKnownSubnetList(NtopInterface *device) {
     return;
   } else {
     i = myGlobals.numKnownSubnets;
-    myGlobals.knownSubnets[i][CONST_NETWORK_ENTRY]    = device->network.s_addr;
-    myGlobals.knownSubnets[i][CONST_NETMASK_ENTRY]    = device->netmask.s_addr;
-    myGlobals.knownSubnets[i][CONST_NETMASK_V6_ENTRY] = num_network_bits(device->netmask.s_addr);
-    myGlobals.knownSubnets[i][CONST_BROADCAST_ENTRY]  = device->network.s_addr | (~device->netmask.s_addr);
+    myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY]    = device->network.s_addr;
+    myGlobals.subnetStats[i].address[CONST_NETMASK_ENTRY]    = device->netmask.s_addr;
+    myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY] = num_network_bits(device->netmask.s_addr);
+    myGlobals.subnetStats[i].address[CONST_BROADCAST_ENTRY]  = device->network.s_addr | (~device->netmask.s_addr);
     myGlobals.numKnownSubnets++;
   }
 }
@@ -1891,8 +1891,8 @@ void updateHostKnownSubnet(HostTraffic *el) {
     struct in_addr addr;
     char addr_buf[32];
 
-    if((el->hostIpAddress.addr._hostIp4Address.s_addr & myGlobals.knownSubnets[i][CONST_NETMASK_ENTRY])
-       == myGlobals.knownSubnets[i][CONST_NETWORK_ENTRY]) {
+    if((el->hostIpAddress.addr._hostIp4Address.s_addr & myGlobals.subnetStats[i].address[CONST_NETMASK_ENTRY])
+       == myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY]) {
       el->known_subnet_id = i;
       return;
     }
