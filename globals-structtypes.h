@@ -1236,6 +1236,7 @@ typedef struct astats {
 
 typedef struct {
   u_int32_t address[4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */  
+  HostTraffic networkHost;
 } NetworkStats;
 
 

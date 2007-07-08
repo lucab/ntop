@@ -27,21 +27,21 @@ static void processFcPkt(const u_char *bp, const struct pcap_pkthdr *h,
 			 u_int16_t ethertype, int actualDeviceId);
 
 static char *fcProtocolStrings[] = {
-    "", "SW_ILS", "IP", "SCSI", "BLS", "ELS", "FCCT", "LinkData",
-    "Video", "LinkCtl", "SWILS_RSP", "FICON", "Undefined"
+  "", "SW_ILS", "IP", "SCSI", "BLS", "ELS", "FCCT", "LinkData",
+  "Video", "LinkCtl", "SWILS_RSP", "FICON", "Undefined"
 };
 
 /* PPPoE - Courtesy of Andreas Pfaller Feb2003 */
 #ifdef HAVE_LINUX_IF_PPPOX_H
- #include <linux/if_pppox.h>
+#include <linux/if_pppox.h>
 #else
- /* Extracted and modified from the Linux header for other systems - BMS Mar2003 */
- /* And for Linux systems without if_pppox.h - BMS Apr2003 */
- struct pppoe_tag {
-         u_int16_t tag_type;
-         u_int16_t tag_len;
-         char tag_data;
- };
+/* Extracted and modified from the Linux header for other systems - BMS Mar2003 */
+/* And for Linux systems without if_pppox.h - BMS Apr2003 */
+struct pppoe_tag {
+  u_int16_t tag_type;
+  u_int16_t tag_len;
+  char tag_data;
+};
 
 struct pppoe_hdr {
 #ifdef CFG_LITTLE_ENDIAN
@@ -64,7 +64,8 @@ static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
 static u_char lowMemoryMsgShown = 0;
 
 static void	updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
-						    u_int16_t dst_as_id, u_int octets);
+				u_int16_t dst_as_id, u_int octets);
+
 
 /* ******************************* */
 
@@ -175,7 +176,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
       case FLAG_P2P_EDONKEY:
 	idx = myGlobals.EdonkeyIdx;
 	break;
-     case FLAG_P2P_GNUTELLA:
+      case FLAG_P2P_GNUTELLA:
 	idx = myGlobals.GnutellaIdx;
 	break;
       case FLAG_P2P_KAZAA:
@@ -222,10 +223,10 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
 
-	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->sentLoc, length);
+	  incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->sentLoc, length);
 
 	  if(newSession)
-	    incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->totalFlows, 1);
+	    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->totalFlows, 1);
 	}
 
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
@@ -234,10 +235,10 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
 
-	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->rcvdLoc, length);
+	  incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->rcvdLoc, length);
 
 	  if(newSession)
-	    incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->totalFlows, 1);
+	    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->totalFlows, 1);
 	}
 
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].local, length);
@@ -248,10 +249,10 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
 
-	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->sentRem, length);
+	  incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->sentRem, length);
 
 	  if(newSession)
-	    incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->totalFlows, 1);
+	    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->totalFlows, 1);
 	}
 
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
@@ -259,10 +260,10 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	    dstHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
 	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
-	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->rcvdLoc, length);
+	  incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->rcvdLoc, length);
 
 	  if(newSession)
-	    incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->totalFlows, 1);
+	    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->totalFlows, 1);
 	}
 
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].local2remote, length);
@@ -277,9 +278,9 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	  }
 
 	  if(newSession)
-	    incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->totalFlows, 1);
+	    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->totalFlows, 1);
 
-	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->sentLoc, length);
+	  incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->sentLoc, length);
 	}
 
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
@@ -289,9 +290,9 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	  }
 
 	  if(newSession)
-	    incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->totalFlows, 1);
+	    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->totalFlows, 1);
 
-	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->rcvdFromRem, length);
+	  incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->rcvdFromRem, length);
 	}
 
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].remote2local, length);
@@ -303,9 +304,9 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	  }
 
 	  if(newSession)
-	    incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->totalFlows, 1);
+	    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->totalFlows, 1);
 
-	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->sentRem, length);
+	  incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->sentRem, length);
 	}
 
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
@@ -315,9 +316,9 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	  }
 
 	  if(newSession)
-	    incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->totalFlows, 1);
+	    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->totalFlows, 1);
 
-	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->rcvdFromRem, length);
+	  incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->rcvdFromRem, length);
 	}
 
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].remote, length);
@@ -456,10 +457,10 @@ static void checkFragmentOverlap(HostTraffic *srcHost,
   }
 
   if((fragment->fragmentOrder == FLAG_INCREASING_FRAGMENT_ORDER
-       && fragment->lastOffset+fragment->lastDataLength > fragmentOffset)
-      ||
-      (fragment->fragmentOrder == FLAG_DECREASING_FRAGMENT_ORDER
-       && fragment->lastOffset < fragmentOffset+dataLength)) {
+      && fragment->lastOffset+fragment->lastDataLength > fragmentOffset)
+     ||
+     (fragment->fragmentOrder == FLAG_DECREASING_FRAGMENT_ORDER
+      && fragment->lastOffset < fragmentOffset+dataLength)) {
     if(myGlobals.runningPref.enableSuspiciousPacketDump) {
       char buf[LEN_GENERAL_WORK_BUFFER];
       safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
@@ -538,10 +539,10 @@ static u_int handleFragment(HostTraffic *srcHost,
 
   /* Now check if we have all the data needed for the statistics */
   if((fragment->sport != 0) && (fragment->dport != 0) /* first fragment rcvd */
-      /* last fragment rcvd */
-      && (fragment->expectedDataLength != 0)
-      /* probably all fragments rcvd */
-      && (fragment->totalDataLength >= fragment->expectedDataLength)) {
+     /* last fragment rcvd */
+     && (fragment->expectedDataLength != 0)
+     /* probably all fragments rcvd */
+     && (fragment->totalDataLength >= fragment->expectedDataLength)) {
     *sport = fragment->sport;
     *dport = fragment->dport;
     length = fragment->totalPacketLength;
@@ -658,29 +659,29 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
   updateASTraffic(actualDeviceId, srcHost->hostAS, dstHost->hostAS, length.value);
 
   if (!myGlobals.runningPref.printIpOnly) {
-      if (srcHost == dstHost) {
-          /* Fabric controllers exchange link messages where the S_ID & D_ID
-           * are equal. A lot of control traffic is exchanged using these
-           * addresses and so we must track this as an exception to the case of
-           * S_ID == D_ID.
-           */
-          if (srcHost->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
-              if (strncasecmp (srcHost->fcCounters->hostNumFcAddress, FC_FAB_CTLR_ADDR,
-                               strlen (FC_FAB_CTLR_ADDR)) != 0) {
-                  return;
-              }
-          }
-          else {
-              return;
-          }
+    if (srcHost == dstHost) {
+      /* Fabric controllers exchange link messages where the S_ID & D_ID
+       * are equal. A lot of control traffic is exchanged using these
+       * addresses and so we must track this as an exception to the case of
+       * S_ID == D_ID.
+       */
+      if (srcHost->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
+	if (strncasecmp (srcHost->fcCounters->hostNumFcAddress, FC_FAB_CTLR_ADDR,
+			 strlen (FC_FAB_CTLR_ADDR)) != 0) {
+	  return;
+	}
       }
-      else if ((srcHost == myGlobals.otherHostEntry)
-               && (dstHost == myGlobals.otherHostEntry)) {
-          return;
+      else {
+	return;
       }
+    }
+    else if ((srcHost == myGlobals.otherHostEntry)
+	     && (dstHost == myGlobals.otherHostEntry)) {
+      return;
+    }
   }
   else if (srcHost == dstHost)
-      return;
+    return;
 
 
   thisTime = localtime_r(&myGlobals.actTime, &t);
@@ -692,16 +693,16 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
   }
 
   if(srcHost != myGlobals.otherHostEntry) {
-    incrementTrafficCounter(&srcHost->pktSent, numPkts);
-    incrementTrafficCounter(&srcHost->pktSentSession, numPkts);
+    incrementHostTrafficCounter(srcHost, pktSent, numPkts);
+    incrementHostTrafficCounter(srcHost, pktSentSession, numPkts);
     if(srcHost->trafficDistribution == NULL) {
       srcHost->trafficDistribution = calloc(1, sizeof(TrafficDistribution));
       if(srcHost->trafficDistribution == NULL) return;
     }
 
-    incrementTrafficCounter(&srcHost->trafficDistribution->last24HoursBytesSent[hourId], length.value);
-    incrementTrafficCounter(&srcHost->bytesSent, length.value);
-    incrementTrafficCounter(&srcHost->bytesSentSession, length.value);
+    incrementHostTrafficCounter(srcHost, trafficDistribution->last24HoursBytesSent[hourId], length.value);
+    incrementHostTrafficCounter(srcHost, bytesSent, length.value);
+    incrementHostTrafficCounter(srcHost, bytesSentSession, length.value);
   }
 
   if(dstHost != myGlobals.otherHostEntry) {
@@ -710,17 +711,17 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
       if(dstHost->trafficDistribution == NULL) return;
     }
 
-    incrementTrafficCounter(&dstHost->trafficDistribution->last24HoursBytesRcvd[hourId], length.value);
-    incrementTrafficCounter(&dstHost->bytesRcvd, length.value);
-    incrementTrafficCounter(&dstHost->bytesRcvdSession, length.value);
-    incrementTrafficCounter(&dstHost->pktRcvd, numPkts);
-    incrementTrafficCounter(&dstHost->pktRcvdSession, numPkts);
+    incrementHostTrafficCounter(dstHost, trafficDistribution->last24HoursBytesRcvd[hourId], length.value);
+    incrementHostTrafficCounter(dstHost, bytesRcvd, length.value);
+    incrementHostTrafficCounter(dstHost, bytesRcvdSession, length.value);
+    incrementHostTrafficCounter(dstHost, pktRcvd, numPkts);
+    incrementHostTrafficCounter(dstHost, pktRcvdSession, numPkts);
   }
 
   if(broadcastHost(dstHost)) {
     if(srcHost != myGlobals.otherHostEntry) {
-      incrementTrafficCounter(&srcHost->pktBroadcastSent, numPkts);
-      incrementTrafficCounter(&srcHost->bytesBroadcastSent, length.value);
+      incrementHostTrafficCounter(srcHost, pktBroadcastSent, numPkts);
+      incrementHostTrafficCounter(srcHost, bytesBroadcastSent, length.value);
     }
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].broadcastPkts, numPkts);
   } else if(isMulticastAddress(&(dstHost->hostIpAddress), NULL, NULL)) {
@@ -729,13 +730,13 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
 	       srcHost->hostResolvedName, dstHost->hostResolvedName);
 #endif
     if(srcHost != myGlobals.otherHostEntry) {
-      incrementTrafficCounter(&srcHost->pktMulticastSent, numPkts);
-      incrementTrafficCounter(&srcHost->bytesMulticastSent, length.value);
+      incrementHostTrafficCounter(srcHost, pktMulticastSent, numPkts);
+      incrementHostTrafficCounter(srcHost, bytesMulticastSent, length.value);
     }
 
     if(dstHost != myGlobals.otherHostEntry) {
-      incrementTrafficCounter(&dstHost->pktMulticastRcvd, numPkts);
-      incrementTrafficCounter(&dstHost->bytesMulticastRcvd, length.value);
+      incrementHostTrafficCounter(dstHost, pktMulticastRcvd, numPkts);
+      incrementHostTrafficCounter(dstHost, bytesMulticastRcvd, length.value);
     }
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].multicastPkts, numPkts);
   }
@@ -955,7 +956,7 @@ static AsStats* allocASStats(u_int16_t as_id) {
 /* ************************************ */
 
 static void updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
-							u_int16_t dst_as_id, u_int octets) {
+			    u_int16_t dst_as_id, u_int octets) {
   AsStats *stats, *prev_stats = NULL;
   u_char found_src = 0, found_dst = 0;
 
@@ -1282,33 +1283,34 @@ static void processIpPkt(const u_char *bp,
     ctr.value = length;
     updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);
   }
+
 #ifdef INET6
   if(ip6) {
-    incrementTrafficCounter(&srcHost->ipv6Sent, length),
-      incrementTrafficCounter(&dstHost->ipv6Rcvd, length);
+    incrementHostTrafficCounter(srcHost, ipv6Sent, length),
+      incrementHostTrafficCounter(dstHost, ipv6Rcvd, length);
   } else
 #endif
     {
-      incrementTrafficCounter(&srcHost->ipBytesSent, length),
-	incrementTrafficCounter(&dstHost->ipBytesRcvd, length);
+      incrementHostTrafficCounter(srcHost, ipBytesSent, length),
+	incrementHostTrafficCounter(dstHost, ipBytesRcvd, length);
     }
 
   if(subnetPseudoLocalHost(srcHost)) {
     if(subnetPseudoLocalHost(dstHost)) {
-      incrementTrafficCounter(&srcHost->bytesSentLoc, length);
-      incrementTrafficCounter(&dstHost->bytesRcvdLoc, length);
+      incrementHostTrafficCounter(srcHost, bytesSentLoc, length);
+      incrementHostTrafficCounter(dstHost, bytesRcvdLoc, length);
     } else {
-      incrementTrafficCounter(&srcHost->bytesSentRem, length);
-      incrementTrafficCounter(&dstHost->bytesRcvdLoc, length);
+      incrementHostTrafficCounter(srcHost, bytesSentRem, length);
+      incrementHostTrafficCounter(dstHost, bytesRcvdLoc, length);
     }
   } else {
     /* srcHost is remote */
     if(subnetPseudoLocalHost(dstHost)) {
-      incrementTrafficCounter(&srcHost->bytesSentLoc, length);
-      incrementTrafficCounter(&dstHost->bytesRcvdFromRem, length);
+      incrementHostTrafficCounter(srcHost, bytesSentLoc, length);
+      incrementHostTrafficCounter(dstHost, bytesRcvdFromRem, length);
     } else {
-      incrementTrafficCounter(&srcHost->bytesSentRem, length);
-      incrementTrafficCounter(&dstHost->bytesRcvdFromRem, length);
+      incrementHostTrafficCounter(srcHost, bytesSentRem, length);
+      incrementHostTrafficCounter(dstHost, bytesRcvdFromRem, length);
     }
   }
 
@@ -1339,21 +1341,21 @@ static void processIpPkt(const u_char *bp,
 
     switch(nh) {
     case IPPROTO_TCP:
-      incrementTrafficCounter(&srcHost->tcpFragmentsSent, length),
-	incrementTrafficCounter(&dstHost->tcpFragmentsRcvd, length);
+      incrementHostTrafficCounter(srcHost, tcpFragmentsSent, length),
+	incrementHostTrafficCounter(dstHost, tcpFragmentsRcvd, length);
       break;
     case IPPROTO_UDP:
-      incrementTrafficCounter(&srcHost->udpFragmentsSent, length),
-	incrementTrafficCounter(&dstHost->udpFragmentsRcvd, length);
+      incrementHostTrafficCounter(srcHost, udpFragmentsSent, length),
+	incrementHostTrafficCounter(dstHost, udpFragmentsRcvd, length);
       break;
     case IPPROTO_ICMP:
-      incrementTrafficCounter(&srcHost->icmpFragmentsSent, length),
-	incrementTrafficCounter(&dstHost->icmpFragmentsRcvd, length);
+      incrementHostTrafficCounter(srcHost, icmpFragmentsSent, length),
+	incrementHostTrafficCounter(dstHost, icmpFragmentsRcvd, length);
       break;
 #ifdef INET6
     case IPPROTO_ICMPV6:
-      incrementTrafficCounter(&srcHost->icmp6FragmentsSent, length),
-	incrementTrafficCounter(&dstHost->icmp6FragmentsRcvd, length);
+      incrementHostTrafficCounter(srcHost, icmp6FragmentsSent, length),
+	incrementHostTrafficCounter(dstHost, icmp6FragmentsRcvd, length);
       break;
 #endif
     }
@@ -1561,26 +1563,26 @@ static void processIpPkt(const u_char *bp,
 
 	if(subnetPseudoLocalHost(srcHost)) {
 	  if(subnetPseudoLocalHost(dstHost)) {
-	    incrementTrafficCounter(&srcHost->tcpSentLoc, length);
-	    incrementTrafficCounter(&dstHost->tcpRcvdLoc, length);
+	    incrementHostTrafficCounter(srcHost, tcpSentLoc, length);
+	    incrementHostTrafficCounter(dstHost, tcpRcvdLoc, length);
 	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.local,
 				    length);
 	  } else {
-	    incrementTrafficCounter(&srcHost->tcpSentRem, length);
-	    incrementTrafficCounter(&dstHost->tcpRcvdLoc, length);
+	    incrementHostTrafficCounter(srcHost, tcpSentRem, length);
+	    incrementHostTrafficCounter(dstHost, tcpRcvdLoc, length);
 	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.local2remote,
 				    length);
 	  }
 	} else {
 	  /* srcHost is remote */
 	  if(subnetPseudoLocalHost(dstHost)) {
-	    incrementTrafficCounter(&srcHost->tcpSentLoc, length);
-	    incrementTrafficCounter(&dstHost->tcpRcvdFromRem, length);
+	    incrementHostTrafficCounter(srcHost, tcpSentLoc, length);
+	    incrementHostTrafficCounter(dstHost, tcpRcvdFromRem, length);
 	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.remote2local,
 				    length);
 	  } else {
-	    incrementTrafficCounter(&srcHost->tcpSentRem, length);
-	    incrementTrafficCounter(&dstHost->tcpRcvdFromRem, length);
+	    incrementHostTrafficCounter(srcHost, tcpSentRem, length);
+	    incrementHostTrafficCounter(dstHost, tcpRcvdFromRem, length);
 	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.remote,
 				    length);
 	    nonFullyRemoteSession = 0;
@@ -1732,14 +1734,14 @@ static void processIpPkt(const u_char *bp,
 	      addTimeMapping(transactionId, tvstrct);
 
 	      if(subnetLocalHost(dstHost))
-		incrementTrafficCounter(&srcHost->protocolInfo->dnsStats->numLocalReqSent, 1);
+		incrementHostTrafficCounter(srcHost, protocolInfo->dnsStats->numLocalReqSent, 1);
 	      else
-		incrementTrafficCounter(&srcHost->protocolInfo->dnsStats->numRemReqSent, 1);
+		incrementHostTrafficCounter(srcHost, protocolInfo->dnsStats->numRemReqSent, 1);
 
 	      if(subnetLocalHost(srcHost))
-		incrementTrafficCounter(&dstHost->protocolInfo->dnsStats->numLocalReqRcvd, 1);
+		incrementHostTrafficCounter(dstHost, protocolInfo->dnsStats->numLocalReqRcvd, 1);
 	      else
-		incrementTrafficCounter(&dstHost->protocolInfo->dnsStats->numRemReqRcvd, 1);
+		incrementHostTrafficCounter(dstHost, protocolInfo->dnsStats->numRemReqRcvd, 1);
 	    } else {
 	      time_t microSecTimeDiff;
 
@@ -1794,11 +1796,11 @@ static void processIpPkt(const u_char *bp,
 	      if(sport != 5353) FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
 
 	      if(positiveReply) {
-		incrementTrafficCounter(&srcHost->protocolInfo->dnsStats->numPositiveReplSent, 1);
-		incrementTrafficCounter(&dstHost->protocolInfo->dnsStats->numPositiveReplRcvd, 1);
+		incrementHostTrafficCounter(srcHost, protocolInfo->dnsStats->numPositiveReplSent, 1);
+		incrementHostTrafficCounter(dstHost, protocolInfo->dnsStats->numPositiveReplRcvd, 1);
 	      } else {
-		incrementTrafficCounter(&srcHost->protocolInfo->dnsStats->numNegativeReplSent, 1);
-		incrementTrafficCounter(&dstHost->protocolInfo->dnsStats->numNegativeReplRcvd, 1);
+		incrementHostTrafficCounter(srcHost, protocolInfo->dnsStats->numNegativeReplSent, 1);
+		incrementHostTrafficCounter(dstHost, protocolInfo->dnsStats->numNegativeReplRcvd, 1);
 	      }
 	    }
 	  } else {
@@ -1851,23 +1853,23 @@ static void processIpPkt(const u_char *bp,
 
 	if(subnetPseudoLocalHost(srcHost)) {
 	  if(subnetPseudoLocalHost(dstHost)) {
-	    incrementTrafficCounter(&srcHost->udpSentLoc, length);
-	    incrementTrafficCounter(&dstHost->udpRcvdLoc, length);
+	    incrementHostTrafficCounter(srcHost, udpSentLoc, length);
+	    incrementHostTrafficCounter(dstHost, udpRcvdLoc, length);
 	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.local, length);
 	  } else {
-	    incrementTrafficCounter(&srcHost->udpSentRem, length);
-	    incrementTrafficCounter(&dstHost->udpRcvdLoc, length);
+	    incrementHostTrafficCounter(srcHost, udpSentRem, length);
+	    incrementHostTrafficCounter(dstHost, udpRcvdLoc, length);
 	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.local2remote, length);
 	  }
 	} else {
 	  /* srcHost is remote */
 	  if(subnetPseudoLocalHost(dstHost)) {
-	    incrementTrafficCounter(&srcHost->udpSentLoc, length);
-	    incrementTrafficCounter(&dstHost->udpRcvdFromRem, length);
+	    incrementHostTrafficCounter(srcHost, udpSentLoc, length);
+	    incrementHostTrafficCounter(dstHost, udpRcvdFromRem, length);
 	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.remote2local, length);
 	  } else {
-	    incrementTrafficCounter(&srcHost->udpSentRem, length);
-	    incrementTrafficCounter(&dstHost->udpRcvdFromRem, length);
+	    incrementHostTrafficCounter(srcHost, udpSentRem, length);
+	    incrementHostTrafficCounter(dstHost, udpRcvdFromRem, length);
 	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.remote, length);
 	    nonFullyRemoteSession = 0;
 	  }
@@ -1876,15 +1878,15 @@ static void processIpPkt(const u_char *bp,
         sportIdx = mapGlobalToLocalIdx(sport), dportIdx = mapGlobalToLocalIdx(dport);
 
         if((myGlobals.runningPref.enableOtherPacketDump) && ((sportIdx == -1) && (dportIdx == -1))) {
-	    /*
-	       Both source & destination port are unknown.
-	       The packet will be counted to "Other TCP/UDP prot.".
-	       We dump the packet if requested */
-	    dumpOtherPacket(actualDeviceId);
-	  }
+	  /*
+	    Both source & destination port are unknown.
+	    The packet will be counted to "Other TCP/UDP prot.".
+	    We dump the packet if requested */
+	  dumpOtherPacket(actualDeviceId);
+	}
 
 	if(nonFullyRemoteSession) {
-            /* There is no session structure returned for UDP sessions */
+	  /* There is no session structure returned for UDP sessions */
 #ifdef INET6
 	  if(ip6)
 	    theSession =  handleSession(h, fragmented, 0,
@@ -1964,14 +1966,14 @@ static void processIpPkt(const u_char *bp,
       proto = "ICMP";
       memcpy(&icmpPkt, bp+hlen, sizeof(struct icmp));
 
-      incrementTrafficCounter(&srcHost->icmpSent, length);
-      incrementTrafficCounter(&dstHost->icmpRcvd, length);
+      incrementHostTrafficCounter(srcHost, icmpSent, length);
+      incrementHostTrafficCounter(dstHost, icmpRcvd, length);
 
       if(off & 0x3fff) {
 	char *fmt = "Detected ICMP fragment [%s -> %s] (network attack attempt?)";
 
-	incrementTrafficCounter(&srcHost->icmpFragmentsSent, length),
-	  incrementTrafficCounter(&dstHost->icmpFragmentsRcvd, length);
+	incrementHostTrafficCounter(srcHost, icmpFragmentsSent, length),
+	  incrementHostTrafficCounter(dstHost, icmpFragmentsRcvd, length);
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->secHostPkts->icmpFragmentSent, dstHost, actualDeviceId);
 	incrementUsageCounter(&dstHost->secHostPkts->icmpFragmentRcvd, srcHost, actualDeviceId);
@@ -1992,14 +1994,14 @@ static void processIpPkt(const u_char *bp,
 	  memset(srcHost->icmpInfo, 0, sizeof(IcmpHostInfo));
 	}
 
-	incrementTrafficCounter(&srcHost->icmpInfo->icmpMsgSent[icmpPkt.icmp_type], 1);
+	incrementHostTrafficCounter(srcHost, icmpInfo->icmpMsgSent[icmpPkt.icmp_type], 1);
 
 	if(dstHost->icmpInfo == NULL) {
 	  if( (dstHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo))) == NULL) return;
 	  memset(dstHost->icmpInfo, 0, sizeof(IcmpHostInfo));
 	}
 
-	incrementTrafficCounter(&dstHost->icmpInfo->icmpMsgRcvd[icmpPkt.icmp_type], 1);
+	incrementHostTrafficCounter(dstHost, icmpInfo->icmpMsgRcvd[icmpPkt.icmp_type], 1);
 
 	switch (icmpPkt.icmp_type) {
 	case ICMP_ECHOREPLY:
@@ -2162,14 +2164,14 @@ static void processIpPkt(const u_char *bp,
     } else {
       proto = "ICMPv6";
       memcpy(&icmp6Pkt, bp+hlen, sizeof(struct icmp6_hdr));
-      incrementTrafficCounter(&srcHost->icmp6Sent, length);
-      incrementTrafficCounter(&dstHost->icmp6Rcvd, length);
+      incrementHostTrafficCounter(srcHost, icmp6Sent, length);
+      incrementHostTrafficCounter(dstHost, icmp6Rcvd, length);
 
       if(fragmented) {
 	char *fmt = "Detected ICMPv6 fragment [%s -> %s] (network attack attempt?)";
 
-	incrementTrafficCounter(&srcHost->icmp6FragmentsSent, length),
-	  incrementTrafficCounter(&dstHost->icmp6FragmentsRcvd, length);
+	incrementHostTrafficCounter(srcHost, icmp6FragmentsSent, length),
+	  incrementHostTrafficCounter(dstHost, icmp6FragmentsRcvd, length);
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->secHostPkts->icmpFragmentSent, dstHost, actualDeviceId);
 	incrementUsageCounter(&dstHost->secHostPkts->icmpFragmentRcvd, srcHost, actualDeviceId);
@@ -2189,13 +2191,13 @@ static void processIpPkt(const u_char *bp,
 	  memset(srcHost->icmpInfo, 0, sizeof(IcmpHostInfo));
 	}
 
-	incrementTrafficCounter(&srcHost->icmpInfo->icmpMsgSent[icmp6Pkt.icmp6_type], 1);
+	incrementHostTrafficCounter(srcHost, icmpInfo->icmpMsgSent[icmp6Pkt.icmp6_type], 1);
 	if(dstHost->icmpInfo == NULL) {
 	  if((dstHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo))) == NULL) return;
 	  memset(dstHost->icmpInfo, 0, sizeof(IcmpHostInfo));
 	}
 
-	incrementTrafficCounter(&dstHost->icmpInfo->icmpMsgRcvd[icmp6Pkt.icmp6_type], 1);
+	incrementHostTrafficCounter(dstHost, icmpInfo->icmpMsgRcvd[icmp6Pkt.icmp6_type], 1);
 	switch (icmp6Pkt.icmp6_type) {
 	case ICMP6_ECHO_REPLY:
 	case ICMP6_ECHO_REQUEST:
@@ -2306,7 +2308,7 @@ static void processIpPkt(const u_char *bp,
 	      srcHost->ipProtosList[idx] = calloc(sizeof(ShortProtoTrafficInfo), 1);
 	      if(srcHost->ipProtosList[idx] == NULL) return;
 	    }
-	    incrementTrafficCounter(&srcHost->ipProtosList[idx]->sent, length);
+	    incrementHostTrafficCounter(srcHost, ipProtosList[idx]->sent, length);
 	  }
 
 	  if(dstHost->ipProtosList) {
@@ -2314,7 +2316,7 @@ static void processIpPkt(const u_char *bp,
 	      dstHost->ipProtosList[idx] = calloc(sizeof(ShortProtoTrafficInfo), 1);
 	      if(dstHost->ipProtosList[idx] == NULL) return;
 	    }
-	    incrementTrafficCounter(&dstHost->ipProtosList[idx]->rcvd, length);
+	    incrementHostTrafficCounter(dstHost, ipProtosList[idx]->rcvd, length);
 	  }
 
 	  if(myGlobals.device[actualDeviceId].ipProtosList)
@@ -2332,15 +2334,15 @@ static void processIpPkt(const u_char *bp,
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherIpBytes, length);
       sport = dport = 0;
       if(myGlobals.runningPref.enableOtherPacketDump)
-          dumpOtherPacket(actualDeviceId);
+	dumpOtherPacket(actualDeviceId);
 
       if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
       if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 
       if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-      incrementTrafficCounter(&srcHost->nonIPTraffic->otherSent, length);
+      incrementHostTrafficCounter(srcHost, nonIPTraffic->otherSent, length);
       incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, nh);
-      incrementTrafficCounter(&dstHost->nonIPTraffic->otherRcvd, length);
+      incrementHostTrafficCounter(dstHost, nonIPTraffic->otherRcvd, length);
       incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, nh);
     }
     break;
@@ -2378,11 +2380,11 @@ void queuePacket(u_char *_deviceId,
      **************************** */
 
 #ifdef MAX_PROCESS_BUFFER
- if(myGlobals.queueBufferInit == 0) {
-   myGlobals.queueBufferCount = 0;
-   myGlobals.queueBufferInit = 1;
-   memset(&myGlobals.queueBuffer, 0, sizeof(myGlobals.queueBuffer));
- }
+  if(myGlobals.queueBufferInit == 0) {
+    myGlobals.queueBufferCount = 0;
+    myGlobals.queueBufferInit = 1;
+    memset(&myGlobals.queueBuffer, 0, sizeof(myGlobals.queueBuffer));
+  }
 #endif
 
   myGlobals.receivedPackets++;
@@ -2436,10 +2438,10 @@ void queuePacket(u_char *_deviceId,
 
     len = h->caplen;
     if (myGlobals.runningPref.printIpOnly) {
-        /* When we do Fibre Channel, the end of the packet contains EOF
-         * information and so truncating it isn't a good idea.
-         */
-        if(len >= DEFAULT_SNAPLEN) len = DEFAULT_SNAPLEN-1;
+      /* When we do Fibre Channel, the end of the packet contains EOF
+       * information and so truncating it isn't a good idea.
+       */
+      if(len >= DEFAULT_SNAPLEN) len = DEFAULT_SNAPLEN-1;
     }
 
     if(h->caplen >= MAX_PACKET_LEN) {
@@ -2634,16 +2636,16 @@ static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p, int devic
         }
         traceEvent(CONST_TRACE_NOISY, "%smatch on %s for '%s' %s0x%04x-%s-%d/%d",
                    bpf_filter(list->fcode[deviceId].bf_insns, (u_char*)p, h->len, h->caplen) ?
-                     "" : "No ",
+		   "" : "No ",
                    myGlobals.device[deviceId].name,
                    list->flowName,
                    et8021q == ETHERTYPE_802_1Q ? "(802.1q) " : "",
                    et,
                    et == ETHERTYPE_IP ? "IPv4" :
-                     et == ETHERTYPE_IPv6 ? "IPv6" :
-                     et == ETHERTYPE_ARP ? "ARP" :
-                     et == ETHERTYPE_REVARP ? "RARP" :
-                     "other",
+		   et == ETHERTYPE_IPv6 ? "IPv6" :
+		   et == ETHERTYPE_ARP ? "ARP" :
+		   et == ETHERTYPE_REVARP ? "RARP" :
+		   "other",
                    h->len, h->caplen);
       }
 #endif
@@ -2654,7 +2656,7 @@ static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p, int devic
           void(*pluginFunct)(u_char*, const struct pcap_pkthdr*, const u_char*);
 
 	  pluginFunct = (void(*)(u_char *_deviceId, const struct pcap_pkthdr*,
-                         const u_char*))list->pluginStatus.pluginPtr->pluginFunct;
+				 const u_char*))list->pluginStatus.pluginPtr->pluginFunct;
 	  pluginFunct((u_char*)&deviceId, h, p);
         }
       }
@@ -2779,40 +2781,40 @@ void processPacket(u_char *_deviceId,
 #endif
 #ifdef MAX_PROCESS_BUFFER
   struct timeval pktStartOfProcessing,
-                 pktEndOfProcessing;
+    pktEndOfProcessing;
 #endif
 
 #ifdef MEMORY_DEBUG
- #ifdef MEMORY_DEBUG_UNLIMITED
-  #warning MEMORY_DEBUG defined for UNLIMITED usage!
- #else
+#ifdef MEMORY_DEBUG_UNLIMITED
+#warning MEMORY_DEBUG defined for UNLIMITED usage!
+#else
 
-  #ifdef MEMORY_DEBUG_PACKETS
-    {
-      static long numPkt=0;
-      if(++numPkt >= MEMORY_DEBUG_PACKETS) {
-        traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                   "NOTE: ntop shutting down - memory debug packet limit (%d) reached",
-                   MEMORY_DEBUG_PACKETS);
-        cleanup(1);
-      }
+#ifdef MEMORY_DEBUG_PACKETS
+  {
+    static long numPkt=0;
+    if(++numPkt >= MEMORY_DEBUG_PACKETS) {
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+		 "NOTE: ntop shutting down - memory debug packet limit (%d) reached",
+		 MEMORY_DEBUG_PACKETS);
+      cleanup(1);
     }
-  #endif /* MEMORY_DEBUG_PACKETS */
+  }
+#endif /* MEMORY_DEBUG_PACKETS */
 
-  #ifdef MEMORY_DEBUG_SECONDS
-    {
-      static time_t memoryDebugAbortTime=0;
-      if(memoryDebugAbortTime == 0) {
-        memoryDebugAbortTime = time(NULL) + MEMORY_DEBUG_SECONDS;
-      } else if(time(NULL) > memoryDebugAbortTime) {
-        traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                   "NOTE: ntop shutting down - memory debug abort time reached");
-        cleanup(1);
-      }
+#ifdef MEMORY_DEBUG_SECONDS
+  {
+    static time_t memoryDebugAbortTime=0;
+    if(memoryDebugAbortTime == 0) {
+      memoryDebugAbortTime = time(NULL) + MEMORY_DEBUG_SECONDS;
+    } else if(time(NULL) > memoryDebugAbortTime) {
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+		 "NOTE: ntop shutting down - memory debug abort time reached");
+      cleanup(1);
     }
-  #endif /* MEMORY_DEBUG_SECONDS */
+  }
+#endif /* MEMORY_DEBUG_SECONDS */
 
- #endif /* MEMORY_DEBUG_UNLIMITED */
+#endif /* MEMORY_DEBUG_UNLIMITED */
 #endif /* MEMORY_DEBUG */
 
   if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN)
@@ -2895,9 +2897,9 @@ void processPacket(u_char *_deviceId,
   hlen = (myGlobals.device[deviceId].datalink == DLT_NULL) ? CONST_NULL_HDRLEN : sizeof(struct ether_header);
 
   if(!myGlobals.initialSniffTime && (myGlobals.runningPref.rFileName != NULL)) {
-      myGlobals.initialSniffTime = h->ts.tv_sec;
-      myGlobals.device[deviceId].lastThptUpdate = myGlobals.device[deviceId].lastMinThptUpdate =
-          myGlobals.device[deviceId].lastHourThptUpdate = myGlobals.device[deviceId].lastFiveMinsThptUpdate = myGlobals.initialSniffTime;
+    myGlobals.initialSniffTime = h->ts.tv_sec;
+    myGlobals.device[deviceId].lastThptUpdate = myGlobals.device[deviceId].lastMinThptUpdate =
+      myGlobals.device[deviceId].lastHourThptUpdate = myGlobals.device[deviceId].lastFiveMinsThptUpdate = myGlobals.initialSniffTime;
   }
 
   memcpy(&myGlobals.lastPktTime, &h->ts, sizeof(myGlobals.lastPktTime));
@@ -3140,8 +3142,8 @@ void processPacket(u_char *_deviceId,
 	  if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 
 	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-	  incrementTrafficCounter(&srcHost->nonIPTraffic->ipxSent, length),
-	    incrementTrafficCounter(&dstHost->nonIPTraffic->ipxRcvd, length);
+	  incrementHostTrafficCounter(srcHost, nonIPTraffic->ipxSent, length),
+	    incrementHostTrafficCounter(dstHost, nonIPTraffic->ipxRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 
 	  ctr.value = length;
@@ -3183,12 +3185,12 @@ void processPacket(u_char *_deviceId,
 	if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-	incrementTrafficCounter(&srcHost->nonIPTraffic->otherSent, length);
-	incrementTrafficCounter(&dstHost->nonIPTraffic->otherRcvd, length);
+	incrementHostTrafficCounter(srcHost, nonIPTraffic->otherSent, length);
+	incrementHostTrafficCounter(dstHost, nonIPTraffic->otherRcvd, length);
 	incrementUnknownProto(srcHost, 0 /* sent */, eth_type /* eth */, 0 /* dsap */, 0 /* ssap */, 0 /* ip */);
 	incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */, 0 /* ssap */, 0 /* ip */);
 	if(myGlobals.runningPref.enableOtherPacketDump)
-            dumpOtherPacket(actualDeviceId);
+	  dumpOtherPacket(actualDeviceId);
 
 	ctr.value = length;
 
@@ -3240,8 +3242,8 @@ void processPacket(u_char *_deviceId,
 	  if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	  if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-	  incrementTrafficCounter(&srcHost->nonIPTraffic->ipxSent, length);
-	  incrementTrafficCounter(&dstHost->nonIPTraffic->ipxRcvd, length);
+	  incrementHostTrafficCounter(srcHost, nonIPTraffic->ipxSent, length);
+	  incrementHostTrafficCounter(dstHost, nonIPTraffic->ipxRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 	} else if(!myGlobals.runningPref.dontTrustMACaddr) {
 	  /* MAC addresses are meaningful here */
@@ -3357,8 +3359,8 @@ void processPacket(u_char *_deviceId,
 	      if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	      if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	      if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-	      incrementTrafficCounter(&srcHost->nonIPTraffic->stpSent, length),
-		 incrementTrafficCounter(&dstHost->nonIPTraffic->stpRcvd, length);
+	      incrementHostTrafficCounter(srcHost, nonIPTraffic->stpSent, length),
+		incrementHostTrafficCounter(dstHost, nonIPTraffic->stpRcvd, length);
 	      FD_SET(FLAG_HOST_TYPE_SVC_BRIDGE, &srcHost->flags);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].stpBytes, length);
 	    } else if(myGlobals.runningPref.enablePacketDecoding && (sap_type == 0xE0)) {
@@ -3481,8 +3483,8 @@ void processPacket(u_char *_deviceId,
 	      if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	      if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL))  return;
 
-	      incrementTrafficCounter(&srcHost->nonIPTraffic->ipxSent, length),
-		incrementTrafficCounter(&dstHost->nonIPTraffic->ipxRcvd, length);
+	      incrementHostTrafficCounter(srcHost, nonIPTraffic->ipxSent, length),
+		incrementHostTrafficCounter(dstHost, nonIPTraffic->ipxRcvd, length);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 	    } else if((llcHeader.ssap == LLCSAP_NETBIOS) && (llcHeader.dsap == LLCSAP_NETBIOS)) {
 	      /* Netbios */
@@ -3490,8 +3492,8 @@ void processPacket(u_char *_deviceId,
 	      if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	      if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL))  return;
 
-	      incrementTrafficCounter(&srcHost->nonIPTraffic->netbiosSent, length);
-	      incrementTrafficCounter(&dstHost->nonIPTraffic->netbiosRcvd, length);
+	      incrementHostTrafficCounter(srcHost, nonIPTraffic->netbiosSent, length);
+	      incrementHostTrafficCounter(dstHost, nonIPTraffic->netbiosRcvd, length);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].netbiosBytes, length);
 	    } else if((sap_type == 0xF0)
 		      || (sap_type == 0xB4)
@@ -3502,8 +3504,8 @@ void processPacket(u_char *_deviceId,
 	      if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	      if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL))  return;
 
-	      incrementTrafficCounter(&srcHost->nonIPTraffic->dlcSent, length);
-	      incrementTrafficCounter(&dstHost->nonIPTraffic->dlcRcvd, length);
+	      incrementHostTrafficCounter(srcHost, nonIPTraffic->dlcSent, length);
+	      incrementHostTrafficCounter(dstHost, nonIPTraffic->dlcRcvd, length);
 	      FD_SET(FLAG_HOST_TYPE_PRINTER, &dstHost->flags);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].dlcBytes, length);
 	    } else if(sap_type == 0xAA /* SNAP */) {
@@ -3584,8 +3586,8 @@ void processPacket(u_char *_deviceId,
 		if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 		if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL))  return;
 
-		incrementTrafficCounter(&srcHost->nonIPTraffic->appletalkSent, length);
-		incrementTrafficCounter(&dstHost->nonIPTraffic->appletalkRcvd, length);
+		incrementHostTrafficCounter(srcHost, nonIPTraffic->appletalkSent, length);
+		incrementHostTrafficCounter(dstHost, nonIPTraffic->appletalkRcvd, length);
 		incrementTrafficCounter(&myGlobals.device[actualDeviceId].atalkBytes, length);
 	      } else {
 		if((llcHeader.ctl.snap_ether.snap_orgcode[0] == 0x0)
@@ -3604,8 +3606,8 @@ void processPacket(u_char *_deviceId,
 		if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 		if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL))  return;
 
-		incrementTrafficCounter(&srcHost->nonIPTraffic->otherSent, length);
-		incrementTrafficCounter(&dstHost->nonIPTraffic->otherRcvd, length);
+		incrementHostTrafficCounter(srcHost, nonIPTraffic->otherSent, length);
+		incrementHostTrafficCounter(dstHost, nonIPTraffic->otherRcvd, length);
 		incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
 
 		incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, llcHeader.dsap /* dsap */,
@@ -3613,7 +3615,7 @@ void processPacket(u_char *_deviceId,
 		incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */,
 				      llcHeader.ssap /* ssap */, 0 /* ip */);
 		if(myGlobals.runningPref.enableOtherPacketDump)
-                    dumpOtherPacket(actualDeviceId);
+		  dumpOtherPacket(actualDeviceId);
 	      }
 	    } else if(myGlobals.runningPref.enablePacketDecoding
 		      && ((sap_type == 0x06)
@@ -3624,8 +3626,8 @@ void processPacket(u_char *_deviceId,
 	      if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	      if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL))  return;
 
-	      incrementTrafficCounter(&srcHost->nonIPTraffic->osiSent, length);
-	      incrementTrafficCounter(&dstHost->nonIPTraffic->osiRcvd, length);
+	      incrementHostTrafficCounter(srcHost, nonIPTraffic->osiSent, length);
+	      incrementHostTrafficCounter(dstHost, nonIPTraffic->osiRcvd, length);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].osiBytes, length);
 	    } else {
 	      /* Unknown Protocol */
@@ -3641,8 +3643,8 @@ void processPacket(u_char *_deviceId,
 	      if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	      if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL))  return;
 
-	      incrementTrafficCounter(&srcHost->nonIPTraffic->otherSent, length);
-	      incrementTrafficCounter(&dstHost->nonIPTraffic->otherRcvd, length);
+	      incrementHostTrafficCounter(srcHost, nonIPTraffic->otherSent, length);
+	      incrementHostTrafficCounter(dstHost, nonIPTraffic->otherRcvd, length);
 
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
 	      incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, llcHeader.dsap /* dsap */,
@@ -3650,7 +3652,7 @@ void processPacket(u_char *_deviceId,
 	      incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */,
 				    llcHeader.ssap /* ssap */, 0 /* ip */);
 	      if(myGlobals.runningPref.enableOtherPacketDump)
-                  dumpOtherPacket(actualDeviceId);
+		dumpOtherPacket(actualDeviceId);
 	    }
 
 	    ctr.value = length;
@@ -3666,10 +3668,10 @@ void processPacket(u_char *_deviceId,
       } else if (((eth_type == ETHERTYPE_MDSHDR) || (eth_type == ETHERTYPE_BRDWLK) ||
                   (eth_type == ETHERTYPE_UNKNOWN) || (eth_type == ETHERTYPE_BRDWLK_OLD)) &&
                  (!myGlobals.runningPref.printIpOnly)) {
-          /* An FC packet can be captured as Ethernet for three different
-           * Ethertypes.
-           */
-          processFcPkt (p, h, eth_type, actualDeviceId);
+	/* An FC packet can be captured as Ethernet for three different
+	 * Ethertypes.
+	 */
+	processFcPkt (p, h, eth_type, actualDeviceId);
       } else if((eth_type == ETHERTYPE_IP) || (eth_type == ETHERTYPE_IPv6)) {
 	if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type > ETHERMTU)) {
 	  processIpPkt(p, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
@@ -3738,7 +3740,7 @@ void processPacket(u_char *_deviceId,
         int protocol=ntohs(*((int *) (p+hlen+6)));
 
         if(pppoe_hdr->ver==1 && pppoe_hdr->type==1 && pppoe_hdr->code==0 &&
-            protocol==0x0021) {
+	   protocol==0x0021) {
           hlen+=8; /* length of pppoe header */
 	  processIpPkt(p+hlen, h, length, NULL, NULL, actualDeviceId, vlanId);
         }
@@ -3804,14 +3806,14 @@ void processPacket(u_char *_deviceId,
 		lockHostsHashMutex(srcHost, "processPacket-src-6");
 		if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 		if(srcHost->nonIPTraffic == NULL) return;
-		incrementTrafficCounter(&srcHost->nonIPTraffic->arpReplyPktsSent, 1);
+		incrementHostTrafficCounter(srcHost, nonIPTraffic->arpReplyPktsSent, 1);
 	      }
 
 	      if(dstHost != NULL) {
 		lockHostsHashMutex(dstHost, "processPacket-dst-6");
 		if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 		if(dstHost->nonIPTraffic == NULL) return;
-		incrementTrafficCounter(&dstHost->nonIPTraffic->arpReplyPktsRcvd, 1);
+		incrementHostTrafficCounter(dstHost, nonIPTraffic->arpReplyPktsRcvd, 1);
 	      }
 
 
@@ -3843,7 +3845,7 @@ void processPacket(u_char *_deviceId,
 		if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) {
 		  if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 		  if(srcHost->nonIPTraffic == NULL) return;
-		  incrementTrafficCounter(&srcHost->nonIPTraffic->arpReqPktsSent, 1);
+		  incrementHostTrafficCounter(srcHost, nonIPTraffic->arpReqPktsSent, 1);
 		}
 	      }
 	    }
@@ -3854,13 +3856,13 @@ void processPacket(u_char *_deviceId,
 	  if(srcHost != NULL) {
 	    if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	    if(srcHost->nonIPTraffic == NULL) return;
-	    incrementTrafficCounter(&srcHost->nonIPTraffic->arp_rarpSent, length);
+	    incrementHostTrafficCounter(srcHost, nonIPTraffic->arp_rarpSent, length);
 	  }
 
 	  if(dstHost != NULL) {
 	    if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	    if(dstHost->nonIPTraffic == NULL) return;
-	    incrementTrafficCounter(&dstHost->nonIPTraffic->arp_rarpRcvd, length);
+	    incrementHostTrafficCounter(dstHost, nonIPTraffic->arp_rarpRcvd, length);
 	  }
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].arpRarpBytes, length);
 	  break;
@@ -3868,8 +3870,8 @@ void processPacket(u_char *_deviceId,
 	  if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	  if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	  if((srcHost->nonIPTraffic == NULL) || (srcHost->nonIPTraffic == NULL)) return;
-	  incrementTrafficCounter(&srcHost->nonIPTraffic->decnetSent, length);
-	  incrementTrafficCounter(&dstHost->nonIPTraffic->decnetRcvd, length);
+	  incrementHostTrafficCounter(srcHost, nonIPTraffic->decnetSent, length);
+	  incrementHostTrafficCounter(dstHost, nonIPTraffic->decnetRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].decnetBytes, length);
 	  break;
 	case ETHERTYPE_ATALK: /* AppleTalk */
@@ -3877,14 +3879,14 @@ void processPacket(u_char *_deviceId,
 	  if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	  if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	  if((srcHost->nonIPTraffic == NULL) || (srcHost->nonIPTraffic == NULL)) return;
-	  incrementTrafficCounter(&srcHost->nonIPTraffic->appletalkSent, length);
-	  incrementTrafficCounter(&dstHost->nonIPTraffic->appletalkRcvd, length);
+	  incrementHostTrafficCounter(srcHost, nonIPTraffic->appletalkSent, length);
+	  incrementHostTrafficCounter(dstHost, nonIPTraffic->appletalkRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].atalkBytes, length);
 	  break;
 	case ETHERTYPE_IPv6:
 	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
-	  incrementTrafficCounter(&srcHost->ipv6Sent, length);
-	  incrementTrafficCounter(&dstHost->ipv6Rcvd, length);
+	  incrementHostTrafficCounter(srcHost, ipv6Sent, length);
+	  incrementHostTrafficCounter(dstHost, ipv6Rcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipv6Bytes, length);
 	  break;
 	default:
@@ -3897,15 +3899,15 @@ void processPacket(u_char *_deviceId,
 	  if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	  if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 	  if((srcHost->nonIPTraffic == NULL) || (srcHost->nonIPTraffic == NULL)) return;
-	  incrementTrafficCounter(&srcHost->nonIPTraffic->otherSent, length);
-	  incrementTrafficCounter(&dstHost->nonIPTraffic->otherRcvd, length);
+	  incrementHostTrafficCounter(srcHost, nonIPTraffic->otherSent, length);
+	  incrementHostTrafficCounter(dstHost, nonIPTraffic->otherRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
 	  incrementUnknownProto(srcHost, 0 /* sent */, eth_type /* eth */, 0 /* dsap */,
 				0 /* ssap */, 0 /* ip */);
 	  incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */,
 				0 /* ssap */, 0 /* ip */);
 	  if(myGlobals.runningPref.enableOtherPacketDump)
-              dumpOtherPacket(actualDeviceId);
+	    dumpOtherPacket(actualDeviceId);
 	  break;
 	}
 
@@ -3942,10 +3944,10 @@ void processPacket(u_char *_deviceId,
 #endif
 
   if (myGlobals.runningPref.rFileName != NULL) {
-      if (myGlobals.actTime > (lastUpdateThptTime + PARM_THROUGHPUT_REFRESH_INTERVAL)) {
-          updateThpt (1);
-          lastUpdateThptTime = myGlobals.actTime;
-      }
+    if (myGlobals.actTime > (lastUpdateThptTime + PARM_THROUGHPUT_REFRESH_INTERVAL)) {
+      updateThpt (1);
+      lastUpdateThptTime = myGlobals.actTime;
+    }
   }
 
   if(myGlobals.resetHashNow == 1) {
@@ -3986,273 +3988,273 @@ static void processFcPkt(const u_char *bp,
 			 u_int16_t ethertype,
 			 int actualDeviceId)
 {
-    FcHeaderAlign *hdralign;
-    FcHeader fchdr;
-    FcAddress srcFcAddr, dstFcAddr;
-    u_char *hdrBytes;
-    u_int16_t payload_len = h->len - 14; /* FC length = pkt len - arpa hdr len */
-    u_int16_t totlen = h->len;
-    u_int16_t actLen = h->caplen; /* Used when pcap truncates frames  */
-    char *proto;
-    u_short protocol;
-    HostTraffic *srcHost=NULL, *dstHost=NULL;
-    TrafficCounter ctr;
-    u_int32_t offset = 14;      /* start past the ethernet header */
-    u_int16_t vsanId = 0,
-             fcFrameLen = 0;
-    u_int8_t sof = 0, eof = 0, error = 0;
+  FcHeaderAlign *hdralign;
+  FcHeader fchdr;
+  FcAddress srcFcAddr, dstFcAddr;
+  u_char *hdrBytes;
+  u_int16_t payload_len = h->len - 14; /* FC length = pkt len - arpa hdr len */
+  u_int16_t totlen = h->len;
+  u_int16_t actLen = h->caplen; /* Used when pcap truncates frames  */
+  char *proto;
+  u_short protocol;
+  HostTraffic *srcHost=NULL, *dstHost=NULL;
+  TrafficCounter ctr;
+  u_int32_t offset = 14;      /* start past the ethernet header */
+  u_int16_t vsanId = 0,
+    fcFrameLen = 0;
+  u_int8_t sof = 0, eof = 0, error = 0;
 #if CFG_LITTLE_ENDIAN
-    u_int16_t didx;        /* source & dest port indices on MDS */
+  u_int16_t didx;        /* source & dest port indices on MDS */
 #endif
-    u_char isFirstFrame = FALSE,
-           isLastFrame = FALSE,
-           isFragment = FALSE;
-    u_char gs_type, gs_stype, isXchgOrig;
-    u_int16_t nsOpcode;
+  u_char isFirstFrame = FALSE,
+    isLastFrame = FALSE,
+    isFragment = FALSE;
+  u_char gs_type, gs_stype, isXchgOrig;
+  u_int16_t nsOpcode;
 
-    /* Deal with Vegas Header or Boardwalk Header based on ethertype */
-    if ((ethertype == ETHERTYPE_BRDWLK) ||
-        (ethertype == ETHERTYPE_BRDWLK_OLD)) {
-        sof = (bp[offset] & 0xF0) >> 4;
-        vsanId = ntohs (*(u_int16_t *)&bp[offset]) & 0x0FFF;
-        eof = bp[totlen-1];
-        error = bp[totlen-2];
-        offset += 2;            /* skip the brdwlk hdr field */
+  /* Deal with Vegas Header or Boardwalk Header based on ethertype */
+  if ((ethertype == ETHERTYPE_BRDWLK) ||
+      (ethertype == ETHERTYPE_BRDWLK_OLD)) {
+    sof = (bp[offset] & 0xF0) >> 4;
+    vsanId = ntohs (*(u_int16_t *)&bp[offset]) & 0x0FFF;
+    eof = bp[totlen-1];
+    error = bp[totlen-2];
+    offset += 2;            /* skip the brdwlk hdr field */
 
-        if ((error & 0x8) && (error & 0x1)) {
-            /* This indicates that Boardwalk carries the original FC
-             * length even though the frame is truncated */
-            payload_len = ntohl (*(u_int32_t *)&bp[payload_len+14-8]);
-            payload_len *= 4;
-        }
-        /* If VSAN is not 0, there is an EISL header; skip it */
-        if (vsanId) {
-            offset += 8;
-            payload_len -= 8;
-        }
-
-        if ((error & 0x8) && (error & 0x1)) {
-            fcFrameLen = payload_len;
-            /* Skip CRC incl payload len */
-            payload_len -= (FC_HDR_SIZE + 4);
-        }
-        else {
-            fcFrameLen = payload_len - 6; /* Brdwlk hdr + trlr */
-            /* Skip Brdwlk header & trlr & CRC incl payload len */
-            payload_len -= (FC_HDR_SIZE + 6); /* TBD: Handle optional headers */
-        }
+    if ((error & 0x8) && (error & 0x1)) {
+      /* This indicates that Boardwalk carries the original FC
+       * length even though the frame is truncated */
+      payload_len = ntohl (*(u_int32_t *)&bp[payload_len+14-8]);
+      payload_len *= 4;
     }
-    else if ((ethertype == ETHERTYPE_UNKNOWN) || (ethertype == ETHERTYPE_MDSHDR)) {
+    /* If VSAN is not 0, there is an EISL header; skip it */
+    if (vsanId) {
+      offset += 8;
+      payload_len -= 8;
+    }
+
+    if ((error & 0x8) && (error & 0x1)) {
+      fcFrameLen = payload_len;
+      /* Skip CRC incl payload len */
+      payload_len -= (FC_HDR_SIZE + 4);
+    }
+    else {
+      fcFrameLen = payload_len - 6; /* Brdwlk hdr + trlr */
+      /* Skip Brdwlk header & trlr & CRC incl payload len */
+      payload_len -= (FC_HDR_SIZE + 6); /* TBD: Handle optional headers */
+    }
+  }
+  else if ((ethertype == ETHERTYPE_UNKNOWN) || (ethertype == ETHERTYPE_MDSHDR)) {
 #if CFG_LITTLE_ENDIAN
-        sof = (bp[offset+1] & 0x0F);
-        fcFrameLen = ntohs (*((u_int16_t *)&bp[offset+2]));
-        vsanId = ntohs (*(u_int16_t *)&bp[offset+14] & 0x0FFF);
-        didx =   ntohs (*((u_int16_t *)&bp[offset+6]) & 0x1FF8) >> 3;
+    sof = (bp[offset+1] & 0x0F);
+    fcFrameLen = ntohs (*((u_int16_t *)&bp[offset+2]));
+    vsanId = ntohs (*(u_int16_t *)&bp[offset+14] & 0x0FFF);
+    didx =   ntohs (*((u_int16_t *)&bp[offset+6]) & 0x1FF8) >> 3;
 #else
-        sof = bp[offset+1] & 0x0F;
-        fcFrameLen = ntohs ((*(u_int16_t *)&bp[offset+3]) & 0x1FFF);
-        vsanId = ntohs ((*(u_int16_t *)&bp[offset+14]) & 0x0FFF);
+    sof = bp[offset+1] & 0x0F;
+    fcFrameLen = ntohs ((*(u_int16_t *)&bp[offset+3]) & 0x1FFF);
+    vsanId = ntohs ((*(u_int16_t *)&bp[offset+14]) & 0x0FFF);
 #endif
-        eof = bp[offset+MDSHDR_HEADER_SIZE+fcFrameLen-MDSHDR_TRAILER_SIZE];
+    eof = bp[offset+MDSHDR_HEADER_SIZE+fcFrameLen-MDSHDR_TRAILER_SIZE];
 
-        offset += MDSHDR_HEADER_SIZE;
-        payload_len -= (MDSHDR_HEADER_SIZE + MDSHDR_TRAILER_SIZE+FC_HDR_SIZE);
-    }
+    offset += MDSHDR_HEADER_SIZE;
+    payload_len -= (MDSHDR_HEADER_SIZE + MDSHDR_TRAILER_SIZE+FC_HDR_SIZE);
+  }
 
-    memcpy(&fchdr, bp+offset, sizeof(FcHeader));
-    hdralign = (FcHeaderAlign *)&fchdr;
-    hdrBytes = (u_char *)&fchdr;
+  memcpy(&fchdr, bp+offset, sizeof(FcHeader));
+  hdralign = (FcHeaderAlign *)&fchdr;
+  hdrBytes = (u_char *)&fchdr;
 
 #if CFG_LITTLE_ENDIAN
-    memcpy (&srcFcAddr, &hdrBytes[5], 3);
-    memcpy (&dstFcAddr, &hdrBytes[1], 3);
+  memcpy (&srcFcAddr, &hdrBytes[5], 3);
+  memcpy (&dstFcAddr, &hdrBytes[1], 3);
 #else
-    memcpy (&srcFcAddr, &hdrBytes[5], 3);
-    memcpy (&dstFcAddr, &hdrBytes[1], 3);
+  memcpy (&srcFcAddr, &hdrBytes[5], 3);
+  memcpy (&dstFcAddr, &hdrBytes[1], 3);
 #endif
-    isFirstFrame = ((sof == MDSHDR_SOFi2) || (sof == MDSHDR_SOFi3) ||
-                    ((sof == MDSHDR_SOFf) && (fchdr.seq_cnt == 0)));
-    isLastFrame  = (eof != MDSHDR_EOFn);
+  isFirstFrame = ((sof == MDSHDR_SOFi2) || (sof == MDSHDR_SOFi3) ||
+		  ((sof == MDSHDR_SOFf) && (fchdr.seq_cnt == 0)));
+  isLastFrame  = (eof != MDSHDR_EOFn);
 
-    /* This is bit 23 of F_CTL which indicates whether the S_ID is the
-     * originator of the exchange or the responder.
-     */
-    isXchgOrig = (bp[offset+9] & 0x80) ? 0 : 1;
+  /* This is bit 23 of F_CTL which indicates whether the S_ID is the
+   * originator of the exchange or the responder.
+   */
+  isXchgOrig = (bp[offset+9] & 0x80) ? 0 : 1;
 
-    /* Unless a frame is truncated by libpcap, we should have valid EOF */
-    if ((actLen == h->len) && (eof != MDSHDR_EOFn) && (eof != MDSHDR_EOFt)) {
-        incrementTrafficCounter (&myGlobals.device[actualDeviceId].rcvdFcPktStats.badCRC, 1);
-        if (myGlobals.runningPref.enableSuspiciousPacketDump) {
-            traceEvent(CONST_TRACE_WARNING, "Bad EOF Frame Received");
-            dumpSuspiciousPacket(actualDeviceId);
-        }
-        if (eof == MDSHDR_EOFa) {
-            incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcEofaPkts, 1);
-        }
-        else {
-            incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcEofAbnormalPkts, 1);
-        }
+  /* Unless a frame is truncated by libpcap, we should have valid EOF */
+  if ((actLen == h->len) && (eof != MDSHDR_EOFn) && (eof != MDSHDR_EOFt)) {
+    incrementTrafficCounter (&myGlobals.device[actualDeviceId].rcvdFcPktStats.badCRC, 1);
+    if (myGlobals.runningPref.enableSuspiciousPacketDump) {
+      traceEvent(CONST_TRACE_WARNING, "Bad EOF Frame Received");
+      dumpSuspiciousPacket(actualDeviceId);
     }
-
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcPkts, 1);
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcBytes, fcFrameLen);
-
-    dstHost = lookupFcHost (&dstFcAddr, vsanId, actualDeviceId);
-    srcHost = lookupFcHost (&srcFcAddr, vsanId, actualDeviceId);
-
-    if(srcHost == NULL) {
-        /* Sanity check */
-        traceEvent(CONST_TRACE_ERROR, "Sanity check failed (1) [Low memory?]");
-        return; /* It might be that there's not enough memory that that
-                   dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst) caused
-                   srcHost to be freed */
+    if (eof == MDSHDR_EOFa) {
+      incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcEofaPkts, 1);
     }
-
-    if(dstHost == NULL) {
-        /* Sanity check */
-        traceEvent(CONST_TRACE_ERROR, "Sanity check failed (2) [Low memory?]");
-        return;
+    else {
+      incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcEofAbnormalPkts, 1);
     }
+  }
 
-    if (strncasecmp (dstHost->fcCounters->hostNumFcAddress, FC_BROADCAST_ADDR,
-                     strlen (FC_BROADCAST_ADDR)) == 0) {
-        incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcBroadcastPkts, 1);
-        incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcBroadcastBytes, fcFrameLen);
-    }
+  incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcPkts, 1);
+  incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcBytes, fcFrameLen);
 
-    updateFcDevicePacketStats(fcFrameLen, actualDeviceId);
+  dstHost = lookupFcHost (&dstFcAddr, vsanId, actualDeviceId);
+  srcHost = lookupFcHost (&srcFcAddr, vsanId, actualDeviceId);
 
-    ctr.value = fcFrameLen;
-    updatePacketCount(srcHost, NULL, dstHost, NULL, ctr, 1, actualDeviceId);
+  if(srcHost == NULL) {
+    /* Sanity check */
+    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (1) [Low memory?]");
+    return; /* It might be that there's not enough memory that that
+	       dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst) caused
+	       srcHost to be freed */
+  }
+
+  if(dstHost == NULL) {
+    /* Sanity check */
+    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (2) [Low memory?]");
+    return;
+  }
+
+  if (strncasecmp (dstHost->fcCounters->hostNumFcAddress, FC_BROADCAST_ADDR,
+		   strlen (FC_BROADCAST_ADDR)) == 0) {
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcBroadcastPkts, 1);
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcBroadcastBytes, fcFrameLen);
+  }
+
+  updateFcDevicePacketStats(fcFrameLen, actualDeviceId);
+
+  ctr.value = fcFrameLen;
+  updatePacketCount(srcHost, NULL, dstHost, NULL, ctr, 1, actualDeviceId);
 
 #ifdef NOT_YET
-    updateTrafficMatrix (srcHost, dstHost, ctr, actualDeviceId);
+  updateTrafficMatrix (srcHost, dstHost, ctr, actualDeviceId);
 #endif
 
-    incrementTrafficCounter(&srcHost->fcCounters->fcBytesSent, fcFrameLen);
-    incrementTrafficCounter(&dstHost->fcCounters->fcBytesRcvd, fcFrameLen);
-    incrementTrafficCounter(&srcHost->fcCounters->fcPktsSent, 1);
-    incrementTrafficCounter(&dstHost->fcCounters->fcPktsRcvd, 1);
+  incrementHostTrafficCounter(srcHost, fcCounters->fcBytesSent, fcFrameLen);
+  incrementHostTrafficCounter(dstHost, fcCounters->fcBytesRcvd, fcFrameLen);
+  incrementHostTrafficCounter(srcHost, fcCounters->fcPktsSent, 1);
+  incrementHostTrafficCounter(dstHost, fcCounters->fcPktsRcvd, 1);
 
-    /* Class-Based Stats */
-    if ((sof == MDSHDR_SOFi3) || (sof == MDSHDR_SOFn3)) {
-      incrementTrafficCounter (&srcHost->fcCounters->class3Sent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->fcCounters->class3Rcvd, fcFrameLen);
-        incrementTrafficCounter (&myGlobals.device[actualDeviceId].class2Bytes, fcFrameLen);
+  /* Class-Based Stats */
+  if ((sof == MDSHDR_SOFi3) || (sof == MDSHDR_SOFn3)) {
+    incrementHostTrafficCounter(srcHost, fcCounters->class3Sent, fcFrameLen);
+    incrementHostTrafficCounter(dstHost, fcCounters->class3Rcvd, fcFrameLen);
+    incrementTrafficCounter (&myGlobals.device[actualDeviceId].class2Bytes, fcFrameLen);
+  }
+  else if ((sof == MDSHDR_SOFi2) || (sof == MDSHDR_SOFn2)) {
+    incrementHostTrafficCounter(srcHost, fcCounters->class2Sent, fcFrameLen);
+    incrementHostTrafficCounter(dstHost, fcCounters->class2Rcvd, fcFrameLen);
+    incrementTrafficCounter (&myGlobals.device[actualDeviceId].class3Bytes, fcFrameLen);
+  }
+  else if (sof == MDSHDR_SOFf) {
+    incrementHostTrafficCounter(srcHost, fcCounters->classFSent, fcFrameLen);
+    incrementHostTrafficCounter(dstHost, fcCounters->classFRcvd, fcFrameLen);
+    incrementTrafficCounter (&myGlobals.device[actualDeviceId].classFBytes, fcFrameLen);
+  }
+
+  isFragment = isFirstFrame && !(isLastFrame);
+
+  if (isFragment) {
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].fragmentedFcBytes, fcFrameLen);
+  }
+
+  protocol = getFcProtocol (fchdr.r_ctl, fchdr.type);
+
+  if (protocol <= FC_FTYPE_UNDEF) {
+    proto = fcProtocolStrings[protocol];
+  }
+
+  switch (protocol) {
+  case FC_FTYPE_SWILS:
+  case FC_FTYPE_SWILS_RSP:
+    incrementHostTrafficCounter(srcHost, fcCounters->fcSwilsBytesSent, fcFrameLen);
+    incrementHostTrafficCounter(dstHost, fcCounters->fcSwilsBytesRcvd, fcFrameLen);
+    incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcSwilsBytes, fcFrameLen);
+    break;
+  case FC_FTYPE_IP:
+    incrementHostTrafficCounter(srcHost, fcCounters->fcIpfcBytesSent, fcFrameLen);
+    incrementHostTrafficCounter(dstHost, fcCounters->fcIpfcBytesRcvd, fcFrameLen);
+    incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcIpfcBytes, fcFrameLen);
+    break;
+  case FC_FTYPE_SCSI:
+    incrementHostTrafficCounter(srcHost, fcCounters->fcFcpBytesSent, fcFrameLen);
+    incrementHostTrafficCounter(dstHost, fcCounters->fcFcpBytesRcvd, fcFrameLen);
+    incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcFcpBytes, fcFrameLen);
+
+    if ((fchdr.r_ctl & 0xF) == FCP_IU_CMD) {
+      /* We deal with command frames only for now */
+      fillFcpInfo (&bp[offset+24], srcHost, dstHost);
     }
-    else if ((sof == MDSHDR_SOFi2) || (sof == MDSHDR_SOFn2)) {
-        incrementTrafficCounter (&srcHost->fcCounters->class2Sent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->fcCounters->class2Rcvd, fcFrameLen);
-        incrementTrafficCounter (&myGlobals.device[actualDeviceId].class3Bytes, fcFrameLen);
+    break;
+  case FC_FTYPE_ELS:
+    if (isPlogi (fchdr.r_ctl, fchdr.type, bp[offset+24])) {
+      fillFcHostInfo (&bp[offset+24], srcHost);
     }
-    else if (sof == MDSHDR_SOFf) {
-        incrementTrafficCounter (&srcHost->fcCounters->classFSent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->fcCounters->classFRcvd, fcFrameLen);
-        incrementTrafficCounter (&myGlobals.device[actualDeviceId].classFBytes, fcFrameLen);
-    }
+    incrementHostTrafficCounter(srcHost, fcCounters->fcElsBytesSent, fcFrameLen);
+    incrementHostTrafficCounter(dstHost, fcCounters->fcElsBytesRcvd, fcFrameLen);
+    incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcElsBytes, fcFrameLen);
 
-    isFragment = isFirstFrame && !(isLastFrame);
-
-    if (isFragment) {
-        incrementTrafficCounter(&myGlobals.device[actualDeviceId].fragmentedFcBytes, fcFrameLen);
-    }
-
-    protocol = getFcProtocol (fchdr.r_ctl, fchdr.type);
-
-    if (protocol <= FC_FTYPE_UNDEF) {
-        proto = fcProtocolStrings[protocol];
-    }
-
-    switch (protocol) {
-    case FC_FTYPE_SWILS:
-    case FC_FTYPE_SWILS_RSP:
-        incrementTrafficCounter (&srcHost->fcCounters->fcSwilsBytesSent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->fcCounters->fcSwilsBytesRcvd, fcFrameLen);
-        incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcSwilsBytes, fcFrameLen);
-        break;
-    case FC_FTYPE_IP:
-        incrementTrafficCounter (&srcHost->fcCounters->fcIpfcBytesSent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->fcCounters->fcIpfcBytesRcvd, fcFrameLen);
-        incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcIpfcBytes, fcFrameLen);
-        break;
-    case FC_FTYPE_SCSI:
-        incrementTrafficCounter (&srcHost->fcCounters->fcFcpBytesSent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->fcCounters->fcFcpBytesRcvd, fcFrameLen);
-        incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcFcpBytes, fcFrameLen);
-
-        if ((fchdr.r_ctl & 0xF) == FCP_IU_CMD) {
-	  /* We deal with command frames only for now */
-	  fillFcpInfo (&bp[offset+24], srcHost, dstHost);
-        }
-        break;
-    case FC_FTYPE_ELS:
-        if (isPlogi (fchdr.r_ctl, fchdr.type, bp[offset+24])) {
-            fillFcHostInfo (&bp[offset+24], srcHost);
-        }
-        incrementTrafficCounter (&srcHost->fcCounters->fcElsBytesSent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->fcCounters->fcElsBytesRcvd, fcFrameLen);
-        incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcElsBytes, fcFrameLen);
-
-        /* Count RSCNs separately */
-        if (isRscn (fchdr.r_ctl, fchdr.type, bp[offset+24])) {
-            incrementTrafficCounter (&dstHost->fcCounters->fcRscnsRcvd, fcFrameLen);
-        }
-
-        break;
-    case FC_FTYPE_FCCT:
-        gs_type = bp[offset+24+4];
-        gs_stype = bp[offset+24+5];
-
-        if (((gs_type == FCCT_GSTYPE_DIRSVC) && (gs_stype == FCCT_GSSUBTYPE_DNS)) ||
-            ((gs_type == FCCT_GSTYPE_MGMTSVC) && (gs_stype == FCCT_GSSUBTYPE_UNS))) {
-            nsOpcode = ntohs (*(u_int16_t *)&bp[offset+24+8]);
-
-            /* Use registration information to save more information about
-             * device.
-             */
-            switch(nsOpcode) {
-            case FCDNS_RNN_ID:
-	      strncpy ((char*)srcHost->fcCounters->nWWN.str, (char*)&bp[offset+24+16+4], LEN_WWN_ADDRESS);
-	      break;
-            }
-
-            incrementTrafficCounter (&srcHost->fcCounters->fcDnsBytesSent, fcFrameLen);
-            incrementTrafficCounter (&dstHost->fcCounters->fcDnsBytesRcvd, fcFrameLen);
-            incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcDnsBytes, fcFrameLen);
-
-        }
-        else {
-	  incrementTrafficCounter (&srcHost->fcCounters->otherFcBytesSent, fcFrameLen);
-            incrementTrafficCounter (&dstHost->fcCounters->otherFcBytesRcvd, fcFrameLen);
-            incrementTrafficCounter (&myGlobals.device[actualDeviceId].otherFcBytes, fcFrameLen);
-        }
-        break;
-    case FC_FTYPE_SBCCS:
-        incrementTrafficCounter (&srcHost->fcCounters->fcFiconBytesSent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->fcCounters->fcFiconBytesRcvd, fcFrameLen);
-        incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcFiconBytes, fcFrameLen);
-        break;
-    case FC_FTYPE_LINKDATA:
-    case FC_FTYPE_VDO:
-    case FC_FTYPE_LINKCTL:
-    case FC_FTYPE_BLS:
-    default:
-        incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherFcBytes, fcFrameLen);
-        incrementTrafficCounter(&srcHost->fcCounters->otherFcBytesSent, fcFrameLen);
-        incrementTrafficCounter(&dstHost->fcCounters->otherFcBytesRcvd, fcFrameLen);
-        break;
+    /* Count RSCNs separately */
+    if (isRscn (fchdr.r_ctl, fchdr.type, bp[offset+24])) {
+      incrementHostTrafficCounter(dstHost, fcCounters->fcRscnsRcvd, fcFrameLen);
     }
 
-    /* Update VSAN-based stats */
-    allocateElementHash(actualDeviceId, 2 /* VSAN hash */);
-    updateFcFabricElementHash (myGlobals.device[actualDeviceId].vsanHash,
-                               vsanId, &bp[offset+24], &srcFcAddr, &dstFcAddr,
-                               protocol, fchdr.r_ctl, fcFrameLen);
+    break;
+  case FC_FTYPE_FCCT:
+    gs_type = bp[offset+24+4];
+    gs_stype = bp[offset+24+5];
 
-    /* Update Session stats */
-    handleFcSession (h, FALSE, srcHost, dstHost, fcFrameLen, payload_len,
-                     ntohs(fchdr.oxid), ntohs (fchdr.rxid), protocol,
-                     fchdr.r_ctl, isXchgOrig, &bp[offset+24], actualDeviceId);
+    if (((gs_type == FCCT_GSTYPE_DIRSVC) && (gs_stype == FCCT_GSSUBTYPE_DNS)) ||
+	((gs_type == FCCT_GSTYPE_MGMTSVC) && (gs_stype == FCCT_GSSUBTYPE_UNS))) {
+      nsOpcode = ntohs (*(u_int16_t *)&bp[offset+24+8]);
+
+      /* Use registration information to save more information about
+       * device.
+       */
+      switch(nsOpcode) {
+      case FCDNS_RNN_ID:
+	strncpy ((char*)srcHost->fcCounters->nWWN.str, (char*)&bp[offset+24+16+4], LEN_WWN_ADDRESS);
+	break;
+      }
+
+      incrementHostTrafficCounter(srcHost, fcCounters->fcDnsBytesSent, fcFrameLen);
+      incrementHostTrafficCounter(dstHost, fcCounters->fcDnsBytesRcvd, fcFrameLen);
+      incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcDnsBytes, fcFrameLen);
+
+    }
+    else {
+      incrementHostTrafficCounter(srcHost, fcCounters->otherFcBytesSent, fcFrameLen);
+      incrementHostTrafficCounter(dstHost, fcCounters->otherFcBytesRcvd, fcFrameLen);
+      incrementTrafficCounter (&myGlobals.device[actualDeviceId].otherFcBytes, fcFrameLen);
+    }
+    break;
+  case FC_FTYPE_SBCCS:
+    incrementHostTrafficCounter(srcHost, fcCounters->fcFiconBytesSent, fcFrameLen);
+    incrementHostTrafficCounter(dstHost, fcCounters->fcFiconBytesRcvd, fcFrameLen);
+    incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcFiconBytes, fcFrameLen);
+    break;
+  case FC_FTYPE_LINKDATA:
+  case FC_FTYPE_VDO:
+  case FC_FTYPE_LINKCTL:
+  case FC_FTYPE_BLS:
+  default:
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherFcBytes, fcFrameLen);
+    incrementHostTrafficCounter(srcHost, fcCounters->otherFcBytesSent, fcFrameLen);
+    incrementHostTrafficCounter(dstHost, fcCounters->otherFcBytesRcvd, fcFrameLen);
+    break;
+  }
+
+  /* Update VSAN-based stats */
+  allocateElementHash(actualDeviceId, 2 /* VSAN hash */);
+  updateFcFabricElementHash (myGlobals.device[actualDeviceId].vsanHash,
+			     vsanId, &bp[offset+24], &srcFcAddr, &dstFcAddr,
+			     protocol, fchdr.r_ctl, fcFrameLen);
+
+  /* Update Session stats */
+  handleFcSession (h, FALSE, srcHost, dstHost, fcFrameLen, payload_len,
+		   ntohs(fchdr.oxid), ntohs (fchdr.rxid), protocol,
+		   fchdr.r_ctl, isXchgOrig, &bp[offset+24], actualDeviceId);
 }
 
 /* ************************************ */

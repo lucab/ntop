@@ -1376,11 +1376,11 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
       rc = atoi(&tmpStr[9]);
 
       if(rc == 200) /* HTTP/1.1 200 OK */ {
-	incrementTrafficCounter(&srcHost->protocolInfo->httpStats->numPositiveReplSent, 1);
-	incrementTrafficCounter(&dstHost->protocolInfo->httpStats->numPositiveReplRcvd, 1);
+	incrementHostTrafficCounter(srcHost, protocolInfo->httpStats->numPositiveReplSent, 1);
+	incrementHostTrafficCounter(dstHost, protocolInfo->httpStats->numPositiveReplRcvd, 1);
       } else {
-	incrementTrafficCounter(&srcHost->protocolInfo->httpStats->numNegativeReplSent, 1);
-	incrementTrafficCounter(&dstHost->protocolInfo->httpStats->numNegativeReplRcvd, 1);
+	incrementHostTrafficCounter(srcHost, protocolInfo->httpStats->numNegativeReplSent, 1);
+	incrementHostTrafficCounter(dstHost, protocolInfo->httpStats->numNegativeReplRcvd, 1);
       }
 
       if(microSecTimeDiff > 0) {
@@ -1458,14 +1458,14 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 	}
 
 	if(subnetLocalHost(dstHost))
-	  incrementTrafficCounter(&srcHost->protocolInfo->httpStats->numLocalReqSent, 1);
+	  incrementHostTrafficCounter(srcHost, protocolInfo->httpStats->numLocalReqSent, 1);
 	else
-	  incrementTrafficCounter(&srcHost->protocolInfo->httpStats->numRemReqSent, 1);
+	  incrementHostTrafficCounter(srcHost, protocolInfo->httpStats->numRemReqSent, 1);
 
 	if(subnetLocalHost(srcHost))
-	  incrementTrafficCounter(&dstHost->protocolInfo->httpStats->numLocalReqRcvd, 1);
+	  incrementHostTrafficCounter(dstHost, protocolInfo->httpStats->numLocalReqRcvd, 1);
 	else
-	  incrementTrafficCounter(&dstHost->protocolInfo->httpStats->numRemReqRcvd, 1);
+	  incrementHostTrafficCounter(dstHost, protocolInfo->httpStats->numRemReqRcvd, 1);
 
 	row = strtok_r(rcStr, "\n", &strtokState);
 
@@ -2964,10 +2964,10 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
    * Increment session counters.
    */
   if (isXchgOrig) {
-    incrementTrafficCounter (&theSession->fcpBytesSent, length);
+    incrementTrafficCounter(&theSession->fcpBytesSent, length);
   }
   else {
-    incrementTrafficCounter (&theSession->fcpBytesRcvd, length);
+    incrementTrafficCounter(&theSession->fcpBytesRcvd, length);
   }
 
   if (rCtl != FCP_IU_CMD) {
@@ -2977,11 +2977,11 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
     if (!getScsiLunCmdInfo (theSession, &lun, &cmd, oxid)) {
       /* No matching command/lun found. Skip */
       if (isXchgOrig) {
-	incrementTrafficCounter (&theSession->unknownLunBytesSent,
+	incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				 length);
       }
       else {
-	incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+	incrementTrafficCounter(&theSession->unknownLunBytesRcvd,
 				 length);
       }
       return;
@@ -2992,11 +2992,11 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
        * it cannot be tracked as well. So, just return.
        */
       if (isXchgOrig) {
-	incrementTrafficCounter (&theSession->unknownLunBytesSent,
+	incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				 length);
       }
       else {
-	incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+	incrementTrafficCounter(&theSession->unknownLunBytesRcvd,
 				 length);
       }
       return;
@@ -3014,11 +3014,11 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
        * it cannot be tracked as well. So, just return.
        */
       if (isXchgOrig) {
-	incrementTrafficCounter (&theSession->unknownLunBytesSent,
+	incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				 length);
       }
       else {
-	incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+	incrementTrafficCounter(&theSession->unknownLunBytesRcvd,
 				 length);
       }
       return;
@@ -3039,11 +3039,11 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
 		    "so stats can be tracked for this LUN.\n",
 		    dstHost->fcCounters->hostNumFcAddress);
 	if (isXchgOrig) {
-	  incrementTrafficCounter (&theSession->unknownLunBytesSent,
+	  incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				   length);
 	}
 	else {
-	  incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+	  incrementTrafficCounter(&theSession->unknownLunBytesRcvd,
 				   length);
 	}
 	return;
@@ -3061,11 +3061,11 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
 		  "so stats can be tracked for this LUN.\n",
 		  MAX_LUNS_SUPPORTED, dstHost->fcCounters->hostNumFcAddress);
       if (isXchgOrig) {
-	incrementTrafficCounter (&theSession->unknownLunBytesSent,
+	incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				 length);
       }
       else {
-	incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+	incrementTrafficCounter(&theSession->unknownLunBytesRcvd,
 				 length);
       }
       return;
@@ -3078,11 +3078,11 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
 	traceEvent (CONST_TRACE_ERROR, "Unable to allocate LUN for %d:%s\n",
 		    lun, dstHost->fcCounters->hostNumFcAddress);
 	if (isXchgOrig) {
-	  incrementTrafficCounter (&theSession->unknownLunBytesSent,
+	  incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				   length);
 	}
 	else {
-	  incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+	  incrementTrafficCounter(&theSession->unknownLunBytesRcvd,
 				   length);
 	}
 	return;
@@ -3108,11 +3108,11 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
 	  traceEvent (CONST_TRACE_ERROR, "Unable to allocate host LUN for %d:%s\n",
 		      lun, dstHost->fcCounters->hostNumFcAddress);
 	  if (isXchgOrig) {
-	    incrementTrafficCounter (&theSession->unknownLunBytesSent,
+	    incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				     length);
 	  }
 	  else {
-	    incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+	    incrementTrafficCounter(&theSession->unknownLunBytesRcvd,
 				     length);
 	  }
 	  return;
@@ -3133,11 +3133,11 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
 	  traceEvent (CONST_TRACE_ERROR, "Unable to allocate host LUN for %d:%s\n",
 		      lun, srcHost->fcCounters->hostNumFcAddress);
 	  if (isXchgOrig) {
-	    incrementTrafficCounter (&theSession->unknownLunBytesSent,
+	    incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				     length);
 	  }
 	  else {
-	    incrementTrafficCounter (&theSession->unknownLunBytesRcvd,
+	    incrementTrafficCounter(&theSession->unknownLunBytesRcvd,
 				     length);
 	  }
 	  return;
@@ -3210,9 +3210,9 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
     theSession->lastLun = lun;
 
     if (iocmdType == SCSI_READ_CMD) {
-      incrementTrafficCounter (&theSession->numScsiRdCmd, 1);
-      incrementTrafficCounter (&lunStats->numScsiRdCmd, 1);
-      incrementTrafficCounter (&hostLunStats->numScsiRdCmd, 1);
+      incrementTrafficCounter(&theSession->numScsiRdCmd, 1);
+      incrementTrafficCounter(&lunStats->numScsiRdCmd, 1);
+      incrementTrafficCounter(&hostLunStats->numScsiRdCmd, 1);
 
       lunStats->frstRdDataRcvd = TRUE;
       hostLunStats->frstRdDataRcvd = TRUE;
@@ -3236,9 +3236,9 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       }
     }
     else if (iocmdType == SCSI_WR_CMD) {
-      incrementTrafficCounter (&theSession->numScsiWrCmd, 1);
-      incrementTrafficCounter (&lunStats->numScsiWrCmd, 1);
-      incrementTrafficCounter (&hostLunStats->numScsiWrCmd, 1);
+      incrementTrafficCounter(&theSession->numScsiWrCmd, 1);
+      incrementTrafficCounter(&lunStats->numScsiWrCmd, 1);
+      incrementTrafficCounter(&hostLunStats->numScsiWrCmd, 1);
 
       lunStats->frstWrDataRcvd = TRUE;
       hostLunStats->frstWrDataRcvd = TRUE;
@@ -3262,9 +3262,9 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       }
     }
     else {
-      incrementTrafficCounter (&theSession->numScsiOtCmd, 1);
-      incrementTrafficCounter (&lunStats->numScsiOtCmd, 1);
-      incrementTrafficCounter (&hostLunStats->numScsiOtCmd, 1);
+      incrementTrafficCounter(&theSession->numScsiOtCmd, 1);
+      incrementTrafficCounter(&lunStats->numScsiOtCmd, 1);
+      incrementTrafficCounter(&hostLunStats->numScsiOtCmd, 1);
     }
 
     if ((task_mgmt = bp[10]) != 0) {
@@ -3301,17 +3301,17 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
     }
 
     if (theSession->initiator == srcHost) {
-      incrementTrafficCounter (&(lunStats->bytesSent), length);
+      incrementTrafficCounter(&(lunStats->bytesSent), length);
       lunStats->pktSent++;
 
-      incrementTrafficCounter (&hostLunStats->bytesRcvd, length);
+      incrementTrafficCounter(&hostLunStats->bytesRcvd, length);
       hostLunStats->pktRcvd++;
     }
     else {
-      incrementTrafficCounter (&lunStats->bytesRcvd, length);
+      incrementTrafficCounter(&lunStats->bytesRcvd, length);
       lunStats->pktRcvd++;
 
-      incrementTrafficCounter (&hostLunStats->bytesSent, length);
+      incrementTrafficCounter(&hostLunStats->bytesSent, length);
       hostLunStats->pktSent++;
     }
 
@@ -3370,8 +3370,8 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
     iocmdType = getScsiCmdType (lunStats->lastScsiCmd, &ioSize, bp);
 
     if (iocmdType == SCSI_READ_CMD) {
-      incrementTrafficCounter (&lunStats->scsiRdBytes, payload_len);
-      incrementTrafficCounter (&hostLunStats->scsiRdBytes, payload_len);
+      incrementTrafficCounter(&lunStats->scsiRdBytes, payload_len);
+      incrementTrafficCounter(&hostLunStats->scsiRdBytes, payload_len);
 
       if (lunStats->frstRdDataRcvd) {
 	lunStats->frstRdDataRcvd = FALSE;
@@ -3385,8 +3385,8 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       }
     }
     else if (iocmdType == SCSI_WR_CMD) {
-      incrementTrafficCounter (&lunStats->scsiWrBytes, payload_len);
-      incrementTrafficCounter (&hostLunStats->scsiWrBytes, payload_len);
+      incrementTrafficCounter(&lunStats->scsiWrBytes, payload_len);
+      incrementTrafficCounter(&hostLunStats->scsiWrBytes, payload_len);
 
       if (lunStats->frstWrDataRcvd) {
 	lunStats->frstWrDataRcvd = FALSE;
@@ -3400,22 +3400,22 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       }
     }
     else {
-      incrementTrafficCounter (&lunStats->scsiOtBytes, payload_len);
-      incrementTrafficCounter (&hostLunStats->scsiOtBytes, payload_len);
+      incrementTrafficCounter(&lunStats->scsiOtBytes, payload_len);
+      incrementTrafficCounter(&hostLunStats->scsiOtBytes, payload_len);
     }
 
     if (theSession->initiator == srcHost) {
-      incrementTrafficCounter (&(lunStats->bytesSent), length);
+      incrementTrafficCounter(&(lunStats->bytesSent), length);
       lunStats->pktSent++;
 
-      incrementTrafficCounter (&(hostLunStats->bytesRcvd), length);
+      incrementTrafficCounter(&(hostLunStats->bytesRcvd), length);
       hostLunStats->pktRcvd++;
     }
     else {
-      incrementTrafficCounter (&lunStats->bytesRcvd, length);
+      incrementTrafficCounter(&lunStats->bytesRcvd, length);
       lunStats->pktRcvd++;
 
-      incrementTrafficCounter (&hostLunStats->bytesSent, length);
+      incrementTrafficCounter(&hostLunStats->bytesSent, length);
       hostLunStats->pktSent++;
     }
 
@@ -3440,17 +3440,17 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
     }
 
     if (theSession->initiator == srcHost) {
-      incrementTrafficCounter (&(lunStats->bytesSent), length);
+      incrementTrafficCounter(&(lunStats->bytesSent), length);
       lunStats->pktSent++;
 
-      incrementTrafficCounter (&(hostLunStats->bytesRcvd), length);
+      incrementTrafficCounter(&(hostLunStats->bytesRcvd), length);
       hostLunStats->pktRcvd++;
     }
     else {
-      incrementTrafficCounter (&lunStats->bytesRcvd, length);
+      incrementTrafficCounter(&lunStats->bytesRcvd, length);
       lunStats->pktRcvd++;
 
-      incrementTrafficCounter (&hostLunStats->bytesSent, length);
+      incrementTrafficCounter(&hostLunStats->bytesSent, length);
       hostLunStats->pktSent++;
     }
 
@@ -3516,17 +3516,17 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
     }
 
     if (theSession->initiator == srcHost) {
-      incrementTrafficCounter (&(lunStats->bytesSent), length);
+      incrementTrafficCounter(&(lunStats->bytesSent), length);
       lunStats->pktSent++;
 
-      incrementTrafficCounter (&hostLunStats->bytesRcvd, length);
+      incrementTrafficCounter(&hostLunStats->bytesRcvd, length);
       hostLunStats->pktRcvd++;
     }
     else {
-      incrementTrafficCounter (&lunStats->bytesRcvd, length);
+      incrementTrafficCounter(&lunStats->bytesRcvd, length);
       lunStats->pktRcvd++;
 
-      incrementTrafficCounter (&(hostLunStats->bytesSent), length);
+      incrementTrafficCounter(&(hostLunStats->bytesSent), length);
       hostLunStats->pktSent++;
     }
 
@@ -3567,7 +3567,7 @@ static void processSwRscn (const u_char *bp, u_short vsanId, int actualDeviceId)
       }
       else if (event == FC_SW_RSCN_PORT_OFFLINE) {
 	affectedHost->fcCounters->lastOfflineTime = myGlobals.actTime;
-	incrementTrafficCounter (&affectedHost->fcCounters->numOffline, 1);
+	incrementTrafficCounter(&affectedHost->fcCounters->numOffline, 1);
       }
     }
   }
@@ -3720,11 +3720,11 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
    * flow
    */
   if (isXchgOrig) {
-    incrementTrafficCounter (&(theSession->bytesSent), length);
+    incrementTrafficCounter(&(theSession->bytesSent), length);
     theSession->pktSent++;
   }
   else {
-    incrementTrafficCounter (&theSession->bytesRcvd, length);
+    incrementTrafficCounter(&theSession->bytesRcvd, length);
     theSession->pktRcvd++;
   }
 
@@ -3745,10 +3745,10 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
     }
 
     if (isXchgOrig) {
-      incrementTrafficCounter (&theSession->fcElsBytesSent, length);
+      incrementTrafficCounter(&theSession->fcElsBytesSent, length);
     }
     else {
-      incrementTrafficCounter (&theSession->fcElsBytesRcvd, length);
+      incrementTrafficCounter(&theSession->fcElsBytesRcvd, length);
     }
 
     theSession->lastElsCmd = cmd;
@@ -3761,18 +3761,18 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
     if (((gs_type == FCCT_GSTYPE_DIRSVC) && (gs_stype == FCCT_GSSUBTYPE_DNS)) ||
 	((gs_type == FCCT_GSTYPE_MGMTSVC) && (gs_stype == FCCT_GSSUBTYPE_UNS))) {
       if (isXchgOrig) {
-	incrementTrafficCounter (&theSession->fcDnsBytesSent, length);
+	incrementTrafficCounter(&theSession->fcDnsBytesSent, length);
       }
       else {
-	incrementTrafficCounter (&theSession->fcDnsBytesRcvd, length);
+	incrementTrafficCounter(&theSession->fcDnsBytesRcvd, length);
       }
     }
     else {
       if (isXchgOrig) {
-	incrementTrafficCounter (&theSession->otherBytesSent, length);
+	incrementTrafficCounter(&theSession->otherBytesSent, length);
       }
       else {
-	incrementTrafficCounter (&theSession->otherBytesRcvd, length);
+	incrementTrafficCounter(&theSession->otherBytesRcvd, length);
       }
     }
     break;
@@ -3780,10 +3780,10 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
   case FC_FTYPE_SWILS_RSP:
 
     if (isXchgOrig) {
-      incrementTrafficCounter (&theSession->fcSwilsBytesSent, length);
+      incrementTrafficCounter(&theSession->fcSwilsBytesSent, length);
     }
     else {
-      incrementTrafficCounter (&theSession->fcSwilsBytesRcvd, length);
+      incrementTrafficCounter(&theSession->fcSwilsBytesRcvd, length);
     }
 
     hash = getFcFabricElementHash (srcHost->fcCounters->vsanId, actualDeviceId);
@@ -3807,18 +3807,18 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
     case FC_SWILS_EFP:
     case FC_SWILS_DIA:
     case FC_SWILS_RDI:
-      incrementTrafficCounter (&hash->dmBytes, length);
-      incrementTrafficCounter (&hash->dmPkts, 1);
+      incrementTrafficCounter(&hash->dmBytes, length);
+      incrementTrafficCounter(&hash->dmPkts, 1);
       break;
     case FC_SWILS_HLO:
     case FC_SWILS_LSU:
     case FC_SWILS_LSA:
-      incrementTrafficCounter (&hash->fspfBytes, length);
-      incrementTrafficCounter (&hash->fspfPkts, 1);
+      incrementTrafficCounter(&hash->fspfBytes, length);
+      incrementTrafficCounter(&hash->fspfPkts, 1);
       break;
     case FC_SWILS_RSCN:
-      incrementTrafficCounter (&hash->rscnBytes, length);
-      incrementTrafficCounter (&hash->rscnPkts, 1);
+      incrementTrafficCounter(&hash->rscnBytes, length);
+      incrementTrafficCounter(&hash->rscnPkts, 1);
       processSwRscn (bp, srcHost->fcCounters->vsanId, actualDeviceId);
       break;
     case FC_SWILS_DRLIR:
@@ -3829,14 +3829,14 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
     case FC_SWILS_RCA:
     case FC_SWILS_SFC:
     case FC_SWILS_UFC:
-      incrementTrafficCounter (&hash->zsBytes, length);
-      incrementTrafficCounter (&hash->zsPkts, 1);
+      incrementTrafficCounter(&hash->zsBytes, length);
+      incrementTrafficCounter(&hash->zsPkts, 1);
       break;
     case FC_SWILS_ELP:
     case FC_SWILS_ESC:
     default:
-      incrementTrafficCounter (&hash->otherCtlBytes, length);
-      incrementTrafficCounter (&hash->otherCtlPkts, 1);
+      incrementTrafficCounter(&hash->otherCtlBytes, length);
+      incrementTrafficCounter(&hash->otherCtlPkts, 1);
       break;
     }
     break;
@@ -3844,19 +3844,19 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
     break;
   case FC_FTYPE_IP:
     if (isXchgOrig) {
-      incrementTrafficCounter (&theSession->ipfcBytesSent, length);
+      incrementTrafficCounter(&theSession->ipfcBytesSent, length);
     }
     else {
-      incrementTrafficCounter (&theSession->ipfcBytesRcvd, length);
+      incrementTrafficCounter(&theSession->ipfcBytesRcvd, length);
     }
     break;
 
   default:
     if (isXchgOrig) {
-      incrementTrafficCounter (&theSession->otherBytesSent, length);
+      incrementTrafficCounter(&theSession->otherBytesSent, length);
     }
     else {
-      incrementTrafficCounter (&theSession->otherBytesRcvd, length);
+      incrementTrafficCounter(&theSession->otherBytesRcvd, length);
     }
     break;
   }

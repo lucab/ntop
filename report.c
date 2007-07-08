@@ -5779,7 +5779,6 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	if(network_mode == NETWORK_VIEW) {
 	  char *nw_name = host2networkName(statsEntry->domainHost, buf1, sizeof(buf1));
 	  char sym_nw_name[256];
-
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "network.name.%s",
 			nw_name);
 
@@ -5882,8 +5881,20 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		       statsEntry->clusterName);
 	 sendString(buf);
 
+      } else if((network_mode == NETWORK_VIEW) && (statsEntry->domainHost != NULL)) {
+	char rrdBuf[LEN_GENERAL_WORK_BUFFER];
+
+	hostRRdGraphLink(statsEntry->domainHost, rrdBuf, sizeof(rrdBuf));
+	sendString("<TD "TD_BG" ALIGN=CENTER>");
+
+	if(rrdBuf[0] != '\0')
+	  sendString(rrdBuf);
+	else
+	  sendString("&nbsp;");
+	
+	sendString("</TD>\n");
       } else
-	 sendString("<TD "TD_BG" ALIGN=CENTER>&nbsp;</TD>");
+	 sendString("<TD "TD_BG" ALIGN=CENTER>&nbsp;</TD>\n");
 
       /* Avoid huge tables */
       if(printedEntries++ > myGlobals.runningPref.maxNumLines)
@@ -6830,3 +6841,40 @@ void findHost(char *key) {
 
   sendString("\n] }\n");
 }
+
+/* ************************************************** */
+
+char* hostRRdGraphLink(HostTraffic *el, char *tmpStr, int tmpStrLen) {
+  struct stat statbuf;
+  char *key;
+  char buf[256];
+
+  if((!myGlobals.runningPref.dontTrustMACaddr) && subnetPseudoLocalHost(el) 
+     && (el->ethAddressString[0] != '\0') /* Really safe in case a host that was supposed to be local isn't really so*/)
+      key = el->ethAddressString;
+  else
+    key = el->hostNumIpAddress;
+   
+  /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
+		myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
+		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
+		dotToSlash(key));
+  
+  revertSlashIfWIN32(buf, 0);
+  
+  if(stat(buf, &statbuf) == 0) {
+    safe_snprintf(__FILE__, __LINE__, tmpStr, tmpStrLen,
+                  "[ <a href=\"/" CONST_PLUGINS_HEADER 
+		  "rrdPlugin?action=list&amp;key=interfaces/%s/hosts/%s&amp;title=host%%20%s\">"
+                  "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
+		  " class=tooltip alt=\"view rrd graphs of historical data for this host\"></a> ]",
+                  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
+                  dotToSlash(key),
+		  el->hostResolvedName[0] != '\0' ? el->hostResolvedName : el->hostNumIpAddress);
+  } else
+    tmpStr[0] = '\0';
+}
+
+
+/* ************************************************** */

@@ -4093,36 +4093,15 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   /* RRD */
   if(el->hostNumIpAddress[0] != '\0') {
-    struct stat statbuf;
-    char *key;
+    char rrdBuf[LEN_GENERAL_WORK_BUFFER];
 
-    if((!myGlobals.runningPref.dontTrustMACaddr) && subnetPseudoLocalHost(el) 
-       && (el->ethAddressString[0] != '\0') /* Really safe in case a host that was supposed to be local isn't really so*/)
-      key = el->ethAddressString;
-    else
-      key = el->hostNumIpAddress;
+    hostRRdGraphLink(el, rrdBuf, sizeof(rrdBuf));
 
-    /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
-	     myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-	     myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
-	     dotToSlash(key));
-
-    revertSlashIfWIN32(buf, 0);
-
-    if(stat(buf, &statbuf) == 0) {
+    if(rrdBuf[0] != '\0') {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
-                  "<TD "TD_BG" ALIGN=\"right\">"
-                  "[ <a href=\"/" CONST_PLUGINS_HEADER 
-		  "rrdPlugin?action=list&amp;key=interfaces/%s/hosts/%s&amp;title=host%%20%s\">"
-                  "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
-		    " class=tooltip alt=\"view rrd graphs of historical data for this host\"></a> ]"
-                  "</TD></TR>\n",
-		  getRowColor(),
-                  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
-                  dotToSlash(key),
-		  el->hostResolvedName[0] != '\0' ? el->hostResolvedName : el->hostNumIpAddress);
+		    "<TD "TD_BG" ALIGN=\"right\">%s</TD></TR>\n",
+		    getRowColor(), rrdBuf);
       sendString(buf);
     }
   }

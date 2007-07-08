@@ -136,12 +136,12 @@ int fillFcpInfo (const u_char *bp, HostTraffic *srcHost, HostTraffic *dstHost)
   if(allocFcScsiCounters(dstHost) == NULL) return(0);
 
   if (bp[offset+11] & 0x1) {
-    incrementTrafficCounter (&srcHost->fcCounters->scsiWriteBytes, fcpDl);
-    incrementTrafficCounter (&dstHost->fcCounters->scsiWriteBytes, fcpDl);
+    incrementTrafficCounter(&srcHost->fcCounters->scsiWriteBytes, fcpDl);
+    incrementTrafficCounter(&dstHost->fcCounters->scsiWriteBytes, fcpDl);
   }
   else if (bp[offset+11] & 0x2) {
-    incrementTrafficCounter (&srcHost->fcCounters->scsiReadBytes, fcpDl);
-    incrementTrafficCounter (&dstHost->fcCounters->scsiReadBytes, fcpDl);
+    incrementTrafficCounter(&srcHost->fcCounters->scsiReadBytes, fcpDl);
+    incrementTrafficCounter(&dstHost->fcCounters->scsiReadBytes, fcpDl);
   }
 
   return (0);
@@ -222,8 +222,8 @@ int updateFcFabricElementHash (FcFabricElementHash **theHash, u_short vsanId,
 
   hash = theHash[idx];
 
-  incrementTrafficCounter (&hash->totBytes, pktlen);
-  incrementTrafficCounter (&hash->totPkts, 1);
+  incrementTrafficCounter(&hash->totBytes, pktlen);
+  incrementTrafficCounter(&hash->totPkts, 1);
 
 #ifdef NOT_YET    
   if (protocol == FC_FTYPE_SWILS) {
@@ -231,33 +231,33 @@ int updateFcFabricElementHash (FcFabricElementHash **theHash, u_short vsanId,
 
     switch (cmd) {
     case FC_SWILS_ELP:
-      incrementTrafficCounter (&hash->pmBytes, pktlen);
-      incrementTrafficCounter (&hash->pmPkts, 1);
+      incrementTrafficCounter(&hash->pmBytes, pktlen);
+      incrementTrafficCounter(&hash->pmPkts, 1);
       hash->fabricConfStartTime = myGlobals.actTime;
 
       break;
     case FC_SWILS_ESC:
-      incrementTrafficCounter (&hash->pmBytes, pktlen);
-      incrementTrafficCounter (&hash->pmPkts, 1);
+      incrementTrafficCounter(&hash->pmBytes, pktlen);
+      incrementTrafficCounter(&hash->pmPkts, 1);
             
       break;
     case FC_SWILS_BF:
-      incrementTrafficCounter (&hash->dmBytes, pktlen);
-      incrementTrafficCounter (&hash->dmPkts, 1);
-      incrementTrafficCounter (&hash->numBF, 1);
+      incrementTrafficCounter(&hash->dmBytes, pktlen);
+      incrementTrafficCounter(&hash->dmPkts, 1);
+      incrementTrafficCounter(&hash->numBF, 1);
       hash->fabricConfStartTime = myGlobals.actTime;
 
       break;
     case FC_SWILS_RCF:
-      incrementTrafficCounter (&hash->dmBytes, pktlen);
-      incrementTrafficCounter (&hash->dmPkts, 1);
-      incrementTrafficCounter (&hash->numRCF, 1);
+      incrementTrafficCounter(&hash->dmBytes, pktlen);
+      incrementTrafficCounter(&hash->dmPkts, 1);
+      incrementTrafficCounter(&hash->numRCF, 1);
       hash->fabricConfStartTime = myGlobals.actTime;
             
       break; 
     case FC_SWILS_EFP:
-      incrementTrafficCounter (&hash->dmBytes, pktlen);
-      incrementTrafficCounter (&hash->dmPkts, 1);
+      incrementTrafficCounter(&hash->dmBytes, pktlen);
+      incrementTrafficCounter(&hash->dmPkts, 1);
 
       /* Copy the latest EFP for the domain list */
       payload_len = ntohs (*(u_short *)&bp[2]);
@@ -273,33 +273,33 @@ int updateFcFabricElementHash (FcFabricElementHash **theHash, u_short vsanId,
 
       break;
     case FC_SWILS_DIA:
-      incrementTrafficCounter (&hash->dmBytes, pktlen);
-      incrementTrafficCounter (&hash->dmPkts, 1);
+      incrementTrafficCounter(&hash->dmBytes, pktlen);
+      incrementTrafficCounter(&hash->dmPkts, 1);
 
       break;
     case FC_SWILS_RDI:
-      incrementTrafficCounter (&hash->dmBytes, pktlen);
-      incrementTrafficCounter (&hash->dmPkts, 1);
+      incrementTrafficCounter(&hash->dmBytes, pktlen);
+      incrementTrafficCounter(&hash->dmPkts, 1);
             
       break;
     case FC_SWILS_HLO:
-      incrementTrafficCounter (&hash->fspfBytes, pktlen);
-      incrementTrafficCounter (&hash->fspfPkts, 1);
-      incrementTrafficCounter (&hash->hloPkts, 1);
+      incrementTrafficCounter(&hash->fspfBytes, pktlen);
+      incrementTrafficCounter(&hash->fspfPkts, 1);
+      incrementTrafficCounter(&hash->hloPkts, 1);
             
       break;
     case FC_SWILS_LSU:
-      incrementTrafficCounter (&hash->fspfBytes, pktlen);
-      incrementTrafficCounter (&hash->fspfPkts, 1);
-      incrementTrafficCounter (&hash->lsuBytes, pktlen);
-      incrementTrafficCounter (&hash->lsuPkts, 1);
+      incrementTrafficCounter(&hash->fspfBytes, pktlen);
+      incrementTrafficCounter(&hash->fspfPkts, 1);
+      incrementTrafficCounter(&hash->lsuBytes, pktlen);
+      incrementTrafficCounter(&hash->lsuPkts, 1);
             
       break;
     case FC_SWILS_LSA:
-      incrementTrafficCounter (&hash->fspfBytes, pktlen);
-      incrementTrafficCounter (&hash->fspfPkts, 1);
-      incrementTrafficCounter (&hash->lsaBytes, pktlen);
-      incrementTrafficCounter (&hash->lsaPkts, 1);
+      incrementTrafficCounter(&hash->fspfBytes, pktlen);
+      incrementTrafficCounter(&hash->fspfPkts, 1);
+      incrementTrafficCounter(&hash->lsaBytes, pktlen);
+      incrementTrafficCounter(&hash->lsaPkts, 1);
 
       /* Check if fabric configuration is over */
       if (hash->fabricConfInProgress) {
@@ -321,8 +321,8 @@ int updateFcFabricElementHash (FcFabricElementHash **theHash, u_short vsanId,
             
       break;
     case FC_SWILS_RSCN:
-      incrementTrafficCounter (&hash->rscnBytes, pktlen);
-      incrementTrafficCounter (&hash->rscnPkts, 1);
+      incrementTrafficCounter(&hash->rscnBytes, pktlen);
+      incrementTrafficCounter(&hash->rscnPkts, 1);
 
       break;
     case FC_SWILS_DRLIR:
@@ -333,21 +333,21 @@ int updateFcFabricElementHash (FcFabricElementHash **theHash, u_short vsanId,
       break;
             
     case FC_SWILS_MR:
-      incrementTrafficCounter (&hash->zsBytes, pktlen);
-      incrementTrafficCounter (&hash->zsPkts, 1);
+      incrementTrafficCounter(&hash->zsBytes, pktlen);
+      incrementTrafficCounter(&hash->zsPkts, 1);
             
       break;
     case FC_SWILS_ACA:
-      incrementTrafficCounter (&hash->zsBytes, pktlen);
-      incrementTrafficCounter (&hash->zsPkts, 1);
+      incrementTrafficCounter(&hash->zsBytes, pktlen);
+      incrementTrafficCounter(&hash->zsPkts, 1);
 
       hash->zoneConfStartTime = myGlobals.actTime;
       hash->zoneConfInProgress = TRUE;
             
       break;
     case FC_SWILS_RCA:
-      incrementTrafficCounter (&hash->zsBytes, pktlen);
-      incrementTrafficCounter (&hash->zsPkts, 1);
+      incrementTrafficCounter(&hash->zsBytes, pktlen);
+      incrementTrafficCounter(&hash->zsPkts, 1);
 
       /* We should in reality do this when we see the ACC for RCA */
       if (hash->zoneConfInProgress) {
@@ -364,14 +364,14 @@ int updateFcFabricElementHash (FcFabricElementHash **theHash, u_short vsanId,
       }
       break;
     case FC_SWILS_SFC:
-      incrementTrafficCounter (&hash->zsBytes, pktlen);
-      incrementTrafficCounter (&hash->zsPkts, 1);
-      incrementTrafficCounter (&hash->numZoneConf, 1);
+      incrementTrafficCounter(&hash->zsBytes, pktlen);
+      incrementTrafficCounter(&hash->zsPkts, 1);
+      incrementTrafficCounter(&hash->numZoneConf, 1);
             
       break;
     case FC_SWILS_UFC:
-      incrementTrafficCounter (&hash->zsBytes, pktlen);
-      incrementTrafficCounter (&hash->zsPkts, 1);
+      incrementTrafficCounter(&hash->zsBytes, pktlen);
+      incrementTrafficCounter(&hash->zsPkts, 1);
             
       break;
     case FC_SWILS_SWACC:
@@ -443,14 +443,14 @@ int updateFcFabricElementHash (FcFabricElementHash **theHash, u_short vsanId,
   }
 
   if (srcDomain != FC_ID_SYSTEM_DOMAIN) {
-    incrementTrafficCounter (&hash->domainStats[srcDomain].sentBytes, pktlen);
+    incrementTrafficCounter(&hash->domainStats[srcDomain].sentBytes, pktlen);
 
     switch (protocol) {
     }
   }
     
   if (dstDomain != FC_ID_SYSTEM_DOMAIN) {
-    incrementTrafficCounter (&hash->domainStats[dstDomain].rcvdBytes, pktlen);
+    incrementTrafficCounter(&hash->domainStats[dstDomain].rcvdBytes, pktlen);
         
     switch (protocol) {
     }
@@ -458,34 +458,34 @@ int updateFcFabricElementHash (FcFabricElementHash **theHash, u_short vsanId,
 
   switch (protocol) {
   case FC_FTYPE_SWILS:
-    incrementTrafficCounter (&hash->fcSwilsBytes, pktlen);
+    incrementTrafficCounter(&hash->fcSwilsBytes, pktlen);
     break;
   case FC_FTYPE_SCSI:
-    incrementTrafficCounter (&hash->fcFcpBytes, pktlen);
+    incrementTrafficCounter(&hash->fcFcpBytes, pktlen);
     break;
   case FC_FTYPE_SBCCS:
-    incrementTrafficCounter (&hash->fcFiconBytes, pktlen);
+    incrementTrafficCounter(&hash->fcFiconBytes, pktlen);
     break;
   case FC_FTYPE_ELS:
-    incrementTrafficCounter (&hash->fcElsBytes, pktlen);
+    incrementTrafficCounter(&hash->fcElsBytes, pktlen);
     break;
   case FC_FTYPE_FCCT:
     gs_type = bp[4];
     gs_stype = bp[5];
 
     if ((gs_type == FCCT_GSTYPE_DIRSVC) && (gs_stype == FCCT_GSSUBTYPE_DNS)) {
-      incrementTrafficCounter (&hash->fcDnsBytes, pktlen);
+      incrementTrafficCounter(&hash->fcDnsBytes, pktlen);
     }
     else {
-      incrementTrafficCounter (&hash->otherFcBytes, pktlen);
+      incrementTrafficCounter(&hash->otherFcBytes, pktlen);
     }
     break;
   case FC_FTYPE_IP:
-    incrementTrafficCounter (&hash->fcIpfcBytes, pktlen);
+    incrementTrafficCounter(&hash->fcIpfcBytes, pktlen);
     break;
         
   default:
-    incrementTrafficCounter (&hash->otherFcBytes, pktlen);
+    incrementTrafficCounter(&hash->otherFcBytes, pktlen);
     break;
   }
 

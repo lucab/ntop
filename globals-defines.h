@@ -2882,3 +2882,7 @@ struct ip6_hdr
 
 #define UNKNOWN_SUBNET_ID ((int8_t)-1)
 #define ALL_SUBNET_IDS    ((int8_t)-2)
+
+/* *************************** */
+
+#define incrementHostTrafficCounter(a, b, c) incrementTrafficCounter(&a->b, c)
