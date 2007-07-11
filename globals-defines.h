@@ -2885,4 +2885,10 @@ struct ip6_hdr
 
 /* *************************** */
 
+#define DEFAULT_NTOP_PLUGINS_INSTALL    "/usr/local/lib/ntop/plugins"
+#define DEFAULT_NTOP_HTML_INSTALL       "/usr/local/share/ntop"
+#define DEFAULT_NTOP_CFG_CONFIGFILE_DIR "/usr/local/etc/ntop"
+
+/* *************************** */
+
 #define incrementHostTrafficCounter(a, b, c) incrementTrafficCounter(&a->b, c)

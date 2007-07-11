@@ -17,6 +17,9 @@ esac
 
 umask 022
 
+# Update shared libs
+/sbin/ldconfig
+
 update-rc.d ntop defaults 93 >/dev/null
 
 # Set ntop defaults
@@ -24,6 +27,6 @@ update-rc.d ntop defaults 93 >/dev/null
 
 # Set the administrator password
 /etc/init.d/ntop start
-/sbin/ldconfig
+
 
 exit 0

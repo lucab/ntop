@@ -37,18 +37,18 @@ int optopt;
 
 #ifdef WIN32
 char *version, *osName, *author, *buildDate, *configureDate,
-            *configure_parameters,
-            *host_system_type,
-            *target_system_type,
-            *compiler_cppflags,
-            *compiler_cflags,
-            *include_path,
-            *system_libs,
+  *configure_parameters,
+  *host_system_type,
+  *target_system_type,
+  *compiler_cppflags,
+  *compiler_cflags,
+  *include_path,
+  *system_libs,
 #ifdef MAKE_WITH_I18N
-            *locale_dir,
+  *locale_dir,
 #endif
-            *install_path,
-            *force_runtime;
+  *install_path,
+  *force_runtime;
 #endif
 
 static u_short _mtuSize[MAX_DLT_ARRAY];
@@ -63,11 +63,11 @@ static char *_dataFileDirs[]   = {
   ".",
 #endif
 #ifdef WIN32
-				   _wdir,
+  _wdir,
 #endif
-				   CFG_DATAFILE_DIR, NULL };
-static char *_pluginDirs[]     = { "./plugins", CFG_PLUGIN_DIR, NULL };
-static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR,
+  CFG_DATAFILE_DIR, DEFAULT_NTOP_HTML_INSTALL, NULL };
+static char *_pluginDirs[]     = { "./plugins", CFG_PLUGIN_DIR, DEFAULT_NTOP_PLUGINS_INSTALL, NULL };
+static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR, DEFAULT_NTOP_CFG_CONFIGFILE_DIR,
 #ifdef WIN32
 				   _wdir,
 #else
@@ -83,7 +83,7 @@ static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR,
  *
  */
 #ifdef HAVE_LIBWRAP
-  int allow_severity, deny_severity;
+int allow_severity, deny_severity;
 #endif /* HAVE_LIBWRAP */
 
 #if defined(INET6)
@@ -136,7 +136,7 @@ static void allocateOtherHosts() {
 /* ************************************ */
 
 void extend8021Qmtu(void) {
-#ifndef MAKE_WITH_JUMBO_FRAMES                                  
+#ifndef MAKE_WITH_JUMBO_FRAMES
   /* 1500 + 14 bytes header + 4 VLAN */
   _mtuSize[DLT_EN10MB] = 1500+sizeof(struct ether_header)+4;
 #endif
@@ -308,10 +308,10 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.numBadSSIRequests = 0;
   myGlobals.numHandledSSIRequests = 0;
 
-/* create the logView stuff Mutex first... must be before the 1st traceEvent() call */
+  /* create the logView stuff Mutex first... must be before the 1st traceEvent() call */
   createMutex(&myGlobals.logViewMutex);     /* synchronize logView buffer */
 #ifdef FORPRENPTL
-  #warning Making version for Pre NPTL Thread Library...
+#warning Making version for Pre NPTL Thread Library...
   createMutex(&myGlobals.preNPTLlogMutex);     /* synchronize logView buffer */
 #endif
   myGlobals.logViewNext = 0;
@@ -347,7 +347,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
     createMutex(&myGlobals.hostsHashMutex[i]);
     myGlobals.hostsHashMutexNumLocks[i] = 0;
   }
-  
+
   myGlobals.receivedPackets          = 0;
   myGlobals.receivedPacketsProcessed = 0;
   myGlobals.receivedPacketsQueued    = 0;
@@ -360,33 +360,33 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
   myGlobals.dummyEthAddress[0] = '\0';
 
-      /*
-       *  Setup the mtu and header size tables.
-       *
-       *  We set only the ones we specifically know... anything else will
-       *  get mtu=CONST_UNKNOWN_MTU, header=0
-       *
-       *     If mtuSize is wrong, the only problem will be 1) erroneous-/mis-classification
-       *     of packets as "too long", 2) the suspicious packet file, if one, may have
-       *     extra or missing entries, and 3) an erroneous line in the report.
-       *
-       *     If headerSize is wrong, there are no known problems.
-       *
-       *  Remember that for most protocols, mtu isn't fixed - it's set by the routers
-       *  and can be tuned by the sysadmin, isp, et al for "best results".
-       *
-       *  These do need to be periodically resynced with tcpdump.org and with user experience.
-       *
-       *  History:
-       *      15Sep2002 - BStrauss
-       *
-       */
+  /*
+   *  Setup the mtu and header size tables.
+   *
+   *  We set only the ones we specifically know... anything else will
+   *  get mtu=CONST_UNKNOWN_MTU, header=0
+   *
+   *     If mtuSize is wrong, the only problem will be 1) erroneous-/mis-classification
+   *     of packets as "too long", 2) the suspicious packet file, if one, may have
+   *     extra or missing entries, and 3) an erroneous line in the report.
+   *
+   *     If headerSize is wrong, there are no known problems.
+   *
+   *  Remember that for most protocols, mtu isn't fixed - it's set by the routers
+   *  and can be tuned by the sysadmin, isp, et al for "best results".
+   *
+   *  These do need to be periodically resynced with tcpdump.org and with user experience.
+   *
+   *  History:
+   *      15Sep2002 - BStrauss
+   *
+   */
 
   { int ii;
-    for (ii=0; ii<MAX_DLT_ARRAY; ii++) {
-        _mtuSize[ii]    = CONST_UNKNOWN_MTU;
-        _headerSize[ii] = 0;
-    }
+  for (ii=0; ii<MAX_DLT_ARRAY; ii++) {
+    _mtuSize[ii]    = CONST_UNKNOWN_MTU;
+    _headerSize[ii] = 0;
+  }
   }
 
   _mtuSize[DLT_NULL] = 8232                                    /* no link-layer encapsulation */;
@@ -395,7 +395,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 #ifdef MAKE_WITH_JUMBO_FRAMES
   _mtuSize[DLT_EN10MB] = 9000                                  /* Ethernet (1000Mb+ Jumbo Frames) */;
 #else
-      /* 1500 + 14 bytes header Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+  /* 1500 + 14 bytes header Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
   _mtuSize[DLT_EN10MB] = 1500+sizeof(struct ether_header)      /* Ethernet (10Mb) */;
 #endif
   _headerSize[DLT_EN10MB] = sizeof(struct ether_header);
@@ -409,7 +409,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   /* _mtuSize[DLT_PPP] = ?                                        Point-to-point Protocol */
   _headerSize[DLT_PPP] = CONST_PPP_HDRLEN;
 
-      /* Courtesy of Richard Parvass <Richard.Parvass@ReckittBenckiser.com> */
+  /* Courtesy of Richard Parvass <Richard.Parvass@ReckittBenckiser.com> */
   _mtuSize[DLT_FDDI] = 4470                                    /* FDDI */;
   _headerSize[DLT_FDDI] = sizeof(struct fddi_header);
 
@@ -420,7 +420,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   _headerSize[DLT_RAW] = 0;
 
   /* Others defined in bpf.h at tcpdump.org as of the resync - it would be NICE
-      to have values for these... */
+     to have values for these... */
 
   /* _mtuSize[DLT_EN3MB] = ?                                    Experimental Ethernet (3Mb) */
   /* _mtuSize[DLT_AX25] = ?                                     Amateur Radio AX.25 */
@@ -499,20 +499,20 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.scsiDefaultDevType = SCSI_DEV_UNINIT;
 
   if (!myGlobals.runningPref.printIpOnly) {
-      if (myGlobals.fcnsCacheHash != NULL) {
-          free (myGlobals.fcnsCacheHash);
-      }
-      myGlobals.fcnsCacheHash = malloc(CONST_HASH_INITIAL_SIZE * sizeof(FcNameServerCacheEntry *));
-      if (myGlobals.fcnsCacheHash == NULL) {
-          traceEvent (CONST_TRACE_ERROR, "Unable to allocate fc Name Server Cache\n");
-      }
+    if (myGlobals.fcnsCacheHash != NULL) {
+      free (myGlobals.fcnsCacheHash);
+    }
+    myGlobals.fcnsCacheHash = malloc(CONST_HASH_INITIAL_SIZE * sizeof(FcNameServerCacheEntry *));
+    if (myGlobals.fcnsCacheHash == NULL) {
+      traceEvent (CONST_TRACE_ERROR, "Unable to allocate fc Name Server Cache\n");
+    }
 
-      memset(myGlobals.fcnsCacheHash, 0,
-             CONST_HASH_INITIAL_SIZE * sizeof(FcNameServerCacheEntry *));
+    memset(myGlobals.fcnsCacheHash, 0,
+	   CONST_HASH_INITIAL_SIZE * sizeof(FcNameServerCacheEntry *));
 
-      myGlobals.displayOption = DISPLAY_FC_DEFAULT;
-      if (!myGlobals.runningPref.defaultVsan)
-          myGlobals.runningPref.defaultVsan = DEFAULT_VSAN;
+    myGlobals.displayOption = DISPLAY_FC_DEFAULT;
+    if (!myGlobals.runningPref.defaultVsan)
+      myGlobals.runningPref.defaultVsan = DEFAULT_VSAN;
   }
   myGlobals.fcMatrixHashCollisions = 0;
   myGlobals.fcMatrixHashUnresCollisions = 0;
@@ -533,7 +533,7 @@ void initNtop(char *devices) {
     addDefaultProtocols();
 
 #ifdef HAVE_LIBPCRE
-  if(myGlobals.runningPref.enableL7) 
+  if(myGlobals.runningPref.enableL7)
     initl7();
   else
     traceEvent(CONST_TRACE_INFO, "No patterns to load: protocol guessing disabled.");
@@ -554,10 +554,10 @@ void initNtop(char *devices) {
   if(myGlobals.runningPref.daemonMode) {
     /*
       Before bacoming a daemon we need o make sure that
-      ntop has been installed properly and that all the 
+      ntop has been installed properly and that all the
       html files are on the right place
     */
-    
+
     int idx, found = 0;
 
     for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
@@ -569,7 +569,7 @@ void initNtop(char *devices) {
 		      "%s/html/%s",
 		      myGlobals.dataFileDirs[idx],
 		      "ntop.gif" /* This file must always exist */);
-	
+
 	if(stat(tmpStr, &statbuf) == 0) {
 	  found = 1;
 	  break;
@@ -577,7 +577,7 @@ void initNtop(char *devices) {
       }
     }
 
-    
+
     if(!found) {
       traceEvent(CONST_TRACE_WARNING, "ntop will not become a daemon as it has not been");
       traceEvent(CONST_TRACE_WARNING, "installed properly (did you do 'make install')");
@@ -590,15 +590,15 @@ void initNtop(char *devices) {
 
   /* Handle known subnetworks (if any) */
   handleKnownAddresses(myGlobals.runningPref.knownSubnets);
-  
+
   if((myGlobals.runningPref.rFileName != NULL) &&
      ((myGlobals.runningPref.localAddresses == NULL) &&
       !myGlobals.runningPref.printFcOnly)) {
-      setRunState(FLAG_NTOPSTATE_SHUTDOWN);
-      traceEvent(CONST_TRACE_FATALERROR,
-                 "-m | local-subnets must be specified when the -f | --traffic-dump-file option is used"
-                 "Capture not started");
-      exit(2); /* Just in case */
+    setRunState(FLAG_NTOPSTATE_SHUTDOWN);
+    traceEvent(CONST_TRACE_FATALERROR,
+	       "-m | local-subnets must be specified when the -f | --traffic-dump-file option is used"
+	       "Capture not started");
+    exit(2); /* Just in case */
   }
 
   if(myGlobals.runningPref.currentFilterExpression != NULL)
@@ -655,8 +655,8 @@ void initNtop(char *devices) {
 
 
   if(myGlobals.runningPref.skipVersionCheck != TRUE) {
-      pthread_t myThreadId;
-      createThread(&myThreadId, checkVersion, NULL);
+    pthread_t myThreadId;
+    createThread(&myThreadId, checkVersion, NULL);
   }
 }
 
@@ -681,15 +681,15 @@ void initNtop(char *devices) {
 
 short _setRunState(char *file, int line, short newRunState) {
 
-static short stateTransitionTable[FLAG_NTOPSTATE_TERM+1][FLAG_NTOPSTATE_TERM+1];
-static char *stateTransitionTableNames[FLAG_NTOPSTATE_TERM+1];
-static short stateTransitionTableLoaded=0;
+  static short stateTransitionTable[FLAG_NTOPSTATE_TERM+1][FLAG_NTOPSTATE_TERM+1];
+  static char *stateTransitionTableNames[FLAG_NTOPSTATE_TERM+1];
+  static short stateTransitionTableLoaded=0;
 
   if(stateTransitionTableLoaded == 0) {
     /* One time load */
     int i;
 
-    for(i=0; i<FLAG_NTOPSTATE_TERM; i++) 
+    for(i=0; i<FLAG_NTOPSTATE_TERM; i++)
       stateTransitionTable[i][i] = 1;
 
     stateTransitionTable[FLAG_NTOPSTATE_NOTINIT][FLAG_NTOPSTATE_PREINIT] = 1;
@@ -704,7 +704,7 @@ static short stateTransitionTableLoaded=0;
     stateTransitionTable[FLAG_NTOPSTATE_STOPCAP][FLAG_NTOPSTATE_SHUTDOWNREQ] = 1;
     stateTransitionTable[FLAG_NTOPSTATE_STOPCAP][FLAG_NTOPSTATE_SHUTDOWN] = 1;
 
-    for(i=FLAG_NTOPSTATE_PREINIT; i<FLAG_NTOPSTATE_SHUTDOWNREQ; i++) 
+    for(i=FLAG_NTOPSTATE_PREINIT; i<FLAG_NTOPSTATE_SHUTDOWNREQ; i++)
       stateTransitionTable[i][FLAG_NTOPSTATE_SHUTDOWNREQ] = 1;
 
     stateTransitionTable[FLAG_NTOPSTATE_SHUTDOWNREQ][FLAG_NTOPSTATE_SHUTDOWN] = 1;
@@ -732,52 +732,52 @@ static short stateTransitionTableLoaded=0;
     exit(99);
   }
 
-/* These are largely blueprints for the future */
+  /* These are largely blueprints for the future */
 
   /* Take appropriate finishing action(s) for old state... */
   switch(newRunState) {
-    case FLAG_NTOPSTATE_NOTINIT:
-      break;
-    case FLAG_NTOPSTATE_PREINIT:
-      break;
-    case FLAG_NTOPSTATE_INIT:
-      break;
-    case FLAG_NTOPSTATE_INITNONROOT:
-      break;
-    case FLAG_NTOPSTATE_RUN:
-      break;
-    case FLAG_NTOPSTATE_STOPCAP:
-      break;
-    case FLAG_NTOPSTATE_SHUTDOWNREQ:
-      break;
-    case FLAG_NTOPSTATE_SHUTDOWN:
-      break;
-    case FLAG_NTOPSTATE_TERM:
-      break;
+  case FLAG_NTOPSTATE_NOTINIT:
+    break;
+  case FLAG_NTOPSTATE_PREINIT:
+    break;
+  case FLAG_NTOPSTATE_INIT:
+    break;
+  case FLAG_NTOPSTATE_INITNONROOT:
+    break;
+  case FLAG_NTOPSTATE_RUN:
+    break;
+  case FLAG_NTOPSTATE_STOPCAP:
+    break;
+  case FLAG_NTOPSTATE_SHUTDOWNREQ:
+    break;
+  case FLAG_NTOPSTATE_SHUTDOWN:
+    break;
+  case FLAG_NTOPSTATE_TERM:
+    break;
   }
 
   /* Take appropriate action(s) for new state... */
   switch(newRunState) {
-    case FLAG_NTOPSTATE_NOTINIT:
-      break;
-    case FLAG_NTOPSTATE_PREINIT:
-      break;
-    case FLAG_NTOPSTATE_INIT:
-      break;
-    case FLAG_NTOPSTATE_INITNONROOT:
-      break;
-    case FLAG_NTOPSTATE_RUN:
-      break;
-    case FLAG_NTOPSTATE_STOPCAP:
-      break;
-    case FLAG_NTOPSTATE_SHUTDOWNREQ:
-      break;
-    case FLAG_NTOPSTATE_SHUTDOWN:
-      break;
-    case FLAG_NTOPSTATE_TERM:
-      break;
+  case FLAG_NTOPSTATE_NOTINIT:
+    break;
+  case FLAG_NTOPSTATE_PREINIT:
+    break;
+  case FLAG_NTOPSTATE_INIT:
+    break;
+  case FLAG_NTOPSTATE_INITNONROOT:
+    break;
+  case FLAG_NTOPSTATE_RUN:
+    break;
+  case FLAG_NTOPSTATE_STOPCAP:
+    break;
+  case FLAG_NTOPSTATE_SHUTDOWNREQ:
+    break;
+  case FLAG_NTOPSTATE_SHUTDOWN:
+    break;
+  case FLAG_NTOPSTATE_TERM:
+    break;
   }
-  
+
   myGlobals.ntopRunState = newRunState;
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "THREADMGMT[t%lu]: ntop RUNSTATE: %s(%d)",
              pthread_self(),

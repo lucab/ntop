@@ -1,13 +1,9 @@
 all:
-	@echo 
-	@echo "************************************************************" 
-	@echo "- Make sure you have installed the files under debian/tmp"
-	@echo "************************************************************" 
-	@echo 
-	cd ../;make install	
+	rm -rf debian/tmp
+	cd ..;make install install-data-as
 	#cd ./debian/tmp; find usr -type d > ../dirs
 	@find ./debian -name "*~" -exec /bin/rm {} ';' 
-	dpkg-buildpackage -rfakeroot -d # -us -uc 
+	dpkg-buildpackage -rfakeroot #-d # -us -uc 
 	@\rm -f ../ntop*dsc ../ntop*.gz ../ntop*changes 
 	@/bin/mv ../ntop*deb . 
 	@echo 

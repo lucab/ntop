@@ -1,11 +1,13 @@
 #! /bin/sh
-set -e
+
 #
 # (C) 2003 - Luca Deri <deri@ntop.org>
 # (C) 2007 - Massimo Torquati <torquati@ntop.org>
 #
 
 APPNAME=ntop
+PERSISTENT_DIR=/usr/local/share/ntop
+SPOOL_DIR=$PERSISTENT_DIR/spool
 
 ####################
 
@@ -13,6 +15,8 @@ start_ntop() {
    if test -f /etc/ntop/ntop.start; then
       start-stop-daemon --start --quiet --name $APPNAME --background --exec /usr/local/bin/ntop @/etc/ntop/ntop.conf > /dev/null
    fi
+
+   return 0
 }
 
 ####################
@@ -25,9 +29,29 @@ stop_ntop() {
 
 default_ntop() { 
     chown -R nobody /usr/local/var/ntop/rrd
-    if [ ! -f /usr/local/share/ntop/ntop_pw.db ]; then
-	/usr/local/bin/ntop -P /usr/local/share/ntop -Q /var/log/ntop --set-admin-password=admin
+    if [ ! -f $PERSISTENT_DIR/ntop_pw.db ]; then
+	/usr/local/bin/ntop -u nobody -P $PERSISTENT_DIR -Q $SPOOL_DIR --set-admin-password=admin
     fi
+
+    if [ ! -d /etc/ntop ]; then
+	mkdir /etc/ntop
+	touch /etc/ntop/ntop.start
+	echo "-P $PERSISTENT_DIR" > /etc/ntop/ntop.conf
+	echo "-Q $SPOOL_DIR" >> /etc/ntop/ntop.conf
+	echo "-u nobody" >> /etc/ntop/ntop.conf
+    fi
+
+    if [ ! -d $PERSISTENT_DIR ]; then
+	mkdir -p $PERSISTENT_DIR
+	chmod gou+w $PERSISTENT_DIR
+    fi
+
+    if [ ! -d $SPOOL_DIR ]; then
+	mkdir -p $SPOOL_DIR
+	chmod gou+w $SPOOL_DIR
+    fi
+
+    chown -R nobody $PERSISTENT_DIR $SPOOL_DIR
 }
 
 ########

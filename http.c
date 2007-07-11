@@ -791,7 +791,6 @@ static void ssiMenu_Body() {
 /* ************************* */
 
 static void processSSI(const char *ssiRequest) {
-
   int rc;
   char *ssiVirtual,
     *ssiURIstart,
@@ -2260,7 +2259,9 @@ static int returnHTTPPage(char* pageName,
 	  }
 
 	  traceEvent(CONST_TRACE_ERROR, "Cannot open file '%s', ignored...", tmpStr);
-	}
+	} else
+	  traceEvent(CONST_TRACE_INFO, "File %s not found on disk [%s][%d]", 
+		     tmpStr, myGlobals.dataFileDirs[idx], idx);
 
 #ifdef MAKE_WITH_I18N
       }
