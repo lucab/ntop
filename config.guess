@@ -1,10 +1,26 @@
 #! /bin/sh
 # Attempt to guess a canonical system name.
 #   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
+<<<<<<< config.guess
+<<<<<<< config.guess
+#   2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+
+timestamp='2005-12-13'
+=======
+<<<<<<< config.guess
+#   2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+=======
+=======
+>>>>>>> 2.42
 #   2000, 2001, 2002, 2003, 2004, 2005, 2006 Free Software Foundation,
 #   Inc.
 
 timestamp='2006-07-02'
+<<<<<<< config.guess
+>>>>>>> 2.40
+>>>>>>> 2.41
+=======
+>>>>>>> 2.42
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -201,6 +217,37 @@ case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
 	echo "${machine}-${os}${release}"
 	exit ;;
     *:OpenBSD:*:*)
+<<<<<<< config.guess
+<<<<<<< config.guess
+	UNAME_MACHINE_ARCH=`arch | sed 's/OpenBSD.//'`
+	echo ${UNAME_MACHINE_ARCH}-unknown-openbsd${UNAME_RELEASE}
+	exit ;;
+    *:ekkoBSD:*:*)
+	echo ${UNAME_MACHINE}-unknown-ekkobsd${UNAME_RELEASE}
+	exit ;;
+    macppc:MirBSD:*:*)
+	echo powerppc-unknown-mirbsd${UNAME_RELEASE}
+	exit ;;
+    *:MirBSD:*:*)
+	echo ${UNAME_MACHINE}-unknown-mirbsd${UNAME_RELEASE}
+	exit ;;
+=======
+<<<<<<< config.guess
+	UNAME_MACHINE_ARCH=`arch | sed 's/OpenBSD.//'`
+	echo ${UNAME_MACHINE_ARCH}-unknown-openbsd${UNAME_RELEASE}
+	exit ;;
+    *:ekkoBSD:*:*)
+	echo ${UNAME_MACHINE}-unknown-ekkobsd${UNAME_RELEASE}
+	exit ;;
+    macppc:MirBSD:*:*)
+	echo powerppc-unknown-mirbsd${UNAME_RELEASE}
+	exit ;;
+    *:MirBSD:*:*)
+	echo ${UNAME_MACHINE}-unknown-mirbsd${UNAME_RELEASE}
+	exit ;;
+=======
+=======
+>>>>>>> 2.42
 	UNAME_MACHINE_ARCH=`arch | sed 's/OpenBSD.//'`
 	echo ${UNAME_MACHINE_ARCH}-unknown-openbsd${UNAME_RELEASE}
 	exit ;;
@@ -216,6 +263,11 @@ case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
     *:MirBSD:*:*)
 	echo ${UNAME_MACHINE}-unknown-mirbsd${UNAME_RELEASE}
 	exit ;;
+<<<<<<< config.guess
+>>>>>>> 2.40
+>>>>>>> 2.41
+=======
+>>>>>>> 2.42
     alpha:OSF1:*:*)
 	case $UNAME_RELEASE in
 	*4.0)
@@ -766,6 +818,21 @@ EOF
 	exit ;;
     *:BSD/OS:*:*)
 	echo ${UNAME_MACHINE}-unknown-bsdi${UNAME_RELEASE}
+<<<<<<< config.guess
+<<<<<<< config.guess
+	exit ;;
+    *:FreeBSD:*:*)
+	echo ${UNAME_MACHINE}-unknown-freebsd`echo ${UNAME_RELEASE}|sed -e 's/[-(].*//'`
+	exit ;;
+=======
+<<<<<<< config.guess
+	exit ;;
+    *:FreeBSD:*:*)
+	echo ${UNAME_MACHINE}-unknown-freebsd`echo ${UNAME_RELEASE}|sed -e 's/[-(].*//'`
+	exit ;;
+=======
+=======
+>>>>>>> 2.42
 	exit ;;
     *:FreeBSD:*:*)
 	case ${UNAME_MACHINE} in
@@ -777,6 +844,11 @@ EOF
 		echo ${UNAME_MACHINE}-unknown-freebsd`echo ${UNAME_RELEASE}|sed -e 's/[-(].*//'` ;;
 	esac
 	exit ;;
+<<<<<<< config.guess
+>>>>>>> 2.40
+>>>>>>> 2.41
+=======
+>>>>>>> 2.42
     i*:CYGWIN*:*)
 	echo ${UNAME_MACHINE}-pc-cygwin
 	exit ;;
@@ -789,6 +861,23 @@ EOF
 	exit ;;
     i*:PW*:*)
 	echo ${UNAME_MACHINE}-pc-pw32
+<<<<<<< config.guess
+<<<<<<< config.guess
+	exit ;;
+    x86:Interix*:[345]*)
+=======
+<<<<<<< config.guess
+	exit ;;
+    x86:Interix*:[345]*)
+>>>>>>> 2.41
+	echo i586-pc-interix${UNAME_RELEASE}|sed -e 's/\..*//'
+<<<<<<< config.guess
+	exit ;;
+=======
+	exit ;;
+=======
+=======
+>>>>>>> 2.42
 	exit ;;
     x86:Interix*:[3456]*)
 	echo i586-pc-interix${UNAME_RELEASE}
@@ -796,6 +885,11 @@ EOF
     EM64T:Interix*:[3456]*)
 	echo x86_64-unknown-interix${UNAME_RELEASE}
 	exit ;;
+<<<<<<< config.guess
+>>>>>>> 2.40
+>>>>>>> 2.41
+=======
+>>>>>>> 2.42
     [345]86:Windows_95:* | [345]86:Windows_98:* | [345]86:Windows_NT:*)
 	echo i${UNAME_MACHINE}-pc-mks
 	exit ;;
@@ -830,10 +924,24 @@ EOF
 	exit ;;
     arm*:Linux:*:*)
 	echo ${UNAME_MACHINE}-unknown-linux-gnu
+<<<<<<< config.guess
+<<<<<<< config.guess
+	exit ;;
+=======
+<<<<<<< config.guess
+	exit ;;
+=======
+=======
+>>>>>>> 2.42
 	exit ;;
     avr32*:Linux:*:*)
 	echo ${UNAME_MACHINE}-unknown-linux-gnu
 	exit ;;
+<<<<<<< config.guess
+>>>>>>> 2.40
+>>>>>>> 2.41
+=======
+>>>>>>> 2.42
     cris:Linux:*:*)
 	echo cris-axis-linux-gnu
 	exit ;;
@@ -868,12 +976,28 @@ EOF
 	#endif
 	#endif
 EOF
+<<<<<<< config.guess
+<<<<<<< config.guess
+	eval "`$CC_FOR_BUILD -E $dummy.c 2>/dev/null | sed -n '/^CPU/{s: ::g;p;}'`"
+	test x"${CPU}" != x && { echo "${CPU}-unknown-linux-gnu"; exit; }
+=======
+<<<<<<< config.guess
+	eval "`$CC_FOR_BUILD -E $dummy.c 2>/dev/null | sed -n '/^CPU/{s: ::g;p;}'`"
+	test x"${CPU}" != x && { echo "${CPU}-unknown-linux-gnu"; exit; }
+=======
+=======
+>>>>>>> 2.42
 	eval "`$CC_FOR_BUILD -E $dummy.c 2>/dev/null | sed -n '
 	    /^CPU/{
 		s: ::g
 		p
 	    }'`"
 	test x"${CPU}" != x && { echo "${CPU}-unknown-linux-gnu"; exit; }
+<<<<<<< config.guess
+>>>>>>> 2.40
+>>>>>>> 2.41
+=======
+>>>>>>> 2.42
 	;;
     mips64:Linux:*:*)
 	eval $set_cc_for_build
@@ -891,12 +1015,28 @@ EOF
 	#endif
 	#endif
 EOF
+<<<<<<< config.guess
+<<<<<<< config.guess
+	eval "`$CC_FOR_BUILD -E $dummy.c 2>/dev/null | sed -n '/^CPU/{s: ::g;p;}'`"
+	test x"${CPU}" != x && { echo "${CPU}-unknown-linux-gnu"; exit; }
+=======
+<<<<<<< config.guess
+	eval "`$CC_FOR_BUILD -E $dummy.c 2>/dev/null | sed -n '/^CPU/{s: ::g;p;}'`"
+	test x"${CPU}" != x && { echo "${CPU}-unknown-linux-gnu"; exit; }
+=======
+=======
+>>>>>>> 2.42
 	eval "`$CC_FOR_BUILD -E $dummy.c 2>/dev/null | sed -n '
 	    /^CPU/{
 		s: ::g
 		p
 	    }'`"
 	test x"${CPU}" != x && { echo "${CPU}-unknown-linux-gnu"; exit; }
+<<<<<<< config.guess
+>>>>>>> 2.40
+>>>>>>> 2.41
+=======
+>>>>>>> 2.42
 	;;
     or32:Linux:*:*)
 	echo or32-unknown-linux-gnu
@@ -992,7 +1132,21 @@ EOF
 	LIBC=gnulibc1
 	# endif
 	#else
+<<<<<<< config.guess
+<<<<<<< config.guess
+	#if defined(__INTEL_COMPILER) || defined(__PGI)
+=======
+<<<<<<< config.guess
+	#if defined(__INTEL_COMPILER) || defined(__PGI)
+=======
+=======
+>>>>>>> 2.42
 	#if defined(__INTEL_COMPILER) || defined(__PGI) || defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+<<<<<<< config.guess
+>>>>>>> 2.40
+>>>>>>> 2.41
+=======
+>>>>>>> 2.42
 	LIBC=gnu
 	#else
 	LIBC=gnuaout
@@ -1002,6 +1156,25 @@ EOF
 	LIBC=dietlibc
 	#endif
 EOF
+<<<<<<< config.guess
+<<<<<<< config.guess
+	eval "`$CC_FOR_BUILD -E $dummy.c 2>/dev/null | sed -n '/^LIBC/{s: ::g;p;}'`"
+	test x"${LIBC}" != x && {
+		echo "${UNAME_MACHINE}-pc-linux-${LIBC}"
+		exit
+	}
+	test x"${TENTATIVE}" != x && { echo "${TENTATIVE}"; exit; }
+=======
+<<<<<<< config.guess
+	eval "`$CC_FOR_BUILD -E $dummy.c 2>/dev/null | sed -n '/^LIBC/{s: ::g;p;}'`"
+	test x"${LIBC}" != x && {
+		echo "${UNAME_MACHINE}-pc-linux-${LIBC}"
+		exit
+	}
+	test x"${TENTATIVE}" != x && { echo "${TENTATIVE}"; exit; }
+=======
+=======
+>>>>>>> 2.42
 	eval "`$CC_FOR_BUILD -E $dummy.c 2>/dev/null | sed -n '
 	    /^LIBC/{
 		s: ::g
@@ -1012,6 +1185,11 @@ EOF
 		exit
 	}
 	test x"${TENTATIVE}" != x && { echo "${TENTATIVE}"; exit; }
+<<<<<<< config.guess
+>>>>>>> 2.40
+>>>>>>> 2.41
+=======
+>>>>>>> 2.42
 	;;
     i*86:DYNIX/ptx:4*:*)
 	# ptx 4.0 does uname -s correctly, with DYNIX/ptx in there.

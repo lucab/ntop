@@ -747,17 +747,17 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   else {
     if(!strcmp(rrdName, "throughput")) {
 #ifdef WIN32
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd", 
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd",
 		    myGlobals.spoolPath, driveSerial, rrdPath, rrdName);
 #else
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", 
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
 		    myGlobals.spoolPath, rrdPath, rrdName);
 #endif
     } else
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", 
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
 		    myGlobals.rrdPath, rrdPath, rrdName);
   }
-  
+
   /* startTime[4] skips the 'now-' */
   safe_snprintf(__FILE__, __LINE__, fname, sizeof(fname), "%s/%s/%s-%s%s%s",
 		myGlobals.rrdPath, rrd_subdirs[0], startTime, rrdPrefix, rrdName,
@@ -767,7 +767,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   revertSlashIfWIN32(fname, 0);
 
   /* traceEvent(CONST_TRACE_INFO, "--> '%s'", path); */
-  
+
   if(endsWith(rrdName, "Bytes")) label = "Bytes/s";
   else if(endsWith(rrdName, "Pkts")) label = "Pkt/s";
   else label = capitalizeInitial(rrdName);
@@ -869,6 +869,17 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     }
 
     if(show_trend) argv[argc++] = "LINE1:smoothed#0000FF:Trend (30 min)";
+
+    /* 95th Percentile */
+    argv[argc++] = "VDEF:ninetyfive=ctr,95,PERCENT";
+    argv[argc++] = "LINE1.5:ninetyfive#ff00ff:95th\ Percentile";
+
+    if(0) {
+      int j;
+
+      for(j=0; j<argc; j++)
+	traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
+    }
 
     accessMutex(&rrdMutex, "rrd_graph");
     optind=0; /* reset gnu getopt */
@@ -1126,14 +1137,14 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
 
     if(!strcmp(rrds[i], "throughput")) {
 #ifdef WIN32
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd", 
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd",
 		    myGlobals.spoolPath, driveSerial, rrdPath, rrds[i]);
 #else
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", 
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
 		    myGlobals.spoolPath, rrdPath, rrds[i]);
 #endif
     } else
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", 
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
 		    myGlobals.rrdPath, rrdPath, rrds[i]);
 
     revertSlashIfWIN32(path, 0);
@@ -1518,7 +1529,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
 
 static char* spacer(char* str, char *tmpStr, int tmpStrLen,
 		    char *metric_name, int metric_name_len) {
-  int len = strlen(str), i;
+  int len = strlen(str), i, max_spacer_len=20;
   char *token, *token_name, buf[32], debug = 0, *found, *key;
 
   if((strlen(str) > 3) && (!strncmp(str, "IP_", 3))) str += 3;
@@ -1584,11 +1595,11 @@ static char* spacer(char* str, char *tmpStr, int tmpStrLen,
     found[i] = '\0';
   }
 
-  len = strlen(buf); if(len > 15) len = 15;
+  len = strlen(buf); if(len > max_spacer_len) len = max_spacer_len;
   snprintf(tmpStr, len+1, "%s", buf);
 
-  for(i=len; i<15; i++) tmpStr[i] = ' ';
-  tmpStr[16] = '\0';
+  for(i=len; i<max_spacer_len; i++) tmpStr[i] = ' ';
+  tmpStr[max_spacer_len+1] = '\0';
 
   if(debug) traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s)", tmpStr);
 
@@ -1764,11 +1775,12 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     break;
 
   case 99:
-    /* rrdName format can be IP_<proto><Rcvd|Sent><Bytes|Pkts> */
+    /* rrdName format can be IP_<proto><Rcvd|Sent><Bytes|Pkts|Flows> */
     {
       char *sent  = strstr(rrdName, "Sent");
       char *rcvd  = strstr(rrdName, "Rcvd");
       char *pkts  = strstr(rrdName, "Pkts");
+      char *flows = strstr(rrdName, "Flows");
 
       if(sent || rcvd) {
 	if(sent) sent[0]  = '\0'; else rcvd[0] = '\0';
@@ -1798,6 +1810,8 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	label = "Contacted Peers";
       else if(strstr(rrdName, "knownHosts"))
 	label = "Hosts";
+      else if(flows)
+	label = "Flows/s";
       else
 	label = "Bytes/s";
     }
@@ -2997,16 +3011,16 @@ static void arbitraryAction(char *rrdName,
 
     if(!strcmp(rrdName, "throughput")) {
 #ifdef WIN32
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd", 
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd",
 		    myGlobals.spoolPath, driveSerial, rrdKey, rrdName);
 #else
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", 
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
 		    myGlobals.spoolPath, rrdKey, rrdName);
 #endif
     } else
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd", 
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
 		    myGlobals.rrdPath, rrdKey, rrdName);
-    
+
     if(_which == CONST_ARBITRARY_RRDREQUEST_FETCHME[0]) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHTMLheader("RRD data dump", NULL, 0);
@@ -3432,7 +3446,7 @@ static void arbitraryActionPage(void) {
   while((dp = readdir(directoryPointer)) != NULL) {
 
     if(dp->d_name[0] != '.') {
-      safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s", 
+      safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s",
 		    myGlobals.rrdPath, dp->d_name);
       rc = stat(rrdPath, &statBuf);
       if((rc == 0) && ((statBuf.st_mode & S_IFDIR) == S_IFDIR)) {
@@ -4734,7 +4748,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	   || (!myGlobals.device[devIdx].activeDevice))
 	  continue;
 
-	safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), 
+	safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath),
 		      "%s/interfaces/%s/", myGlobals.rrdPath,
 		      myGlobals.device[devIdx].uniqueIfName);
 	mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
