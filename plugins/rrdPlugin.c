@@ -870,7 +870,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 
     if(show_trend) argv[argc++] = "LINE1:smoothed#0000FF:Trend (30 min)";
 
-    /* 95th Percentile */
+    /* 95th Percentile [http://en.wikipedia.org/wiki/Burstable_billing] */
     argv[argc++] = "VDEF:ninetyfive=ctr,95,PERCENT";
     argv[argc++] = "LINE1.5:ninetyfive#ff00ff:95th\ Percentile";
 
