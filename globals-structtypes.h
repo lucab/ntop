@@ -1235,10 +1235,8 @@ typedef struct astats {
 } AsStats;
 
 typedef struct {
-  u_int32_t address[4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */  
-  HostTraffic networkHost;
+  u_int32_t address[4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */    
 } NetworkStats;
-
 
 #define MAX_INTERFACE_STATS_QUEUE_LEN  32
 
@@ -1548,6 +1546,11 @@ typedef struct ntopInterface {
 
   NetFlowGlobals *netflowGlobals;  /* NetFlow */
   SflowGlobals *sflowGlobals;      /* sFlow */
+
+  /* ********************* */
+  
+  /* The variable below is used to collect stats concerning interface subnets */
+  HostTraffic networkHost[MAX_NUM_INTERFACE_NETWORKS];
 } NtopInterface;
 
 /* *********************************** */
@@ -2297,7 +2300,7 @@ typedef struct ntopGlobals {
   u_short numLocalNetworks;
 
   /* All known Networks */
-  NetworkStats subnetStats[MAX_NUM_NETWORKS];
+  NetworkStats subnetStats[MAX_NUM_INTERFACE_NETWORKS];
   u_short numKnownSubnets;  
 
 #if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 3)

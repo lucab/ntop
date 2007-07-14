@@ -987,7 +987,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
       return(NULL);
     }
-    memset(el->protoIPTrafficInfos, 0, len);
+    memset(el->protoIPTrafficInfos, 0, len);   
 
     el->magic = CONST_MAGIC_NUMBER;
     el->hostTrafficBucket = idx; /* Set the bucket index */

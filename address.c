@@ -1838,7 +1838,6 @@ char* host2networkName(HostTraffic *el, char *buf, u_short buf_len) {
   struct in_addr addr;
   char buf1[64];
       
-
   if((el->known_subnet_id == UNKNOWN_SUBNET_ID)
      || (el->known_subnet_id < 0)
      || (el->known_subnet_id > myGlobals.numKnownSubnets))

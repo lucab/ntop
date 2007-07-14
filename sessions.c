@@ -1457,15 +1457,17 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 	  memset(dstHost->protocolInfo->httpStats, 0, sizeof(ServiceStats));
 	}
 
-	if(subnetLocalHost(dstHost))
+	if(subnetLocalHost(dstHost)) {
 	  incrementHostTrafficCounter(srcHost, protocolInfo->httpStats->numLocalReqSent, 1);
-	else
+	} else {
 	  incrementHostTrafficCounter(srcHost, protocolInfo->httpStats->numRemReqSent, 1);
+	} 
 
-	if(subnetLocalHost(srcHost))
+	if(subnetLocalHost(srcHost)) {
 	  incrementHostTrafficCounter(dstHost, protocolInfo->httpStats->numLocalReqRcvd, 1);
-	else
+	} else {
 	  incrementHostTrafficCounter(dstHost, protocolInfo->httpStats->numRemReqRcvd, 1);
+	}
 
 	row = strtok_r(rcStr, "\n", &strtokState);
 
