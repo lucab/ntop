@@ -66,7 +66,6 @@ static u_char lowMemoryMsgShown = 0;
 static void	updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
 				u_int16_t dst_as_id, u_int octets);
 
-
 /* ******************************* */
 
 static u_int32_t getFcProtocol (u_int8_t r_ctl, u_int8_t type)
