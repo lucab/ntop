@@ -3,4 +3,4 @@ on a MySQL DB all the traffic information sent by a NetFlow probe
 such as ntop
 
 ---
-Luca Deri <deri@ntop.org>
+(C) 2006-07 - Luca Deri <deri@ntop.org>
