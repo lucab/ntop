@@ -6729,7 +6729,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printInfoSectionTitle(textPrintFlag, "Networks");
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    char addr_buf[32], mask_buf[32], adapter_buf[64];
+    char addr_buf[32], mask_buf[32], adapter_buf[128];
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%d", 
 		  _intoa(myGlobals.device[i].network, addr_buf, sizeof(addr_buf)),

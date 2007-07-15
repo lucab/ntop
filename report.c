@@ -5309,7 +5309,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
   u_int idx, tmpIdx, numEntries=0, printedEntries=0, maxHosts;
   u_short keyValue=0, i;
   HostTraffic *el;
-  char buf[LEN_GENERAL_WORK_BUFFER], buf1[64];
+  char buf[2*LEN_GENERAL_WORK_BUFFER], buf1[64];
   DomainStats **stats, *tmpStats = NULL, *statsEntry;
   char htmlAnchor[2*LEN_GENERAL_WORK_BUFFER], htmlAnchor1[2*LEN_GENERAL_WORK_BUFFER],
     *sign, *arrowGif, *arrow[48], *theAnchor[48];
@@ -6872,6 +6872,8 @@ char* hostRRdGraphLink(HostTraffic *el, u_char is_subnet_host, char *tmpStr, int
 		  is_subnet_host ? "subnet" : "hosts");
   } else
     tmpStr[0] = '\0';
+
+  return(tmpStr);
 }
 
 /* ************************************************** */
