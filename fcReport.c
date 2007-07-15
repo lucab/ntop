@@ -2636,16 +2636,21 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBy
     safe_snprintf(__FILE__, __LINE__, (char*)vsanStr, sizeof(vsanStr), "&VSAN=%d", vsanId);
   else
     vsanStr[0] = '\0';
+  
+  sendString("<form action=\"../\">\n<b>Traffic Unit</b>:"
+	     "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
 
   if(showBytes)
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "<b>Traffic Unit:</b> [ <B>Bytes</B> ]&nbsp;"
-		  "[ <A HREF=\"/%s?col=%d&unit=0%s\">Packets</A> ]&nbsp;</TD>",
+		  "<option value=\"%s?col=%d&unit=1%s\" selected>Bytes</option>\n"
+		  "<option value=\"%s?col=%d&unit=0%s\">Packets</option>\n</select>\n"
+		  CONST_FC_HOSTS_INFO_HTML, myGlobals.columnSort, vsanStr,
 		  CONST_FC_HOSTS_INFO_HTML, myGlobals.columnSort, vsanStr);
   else
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "<b>Traffic Unit:</b> [ <A HREF=\"/%s?col=%d&unit=1%s\">Bytes</A> ]&nbsp;"
-		  "[ <B>Packets</B> ]&nbsp;</TD>",
+		  "<option value=\"%s?col=%d&unit=1%s\">Bytes</option>\n"
+		  "<option value=\"%s?col=%d&unit=0%s\" selected>Packets</option>\n</select>\n"
+		  CONST_FC_HOSTS_INFO_HTML, myGlobals.columnSort, vsanStr,
 		  CONST_FC_HOSTS_INFO_HTML, myGlobals.columnSort, vsanStr);
 
   sendString(buf);

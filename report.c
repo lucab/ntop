@@ -2579,15 +2579,20 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
      else
        ifStr[0] = '\0';
 
+     sendString("<p><form action=\"../\">\n<b>Traffic Unit</b>:"
+		"<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
+
      if(showBytes)
        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		     "<b>Traffic Unit:</b> [ <B>Bytes</B> ]&nbsp;"
-		     "[ <A HREF=\"/%s?col=%d&unit=0%s%s\">Packets</A> ]&nbsp;</TD>",
+		     "<option value=\"/%s?col=%d&unit=1%s%s\" selected>Bytes</option>\n"
+		     "<option value=\"/%s?col=%d&unit=0%s%s\">Packets</option>\n</select>\n",
+		     CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr,
 		     CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr);
      else
        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		     "<b>Traffic Unit:</b> [ <A HREF=\"/%s?col=%d&unit=1%s%s\">Bytes</A> ]&nbsp;"
-		     "[ <B>Packets</B> ]&nbsp;</TD>",
+		     "<option value=\"/%s?col=%d&unit=1%s%s\">Bytes</option>\n"
+		     "<option value=\"/%s?col=%d&unit=0%s%s\" selected>Packets</option>\n</select>\n",
+		     CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr,
 		     CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr);
 
      sendString(buf);
@@ -5309,7 +5314,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
   u_int idx, tmpIdx, numEntries=0, printedEntries=0, maxHosts;
   u_short keyValue=0, i;
   HostTraffic *el;
-  char buf[2*LEN_GENERAL_WORK_BUFFER], buf1[64];
+  char buf[3*LEN_GENERAL_WORK_BUFFER], buf1[64];
   DomainStats **stats, *tmpStats = NULL, *statsEntry;
   char htmlAnchor[2*LEN_GENERAL_WORK_BUFFER], htmlAnchor1[2*LEN_GENERAL_WORK_BUFFER],
     *sign, *arrowGif, *arrow[48], *theAnchor[48];
@@ -5842,13 +5847,16 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 		    formatBytes(statsEntry->tcpSent.value, 1, formatBuf2, sizeof(formatBuf2)),
 		    formatBytes(statsEntry->tcpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
 		    formatBytes(statsEntry->udpSent.value, 1, formatBuf4, sizeof(formatBuf4)),
 		    formatBytes(statsEntry->udpRcvd.value, 1, formatBuf5, sizeof(formatBuf5)),
-		    formatBytes(statsEntry->icmpSent.value, 1, formatBuf6, sizeof(formatBuf6)),
+		    formatBytes(statsEntry->icmpSent.value, 1, formatBuf6, sizeof(formatBuf6)));
+      sendString(buf);
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		    formatBytes(statsEntry->icmpRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
 		    formatBytes(statsEntry->icmp6Sent.value, 1, formatBuf8, sizeof(formatBuf8)),
 		    formatBytes(statsEntry->icmp6Rcvd.value, 1, formatBuf9, sizeof(formatBuf9)));

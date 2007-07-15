@@ -493,28 +493,34 @@ void printHeader(int reportType, int revertOrder, u_int column,
 	   revertOrder ? "-" : "", column, showLocalityMode, showHostsMode);
 
   sendString("<CENTER><TABLE WIDTH=100%% BORDER=0 "TABLE_DEFAULTS"><TR><TD ALIGN=LEFT>");
+
+  sendString("<p><form action=\"../\">\n<b>Hosts</b>:"
+	     "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
   
   switch(showHostsMode) {
   case showOnlyLocalHosts:
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-              "<b>Hosts:</b> [ <A HREF=\"%s0\">All</A> ]&nbsp;"
-              "[<B> Local Only </B>]&nbsp;"
-              "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;",
-              theLink, theLink);
+		  "<option value=\"%s0\" >All</option>\n"
+		  "<option value=\"%s1\" selected>Local Only</option>\n"
+		  "<option value=\"%s2\" >Remote Only</option>\n"
+		  "</select>\n",
+		  theLink, theLink, theLink);
     break;
   case showOnlyRemoteHosts:
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-	     "<b>Hosts:</b> [ <A HREF=\"%s0\">All</A> ]&nbsp;"
-	     "[ <A HREF=\"%s1\">Local Only</A> ]&nbsp;"
-	     "[<B> Remote Only </B>]&nbsp;",
-	     theLink, theLink);
+		  "<option value=\"%s0\" >All</option>\n"
+		  "<option value=\"%s1\" >Local Only</option>\n"
+		  "<option value=\"%s2\" selected>Remote Only</option>\n"
+		  "</select>\n",
+		  theLink, theLink, theLink);
     break;
   default:
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-	     "<b>Hosts:</b> [<B> All </B>]&nbsp;"
-	     "[ <A HREF=\"%s1\">Local Only</A> ]&nbsp;"
-	     "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;",
-	     theLink, theLink);
+		  "<option value=\"%s0\" selected>All</option>\n"
+		  "<option value=\"%s1\" >Local Only</option>\n"
+		  "<option value=\"%s2\" >Remote Only</option>\n"
+		  "</select>\n",
+		  theLink, theLink, theLink);
     break;
   }
 
@@ -546,30 +552,36 @@ void printHeader(int reportType, int revertOrder, u_int column,
   sendString("</TD>");
 
   if(reportType != TRAFFIC_STATS) {
+    sendString("<TD ALIGN=right><form action=\"../\">\n<b>Data</b>:"
+	       "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
+
     switch(showLocalityMode) {
     case showSentReceived:
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=right>"
-  	     "<b>Data:</b> [<b> All </b>]&nbsp;"
-  	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=1\">Sent Only</a> ]&nbsp;"
-  	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;",
-  	     url, revertOrder ? "-" : "", column, showHostsMode,
-  	     url, revertOrder ? "-" : "", column, showHostsMode);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<option value=\"%s?col=%s%d&showH=%d&showL=0\" selected>All</option>\n"
+		    "<option value=\"%s?col=%s%d&showH=%d&showL=1\">Sent Only</option>\n"
+		    "<option value=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</option>\n",
+		    url, revertOrder ? "-" : "", column, showHostsMode,
+		    url, revertOrder ? "-" : "", column, showHostsMode,
+		    url, revertOrder ? "-" : "", column, showHostsMode);
       break;
     case showOnlySent:
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=right>"
-  	     "<b>Data:</b> [ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
-  	     "[<b> Sent Only </b>]&nbsp;"
-  	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;",
-  	     url, revertOrder ? "-" : "", column, showHostsMode,
-  	     url, revertOrder ? "-" : "", column, showHostsMode);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<option value=\"%s?col=%s%d&showH=%d&showL=0\">All</option>\n"
+		    "<option value=\"%s?col=%s%d&showH=%d&showL=1\" selected>Sent Only</option>\n"
+		    "<option value=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</option>\n",
+		    url, revertOrder ? "-" : "", column, showHostsMode,
+		    url, revertOrder ? "-" : "", column, showHostsMode,
+		    url, revertOrder ? "-" : "", column, showHostsMode);
       break;
     default:
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=right>"
-  	     "<b>Data:</b> [ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
-  	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=1\">Sent Only</a> ]&nbsp;"
-  	     "[<b> Received Only </b>]&nbsp;",
-  	     url, revertOrder ? "-" : "", column, showHostsMode,
-  	     url, revertOrder ? "-" : "", column, showHostsMode);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<option value=\"%s?col=%s%d&showH=%d&showL=0\">All</option>\n"
+		    "<option value=\"%s?col=%s%d&showH=%d&showL=1\">Sent Only</option>\n"
+		    "<option value=\"%s?col=%s%d&showH=%d&showL=2\" selected>Received Only</option>\n",
+		    url, revertOrder ? "-" : "", column, showHostsMode,
+		    url, revertOrder ? "-" : "", column, showHostsMode,
+		    url, revertOrder ? "-" : "", column, showHostsMode);
       break;
     }
 
@@ -582,16 +594,21 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_SENT_PROTOS:
   case SORT_DATA_PROTOS:
     sendString("<CENTER>\n");
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>\n"
-		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>"
-		"<TH "TH_BG" COLSPAN=2>%s0\">Data%s</A></TH>\n",
-		theAnchor[0], arrow[0], theAnchor[1], arrow[1],
-		theAnchor[2], arrow[2]);
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, 
+		  ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
+		  "<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>\n"
+		  "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>"
+		  "<TH "TH_BG" COLSPAN=2>%s0\">Data%s</A></TH>\n",
+		  theAnchor[0], arrow[0], theAnchor[1], arrow[1],
+		  theAnchor[2], arrow[2]);
     sendString(buf);
-
+    
     for(i=0; i<=15; i++)
-      if(abs(column) == i+1)  { arrow[i] = arrowGif; theAnchor[i] = htmlAnchor; } else { arrow[i] = ""; theAnchor[i] = htmlAnchor1;  }
+      if(abs(column) == i+1) {
+	arrow[i] = arrowGif; theAnchor[i] = htmlAnchor; 
+      } else {
+	arrow[i] = ""; theAnchor[i] = htmlAnchor1;  
+      }
 
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s1\">TCP%s</A></TH>"
 		"<TH "TH_BG">%s2\">UDP%s</A></TH><TH "TH_BG">%s3\">ICMP%s</A></TH>""<TH "TH_BG">%s4\">ICMPv6%s</A></TH>"
