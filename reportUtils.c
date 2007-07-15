@@ -4095,7 +4095,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if(el->hostNumIpAddress[0] != '\0') {
     char rrdBuf[LEN_GENERAL_WORK_BUFFER];
 
-    hostRRdGraphLink(el, rrdBuf, sizeof(rrdBuf));
+    hostRRdGraphLink(el, 0, rrdBuf, sizeof(rrdBuf));
 
     if(rrdBuf[0] != '\0') {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),

@@ -361,7 +361,6 @@ void printTrafficSummary (int revertOrder) {
     sendString(buf);
   }
 
-#ifndef EMBEDDED
   if(myGlobals.numDevices > 1) {
     int found = 0;
 
@@ -376,7 +375,6 @@ void printTrafficSummary (int revertOrder) {
 		 "<iframe frameborder=0 SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\"></iframe></TH></TR>\n");
     }
   }
-#endif
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
     unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value
@@ -739,7 +737,6 @@ void printTrafficStatistics(int revertOrder) {
     sendString(buf);
   }
 
-#ifndef EMBEDDED
   if(myGlobals.numDevices > 1) {
     int found = 0;
 
@@ -754,7 +751,6 @@ void printTrafficStatistics(int revertOrder) {
 		   "<iframe frameborder=0 SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
     }
   }
-#endif
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
     Counter dummyCounter;
@@ -849,11 +845,9 @@ void printTrafficStatistics(int revertOrder) {
 		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value, formatBuf, sizeof(formatBuf)));
     sendString(buf);
 
-#ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
       sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
 		 "<iframe frameborder=0 SRC=\"" CONST_PIE_PKT_CAST_DIST CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
-#endif
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       /*
@@ -963,11 +957,9 @@ void printTrafficStatistics(int revertOrder) {
       sendString(buf);
 #endif /* MAKE_WITH_JUMBO_FRAMES */
 
-#ifndef EMBEDDED
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
 		   "<iframe frameborder=0 SRC=\"" CONST_PIE_PKT_SIZE_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
-#endif
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Packets&nbsp;too&nbsp;long [> %d]</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
@@ -1162,14 +1154,14 @@ void printTrafficStatistics(int revertOrder) {
 		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value, formatBuf1, sizeof(formatBuf1)));
     sendString(buf);
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">IP Traffic</th>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">IPv4 Traffic</th>"
 		  "<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
 		  getRowColor(), formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1, formatBuf, sizeof(formatBuf)),
 		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value, formatBuf1, sizeof(formatBuf1)));
     sendString(buf);
 
     if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Fragmented IP Traffic</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Fragmented IPv4 Traffic</th>"
 		    "<TD "TD_BG" align=right COLSPAN=2>%s [%.1f%%]</td></TR>\n",
 		    getRowColor(),
 		    formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].fragmentedIpBytes.value, 1, formatBuf, sizeof(formatBuf)),
@@ -1186,16 +1178,14 @@ void printTrafficStatistics(int revertOrder) {
     else
       dummyCounter = 0;
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Non IP Traffic</th>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Non IPv4 Traffic</th>"
 		  "<TD "TD_BG" align=right COLSPAN=2>%s</td></TR>\n",
 		  getRowColor(), formatBytes(dummyCounter, 1, formatBuf, sizeof(formatBuf)));
     sendString(buf);
 
-#ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value > 0)
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
 		   "<iframe frameborder=0 SRC=\"" CONST_PIE_IP_TRAFFIC  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
-#endif
 
     /* ********************* */
 
@@ -1282,10 +1272,8 @@ void printTrafficStatistics(int revertOrder) {
 				 formatBuf, sizeof(formatBuf)));
 	sendString(buf);
 
-#ifndef EMBEDDED
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
 		   "<iframe frameborder=0 SRC=\"" CONST_PIE_TTL_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
-#endif
       }
     }
 
@@ -1293,13 +1281,11 @@ void printTrafficStatistics(int revertOrder) {
 
     /* ************************ */
 
-#ifndef EMBEDDED
     if(myGlobals.runningPref.enableSessionHandling && drawHostsDistanceGraph(1))
       sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Remote Hosts Distance</TH>"
                  "<TD BGCOLOR=white ALIGN=CENTER>"
 		 "<iframe frameborder=0 SRC=\"" CONST_BAR_HOST_DISTANCE CHART_FORMAT "\" width=400 height=250></iframe>"
                  "</TD></TR>\n");
-#endif
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       updateThpt(0);
@@ -1366,7 +1352,6 @@ void printTrafficStatistics(int revertOrder) {
 
    /* ********************* */
 
- #ifndef EMBEDDED
   if(strcmp(myGlobals.device[0].name, "pcap-file")) {
     /* RRD */
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
@@ -1390,8 +1375,8 @@ void printTrafficStatistics(int revertOrder) {
       sendString(buf);
     }
   }
- #endif
-   /* ********************* */
+
+  /* ********************* */
 
    sendString("</TABLE></CENTER>\n");
 
@@ -4417,8 +4402,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 			 1, remainingFlows, 0);
        }
 
- #ifndef EMBEDDED
-	   if((numProtosFound > 0) && printGraph) {
+       if((numProtosFound > 0) && printGraph) {
 		   struct stat statbuf;
 
 		   if(strcmp(myGlobals.device[0].name, "pcap-file")) {
@@ -4475,7 +4459,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 			   }
 		   }
 	   }
- #endif
+ 
        sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=5 ALIGN=LEFT "DARK_BG">"
 		  "Note:\n"
 		  "<ul><li>What is a flow?<br><ul><li>TCP: a flows is a TCP connection."
@@ -4486,8 +4470,11 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
        sendString("</TABLE>"TABLE_OFF"<P>\n");
 
        /* *********************** */
-
-       if((remainingTraffic > 0) && printGraph) {
+              
+       if((remainingTraffic > 0) 
+	  && printGraph 
+	  /* Courtesy of Martin Winter <mwinter@noaccess.com> */
+	  && (myGlobals.device[myGlobals.actualReportDeviceId].ipPorts != NULL)) {
 	 PortCounter **ipPorts;
 	 int idx = 0;
 
@@ -4664,14 +4651,12 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value/
 			myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
    
-#ifndef EMBEDDED
    if(printGraph) {
      sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
 		"<iframe frameborder=0 SRC=\"" CONST_BAR_ALLPROTO_DIST  CHART_FORMAT "\" "
 		"width=650 height=250></iframe>"
 		"</TD></TR>\n");
   }
-#endif
 
   sendString("</TABLE>"TABLE_OFF"<P></CENTER>\n");
 }
@@ -5565,80 +5550,86 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	    /* Network */
 	    char *nw_name = host2networkName(el, buf1, sizeof(buf1));
 
-	    for(keyValue=0, tmpIdx=0; nw_name[tmpIdx] != '\0'; tmpIdx++)
-	      keyValue += (tmpIdx+1)*(u_short)nw_name[tmpIdx];
+	     for(keyValue=0, tmpIdx=0; nw_name[tmpIdx] != '\0'; tmpIdx++)
+	       keyValue += (tmpIdx+1)*(u_short)nw_name[tmpIdx];
 
-	    keyValue %= maxHosts;
+	     keyValue %= maxHosts;
 
-	    while(stats[keyValue] != NULL) {
-	      u_int32_t a, b;
+	     while(stats[keyValue] != NULL) {
+	       u_int32_t a, b;
 
-	      a = el->hostIpAddress.Ip4Address.s_addr && (0xFFFFFFFF << (32-el->network_mask));
-	      b = stats[keyValue]->domainHost->hostIpAddress.Ip4Address.s_addr
-		&& (0xFFFFFFFF << (32-stats[keyValue]->domainHost->network_mask));
+	       a = el->hostIpAddress.Ip4Address.s_addr && (0xFFFFFFFF << (32-el->network_mask));
+	       b = stats[keyValue]->domainHost->hostIpAddress.Ip4Address.s_addr
+		 && (0xFFFFFFFF << (32-stats[keyValue]->domainHost->network_mask));
 
-	      if(a == b)
-		break;
-	      else
-		keyValue = (keyValue+1) % maxHosts;
-	    }
-	  } else if(network_mode == AS_VIEW) {
-	    keyValue = (el->hostAS % maxHosts);
+	       if(a == b)
+		 break;
+	       else
+		 keyValue = (keyValue+1) % maxHosts;
+	     }
+	   } else if(network_mode == AS_VIEW) {
+	     keyValue = (el->hostAS % maxHosts);
 
-	    while(stats[keyValue] != NULL) {
-	      if(stats[keyValue]->domainHost->hostAS == el->hostAS)
-		break;
-	      else
-		keyValue = (keyValue+1) % maxHosts;
-	    }
+	     while(stats[keyValue] != NULL) {
+	       if(stats[keyValue]->domainHost->hostAS == el->hostAS)
+		 break;
+	       else
+		 keyValue = (keyValue+1) % maxHosts;
+	     }
 
-	    /* traceEvent(CONST_TRACE_INFO, "--> [AS=%d]", el->hostAS); */
-	  } else {
-		  if(el->dnsDomainValue == NULL) continue;
+	     /* traceEvent(CONST_TRACE_INFO, "--> [AS=%d]", el->hostAS); */
+	   } else {
+		   if(el->dnsDomainValue == NULL) continue;
 
-	    /* Domain */
-	    for(keyValue=0, tmpIdx=0; el->dnsDomainValue[tmpIdx] != '\0'; tmpIdx++)
-	      keyValue += (tmpIdx+1)*(u_short)el->dnsDomainValue[tmpIdx];
+	     /* Domain */
+	     for(keyValue=0, tmpIdx=0; el->dnsDomainValue[tmpIdx] != '\0'; tmpIdx++)
+	       keyValue += (tmpIdx+1)*(u_short)el->dnsDomainValue[tmpIdx];
 
-	    keyValue %= maxHosts;
+	     keyValue %= maxHosts;
 
-	    while((stats[keyValue] != NULL)
-		  && (strcasecmp(stats[keyValue]->domainHost->dnsDomainValue, el->dnsDomainValue) != 0))
-	      keyValue = (keyValue+1) % maxHosts;
-	  }
-	} else {
-	  /* Cluster */
-	  u_char found = 0;
+	     while((stats[keyValue] != NULL)
+		   && (strcasecmp(stats[keyValue]->domainHost->dnsDomainValue, el->dnsDomainValue) != 0))
+	       keyValue = (keyValue+1) % maxHosts;
+	   }
+	 } else {
+	   /* Cluster */
+	   u_char found = 0;
 
-	  if(el->hostIpAddress.hostFamily != AF_INET) continue;
+	   if(el->hostIpAddress.hostFamily != AF_INET) continue;
 
-	  keyValue = 0;
-	all_hosts_cluster:
+	   keyValue = 0;
+	 all_hosts_cluster:
 
-	  if(debug) traceEvent(CONST_TRACE_WARNING, "[keyValue=%d][totNumClusters=%d]",
-			       keyValue, totNumClusters);
+	   if(debug) traceEvent(CONST_TRACE_WARNING, "[keyValue=%d][totNumClusters=%d]",
+				keyValue, totNumClusters);
 
-	  for(; keyValue<totNumClusters; keyValue++) {
-	    if(__pseudoLocalAddress(&el->hostIpAddress.addr._hostIp4Address,
-				    localNetworks[keyValue], numLocalNetworks[keyValue], NULL, NULL)) {
-	      found = 1;
-	      break;
-	    }
-	  }
+	   for(; keyValue<totNumClusters; keyValue++) {
+	     if(__pseudoLocalAddress(&el->hostIpAddress.addr._hostIp4Address,
+				     localNetworks[keyValue], numLocalNetworks[keyValue], NULL, NULL)) {
+	       found = 1;
+	       break;
+	     }
+	   }
 
-	  if((!found) || (keyValue >= totNumClusters  /* due to the goto */)) continue;
-	}
+	   if((!found) || (keyValue >= totNumClusters  /* due to the goto */)) continue;
+	 }
 
-	if(stats[keyValue] != NULL)
-	  statsEntry = stats[keyValue];
-	else {
-	  statsEntry = &tmpStats[numEntries++];
-	  memset(statsEntry, 0, sizeof(DomainStats));
+	 if(stats[keyValue] != NULL)
+	   statsEntry = stats[keyValue];
+	 else {
+	   statsEntry = &tmpStats[numEntries++];
+	   memset(statsEntry, 0, sizeof(DomainStats));
 
-	  if(clusterMode)
-	    statsEntry->clusterName = (char*)clusterNames[keyValue];
-	  else
-	    statsEntry->domainHost = el;
+	   if(clusterMode)
+	     statsEntry->clusterName = (char*)clusterNames[keyValue];
+	   else {
+	     if((network_mode == NETWORK_VIEW) && (domain_network_name == NULL) /* All entries */) 
+	       statsEntry->known_subnet_id = el->known_subnet_id;
+	     else
+	       statsEntry->known_subnet_id = UNKNOWN_SUBNET_ID;
+
+	     statsEntry->domainHost = el;
+	   }
 
 	  stats[keyValue] = statsEntry;
 	  /* traceEvent(CONST_TRACE_INFO, "[%d] %s/%s", numEntries, el->dnsDomainValue, el->ip2ccValue); */
@@ -5884,7 +5875,9 @@ void printDomainStats(char* domain_network_name, int network_mode,
       } else if((network_mode == NETWORK_VIEW) && (statsEntry->domainHost != NULL)) {
 	char rrdBuf[LEN_GENERAL_WORK_BUFFER];
 
-	hostRRdGraphLink(statsEntry->domainHost, rrdBuf, sizeof(rrdBuf));
+	hostRRdGraphLink(statsEntry->domainHost,
+			 (domain_network_name == NULL) ? 1 : 0,
+			 rrdBuf, sizeof(rrdBuf));
 	sendString("<TD "TD_BG" ALIGN=CENTER>");
 
 	if(rrdBuf[0] != '\0')
@@ -5916,8 +5909,6 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		     myGlobals.runningPref.maxNumLines,
 		     revertOrder, abs(sortedColumn), network_mode);
   
-
-#ifndef EMBEDDED
     /* FIX */
     /* RRDs for domains */
     if(domain_network_name != NULL) {
@@ -5949,7 +5940,6 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	sendString(buf);
       }
     }
-#endif
 
     if(!clusterMode) {
       sendString("<p align=\"center\"><b>NOTE</b>: ");
@@ -6844,37 +6834,44 @@ void findHost(char *key) {
 
 /* ************************************************** */
 
-char* hostRRdGraphLink(HostTraffic *el, char *tmpStr, int tmpStrLen) {
+char* hostRRdGraphLink(HostTraffic *el, u_char is_subnet_host, char *tmpStr, int tmpStrLen) {
   struct stat statbuf;
   char *key;
-  char buf[256];
+  char buf[256], subnet_buf[32];
 
-  if((!myGlobals.runningPref.dontTrustMACaddr) && subnetPseudoLocalHost(el) 
-     && (el->ethAddressString[0] != '\0') /* Really safe in case a host that was supposed to be local isn't really so*/)
+  if(is_subnet_host)
+    key = host2networkName(el, subnet_buf, sizeof(subnet_buf));
+  else {
+    if((!myGlobals.runningPref.dontTrustMACaddr) && subnetPseudoLocalHost(el) 
+       && (el->ethAddressString[0] != '\0') /* Really safe in case a host that was supposed to be local isn't really so */)
       key = el->ethAddressString;
-  else
-    key = el->hostNumIpAddress;
-   
+    else
+      key = el->hostNumIpAddress;
+  }
+
   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/%s/%s",
 		myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
+		is_subnet_host ? "subnet" : "hosts",
 		dotToSlash(key));
   
   revertSlashIfWIN32(buf, 0);
-  
+
   if(stat(buf, &statbuf) == 0) {
     safe_snprintf(__FILE__, __LINE__, tmpStr, tmpStrLen,
                   "[ <a href=\"/" CONST_PLUGINS_HEADER 
-		  "rrdPlugin?action=list&amp;key=interfaces/%s/hosts/%s&amp;title=host%%20%s\">"
+		  "rrdPlugin?action=list&amp;key=interfaces/%s/%s/%s&amp;title=%s%%20%s\">"
                   "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
-		  " class=tooltip alt=\"view rrd graphs of historical data for this host\"></a> ]",
+		  " class=tooltip alt=\"view rrd graphs of historical data for this %s\"></a> ]",
                   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
+		  is_subnet_host ? "subnet" : "hosts",
                   dotToSlash(key),
-		  el->hostResolvedName[0] != '\0' ? el->hostResolvedName : el->hostNumIpAddress);
+		  is_subnet_host ? "subnet+" : "host+",
+		  is_subnet_host ? subnet_buf : (el->hostResolvedName[0] != '\0' ? el->hostResolvedName : el->hostNumIpAddress),
+		  is_subnet_host ? "subnet" : "hosts");
   } else
     tmpStr[0] = '\0';
 }
-
 
 /* ************************************************** */

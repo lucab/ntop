@@ -59,9 +59,7 @@ extern char _wdir[];
 #endif
 
 static char *_dataFileDirs[]   = {
-#ifndef EMBEDDED
   ".",
-#endif
 #ifdef WIN32
   _wdir,
 #endif

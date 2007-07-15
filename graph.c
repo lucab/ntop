@@ -25,8 +25,6 @@
 
 #include "ntop.h"
 
-#ifndef EMBEDDED
-
 #define _GRAPH_C_
 #include "globals-report.h"
 
@@ -1554,6 +1552,3 @@ void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent) {
 
   build_pie(idx, p, lbl);
 }
-
-
-#endif /* EMBEDDED */

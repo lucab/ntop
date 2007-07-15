@@ -450,9 +450,7 @@ ntop.h
 #include <pcre.h>
 #endif
 
-#ifndef EMBEDDED
 #include "rrd.h"
-#endif
 
 #ifdef HAVE_GETOPT_H
 #include "getopt.h"

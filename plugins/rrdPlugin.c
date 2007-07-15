@@ -69,7 +69,7 @@ static Counter numRRDUpdates = 0, numTotalRRDUpdates = 0;
 static unsigned long numRuns = 0, numRRDerrors = 0, numRRDCycles=0;
 static time_t start_tm, end_tm, rrdTime;
 
-static u_short dumpDomains, dumpFlows, dumpHosts,
+static u_short dumpDomains, dumpFlows, dumpHosts, dumpSubnets,
   dumpInterfaces, dumpASs, enableAberrant, dumpMatrix, shownCreate=0;
 
 static Counter rrdGraphicRequests=0;
@@ -872,7 +872,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 
     /* 95th Percentile [http://en.wikipedia.org/wiki/Burstable_billing] */
     argv[argc++] = "VDEF:ninetyfive=ctr,95,PERCENT";
-    argv[argc++] = "LINE1.5:ninetyfive#ff00ff:95th\ Percentile";
+    argv[argc++] = "LINE1.2:ninetyfive#ff00ffBB:95th Percentile";
 
     if(0) {
       int j;
@@ -2622,6 +2622,13 @@ static void commonRRDinit(void) {
     dumpFlows = atoi(value);
   }
 
+  if(fetchPrefsValue("rrd.dataDumpSubnets", value, sizeof(value)) == -1) {
+    storePrefsValue("rrd.dataDumpSubnets", "0");
+    dumpSubnets = 0;
+  } else {
+    dumpSubnets = atoi(value);
+  }
+
   if(fetchPrefsValue("rrd.dataDumpHosts", value, sizeof(value)) == -1) {
     storePrefsValue("rrd.dataDumpHosts", "0");
     dumpHosts = 0;
@@ -2747,6 +2754,7 @@ static void commonRRDinit(void) {
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpMonths %d months by day", dumpMonths);
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpDomains %s", dumpDomains == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpFlows %s", dumpFlows == 0 ? "no" : "yes");
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpSubnets %s", dumpSubnets == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpHosts %s", dumpHosts == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterfaces %s", dumpInterfaces == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpASs %s", dumpASs == 0 ? "no" : "yes");
@@ -2755,7 +2763,8 @@ static void commonRRDinit(void) {
 	     dumpDetail == FLAG_RRD_DETAIL_HIGH ? "high" :
              (dumpDetail == FLAG_RRD_DETAIL_MEDIUM ? "medium" : "low"));
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     hostsFilter %s", hostsFilter);
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     rrdPath %s", myGlobals.rrdPath);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     rrdPath %s [normal]", myGlobals.rrdPath);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     rrdPath %s [throughput]", myGlobals.spoolPath);
 #ifndef WIN32
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     umask %04o", myGlobals.rrdUmask);
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     DirPerms %04o", myGlobals.rrdDirectoryPermissions);
@@ -3555,7 +3564,7 @@ static void handleRRDHTTPrequest(char* url) {
     rrdPrefix[32], rrdIP[32], rrdInterface[64], rrdPath[512], mode[32], cluster[32];
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
-  int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces, _dumpASs, _enableAberrant,
+  int _dumpDomains, _dumpFlows, _dumpSubnets, _dumpHosts, _dumpInterfaces, _dumpASs, _enableAberrant,
     _dumpMatrix, _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId;
   int i, len, idx;
   time_t date1 = 0, date2 = 0;
@@ -3582,6 +3591,7 @@ static void handleRRDHTTPrequest(char* url) {
   /* Initial values - remember, for checkboxes these need to be OFF (there's no html UNCHECKED option) */
   _dumpDomains=0;
   _dumpFlows=0;
+  _dumpSubnets=0;
   _dumpHosts=0;
   _dumpInterfaces=0;
   _dumpASs=0;
@@ -3713,6 +3723,8 @@ static void handleRRDHTTPrequest(char* url) {
 	  _dumpDomains = 1;
 	} else if(strcmp(key, "dumpFlows") == 0) {
 	  _dumpFlows = 1;
+	} else if(strcmp(key, "dumpSubnets") == 0) {
+	  _dumpSubnets = 1;
 	} else if(strcmp(key, "dumpDetail") == 0) {
 	  _dumpDetail = atoi(value);
 	  if(_dumpDetail > FLAG_RRD_DETAIL_HIGH) _dumpDetail = FLAG_RRD_DETAIL_HIGH;
@@ -3776,14 +3788,14 @@ static void handleRRDHTTPrequest(char* url) {
       dumpHours = _dumpHours;
       dumpDays = _dumpDays;
       dumpMonths = _dumpMonths;
-      /* traceEvent(CONST_TRACE_INFO, "RRD: dumpFlows=%d", dumpFlows); */
-      dumpDomains=_dumpDomains;
-      dumpFlows=_dumpFlows;
-      dumpHosts=_dumpHosts;
-      dumpInterfaces=_dumpInterfaces;
-      dumpASs=_dumpASs;
-      enableAberrant=_enableAberrant;
-      dumpMatrix=_dumpMatrix;
+      dumpDomains = _dumpDomains;
+      dumpFlows = _dumpFlows;
+      dumpSubnets = _dumpSubnets;
+      dumpHosts = _dumpHosts;
+      dumpInterfaces = _dumpInterfaces;
+      dumpASs = _dumpASs;
+      enableAberrant = _enableAberrant;
+      dumpMatrix = _dumpMatrix;
       dumpDetail = _dumpDetail;
 #ifndef WIN32
       dumpPermissions = _dumpPermissions;
@@ -3803,6 +3815,8 @@ static void handleRRDHTTPrequest(char* url) {
       storePrefsValue("rrd.dataDumpDomains", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpFlows);
       storePrefsValue("rrd.dataDumpFlows", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpSubnets);
+      storePrefsValue("rrd.dataDumpSubnets", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpHosts);
       storePrefsValue("rrd.dataDumpHosts", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpInterfaces);
@@ -3925,6 +3939,10 @@ static void handleRRDHTTPrequest(char* url) {
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpFlows VALUE=1 %s> Flows<br>\n",
 		dumpFlows ? "CHECKED" : "" );
+  sendString(buf);
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpSubnets VALUE=1 %s> Subnets<br>\n",
+		dumpSubnets ? "CHECKED" : "" );
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpHosts VALUE=1 %s> Hosts<br>\n",
@@ -4125,8 +4143,8 @@ RETSIGTYPE rrdcleanup(int signo) {
 
 /* ****************************** */
 
-static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
-  char value[512 /* leave it big for hosts filter */];
+static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet_host) {
+  char value[512 /* leave it big for hosts filter */], subnet_buf[32];
   NetworkStats networks[32];
   u_short numLocalNets;
   int idx;
@@ -4136,53 +4154,63 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
   char *hostKey;
   int j;
 
-  if((el == myGlobals.otherHostEntry) || (el == myGlobals.broadcastEntry)
-     || broadcastHost(el) || (myGlobals.runningPref.trackOnlyLocalHosts &&
-                              (!subnetPseudoLocalHost(el)))) {
-    return;
+  if(!is_subnet_host) {
+    if((el == myGlobals.otherHostEntry) || (el == myGlobals.broadcastEntry)
+       || broadcastHost(el) 
+       || (myGlobals.runningPref.trackOnlyLocalHosts && (!subnetPseudoLocalHost(el)))) {
+      return;
+    }
   }
 
   /* ********************************************* */
 
   numLocalNets = 0;
- /* Avoids strtok to blanks into hostsFilter */
-  safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s", hostsFilter);
-  handleAddressLists(rrdPath, networks, &numLocalNets, value, sizeof(value), CONST_HANDLEADDRESSLISTS_RRD);
+
+  if(!is_subnet_host) {
+    /* Avoids strtok to blanks into hostsFilter */
+    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s", hostsFilter);
+    handleAddressLists(rrdPath, networks, &numLocalNets, value, sizeof(value), CONST_HANDLEADDRESSLISTS_RRD);
+  }
 
   /* ********************************************* */
 
-  if((el->bytesSent.value > 0) || (el->bytesRcvd.value > 0)) {
-    if(el->hostNumIpAddress[0] != '\0') {
-      hostKey = el->hostNumIpAddress;
+  if((el->bytesSent.value > 0) || (el->bytesRcvd.value > 0) || is_subnet_host) {
+    if(!is_subnet_host) {
+      if(el->hostNumIpAddress[0] != '\0') {
+	hostKey = el->hostNumIpAddress;
 
-      if((numLocalNets > 0)
-	 && (el->hostIpAddress.hostFamily == AF_INET) /* IPv4 ONLY <-- FIX */
-	 && (!__pseudoLocalAddress(&el->hostIpAddress.Ip4Address, networks, numLocalNets, NULL, NULL))) {
+	if((numLocalNets > 0)
+	   && (el->hostIpAddress.hostFamily == AF_INET) /* IPv4 ONLY <-- FIX */
+	   && (!__pseudoLocalAddress(&el->hostIpAddress.Ip4Address, networks, numLocalNets, NULL, NULL))) {
+	  return;
+	}
+
+	if((!myGlobals.runningPref.dontTrustMACaddr)
+	   && subnetPseudoLocalHost(el)
+	   && (el->ethAddressString[0] != '\0'))
+	  /*
+	    NOTE:
+	    MAC address is empty even for local hosts if this host has
+	    been learnt on a virtual interface such as the NetFlow interface
+	  */
+	  hostKey = el->ethAddressString;
+      } else {
+	/* For the time being do not save IP-less hosts */
+
 	return;
       }
-
-      if((!myGlobals.runningPref.dontTrustMACaddr)
-	 && subnetPseudoLocalHost(el)
-	 && (el->ethAddressString[0] != '\0'))
-	/*
-	  NOTE:
-	  MAC address is empty even for local hosts if this host has
-	  been learnt on a virtual interface such as the NetFlow interface
-	*/
-	hostKey = el->ethAddressString;
-    } else {
-      /* For the time being do not save IP-less hosts */
-
-      return;
+    } else {  
+      hostKey = host2networkName(el, subnet_buf, sizeof(subnet_buf));
     }
 
     adjHostName = dotToSlash(hostKey);
 
-    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
+    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/%s/%s/",
 		  myGlobals.rrdPath, myGlobals.device[devIdx].uniqueIfName,
+		  is_subnet_host ? "subnet" : "hosts",
 		  adjHostName);
     mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
-
+    
     traceEventRRDebug(2, "Updating %s [%s/%s]", hostKey, el->hostNumIpAddress, el->ethAddressString);
 
     updateTrafficCounter(rrdPath, "pktSent", &el->pktSent, 0);
@@ -4249,17 +4277,19 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 	updateTrafficCounter(rrdPath, "otherRcvd", &el->nonIPTraffic->otherRcvd, 0);
       }
 
-      protoList = myGlobals.ipProtosList, idx=0;
-      while(protoList != NULL) {
-	char buf[64];
+      if(el->ipProtosList != NULL) {
+	protoList = myGlobals.ipProtosList, idx=0;
+	while(protoList != NULL) {
+	  char buf[64];
 
-	if(el->ipProtosList[idx] != NULL) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sSent", protoList->protocolName);
-	  updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx]->sent, 0);
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sRcvd", protoList->protocolName);
-	  updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx]->rcvd, 0);
+	  if(el->ipProtosList[idx] != NULL) {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sSent", protoList->protocolName);
+	    updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx]->sent, 0);
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sRcvd", protoList->protocolName);
+	    updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx]->rcvd, 0);
+	  }
+	  idx++, protoList = protoList->next;
 	}
-	idx++, protoList = protoList->next;
       }
     }
 
@@ -4268,13 +4298,13 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
       updateCounter(rrdPath, "totPeersRcvd", el->totContactedRcvdPeers, 0);
 
       if(el->protoIPTrafficInfos) {
-	traceEventRRDebug(0, "Updating host %s", hostKey);
+	traceEventRRDebug(0, "Updating %s %s", is_subnet_host ? "subnet" : "hosts", hostKey);
 
-	safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/IP_",
+	safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/%s/%s/IP_",
 		      myGlobals.rrdPath,
 		      myGlobals.device[devIdx].uniqueIfName,
-		      adjHostName
-		      );
+		      is_subnet_host ? "subnet" : "hosts",
+		      adjHostName);
 
         for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
           if(el->protoIPTrafficInfos[j]) {
@@ -4713,10 +4743,23 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	for (el = getFirstHost(devIdx); el != NULL; el = getNextHost(devIdx, el)) {
 	  if (el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH)
-	    rrdUpdateIPHostStats(el, devIdx);
+	    rrdUpdateIPHostStats(el, devIdx, 0);
 	  else if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC)
 	    rrdUpdateFcHostStats(el, devIdx);
         }
+      }
+    }
+
+    /* ****************************************************** */
+
+    if(dumpSubnets) {
+      for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
+	int subnetIdx;
+
+	for(subnetIdx=0; subnetIdx<myGlobals.numKnownSubnets; subnetIdx++) {
+	  myGlobals.device[devIdx].networkHost[subnetIdx].known_subnet_id = subnetIdx;
+	  rrdUpdateIPHostStats(&myGlobals.device[devIdx].networkHost[subnetIdx], devIdx, 1);	
+	}
       }
     }
 

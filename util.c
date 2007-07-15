@@ -4874,14 +4874,6 @@ int ntop_conditional_sched_yield(void) {
 
 /* ********************************* */
 
-#ifdef EMBEDDED
-extern char *crypt (__const char *__key, __const char *__salt) {
-  return(__key);
-}
-#endif
-
-/* ********************************* */
-
 #ifdef WIN32
 
 static const char *

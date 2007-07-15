@@ -2847,7 +2847,6 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
         drawVsanDomainTrafficDistribution(vsanId, FALSE);
 	printTrailer=0;
-#ifndef EMBEDDED
       } else if(strncasecmp(pageName, CONST_PIE_IP_TRAFFIC, strlen(CONST_PIE_IP_TRAFFIC)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawTrafficPie();
@@ -3150,7 +3149,6 @@ static int returnHTTPPage(char* pageName,
 	    printTrailer=0;
 	  }
 	}
-#endif /* EMBEDDED */
       } else if(strcasecmp(pageName, CONST_CREDITS_HTML) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printHTMLheader("Credits", NULL, BITFLAG_HTML_NO_REFRESH);
