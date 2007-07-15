@@ -2327,6 +2327,7 @@ static void processIpPkt(const u_char *bp,
 	      if(srcHost->ipProtosList[idx] == NULL) return;
 	    }
 
+	    allocHostTrafficCounterMemory(srcHost, ipProtosList, (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**));
 	    allocHostTrafficCounterMemory(srcHost, ipProtosList[idx], sizeof(ShortProtoTrafficInfo));
 	    incrementHostTrafficCounter(srcHost, ipProtosList[idx]->sent, length);
 	  }
@@ -2337,6 +2338,7 @@ static void processIpPkt(const u_char *bp,
 	      if(dstHost->ipProtosList[idx] == NULL) return;
 	    }
 	    
+	    allocHostTrafficCounterMemory(dstHost, ipProtosList, (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**));
 	    allocHostTrafficCounterMemory(dstHost, ipProtosList[idx], sizeof(ShortProtoTrafficInfo));
 	    incrementHostTrafficCounter(dstHost, ipProtosList[idx]->rcvd, length);
 	  }
