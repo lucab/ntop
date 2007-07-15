@@ -2895,6 +2895,6 @@ struct ip6_hdr
 
 #define incrementHostTrafficCounter(_a_, _b_, _c_) { if(_a_->known_subnet_id != UNKNOWN_SUBNET_ID) incrementTrafficCounter(&myGlobals.device[actualDeviceId].networkHost[_a_->known_subnet_id]._b_,_c_); incrementTrafficCounter(&_a_->_b_, _c_); }
 
-#define  allocHostTrafficCounterMemory(_a_, _b_, _c_) { if((_a_->known_subnet_id != UNKNOWN_SUBNET_ID) && (myGlobals.device[actualDeviceId].networkHost[_a_->known_subnet_id]._b_ == NULL)) myGlobals.device[actualDeviceId].networkHost[_a_->known_subnet_id]._b_ = calloc(_c_, 1); }
+#define  allocHostTrafficCounterMemory(_a_, _b_, _c_) { if((_a_->known_subnet_id != UNKNOWN_SUBNET_ID) && (myGlobals.device[actualDeviceId].networkHost[_a_->known_subnet_id]._b_ == NULL)) myGlobals.device[actualDeviceId].networkHost[_a_->known_subnet_id]._b_ = calloc(_c_, 1); if(_a_->_b_ == NULL) _a_->_b_ = calloc(_c_, 1); }
 
 /* *************************** */

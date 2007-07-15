@@ -222,11 +222,6 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
     if(subnetPseudoLocalHost(srcHost)) {
       if(subnetPseudoLocalHost(dstHost)) {
 	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) {
-	  if(srcHost->protoIPTrafficInfos[idx] == NULL) {
-	    srcHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return(-1);
-	  }
-
 	  incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->sentLoc, length);
 
 	  if(newSession)
@@ -234,11 +229,6 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	}
 
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
-	  if(dstHost->protoIPTrafficInfos[idx] == NULL) {
-	    dstHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return(-1);
-	  }
-
 	  incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->rcvdLoc, length);
 
 	  if(newSession)
@@ -248,11 +238,6 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].local, length);
       } else {
 	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) {
-	  if(srcHost->protoIPTrafficInfos[idx] == NULL) {
-	    srcHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return(-1);
-	  }
-
 	  incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->sentRem, length);
 
 	  if(newSession)
@@ -260,10 +245,6 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	}
 
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
-	  if(dstHost->protoIPTrafficInfos[idx] == NULL) {
-	    dstHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return(-1);
-	  }
 	  incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->rcvdLoc, length);
 
 	  if(newSession)
@@ -276,11 +257,6 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
       /* srcHost is remote */
       if(subnetPseudoLocalHost(dstHost)) {
 	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) {
-	  if(srcHost->protoIPTrafficInfos[idx] == NULL) {
-	    srcHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return(-1);
-	  }
-
 	  if(newSession)
 	    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->totalFlows, 1);
 
@@ -288,11 +264,6 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	}
 
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
-	  if(dstHost->protoIPTrafficInfos[idx] == NULL) {
-	    dstHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return(-1);
-	  }
-
 	  if(newSession)
 	    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->totalFlows, 1);
 
@@ -302,11 +273,6 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].remote2local, length);
       } else {
 	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) {
-	  if(srcHost->protoIPTrafficInfos[idx] == NULL) {
-	    srcHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return(-1);
-	  }
-
 	  if(newSession)
 	    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->totalFlows, 1);
 
@@ -314,11 +280,6 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	}
 
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
-	  if(dstHost->protoIPTrafficInfos[idx] == NULL) {
-	    dstHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
-	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return(-1);
-	  }
-
 	  if(newSession)
 	    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->totalFlows, 1);
 
@@ -699,29 +660,23 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
   if(srcHost != myGlobals.otherHostEntry) {
     incrementHostTrafficCounter(srcHost, pktSent, numPkts);
     incrementHostTrafficCounter(srcHost, pktSentSession, numPkts);
-    if(srcHost->trafficDistribution == NULL) {
-      srcHost->trafficDistribution = calloc(1, sizeof(TrafficDistribution));
-      if(srcHost->trafficDistribution == NULL) return;
-    }
 
     allocHostTrafficCounterMemory(srcHost, trafficDistribution, sizeof(TrafficDistribution));
+    if(srcHost->trafficDistribution == NULL) return;
     incrementHostTrafficCounter(srcHost, trafficDistribution->last24HoursBytesSent[hourId], length.value);
     incrementHostTrafficCounter(srcHost, bytesSent, length.value);
     incrementHostTrafficCounter(srcHost, bytesSentSession, length.value);
   }
 
   if(dstHost != myGlobals.otherHostEntry) {
-    if(dstHost->trafficDistribution == NULL) {
-      dstHost->trafficDistribution = calloc(1, sizeof(TrafficDistribution));
-      if(dstHost->trafficDistribution == NULL) return;
-    }
+    incrementHostTrafficCounter(dstHost, pktRcvd, numPkts);
+    incrementHostTrafficCounter(dstHost, pktRcvdSession, numPkts);
 
     allocHostTrafficCounterMemory(dstHost, trafficDistribution, sizeof(TrafficDistribution));
+    if(dstHost->trafficDistribution == NULL) return;
     incrementHostTrafficCounter(dstHost, trafficDistribution->last24HoursBytesRcvd[hourId], length.value);
     incrementHostTrafficCounter(dstHost, bytesRcvd, length.value);
     incrementHostTrafficCounter(dstHost, bytesRcvdSession, length.value);
-    incrementHostTrafficCounter(dstHost, pktRcvd, numPkts);
-    incrementHostTrafficCounter(dstHost, pktRcvdSession, numPkts);
   }
 
   if(broadcastHost(dstHost)) {
@@ -754,7 +709,6 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
 /* ************************************ */
 
 void updateHostName(HostTraffic *el) {
-
   if((el->hostNumIpAddress[0] == '\0')
      || (el->hostResolvedName == NULL)
      || (el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE)
@@ -1715,24 +1669,15 @@ static void processIpPkt(const u_char *bp,
 		       isRequest, positiveReply);
 #endif
 
-	    if(srcHost->protocolInfo == NULL) srcHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
-	    if(dstHost->protocolInfo == NULL) dstHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
+	    allocHostTrafficCounterMemory(srcHost, protocolInfo, sizeof(ProtocolInfo));
+	    allocHostTrafficCounterMemory(dstHost, protocolInfo, sizeof(ProtocolInfo));
+	    if((srcHost->protocolInfo == NULL) || (dstHost->protocolInfo == NULL)) return;
 
-	    if((srcHost->protocolInfo == NULL) || (dstHost->protocolInfo == NULL))
-	      return;
+	    allocHostTrafficCounterMemory(srcHost, protocolInfo->dnsStats, sizeof(ServiceStats));
+	    if(srcHost->protocolInfo->dnsStats == NULL) return;
+	    allocHostTrafficCounterMemory(dstHost, protocolInfo->dnsStats, sizeof(ServiceStats));
+	    if(dstHost->protocolInfo->dnsStats == NULL) return;
 
-	    if(srcHost->protocolInfo->dnsStats == NULL) {
-	      srcHost->protocolInfo->dnsStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-	      if(srcHost->protocolInfo->dnsStats == NULL) return;
-	      memset(srcHost->protocolInfo->dnsStats, 0, sizeof(ServiceStats));
-	    }
-
-	    if(dstHost->protocolInfo->dnsStats == NULL) {
-	      dstHost->protocolInfo->dnsStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-	      if(dstHost->protocolInfo->dnsStats == NULL) return;
-	      memset(dstHost->protocolInfo->dnsStats, 0, sizeof(ServiceStats));
-	    }
-	    
 	    allocHostTrafficCounterMemory(srcHost, protocolInfo, sizeof(ProtocolInfo));
 	    allocHostTrafficCounterMemory(srcHost, protocolInfo->dnsStats, sizeof(ServiceStats));
 
@@ -2003,20 +1948,13 @@ static void processIpPkt(const u_char *bp,
 
       if(icmpPkt.icmp_type <= ICMP_MAXTYPE) {
 	short dumpPacket = 1;
-	if(srcHost->icmpInfo == NULL) {
-	  if((srcHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo))) == NULL) return;
-	  memset(srcHost->icmpInfo, 0, sizeof(IcmpHostInfo));
-	}
 
 	allocHostTrafficCounterMemory(srcHost, icmpInfo, sizeof(IcmpHostInfo));
+	if(srcHost->icmpInfo == NULL) return;
 	incrementHostTrafficCounter(srcHost, icmpInfo->icmpMsgSent[icmpPkt.icmp_type], 1);
 
-	if(dstHost->icmpInfo == NULL) {
-	  if((dstHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo))) == NULL) return;
-	  memset(dstHost->icmpInfo, 0, sizeof(IcmpHostInfo));
-	}
-
 	allocHostTrafficCounterMemory(dstHost, icmpInfo, sizeof(IcmpHostInfo));
+	if(dstHost->icmpInfo == NULL) return;
 	incrementHostTrafficCounter(dstHost, icmpInfo->icmpMsgRcvd[icmpPkt.icmp_type], 1);
 
 	switch (icmpPkt.icmp_type) {
@@ -2202,19 +2140,15 @@ static void processIpPkt(const u_char *bp,
 
       if(icmp6Pkt.icmp6_type <= ICMP6_MAXTYPE) {
 	short dumpPacket = 1;
-	if(srcHost->icmpInfo == NULL) {
-	  if((srcHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo))) == NULL) return;
-	  memset(srcHost->icmpInfo, 0, sizeof(IcmpHostInfo));
-	}
-
+	
 	allocHostTrafficCounterMemory(srcHost, icmpInfo, sizeof(IcmpHostInfo));
+	if(srcHost->icmpInfo == NULL) return;
+
 	incrementHostTrafficCounter(srcHost, icmpInfo->icmpMsgSent[icmp6Pkt.icmp6_type], 1);
-	if(dstHost->icmpInfo == NULL) {
-	  if((dstHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo))) == NULL) return;
-	  memset(dstHost->icmpInfo, 0, sizeof(IcmpHostInfo));
-	}
 
 	allocHostTrafficCounterMemory(dstHost, icmpInfo, sizeof(IcmpHostInfo));
+	if(dstHost->icmpInfo == NULL) return;
+
 	incrementHostTrafficCounter(dstHost, icmpInfo->icmpMsgRcvd[icmp6Pkt.icmp6_type], 1);
 	switch (icmp6Pkt.icmp6_type) {
 	case ICMP6_ECHO_REPLY:
@@ -2321,25 +2255,17 @@ static void processIpPkt(const u_char *bp,
 	if((protoList->protocolId == nh)
 	   || ((protoList->protocolIdAlias != 0) && (protoList->protocolIdAlias == nh))) {
 
+	  allocHostTrafficCounterMemory(srcHost, ipProtosList, (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**));
 	  if(srcHost->ipProtosList) {
-	    if(srcHost->ipProtosList[idx] == NULL) {
-	      srcHost->ipProtosList[idx] = calloc(sizeof(ShortProtoTrafficInfo), 1);
-	      if(srcHost->ipProtosList[idx] == NULL) return;
-	    }
-
-	    allocHostTrafficCounterMemory(srcHost, ipProtosList, (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**));
 	    allocHostTrafficCounterMemory(srcHost, ipProtosList[idx], sizeof(ShortProtoTrafficInfo));
+	    if(srcHost->ipProtosList[idx] == NULL) return;
 	    incrementHostTrafficCounter(srcHost, ipProtosList[idx]->sent, length);
 	  }
 
+	  allocHostTrafficCounterMemory(dstHost, ipProtosList, (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**));
 	  if(dstHost->ipProtosList) {
-	    if(dstHost->ipProtosList[idx] == NULL) {
-	      dstHost->ipProtosList[idx] = calloc(sizeof(ShortProtoTrafficInfo), 1);
-	      if(dstHost->ipProtosList[idx] == NULL) return;
-	    }
-	    
-	    allocHostTrafficCounterMemory(dstHost, ipProtosList, (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**));
 	    allocHostTrafficCounterMemory(dstHost, ipProtosList[idx], sizeof(ShortProtoTrafficInfo));
+	    if(dstHost->ipProtosList[idx] == NULL) return;
 	    incrementHostTrafficCounter(dstHost, ipProtosList[idx]->rcvd, length);
 	  }
 
@@ -2360,13 +2286,10 @@ static void processIpPkt(const u_char *bp,
       if(myGlobals.runningPref.enableOtherPacketDump)
 	dumpOtherPacket(actualDeviceId);
 
-      if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-      if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-
       allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
       allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
-
       if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
+
       incrementHostTrafficCounter(srcHost, nonIPTraffic->otherSent, length);
       incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, nh);
       incrementHostTrafficCounter(dstHost, nonIPTraffic->otherRcvd, length);
@@ -3165,12 +3088,9 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  TrafficCounter ctr;
 
-	  if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-	  if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-
 	  allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
 	  allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
+	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
 
 	  incrementHostTrafficCounter(srcHost, nonIPTraffic->ipxSent, length);
 	  incrementHostTrafficCounter(dstHost, nonIPTraffic->ipxRcvd, length);
@@ -3212,12 +3132,9 @@ void processPacket(u_char *_deviceId,
 
 	if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
-	if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-	if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-	if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-
 	allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
 	allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
+	if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
 	
 	incrementHostTrafficCounter(srcHost, nonIPTraffic->otherSent, length);
 	incrementHostTrafficCounter(dstHost, nonIPTraffic->otherRcvd, length);
@@ -3273,12 +3190,9 @@ void processPacket(u_char *_deviceId,
 
 	  if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
-	  if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-	  if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-
 	  allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
 	  allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
+	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
 	  
 	  incrementHostTrafficCounter(srcHost, nonIPTraffic->ipxSent, length);
 	  incrementHostTrafficCounter(dstHost, nonIPTraffic->ipxRcvd, length);
@@ -3288,12 +3202,9 @@ void processPacket(u_char *_deviceId,
 	  srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
 	  dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
 
-	  if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-	  if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-
 	  allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
 	  allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
+	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
 
 	  if((srcHost != NULL) && (dstHost != NULL)) {
 	    TrafficCounter ctr;
@@ -3769,16 +3680,9 @@ void processPacket(u_char *_deviceId,
 	  lowMemoryMsgShown = 1;
 	  return;
 	} else {
-	  /*
-	    traceEvent(CONST_TRACE_INFO, "lockHostsHashMutex(%s)(%s)",
-	    etheraddr_string(ether_src, ipxBuffer),
-	    srcHost->ethAddressString);
-	  */
 	  lockHostsHashMutex(srcHost, "processPacket-src-5");
-
-	  if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-	  if(srcHost->nonIPTraffic == NULL) return;
 	  allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
+	  if(srcHost->nonIPTraffic == NULL) return;
 	}
 
 	dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
@@ -3791,9 +3695,8 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  /* traceEvent(CONST_TRACE_INFO, "lockHostsHashMutex()"); */
 	  lockHostsHashMutex(dstHost, "processPacket-src-5");
-	  if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-	  if(dstHost->nonIPTraffic == NULL) return;
 	  allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
+	  if(dstHost->nonIPTraffic == NULL) return;
 	}
 
 	if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
@@ -3801,6 +3704,7 @@ void processPacket(u_char *_deviceId,
 	switch(eth_type) {
 	case ETHERTYPE_ARP: /* ARP - Address resolution Protocol */
 	  memcpy(&arpHdr, p+hlen, sizeof(arpHdr));
+
 	  if(EXTRACT_16BITS(&arpHdr.arp_pro) == ETHERTYPE_IP) {
 	    int arpOp = EXTRACT_16BITS(&arpHdr.arp_op);
 
@@ -3817,16 +3721,12 @@ void processPacket(u_char *_deviceId,
 	      srcHost = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, vlanId, 0, 0, actualDeviceId);
 	      if(srcHost != NULL) {
 		lockHostsHashMutex(srcHost, "processPacket-src-6");
-		if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-		if(srcHost->nonIPTraffic == NULL) return;
 		allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
 		incrementHostTrafficCounter(srcHost, nonIPTraffic->arpReplyPktsSent, 1);
 	      }
 
 	      if(dstHost != NULL) {
 		lockHostsHashMutex(dstHost, "processPacket-dst-6");
-		if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
-		if(dstHost->nonIPTraffic == NULL) return;		
 		allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
 		incrementHostTrafficCounter(dstHost, nonIPTraffic->arpReplyPktsRcvd, 1);
 	      }
@@ -3855,6 +3755,7 @@ void processPacket(u_char *_deviceId,
 		}
 
 		updateHostKnownSubnet(srcHost);
+		allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic)); /* Necessary after updateHostKnownSubnet() */
 
 		if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) {
 		  incrementHostTrafficCounter(srcHost, nonIPTraffic->arpReqPktsSent, 1);
@@ -3863,34 +3764,39 @@ void processPacket(u_char *_deviceId,
 	    }
 	  }
 	  /* DO NOT ADD A break ABOVE ! */
-	case ETHERTYPE_REVARP: /* Reverse ARP */
 
+	case ETHERTYPE_REVARP: /* Reverse ARP */
 	  if(srcHost != NULL) {
 	    incrementHostTrafficCounter(srcHost, nonIPTraffic->arp_rarpSent, length);
 	  }
 
 	  if(dstHost != NULL) {
+	    
 	    incrementHostTrafficCounter(dstHost, nonIPTraffic->arp_rarpRcvd, length);
 	  }
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].arpRarpBytes, length);
 	  break;
+
 	case ETHERTYPE_DN: /* Decnet */
 	  incrementHostTrafficCounter(srcHost, nonIPTraffic->decnetSent, length);
 	  incrementHostTrafficCounter(dstHost, nonIPTraffic->decnetRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].decnetBytes, length);
 	  break;
+
 	case ETHERTYPE_ATALK: /* AppleTalk */
 	case ETHERTYPE_AARP:
 	  incrementHostTrafficCounter(srcHost, nonIPTraffic->appletalkSent, length);
 	  incrementHostTrafficCounter(dstHost, nonIPTraffic->appletalkRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].atalkBytes, length);
 	  break;
+
 	case ETHERTYPE_IPv6:
 	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
 	  incrementHostTrafficCounter(srcHost, ipv6Sent, length);
 	  incrementHostTrafficCounter(dstHost, ipv6Rcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipv6Bytes, length);
 	  break;
+
 	default:
 #ifdef UNKNOWN_PACKET_DEBUG
 	  traceEvent(CONST_TRACE_INFO, "UNKNOWN_PACKET_DEBUG: %s/%s->%s/%s [eth type %d (0x%x)]",

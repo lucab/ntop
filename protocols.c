@@ -138,21 +138,8 @@ void handleBootp(HostTraffic *srcHost,
 	    }
 
 	    if(realDstHost != NULL) {
-	      if(realDstHost->protocolInfo == NULL) realDstHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
-
-	      if(realDstHost->protocolInfo->dhcpStats == NULL) {
-		realDstHost->protocolInfo->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
-		memset(realDstHost->protocolInfo->dhcpStats, 0, sizeof(DHCPStats));
-	      }
-	      
 	      allocHostTrafficCounterMemory(realDstHost, protocolInfo, sizeof(ProtocolInfo));
 	      allocHostTrafficCounterMemory(realDstHost, protocolInfo->dhcpStats, sizeof(DHCPStats));
-
-	      if(srcHost->protocolInfo == NULL) srcHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
-	      if(srcHost->protocolInfo->dhcpStats == NULL) {
-		srcHost->protocolInfo->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
-		memset(srcHost->protocolInfo->dhcpStats, 0, sizeof(DHCPStats));
-	      }
 
 	      allocHostTrafficCounterMemory(srcHost, protocolInfo, sizeof(ProtocolInfo));
 	      allocHostTrafficCounterMemory(srcHost, protocolInfo->dhcpStats, sizeof(DHCPStats));
