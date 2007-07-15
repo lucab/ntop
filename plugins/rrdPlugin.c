@@ -4229,7 +4229,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       updateTrafficCounter(rrdPath, "bytesMulticastRcvd", &el->bytesMulticastRcvd, 0);
 
       updateTrafficCounter(rrdPath, "bytesLocSent", &el->bytesSentLoc, 0);
-      updateTrafficCounter(rrdPath, "bytesRemSent", &el->bytesSentRem, 0);
+      updateTrafficCounter(rrdPath, "bytesRemSent", &el->bytesSentRem, 0); 
       updateTrafficCounter(rrdPath, "bytesLocRcvd", &el->bytesRcvdLoc, 0);
       updateTrafficCounter(rrdPath, "bytesFromRemRcvd", &el->bytesRcvdFromRem, 0);
       updateTrafficCounter(rrdPath, "ipBytesSent", &el->ipBytesSent, 0);

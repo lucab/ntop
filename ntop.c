@@ -988,6 +988,7 @@ RETSIGTYPE cleanup(int signo) {
   setRunState(FLAG_NTOPSTATE_SHUTDOWN);
 
   if(cleanup_called) {
+    traceEvent(CONST_TRACE_INFO, "CLEANUP[t%lu]: exiting", pthread_self());
     exit(0);
   }
 
