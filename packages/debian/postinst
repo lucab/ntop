@@ -22,8 +22,8 @@ umask 022
 
 update-rc.d ntop defaults 93 >/dev/null
 
-# Set ntop defaults
-/etc/init.d/ntop default
+# Stop ntop (if any)
+/etc/init.d/ntop stop
 
 # Set the administrator password
 /etc/init.d/ntop start

@@ -5,6 +5,8 @@
 # (C) 2007    - Massimo Torquati <torquati@ntop.org>
 #
 
+. /usr/local/sbin/stop_app.sh
+
 APPNAME=ntop
 PERSISTENT_DIR=/usr/local/share/ntop
 SPOOL_DIR=$PERSISTENT_DIR/spool
@@ -12,11 +14,23 @@ NTOP_PATH=/usr/local/bin/ntop
 NTOP_CONF=/etc/ntop/ntop.conf
 NTOP_PIDFILE=/var/run/ntop.pid
 
+# Enable watchdogging
+USERUNSV=1
+RUNSV="/usr/local/bin/runsv"
+RUNSV_PIDFILE="/var/run/runsv.ntop"
+TIMETOWAIT=2
+RUNSV_OPT="-p $RUNSV_PIDFILE -s $TIMETOWAIT -- "
+
+
 ####################
 
 start_ntop() {
    if test -f /etc/ntop/ntop.start; then
-      start-stop-daemon --start --quiet --name $APPNAME --background --exec $NTOP_PATH @$NTOP_CONF > /dev/null
+       if [ $USERUNSV -eq 1 ]; then
+	   ${RUNSV} ${RUNSV_OPT} $NTOP_PATH @$NTOP_CONF > /dev/null &
+       else
+	   start-stop-daemon --start --quiet --name $APPNAME --background --exec $NTOP_PATH @$NTOP_CONF > /dev/null
+       fi
    fi
 
    return 0
@@ -55,19 +69,27 @@ wait_for_deaddaemon () {
 ####################
 
 stop_ntop() { 
-    if [ -f $NTOP_PIDFILE ]; then
+    if [ $USERUNSV -eq 1 ]; then
 	pid=`cat $NTOP_PIDFILE 2>/dev/null`
+	stop_app -a ntop -r
 	if [ -n $pid ]; then
-	    kill $pid
+	    wait_for_deaddaemon $pid
 	fi
-	wait_for_deaddaemon $pid
+    else
+	if [ -f $NTOP_PIDFILE ]; then
+	    pid=`cat $NTOP_PIDFILE 2>/dev/null`
+	    if [ -n $pid ]; then
+		kill $pid
+	        wait_for_deaddaemon $pid
+	    fi
+	fi
     fi
 }
 
 ####################
 
 default_ntop() { 
-    if [ ! -d $PERSISTENT_DIR/rrd ]; then
+    if [ ! -d $PERSISTENT_DIR ] && [ ! -h  $PERSISTENT_DIR ]; then
 	mkdir -p $PERSISTENT_DIR/rrd
     fi
     chown -R nobody $PERSISTENT_DIR/rrd
