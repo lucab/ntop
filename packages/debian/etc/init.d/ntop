@@ -1,19 +1,22 @@
 #! /bin/sh
 
 #
-# (C) 2003 - Luca Deri <deri@ntop.org>
-# (C) 2007 - Massimo Torquati <torquati@ntop.org>
+# (C) 2003-07 - Luca Deri <deri@ntop.org>
+# (C) 2007    - Massimo Torquati <torquati@ntop.org>
 #
 
 APPNAME=ntop
 PERSISTENT_DIR=/usr/local/share/ntop
 SPOOL_DIR=$PERSISTENT_DIR/spool
+NTOP_PATH=/usr/local/bin/ntop
+NTOP_CONF=/etc/ntop/ntop.conf
+NTOP_PIDFILE=/var/run/ntop.pid
 
 ####################
 
 start_ntop() {
    if test -f /etc/ntop/ntop.start; then
-      start-stop-daemon --start --quiet --name $APPNAME --background --exec /usr/local/bin/ntop @/etc/ntop/ntop.conf > /dev/null
+      start-stop-daemon --start --quiet --name $APPNAME --background --exec $NTOP_PATH @$NTOP_CONF > /dev/null
    fi
 
    return 0
@@ -21,24 +24,64 @@ start_ntop() {
 
 ####################
 
+wait_for_deaddaemon () {
+    WAITFORDAEMON=15
+    pid=$1
+    sleep 1
+    if test -n "$pid"
+	then
+	if kill -0 $pid 2>/dev/null
+	    then
+	    echo -n "."
+	    cnt=0
+	    while kill -0 $pid 2>/dev/null
+	      do
+	      cnt=`expr $cnt + 1`
+	      if [ $cnt -gt $WAITFORDAEMON ]
+		  then
+		  echo " FAILED."
+		  return 1
+	      fi
+	      sleep 1
+	      echo -n "."
+	    done
+	fi
+    fi
+
+    rm -f $NTOP_PIDFILE
+    return 0
+}
+
+####################
+
 stop_ntop() { 
-    start-stop-daemon --stop --oknodo --name $APPNAME --retry 9
+    if [ -f $NTOP_PIDFILE ]; then
+	pid=`cat $NTOP_PIDFILE 2>/dev/null`
+	if [ -n $pid ]; then
+	    kill $pid
+	fi
+	wait_for_deaddaemon $pid
+    fi
 }
 
 ####################
 
 default_ntop() { 
-    chown -R nobody /usr/local/var/ntop/rrd
+    if [ ! -d $PERSISTENT_DIR/rrd ]; then
+	mkdir -p $PERSISTENT_DIR/rrd
+    fi
+    chown -R nobody $PERSISTENT_DIR/rrd
+
     if [ ! -f $PERSISTENT_DIR/ntop_pw.db ]; then
-	/usr/local/bin/ntop -u nobody -P $PERSISTENT_DIR -Q $SPOOL_DIR --set-admin-password=admin
+	$NTOP_PATH -u nobody -P $PERSISTENT_DIR -Q $SPOOL_DIR --set-admin-password=admin
     fi
 
     if [ ! -d /etc/ntop ]; then
 	mkdir /etc/ntop
 	touch /etc/ntop/ntop.start
-	echo "-P $PERSISTENT_DIR" > /etc/ntop/ntop.conf
-	echo "-Q $SPOOL_DIR" >> /etc/ntop/ntop.conf
-	echo "-u nobody" >> /etc/ntop/ntop.conf
+	echo "-P $PERSISTENT_DIR" > $NTOP_CONF
+	echo "-Q $SPOOL_DIR" >> $NTOP_CONF
+	echo "-u nobody" >> $NTOP_CONF
     fi
 
     if [ ! -d $PERSISTENT_DIR ]; then
