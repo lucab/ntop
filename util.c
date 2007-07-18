@@ -977,7 +977,15 @@ void handleAddressLists(char* addresses, NetworkStats theNetworks[MAX_NUM_NETWOR
     u_int32_t network, networkMask, broadcast;
     int bits, a, b, c, d;
     char *mask = strchr(address, '/');
-
+    char *equal = strchr(address, '=');
+    
+    if(equal != NULL) {
+      char key[64];
+      equal[0] = '\0';
+      safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "subnet.name.%s", address);
+      storePrefsValue(key, &equal[1]);
+    }
+      
     if(mask == NULL) {
       bits = 32;
     } else {
@@ -1162,18 +1170,55 @@ void handleLocalAddresses(char* addresses) {
 
 /* ********************************* */
 
+static char* read_file(char* path, char* buf, u_int buf_len) {
+  FILE *fd = fopen(&path[1], "r");
+
+  if(fd == NULL) {
+    traceEvent(CONST_TRACE_WARNING, "Unable to read file %s", path);
+    return(NULL);
+  } else {
+    char line[256];
+    int idx = 0;
+    
+    while(!feof(fd) && (fgets(line, sizeof(line), fd) != NULL)) {
+      if((line[0] == '#') || (line[0] == '\n')) continue;
+      while(strlen(line) && (line[strlen(line)-1] == '\n')) {
+	line[strlen(line)-1] = '\0';
+      }
+      
+      safe_snprintf(__FILE__, __LINE__, &buf[idx], buf_len-idx-2, "%s%s", (idx > 0) ? "," : "", line);     
+      idx = strlen(buf);
+    }
+
+    fclose(fd);
+  }
+}
+
+/* ********************************* */
+
 void handleKnownAddresses(char* addresses) {
   char knownSubnets[1024];
 
   knownSubnets[0] = '\0';
 
   if(addresses != NULL) {
-    char *addresses_copy = strdup(addresses);
+    char *addresses_copy;
+    char buf[2048];
+
+    if(addresses[0] == '@') {
+      /* This is a file */
+      addresses_copy = read_file(addresses, buf, sizeof(buf));
+      if(addresses_copy)
+	addresses_copy = strdup(buf);
+    } else
+      addresses_copy = strdup(addresses);
     
-    handleAddressLists(addresses_copy, myGlobals.subnetStats, &myGlobals.numKnownSubnets,
-		       knownSubnets, sizeof(knownSubnets), CONST_HANDLEADDRESSLISTS_MAIN);
-    
-    free(addresses_copy);
+    if(addresses_copy) {
+      handleAddressLists(addresses_copy, myGlobals.subnetStats, &myGlobals.numKnownSubnets,
+			 knownSubnets, sizeof(knownSubnets), CONST_HANDLEADDRESSLISTS_MAIN);
+      
+      free(addresses_copy);
+    }
   }
 
   /* Not used anymore */

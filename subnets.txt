@@ -1,0 +1,5 @@
+#
+# Format <network>=<name>
+#
+192.168.0.0/24=home
+172.16.0.0/16=my private net

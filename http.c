@@ -2600,36 +2600,6 @@ static int returnHTTPPage(char* pageName,
           if(db_val != NULL) free(db_val);
 	  return(0);
 	} else {
-
-
-#ifdef MAKE_WITH_HTTPSIGTRAP
-          signal(SIGSEGV, httpcleanup);
-          signal(SIGHUP,  httpcleanup);
-          signal(SIGINT,  httpcleanup);
-          signal(SIGQUIT, httpcleanup);
-          signal(SIGILL,  httpcleanup);
-          signal(SIGABRT, httpcleanup);
-          signal(SIGFPE,  httpcleanup);
-          signal(SIGKILL, httpcleanup);
-          /* signal(SIGPIPE, httpcleanup); */
-          signal(SIGTERM, httpcleanup);
-          signal(SIGUSR1, httpcleanup);
-          signal(SIGUSR2, httpcleanup);
-          /* signal(SIGCHLD, httpcleanup); */
-#ifdef SIGCONT
-          signal(SIGCONT, httpcleanup);
-#endif
-#ifdef SIGSTOP
-          signal(SIGSTOP, httpcleanup);
-#endif
-#ifdef SIGBUS
-          signal(SIGBUS,  httpcleanup);
-#endif
-#ifdef SIGSYS
-          signal(SIGSYS,  httpcleanup);
-#endif
-#endif /* MAKE_WITH_HTTPSIGTRAP */
-
 	  detachFromTerminalUnderUnix(0);
 
 	  /* Close inherited sockets */

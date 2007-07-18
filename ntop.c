@@ -42,6 +42,8 @@ static void printMutexInfo(PthreadMutex *mutexId, char *mutexName) {
 	     mutexId->maxLockedDuration);
 }
 
+/* *************************** */
+
 #ifndef WIN32
 void handleSigHup(int signalId _UNUSED_) {
   int i;
@@ -62,7 +64,9 @@ void handleSigHup(int signalId _UNUSED_) {
   if(myGlobals.runningPref.numericFlag == 0)
     printMutexInfo(&myGlobals.addressResolutionMutex, "myGlobals.addressResolutionMutex");
 
-  (void)signal(SIGHUP,  handleSigHup);
+  handleKnownAddresses(myGlobals.runningPref.knownSubnets);
+
+  (void)signal(SIGHUP, handleSigHup);
 }
 
 #endif /* WIN32 */

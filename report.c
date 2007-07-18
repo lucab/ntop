@@ -2506,7 +2506,9 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
      if((el->vlanId != NO_VLAN) && (el->vlanId < MAX_VLAN))       { vlanList[el->vlanId] = 1, foundVlan = 1; }
      if((vlanId != NO_VLAN) && (el->vlanId != vlanId)) continue;
 
-     if(el->known_subnet_id != UNKNOWN_SUBNET_ID) foundSubnet = 1, knownSubnets[el->known_subnet_id] = 1;
+     if((el->known_subnet_id < myGlobals.numKnownSubnets) && (el->known_subnet_id != UNKNOWN_SUBNET_ID) )
+	foundSubnet = 1, knownSubnets[el->known_subnet_id] = 1;
+
      if((knownSubnetId != UNKNOWN_SUBNET_ID) && (knownSubnetId != ALL_SUBNET_IDS)
 	&& (el->known_subnet_id != knownSubnetId)) 
        continue;
@@ -2646,7 +2648,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
        for(i=0; i<myGlobals.numKnownSubnets; i++)
 	 if(knownSubnets[i] == 1) {
 	   struct in_addr addr;
-	   char addr_buf[32];
+	   char addr_buf[32], alias[64], key[64], *net;
 	   
 	   addr.s_addr = myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY];
 
@@ -2655,12 +2657,22 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 	   else
 	     selected = 0;
 	   
+	   net = _intoa(addr, addr_buf, sizeof(addr_buf));
+
+	   safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "subnet.name.%s/%d",
+			 net, myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY]);
+	   
+	   alias[0] = '\0';
+	   fetchPrefsValue(key, alias, sizeof(alias));
+
 	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			 "<option value=\"/%s?unit=%d&subnet=%d\"%s>%s/%d</option>\n",
+			 "<option value=\"/%s?unit=%d&subnet=%d\"%s>%s/%d %s%s%s</option>\n",
 			 CONST_HOSTS_INFO_HTML, showBytes, i,
-			 selected ? " selected" : "",
-			 _intoa(addr, addr_buf, sizeof(addr_buf)),
-			 myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY]);
+			 selected ? " selected" : "", net,
+			 myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY],
+			 (alias[0] != '\0') ? "[" : "",
+			 alias,
+			 (alias[0] != '\0') ? "]" : "");
 
 	   sendString(buf);
 	 }
@@ -3084,7 +3096,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
      char errorAdditionalText[1024], whois[256];
 
      safe_snprintf(__FILE__, __LINE__, whois, sizeof(whois),
-		   "[ <A class=external HREF=\"http://www.radb.net/cgi-bin/radb/whois.cgi?obj=%s\">Whois</A> ]</TD></TR>\n",
+		   "[ <A class=external HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=%s\">Whois</A> ]</TD></TR>\n",
 		   host);
 
      safe_snprintf(__FILE__, __LINE__, errorAdditionalText, sizeof(errorAdditionalText),
@@ -5510,7 +5522,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
       if(network_mode) {
 	if(network_mode == NETWORK_VIEW) {
-	  if(el->known_subnet_id == UNKNOWN_SUBNET_ID)
+	  if((el->known_subnet_id == UNKNOWN_SUBNET_ID) || (el->known_subnet_id >= myGlobals.numKnownSubnets))
 	    continue;
 	  else if((domain_network_name != NULL) && (domain_network_name[0] != '\0')) {
 	    char *nw_name = host2networkName(el, buf1, sizeof(buf1));
@@ -5775,16 +5787,23 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	if(network_mode == NETWORK_VIEW) {
 	  char *nw_name = host2networkName(statsEntry->domainHost, buf1, sizeof(buf1));
 	  char sym_nw_name[256];
+
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "network.name.%s",
 			nw_name);
 
-	  if(fetchPrefsValue(buf, sym_nw_name, sizeof(sym_nw_name)) == -1)
-	    sym_nw_name[0] = '\0';
+	  if(fetchPrefsValue(buf, sym_nw_name, sizeof(sym_nw_name)) == -1) {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "subnet.name.%s", nw_name);
+	    if(fetchPrefsValue(buf, sym_nw_name, sizeof(sym_nw_name)) == -1)
+	      sym_nw_name[0] = '\0';
+	  }
 
 	  safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
-			"<A HREF=/%s?dom=%s&netmode=%d>%s</A>",
+			"<A HREF=/%s?dom=%s&netmode=%d>%s%s%s%s</A>",
 			CONST_DOMAIN_STATS_HTML, nw_name, network_mode,
-			(sym_nw_name[0] == '\0') ? nw_name : sym_nw_name);
+			nw_name,
+			(sym_nw_name[0] == '\0') ? "" : " [",
+			sym_nw_name,
+			(sym_nw_name[0] == '\0') ? "" : "]");
 	
 	} else if(network_mode == AS_VIEW) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "as.name.%d", 
