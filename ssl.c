@@ -149,11 +149,7 @@ int init_ssl(void) {
 
   SSL_load_error_strings();
   SSLeay_add_ssl_algorithms();
-#ifdef MAKE_WITH_SSLV3_SUPPORT
   meth = SSLv23_server_method();
-#else
-  meth = SSLv2_server_method();
-#endif
   myGlobals.ctx = SSL_CTX_new (meth);
   if (!myGlobals.ctx) {
     ntop_ssl_error_report("ssl_init-server_method");
@@ -161,10 +157,7 @@ int init_ssl(void) {
   }
 
   SSL_CTX_set_options(myGlobals.ctx, SSL_OP_ALL); /* Enable the work-arounds */
-
-#ifdef MAKE_WITH_SSLV3_SUPPORT
   SSL_CTX_set_options(myGlobals.ctx, SSL_OP_NO_TLSv1); 
-#endif
 
   if ((!SSL_CTX_load_verify_locations(myGlobals.ctx, NULL, NULL)) ||
       (!SSL_CTX_set_default_verify_paths(myGlobals.ctx))) {

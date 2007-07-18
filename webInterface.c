@@ -2878,14 +2878,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLV3_SUPPORT",
-#ifdef MAKE_WITH_SSLV3_SUPPORT
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLWATCHDOG_COMPILETIME",
 #ifdef MAKE_WITH_SSLWATCHDOG_COMPILETIME
                          "yes"

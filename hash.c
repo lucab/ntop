@@ -922,7 +922,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   }
 
   if(numRuns > myGlobals.device[actualDeviceId].hashListMaxLookups)
-    myGlobals.device[actualDeviceId].hashListMaxLookups = numRuns ;
+    myGlobals.device[actualDeviceId].hashListMaxLookups = numRuns;
 
   if(hostFound) {
     /* Existing host entry */

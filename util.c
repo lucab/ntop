@@ -2212,9 +2212,7 @@ int _unlockHostsHashMutex(HostTraffic *host, char *file, int line) {
 /* ************************************ */
 
 int checkCommand(char* commandName) {
-
 #ifndef WIN32
-
   char buf[256], *workBuf;
   struct stat statBuf;
   int rc, ecode=0;
