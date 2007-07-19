@@ -2891,7 +2891,7 @@ struct ip6_hdr
 
 /* *************************** */
 
-#define MAX_NUM_INTERFACE_NETWORKS MAX_NUM_NETWORKS
+#define MAX_NUM_INTERFACE_NETWORKS      128
 
 #define incrementHostTrafficCounter(_a_, _b_, _c_) { if(_a_->known_subnet_id != UNKNOWN_SUBNET_ID) incrementTrafficCounter(&myGlobals.device[actualDeviceId].networkHost[_a_->known_subnet_id]._b_,_c_); incrementTrafficCounter(&_a_->_b_, _c_); }
 
