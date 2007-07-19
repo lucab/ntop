@@ -3078,7 +3078,10 @@ void processPacket(u_char *_deviceId,
 	if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
 	memcpy((char *)&ipxPkt, (char *)p+sizeof(struct ether_header), sizeof(IPXpacket));
-
+	
+	allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
+	allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
+	
 	if(ntohs(ipxPkt.dstSocket) == 0x0452) {
 	  /* SAP */
 	  int displ = sizeof(struct ether_header);
@@ -3088,8 +3091,6 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  TrafficCounter ctr;
 
-	  allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
-	  allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
 	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
 
 	  incrementHostTrafficCounter(srcHost, nonIPTraffic->ipxSent, length);
@@ -3337,7 +3338,6 @@ void processPacket(u_char *_deviceId,
 		int i, found;
 
 		memcpy(&serverType, &ipxBuffer[32], 2);
-
 		serverType = ntohs(serverType);
 
 		memcpy(serverName, &ipxBuffer[34], 56); serverName[56] = '\0';
@@ -3346,6 +3346,9 @@ void processPacket(u_char *_deviceId,
 		    serverName[i] = '\0';
 		    break;
 		  }
+		
+		incrementHostTrafficCounter(srcHost, nonIPTraffic->ipxSent, length);
+		incrementHostTrafficCounter(dstHost, nonIPTraffic->ipxRcvd, length);
 
 		for(i=0, found=0; i<srcHost->nonIPTraffic->numIpxNodeTypes; i++)
 		  if(srcHost->nonIPTraffic->ipxNodeType[i] == serverType) {
@@ -3430,8 +3433,6 @@ void processPacket(u_char *_deviceId,
 #endif
 	      }
 
-	      incrementHostTrafficCounter(srcHost, nonIPTraffic->ipxSent, length);
-	      incrementHostTrafficCounter(dstHost, nonIPTraffic->ipxRcvd, length);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 	    } else if((llcHeader.ssap == LLCSAP_NETBIOS) && (llcHeader.dsap == LLCSAP_NETBIOS)) {
 	      /* Netbios */

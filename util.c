@@ -1191,6 +1191,7 @@ static char* read_file(char* path, char* buf, u_int buf_len) {
     }
 
     fclose(fd);
+    return(buf);
   }
 }
 
