@@ -1213,7 +1213,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     return(NULL);
   }
 
-  idx = hashFcHost (hostFcAddress, vsanId, &el, actualDeviceId);
+  idx = hashFcHost(hostFcAddress, vsanId, &el, actualDeviceId);
 
   if(el != NULL) {
     return (el);
@@ -1244,8 +1244,8 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 		 idx, el->hostTrafficBucket);
     }
 
-    if ((el->fcCounters != NULL) &&
-	(memcmp ((u_int8_t *)&(el->fcCounters->hostFcAddress), hostFcAddress, LEN_FC_ADDRESS) == 0)) {
+    if((el->fcCounters != NULL) &&
+       (memcmp((u_int8_t *)&(el->fcCounters->hostFcAddress), hostFcAddress, LEN_FC_ADDRESS) == 0)) {
       hostFound = 1;
       break;
     }

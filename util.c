@@ -2203,11 +2203,13 @@ int _lockHostsHashMutex(HostTraffic *host, char *where, char *file, int line) {
   int rc = 0;
 
   if(host) {
+#if 0
     if(0)
       traceEvent(CONST_TRACE_INFO, "==> lockHostsHashMutex(idx=%d) [%s:%d]",
 		 host->hostTrafficBucket, file, line);
 
     _accessMutex(&myGlobals.hostsHashLockMutex, "lockHostsHashMutex", file, line);
+
     if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 0) {
       myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]++;
       _accessMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], where, file, line);
@@ -2215,7 +2217,11 @@ int _lockHostsHashMutex(HostTraffic *host, char *where, char *file, int line) {
       /* Already locked */
       myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]++;
     }
+
     _releaseMutex(&myGlobals.hostsHashLockMutex, file, line);
+#else
+    _accessMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], where, file, line);
+#endif
   } else {
     rc = -1;
   }
@@ -2230,11 +2236,13 @@ int _unlockHostsHashMutex(HostTraffic *host, char *file, int line) {
   int rc;
 
   if(host) {
+#if 0
     if(0)
       traceEvent(CONST_TRACE_INFO, "==> unlockHostsHashMutex(idx=%d) [%s:%d]",
 		 host->hostTrafficBucket, file, line);
 
     accessMutex(&myGlobals.hostsHashLockMutex, "unlockHostsHashMutex");
+
     if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] > 1) {
       myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]--;
       rc = 0;
@@ -2247,7 +2255,11 @@ int _unlockHostsHashMutex(HostTraffic *host, char *file, int line) {
                  file, line);
       rc = 0;
     }
+
     releaseMutex(&myGlobals.hostsHashLockMutex);
+#else
+    rc = releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket]);
+#endif
   } else {
     rc = -1;
   }

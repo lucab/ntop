@@ -1675,15 +1675,16 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
 static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 			 char *startTime, char* endTime, char *rrdPrefix, char *mode) {
   char path[512], *argv[6*MAX_NUM_ENTRIES], tmpStr[32], fname[384], *label, rrdPath_copy[512];
-  char buf0[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf1[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
+  char buf0[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf1[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf2[2*MAX_BUF_LEN];
   char buf3[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
   char buf4[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf5[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], _rrdName[256];
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
   int argc = 0, rc, x, y, i, entryId=0, num_rrd_hosts_path = 0, j;
   DIR* directoryPointer;
   char *rrd_custom[MAX_NUM_RRD_ENTRIES], *rrd_hosts_path[MAX_NUM_RRD_HOSTS],
-    *rrd_hosts[MAX_NUM_RRD_HOSTS], file_a[32], file_b[32], title_buf[48];
+    *rrd_hosts[MAX_NUM_RRD_HOSTS], file_a[32], file_b[32], title_buf[48], *upside;
   double ymin,ymax;
+  u_int8_t upside_down = 0;
 
   i = strlen(rrdPath); if((i > 1) && (rrdPath[i-1] == '/')) rrdPath[i-1] = '\0';
 
@@ -1792,7 +1793,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	rrd_custom[1] = file_b;
 	rrd_custom[2] = NULL;
 	rrds = (char**)rrd_custom;
-
+	upside_down = 1;
 	/* traceEvent(CONST_TRACE_WARNING, "RRD: [%s][%s]", file_a, file_b); */
       } else {
 	snprintf(file_a, sizeof(file_a), "%s", rrdName);
@@ -2003,30 +2004,49 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
       /* traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s) [%d/%d]", path, j, num_rrd_hosts_path);  */
 
       if(stat(path, &statbuf) == 0) {
-	char metric_name[32];
+	char metric_name[32], do_upside;
 
-	safe_snprintf(__FILE__, __LINE__, buf0[entryId], 2*MAX_BUF_LEN,
-		      "DEF:ctr%d=%s:counter:AVERAGE", entryId, sanitizeRrdPath(path));
-	argv[argc++] = buf0[entryId];
-	safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
-		      "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-		      entryId, rrd_colors[entryId],
-		      spacer((graphId == 98) ? rrd_hosts[j] : rrds[i], tmpStr, sizeof(tmpStr),
-			     metric_name, sizeof(metric_name)));
-	argv[argc++] = buf1[entryId];
+	if(upside_down && (i == 1)) {
+	  safe_snprintf(__FILE__, __LINE__, buf0[entryId], 2*MAX_BUF_LEN,
+			"DEF:my_ctr%d=%s:counter:AVERAGE", entryId, sanitizeRrdPath(path));
+	  argv[argc++] = buf0[entryId];
+	  safe_snprintf(__FILE__, __LINE__, buf2, 2*MAX_BUF_LEN,
+			"CDEF:ctr%d=my_ctr%d,-1,*", entryId, entryId);
+	  argv[argc++] = buf2;
+	  safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
+			"%s:ctr%d%s:%s", "AREA",
+			entryId, rrd_colors[entryId],
+			spacer((graphId == 98) ? rrd_hosts[j] : rrds[i], tmpStr, sizeof(tmpStr),
+			       metric_name, sizeof(metric_name)));
+	  argv[argc++] = buf1[entryId];
+	  do_upside = 1;
+	} else {
+	  safe_snprintf(__FILE__, __LINE__, buf0[entryId], 2*MAX_BUF_LEN,
+			"DEF:ctr%d=%s:counter:AVERAGE", entryId, sanitizeRrdPath(path));
+	  argv[argc++] = buf0[entryId];
+	  safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
+			"%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
+			entryId, rrd_colors[entryId],
+			spacer((graphId == 98) ? rrd_hosts[j] : rrds[i], tmpStr, sizeof(tmpStr),
+			       metric_name, sizeof(metric_name)));
+	  argv[argc++] = buf1[entryId];
+	  do_upside = 0;
+	}
 
 	/*
 	  safe_snprintf(__FILE__, __LINE__, buf2[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":MIN:Min\\: %3.1lf%s");
 	  argv[argc++] = buf2[entryId];
 	*/
 
-	safe_snprintf(__FILE__, __LINE__, buf3[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":MAX:Max\\: %3.1lf%s\\t");
+	if(do_upside) upside = "my_"; else upside = "";
+
+	safe_snprintf(__FILE__, __LINE__, buf3[entryId], 2*MAX_BUF_LEN, "GPRINT:%sctr%d%s", upside, entryId, ":MAX:Max\\: %3.1lf%s\\t");
 	argv[argc++] = buf3[entryId];
 
-	safe_snprintf(__FILE__, __LINE__, buf4[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %3.1lf%s\\t");
+	safe_snprintf(__FILE__, __LINE__, buf4[entryId], 2*MAX_BUF_LEN, "GPRINT:%sctr%d%s", upside, entryId, ":AVERAGE:Avg\\: %3.1lf%s\\t");
 	argv[argc++] = buf4[entryId];
 
-	safe_snprintf(__FILE__, __LINE__, buf5[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Last\\: %3.1lf%s\\n");
+	safe_snprintf(__FILE__, __LINE__, buf5[entryId], 2*MAX_BUF_LEN, "GPRINT:%sctr%d%s", upside, entryId, ":LAST:Last\\: %3.1lf%s\\n");
 	argv[argc++] = buf5[entryId];
 
 	entryId++;
