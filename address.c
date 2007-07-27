@@ -1834,23 +1834,34 @@ void checkSpoofing(HostTraffic *hostToCheck, int actualDeviceId) {
 
 /* **************************************** */
 
-char* host2networkName(HostTraffic *el, char *buf, u_short buf_len) {
+char* subnetId2networkName(int8_t known_subnet_id, char *buf, u_short buf_len) {
   struct in_addr addr;
   char buf1[64];
       
-  if((el->known_subnet_id == UNKNOWN_SUBNET_ID)
-     || (el->known_subnet_id < 0)
-     || (el->known_subnet_id > myGlobals.numKnownSubnets))
+  if((known_subnet_id == UNKNOWN_SUBNET_ID)
+     || (known_subnet_id < 0)
+     || (known_subnet_id > myGlobals.numKnownSubnets))
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "0.0.0.0/0");
   else {
-    addr.s_addr = myGlobals.subnetStats[el->known_subnet_id].address[CONST_NETWORK_ENTRY];
+    addr.s_addr = myGlobals.subnetStats[known_subnet_id].address[CONST_NETWORK_ENTRY];
     
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s/%d",
 		  _intoa(addr, buf1, sizeof(buf1)), 
-		  myGlobals.subnetStats[el->known_subnet_id].address[CONST_NETMASK_V6_ENTRY]);
+		  myGlobals.subnetStats[known_subnet_id].address[CONST_NETMASK_V6_ENTRY]);
   }
 
   return(buf);
+}
+
+/* **************************************** */
+
+char* host2networkName(HostTraffic *el, char *buf, u_short buf_len) {
+  if(el != NULL)
+    return(subnetId2networkName(el->known_subnet_id, buf, buf_len));
+  else {
+    buf[0] = '\0';
+    return(buf);
+  }
 }
 
 /* **************************************** */

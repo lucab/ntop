@@ -176,7 +176,7 @@ void addPageIndicator(char *url, u_int pageNum,
     safe_snprintf(__FILE__, __LINE__, prevBuf, sizeof(prevBuf),
 		  "<A HREF=\"%s%cpage=0&netmode=%d&col=%s\"><IMG SRC=/fback.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Back to first page\"></A> "
 		  "<A HREF=\"%s%cpage=%d&netmode=%dcol=%s\"><IMG SRC=/back.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Prior page\"></A>",
-		  url, separator, netmode, shortBuf, 
+		  url, separator, netmode, shortBuf,
 		  url, separator, pageNum-1, netmode, shortBuf);
   } else
     prevBuf[0] = '\0';
@@ -185,7 +185,7 @@ void addPageIndicator(char *url, u_int pageNum,
     safe_snprintf(__FILE__, __LINE__, nextBuf, sizeof(nextBuf),
 		  "<A HREF=\"%s%cpage=%d&netmode=%d&col=%s\"><IMG SRC=/forward.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Next Page\"></A> "
 		  "<A HREF=\"%s%cpage=%d&netmode=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Forward to last page\"></A>",
-		  url, separator, pageNum+1, netmode, shortBuf, 
+		  url, separator, pageNum+1, netmode, shortBuf,
 		  url, separator, numPages-1, netmode, shortBuf);
   }  else
     nextBuf[0] = '\0';
@@ -229,7 +229,7 @@ void printTrafficSummary (int revertOrder) {
     if(myGlobals.device[i].activeDevice) {
       char buf1[128];
       NtopIfaceAddr *ifaddr;
-      
+
       if(myGlobals.device[i].sflowGlobals || myGlobals.device[i].netflowGlobals)
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
 		      "%s</TD>",
@@ -242,7 +242,7 @@ void printTrafficSummary (int revertOrder) {
 		      myGlobals.device[i].uniqueIfName[0] != '\0' ? myGlobals.device[i].uniqueIfName : "&nbsp;",
 		      myGlobals.device[i].name);
 
-	sendString(buf);
+      sendString(buf);
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
 		    myGlobals.device[i].name);
@@ -332,22 +332,22 @@ void printTrafficSummary (int revertOrder) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
 		  myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
-        
+
     revertSlashIfWIN32(buf, 0);
-   
+
     if(stat(buf, &statbuf) != 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%u</TD></TR>\n", i);
     } else
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT>"		    
+		    "<TD "TD_BG" ALIGN=RIGHT>"
 		    "%u <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=knownHostsNum&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
 		    "<IMG valign=top class=tooltip SRC=graph.gif border=0></A>"
-		    "</TD></TR>\n", 
-		    i, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600), 
+		    "</TD></TR>\n",
+		    i, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600),
 		    (unsigned int)myGlobals.actTime, "Active+End+Nodes");
 
-    
+
     sendString(buf);
   }
 
@@ -612,7 +612,7 @@ void printTrafficStatistics(int revertOrder) {
       if(myGlobals.device[i].sflowGlobals || myGlobals.device[i].netflowGlobals)
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
 		      "%s</TD>",
-		      myGlobals.device[i].humanFriendlyName[0] != '\0' ? 
+		      myGlobals.device[i].humanFriendlyName[0] != '\0' ?
 		      myGlobals.device[i].humanFriendlyName : "&nbsp;");
       else
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
@@ -692,7 +692,7 @@ void printTrafficStatistics(int revertOrder) {
     sendString(buf);
   }
   else {
-	  time_t t = myGlobals.lastPktTime.tv_sec;
+    time_t t = myGlobals.lastPktTime.tv_sec;
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
@@ -709,23 +709,23 @@ void printTrafficStatistics(int revertOrder) {
   if((i = numActiveSenders(myGlobals.actualReportDeviceId)) > 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
 		  myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);    
-    
+		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+
     revertSlashIfWIN32(buf, 0);
-   
+
     if(stat(buf, &statbuf) != 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%u</TD></TR>\n", i);
     } else
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT>"		    
+		    "<TD "TD_BG" ALIGN=RIGHT>"
 		    "%u <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=knownHostsNum&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
 		    "<IMG valign=top class=tooltip SRC=graph.gif border=0></A>"
-		    "</TD></TR>\n", 
-		    i, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600), 
+		    "</TD></TR>\n",
+		    i, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600),
 		    (unsigned int)myGlobals.actTime, "Active+End+Nodes");
 
-    
+
     sendString(buf);
   }
 
@@ -747,8 +747,8 @@ void printTrafficStatistics(int revertOrder) {
       }
 
     if(found) {
-	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		   "<iframe frameborder=0 SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+      sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+		 "<iframe frameborder=0 SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
     }
   }
 
@@ -1122,8 +1122,8 @@ void printTrafficStatistics(int revertOrder) {
 			       formatBuf, sizeof(formatBuf)));
       sendString(buf);
 
-	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		   "<iframe frameborder=0 SRC=\"" CONST_PIE_FC_PKT_SZ_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+      sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+		 "<iframe frameborder=0 SRC=\"" CONST_PIE_FC_PKT_SZ_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>Packets&nbsp;too&nbsp;long [> %d]</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
@@ -1184,8 +1184,8 @@ void printTrafficStatistics(int revertOrder) {
     sendString(buf);
 
     if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value > 0)
-	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		   "<iframe frameborder=0 SRC=\"" CONST_PIE_IP_TRAFFIC  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+      sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+		 "<iframe frameborder=0 SRC=\"" CONST_PIE_IP_TRAFFIC  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 
     /* ********************* */
 
@@ -1332,25 +1332,25 @@ void printTrafficStatistics(int revertOrder) {
 		     (float)(myGlobals.actTime-myGlobals.initialSniffTime+1)));
       sendString(buf);
 
-      
+
 #if 0
       sendString("<script>if(hasSVGSupport) {\n");
       sendString("document.write(\"<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-		  "<embed src=\"/graph_if.svg\" width=\"400\" height=\"250\" type=\"image/svg+xml\" />"
-		  "</TH></TR>\n\"); }</script>\n");
- #endif
+		 "<embed src=\"/graph_if.svg\" width=\"400\" height=\"250\" type=\"image/svg+xml\" />"
+		 "</TH></TR>\n\"); }</script>\n");
+#endif
 
- #if 0
-     sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-		"<embed src=\"/bar.html\" width=\"400\" height=\"250\" SCROLLING=NO>"
-		"</TH></TR>\n");
+#if 0
+      sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
+		 "<embed src=\"/bar.html\" width=\"400\" height=\"250\" SCROLLING=NO>"
+		 "</TH></TR>\n");
 
- #endif
-       sendString("</TABLE>"TABLE_OFF"</TR>\n");
-     }
-   }
+#endif
+      sendString("</TABLE>"TABLE_OFF"</TR>\n");
+    }
+  }
 
-   /* ********************* */
+  /* ********************* */
 
   if(strcmp(myGlobals.device[0].name, "pcap-file")) {
     /* RRD */
@@ -1378,867 +1378,867 @@ void printTrafficStatistics(int revertOrder) {
 
   /* ********************* */
 
-   sendString("</TABLE></CENTER>\n");
-
-   if(!myGlobals.runningPref.printFcOnly) {
-     printProtoTraffic(TRUE);
-     sendString("<p>\n");
-     printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, TRUE);
-   }
-   if(!myGlobals.runningPref.printIpOnly) {
-     sendString("<p>\n");
-     printFcProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, TRUE);
-   }
- }
-
- /* ******************************* */
-
- int combineReportTypeLocality(int reportTypeReq, LocalityDisplayPolicy showLocalityMode) {
-   int rc = reportTypeReq;
-
-   switch(reportTypeReq) {
-   case SORT_DATA_HOST_TRAFFIC:
-     switch(showLocalityMode) {
-     case showOnlySent:
-       rc = SORT_DATA_SENT_HOST_TRAFFIC;
-       break;
-     case showOnlyReceived:
-       rc = SORT_DATA_RCVD_HOST_TRAFFIC;
-     default:
-       /* Nothign to do */
-       break;
-     }
-     break;
-   case SORT_DATA_PROTOS:
-     switch(showLocalityMode) {
-     case showOnlySent:
-       rc = SORT_DATA_SENT_PROTOS;
-       break;
-     case showOnlyReceived:
-       rc = SORT_DATA_RECEIVED_PROTOS;
-     default:
-       /* Nothign to do */
-       break;
-     }
-     break;
-   case SORT_DATA_IP:
-     switch(showLocalityMode) {
-     case showOnlySent:
-       rc = SORT_DATA_SENT_IP;
-       break;
-     case showOnlyReceived:
-       rc = SORT_DATA_RECEIVED_IP;
-     default:
-       /* Nothign to do */
-       break;
-     }
-     break;
-   case SORT_DATA_THPT:
-     switch(showLocalityMode) {
-     case showOnlySent:
-       rc = SORT_DATA_SENT_THPT;
-       break;
-     case showOnlyReceived:
-       rc = SORT_DATA_RECEIVED_THPT;
-     default:
-       /* Nothign to do */
-       break;
-     }
-     break;
-
-   default:
-     /* Nothing to do */
-     break;
-   }
-
-   return(rc);
- }
-
- /* ******************************* */
-
- void printHostsTraffic(int reportTypeReq,
-			int sortedColumn,
-			int revertOrder,
-			int pageNum,
-			char* url,
-			HostsDisplayPolicy showHostsMode,
-			LocalityDisplayPolicy showLocalityMode,
-			int vlanId) {
-   u_int idx, idx1, numEntries=0;
-   int printedEntries=0, hourId, maxHosts;
-   char theDate[8];
-   struct tm t;
-   HostTraffic *el;
-   HostTraffic** tmpTable;
-   char buf[LEN_GENERAL_WORK_BUFFER*2], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-   float sentPercent=0, rcvdPercent=0, totPercent=0;
-   Counter totIpBytesSent=0, totIpBytesRcvd=0, totIpBytes=0;
-   Counter totEthBytesSent=0, totEthBytesRcvd=0, totEthBytes=0;
-   ProtocolsList *protoList;
-   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32],
-     formatBuf4[32], formatBuf5[32], formatBuf6[32], formatBuf7[32],
-     formatBuf8[32], formatBuf9[32];
-   int reportType;
-   u_char *vlanList;
-
-   vlanList = calloc(1, MAX_VLAN); if(vlanList == NULL) return;
-   vlanId = abs(vlanId);
-
-   /* traceEvent(CONST_TRACE_INFO, "VLAN: %d", vlanId); */
-
-   reportType = combineReportTypeLocality(reportTypeReq, showLocalityMode);
-
-   memset(buf, 0, sizeof(buf));
-   switch(reportType) {
-   case SORT_DATA_RCVD_HOST_TRAFFIC:
-   case SORT_DATA_SENT_HOST_TRAFFIC:
-   case SORT_DATA_HOST_TRAFFIC:
-     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Network Activity: ");
-     break;
-   case SORT_DATA_RECEIVED_PROTOS:
-   case SORT_DATA_SENT_PROTOS:
-   case SORT_DATA_PROTOS:
-     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Network Traffic [All Protocols]: ");
-     break;
-   case SORT_DATA_RECEIVED_IP:
-   case SORT_DATA_SENT_IP:
-   case SORT_DATA_IP:
-     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Network Traffic [TCP/IP]: ");
-     break;
-   case SORT_DATA_RECEIVED_THPT:
-   case SORT_DATA_SENT_THPT:
-   case SORT_DATA_THPT:
-     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Network Throughput: ");
-     break;
-   default:
-     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "?: ");
-     break;
-   }
-
-   switch(showHostsMode) {
-   case showAllHosts:
-     strncat(buf, "All Hosts", (sizeof(buf) - strlen(buf) - 1));
-     break;
-   case showOnlyLocalHosts:
-     strncat(buf, "Local Hosts", (sizeof(buf) - strlen(buf) - 1));
-     break;
-   case showOnlyRemoteHosts:
-     strncat(buf, "Remote Hosts", (sizeof(buf) - strlen(buf) - 1));
-     break;
-   }
-
-   switch(showLocalityMode) {
-   case showSentReceived:
-     strncat(buf, " - Data Sent+Received", (sizeof(buf) - strlen(buf) - 1));
-     break;
-   case showOnlySent:
-     strncat(buf, " - Data Sent", (sizeof(buf) - strlen(buf) - 1));
-     break;
-   case showOnlyReceived:
-     strncat(buf, " - Data Received", (sizeof(buf) - strlen(buf) - 1));
-     break;
-   }
-
-   for(el=getFirstHost(myGlobals.actualReportDeviceId);
-       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el))
-     if((el->vlanId > 0) && (el->vlanId < MAX_VLAN)) vlanList[el->vlanId] = 1;
-
-   printHTMLheader(buf, NULL, 0);
-
-   printHeader(reportTypeReq, revertOrder, abs(sortedColumn), showHostsMode,
-	       showLocalityMode, (char*)vlanList, vlanId);
-
-   strftime(theDate, 8, CONST_TOD_HOUR_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
-   hourId = atoi(theDate);
-
-   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno;
-   /* save ths as it can change */
-
-   tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*),
-							 "printHostsTraffic");
-   if(tmpTable == NULL) {
-     free(vlanList);
-     return;
-   }
-
-   for(el=getFirstHost(myGlobals.actualReportDeviceId);
-       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-     if(!isFcHost (el) && (broadcastHost(el) == 0)) {
-       u_char addHost;
-
-       if((vlanId > 0) && (el->vlanId != vlanId)) continue;
-       if(el->community && (!isAllowedCommunity(el->community))) continue;
-
-       if(((showLocalityMode == showOnlySent) && (el->bytesSent.value > 0))
-	  || ((showLocalityMode == showOnlyReceived) && (el->bytesRcvd.value > 0))
-	  || ((showLocalityMode == showSentReceived) && (el->bytesSent.value + el->bytesRcvd.value > 0))) {
-	 if(((reportType == SORT_DATA_RECEIVED_IP)
-	     || (reportType == SORT_DATA_SENT_IP)
-	     || (reportType == SORT_DATA_IP))
-	    && (el->hostNumIpAddress[0] == '\0')) {
-	   continue;
-	 }
-
-	 addHost = 1;
-
-	 switch(myGlobals.hostsDisplayPolicy) {
-	 case showOnlyLocalHosts:
-	   if(!subnetPseudoLocalHost(el)) addHost = 0;
-	   break;
-	 case showOnlyRemoteHosts:
-	   if(subnetPseudoLocalHost(el)) addHost = 0;
-	   break;
-	 default:
-	   /* Nothign to do */
-	   break;
-	 }
-
-	 if(addHost) {
-	   tmpTable[numEntries++] = el;
-	   if(numEntries >= maxHosts)
-	     break;
-	 }
-       }
-     }
-   } /* for */
-
-   if(numEntries > 0) {
-     /*
-       The switch below is needed to:
-       - sort data according to the selected column
-       - 'recycle' (somebody would call this "code reuse") the cmpFctn function
-     */
-
-     if(sortedColumn == FLAG_HOST_DUMMY_IDX)
-       myGlobals.columnSort = FLAG_HOST_DUMMY_IDX; /* Host name */
-     else if(sortedColumn == FLAG_DOMAIN_DUMMY_IDX)
-       myGlobals.columnSort = FLAG_DOMAIN_DUMMY_IDX; /* domain name */
-     else
-       myGlobals.columnSort = sortedColumn;
-
- #ifdef DEBUG
-     traceEvent(CONST_TRACE_INFO, ">reportType=%d/sortedColumn=%d/myGlobals.columnSort=%d<",
-		reportType, sortedColumn, myGlobals.columnSort);
- #endif
-
-     myGlobals.reportKind = reportType;
-     /* if(myGlobals.columnSort == 0) myGlobals.reportKind = 0;*/
-
-     qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
-
-     switch(reportType) {
-     case SORT_DATA_RECEIVED_PROTOS:
-     case SORT_DATA_SENT_PROTOS:
-       totEthBytesSent = totEthBytesRcvd = 0;
-
-       for(idx=0; idx<numEntries; idx++) {
-	 if(tmpTable[idx] != NULL) {
-	   totEthBytesSent += tmpTable[idx]->bytesSent.value;
-	   totEthBytesRcvd += tmpTable[idx]->bytesRcvd.value;
-	 }
-       }
-
-       /* Avoid core dumps */
-       if(totEthBytesSent == 0) totEthBytesSent = 1;
-       if(totEthBytesRcvd == 0) totEthBytesRcvd = 1;
-       break;
-     case SORT_DATA_PROTOS:
-       totEthBytes = 0;
-
-       for(idx=0; idx<numEntries; idx++) {
-	 if(tmpTable[idx] != NULL) {
-	   totEthBytes += tmpTable[idx]->bytesSent.value +
-	     tmpTable[idx]->bytesRcvd.value;
-	 }
-       }
-
-       /* Avoid core dumps */
-       if(totEthBytes == 0) totEthBytes = 1;
-       break;
-     case SORT_DATA_RECEIVED_IP:
-     case SORT_DATA_SENT_IP:
-       totIpBytesSent = totIpBytesRcvd = 0;
-
-       for(idx=0; idx<numEntries; idx++) {
-	 if(tmpTable[idx] != NULL) {
-	   totIpBytesSent += tmpTable[idx]->ipBytesSent.value;
-	   totIpBytesRcvd += tmpTable[idx]->ipBytesRcvd.value;
-	 }
-       }
-
-       /* Avoid core dumps */
-       if(totIpBytesSent == 0) totIpBytesSent = 1;
-       if(totIpBytesRcvd == 0) totIpBytesRcvd = 1;
-       break;
-     case SORT_DATA_IP:
-       totIpBytes = 0;
-
-       for(idx=0; idx<numEntries; idx++) {
-	 if(tmpTable[idx] != NULL) {
-	   totIpBytes += tmpTable[idx]->ipBytesSent.value +
-	     tmpTable[idx]->ipBytesRcvd.value;
-	 }
-       }
-
-       /* Avoid core dumps */
-       if(totIpBytes == 0) totIpBytes = 1;
-       break;
-     }
-
- #ifdef DEBUG
-     traceEvent(CONST_TRACE_INFO, "totIpBytesSent=%u, totIpBytesRcvd=%u totIpBytes=%u",
-		totIpBytesSent, totIpBytesRcvd, totIpBytes);
- #endif
-
-     for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
-       int i;
-       char webHostName[LEN_GENERAL_WORK_BUFFER];
-
-       if(revertOrder)
-	 el = tmpTable[numEntries-idx-1];
-       else
-	 el = tmpTable[idx];
-
-       if(el != NULL) {
-	 switch(reportType) {
-	 case SORT_DATA_RECEIVED_PROTOS:
-	 case SORT_DATA_SENT_PROTOS:
-	   sentPercent = (100*(float)el->bytesSent.value)/totEthBytesSent;
-	   rcvdPercent = (100*(float)el->bytesRcvd.value)/totEthBytesRcvd;
-	   break;
-	 case SORT_DATA_PROTOS:
-	   totPercent = (100*(float) (el->bytesSent.value + el->bytesRcvd.value) )/totEthBytes;
-	   break;
-	 case SORT_DATA_RECEIVED_IP:
-	 case SORT_DATA_SENT_IP:
-	   sentPercent = (100*(float)el->ipBytesSent.value)/totIpBytesSent;
-	   rcvdPercent = (100*(float)el->ipBytesRcvd.value)/totIpBytesRcvd;
-	   break;
-	 case SORT_DATA_IP:
-	   totPercent = (100*(float) (el->ipBytesSent.value + el->ipBytesRcvd.value) )/totIpBytes;
-	   break;
-	 case SORT_DATA_RECEIVED_THPT:
-	 case SORT_DATA_RCVD_HOST_TRAFFIC:
-	 case SORT_DATA_SENT_HOST_TRAFFIC:
-	 case SORT_DATA_SENT_THPT:
-	 case TRAFFIC_STATS:
-	 case SORT_DATA_HOST_TRAFFIC:
-	 case SORT_DATA_THPT:
-	   sentPercent = rcvdPercent = 0;
-	   break;
-	 }
-
-	 /*
-	   Fixed buffer overflow.
-	   Courtesy of Rainer Tammer <rainer.tammer@spg.schulergroup.com>
-	 */
-	 strncpy(webHostName, makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1,
-					   hostLinkBuf, sizeof(hostLinkBuf)),
-		 sizeof(webHostName));
-
-	 switch(reportType) {
-	 case SORT_DATA_RECEIVED_PROTOS:
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			 getRowColor(), webHostName,
-			 formatBytes(el->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
-			 rcvdPercent, myGlobals.separator,
-			 formatBytes(el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value, 1, formatBuf1, sizeof(formatBuf1)),
-			 formatBytes(el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1, formatBuf2, sizeof(formatBuf2)),
-			 formatBytes(el->icmpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
-			 formatBytes(el->icmp6Rcvd.value, 1, formatBuf4, sizeof(formatBuf4)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->dlcRcvd.value, 1, formatBuf5, sizeof(formatBuf5)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->ipxRcvd.value, 1, formatBuf6, sizeof(formatBuf6)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->decnetRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpRcvd.value, 1, formatBuf8, sizeof(formatBuf8)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->appletalkRcvd.value, 1, formatBuf9, sizeof(formatBuf9))
-			 );
-	   sendString(buf);
-
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->osiRcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
-			 formatBytes(el->ipv6Rcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpRcvd.value, 1, formatBuf4, sizeof(formatBuf4)));
-	   sendString(buf);
-
-	   protoList = myGlobals.ipProtosList, idx1=0;
-	   while(protoList != NULL) {
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			   el->ipProtosList[idx1] != NULL ?
-			   formatBytes(el->ipProtosList[idx1]->rcvd.value, 1, formatBuf, sizeof(formatBuf)) : "0");
-	     sendString(buf);
-
-	     idx1++, protoList = protoList->next;
-	   }
-
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->otherRcvd.value, 1, formatBuf, sizeof(formatBuf)));
-	   sendString(buf);
-	   break;
-	 case SORT_DATA_SENT_PROTOS:
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			 getRowColor(), webHostName,
-			 formatBytes(el->bytesSent.value, 1, formatBuf, sizeof(formatBuf)), sentPercent, myGlobals.separator,
-			 formatBytes(el->tcpSentLoc.value+el->tcpSentRem.value, 1, formatBuf1, sizeof(formatBuf1)),
-			 formatBytes(el->udpSentLoc.value+el->udpSentRem.value, 1, formatBuf2, sizeof(formatBuf2)),
-			 formatBytes(el->icmpSent.value, 1, formatBuf3, sizeof(formatBuf3)),
-			 formatBytes(el->icmp6Sent.value, 1, formatBuf4, sizeof(formatBuf4)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->dlcSent.value, 1, formatBuf5, sizeof(formatBuf5)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->ipxSent.value, 1, formatBuf6, sizeof(formatBuf6)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->decnetSent.value, 1, formatBuf7, sizeof(formatBuf7)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpSent.value, 1, formatBuf8, sizeof(formatBuf8)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->appletalkSent.value, 1, formatBuf9, sizeof(formatBuf9))
-			 );
-
-	   sendString(buf);
-
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosSent.value, 1, formatBuf, sizeof(formatBuf)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->osiSent.value, 1, formatBuf1, sizeof(formatBuf1)),
-			 formatBytes(el->ipv6Sent.value, 1, formatBuf2, sizeof(formatBuf2)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpSent.value, 1, formatBuf3, sizeof(formatBuf3)));
-	   sendString(buf);
-
-	   protoList = myGlobals.ipProtosList, idx1=0;
-	   while(protoList != NULL) {
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			   el->ipProtosList[idx1] != NULL ?
-			   formatBytes(el->ipProtosList[idx1]->sent.value, 1,
-				       formatBuf, sizeof(formatBuf)) : "0");
-	     sendString(buf);
-
-	     idx1++, protoList = protoList->next;
-	   }
-
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->otherSent.value, 1, formatBuf, sizeof(formatBuf))
-			 );
-	   sendString(buf);
-	   break;
-	 case SORT_DATA_PROTOS:
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			 getRowColor(), webHostName,
-			 formatBytes(el->bytesSent.value+el->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
-			 totPercent, myGlobals.separator,
-			 formatBytes(el->tcpSentLoc.value+el->tcpSentRem.value+
-				     el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value, 1, formatBuf1, sizeof(formatBuf1)),
-			 formatBytes(el->udpSentLoc.value+el->udpSentRem.value+
-				     el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1, formatBuf2, sizeof(formatBuf2)),
-			 formatBytes(el->icmpSent.value+el->icmpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
-			 formatBytes(el->icmp6Sent.value+el->icmp6Rcvd.value, 1, formatBuf4, sizeof(formatBuf4)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->dlcSent.value+el->nonIPTraffic->dlcRcvd.value,
-				     1, formatBuf5, sizeof(formatBuf5)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->ipxSent.value+el->nonIPTraffic->ipxRcvd.value,
-				     1, formatBuf6, sizeof(formatBuf6)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->decnetSent.value+el->nonIPTraffic->decnetRcvd.value,
-				     1, formatBuf7, sizeof(formatBuf7)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpSent.value+el->nonIPTraffic->arp_rarpRcvd.value,
-				     1, formatBuf8, sizeof(formatBuf8)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->appletalkSent.value+el->nonIPTraffic->appletalkRcvd.value,
-				     1, formatBuf9, sizeof(formatBuf9))
-			 );
-
-	   sendString(buf);
-
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosSent.value+el->nonIPTraffic->netbiosRcvd.value,
-				     1, formatBuf, sizeof(formatBuf)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->osiSent.value+el->nonIPTraffic->osiRcvd.value,
-				     1, formatBuf1, sizeof(formatBuf1)),
-			 formatBytes(el->ipv6Sent.value+el->ipv6Rcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
-			 formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpSent.value+el->nonIPTraffic->stpRcvd.value,
-				     1, formatBuf3, sizeof(formatBuf3)));
-	   sendString(buf);
-
-	   protoList = myGlobals.ipProtosList, idx1=0;
-	   while(protoList != NULL) {
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			   el->ipProtosList[idx1] != NULL ?
-			   formatBytes(el->ipProtosList[idx1]->sent.value
-				       +el->ipProtosList[idx1]->rcvd.value, 1,
-				       formatBuf, sizeof(formatBuf)) : "0");
-	     sendString(buf);
-
-	     idx1++, protoList = protoList->next;
-	   }
-
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			 formatBytes(el->nonIPTraffic == NULL ? 0 :
-				     el->nonIPTraffic->otherSent.value+el->nonIPTraffic->otherRcvd.value,
-				     1, formatBuf, sizeof(formatBuf))
-			 );
-	   sendString(buf);
-
-	   break;
-	 case SORT_DATA_RECEIVED_IP:
-	   {
-	     Counter totalIPTraffic=0;
-
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
-			   "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
-			   getRowColor(), webHostName,
-			   formatBytes(el->ipBytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
-			   rcvdPercent, myGlobals.separator);
-	     sendString(buf);
-
-	     for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	       if(el->protoIPTrafficInfos[i])
-		 totalIPTraffic += el->protoIPTrafficInfos[i]->rcvdLoc.value+
-		   el->protoIPTrafficInfos[i]->rcvdFromRem.value;
-	       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			     el->protoIPTrafficInfos[i] ?
-			     formatBytes(el->protoIPTrafficInfos[i]->rcvdLoc.value+
-					 el->protoIPTrafficInfos[i]->rcvdFromRem.value, 1,
-					 formatBuf, sizeof(formatBuf)) : "0");
-	       sendString(buf);
-	     }
-
-	     /* Rounding may cause troubles */
-	     if(el->ipBytesRcvd.value > totalIPTraffic)
-	       totalIPTraffic = el->ipBytesRcvd.value - totalIPTraffic;
-	     else
-	       totalIPTraffic = 0;
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			   formatBytes(totalIPTraffic, 1, formatBuf, sizeof(formatBuf)));
-	     sendString(buf);
-	   }
-	   break;
-	 case SORT_DATA_SENT_IP:
-	   {
-	     Counter totalIPTraffic=0;
-
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
-			   "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
-			   getRowColor(), webHostName,
-			   formatBytes(el->ipBytesSent.value, 1, formatBuf, sizeof(formatBuf)),
-			   sentPercent, myGlobals.separator);
-	     sendString(buf);
-
-	     for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	       if(el->protoIPTrafficInfos[i])
-		 totalIPTraffic += el->protoIPTrafficInfos[i]->sentLoc.value+
-		   el->protoIPTrafficInfos[i]->sentRem.value;
-
-	       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			     el->protoIPTrafficInfos[i] ?
-			     formatBytes(el->protoIPTrafficInfos[i]->sentLoc.value+
-					 el->protoIPTrafficInfos[i]->sentRem.value, 1,
-					 formatBuf, sizeof(formatBuf)) : "0");
-	       sendString(buf);
-	     }
-
-	     /* Rounding may cause troubles */
-	     if(el->ipBytesSent.value > totalIPTraffic)
-	       totalIPTraffic = el->ipBytesSent.value - totalIPTraffic;
-	     else
-	       totalIPTraffic = 0;
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			   formatBytes(totalIPTraffic, 1, formatBuf, sizeof(formatBuf)));
-	     sendString(buf);
-	   }
-	   break;
-	 case SORT_DATA_IP:
-	   {
-	     Counter totalIPTraffic=0;
-
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
-			   "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
-			   getRowColor(), webHostName,
-			   formatBytes(el->ipBytesSent.value+el->ipBytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
-			   totPercent, myGlobals.separator);
-	     sendString(buf);
-
-	     for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	       if(el->protoIPTrafficInfos[i])
-		 totalIPTraffic += el->protoIPTrafficInfos[i]->sentLoc.value+
-		   el->protoIPTrafficInfos[i]->rcvdLoc.value+
-		   el->protoIPTrafficInfos[i]->sentRem.value+
-		   el->protoIPTrafficInfos[i]->rcvdFromRem.value;
-	       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			     el->protoIPTrafficInfos[i] ?
-			     formatBytes(el->protoIPTrafficInfos[i]->sentLoc.value+
-					 el->protoIPTrafficInfos[i]->rcvdLoc.value+
-					 el->protoIPTrafficInfos[i]->sentRem.value+
-					 el->protoIPTrafficInfos[i]->rcvdFromRem.value, 1,
-					 formatBuf, sizeof(formatBuf)) : "0");
-	       sendString(buf);
-	     }
-
-	     /* Rounding may cause troubles */
-	     if(el->ipBytesSent.value+el->ipBytesRcvd.value > totalIPTraffic)
-	       totalIPTraffic = el->ipBytesSent.value + el->ipBytesRcvd.value - totalIPTraffic;
-	     else
-	       totalIPTraffic = 0;
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			   formatBytes(totalIPTraffic, 1, formatBuf, sizeof(formatBuf)));
-	     sendString(buf);
-	   }
-	   break;
-	 case SORT_DATA_RECEIVED_THPT:
-	   {
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
-			   "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>",
-			   getRowColor(), webHostName,
-			   formatThroughput(el->actualRcvdThpt, 1, formatBuf, sizeof(formatBuf)),
-			   formatThroughput(el->averageRcvdThpt, 1, formatBuf1, sizeof(formatBuf1)),
-			   formatThroughput(el->peakRcvdThpt, 1, formatBuf2, sizeof(formatBuf2)),
-			   el->actualRcvdPktThpt,
-			   el->averageRcvdPktThpt,
-			   el->peakRcvdPktThpt);
-	     sendString(buf);
-	   }
-	   break;
-	 case SORT_DATA_SENT_THPT:
-	   {
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
-			   "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>",
-			   getRowColor(), webHostName,
-			   formatThroughput(el->actualSentThpt, 1, formatBuf, sizeof(formatBuf)),
-			   formatThroughput(el->averageSentThpt, 1, formatBuf1, sizeof(formatBuf1)),
-			   formatThroughput(el->peakSentThpt, 1, formatBuf2, sizeof(formatBuf2)),
-			   el->actualSentPktThpt,
-			   el->averageSentPktThpt,
-			   el->peakSentPktThpt);
-	     sendString(buf);
-	   }
-	   break;
-	 case SORT_DATA_THPT:
-	   {
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
-			   "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
-			   "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>",
-			   getRowColor(), webHostName,
-			   formatThroughput(el->actualTThpt, 1, formatBuf, sizeof(formatBuf)),
-			   formatThroughput(el->averageTThpt, 1, formatBuf1, sizeof(formatBuf1)),
-			   formatThroughput(el->peakTThpt, 1, formatBuf2, sizeof(formatBuf2)),
-			   el->actualTPktThpt,
-			   el->averageTPktThpt,
-			   el->peakTPktThpt);
-	     sendString(buf);
-	   }
-	   break;
-	 case SORT_DATA_RCVD_HOST_TRAFFIC:
-	 case SORT_DATA_SENT_HOST_TRAFFIC:
-	 case SORT_DATA_HOST_TRAFFIC:
-	 case TRAFFIC_STATS:
-	   {
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s>%s", getRowColor(), webHostName);
-	     sendString(buf);
-	     printHostThtpShort(el, reportType, hourId);
-	   }
-	   break;
-	 }
-
-	 sendString("</TR>\n");
-
-	 /* Avoid huge tables */
-	 if(printedEntries++ > myGlobals.runningPref.maxNumLines)
-	   break;
-       }
-     }
-   } else
-     idx = 0;
-
-   sendString("\n</TABLE>"TABLE_OFF"\n");
-
-   switch(reportType) {
-   case SORT_DATA_RCVD_HOST_TRAFFIC:
-   case SORT_DATA_SENT_HOST_TRAFFIC:
-   case SORT_DATA_HOST_TRAFFIC:
-   case SORT_DATA_RECEIVED_THPT:
-   case SORT_DATA_SENT_THPT:
-   case SORT_DATA_THPT:
-     break;
-   case SORT_DATA_RECEIVED_PROTOS:
-   case SORT_DATA_RECEIVED_IP:
-   case SORT_DATA_SENT_PROTOS:
-   case SORT_DATA_SENT_IP:
-   case SORT_DATA_PROTOS:
-   case SORT_DATA_IP:
-     sendString("<P><I>Note: These counters do not include broadcasts and will not equal the 'Global Protocol Distribution'</I></P>\n");
-     break;
-   }
-
-   sendString("</CENTER>\n");
-
-   printFooter(reportType);
-
-   addPageIndicator(url, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
-		    revertOrder, abs(sortedColumn), -1);
-
-   sendString("<p><b>NOTE</b>:</p>\n<ul>"
-	      "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> "
-	      "for more information about host and domain sorting.</li>\n"
-	      "</ul><p>\n");
-
-   myGlobals.lastRefreshTime = myGlobals.actTime;
-   free(vlanList);
-   free(tmpTable);
- }
-
- /* ******************************* */
-
- void printMulticastStats(int sortedColumn /* ignored so far */,
-			  int revertOrder,
-			  int pageNum) {
-   u_int idx, numEntries=0, maxHosts;
-   int printedEntries=0, i;
-   HostTraffic *el;
-   HostTraffic** tmpTable;
-   char buf[LEN_GENERAL_WORK_BUFFER], *sign, *theAnchor[6], *arrow[6], *arrowGif;
-   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32];
-   char htmlAnchor[64], htmlAnchor1[64], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-
-   printHTMLheader("Multicast Statistics", NULL, 0);
-
-   memset(buf, 0, sizeof(buf));
-   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
-
-   tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "printMulticastStats");
-   if(tmpTable == NULL)
-     return;
-
-   /* All the ALT tags courtesy of "Burton M. Strauss III" <BStrauss3@attbi.com> */
-   if(revertOrder) {
-     sign = "";
-     arrowGif = "&nbsp;" CONST_IMG_ARROW_UP;
-   } else {
-     sign = "-";
-     arrowGif = "&nbsp;" CONST_IMG_ARROW_DOWN;
-   }
-
-   for(el=getFirstHost(myGlobals.actualReportDeviceId);
-       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-     if(((el->pktMulticastSent.value > 0) || (el->pktMulticastRcvd.value > 0))
-	&& (!broadcastHost(el))) {
-       if(el->community && (!isAllowedCommunity(el->community))) continue;
-       tmpTable[numEntries++] = el;
-     }
-
-     if(numEntries >= maxHosts)
-       break;
-   }
-
-   if(numEntries > 0) {
-     myGlobals.columnSort = sortedColumn; /* Host name */
-
-     safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", CONST_MULTICAST_STATS_HTML, sign);
-     safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", CONST_MULTICAST_STATS_HTML);
-
-     for(i=0; i<=5; i++)
-       if(abs(myGlobals.columnSort) == i)
-	 arrow[i] = arrowGif, theAnchor[i] = htmlAnchor;
-       else
-	 arrow[i] = "", theAnchor[i] = htmlAnchor1;
-
-     sendString("<CENTER>\n");
-     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		   ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG">%s0>Host%s</A></TH>\n"
-		   "<TH "TH_BG">%s1>Domain%s</A></TH>"
-		   "<TH "TH_BG">%s2>Pkts Sent%s</A></TH>"
-		   "<TH "TH_BG">%s3>Data Sent%s</A></TH>"
-		   "<TH "TH_BG">%s4>Pkts Rcvd%s</A></TH>"
-		   "<TH "TH_BG">%s5>Data Rcvd%s</A></TH>"
-		   "</TR>\n",
-		   theAnchor[0], arrow[0],
-		   theAnchor[1], arrow[1],
-		   theAnchor[2], arrow[2],
-		   theAnchor[3], arrow[3],
-		   theAnchor[4], arrow[4],
-		   theAnchor[5], arrow[5]
-		   );
-     sendString(buf);
-
-     qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpMulticastFctn);
-
-     for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
-       if(revertOrder)
-	 el = tmpTable[numEntries-idx-1];
-       else
-	 el = tmpTable[idx];
-
-       if(el != NULL) {
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
-		       "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		       "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		       "</TR>\n",
-		       getRowColor(), makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1, hostLinkBuf, sizeof(hostLinkBuf)),
-		       formatPkts(el->pktMulticastSent.value, formatBuf, sizeof(formatBuf)),
-		       formatBytes(el->bytesMulticastSent.value, 1, formatBuf1, sizeof(formatBuf1)),
-		       formatPkts(el->pktMulticastRcvd.value, formatBuf2, sizeof(formatBuf2)),
-		       formatBytes(el->bytesMulticastRcvd.value, 1, formatBuf3, sizeof(formatBuf3)));
-
-	 sendString(buf);
-
-	 /* Avoid huge tables */
-	 if(printedEntries++ > myGlobals.runningPref.maxNumLines)
-	   break;
-       }
-     }
-
-     sendString("</TABLE>"TABLE_OFF"\n");
-     sendString("</CENTER>\n");
-
-     addPageIndicator(CONST_MULTICAST_STATS_HTML, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
-		      revertOrder, abs(sortedColumn), -1);
-
-     printFooterHostLink();
-
-   } else
-     printNoDataYet();
-
-   free(tmpTable);
-
-   sendString("<P ALIGN=right><A class=external HREF=http://www.iana.org/assignments/multicast-addresses>List</A> of multicast addresses</P>\n");
- }
-
- /* ****************************************************************** */
+  sendString("</TABLE></CENTER>\n");
+
+  if(!myGlobals.runningPref.printFcOnly) {
+    printProtoTraffic(TRUE);
+    sendString("<p>\n");
+    printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, TRUE);
+  }
+  if(!myGlobals.runningPref.printIpOnly) {
+    sendString("<p>\n");
+    printFcProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, TRUE);
+  }
+}
+
+/* ******************************* */
+
+int combineReportTypeLocality(int reportTypeReq, LocalityDisplayPolicy showLocalityMode) {
+  int rc = reportTypeReq;
+
+  switch(reportTypeReq) {
+  case SORT_DATA_HOST_TRAFFIC:
+    switch(showLocalityMode) {
+    case showOnlySent:
+      rc = SORT_DATA_SENT_HOST_TRAFFIC;
+      break;
+    case showOnlyReceived:
+      rc = SORT_DATA_RCVD_HOST_TRAFFIC;
+    default:
+      /* Nothign to do */
+      break;
+    }
+    break;
+  case SORT_DATA_PROTOS:
+    switch(showLocalityMode) {
+    case showOnlySent:
+      rc = SORT_DATA_SENT_PROTOS;
+      break;
+    case showOnlyReceived:
+      rc = SORT_DATA_RECEIVED_PROTOS;
+    default:
+      /* Nothign to do */
+      break;
+    }
+    break;
+  case SORT_DATA_IP:
+    switch(showLocalityMode) {
+    case showOnlySent:
+      rc = SORT_DATA_SENT_IP;
+      break;
+    case showOnlyReceived:
+      rc = SORT_DATA_RECEIVED_IP;
+    default:
+      /* Nothign to do */
+      break;
+    }
+    break;
+  case SORT_DATA_THPT:
+    switch(showLocalityMode) {
+    case showOnlySent:
+      rc = SORT_DATA_SENT_THPT;
+      break;
+    case showOnlyReceived:
+      rc = SORT_DATA_RECEIVED_THPT;
+    default:
+      /* Nothign to do */
+      break;
+    }
+    break;
+
+  default:
+    /* Nothing to do */
+    break;
+  }
+
+  return(rc);
+}
+
+/* ******************************* */
+
+void printHostsTraffic(int reportTypeReq,
+		       int sortedColumn,
+		       int revertOrder,
+		       int pageNum,
+		       char* url,
+		       HostsDisplayPolicy showHostsMode,
+		       LocalityDisplayPolicy showLocalityMode,
+		       int vlanId) {
+  u_int idx, idx1, numEntries=0;
+  int printedEntries=0, hourId, maxHosts;
+  char theDate[8];
+  struct tm t;
+  HostTraffic *el;
+  HostTraffic** tmpTable;
+  char buf[LEN_GENERAL_WORK_BUFFER*2], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  float sentPercent=0, rcvdPercent=0, totPercent=0;
+  Counter totIpBytesSent=0, totIpBytesRcvd=0, totIpBytes=0;
+  Counter totEthBytesSent=0, totEthBytesRcvd=0, totEthBytes=0;
+  ProtocolsList *protoList;
+  char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32],
+    formatBuf4[32], formatBuf5[32], formatBuf6[32], formatBuf7[32],
+    formatBuf8[32], formatBuf9[32];
+  int reportType;
+  u_char *vlanList;
+
+  vlanList = calloc(1, MAX_VLAN); if(vlanList == NULL) return;
+  vlanId = abs(vlanId);
+
+  /* traceEvent(CONST_TRACE_INFO, "VLAN: %d", vlanId); */
+
+  reportType = combineReportTypeLocality(reportTypeReq, showLocalityMode);
+
+  memset(buf, 0, sizeof(buf));
+  switch(reportType) {
+  case SORT_DATA_RCVD_HOST_TRAFFIC:
+  case SORT_DATA_SENT_HOST_TRAFFIC:
+  case SORT_DATA_HOST_TRAFFIC:
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Network Activity: ");
+    break;
+  case SORT_DATA_RECEIVED_PROTOS:
+  case SORT_DATA_SENT_PROTOS:
+  case SORT_DATA_PROTOS:
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Network Traffic [All Protocols]: ");
+    break;
+  case SORT_DATA_RECEIVED_IP:
+  case SORT_DATA_SENT_IP:
+  case SORT_DATA_IP:
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Network Traffic [TCP/IP]: ");
+    break;
+  case SORT_DATA_RECEIVED_THPT:
+  case SORT_DATA_SENT_THPT:
+  case SORT_DATA_THPT:
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Network Throughput: ");
+    break;
+  default:
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "?: ");
+    break;
+  }
+
+  switch(showHostsMode) {
+  case showAllHosts:
+    strncat(buf, "All Hosts", (sizeof(buf) - strlen(buf) - 1));
+    break;
+  case showOnlyLocalHosts:
+    strncat(buf, "Local Hosts", (sizeof(buf) - strlen(buf) - 1));
+    break;
+  case showOnlyRemoteHosts:
+    strncat(buf, "Remote Hosts", (sizeof(buf) - strlen(buf) - 1));
+    break;
+  }
+
+  switch(showLocalityMode) {
+  case showSentReceived:
+    strncat(buf, " - Data Sent+Received", (sizeof(buf) - strlen(buf) - 1));
+    break;
+  case showOnlySent:
+    strncat(buf, " - Data Sent", (sizeof(buf) - strlen(buf) - 1));
+    break;
+  case showOnlyReceived:
+    strncat(buf, " - Data Received", (sizeof(buf) - strlen(buf) - 1));
+    break;
+  }
+
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
+      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el))
+    if((el->vlanId > 0) && (el->vlanId < MAX_VLAN)) vlanList[el->vlanId] = 1;
+
+  printHTMLheader(buf, NULL, 0);
+
+  printHeader(reportTypeReq, revertOrder, abs(sortedColumn), showHostsMode,
+	      showLocalityMode, (char*)vlanList, vlanId);
+
+  strftime(theDate, 8, CONST_TOD_HOUR_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
+  hourId = atoi(theDate);
+
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno;
+  /* save ths as it can change */
+
+  tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*),
+							"printHostsTraffic");
+  if(tmpTable == NULL) {
+    free(vlanList);
+    return;
+  }
+
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
+      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+    if(!isFcHost (el) && (broadcastHost(el) == 0)) {
+      u_char addHost;
+
+      if((vlanId > 0) && (el->vlanId != vlanId)) continue;
+      if(el->community && (!isAllowedCommunity(el->community))) continue;
+
+      if(((showLocalityMode == showOnlySent) && (el->bytesSent.value > 0))
+	 || ((showLocalityMode == showOnlyReceived) && (el->bytesRcvd.value > 0))
+	 || ((showLocalityMode == showSentReceived) && (el->bytesSent.value + el->bytesRcvd.value > 0))) {
+	if(((reportType == SORT_DATA_RECEIVED_IP)
+	    || (reportType == SORT_DATA_SENT_IP)
+	    || (reportType == SORT_DATA_IP))
+	   && (el->hostNumIpAddress[0] == '\0')) {
+	  continue;
+	}
+
+	addHost = 1;
+
+	switch(myGlobals.hostsDisplayPolicy) {
+	case showOnlyLocalHosts:
+	  if(!subnetPseudoLocalHost(el)) addHost = 0;
+	  break;
+	case showOnlyRemoteHosts:
+	  if(subnetPseudoLocalHost(el)) addHost = 0;
+	  break;
+	default:
+	  /* Nothign to do */
+	  break;
+	}
+
+	if(addHost) {
+	  tmpTable[numEntries++] = el;
+	  if(numEntries >= maxHosts)
+	    break;
+	}
+      }
+    }
+  } /* for */
+
+  if(numEntries > 0) {
+    /*
+      The switch below is needed to:
+      - sort data according to the selected column
+      - 'recycle' (somebody would call this "code reuse") the cmpFctn function
+    */
+
+    if(sortedColumn == FLAG_HOST_DUMMY_IDX)
+      myGlobals.columnSort = FLAG_HOST_DUMMY_IDX; /* Host name */
+    else if(sortedColumn == FLAG_DOMAIN_DUMMY_IDX)
+      myGlobals.columnSort = FLAG_DOMAIN_DUMMY_IDX; /* domain name */
+    else
+      myGlobals.columnSort = sortedColumn;
+
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, ">reportType=%d/sortedColumn=%d/myGlobals.columnSort=%d<",
+	       reportType, sortedColumn, myGlobals.columnSort);
+#endif
+
+    myGlobals.reportKind = reportType;
+    /* if(myGlobals.columnSort == 0) myGlobals.reportKind = 0;*/
+
+    qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
+
+    switch(reportType) {
+    case SORT_DATA_RECEIVED_PROTOS:
+    case SORT_DATA_SENT_PROTOS:
+      totEthBytesSent = totEthBytesRcvd = 0;
+
+      for(idx=0; idx<numEntries; idx++) {
+	if(tmpTable[idx] != NULL) {
+	  totEthBytesSent += tmpTable[idx]->bytesSent.value;
+	  totEthBytesRcvd += tmpTable[idx]->bytesRcvd.value;
+	}
+      }
+
+      /* Avoid core dumps */
+      if(totEthBytesSent == 0) totEthBytesSent = 1;
+      if(totEthBytesRcvd == 0) totEthBytesRcvd = 1;
+      break;
+    case SORT_DATA_PROTOS:
+      totEthBytes = 0;
+
+      for(idx=0; idx<numEntries; idx++) {
+	if(tmpTable[idx] != NULL) {
+	  totEthBytes += tmpTable[idx]->bytesSent.value +
+	    tmpTable[idx]->bytesRcvd.value;
+	}
+      }
+
+      /* Avoid core dumps */
+      if(totEthBytes == 0) totEthBytes = 1;
+      break;
+    case SORT_DATA_RECEIVED_IP:
+    case SORT_DATA_SENT_IP:
+      totIpBytesSent = totIpBytesRcvd = 0;
+
+      for(idx=0; idx<numEntries; idx++) {
+	if(tmpTable[idx] != NULL) {
+	  totIpBytesSent += tmpTable[idx]->ipBytesSent.value;
+	  totIpBytesRcvd += tmpTable[idx]->ipBytesRcvd.value;
+	}
+      }
+
+      /* Avoid core dumps */
+      if(totIpBytesSent == 0) totIpBytesSent = 1;
+      if(totIpBytesRcvd == 0) totIpBytesRcvd = 1;
+      break;
+    case SORT_DATA_IP:
+      totIpBytes = 0;
+
+      for(idx=0; idx<numEntries; idx++) {
+	if(tmpTable[idx] != NULL) {
+	  totIpBytes += tmpTable[idx]->ipBytesSent.value +
+	    tmpTable[idx]->ipBytesRcvd.value;
+	}
+      }
+
+      /* Avoid core dumps */
+      if(totIpBytes == 0) totIpBytes = 1;
+      break;
+    }
+
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "totIpBytesSent=%u, totIpBytesRcvd=%u totIpBytes=%u",
+	       totIpBytesSent, totIpBytesRcvd, totIpBytes);
+#endif
+
+    for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
+      int i;
+      char webHostName[LEN_GENERAL_WORK_BUFFER];
+
+      if(revertOrder)
+	el = tmpTable[numEntries-idx-1];
+      else
+	el = tmpTable[idx];
+
+      if(el != NULL) {
+	switch(reportType) {
+	case SORT_DATA_RECEIVED_PROTOS:
+	case SORT_DATA_SENT_PROTOS:
+	  sentPercent = (100*(float)el->bytesSent.value)/totEthBytesSent;
+	  rcvdPercent = (100*(float)el->bytesRcvd.value)/totEthBytesRcvd;
+	  break;
+	case SORT_DATA_PROTOS:
+	  totPercent = (100*(float) (el->bytesSent.value + el->bytesRcvd.value) )/totEthBytes;
+	  break;
+	case SORT_DATA_RECEIVED_IP:
+	case SORT_DATA_SENT_IP:
+	  sentPercent = (100*(float)el->ipBytesSent.value)/totIpBytesSent;
+	  rcvdPercent = (100*(float)el->ipBytesRcvd.value)/totIpBytesRcvd;
+	  break;
+	case SORT_DATA_IP:
+	  totPercent = (100*(float) (el->ipBytesSent.value + el->ipBytesRcvd.value) )/totIpBytes;
+	  break;
+	case SORT_DATA_RECEIVED_THPT:
+	case SORT_DATA_RCVD_HOST_TRAFFIC:
+	case SORT_DATA_SENT_HOST_TRAFFIC:
+	case SORT_DATA_SENT_THPT:
+	case TRAFFIC_STATS:
+	case SORT_DATA_HOST_TRAFFIC:
+	case SORT_DATA_THPT:
+	  sentPercent = rcvdPercent = 0;
+	  break;
+	}
+
+	/*
+	  Fixed buffer overflow.
+	  Courtesy of Rainer Tammer <rainer.tammer@spg.schulergroup.com>
+	*/
+	strncpy(webHostName, makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1,
+					  hostLinkBuf, sizeof(hostLinkBuf)),
+		sizeof(webHostName));
+
+	switch(reportType) {
+	case SORT_DATA_RECEIVED_PROTOS:
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			getRowColor(), webHostName,
+			formatBytes(el->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
+			rcvdPercent, myGlobals.separator,
+			formatBytes(el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value, 1, formatBuf1, sizeof(formatBuf1)),
+			formatBytes(el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1, formatBuf2, sizeof(formatBuf2)),
+			formatBytes(el->icmpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
+			formatBytes(el->icmp6Rcvd.value, 1, formatBuf4, sizeof(formatBuf4)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->dlcRcvd.value, 1, formatBuf5, sizeof(formatBuf5)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->ipxRcvd.value, 1, formatBuf6, sizeof(formatBuf6)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->decnetRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpRcvd.value, 1, formatBuf8, sizeof(formatBuf8)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->appletalkRcvd.value, 1, formatBuf9, sizeof(formatBuf9))
+			);
+	  sendString(buf);
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->osiRcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
+			formatBytes(el->ipv6Rcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpRcvd.value, 1, formatBuf4, sizeof(formatBuf4)));
+	  sendString(buf);
+
+	  protoList = myGlobals.ipProtosList, idx1=0;
+	  while(protoList != NULL) {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			  el->ipProtosList[idx1] != NULL ?
+			  formatBytes(el->ipProtosList[idx1]->rcvd.value, 1, formatBuf, sizeof(formatBuf)) : "0");
+	    sendString(buf);
+
+	    idx1++, protoList = protoList->next;
+	  }
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->otherRcvd.value, 1, formatBuf, sizeof(formatBuf)));
+	  sendString(buf);
+	  break;
+	case SORT_DATA_SENT_PROTOS:
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			getRowColor(), webHostName,
+			formatBytes(el->bytesSent.value, 1, formatBuf, sizeof(formatBuf)), sentPercent, myGlobals.separator,
+			formatBytes(el->tcpSentLoc.value+el->tcpSentRem.value, 1, formatBuf1, sizeof(formatBuf1)),
+			formatBytes(el->udpSentLoc.value+el->udpSentRem.value, 1, formatBuf2, sizeof(formatBuf2)),
+			formatBytes(el->icmpSent.value, 1, formatBuf3, sizeof(formatBuf3)),
+			formatBytes(el->icmp6Sent.value, 1, formatBuf4, sizeof(formatBuf4)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->dlcSent.value, 1, formatBuf5, sizeof(formatBuf5)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->ipxSent.value, 1, formatBuf6, sizeof(formatBuf6)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->decnetSent.value, 1, formatBuf7, sizeof(formatBuf7)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpSent.value, 1, formatBuf8, sizeof(formatBuf8)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->appletalkSent.value, 1, formatBuf9, sizeof(formatBuf9))
+			);
+
+	  sendString(buf);
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosSent.value, 1, formatBuf, sizeof(formatBuf)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->osiSent.value, 1, formatBuf1, sizeof(formatBuf1)),
+			formatBytes(el->ipv6Sent.value, 1, formatBuf2, sizeof(formatBuf2)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpSent.value, 1, formatBuf3, sizeof(formatBuf3)));
+	  sendString(buf);
+
+	  protoList = myGlobals.ipProtosList, idx1=0;
+	  while(protoList != NULL) {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			  el->ipProtosList[idx1] != NULL ?
+			  formatBytes(el->ipProtosList[idx1]->sent.value, 1,
+				      formatBuf, sizeof(formatBuf)) : "0");
+	    sendString(buf);
+
+	    idx1++, protoList = protoList->next;
+	  }
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->otherSent.value, 1, formatBuf, sizeof(formatBuf))
+			);
+	  sendString(buf);
+	  break;
+	case SORT_DATA_PROTOS:
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			getRowColor(), webHostName,
+			formatBytes(el->bytesSent.value+el->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
+			totPercent, myGlobals.separator,
+			formatBytes(el->tcpSentLoc.value+el->tcpSentRem.value+
+				    el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value, 1, formatBuf1, sizeof(formatBuf1)),
+			formatBytes(el->udpSentLoc.value+el->udpSentRem.value+
+				    el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1, formatBuf2, sizeof(formatBuf2)),
+			formatBytes(el->icmpSent.value+el->icmpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
+			formatBytes(el->icmp6Sent.value+el->icmp6Rcvd.value, 1, formatBuf4, sizeof(formatBuf4)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->dlcSent.value+el->nonIPTraffic->dlcRcvd.value,
+				    1, formatBuf5, sizeof(formatBuf5)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->ipxSent.value+el->nonIPTraffic->ipxRcvd.value,
+				    1, formatBuf6, sizeof(formatBuf6)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->decnetSent.value+el->nonIPTraffic->decnetRcvd.value,
+				    1, formatBuf7, sizeof(formatBuf7)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpSent.value+el->nonIPTraffic->arp_rarpRcvd.value,
+				    1, formatBuf8, sizeof(formatBuf8)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->appletalkSent.value+el->nonIPTraffic->appletalkRcvd.value,
+				    1, formatBuf9, sizeof(formatBuf9))
+			);
+
+	  sendString(buf);
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosSent.value+el->nonIPTraffic->netbiosRcvd.value,
+				    1, formatBuf, sizeof(formatBuf)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->osiSent.value+el->nonIPTraffic->osiRcvd.value,
+				    1, formatBuf1, sizeof(formatBuf1)),
+			formatBytes(el->ipv6Sent.value+el->ipv6Rcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpSent.value+el->nonIPTraffic->stpRcvd.value,
+				    1, formatBuf3, sizeof(formatBuf3)));
+	  sendString(buf);
+
+	  protoList = myGlobals.ipProtosList, idx1=0;
+	  while(protoList != NULL) {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			  el->ipProtosList[idx1] != NULL ?
+			  formatBytes(el->ipProtosList[idx1]->sent.value
+				      +el->ipProtosList[idx1]->rcvd.value, 1,
+				      formatBuf, sizeof(formatBuf)) : "0");
+	    sendString(buf);
+
+	    idx1++, protoList = protoList->next;
+	  }
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			formatBytes(el->nonIPTraffic == NULL ? 0 :
+				    el->nonIPTraffic->otherSent.value+el->nonIPTraffic->otherRcvd.value,
+				    1, formatBuf, sizeof(formatBuf))
+			);
+	  sendString(buf);
+
+	  break;
+	case SORT_DATA_RECEIVED_IP:
+	  {
+	    Counter totalIPTraffic=0;
+
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
+			  getRowColor(), webHostName,
+			  formatBytes(el->ipBytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
+			  rcvdPercent, myGlobals.separator);
+	    sendString(buf);
+
+	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	      if(el->protoIPTrafficInfos[i])
+		totalIPTraffic += el->protoIPTrafficInfos[i]->rcvdLoc.value+
+		  el->protoIPTrafficInfos[i]->rcvdFromRem.value;
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			    el->protoIPTrafficInfos[i] ?
+			    formatBytes(el->protoIPTrafficInfos[i]->rcvdLoc.value+
+					el->protoIPTrafficInfos[i]->rcvdFromRem.value, 1,
+					formatBuf, sizeof(formatBuf)) : "0");
+	      sendString(buf);
+	    }
+
+	    /* Rounding may cause troubles */
+	    if(el->ipBytesRcvd.value > totalIPTraffic)
+	      totalIPTraffic = el->ipBytesRcvd.value - totalIPTraffic;
+	    else
+	      totalIPTraffic = 0;
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			  formatBytes(totalIPTraffic, 1, formatBuf, sizeof(formatBuf)));
+	    sendString(buf);
+	  }
+	  break;
+	case SORT_DATA_SENT_IP:
+	  {
+	    Counter totalIPTraffic=0;
+
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
+			  getRowColor(), webHostName,
+			  formatBytes(el->ipBytesSent.value, 1, formatBuf, sizeof(formatBuf)),
+			  sentPercent, myGlobals.separator);
+	    sendString(buf);
+
+	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	      if(el->protoIPTrafficInfos[i])
+		totalIPTraffic += el->protoIPTrafficInfos[i]->sentLoc.value+
+		  el->protoIPTrafficInfos[i]->sentRem.value;
+
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			    el->protoIPTrafficInfos[i] ?
+			    formatBytes(el->protoIPTrafficInfos[i]->sentLoc.value+
+					el->protoIPTrafficInfos[i]->sentRem.value, 1,
+					formatBuf, sizeof(formatBuf)) : "0");
+	      sendString(buf);
+	    }
+
+	    /* Rounding may cause troubles */
+	    if(el->ipBytesSent.value > totalIPTraffic)
+	      totalIPTraffic = el->ipBytesSent.value - totalIPTraffic;
+	    else
+	      totalIPTraffic = 0;
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			  formatBytes(totalIPTraffic, 1, formatBuf, sizeof(formatBuf)));
+	    sendString(buf);
+	  }
+	  break;
+	case SORT_DATA_IP:
+	  {
+	    Counter totalIPTraffic=0;
+
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
+			  getRowColor(), webHostName,
+			  formatBytes(el->ipBytesSent.value+el->ipBytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
+			  totPercent, myGlobals.separator);
+	    sendString(buf);
+
+	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	      if(el->protoIPTrafficInfos[i])
+		totalIPTraffic += el->protoIPTrafficInfos[i]->sentLoc.value+
+		  el->protoIPTrafficInfos[i]->rcvdLoc.value+
+		  el->protoIPTrafficInfos[i]->sentRem.value+
+		  el->protoIPTrafficInfos[i]->rcvdFromRem.value;
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			    el->protoIPTrafficInfos[i] ?
+			    formatBytes(el->protoIPTrafficInfos[i]->sentLoc.value+
+					el->protoIPTrafficInfos[i]->rcvdLoc.value+
+					el->protoIPTrafficInfos[i]->sentRem.value+
+					el->protoIPTrafficInfos[i]->rcvdFromRem.value, 1,
+					formatBuf, sizeof(formatBuf)) : "0");
+	      sendString(buf);
+	    }
+
+	    /* Rounding may cause troubles */
+	    if(el->ipBytesSent.value+el->ipBytesRcvd.value > totalIPTraffic)
+	      totalIPTraffic = el->ipBytesSent.value + el->ipBytesRcvd.value - totalIPTraffic;
+	    else
+	      totalIPTraffic = 0;
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			  formatBytes(totalIPTraffic, 1, formatBuf, sizeof(formatBuf)));
+	    sendString(buf);
+	  }
+	  break;
+	case SORT_DATA_RECEIVED_THPT:
+	  {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>",
+			  getRowColor(), webHostName,
+			  formatThroughput(el->actualRcvdThpt, 1, formatBuf, sizeof(formatBuf)),
+			  formatThroughput(el->averageRcvdThpt, 1, formatBuf1, sizeof(formatBuf1)),
+			  formatThroughput(el->peakRcvdThpt, 1, formatBuf2, sizeof(formatBuf2)),
+			  el->actualRcvdPktThpt,
+			  el->averageRcvdPktThpt,
+			  el->peakRcvdPktThpt);
+	    sendString(buf);
+	  }
+	  break;
+	case SORT_DATA_SENT_THPT:
+	  {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>",
+			  getRowColor(), webHostName,
+			  formatThroughput(el->actualSentThpt, 1, formatBuf, sizeof(formatBuf)),
+			  formatThroughput(el->averageSentThpt, 1, formatBuf1, sizeof(formatBuf1)),
+			  formatThroughput(el->peakSentThpt, 1, formatBuf2, sizeof(formatBuf2)),
+			  el->actualSentPktThpt,
+			  el->averageSentPktThpt,
+			  el->peakSentPktThpt);
+	    sendString(buf);
+	  }
+	  break;
+	case SORT_DATA_THPT:
+	  {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>",
+			  getRowColor(), webHostName,
+			  formatThroughput(el->actualTThpt, 1, formatBuf, sizeof(formatBuf)),
+			  formatThroughput(el->averageTThpt, 1, formatBuf1, sizeof(formatBuf1)),
+			  formatThroughput(el->peakTThpt, 1, formatBuf2, sizeof(formatBuf2)),
+			  el->actualTPktThpt,
+			  el->averageTPktThpt,
+			  el->peakTPktThpt);
+	    sendString(buf);
+	  }
+	  break;
+	case SORT_DATA_RCVD_HOST_TRAFFIC:
+	case SORT_DATA_SENT_HOST_TRAFFIC:
+	case SORT_DATA_HOST_TRAFFIC:
+	case TRAFFIC_STATS:
+	  {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s>%s", getRowColor(), webHostName);
+	    sendString(buf);
+	    printHostThtpShort(el, reportType, hourId);
+	  }
+	  break;
+	}
+
+	sendString("</TR>\n");
+
+	/* Avoid huge tables */
+	if(printedEntries++ > myGlobals.runningPref.maxNumLines)
+	  break;
+      }
+    }
+  } else
+    idx = 0;
+
+  sendString("\n</TABLE>"TABLE_OFF"\n");
+
+  switch(reportType) {
+  case SORT_DATA_RCVD_HOST_TRAFFIC:
+  case SORT_DATA_SENT_HOST_TRAFFIC:
+  case SORT_DATA_HOST_TRAFFIC:
+  case SORT_DATA_RECEIVED_THPT:
+  case SORT_DATA_SENT_THPT:
+  case SORT_DATA_THPT:
+    break;
+  case SORT_DATA_RECEIVED_PROTOS:
+  case SORT_DATA_RECEIVED_IP:
+  case SORT_DATA_SENT_PROTOS:
+  case SORT_DATA_SENT_IP:
+  case SORT_DATA_PROTOS:
+  case SORT_DATA_IP:
+    sendString("<P><I>Note: These counters do not include broadcasts and will not equal the 'Global Protocol Distribution'</I></P>\n");
+    break;
+  }
+
+  sendString("</CENTER>\n");
+
+  printFooter(reportType);
+
+  addPageIndicator(url, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
+		   revertOrder, abs(sortedColumn), -1);
+
+  sendString("<p><b>NOTE</b>:</p>\n<ul>"
+	     "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> "
+	     "for more information about host and domain sorting.</li>\n"
+	     "</ul><p>\n");
+
+  myGlobals.lastRefreshTime = myGlobals.actTime;
+  free(vlanList);
+  free(tmpTable);
+}
+
+/* ******************************* */
+
+void printMulticastStats(int sortedColumn /* ignored so far */,
+			 int revertOrder,
+			 int pageNum) {
+  u_int idx, numEntries=0, maxHosts;
+  int printedEntries=0, i;
+  HostTraffic *el;
+  HostTraffic** tmpTable;
+  char buf[LEN_GENERAL_WORK_BUFFER], *sign, *theAnchor[6], *arrow[6], *arrowGif;
+  char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32];
+  char htmlAnchor[64], htmlAnchor1[64], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+
+  printHTMLheader("Multicast Statistics", NULL, 0);
+
+  memset(buf, 0, sizeof(buf));
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+
+  tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "printMulticastStats");
+  if(tmpTable == NULL)
+    return;
+
+  /* All the ALT tags courtesy of "Burton M. Strauss III" <BStrauss3@attbi.com> */
+  if(revertOrder) {
+    sign = "";
+    arrowGif = "&nbsp;" CONST_IMG_ARROW_UP;
+  } else {
+    sign = "-";
+    arrowGif = "&nbsp;" CONST_IMG_ARROW_DOWN;
+  }
+
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
+      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+    if(((el->pktMulticastSent.value > 0) || (el->pktMulticastRcvd.value > 0))
+       && (!broadcastHost(el))) {
+      if(el->community && (!isAllowedCommunity(el->community))) continue;
+      tmpTable[numEntries++] = el;
+    }
+
+    if(numEntries >= maxHosts)
+      break;
+  }
+
+  if(numEntries > 0) {
+    myGlobals.columnSort = sortedColumn; /* Host name */
+
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", CONST_MULTICAST_STATS_HTML, sign);
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", CONST_MULTICAST_STATS_HTML);
+
+    for(i=0; i<=5; i++)
+      if(abs(myGlobals.columnSort) == i)
+	arrow[i] = arrowGif, theAnchor[i] = htmlAnchor;
+      else
+	arrow[i] = "", theAnchor[i] = htmlAnchor1;
+
+    sendString("<CENTER>\n");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		  ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG">%s0>Host%s</A></TH>\n"
+		  "<TH "TH_BG">%s1>Domain%s</A></TH>"
+		  "<TH "TH_BG">%s2>Pkts Sent%s</A></TH>"
+		  "<TH "TH_BG">%s3>Data Sent%s</A></TH>"
+		  "<TH "TH_BG">%s4>Pkts Rcvd%s</A></TH>"
+		  "<TH "TH_BG">%s5>Data Rcvd%s</A></TH>"
+		  "</TR>\n",
+		  theAnchor[0], arrow[0],
+		  theAnchor[1], arrow[1],
+		  theAnchor[2], arrow[2],
+		  theAnchor[3], arrow[3],
+		  theAnchor[4], arrow[4],
+		  theAnchor[5], arrow[5]
+		  );
+    sendString(buf);
+
+    qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpMulticastFctn);
+
+    for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
+      if(revertOrder)
+	el = tmpTable[numEntries-idx-1];
+      else
+	el = tmpTable[idx];
+
+      if(el != NULL) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "</TR>\n",
+		      getRowColor(), makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1, hostLinkBuf, sizeof(hostLinkBuf)),
+		      formatPkts(el->pktMulticastSent.value, formatBuf, sizeof(formatBuf)),
+		      formatBytes(el->bytesMulticastSent.value, 1, formatBuf1, sizeof(formatBuf1)),
+		      formatPkts(el->pktMulticastRcvd.value, formatBuf2, sizeof(formatBuf2)),
+		      formatBytes(el->bytesMulticastRcvd.value, 1, formatBuf3, sizeof(formatBuf3)));
+
+	sendString(buf);
+
+	/* Avoid huge tables */
+	if(printedEntries++ > myGlobals.runningPref.maxNumLines)
+	  break;
+      }
+    }
+
+    sendString("</TABLE>"TABLE_OFF"\n");
+    sendString("</CENTER>\n");
+
+    addPageIndicator(CONST_MULTICAST_STATS_HTML, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
+		     revertOrder, abs(sortedColumn), -1);
+
+    printFooterHostLink();
+
+  } else
+    printNoDataYet();
+
+  free(tmpTable);
+
+  sendString("<P ALIGN=right><A class=external HREF=http://www.iana.org/assignments/multicast-addresses>List</A> of multicast addresses</P>\n");
+}
+
+/* ****************************************************************** */
 
 static void makeHostName(HostTraffic *el, char *buf, int len) {
   if(el->hostResolvedName[0] != '\0') strcpy(buf, el->hostResolvedName);
@@ -2246,2433 +2246,2433 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
   else if(el->ethAddressString[0] != '\0') strcpy(buf, el->ethAddressString);
 }
 
- /* ****************************************************************** */
+/* ****************************************************************** */
 
- #define LOCAL_COLOR     "mistyrose2"
- #define REMOTE_COLOR    "lightsteelblue1"
+#define LOCAL_COLOR     "mistyrose2"
+#define REMOTE_COLOR    "lightsteelblue1"
 
- static int addNodeInfo(FILE *fd, HostTraffic *el) {
-   char buf0[128], buf1[128];
+static int addNodeInfo(FILE *fd, HostTraffic *el) {
+  char buf0[128], buf1[128];
 
-   makeHostName(el, buf0, sizeof(buf0));
-   makeHostLink(el, FLAG_HOSTLINK_TEXT_LITE_FORMAT, 0, 0, buf1, sizeof(buf1));
-   if(buf1[0] != '\0') {
-     fprintf(fd, "\"%s\" [URL=\"%s\", color=%s];\n", buf0, buf1,
-	     subnetLocalHost(el) ? LOCAL_COLOR : REMOTE_COLOR);
-     return(1);
-   }
-   return(0);
- }
+  makeHostName(el, buf0, sizeof(buf0));
+  makeHostLink(el, FLAG_HOSTLINK_TEXT_LITE_FORMAT, 0, 0, buf1, sizeof(buf1));
+  if(buf1[0] != '\0') {
+    fprintf(fd, "\"%s\" [URL=\"%s\", color=%s];\n", buf0, buf1,
+	    subnetLocalHost(el) ? LOCAL_COLOR : REMOTE_COLOR);
+    return(1);
+  }
+  return(0);
+}
 
- /* ****************************************************************** */
+/* ****************************************************************** */
 
- void makeDot() {
- #ifdef WIN32
-   returnHTTPpageNotFound("<b>This feature is not available on your platform</b>");
-   return;
- #else
-   HostTraffic *el, *el2, tmpEl;
-   char buf[LEN_GENERAL_WORK_BUFFER], buf1[LEN_GENERAL_WORK_BUFFER],
-     path[384], dotPath[256];
-   FILE *fd, *cmap, *in, *out, *make;
-   struct stat statbuf;
-   int rc;
+void makeDot() {
+#ifdef WIN32
+  returnHTTPpageNotFound("<b>This feature is not available on your platform</b>");
+  return;
+#else
+  HostTraffic *el, *el2, tmpEl;
+  char buf[LEN_GENERAL_WORK_BUFFER], buf1[LEN_GENERAL_WORK_BUFFER],
+    path[384], dotPath[256];
+  FILE *fd, *cmap, *in, *out, *make;
+  struct stat statbuf;
+  int rc;
 
-   printHTMLheader("Local Network Traffic Map", NULL, 0);
+  printHTMLheader("Local Network Traffic Map", NULL, 0);
 
-   /*
-     First of all let's see if the path of dot is inside
-     the preferences
+  /*
+    First of all let's see if the path of dot is inside
+    the preferences
+  */
+  if(fetchPrefsValue("dot.path", buf, sizeof(buf)) != -1) {
+    snprintf(dotPath, sizeof(dotPath), "%s", buf);
+  } else {
+    snprintf(dotPath, sizeof(dotPath), "/usr/local/bin/dot");
+    storePrefsValue("dot.path", dotPath); /* Set the default */
+  }
+
+  revertSlashIfWIN32(dotPath, 0);
+
+  if(stat(dotPath, &statbuf) != 0) {
+    snprintf(buf, sizeof(buf),
+	     "<h1>ERROR</h1>\n<center><b>Missing <A HREF=http://www.graphviz.org/>dot</A> tool (expected %s). Please set its path (key dot.path) "
+	     "<A HREF="CONST_EDIT_PREFS">here</A>.</b></center>",
+	     dotPath);
+    sendString(buf);
+    return;
+  }
+
+  snprintf(path, sizeof(path), "%s/ntop-all.dot", myGlobals.spoolPath);
+  fd = fopen(path, "w");
+
+  if(fd != NULL) {
+    for(el=getFirstHost(myGlobals.actualReportDeviceId);
+	el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+      int numEntries, i, urlSent = 0;
+
+      if(el->community && (!isAllowedCommunity(el->community))) continue;
+
+      if(subnetLocalHost(el)) {
+	makeHostName(el, buf, sizeof(buf));
+
+	for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+	  if(!emptySerial(&el->contactedSentPeers.peersSerials[i])
+	     && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))) {
+	    if((el2 = quickHostLink(el->contactedSentPeers.peersSerials[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
+
+	      makeHostName(el2, buf1, sizeof(buf1));
+	      if(addNodeInfo(fd, el2)) {
+		fprintf(fd, "\"%s\" -> \"%s\";\n", buf, buf1);
+		if(!urlSent) urlSent = addNodeInfo(fd, el);
+	      }
+	    }
+	  }
+
+	/* ****************************** */
+
+	for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+	  if(!emptySerial(&el->contactedRcvdPeers.peersSerials[i])
+	     && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))) {
+	    if((el2 = quickHostLink(el->contactedRcvdPeers.peersSerials[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
+	      makeHostName(el2, buf1, sizeof(buf1));
+
+	      for(i=0; i<strlen(buf1); i++) if(buf1[i] == '\"') buf1[i] = ' ';
+
+	      if(addNodeInfo(fd, el2)) {
+		fprintf(fd, "\"%s\" -> \"%s\";\n", buf1, buf);
+		if(!urlSent) urlSent = addNodeInfo(fd, el);
+	      }
+	    }
+	  }
+      }
+    }
+
+    fclose(fd);
+
+    snprintf(path, sizeof(path), "sort -u %s/ntop-all.dot > %s/ntop-sort.dot", myGlobals.spoolPath, myGlobals.spoolPath);
+    sendString("<!-- sort command is ");
+    sendString(path);
+    sendString(" -->\n");
+    errno = 0;
+    rc = system(path);
+    if((rc == -1) && (errno != ECHILD)) {
+      snprintf(buf, sizeof(buf),
+	       "<h1>ERROR</h1>\n<center><b>Sorting of ntop-all.dot failed, rc %d</b></center>",
+	       errno);
+      sendString(buf);
+      return;
+    }
+
+    snprintf(path, sizeof(path), "%s/ntop.dot", myGlobals.spoolPath);
+    out = fopen(path, "w");
+
+    if(out != NULL) {
+      fprintf(out, "digraph ntop {\n");
+      fprintf(out, "node [shape = polygon, sides=4, fontsize=9, style=filled, fontname=\"Helvetica\"];\n");
+
+      snprintf(path, sizeof(path), "%s/ntop-sort.dot", myGlobals.spoolPath);
+      if((in = fopen(path, "r")) != NULL) {
+	while(!feof(in) && (fgets(buf, sizeof(buf), in) != NULL))
+	  fprintf(out, "%s", buf);
+      }
+
+      fprintf(out, "}\n");
+      fclose(out);
+      fclose(in);
+    }
+
+    /* Added -c courtesy of Max Waterman <davidmaxwaterman@fastmail.co.uk> */
+    snprintf(path, sizeof(path), "%s -Tpng -Goverlap=false %s/ntop.dot -o %s/"CONST_NETWORK_IMAGE_MAP " 2>&1 ",
+	     dotPath, myGlobals.spoolPath, myGlobals.spoolPath);
+    sendString("<!-- dot(generate) command is ");
+    sendString(path);
+    sendString(" -->\n");
+    errno = 0;
+    make = popen(path, "r");
+    if(make == NULL) {
+      snprintf(buf, sizeof(buf),
+	       "<h1>ERROR</h1>\n<center><p>Creation of network map failed, rc %s(%d)</p></center>\n"
+	       "<p>Command was:</p>\n<pre>%s</pre>",
+	       strerror(errno), errno, path);
+      sendString(buf);
+      return;
+    }
+    if(!feof(make) && (fgets(buf, sizeof(buf), make) != NULL)) {
+      sendString("<h1>ERROR</h1>\n<center><p>Creation of network map failed</p></center>\n"
+		 "<p>Command was:</p>\n<pre>");
+      sendString(path);
+      sendString("</pre>\n<p>Results were:</p>\n<pre>");
+      sendString(buf);
+      while(!feof(make) && (fgets(buf, sizeof(buf), make) != NULL)) {
+	sendString(buf);
+      }
+      sendString("</pre>\n");
+      return;
+    }
+    pclose(make);
+
+    snprintf(path, sizeof(path), "%s -Tcmap -Goverlap=false %s/ntop.dot", dotPath, myGlobals.spoolPath);
+    sendString("<!-- dot(cmap) command is ");
+    sendString(path);
+    sendString(" -->\n");
+    cmap = popen(path, "r");
+
+    if(cmap != NULL) {
+      sendString("<p><center><img src=\"/"CONST_NETWORK_IMAGE_MAP"\" usemap=\"#G\" ismap=\"ismap\" border=\"0\">");
+      sendString("</center><map id=\"G\" name=\"G\">\n");
+
+      while(!feof(cmap) && (fgets(buf, sizeof(buf), cmap) != NULL))
+	sendString(buf);
+
+      sendString("</map>\n");
+
+      sendString("<p><small>Graph generated by Dot, part of <A class=external HREF=http://www.graphviz.org>Graphviz</A>, created by "
+		 "<A HREF=http://www.research.att.com/>AT&T Research</A>.</small>\n");
+
+      pclose(cmap);
+    } else {
+      returnHTTPpageNotFound("Unable to generate cmap file (Is dot installed?)");
+    }
+  } else {
+    returnHTTPpageNotFound("Unable to create temporary file");
+  }
+#endif
+}
+
+/* ******************************* */
+
+void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes,
+		    int vlanId, int ifId, int knownSubnetId) {
+  u_int idx, numEntries=0, maxHosts;
+  int printedEntries=0;
+  unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
+  HostTraffic *el;
+  HostTraffic** tmpTable;
+  char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[12], *theAnchor[12], osBuf[160];
+  char htmlAnchor[64], htmlAnchor1[64];
+  char formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  u_char *vlanList, foundVlan = 0, vlanStr[16], ifStr[16], foundIf = 0, *ifList;
+  u_int8_t *knownSubnets, foundSubnet = 0;
+
+  vlanList = calloc(1, MAX_VLAN);
+  if(vlanList == NULL) {
+    traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for vlan list");
+    return;
+  }
+  vlanId = abs(vlanId);
+
+  ifList = calloc(1, MAX_INTERFACE);
+  if(ifList == NULL) {
+    traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for if list");
+    free(vlanList);
+    return;
+  }
+  ifId = abs(ifId);
+
+  knownSubnets = calloc(sizeof(u_int8_t), myGlobals.numKnownSubnets);
+  if(ifList == NULL) {
+    traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for if list");
+    free(vlanList); free(ifList);
+    return;
+  }
+
+  ifId = abs(ifId);
+
+  printHTMLheader("Host Information", NULL, 0);
+
+  memset(buf, 0, sizeof(buf));
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+
+  tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "printHostsInfo");
+  if(tmpTable == NULL) {
+    free(vlanList); free(ifList); free(knownSubnets);
+    return;
+  }
+
+  if(revertOrder)
+    sign = "", arrowGif = "&nbsp;" CONST_IMG_ARROW_UP;
+  else
+    sign = "-", arrowGif = "&nbsp;" CONST_IMG_ARROW_DOWN;
+
+  myGlobals.columnSort = sortedColumn;
+
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
+      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+    unsigned short actUsage, actUsageS, actUsageR;
+
+    if(isFcHost (el) || broadcastHost(el)) continue;
+    if(el->community && (!isAllowedCommunity(el->community))) continue;
+
+    if((el->vlanId != NO_VLAN) && (el->vlanId < MAX_VLAN))       { vlanList[el->vlanId] = 1, foundVlan = 1; }
+    if((vlanId != NO_VLAN) && (el->vlanId != vlanId)) continue;
+
+    if((el->known_subnet_id < myGlobals.numKnownSubnets) && (el->known_subnet_id != UNKNOWN_SUBNET_ID) )
+      foundSubnet = 1, knownSubnets[el->known_subnet_id] = 1;
+
+    if((knownSubnetId != UNKNOWN_SUBNET_ID) && (knownSubnetId != ALL_SUBNET_IDS)
+       && (el->known_subnet_id != knownSubnetId))
+      continue;
+
+    if((knownSubnetId == UNKNOWN_SUBNET_ID) && (el->known_subnet_id != UNKNOWN_SUBNET_ID)) continue;
+
+    if((el->ifId != NO_INTERFACE) && (el->ifId < MAX_INTERFACE)) { ifList[el->ifId] = 1, foundIf = 1; }
+    if((ifId != NO_INTERFACE) && (el->ifId != ifId)) continue;
+
+    if(showBytes) {
+      actUsage  = (unsigned short)(0.5+100.0*(((float)el->bytesSent.value+(float)el->bytesRcvd.value)/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+      actUsageS = (unsigned short)(0.5+100.0*((float)el->bytesSent.value/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+      actUsageR = (unsigned short)(0.5+100.0*((float)el->bytesRcvd.value/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+    } else {
+      actUsage  = (unsigned short)(0.5+100.0*(((float)el->pktSent.value+(float)el->pktRcvd.value)/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value));
+      actUsageS = (unsigned short)(0.5+100.0*((float)el->pktSent.value/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value));
+      actUsageR = (unsigned short)(0.5+100.0*((float)el->pktRcvd.value/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value));
+    }
+
+    el->actBandwidthUsage = actUsage;
+    if(el->actBandwidthUsage > maxBandwidthUsage)
+      maxBandwidthUsage = actUsage;
+    el->actBandwidthUsageS = actUsageS;
+    el->actBandwidthUsageR = actUsageR;
+
+    tmpTable[numEntries++] = el;
+    getHostAS(el);
+
+    if(numEntries >= maxHosts)
+      break;
+  }
+
+  if(numEntries > 0) {
+    int i;
+
+    qsort(tmpTable, numEntries, sizeof(HostTraffic*), sortHostFctn);
+
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
+		  "<A HREF=\"/%s?col=%s", CONST_HOSTS_INFO_HTML, sign);
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1),
+		  "<A HREF=\"/%s?col=", CONST_HOSTS_INFO_HTML);
+
+    for(i=1; i< (sizeof(arrow)/sizeof(char*)); i++) {
+      if(abs(myGlobals.columnSort) == i)
+	arrow[i] = arrowGif, theAnchor[i] = htmlAnchor;
+      else
+	arrow[i] = "", theAnchor[i] = htmlAnchor1;
+    }
+
+    if(abs(myGlobals.columnSort) == FLAG_DOMAIN_DUMMY_IDX)
+      arrow[0] = arrowGif, theAnchor[0] = htmlAnchor;
+    else
+      arrow[0] = "", theAnchor[0] = htmlAnchor1;
+
+    sendString("<P ALIGN=LEFT>");
+
+    if(vlanId > 0)
+      safe_snprintf(__FILE__, __LINE__, (char*)vlanStr, sizeof(vlanStr), "&vlan=%d", vlanId);
+    else
+      vlanStr[0] = '\0';
+
+    if(ifId > 0)
+      safe_snprintf(__FILE__, __LINE__, (char*)ifStr, sizeof(ifStr), "&if=%d", ifId);
+    else
+      ifStr[0] = '\0';
+
+    sendString("<p><form action=\"../\">\n<b>Traffic Unit</b>:"
+	       "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
+
+    if(showBytes)
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<option value=\"/%s?col=%d&unit=1%s%s\" selected>Bytes</option>\n"
+		    "<option value=\"/%s?col=%d&unit=0%s%s\">Packets</option>\n</select>\n",
+		    CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr,
+		    CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr);
+    else
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<option value=\"/%s?col=%d&unit=1%s%s\">Bytes</option>\n"
+		    "<option value=\"/%s?col=%d&unit=0%s%s\" selected>Packets</option>\n</select>\n",
+		    CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr,
+		    CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr);
+
+    sendString(buf);
+    sendString("</P>\n");
+
+    if(foundVlan) {
+      u_char found = 0, tmpBuf[64];
+      u_int8_t selected;
+
+      sendString("<p><form action=\"../\">\n<b>VLAN</b>:"
+		 "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
+
+      for(i=0; i<MAX_VLAN; i++)
+	if(vlanList[i] == 1) {
+	  if(i == vlanId)
+	    selected = 1;
+	  else
+	    selected = 0;
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<option value=\"/%s?unit=%d&vlan=%d\"%s>%s</option>\n",
+			CONST_HOSTS_INFO_HTML, showBytes, i,
+			selected ? " selected" : "",
+			vlan2name(i, (char*)tmpBuf, sizeof(tmpBuf)));
+
+	  sendString(buf);
+	}
+
+      if(vlanId == NO_VLAN)
+	selected = 1;
+      else
+	selected = 0;
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<option value=\"/%s?unit=%d\"%s>All</option>\n",
+		    CONST_HOSTS_INFO_HTML, showBytes,
+		    selected ? " selected" : "");
+
+      sendString(buf);
+
+      sendString("</select>\n</form>\n");
+    }
+
+    if(foundSubnet) {
+      u_char found = 0, tmpBuf[64];
+      u_int8_t selected;
+
+      sendString("<p><form action=\"../\">\n<b>Subnet</b>:"
+		 "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
+
+      for(i=0; i<myGlobals.numKnownSubnets; i++)
+	if(knownSubnets[i] == 1) {
+	  struct in_addr addr;
+	  char addr_buf[32], alias[64], key[64], *net;
+
+	  addr.s_addr = myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY];
+
+	  if((knownSubnetId != UNKNOWN_SUBNET_ID) && (i == knownSubnetId))
+	    selected = 1;
+	  else
+	    selected = 0;
+
+	  net = _intoa(addr, addr_buf, sizeof(addr_buf));
+
+	  safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "subnet.name.%s/%d",
+			net, myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY]);
+
+	  alias[0] = '\0';
+	  fetchPrefsValue(key, alias, sizeof(alias));
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<option value=\"/%s?unit=%d&subnet=%d\"%s>%s/%d %s%s%s</option>\n",
+			CONST_HOSTS_INFO_HTML, showBytes, i,
+			selected ? " selected" : "", net,
+			myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY],
+			(alias[0] != '\0') ? "[" : "",
+			alias,
+			(alias[0] != '\0') ? "]" : "");
+
+	  sendString(buf);
+	}
+
+      if(knownSubnetId == UNKNOWN_SUBNET_ID) selected = 1; else selected = 0;
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<option value=\"/%s?unit=%d&subnet=%d\"%s>Unknown Subnets</option>\n",
+		    CONST_HOSTS_INFO_HTML, showBytes, UNKNOWN_SUBNET_ID,
+		    selected ? " selected" : "");
+
+      sendString(buf);
+
+      if(knownSubnetId == ALL_SUBNET_IDS) selected = 1; else selected = 0;
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<option value=\"/%s?unit=%d&subnet=%d\"%s>All</option>\n"
+		    "</select></form>\n<p>\n",
+		    CONST_HOSTS_INFO_HTML, showBytes, ALL_SUBNET_IDS,
+		    selected ? " selected" : "");
+
+      sendString(buf);
+    }
+
+    if(foundIf) {
+      u_char found = 0;
+      u_int8_t selected;
+
+      sendString("<p><form action=\"../\">\n<b>Interface Id</b>:"
+		 "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
+
+      for(i=0; i<MAX_INTERFACE; i++)
+	if(ifList[i] == 1) {
+	  if(i == ifId)
+	    selected = 1, found = 1;
+	  else
+	    selected = 0;
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"/%s?unit=%d&if=%d\"%s>%d</option>\n",
+			CONST_HOSTS_INFO_HTML, showBytes, i,
+			selected ? " selected" : "", i);
+
+	  sendString(buf);
+	}
+
+      if(!found)
+	selected = 1;
+      else
+	selected = 0;
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"/%s?unit=%d\"%s>All</option>\n"
+		    "</select>\n</form>\n",
+		    CONST_HOSTS_INFO_HTML, showBytes, selected ? " selected" : "", i);
+
+      sendString(buf);
+    }
+
+    if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
+		    "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
+		    "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
+		    "<TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
+		    "<TH "TH_BG">%s3\">MAC&nbsp;Address%s</A></TH>\n"
+		    "<TH "TH_BG">%s11\">Community%s</A></TH>\n"
+		    "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
+		    "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
+		    "<TH "TH_BG">%s5\">Nw&nbsp;Board&nbsp;Vendor%s</A></TH>\n"
+		    "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
+		    "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
+		    "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
+		    "<TH "TH_BG">%s10\">AS%s</A></TH>\n"
+		    "</TR>\n",
+		    theAnchor[1], arrow[1],
+		    theAnchor[0], arrow[0],
+		    theAnchor[2], arrow[2],
+		    theAnchor[3], arrow[3],
+		    theAnchor[11], arrow[11],
+		    theAnchor[6], arrow[6],
+		    theAnchor[4], arrow[4],
+		    theAnchor[5], arrow[5],
+		    theAnchor[7], arrow[7],
+		    theAnchor[8], arrow[8],
+		    theAnchor[9], arrow[9],
+		    theAnchor[10], arrow[10]
+		    );
+    } else {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
+		    "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
+		    "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
+		    "</TH><TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
+		    "<TH "TH_BG">%s11\">Community%s</A></TH>"
+		    "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
+		    "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
+		    "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
+		    "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
+		    "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
+		    "<TH "TH_BG">%s10\">AS%s</A></TH>\n"
+		    "</TR>\n",
+		    theAnchor[1], arrow[1],
+		    theAnchor[0], arrow[0],
+		    theAnchor[2], arrow[2],
+		    theAnchor[6], arrow[6],
+		    theAnchor[11], arrow[11],
+		    theAnchor[4], arrow[4],
+		    theAnchor[7], arrow[7],
+		    theAnchor[8], arrow[8],
+		    theAnchor[9], arrow[9],
+		    theAnchor[10], arrow[10]
+		    );
+    }
+    sendString(buf);
+
+    for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
+      if(revertOrder)
+	el = tmpTable[numEntries-idx-1];
+      else
+	el = tmpTable[idx];
+
+      if(el != NULL) {
+	char *tmpName1, *tmpName2, *tmpName3, sniffedName[MAXDNAME];
+	int displaySniffedName=0;
+
+	tmpName1 = el->hostNumIpAddress;
+
+	if((tmpName1[0] == '\0') || (strcmp(tmpName1, "0.0.0.0") == 0))
+	  tmpName1 = myGlobals.separator;
+
+	if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
+	  tmpName2 = getVendorInfo(el->ethAddress, 1);
+	  if(tmpName2[0] == '\0')
+	    tmpName2 = myGlobals.separator;
+
+	  tmpName3 = el->ethAddressString;
+	  if((tmpName3[0] == '\0')
+	     || (strcmp(tmpName3, "00:00:00:00:00:00") == 0))
+	    tmpName3 = myGlobals.separator;
+	} else {
+	  tmpName2 = myGlobals.separator;
+	  tmpName3 = myGlobals.separator;
+	}
+
+	if(!addrnull(&el->hostIpAddress)
+	   && (getSniffedDNSName(el->hostNumIpAddress,
+				 sniffedName, sizeof(sniffedName)))) {
+#ifdef DEBUG
+	  traceEvent(CONST_TRACE_INFO, "%s <=> %s [%s/%s]",
+		     el->hostNumIpAddress, sniffedName,
+		     el->hostResolvedName, el->hostNumIpAddress);
+#endif
+
+	  if((el->hostResolvedName[0] == '\0') || strcmp(sniffedName, el->hostResolvedName)) {
+	    if((el->hostResolvedName[0] == '\0')
+	       || (strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0)) {
+	      if(strlen(sniffedName) >= (MAX_LEN_SYM_HOST_NAME-1))
+		sniffedName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
+
+	      for(i=0; i<strlen(sniffedName); i++) {
+		if(isupper(sniffedName[i]))
+		  sniffedName[i] = tolower(sniffedName[i]);
+	      }
+
+	      setResolvedName(el, sniffedName, FLAG_HOST_SYM_ADDR_TYPE_NAME);
+	    } else
+	      displaySniffedName=1;
+	  }
+	}
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>", getRowColor());
+	sendString(buf);
+
+	sendString(makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1, hostLinkBuf, sizeof(hostLinkBuf)));
+
+	if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+			tmpName1, tmpName3);
+	} else {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+			tmpName1);
+	}
+	sendString(buf);
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>",
+		      (el->community == NULL) ? "&nbsp;" : el->community);
+	sendString(buf);
+
+
+	sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
+
+	if(el->nonIPTraffic && displaySniffedName) {
+	  short numAddresses = 0;
+
+	  if(el->nonIPTraffic->nbHostName && el->nonIPTraffic->nbDomainName) {
+	    if((el->nonIPTraffic->nbAccountName != NULL) && ((el->nonIPTraffic->nbAccountName[0] != '0'))) {
+	      if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
+		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+			      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName,
+			      el->nonIPTraffic->nbDomainName);
+	      } else {
+		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s@%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+			      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName);
+	      }
+	    } else {
+	      if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
+		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+			      el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName);
+	      } else {
+		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+			      el->nonIPTraffic->nbHostName);
+	      }
+	    }
+	    sendString(buf);
+	    numAddresses++;
+	  } else if(el->nonIPTraffic->nbHostName) {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+			  el->nonIPTraffic->nbHostName);
+	    sendString(buf);
+	    numAddresses++;
+	  }
+
+	  if(el->nonIPTraffic->nbDescr) {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), ":&nbsp;%s", el->nonIPTraffic->nbDescr);
+	    sendString(buf);
+	  }
+
+	  if(displaySniffedName) {
+	    if(numAddresses > 0) sendString("/");
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", sniffedName);
+	    sendString(buf);
+	    numAddresses++;
+	  }
+
+	  if(el->nonIPTraffic->atNetwork) {
+	    char *nodeName = el->nonIPTraffic->atNodeName;
+
+	    if(numAddresses > 0) sendString("/");
+	    if(nodeName == NULL) nodeName = "";
+
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
+			  getOSFlag(el, "Mac", 0, osBuf, sizeof(osBuf)), nodeName);
+	    sendString(buf);
+
+	    if(el->nonIPTraffic->atNodeType[0] != NULL) {
+	      sendString("(");
+	      for(i=0; i<MAX_NODE_TYPES; i++)
+		if(el->nonIPTraffic->atNodeType[i] == NULL)
+		  break;
+		else {
+		  if(i > 0) sendString("/");
+		  sendString(el->nonIPTraffic->atNodeType[i]);
+		}
+
+	      sendString(")&nbsp;");
+	    }
+
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[%d.%d]",
+			  el->nonIPTraffic->atNetwork, el->nonIPTraffic->atNode);
+	    sendString(buf);
+	    numAddresses++;
+	  }
+
+	  if(el->nonIPTraffic->ipxHostName) {
+	    int numSap=0;
+
+	    if(numAddresses > 0) sendString("/");
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
+			  getOSFlag(el, "Novell", 0, osBuf, sizeof(osBuf)),
+			  el->nonIPTraffic->ipxHostName);
+	    sendString(buf);
+
+	    for(i=0; i<el->nonIPTraffic->numIpxNodeTypes; i++) {
+	      char *str = getSAPInfo(el->nonIPTraffic->ipxNodeType[i], 1);
+
+	      if(str[0] != '\0') {
+		if(numSap == 0)
+		  sendString("[");
+		else
+		  sendString("/");
+
+		sendString(str);
+		numSap++;
+	      }
+	    }
+
+	    if(numSap > 0) sendString("]");
+
+	    numAddresses++;
+	  }
+	}
+
+	sendString("&nbsp;</TD>");
+	printBar(buf, sizeof(buf), el->actBandwidthUsageS, el->actBandwidthUsageR, maxBandwidthUsage, 3);
+
+	if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>", tmpName2);
+	  sendString(buf);
+	}
+
+	{
+	  char shortBuf[8];
+
+	  if(!subnetPseudoLocalHost(el)) {
+	    i = guessHops(el);
+	  } else
+	    i = 0;
+
+	  safe_snprintf(__FILE__, __LINE__, shortBuf, sizeof(shortBuf), "%d", i % 256);
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>&nbsp;%s</TD>",
+			(i == 0) ? "" : shortBuf);
+	  sendString(buf);
+	}
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%lu</TD>",
+		      (unsigned long)(el->totContactedSentPeers+el->totContactedRcvdPeers));
+	sendString(buf);
+
+#if 0
+	/* Time distance */
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s-",
+		      formatLatency(el->minLatency, FLAG_STATE_ACTIVE));
+	sendString(buf);
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s</TD>",
+		      formatLatency(el->maxLatency, FLAG_STATE_ACTIVE));
+	sendString(buf);
+#endif
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td "TD_BG" align=\"right\" nowrap>%s</td>",
+		      formatSeconds(el->lastSeen - el->firstSeen, formatBuf, sizeof(formatBuf)));
+	sendString(buf);
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td "TD_BG" align=\"right\" nowrap>%s</td>",
+		      formatSeconds(myGlobals.actTime-el->lastSeen, formatBuf, sizeof(formatBuf)));
+	sendString(buf);
+
+	if(el->hostAS == 0) {
+	  sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>&nbsp;</TD>");
+	} else {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<TD "TD_BG" ALIGN=RIGHT NOWRAP>"
+			"<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\" title=\"Lookup ASN (offsite)\">%d</a>"
+			"</TD>",
+			el->hostAS, el->hostAS);
+	  sendString(buf);
+	}
+
+	sendString("</TR>\n");
+
+	printedEntries++;
+
+	/* Avoid huge tables */
+	if(printedEntries > myGlobals.runningPref.maxNumLines)
+	  break;
+      } else {
+	traceEvent(CONST_TRACE_WARNING, "qsort() problem!");
+      }
+    }
+
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");
+
+    printFooterHostLink();
+
+    printBandwidthFooter();
+
+    addPageIndicator(CONST_HOSTS_INFO_HTML, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
+		     revertOrder, abs(sortedColumn), -1);
+  }
+
+  free(tmpTable);
+  free(vlanList);
+  free(ifList);
+  free(knownSubnets);
+}
+
+/* ************************************ */
+
+void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
+			  int revertOrder, int pageNum, char *url,
+			  int hostInfoPage) {
+  u_int idx, i;
+  u_int16_t vlanId = NO_VLAN;
+  HostTraffic *el=NULL;
+  char buf[LEN_GENERAL_WORK_BUFFER];
+  char formatBuf[32], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  u_short found = 0,
+    foundFcHost = 0,
+    vsanId = 0;
+  char *tok;
+
+  if((tok = strchr(host, '-')) != NULL) {
+    vlanId = vsanId = atoi(&tok[1]);
+    *tok = '\0';
+  }
+
+  for(el=getFirstHost(actualDeviceId);
+      el != NULL; el = getNextHost(actualDeviceId, el)) {
+    if(el->community && (!isAllowedCommunity(el->community))) continue;
+
+    if(((strcmp(el->hostNumIpAddress, host) == 0) || (strcmp(el->ethAddressString, host) == 0))
+       && ((vlanId == NO_VLAN) || ((el->vlanId <= 0) || (el->vlanId == vlanId)))) {
+      found = 1;
+      break;
+    } else if((el->fcCounters != NULL)
+	      && ((strncmp(fc_to_str ((u_int8_t *)&el->fcCounters->hostFcAddress),
+			   host, LEN_FC_ADDRESS_DISPLAY) == 0) &&
+		  ((el->fcCounters->vsanId == vsanId) || (vsanId == 0)))) {
+      found = 1;
+      foundFcHost = 1;
+      break;
+    }
+  }
+
+  /* Dennis Schoen (dennis@cns.dnsalias.org)
+   *
+   * send 404 if we cannot generate the requested page
    */
-   if(fetchPrefsValue("dot.path", buf, sizeof(buf)) != -1) {
-     snprintf(dotPath, sizeof(dotPath), "%s", buf);
-   } else {
-     snprintf(dotPath, sizeof(dotPath), "/usr/local/bin/dot");
-     storePrefsValue("dot.path", dotPath); /* Set the default */
-   }
-
-   revertSlashIfWIN32(dotPath, 0);
-
-   if(stat(dotPath, &statbuf) != 0) {
-     snprintf(buf, sizeof(buf),
-	      "<h1>ERROR</h1>\n<center><b>Missing <A HREF=http://www.graphviz.org/>dot</A> tool (expected %s). Please set its path (key dot.path) "
-	      "<A HREF="CONST_EDIT_PREFS">here</A>.</b></center>",
-	      dotPath);
-     sendString(buf);
-     return;
-   }
-
-   snprintf(path, sizeof(path), "%s/ntop-all.dot", myGlobals.spoolPath);
-   fd = fopen(path, "w");
-
-   if(fd != NULL) {
-     for(el=getFirstHost(myGlobals.actualReportDeviceId);
-	 el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-       int numEntries, i, urlSent = 0;
-
-       if(el->community && (!isAllowedCommunity(el->community))) continue;
-
-       if(subnetLocalHost(el)) {
-	 makeHostName(el, buf, sizeof(buf));
-
-	 for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	   if(!emptySerial(&el->contactedSentPeers.peersSerials[i])
-	      && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))) {
-	     if((el2 = quickHostLink(el->contactedSentPeers.peersSerials[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-
-	       makeHostName(el2, buf1, sizeof(buf1));
-	       if(addNodeInfo(fd, el2)) {
-		 fprintf(fd, "\"%s\" -> \"%s\";\n", buf, buf1);
-		 if(!urlSent) urlSent = addNodeInfo(fd, el);
-	       }
-	     }
-	   }
-
-	 /* ****************************** */
-
-	 for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	   if(!emptySerial(&el->contactedRcvdPeers.peersSerials[i])
-	      && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))) {
-	     if((el2 = quickHostLink(el->contactedRcvdPeers.peersSerials[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	       makeHostName(el2, buf1, sizeof(buf1));
-
-	       for(i=0; i<strlen(buf1); i++) if(buf1[i] == '\"') buf1[i] = ' ';
-
-	       if(addNodeInfo(fd, el2)) {
-		 fprintf(fd, "\"%s\" -> \"%s\";\n", buf1, buf);
-		 if(!urlSent) urlSent = addNodeInfo(fd, el);
-	       }
-	     }
-	   }
-       }
-     }
-
-     fclose(fd);
-
-     snprintf(path, sizeof(path), "sort -u %s/ntop-all.dot > %s/ntop-sort.dot", myGlobals.spoolPath, myGlobals.spoolPath);
-     sendString("<!-- sort command is ");
-     sendString(path);
-     sendString(" -->\n");
-     errno = 0;
-     rc = system(path);
-     if((rc == -1) && (errno != ECHILD)) {
-       snprintf(buf, sizeof(buf),
-		"<h1>ERROR</h1>\n<center><b>Sorting of ntop-all.dot failed, rc %d</b></center>",
-		errno);
-       sendString(buf);
-       return;
-     }
-
-     snprintf(path, sizeof(path), "%s/ntop.dot", myGlobals.spoolPath);
-     out = fopen(path, "w");
-
-     if(out != NULL) {
-       fprintf(out, "digraph ntop {\n");
-       fprintf(out, "node [shape = polygon, sides=4, fontsize=9, style=filled, fontname=\"Helvetica\"];\n");
-
-       snprintf(path, sizeof(path), "%s/ntop-sort.dot", myGlobals.spoolPath);
-       if((in = fopen(path, "r")) != NULL) {
-	 while(!feof(in) && (fgets(buf, sizeof(buf), in) != NULL))
-	   fprintf(out, "%s", buf);
-       }
-
-       fprintf(out, "}\n");
-       fclose(out);
-       fclose(in);
-     }
-
-     /* Added -c courtesy of Max Waterman <davidmaxwaterman@fastmail.co.uk> */
-     snprintf(path, sizeof(path), "%s -Tpng -Goverlap=false %s/ntop.dot -o %s/"CONST_NETWORK_IMAGE_MAP " 2>&1 ",
-	      dotPath, myGlobals.spoolPath, myGlobals.spoolPath);
-     sendString("<!-- dot(generate) command is ");
-     sendString(path);
-     sendString(" -->\n");
-     errno = 0;
-     make = popen(path, "r");
-     if(make == NULL) {
-       snprintf(buf, sizeof(buf),
-		"<h1>ERROR</h1>\n<center><p>Creation of network map failed, rc %s(%d)</p></center>\n"
-		"<p>Command was:</p>\n<pre>%s</pre>",
-		strerror(errno), errno, path);
-       sendString(buf);
-       return;
-     }
-     if(!feof(make) && (fgets(buf, sizeof(buf), make) != NULL)) {
-       sendString("<h1>ERROR</h1>\n<center><p>Creation of network map failed</p></center>\n"
-		  "<p>Command was:</p>\n<pre>");
-       sendString(path);
-       sendString("</pre>\n<p>Results were:</p>\n<pre>");
-       sendString(buf);
-       while(!feof(make) && (fgets(buf, sizeof(buf), make) != NULL)) {
-	 sendString(buf);
-       }
-       sendString("</pre>\n");
-       return;
-     }
-     pclose(make);
-
-     snprintf(path, sizeof(path), "%s -Tcmap -Goverlap=false %s/ntop.dot", dotPath, myGlobals.spoolPath);
-     sendString("<!-- dot(cmap) command is ");
-     sendString(path);
-     sendString(" -->\n");
-     cmap = popen(path, "r");
-
-     if(cmap != NULL) {
-       sendString("<p><center><img src=\"/"CONST_NETWORK_IMAGE_MAP"\" usemap=\"#G\" ismap=\"ismap\" border=\"0\">");
-       sendString("</center><map id=\"G\" name=\"G\">\n");
-
-       while(!feof(cmap) && (fgets(buf, sizeof(buf), cmap) != NULL))
-	 sendString(buf);
-
-       sendString("</map>\n");
-
-       sendString("<p><small>Graph generated by Dot, part of <A class=external HREF=http://www.graphviz.org>Graphviz</A>, created by "
-		  "<A HREF=http://www.research.att.com/>AT&T Research</A>.</small>\n");
-
-       pclose(cmap);
-     } else {
-       returnHTTPpageNotFound("Unable to generate cmap file (Is dot installed?)");
-     }
-   } else {
-     returnHTTPpageNotFound("Unable to create temporary file");
-   }
- #endif
- }
-
- /* ******************************* */
-
- void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, 
-		     int vlanId, int ifId, int knownSubnetId) {
-   u_int idx, numEntries=0, maxHosts;
-   int printedEntries=0;
-   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
-   HostTraffic *el;
-   HostTraffic** tmpTable;
-   char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[12], *theAnchor[12], osBuf[160];
-   char htmlAnchor[64], htmlAnchor1[64];
-   char formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-   u_char *vlanList, foundVlan = 0, vlanStr[16], ifStr[16], foundIf = 0, *ifList;
-   u_int8_t *knownSubnets, foundSubnet = 0;
-
-   vlanList = calloc(1, MAX_VLAN);
-   if(vlanList == NULL) {
-     traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for vlan list");
-     return;
-   }
-   vlanId = abs(vlanId);
-
-   ifList = calloc(1, MAX_INTERFACE);
-   if(ifList == NULL) {
-     traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for if list");
-     free(vlanList);
-     return;
-   }
-   ifId = abs(ifId);
-
-   knownSubnets = calloc(sizeof(u_int8_t), myGlobals.numKnownSubnets);
-   if(ifList == NULL) {
-     traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for if list");
-     free(vlanList); free(ifList);
-     return;
-   }
-
-   ifId = abs(ifId);
-
-   printHTMLheader("Host Information", NULL, 0);
-
-   memset(buf, 0, sizeof(buf));
-   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
-
-   tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "printHostsInfo");
-   if(tmpTable == NULL) {
-     free(vlanList); free(ifList); free(knownSubnets);
-     return;
-   }
-
-   if(revertOrder)
-     sign = "", arrowGif = "&nbsp;" CONST_IMG_ARROW_UP;
-   else
-     sign = "-", arrowGif = "&nbsp;" CONST_IMG_ARROW_DOWN;
-
-   myGlobals.columnSort = sortedColumn;
-
-   for(el=getFirstHost(myGlobals.actualReportDeviceId);
-       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-     unsigned short actUsage, actUsageS, actUsageR;
-
-     if(isFcHost (el) || broadcastHost(el)) continue;
-     if(el->community && (!isAllowedCommunity(el->community))) continue;
-
-     if((el->vlanId != NO_VLAN) && (el->vlanId < MAX_VLAN))       { vlanList[el->vlanId] = 1, foundVlan = 1; }
-     if((vlanId != NO_VLAN) && (el->vlanId != vlanId)) continue;
-
-     if((el->known_subnet_id < myGlobals.numKnownSubnets) && (el->known_subnet_id != UNKNOWN_SUBNET_ID) )
-	foundSubnet = 1, knownSubnets[el->known_subnet_id] = 1;
-
-     if((knownSubnetId != UNKNOWN_SUBNET_ID) && (knownSubnetId != ALL_SUBNET_IDS)
-	&& (el->known_subnet_id != knownSubnetId)) 
-       continue;
-
-     if((knownSubnetId == UNKNOWN_SUBNET_ID) && (el->known_subnet_id != UNKNOWN_SUBNET_ID)) continue;
-
-     if((el->ifId != NO_INTERFACE) && (el->ifId < MAX_INTERFACE)) { ifList[el->ifId] = 1, foundIf = 1; }
-     if((ifId != NO_INTERFACE) && (el->ifId != ifId)) continue;
-
-     if(showBytes) {
-       actUsage  = (unsigned short)(0.5+100.0*(((float)el->bytesSent.value+(float)el->bytesRcvd.value)/
-					       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
-       actUsageS = (unsigned short)(0.5+100.0*((float)el->bytesSent.value/
-					       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
-       actUsageR = (unsigned short)(0.5+100.0*((float)el->bytesRcvd.value/
-					       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
-     } else {
-       actUsage  = (unsigned short)(0.5+100.0*(((float)el->pktSent.value+(float)el->pktRcvd.value)/
-					       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value));
-       actUsageS = (unsigned short)(0.5+100.0*((float)el->pktSent.value/
-					       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value));
-       actUsageR = (unsigned short)(0.5+100.0*((float)el->pktRcvd.value/
-					       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value));
-     }
-
-     el->actBandwidthUsage = actUsage;
-     if(el->actBandwidthUsage > maxBandwidthUsage)
-       maxBandwidthUsage = actUsage;
-     el->actBandwidthUsageS = actUsageS;
-     el->actBandwidthUsageR = actUsageR;
-
-     tmpTable[numEntries++] = el;
-     getHostAS(el);
-
-     if(numEntries >= maxHosts)
-       break;
-   }
-
-   if(numEntries > 0) {
-     int i;
-
-     qsort(tmpTable, numEntries, sizeof(HostTraffic*), sortHostFctn);
-
-     safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
-		   "<A HREF=\"/%s?col=%s", CONST_HOSTS_INFO_HTML, sign);
-     safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1),
-		   "<A HREF=\"/%s?col=", CONST_HOSTS_INFO_HTML);
-
-     for(i=1; i< (sizeof(arrow)/sizeof(char*)); i++) {
-       if(abs(myGlobals.columnSort) == i)
-	 arrow[i] = arrowGif, theAnchor[i] = htmlAnchor;
-       else
-	 arrow[i] = "", theAnchor[i] = htmlAnchor1;
-     }
-
-     if(abs(myGlobals.columnSort) == FLAG_DOMAIN_DUMMY_IDX)
-       arrow[0] = arrowGif, theAnchor[0] = htmlAnchor;
-     else
-       arrow[0] = "", theAnchor[0] = htmlAnchor1;
-
-     sendString("<P ALIGN=LEFT>");
-
-     if(vlanId > 0)
-       safe_snprintf(__FILE__, __LINE__, (char*)vlanStr, sizeof(vlanStr), "&vlan=%d", vlanId);
-     else
-       vlanStr[0] = '\0';
-
-     if(ifId > 0)
-       safe_snprintf(__FILE__, __LINE__, (char*)ifStr, sizeof(ifStr), "&if=%d", ifId);
-     else
-       ifStr[0] = '\0';
-
-     sendString("<p><form action=\"../\">\n<b>Traffic Unit</b>:"
-		"<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
-
-     if(showBytes)
-       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		     "<option value=\"/%s?col=%d&unit=1%s%s\" selected>Bytes</option>\n"
-		     "<option value=\"/%s?col=%d&unit=0%s%s\">Packets</option>\n</select>\n",
-		     CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr,
-		     CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr);
-     else
-       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		     "<option value=\"/%s?col=%d&unit=1%s%s\">Bytes</option>\n"
-		     "<option value=\"/%s?col=%d&unit=0%s%s\" selected>Packets</option>\n</select>\n",
-		     CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr,
-		     CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr);
-
-     sendString(buf);
-     sendString("</P>\n");
-
-     if(foundVlan) {
-       u_char found = 0, tmpBuf[64];
-       u_int8_t selected;
-
-       sendString("<p><form action=\"../\">\n<b>VLAN</b>:"
-                  "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
-
-       for(i=0; i<MAX_VLAN; i++)
-	 if(vlanList[i] == 1) {
-	   if(i == vlanId)
-	     selected = 1;
-	   else
-	     selected = 0;
-
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			 "<option value=\"/%s?unit=%d&vlan=%d\"%s>%s</option>\n",
-			 CONST_HOSTS_INFO_HTML, showBytes, i,
-			 selected ? " selected" : "",
-			 vlan2name(i, (char*)tmpBuf, sizeof(tmpBuf)));
-
-	   sendString(buf);
-	 }
-
-       if(vlanId == NO_VLAN)
-	 selected = 1;
-       else
-	 selected = 0;
-
-       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		     "<option value=\"/%s?unit=%d\"%s>All</option>\n",
-		     CONST_HOSTS_INFO_HTML, showBytes,
-		     selected ? " selected" : "");
-       
-       sendString(buf);
-
-       sendString("</select>\n</form>\n");
-     }
-
-     if(foundSubnet) {
-       u_char found = 0, tmpBuf[64];
-       u_int8_t selected;
-
-       sendString("<p><form action=\"../\">\n<b>Subnet</b>:"
-		  "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
-
-       for(i=0; i<myGlobals.numKnownSubnets; i++)
-	 if(knownSubnets[i] == 1) {
-	   struct in_addr addr;
-	   char addr_buf[32], alias[64], key[64], *net;
-	   
-	   addr.s_addr = myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY];
-
-	   if((knownSubnetId != UNKNOWN_SUBNET_ID) && (i == knownSubnetId))
-	     selected = 1;
-	   else
-	     selected = 0;
-	   
-	   net = _intoa(addr, addr_buf, sizeof(addr_buf));
-
-	   safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "subnet.name.%s/%d",
-			 net, myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY]);
-	   
-	   alias[0] = '\0';
-	   fetchPrefsValue(key, alias, sizeof(alias));
-
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			 "<option value=\"/%s?unit=%d&subnet=%d\"%s>%s/%d %s%s%s</option>\n",
-			 CONST_HOSTS_INFO_HTML, showBytes, i,
-			 selected ? " selected" : "", net,
-			 myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY],
-			 (alias[0] != '\0') ? "[" : "",
-			 alias,
-			 (alias[0] != '\0') ? "]" : "");
-
-	   sendString(buf);
-	 }
-       
-       if(knownSubnetId == UNKNOWN_SUBNET_ID) selected = 1; else selected = 0;
-       
-       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		     "<option value=\"/%s?unit=%d&subnet=%d\"%s>Unknown Subnets</option>\n",
-		     CONST_HOSTS_INFO_HTML, showBytes, UNKNOWN_SUBNET_ID,
-		     selected ? " selected" : "");
-       
-       sendString(buf);
-
-       if(knownSubnetId == ALL_SUBNET_IDS) selected = 1; else selected = 0;
-       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		     "<option value=\"/%s?unit=%d&subnet=%d\"%s>All</option>\n"
-		     "</select></form>\n<p>\n",
-		     CONST_HOSTS_INFO_HTML, showBytes, ALL_SUBNET_IDS,
-		     selected ? " selected" : "");
-       
-       sendString(buf);
-     }
-
-     if(foundIf) {
-       u_char found = 0;
-       u_int8_t selected;
-
-       sendString("<p><form action=\"../\">\n<b>Interface Id</b>:"
-		  "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
-
-       for(i=0; i<MAX_INTERFACE; i++)
-	 if(ifList[i] == 1) {
-	   if(i == ifId)
-	     selected = 1, found = 1;
-	   else
-	     selected = 0;
-
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"/%s?unit=%d&if=%d\"%s>%d</option>\n",
-			 CONST_HOSTS_INFO_HTML, showBytes, i,
-			 selected ? " selected" : "", i);
-
-	   sendString(buf);
-	 }
-
-       if(!found)
-	 selected = 1;
-       else
-	 selected = 0;
-
-       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"/%s?unit=%d\"%s>All</option>\n"
-		     "</select>\n</form>\n",
-		     CONST_HOSTS_INFO_HTML, showBytes, selected ? " selected" : "", i);
-
-       sendString(buf);
-     }
-
-     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		     "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-		     "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
-		     "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
-		     "<TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
-		     "<TH "TH_BG">%s3\">MAC&nbsp;Address%s</A></TH>\n"
-		     "<TH "TH_BG">%s11\">Community%s</A></TH>\n"
-		     "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
-		     "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
-		     "<TH "TH_BG">%s5\">Nw&nbsp;Board&nbsp;Vendor%s</A></TH>\n"
-		     "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
-		     "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
-		     "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
-		     "<TH "TH_BG">%s10\">AS%s</A></TH>\n"
-		     "</TR>\n",
-		     theAnchor[1], arrow[1],
-		     theAnchor[0], arrow[0],
-		     theAnchor[2], arrow[2],
-		     theAnchor[3], arrow[3],
-		     theAnchor[11], arrow[11],
-		     theAnchor[6], arrow[6],
-		     theAnchor[4], arrow[4],
-		     theAnchor[5], arrow[5],
-		     theAnchor[7], arrow[7],
-		     theAnchor[8], arrow[8],
-		     theAnchor[9], arrow[9],
-		     theAnchor[10], arrow[10]
-		     );
-     } else {
-       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-		     "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
-		     "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
-		     "</TH><TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
-		     "<TH "TH_BG">%s11\">Community%s</A></TH>"
-		     "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
-		     "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
-		     "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
-		     "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
-		     "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
-		     "<TH "TH_BG">%s10\">AS%s</A></TH>\n"
-		     "</TR>\n",
-		     theAnchor[1], arrow[1],
-		     theAnchor[0], arrow[0],
-		     theAnchor[2], arrow[2],
-		     theAnchor[6], arrow[6],
-		     theAnchor[11], arrow[11],
-		     theAnchor[4], arrow[4],
-		     theAnchor[7], arrow[7],
-		     theAnchor[8], arrow[8],
-		     theAnchor[9], arrow[9],
-		     theAnchor[10], arrow[10]
-		     );
-     }
-     sendString(buf);
-
-     for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
-       if(revertOrder)
-	 el = tmpTable[numEntries-idx-1];
-       else
-	 el = tmpTable[idx];
-
-       if(el != NULL) {
-	 char *tmpName1, *tmpName2, *tmpName3, sniffedName[MAXDNAME];
-	 int displaySniffedName=0;
-
-	 tmpName1 = el->hostNumIpAddress;
-
-	 if((tmpName1[0] == '\0') || (strcmp(tmpName1, "0.0.0.0") == 0))
-	   tmpName1 = myGlobals.separator;
-
-	 if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-	   tmpName2 = getVendorInfo(el->ethAddress, 1);
-	   if(tmpName2[0] == '\0')
-	     tmpName2 = myGlobals.separator;
-
-	   tmpName3 = el->ethAddressString;
-	   if((tmpName3[0] == '\0')
-	      || (strcmp(tmpName3, "00:00:00:00:00:00") == 0))
-	     tmpName3 = myGlobals.separator;
-	 } else {
-	   tmpName2 = myGlobals.separator;
-	   tmpName3 = myGlobals.separator;
-	 }
-
-	 if(!addrnull(&el->hostIpAddress)
-	    && (getSniffedDNSName(el->hostNumIpAddress,
-				  sniffedName, sizeof(sniffedName)))) {
- #ifdef DEBUG
-	   traceEvent(CONST_TRACE_INFO, "%s <=> %s [%s/%s]",
-		      el->hostNumIpAddress, sniffedName,
-		      el->hostResolvedName, el->hostNumIpAddress);
- #endif
-
-	   if((el->hostResolvedName[0] == '\0') || strcmp(sniffedName, el->hostResolvedName)) {
-	     if((el->hostResolvedName[0] == '\0')
-		|| (strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0)) {
-	       if(strlen(sniffedName) >= (MAX_LEN_SYM_HOST_NAME-1))
-		 sniffedName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
-
-	       for(i=0; i<strlen(sniffedName); i++) {
-		 if(isupper(sniffedName[i])) 
-		   sniffedName[i] = tolower(sniffedName[i]);
-	       }
-
-	       setResolvedName(el, sniffedName, FLAG_HOST_SYM_ADDR_TYPE_NAME);
-	     } else
-	       displaySniffedName=1;
-	   }
-	 }
-
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>", getRowColor());
-	 sendString(buf);
-
-	 sendString(makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1, hostLinkBuf, sizeof(hostLinkBuf)));
-
-	 if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			 tmpName1, tmpName3);
-	 } else {
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			 tmpName1);
-	 }
-	 sendString(buf);
-
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		       "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>",
-		       (el->community == NULL) ? "&nbsp;" : el->community);
-	 sendString(buf);
-
-
-	 sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
-
-	 if(el->nonIPTraffic && displaySniffedName) {
-	   short numAddresses = 0;
-
-	   if(el->nonIPTraffic->nbHostName && el->nonIPTraffic->nbDomainName) {
-	     if((el->nonIPTraffic->nbAccountName != NULL) && ((el->nonIPTraffic->nbAccountName[0] != '0'))) {
-	       if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
-		 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			       el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName,
-			       el->nonIPTraffic->nbDomainName);
-	       } else {
-		 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s@%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			       el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName);
-	       }
-	     } else {
-	       if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
-		 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			       el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName);
-	       } else {
-		 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			       el->nonIPTraffic->nbHostName);
-	       }
-	     }
-	     sendString(buf);
-	     numAddresses++;
-	   } else if(el->nonIPTraffic->nbHostName) {
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			   el->nonIPTraffic->nbHostName);
-	     sendString(buf);
-	     numAddresses++;
-	   }
-
-	   if(el->nonIPTraffic->nbDescr) {
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), ":&nbsp;%s", el->nonIPTraffic->nbDescr);
-	     sendString(buf);
-	   }
-
-	   if(displaySniffedName) {
-	     if(numAddresses > 0) sendString("/");
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", sniffedName);
-	     sendString(buf);
-	     numAddresses++;
-	   }
-
-	   if(el->nonIPTraffic->atNetwork) {
-	     char *nodeName = el->nonIPTraffic->atNodeName;
-
-	     if(numAddresses > 0) sendString("/");
-	     if(nodeName == NULL) nodeName = "";
-
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
-			   getOSFlag(el, "Mac", 0, osBuf, sizeof(osBuf)), nodeName);
-	     sendString(buf);
-
-	     if(el->nonIPTraffic->atNodeType[0] != NULL) {
-	       sendString("(");
-	       for(i=0; i<MAX_NODE_TYPES; i++)
-		 if(el->nonIPTraffic->atNodeType[i] == NULL)
-		   break;
-		 else {
-		   if(i > 0) sendString("/");
-		   sendString(el->nonIPTraffic->atNodeType[i]);
-		 }
-
-	       sendString(")&nbsp;");
-	     }
-
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[%d.%d]",
-			   el->nonIPTraffic->atNetwork, el->nonIPTraffic->atNode);
-	     sendString(buf);
-	     numAddresses++;
-	   }
-
-	   if(el->nonIPTraffic->ipxHostName) {
-	     int numSap=0;
-
-	     if(numAddresses > 0) sendString("/");
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
-			   getOSFlag(el, "Novell", 0, osBuf, sizeof(osBuf)),
-			   el->nonIPTraffic->ipxHostName);
-	     sendString(buf);
-
-	     for(i=0; i<el->nonIPTraffic->numIpxNodeTypes; i++) {
-	       char *str = getSAPInfo(el->nonIPTraffic->ipxNodeType[i], 1);
-
-	       if(str[0] != '\0') {
-		 if(numSap == 0)
-		   sendString("[");
-		 else
-		   sendString("/");
-
-		 sendString(str);
-		 numSap++;
-	       }
-	     }
-
-	     if(numSap > 0) sendString("]");
-
-	     numAddresses++;
-	   }
-	 }
-
-	 sendString("&nbsp;</TD>");
-	 printBar(buf, sizeof(buf), el->actBandwidthUsageS, el->actBandwidthUsageR, maxBandwidthUsage, 3);
-
-	 if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>", tmpName2);
-	   sendString(buf);
-	 }
-
-	 {
-	   char shortBuf[8];
-
-	   if(!subnetPseudoLocalHost(el)) {
-	     i = guessHops(el);
-	   } else
-	     i = 0;
-
-	   safe_snprintf(__FILE__, __LINE__, shortBuf, sizeof(shortBuf), "%d", i % 256);
-
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>&nbsp;%s</TD>",
-			 (i == 0) ? "" : shortBuf);
-	   sendString(buf);
-	 }
-
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%lu</TD>",
-		       (unsigned long)(el->totContactedSentPeers+el->totContactedRcvdPeers));
-	 sendString(buf);
-
- #if 0
-	 /* Time distance */
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s-",
-		       formatLatency(el->minLatency, FLAG_STATE_ACTIVE));
-	 sendString(buf);
-
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s</TD>",
-		       formatLatency(el->maxLatency, FLAG_STATE_ACTIVE));
-	 sendString(buf);
- #endif
-
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td "TD_BG" align=\"right\" nowrap>%s</td>",
-		       formatSeconds(el->lastSeen - el->firstSeen, formatBuf, sizeof(formatBuf)));
-	 sendString(buf);
-
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td "TD_BG" align=\"right\" nowrap>%s</td>",
-		       formatSeconds(myGlobals.actTime-el->lastSeen, formatBuf, sizeof(formatBuf)));
-	 sendString(buf);
-
-	 if(el->hostAS == 0) {
-	   sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>&nbsp;</TD>");
-	 } else {
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			 "<TD "TD_BG" ALIGN=RIGHT NOWRAP>"
-			 "<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\" title=\"Lookup ASN (offsite)\">%d</a>"
-			 "</TD>",
-			 el->hostAS, el->hostAS);
-	   sendString(buf);
-	 }
-
-	 sendString("</TR>\n");
-
-	 printedEntries++;
-
-	 /* Avoid huge tables */
-	 if(printedEntries > myGlobals.runningPref.maxNumLines)
-	   break;
-       } else {
-	 traceEvent(CONST_TRACE_WARNING, "qsort() problem!");
-       }
-     }
-
-     sendString("</TABLE>"TABLE_OFF"<P>\n");
-     sendString("</CENTER>\n");
-
-     printFooterHostLink();
-
-     printBandwidthFooter();
-
-     addPageIndicator(CONST_HOSTS_INFO_HTML, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
-		      revertOrder, abs(sortedColumn), -1);
-   }
-
-   free(tmpTable);
-   free(vlanList);
-   free(ifList);
-   free(knownSubnets);
- }
-
- /* ************************************ */
-
- void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
-			   int revertOrder, int pageNum, char *url,
-			   int hostInfoPage) {
-   u_int idx, i;
-   u_int16_t vlanId = NO_VLAN;
-   HostTraffic *el=NULL;
-   char buf[LEN_GENERAL_WORK_BUFFER];
-   char formatBuf[32], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-   u_short found = 0,
-     foundFcHost = 0,
-     vsanId = 0;
-   char *tok;
-
-   if((tok = strchr(host, '-')) != NULL) {
-     vlanId = vsanId = atoi(&tok[1]);
-     *tok = '\0';
-   }
-
-   for(el=getFirstHost(actualDeviceId);
-       el != NULL; el = getNextHost(actualDeviceId, el)) {
-     if(el->community && (!isAllowedCommunity(el->community))) continue;
-
-     if(((strcmp(el->hostNumIpAddress, host) == 0) || (strcmp(el->ethAddressString, host) == 0))
-	&& ((vlanId == NO_VLAN) || ((el->vlanId <= 0) || (el->vlanId == vlanId)))) {
-       found = 1;
-       break;
-     } else if((el->fcCounters != NULL)
-	       && ((strncmp(fc_to_str ((u_int8_t *)&el->fcCounters->hostFcAddress),
-			    host, LEN_FC_ADDRESS_DISPLAY) == 0) &&
-		   ((el->fcCounters->vsanId == vsanId) || (vsanId == 0)))) {
-       found = 1;
-       foundFcHost = 1;
-       break;
-     }
-   }
-
-   /* Dennis Schoen (dennis@cns.dnsalias.org)
-    *
-    * send 404 if we cannot generate the requested page
+  if((el == NULL) || (!found)) {
+    char errorAdditionalText[1024], whois[256];
+
+    safe_snprintf(__FILE__, __LINE__, whois, sizeof(whois),
+		  "[ <A class=external HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=%s\">Whois</A> ]</TD></TR>\n",
+		  host);
+
+    safe_snprintf(__FILE__, __LINE__, errorAdditionalText, sizeof(errorAdditionalText),
+		  "<p align=\"center\"><img class=tooltip alt=\"Warning\" src=\"/warning.gif\"></p>\n"
+		  "<p align=\"center\"><font color=\"#FF0000\" size=\"+1\">"
+		  "<b>ntop</b> does not currently have any information about host %s %s.</font></p>"
+		  "<p>&nbsp;</p>"
+		  "<p>This is most likely because the host information has been "
+		  "purged as inactive.  You may wish to consider the -c | --sticky-hosts "
+		  "option, although that option may substantially increase memory "
+		  "requirements.</p>\n",
+		  host, whois);
+    returnHTTPpageNotFound(errorAdditionalText);
+    return;
+  }
+
+  if(el->community && (!isAllowedCommunity(el->community))) {
+    returnHTTPpageBadCommunity();
+    return;
+  }
+
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+
+  /* ************************************ */
+
+  if(found && !foundFcHost) {
+    printHostDetailedInfo(el, actualDeviceId);
+    printHostTrafficStats(el, actualDeviceId);
+    printHostIcmpStats(el);
+    printHostFragmentStats(el, actualDeviceId);
+    printHostContactedPeers(el, actualDeviceId);
+    printHostHTTPVirtualHosts(el, actualDeviceId);
+    printHostUsedServices(el, actualDeviceId);
+  } else if(foundFcHost) {
+    printHTMLheader("", NULL, 0);
+    printFcHostHeader(el, url, revertOrder, sortedColumn, hostInfoPage);
+
+    switch (hostInfoPage) {
+    case showHostMainPage:
+      printFcHostDetailedInfo (el, actualDeviceId);
+      printFcHostTrafficStats (el, actualDeviceId);
+      printFcHostContactedPeers(el, actualDeviceId);
+      break;
+    case showHostLunStats:
+      if(el->fcCounters->devType != SCSI_DEV_INITIATOR) {
+	printScsiLunStats (el, actualDeviceId, sortedColumn,
+			   revertOrder, pageNum, url);
+      }
+      break;
+    case showHostLunGraphs:
+      if(el->fcCounters->devType != SCSI_DEV_INITIATOR) {
+	printScsiLunGraphs (el, actualDeviceId);
+      }
+      break;
+    case showHostScsiSessionBytes:
+      printScsiSessionBytes (actualDeviceId, sortedColumn, revertOrder,
+			     pageNum, url, el);
+      break;
+    case showHostScsiSessionTimes:
+      printScsiSessionTimes (actualDeviceId, sortedColumn, revertOrder,
+			     pageNum, url, el);
+      break;
+    case showHostScsiSessionStatus:
+      printScsiSessionStatusInfo (actualDeviceId, sortedColumn,
+				  revertOrder, pageNum, url, el);
+      break;
+    case showHostScsiSessionTMInfo:
+      printScsiSessionTmInfo (actualDeviceId, sortedColumn,
+			      revertOrder, pageNum, url, el);
+      break;
+    case showHostFcSessions:
+      printFCSessions (actualDeviceId, sortedColumn,
+		       revertOrder, pageNum, url, el);
+      break;
+    }
+
+
+    return;
+  }
+
+  /* ***************************************************** */
+
+  i = 0;
+
+  if(el->portsUsage != NULL) {
+    for(idx=1; idx<MAX_ASSIGNED_IP_PORTS /* 1024 */; idx++) {
+      PortUsage *ports = getPortsUsage(el, idx, 0);
+      if(ports != NULL) {
+	char *svc = getAllPortByNum(idx, portBuf, sizeof(portBuf));
+	char webHostName[LEN_GENERAL_WORK_BUFFER];
+	HostTraffic *peerHost;
+
+	if(i == 0) {
+	  printSectionTitle("TCP/UDP&nbsp;Service/Port&nbsp;Usage\n");
+	  sendString("<CENTER>\n");
+	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
+		     "<TH "TH_BG">IP&nbsp;Service</TH>"
+		     "<TH "TH_BG">Port</TH>"
+		     "<TH "TH_BG">#&nbsp;Client&nbsp;Sess.</TH>"
+		     "<TH "TH_BG">Last&nbsp;Client&nbsp;Peer</TH>"
+		     "<TH "TH_BG">#&nbsp;Server&nbsp;Sess.</TH>"
+		     "<TH "TH_BG">Last&nbsp;Server&nbsp;Peer</TH>"
+		     "</TR>\n");
+	  i++;
+	}
+
+	if(svc != NULL) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+			"<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), svc, idx);
+	} else {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%d</TH>"
+			"<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), idx, idx);
+	}
+
+	sendString(buf);
+
+	if(ports->clientUses > 0) {
+	  /* Fix below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
+	  HostTraffic tmpEl;
+
+	  if(emptySerial(&ports->clientUsesLastPeer))
+	    peerHost = NULL;
+	  else
+	    peerHost = quickHostLink(ports->clientUsesLastPeer, actualDeviceId, &tmpEl);
+
+	  if(peerHost == NULL) {
+	    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
+	    strncpy(webHostName, "&nbsp;", sizeof(webHostName));
+	  } else
+	    strncpy(webHostName, makeHostLink(peerHost, FLAG_HOSTLINK_TEXT_FORMAT, 0,
+					      0, hostLinkBuf, sizeof(hostLinkBuf)),
+		    sizeof(webHostName));
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
+			"<TD "TD_BG" ALIGN=CENTER>%s</TD>",
+			ports->clientUses,
+			formatBytes(ports->clientTraffic.value, 1, formatBuf, sizeof(formatBuf)),
+			webHostName);
+	  sendString(buf);
+	} else
+	  sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD>");
+
+	if(ports->serverUses > 0) {
+	  HostTraffic tmpEl;
+
+	  if(emptySerial(&ports->serverUsesLastPeer))
+	    peerHost = NULL;
+	  else
+	    peerHost = quickHostLink(ports->serverUsesLastPeer, actualDeviceId, &tmpEl);
+
+	  if(peerHost == NULL) {
+	    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
+	    strncpy(webHostName, "&nbsp;", sizeof(webHostName));
+	  } else
+	    strncpy(webHostName, makeHostLink(peerHost, FLAG_HOSTLINK_TEXT_FORMAT, 0,
+					      0, hostLinkBuf, sizeof(hostLinkBuf)), sizeof(webHostName));
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
+			"<TD "TD_BG" ALIGN=CENTER>%s</TD></TR>",
+			ports->serverUses,
+			formatBytes(ports->serverTraffic.value, 1, formatBuf, sizeof(formatBuf)),
+			webHostName);
+	  sendString(buf);
+	} else
+	  sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD></TR>");
+      }
+    }
+  }
+
+  if(i > 0){
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");
+  }
+
+  /* *********************************
+********************************* */
+
+  if((el->otherIpPortsRcvd[MAX_NUM_RECENT_PORTS-1] >= 0) || (el->otherIpPortsSent[MAX_NUM_RECENT_PORTS-1] >= 0)) {
+    /* We have something to show */
+    int numPrinted;
+
+    printSectionTitle("TCP/UDP - Traffic on Other Ports\n");
+    sendString("<CENTER>\n");
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
+	       "<TH "TH_BG">Client Port</TH><TH "TH_BG">Server Port</TH>"
+	       "</TR>\n");
+
+    sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=LEFT><UL>");
+
+    for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
+      if(el->otherIpPortsSent[idx] >= 0) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
+		      el->otherIpPortsSent[idx],
+		      getAllPortByNum(el->otherIpPortsSent[idx], portBuf, sizeof(portBuf)));
+	sendString(buf);
+	numPrinted++;
+      }
+    }
+
+    if(numPrinted == 0) sendString("&nbsp;");
+    sendString("</UL></TD><TD "TD_BG" ALIGN=LEFT><UL>");
+
+    for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
+      if(el->otherIpPortsRcvd[idx] >= 0) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
+		      el->otherIpPortsRcvd[idx],
+		      getAllPortByNum(el->otherIpPortsRcvd[idx], portBuf, sizeof(portBuf)));
+	sendString(buf);
+	numPrinted++;
+      }
+    }
+
+    if(numPrinted == 0) sendString("&nbsp;");
+    sendString("</UL></TR></TABLE>"TABLE_OFF"</CENTER>");
+  }
+
+  /* ****************************************************************** */
+
+  if((el->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] >= 0)
+     || (el->recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS-1] >= 0)) {
+    /* We have something to show */
+    int numPrinted;
+
+    printSectionTitle("TCP/UDP Recently Used Ports\n");
+    sendString("<CENTER>\n");
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
+	       "<TH "TH_BG">Client Port</TH><TH "TH_BG">Server Port</TH>"
+	       "</TR>\n");
+
+    sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=LEFT><UL>");
+
+    for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
+      if(el->recentlyUsedClientPorts[idx] >= 0) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
+		      el->recentlyUsedClientPorts[idx],
+		      getAllPortByNum(el->recentlyUsedClientPorts[idx], portBuf, sizeof(portBuf)));
+	sendString(buf);
+	numPrinted++;
+      }
+    }
+
+    if(numPrinted == 0) sendString("&nbsp;");
+
+    sendString("</UL></TD><TD "TD_BG" ALIGN=LEFT><UL>");
+
+    for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
+      if(el->recentlyUsedServerPorts[idx] >= 0) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
+		      el->recentlyUsedServerPorts[idx],
+		      getAllPortByNum(el->recentlyUsedServerPorts[idx], portBuf, sizeof(portBuf)));
+	sendString(buf);
+	numPrinted++;
+      }
+    }
+
+    if(numPrinted == 0) sendString("&nbsp;");
+    sendString("</UL></TR></TABLE>"TABLE_OFF"</CENTER>");
+  }
+
+  /* *************************************************** */
+
+  if((el->protocolInfo != NULL)
+     && (el->protocolInfo->fileList != NULL)) {
+    FileList *list = el->protocolInfo->fileList;
+
+    printSectionTitle("P2P Recently Exchanged Files\n");
+
+    sendString("<CENTER>\n");
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
+	       "<TH "TH_BG" NOWRAP>File Name</TH></TR>\n");
+    sendString("<TR><TD align=left NOWRAP><ol>\n");
+
+    while(list != NULL) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s&nbsp;",
+		    list->fileName);
+      sendString(buf);
+
+      if(FD_ISSET(BITFLAG_P2P_UPLOAD_MODE, &list->fileFlags))
+	sendString("<IMG SRC=/upload.gif ALT=Upload VALIGN=MIDDLE>&nbsp;");
+      if(FD_ISSET(BITFLAG_P2P_DOWNLOAD_MODE, &list->fileFlags))
+	sendString("<IMG SRC=/download.gif ALT=Download VALIGN=MIDDLE>&nbsp;");
+
+      list = list->next;
+    }
+
+    sendString("\n</ol></TD></TR></TABLE></CENTER>\n");
+  }
+
+  /* *************************************************** */
+
+  printHostSessions(el, actualDeviceId);
+}
+
+/* ************************************ */
+
+void printLocalRoutersList(int actualDeviceId) {
+  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  HostTraffic *el, *router;
+  u_int i, j, numEntries=0;
+  HostSerial routerList[MAX_NUM_ROUTERS];
+
+  printHTMLheader("Local Subnet Routers", NULL, 0);
+
+  if(myGlobals.runningPref.dontTrustMACaddr) {
+    printNotAvailable("-o or --no-mac");
+    return;
+  }
+
+  for(el=getFirstHost(actualDeviceId);
+      el != NULL; el = getNextHost(actualDeviceId, el)) {
+
+    if(el->community && (!isAllowedCommunity(el->community))) continue;
+
+    if(subnetLocalHost(el)) {
+      for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
+	if(!emptySerial(&el->contactedRouters.peersSerials[j])) {
+	  short found = 0;
+
+	  for(i=0; i<numEntries; i++) {
+	    if(cmpSerial(&el->contactedRouters.peersSerials[j], &routerList[i])) {
+	      found = 1;
+	      break;
+	    }
+	  }
+
+	  if((found == 0) && (numEntries < MAX_NUM_ROUTERS)) {
+	    routerList[numEntries++] = el->contactedRouters.peersSerials[j];
+	  }
+	}
+    }
+  } /* for */
+
+  if(numEntries == 0) {
+    printNoDataYet();
+    return;
+  } else {
+    sendString("<CENTER>\n");
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG">Router Name</TH>"
+	       "<TH "TH_BG">Used by</TH></TR>\n");
+
+    for(i=0; i<numEntries; i++) {
+      HostTraffic tmpEl;
+
+      if((router = quickHostLink(routerList[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<TR "TR_ON" %s><TH "TH_BG" align=left>%s</TH><TD "TD_BG" ALIGN=LEFT><UL>\n",
+		      getRowColor(),
+		      makeHostLink(router, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
+				   hostLinkBuf, sizeof(hostLinkBuf)));
+	sendString(buf);
+
+
+	for(el=getFirstHost(actualDeviceId); el != NULL; el = getNextHost(actualDeviceId, el)) {
+	  if(el->community && (!isAllowedCommunity(el->community))) continue;
+	  if(subnetLocalHost(el)) {
+	    for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
+	      if(cmpSerial(&el->contactedRouters.peersSerials[j], &routerList[i])) {
+		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<LI>%s</LI>\n",
+			      makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
+					   hostLinkBuf, sizeof(hostLinkBuf)));
+		sendString(buf);
+		break;
+	      }
+	  }
+	}
+
+	sendString("</OL></TD></TR>\n");
+      }
+    }
+
+    sendString("</TABLE>"TABLE_OFF"\n");
+    sendString("</CENTER>\n");
+
+    printHostColorCode(FALSE, 0);
+
+    printFooterHostLink();
+  }
+}
+
+/* ************************************ */
+
+void printIpAccounting(int remoteToLocal, int sortedColumn,
+		       int revertOrder, int pageNum) {
+  u_int idx, numEntries=0, maxHosts;
+  int printedEntries=0;
+  HostTraffic *el, **tmpTable;
+  char buf[LEN_GENERAL_WORK_BUFFER], *str=NULL, *sign, *title=NULL;
+  Counter totalBytesSent, totalBytesRcvd, totalBytes, a=0, b=0;
+  float sentpct, rcvdpct;
+  time_t timeDiff = time(NULL)-myGlobals.initialSniffTime;
+  char *arrowGif, *arrow[48], *theAnchor[48], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char htmlAnchor[64], htmlAnchor1[64];
+  char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32];
+
+  switch(remoteToLocal) {
+  case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
+    str = CONST_IP_R_2_L_HTML;
+    title = "Remote to Local IP Traffic";
+    break;
+  case FLAG_REMOTE_TO_REMOTE_ACCOUNTING:
+    str = CONST_IP_R_2_R_HTML;
+    title = "Remote to Remote IP Traffic";
+    break;
+  case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
+    str = CONST_IP_L_2_R_HTML;
+    title = "Local to Remote IP Traffic";
+    break;
+  case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
+    str = CONST_IP_L_2_L_HTML;
+    title = "Local IP Traffic";
+    break;
+  }
+
+  printHTMLheader(title, NULL, 0);
+
+  if(revertOrder) {
+    sign = "";
+    arrowGif = "&nbsp;" CONST_IMG_ARROW_UP;
+  } else {
+    sign = "-";
+    arrowGif = "&nbsp;" CONST_IMG_ARROW_DOWN;
+  }
+
+  totalBytesSent=0, totalBytesRcvd=0;
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+
+  tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "printIpAccounting");
+  if(tmpTable == NULL)
+    return;
+
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
+      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+    if((broadcastHost(el) == 0) /* No broadcast addresses please */
+       && (multicastHost(el) == 0) /* No multicast addresses please */
+       && ((el->hostNumIpAddress[0] != '\0')
+	   && (!addrnull(&el->hostIpAddress))
+	   /* This host speaks IP */)) {
+
+      if(el->community && (!isAllowedCommunity(el->community))) continue;
+
+      switch(remoteToLocal) {
+      case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
+	if(!subnetPseudoLocalHost(el)) {
+	  if((el->bytesSentLoc.value > 0) || (el->bytesRcvdLoc.value > 0)) {
+	    tmpTable[numEntries++]=el;
+	    totalBytesSent += el->bytesSentLoc.value;
+	    totalBytesRcvd += el->bytesRcvdLoc.value;
+	  }
+	}
+	break;
+      case FLAG_REMOTE_TO_REMOTE_ACCOUNTING:
+	if(!subnetPseudoLocalHost(el)) {
+	  if((el->bytesSentRem.value > 0) || (el->bytesRcvdFromRem.value > 0)) {
+	    tmpTable[numEntries++]=el;
+	    totalBytesSent += el->bytesSentRem.value;
+	    totalBytesRcvd += el->bytesRcvdFromRem.value;
+	  }
+	}
+	break;
+      case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
+	if(subnetPseudoLocalHost(el)) {
+	  if((el->bytesSentRem.value > 0) || (el->bytesRcvdFromRem.value > 0)) {
+	    tmpTable[numEntries++]=el;
+	    totalBytesSent += el->bytesSentRem.value;
+	    totalBytesRcvd += el->bytesRcvdFromRem.value;
+	  }
+	}
+	break;
+      case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
+	if(subnetPseudoLocalHost(el)) {
+	  if((el->bytesSentLoc.value > 0) || (el->bytesRcvdLoc.value > 0)) {
+	    tmpTable[numEntries++]=el;
+	    totalBytesSent += el->bytesSentLoc.value;
+	    totalBytesRcvd += el->bytesRcvdLoc.value;
+	  }
+	}
+	break;
+      }
+
+      if(numEntries >= maxHosts) break;
+    }
+  }
+
+  if(numEntries > 0) {
+    int i;
+
+    myGlobals.columnSort = sortedColumn;
+    myGlobals.sortFilter = remoteToLocal;
+    qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpHostsFctn);
+
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", str, sign);
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", str);
+
+    for(i=1; i<=4; i++)
+      if(abs(myGlobals.columnSort) == i)
+	arrow[i] = arrowGif, theAnchor[i] = htmlAnchor;
+      else
+	arrow[i] = "", theAnchor[i] = htmlAnchor1;
+
+    sendString("<CENTER>\n");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%%\">\n"
+		  "<TR "TR_ON" "DARK_BG"><TH "TH_BG">"
+		  "%s1>Host%s</A></TH>"
+		  "<TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
+		  "<TH "TH_BG" COLSPAN=2>%s3>Data&nbsp;Sent%s</A></TH>"
+		  "<TH "TH_BG" COLSPAN=2>%s4>Data&nbsp;Rcvd%s</A></TH></TR>\n",
+		  theAnchor[1], arrow[1],
+		  theAnchor[2], arrow[2], theAnchor[3], arrow[3],
+		  theAnchor[4], arrow[4]);
+
+    sendString(buf);
+
+    for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
+      if(revertOrder)
+	el = tmpTable[numEntries-idx-1];
+      else
+	el = tmpTable[idx];
+
+      if(el != NULL) {
+	char *tmpName1;
+	tmpName1 = el->hostNumIpAddress;
+	if((tmpName1[0] == '\0') || (strcmp(tmpName1, "0.0.0.0") == 0))
+	  tmpName1 = myGlobals.separator;
+
+	switch(remoteToLocal) {
+	case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
+	  a = el->bytesSentLoc.value;
+	  b = el->bytesRcvdLoc.value;
+	  break;
+	case FLAG_REMOTE_TO_REMOTE_ACCOUNTING:
+	  a = el->bytesSentRem.value;
+	  b = el->bytesRcvdFromRem.value;
+	  break;
+	case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
+	  a = el->bytesSentRem.value;
+	  b = el->bytesRcvdFromRem.value;
+	  break;
+	case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
+	  a = el->bytesSentLoc.value;
+	  b = el->bytesRcvdLoc.value;
+	  break;
+	}
+
+	if(a < 100)  /* Avoid very small decimal values */
+	  sentpct = 0;
+	else
+	  sentpct = (100*(float)a)/totalBytesSent;
+
+	if(b < 100)  /* Avoid very small decimal values */
+	  rcvdpct = 0;
+	else
+	  rcvdpct = (100*(float)b)/totalBytesRcvd;
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
+		      "%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD></TR>\n",
+		      getRowColor(),
+		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
+		      tmpName1,
+		      formatBytes(a, 1, formatBuf, sizeof(formatBuf)),
+		      sentpct, myGlobals.separator,
+		      formatBytes(b, 1, formatBuf1, sizeof(formatBuf1)),
+		      rcvdpct, myGlobals.separator);
+	sendString(buf);
+
+	/* Avoid huge tables */
+	if(printedEntries++ > myGlobals.runningPref.maxNumLines)
+	  break;
+      }
+    }
+
+    sendString("</TABLE>"TABLE_OFF"\n");
+
+    addPageIndicator(str, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
+		     revertOrder, abs(sortedColumn), -1);
+
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\">\n<TR "TR_ON" "DARK_BG">"
+	       "<TH "TH_BG">Total Traffic</TH><TH "TH_BG">Data Sent</TH>\n"
+	       "<TH "TH_BG">Data Rcvd</TH><TH "TH_BG">Used Bandwidth</TH></TR>\n");
+
+    totalBytes = totalBytesSent+totalBytesRcvd;
+
+    /* In this case the total traffic is just half and
+       the following statement holds:
+       totalBytesSent == totalBytesRcvd
+
+       Courtesy of Jac Engel <jacengel@home.nl>
     */
-   if((el == NULL) || (!found)) {
-     char errorAdditionalText[1024], whois[256];
-
-     safe_snprintf(__FILE__, __LINE__, whois, sizeof(whois),
-		   "[ <A class=external HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=%s\">Whois</A> ]</TD></TR>\n",
-		   host);
-
-     safe_snprintf(__FILE__, __LINE__, errorAdditionalText, sizeof(errorAdditionalText),
-		   "<p align=\"center\"><img class=tooltip alt=\"Warning\" src=\"/warning.gif\"></p>\n"
-		   "<p align=\"center\"><font color=\"#FF0000\" size=\"+1\">"
-		   "<b>ntop</b> does not currently have any information about host %s %s.</font></p>"
-		   "<p>&nbsp;</p>"
-		   "<p>This is most likely because the host information has been "
-		   "purged as inactive.  You may wish to consider the -c | --sticky-hosts "
-		   "option, although that option may substantially increase memory "
-		   "requirements.</p>\n",
-		   host, whois);
-     returnHTTPpageNotFound(errorAdditionalText);
-     return;
-   }
-
-   if(el->community && (!isAllowedCommunity(el->community))) {
-     returnHTTPpageBadCommunity();
-     return;
-   }
-
-   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-
-   /* ************************************ */
-
-   if(found && !foundFcHost) {
-     printHostDetailedInfo(el, actualDeviceId);
-     printHostTrafficStats(el, actualDeviceId);
-     printHostIcmpStats(el);
-     printHostFragmentStats(el, actualDeviceId);
-     printHostContactedPeers(el, actualDeviceId);
-     printHostHTTPVirtualHosts(el, actualDeviceId);
-     printHostUsedServices(el, actualDeviceId);
-   } else if(foundFcHost) {
-     printHTMLheader("", NULL, 0);
-     printFcHostHeader(el, url, revertOrder, sortedColumn, hostInfoPage);
-
-     switch (hostInfoPage) {
-     case showHostMainPage:
-       printFcHostDetailedInfo (el, actualDeviceId);
-       printFcHostTrafficStats (el, actualDeviceId);
-       printFcHostContactedPeers(el, actualDeviceId);
-       break;
-     case showHostLunStats:
-       if(el->fcCounters->devType != SCSI_DEV_INITIATOR) {
-	 printScsiLunStats (el, actualDeviceId, sortedColumn,
-			    revertOrder, pageNum, url);
-       }
-       break;
-     case showHostLunGraphs:
-       if(el->fcCounters->devType != SCSI_DEV_INITIATOR) {
-	 printScsiLunGraphs (el, actualDeviceId);
-       }
-       break;
-     case showHostScsiSessionBytes:
-       printScsiSessionBytes (actualDeviceId, sortedColumn, revertOrder,
-			      pageNum, url, el);
-       break;
-     case showHostScsiSessionTimes:
-       printScsiSessionTimes (actualDeviceId, sortedColumn, revertOrder,
-			      pageNum, url, el);
-       break;
-     case showHostScsiSessionStatus:
-       printScsiSessionStatusInfo (actualDeviceId, sortedColumn,
-				   revertOrder, pageNum, url, el);
-       break;
-     case showHostScsiSessionTMInfo:
-       printScsiSessionTmInfo (actualDeviceId, sortedColumn,
-			       revertOrder, pageNum, url, el);
-       break;
-     case showHostFcSessions:
-       printFCSessions (actualDeviceId, sortedColumn,
-			revertOrder, pageNum, url, el);
-       break;
-     }
-
-
-     return;
-   }
-
-   /* ***************************************************** */
-
-   i = 0;
-
-   if(el->portsUsage != NULL) {
-     for(idx=1; idx<MAX_ASSIGNED_IP_PORTS /* 1024 */; idx++) {
-       PortUsage *ports = getPortsUsage(el, idx, 0);
-       if(ports != NULL) {
-	 char *svc = getAllPortByNum(idx, portBuf, sizeof(portBuf));
-	 char webHostName[LEN_GENERAL_WORK_BUFFER];
-	 HostTraffic *peerHost;
-
-	 if(i == 0) {
-	   printSectionTitle("TCP/UDP&nbsp;Service/Port&nbsp;Usage\n");
-	   sendString("<CENTER>\n");
-	   sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-		      "<TH "TH_BG">IP&nbsp;Service</TH>"
-		      "<TH "TH_BG">Port</TH>"
-		      "<TH "TH_BG">#&nbsp;Client&nbsp;Sess.</TH>"
-		      "<TH "TH_BG">Last&nbsp;Client&nbsp;Peer</TH>"
-		      "<TH "TH_BG">#&nbsp;Server&nbsp;Sess.</TH>"
-		      "<TH "TH_BG">Last&nbsp;Server&nbsp;Peer</TH>"
-		      "</TR>\n");
-	   i++;
-	 }
-
-	 if(svc != NULL) {
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-			 "<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), svc, idx);
-	 } else {
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%d</TH>"
-			 "<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), idx, idx);
-	 }
-
-	 sendString(buf);
-
-	 if(ports->clientUses > 0) {
-	   /* Fix below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
-	   HostTraffic tmpEl;
-
-	   if(emptySerial(&ports->clientUsesLastPeer))
-	     peerHost = NULL;
-	   else
-	     peerHost = quickHostLink(ports->clientUsesLastPeer, actualDeviceId, &tmpEl);
-
-	   if(peerHost == NULL) {
-	     /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
-	     strncpy(webHostName, "&nbsp;", sizeof(webHostName));
-	   } else
-	     strncpy(webHostName, makeHostLink(peerHost, FLAG_HOSTLINK_TEXT_FORMAT, 0,
-					       0, hostLinkBuf, sizeof(hostLinkBuf)),
-		     sizeof(webHostName));
-
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
-			 "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
-			 ports->clientUses,
-			 formatBytes(ports->clientTraffic.value, 1, formatBuf, sizeof(formatBuf)),
-			 webHostName);
-	   sendString(buf);
-	 } else
-	   sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD>");
-
-	 if(ports->serverUses > 0) {
-	   HostTraffic tmpEl;
-
-	   if(emptySerial(&ports->serverUsesLastPeer))
-	     peerHost = NULL;
-	   else
-	     peerHost = quickHostLink(ports->serverUsesLastPeer, actualDeviceId, &tmpEl);
-
-	   if(peerHost == NULL) {
-	     /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
-	     strncpy(webHostName, "&nbsp;", sizeof(webHostName));
-	   } else
-	     strncpy(webHostName, makeHostLink(peerHost, FLAG_HOSTLINK_TEXT_FORMAT, 0,
-					       0, hostLinkBuf, sizeof(hostLinkBuf)), sizeof(webHostName));
-
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
-			 "<TD "TD_BG" ALIGN=CENTER>%s</TD></TR>",
-			 ports->serverUses,
-			 formatBytes(ports->serverTraffic.value, 1, formatBuf, sizeof(formatBuf)),
-			 webHostName);
-	   sendString(buf);
-	 } else
-	   sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD></TR>");
-       }
-     }
-   }
-
-   if(i > 0){
-     sendString("</TABLE>"TABLE_OFF"<P>\n");
-     sendString("</CENTER>\n");
-   }
-
-   /* *********************************
- ********************************* */
-
-   if((el->otherIpPortsRcvd[MAX_NUM_RECENT_PORTS-1] >= 0) || (el->otherIpPortsSent[MAX_NUM_RECENT_PORTS-1] >= 0)) {
-     /* We have something to show */
-     int numPrinted;
-
-     printSectionTitle("TCP/UDP - Traffic on Other Ports\n");
-     sendString("<CENTER>\n");
-     sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG">Client Port</TH><TH "TH_BG">Server Port</TH>"
-		"</TR>\n");
-
-     sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=LEFT><UL>");
-
-     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
-       if(el->otherIpPortsSent[idx] >= 0) {
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		       "<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
-		       el->otherIpPortsSent[idx],
-		       getAllPortByNum(el->otherIpPortsSent[idx], portBuf, sizeof(portBuf)));
-	 sendString(buf);
-	 numPrinted++;
-       }
-     }
-
-     if(numPrinted == 0) sendString("&nbsp;");
-     sendString("</UL></TD><TD "TD_BG" ALIGN=LEFT><UL>");
-
-     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
-       if(el->otherIpPortsRcvd[idx] >= 0) {
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		       "<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
-		       el->otherIpPortsRcvd[idx],
-		       getAllPortByNum(el->otherIpPortsRcvd[idx], portBuf, sizeof(portBuf)));
-	 sendString(buf);
-	 numPrinted++;
-       }
-     }
-
-     if(numPrinted == 0) sendString("&nbsp;");
-     sendString("</UL></TR></TABLE>"TABLE_OFF"</CENTER>");
-   }
-
-   /* ****************************************************************** */
-
-   if((el->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] >= 0)
-      || (el->recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS-1] >= 0)) {
-     /* We have something to show */
-     int numPrinted;
-
-     printSectionTitle("TCP/UDP Recently Used Ports\n");
-     sendString("<CENTER>\n");
-     sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG">Client Port</TH><TH "TH_BG">Server Port</TH>"
-		"</TR>\n");
-
-     sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=LEFT><UL>");
-
-     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
-       if(el->recentlyUsedClientPorts[idx] >= 0) {
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		       "<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
-		       el->recentlyUsedClientPorts[idx],
-		       getAllPortByNum(el->recentlyUsedClientPorts[idx], portBuf, sizeof(portBuf)));
-	 sendString(buf);
-	 numPrinted++;
-       }
-     }
-
-     if(numPrinted == 0) sendString("&nbsp;");
-
-     sendString("</UL></TD><TD "TD_BG" ALIGN=LEFT><UL>");
-
-     for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
-       if(el->recentlyUsedServerPorts[idx] >= 0) {
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		       "<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
-		       el->recentlyUsedServerPorts[idx],
-		       getAllPortByNum(el->recentlyUsedServerPorts[idx], portBuf, sizeof(portBuf)));
-	 sendString(buf);
-	 numPrinted++;
-       }
-     }
-
-     if(numPrinted == 0) sendString("&nbsp;");
-     sendString("</UL></TR></TABLE>"TABLE_OFF"</CENTER>");
-   }
-
-   /* *************************************************** */
-
-   if((el->protocolInfo != NULL)
-      && (el->protocolInfo->fileList != NULL)) {
-     FileList *list = el->protocolInfo->fileList;
-
-     printSectionTitle("P2P Recently Exchanged Files\n");
-
-     sendString("<CENTER>\n");
-     sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
-		"<TH "TH_BG" NOWRAP>File Name</TH></TR>\n");
-     sendString("<TR><TD align=left NOWRAP><ol>\n");
-
-     while(list != NULL) {
-       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s&nbsp;",
-		     list->fileName);
-       sendString(buf);
-
-       if(FD_ISSET(BITFLAG_P2P_UPLOAD_MODE, &list->fileFlags))
-	 sendString("<IMG SRC=/upload.gif ALT=Upload VALIGN=MIDDLE>&nbsp;");
-       if(FD_ISSET(BITFLAG_P2P_DOWNLOAD_MODE, &list->fileFlags))
-	 sendString("<IMG SRC=/download.gif ALT=Download VALIGN=MIDDLE>&nbsp;");
-
-       list = list->next;
-     }
-
-     sendString("\n</ol></TD></TR></TABLE></CENTER>\n");
-   }
-
-   /* *************************************************** */
-
-   printHostSessions(el, actualDeviceId);
- }
-
- /* ************************************ */
-
- void printLocalRoutersList(int actualDeviceId) {
-   char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-   HostTraffic *el, *router;
-   u_int i, j, numEntries=0;
-   HostSerial routerList[MAX_NUM_ROUTERS];
-
-   printHTMLheader("Local Subnet Routers", NULL, 0);
-
-   if(myGlobals.runningPref.dontTrustMACaddr) {
-     printNotAvailable("-o or --no-mac");
-     return;
-   }
-
-   for(el=getFirstHost(actualDeviceId);
-       el != NULL; el = getNextHost(actualDeviceId, el)) {
-
-     if(el->community && (!isAllowedCommunity(el->community))) continue;
-
-     if(subnetLocalHost(el)) {
-       for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
-	 if(!emptySerial(&el->contactedRouters.peersSerials[j])) {
-	   short found = 0;
-
-	   for(i=0; i<numEntries; i++) {
-	     if(cmpSerial(&el->contactedRouters.peersSerials[j], &routerList[i])) {
-	       found = 1;
-	       break;
-	     }
-	   }
-
-	   if((found == 0) && (numEntries < MAX_NUM_ROUTERS)) {
-	     routerList[numEntries++] = el->contactedRouters.peersSerials[j];
-	   }
-	 }
-     }
-   } /* for */
-
-   if(numEntries == 0) {
-     printNoDataYet();
-     return;
-   } else {
-     sendString("<CENTER>\n");
-     sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG">Router Name</TH>"
-		"<TH "TH_BG">Used by</TH></TR>\n");
-
-     for(i=0; i<numEntries; i++) {
-       HostTraffic tmpEl;
-
-       if((router = quickHostLink(routerList[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		       "<TR "TR_ON" %s><TH "TH_BG" align=left>%s</TH><TD "TD_BG" ALIGN=LEFT><UL>\n",
-		       getRowColor(),
-		       makeHostLink(router, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
-				    hostLinkBuf, sizeof(hostLinkBuf)));
-	 sendString(buf);
-
-
-	 for(el=getFirstHost(actualDeviceId); el != NULL; el = getNextHost(actualDeviceId, el)) {
-	   if(el->community && (!isAllowedCommunity(el->community))) continue;
-	   if(subnetLocalHost(el)) {
-	     for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
-	       if(cmpSerial(&el->contactedRouters.peersSerials[j], &routerList[i])) {
-		 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<LI>%s</LI>\n",
-			       makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
-					    hostLinkBuf, sizeof(hostLinkBuf)));
-		 sendString(buf);
-		 break;
-	       }
-	   }
-	 }
-
-	 sendString("</OL></TD></TR>\n");
-       }
-     }
-
-     sendString("</TABLE>"TABLE_OFF"\n");
-     sendString("</CENTER>\n");
-
-     printHostColorCode(FALSE, 0);
-
-     printFooterHostLink();
-   }
- }
-
- /* ************************************ */
-
- void printIpAccounting(int remoteToLocal, int sortedColumn,
-			int revertOrder, int pageNum) {
-   u_int idx, numEntries=0, maxHosts;
-   int printedEntries=0;
-   HostTraffic *el, **tmpTable;
-   char buf[LEN_GENERAL_WORK_BUFFER], *str=NULL, *sign, *title=NULL;
-   Counter totalBytesSent, totalBytesRcvd, totalBytes, a=0, b=0;
-   float sentpct, rcvdpct;
-   time_t timeDiff = time(NULL)-myGlobals.initialSniffTime;
-   char *arrowGif, *arrow[48], *theAnchor[48], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-   char htmlAnchor[64], htmlAnchor1[64];
-   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32];
-
-   switch(remoteToLocal) {
-   case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
-     str = CONST_IP_R_2_L_HTML;
-     title = "Remote to Local IP Traffic";
-     break;
-   case FLAG_REMOTE_TO_REMOTE_ACCOUNTING:
-     str = CONST_IP_R_2_R_HTML;
-     title = "Remote to Remote IP Traffic";
-     break;
-   case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
-     str = CONST_IP_L_2_R_HTML;
-     title = "Local to Remote IP Traffic";
-     break;
-   case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
-     str = CONST_IP_L_2_L_HTML;
-     title = "Local IP Traffic";
-     break;
-   }
-
-   printHTMLheader(title, NULL, 0);
-
-   if(revertOrder) {
-     sign = "";
-     arrowGif = "&nbsp;" CONST_IMG_ARROW_UP;
-   } else {
-     sign = "-";
-     arrowGif = "&nbsp;" CONST_IMG_ARROW_DOWN;
-   }
-
-   totalBytesSent=0, totalBytesRcvd=0;
-   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
-
-   tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "printIpAccounting");
-   if(tmpTable == NULL)
-     return;
-
-   for(el=getFirstHost(myGlobals.actualReportDeviceId);
-       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-     if((broadcastHost(el) == 0) /* No broadcast addresses please */
-	&& (multicastHost(el) == 0) /* No multicast addresses please */
-	&& ((el->hostNumIpAddress[0] != '\0')
-	    && (!addrnull(&el->hostIpAddress))
-	    /* This host speaks IP */)) {
-
-       if(el->community && (!isAllowedCommunity(el->community))) continue;
-
-       switch(remoteToLocal) {
-       case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
-	 if(!subnetPseudoLocalHost(el)) {
-	   if((el->bytesSentLoc.value > 0) || (el->bytesRcvdLoc.value > 0)) {
-	     tmpTable[numEntries++]=el;
-	     totalBytesSent += el->bytesSentLoc.value;
-	     totalBytesRcvd += el->bytesRcvdLoc.value;
-	   }
-	 }
-	 break;
-       case FLAG_REMOTE_TO_REMOTE_ACCOUNTING:
-	 if(!subnetPseudoLocalHost(el)) {
-	   if((el->bytesSentRem.value > 0) || (el->bytesRcvdFromRem.value > 0)) {
-	     tmpTable[numEntries++]=el;
-	     totalBytesSent += el->bytesSentRem.value;
-	     totalBytesRcvd += el->bytesRcvdFromRem.value;
-	   }
-	 }
-	 break;
-       case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
-	 if(subnetPseudoLocalHost(el)) {
-	   if((el->bytesSentRem.value > 0) || (el->bytesRcvdFromRem.value > 0)) {
-	     tmpTable[numEntries++]=el;
-	     totalBytesSent += el->bytesSentRem.value;
-	     totalBytesRcvd += el->bytesRcvdFromRem.value;
-	   }
-	 }
-	 break;
-       case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
-	 if(subnetPseudoLocalHost(el)) {
-	   if((el->bytesSentLoc.value > 0) || (el->bytesRcvdLoc.value > 0)) {
-	     tmpTable[numEntries++]=el;
-	     totalBytesSent += el->bytesSentLoc.value;
-	     totalBytesRcvd += el->bytesRcvdLoc.value;
-	   }
-	 }
-	 break;
-       }
-
-       if(numEntries >= maxHosts) break;
-     }
-   }
-
-   if(numEntries > 0) {
-     int i;
-
-     myGlobals.columnSort = sortedColumn;
-     myGlobals.sortFilter = remoteToLocal;
-     qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpHostsFctn);
-
-     safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", str, sign);
-     safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", str);
-
-     for(i=1; i<=4; i++)
-       if(abs(myGlobals.columnSort) == i)
-	 arrow[i] = arrowGif, theAnchor[i] = htmlAnchor;
-       else
-	 arrow[i] = "", theAnchor[i] = htmlAnchor1;
-
-     sendString("<CENTER>\n");
-     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%%\">\n"
-		   "<TR "TR_ON" "DARK_BG"><TH "TH_BG">"
-		   "%s1>Host%s</A></TH>"
-		   "<TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
-		   "<TH "TH_BG" COLSPAN=2>%s3>Data&nbsp;Sent%s</A></TH>"
-		   "<TH "TH_BG" COLSPAN=2>%s4>Data&nbsp;Rcvd%s</A></TH></TR>\n",
-		   theAnchor[1], arrow[1],
-		   theAnchor[2], arrow[2], theAnchor[3], arrow[3],
-		   theAnchor[4], arrow[4]);
-
-     sendString(buf);
-
-     for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
-       if(revertOrder)
-	 el = tmpTable[numEntries-idx-1];
-       else
-	 el = tmpTable[idx];
-
-       if(el != NULL) {
-	 char *tmpName1;
-	 tmpName1 = el->hostNumIpAddress;
-	 if((tmpName1[0] == '\0') || (strcmp(tmpName1, "0.0.0.0") == 0))
-	   tmpName1 = myGlobals.separator;
-
-	 switch(remoteToLocal) {
-	 case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
-	   a = el->bytesSentLoc.value;
-	   b = el->bytesRcvdLoc.value;
-	   break;
-	 case FLAG_REMOTE_TO_REMOTE_ACCOUNTING:
-	   a = el->bytesSentRem.value;
-	   b = el->bytesRcvdFromRem.value;
-	   break;
-	 case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
-	   a = el->bytesSentRem.value;
-	   b = el->bytesRcvdFromRem.value;
-	   break;
-	 case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
-	   a = el->bytesSentLoc.value;
-	   b = el->bytesRcvdLoc.value;
-	   break;
-	 }
-
-	 if(a < 100)  /* Avoid very small decimal values */
-	   sentpct = 0;
-	 else
-	   sentpct = (100*(float)a)/totalBytesSent;
-
-	 if(b < 100)  /* Avoid very small decimal values */
-	   rcvdpct = 0;
-	 else
-	   rcvdpct = (100*(float)b)/totalBytesRcvd;
-
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-		       "%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		       "</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
-		       "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD></TR>\n",
-		       getRowColor(),
-		       makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-		       tmpName1,
-		       formatBytes(a, 1, formatBuf, sizeof(formatBuf)),
-		       sentpct, myGlobals.separator,
-		       formatBytes(b, 1, formatBuf1, sizeof(formatBuf1)),
-		       rcvdpct, myGlobals.separator);
-	 sendString(buf);
-
-	 /* Avoid huge tables */
-	 if(printedEntries++ > myGlobals.runningPref.maxNumLines)
-	   break;
-       }
-     }
-
-     sendString("</TABLE>"TABLE_OFF"\n");
-
-     addPageIndicator(str, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
-		      revertOrder, abs(sortedColumn), -1);
-
-     sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\">\n<TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG">Total Traffic</TH><TH "TH_BG">Data Sent</TH>\n"
-		"<TH "TH_BG">Data Rcvd</TH><TH "TH_BG">Used Bandwidth</TH></TR>\n");
-
-     totalBytes = totalBytesSent+totalBytesRcvd;
-
-     /* In this case the total traffic is just half and
-	the following statement holds:
-	totalBytesSent == totalBytesRcvd
-
-	Courtesy of Jac Engel <jacengel@home.nl>
-     */
-     if(remoteToLocal == FLAG_LOCAL_TO_LOCAL_ACCOUNTING)
-       totalBytes /= 2;
-
-     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">"
-		   "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		   "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		   "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		   "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		   formatBytes(totalBytes, 1, formatBuf, sizeof(formatBuf)),
-		   formatBytes(totalBytesSent, 1, formatBuf1, sizeof(formatBuf1)),
-		   formatBytes(totalBytesRcvd, 1, formatBuf2, sizeof(formatBuf2)),
-		   formatThroughput((float)(totalBytes/timeDiff), 1, formatBuf3, sizeof(formatBuf3)));
-
-     sendString(buf);
-     sendString("</TABLE>"TABLE_OFF"\n");
-     sendString("</CENTER>\n");
-
-     printFooterHostLink();
-
-   } else
-     printNoDataYet();
-
-   free(tmpTable);
- }
-
- /* ********************************** */
-
- static char* print_flags(IPSession *session, char *buf, int buf_len) {
-   snprintf(buf, buf_len,"%s%s%s%s%s&nbsp;",
-	    (session->lastFlags & TH_SYN) ? " SYN" : "",
-	    (session->lastFlags & TH_ACK) ? " ACK" : "",
-	    (session->lastFlags & TH_FIN) ? " FIN" : "",
-	    (session->lastFlags & TH_RST) ? " RST" : "",
-	    (session->lastFlags & TH_PUSH) ? " PUSH" : "");  
-
-   return(buf);
- }
-
- /* ********************************** */
-
- void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
-   int idx;
-   char buf[1500], hostLinkBuf[LEN_GENERAL_WORK_BUFFER], flags_buf[64],
-     hostLinkBuf1[LEN_GENERAL_WORK_BUFFER], *voipStr;
-   int numSessions, printedSessions;
-   char formatBuf[64], formatBuf1[64], formatBuf2[64], formatBuf3[64],
-     formatBuf4[64], formatBuf5[64], formatBuf6[64];
-
-   if(!myGlobals.runningPref.enableSessionHandling) {
-     if(el != NULL) return;
-     printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
-     printNotAvailable("-z or --disable-sessions");
-     return;
-   }
-
-   if((myGlobals.device[actualDeviceId].tcpSession == NULL) ||
-      (myGlobals.device[actualDeviceId].numTcpSessions == 0)) {
-     if(el != NULL) return;
-     printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
-     printNoDataYet();
-     return;
-   }
-
-   /*
-     Due to the way sessions are handled, sessions before those to
-     display need to be skipped
-   */
-   for(idx=1, numSessions=0, printedSessions=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
-     if(el && (printedSessions >= el->numHostSessions)) break;
-     accessMutex(&myGlobals.tcpSessionsMutex, "printActiveTCPSessions");
-
-     if(myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx] != NULL) {
-       char *sport, *dport;
-       Counter dataSent, dataRcvd;
-       IPSession *session = myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx];
-
-       while((session != NULL) && (printedSessions < myGlobals.runningPref.maxNumLines)) {
- #ifndef PARM_PRINT_ALL_SESSIONS
-	 if(session->sessionState != FLAG_STATE_ACTIVE) {
-	   session = session->next;
-	   continue;
-	 }
- #endif
-
-	 if(el && (session->initiator  != el) && (session->remotePeer != el)) {
-	   session = session->next;
-	   continue;
-	 }
-
-	 if((numSessions++) < pageNum*myGlobals.runningPref.maxNumLines) {
-	   session = session->next;
-	   continue;
-	 }
-
-	 if(printedSessions == 0) {
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d Active TCP/UDP Sessions",
-			 myGlobals.device[actualDeviceId].numTcpSessions);			
-
-	   if(el == NULL)
-	     printHTMLheader(buf, NULL, 0);
-	   else
-	     printSectionTitle(buf);
-
-	   sendString("<CENTER>\n"
-		      ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-		      "<TH "TH_BG">Client</TH>"
-		      "<TH "TH_BG">Server</TH>"
-		      "<TH "TH_BG">Data&nbsp;Sent</TH>"
-		      "<TH "TH_BG">Data&nbsp;Rcvd</TH>"
-		      "<TH "TH_BG">Active&nbsp;Since</TH>"
-		      "<TH "TH_BG">Last&nbsp;Seen</TH>"
-		      "<TH "TH_BG">Duration</TH>"
-		      "<TH "TH_BG">Inactive</TH>"
-		      "<TH "TH_BG">Latency</TH>"
-		      "<TH "TH_BG">L7 Proto</TH>"
-		      "<TH "TH_BG">Note</TH>");
- #ifdef PARM_PRINT_ALL_SESSIONS
-	   sendString("<TH "TH_BG">State</TH>");
- #endif
-	   sendString("</TR>\n");
-	 }
-
-	 sport = getPortByNum(session->sport, IPPROTO_TCP);
-	 dport = getPortByNum(session->dport, IPPROTO_TCP);
-	 dataSent = session->bytesSent.value;
-	 dataRcvd = session->bytesRcvd.value;
-
-	 if(sport == NULL) {
-	   static char _sport[8];
-	   safe_snprintf(__FILE__, __LINE__, _sport, 8, "%d", session->sport);
-	   sport = _sport;
-	 }
-
-	 if(dport == NULL) {
-	   static char _dport[8];
-	   safe_snprintf(__FILE__, __LINE__, _dport, 8, "%d", session->dport);
-	   dport = _dport;
-	 }
-
-	 /* Sanity check */
-	 if((myGlobals.actTime < session->firstSeen)
-	    || (session->firstSeen == 0))
-	   session->firstSeen = myGlobals.actTime;
-	 if((myGlobals.actTime < session->lastSeen)
-	    || (session->lastSeen == 0))
-	   session->lastSeen = myGlobals.actTime;
-
-	 if((session->guessed_protocol != NULL)
-	    && session->voipSession
-	    && strstr(session->guessed_protocol, "skype"))
-	   voipStr = "/skype.gif";
-	 else if(session->voipSession)
-	   voipStr = "&nbsp&lt;VoIP&gt;";
-	 else
-	   voipStr = "";
-
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-		       "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s%s%s</TD>"
-		       "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s</TD>",
-		       getRowColor(),
-		       makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT,
-				    0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-		       sport, session->isP2P == 1 ? "&nbsp&lt;P2P&gt;" : "",
-		       voipStr, makeHostLink(session->remotePeer,
-					     FLAG_HOSTLINK_TEXT_FORMAT,
-					     0, 0, hostLinkBuf1,
-					     sizeof(hostLinkBuf1)),
-		       dport);
-	 sendString(buf);
-
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		       "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		       "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		       "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		       "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		       "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		       "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		       "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		       "<TD "TD_BG" ALIGN=CENTER NOWRAP>%s</TD>"
-		       "<TD "TD_BG" ALIGN=LEFT NOWRAP>%s</TD>",
-		       formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),
-		       formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1)),
-		       formatTime(&(session->firstSeen), formatBuf2, sizeof(formatBuf2)),
-		       formatTime(&(session->lastSeen), formatBuf3, sizeof(formatBuf3)),
-		       formatSeconds(session->lastSeen-session->firstSeen, formatBuf4, sizeof(formatBuf4)),
-		       formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
-		       formatLatency(session->nwLatency, session->sessionState, formatBuf6, sizeof(formatBuf6)),
-		       (session->guessed_protocol == NULL) ? "&nbsp;" : session->guessed_protocol,
-		       session->session_info ? session->session_info : 
-		       print_flags(session, flags_buf, sizeof(flags_buf)) /* "&nbsp;" */);
-	 sendString(buf);
-
- #ifdef PARM_PRINT_ALL_SESSIONS
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-		       "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
-		       getSessionState(session));
-	 sendString(buf);
- #endif
-	 sendString("</TR>\n");
-
-	 session = session->next;
-	 printedSessions++;
-       }
-     }
-     
-     releaseMutex(&myGlobals.tcpSessionsMutex);
-   }
-
-   if(printedSessions > 0) {
-     sendString("</TABLE>"TABLE_OFF"<P>\n");
-     sendString("</CENTER>\n");
-
-     if(el == NULL)
-       addPageIndicator(CONST_ACTIVE_TCP_SESSIONS_HTML, pageNum,
-			myGlobals.device[actualDeviceId].numTcpSessions,
-			myGlobals.runningPref.maxNumLines, -1, 0, -1);
-
-     printHostColorCode(FALSE, 0);
-
-     printFooterHostLink();
-   } else {
-     if(el == NULL) {
-       printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
-       printNoDataYet();
-     }
-   }
- }
-
- /* ********************************** */
-
- void printIpProtocolUsage(void) {
-   HostTraffic **hosts, *el;
-   u_short clientPorts[MAX_ASSIGNED_IP_PORTS], serverPorts[MAX_ASSIGNED_IP_PORTS];
-   u_int j, idx1, hostsNum=0, numPorts=0, maxHosts;
-   char buf[LEN_GENERAL_WORK_BUFFER], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-   PortUsage *ports;
-
-   printHTMLheader("TCP/UDP: Local Protocol Usage", NULL, 0);
-
-   memset(clientPorts, 0, sizeof(clientPorts));
-   memset(serverPorts, 0, sizeof(serverPorts));
-
-   hosts = (HostTraffic**)mallocAndInitWithReportWarn(myGlobals.device[myGlobals.actualReportDeviceId].
-						      hostsno*sizeof(HostTraffic*),
-						      "printIpProtocolUsage");
-   if(hosts == NULL)
-     return;
-
-   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno;
-
-   for(el=getFirstHost(myGlobals.actualReportDeviceId);
-       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-
-     if(el->community && (!isAllowedCommunity(el->community))) continue;
-     if(subnetPseudoLocalHost(el) && (el->hostNumIpAddress[0] != '\0')) {
-       hosts[hostsNum++] = el;
-
-       if(el->portsUsage != NULL) {
-	 ports = el->portsUsage;
-	 while(ports) {
-	   j = ports->port;
-	   if((clientPorts[j] == 0) && (serverPorts[j] == 0))
-	     numPorts++;
-	   clientPorts[j] += ports->clientUses;
-	   serverPorts[j] += ports->serverUses;
-	   ports = ports->next;
-	 }
-       }
-     }
-
-     if(hostsNum >= maxHosts) break;
-   } /* for */
-
-   if(numPorts == 0) {
-     printNoDataYet();
-     free(hosts);
-     return;
-   }
-
-   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		 "<center><p>Reporting on actual traffic for %d host(s) on %d service port(s)</p></center>\n",
-		 hostsNum, numPorts);
-   sendString(buf);
-
-   /* Hosts are now in a contiguous structure (hosts[])... */
-
-   sendString("<CENTER>\n");
-   sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG" COLSPAN=2>Service</TH>"
-	      "<TH "TH_BG">Clients</TH><TH "TH_BG">Servers</TH>\n");
-
-   for(j=0; j<MAX_ASSIGNED_IP_PORTS; j++)
-     if((clientPorts[j] > 0) || (serverPorts[j] > 0)) {
-       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-		     "<TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=CENTER>%d</TD>"
-		     "<TD "TD_BG">\n", getRowColor(),
-		     getAllPortByNum(j, portBuf, sizeof(portBuf)), j);
-       sendString(buf);
-
-       if(clientPorts[j] > 0) {
-	 sendString("<UL>");
-	 for(idx1=0; idx1<hostsNum; idx1++) {
-	   ports = getPortsUsage(hosts[idx1], j, 0);
-	   if((hosts[idx1]->portsUsage != NULL)
-	      && ports && (ports->clientUses > 0)) {
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s\n",
-			   makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, hostLinkBuf, sizeof(hostLinkBuf)));
-	     sendString(buf);
-	   }
-	 }
-	 sendString("</UL>");
-       } else
-	 sendString("&nbsp;");
-
-       sendString("</TD><TD "TD_BG">");
-
-       if(serverPorts[j] > 0) {
-	 sendString("<UL>");
-	 for(idx1=0; idx1<hostsNum; idx1++) {
-	   ports = getPortsUsage(hosts[idx1], j, 0);
-	   if((hosts[idx1]->portsUsage != NULL)
-	      && ports && (ports->serverUses > 0)) {
-	     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s\n",
-			   makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, hostLinkBuf, sizeof(hostLinkBuf)));
-	     sendString(buf);
-	   }
-	 }
-	 sendString("</UL>");
-       } else
-	 sendString("&nbsp;");
-
-       sendString("</TD></TR>");
-     } /* for */
-
-   sendString("</TABLE>"TABLE_OFF"<P>\n");
-   sendString("</CENTER>\n");
-
-   printHostColorCode(FALSE, 0);
-
-   printFooterHostLink();
-
-   free(hosts);
- }
-
- /* ********************************** */
-
- void printBar(char *buf, int bufLen,
-	       unsigned short percentageS, /* or the ONLY percentage if R = FLAG_NONSPLITBAR */
-	       unsigned short percentageR,
-	       unsigned short maxPercentage,
-	       unsigned short ratio) {
-
-   /* This shouldn't happen */
-   if(maxPercentage > 100) { maxPercentage = 100; }
-
-   if(percentageR == FLAG_NONSPLITBAR) {
-     /* Single bar */
-     if(percentageS > maxPercentage) { percentageS = maxPercentage; }
-
-     switch(percentageS) {
-     case 0:
-       safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TD "TD_BG" %s>&nbsp;</TD>\n", getActualRowColor());
-       break;
-     default:
-       safe_snprintf(__FILE__, __LINE__, buf, bufLen,
-		     "<TD "TD_BG" ALIGN=LEFT>"
-		     "<IMG ALIGN=ABSMIDDLE SRC=\"/gauge.jpg\" ALT=\"%d%%\" WIDTH=%d HEIGHT=12>"
-		     "&nbsp;</TD>\n",
-		     percentageS, ratio*percentageS);
-       break;
-     }
-   } else {
-     /* Could happen because of rounding */
-     if((percentageS+percentageR) > maxPercentage)
-       percentageR--;
-     if((percentageS+percentageR) > maxPercentage)
-       percentageS--;
-
-     switch(percentageS+percentageR) {
-     case 0:
-       safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TD "TD_BG" %s>&nbsp;</TD>\n", getActualRowColor());
-       break;
-     default:
-       safe_snprintf(__FILE__, __LINE__, buf, bufLen,
-		     "<TD "TD_BG" ALIGN=LEFT>"
-		     "<IMG ALIGN=ABSMIDDLE SRC=\"/gaugeS.jpg\" ALT=\"Sent %d%%\" WIDTH=%d HEIGHT=12>"
-		     "<IMG ALIGN=ABSMIDDLE SRC=\"/gaugeR.jpg\" ALT=\"Received %d%%\" WIDTH=%d HEIGHT=12>"
-		     "&nbsp;</TD>\n",
-		     percentageS, ratio*percentageS, percentageR, ratio*percentageR);
-       break;
-     }
-   }
-
-   sendString(buf);
- }
-
- /* ********************************** */
-
- static int cmpPortsFctn(const void *_a, const void *_b) {
-   if((_a == NULL) || (_b == NULL))
-     return(0);
-   else {
-     PortCounter *a, *b;
-
-     a = *((PortCounter**)_a);
-     b = *((PortCounter**)_b);
-
-     if((a == NULL) || (b == NULL))
-       return(0);
-
-     if((a->sent+a->rcvd) > (b->sent+b->rcvd))
-       return(-1);
-     else
-       return(1);
-   }
- }
-
- /* ********************************** */
-
- void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
-   int i;
-   char buf[4*LEN_GENERAL_WORK_BUFFER], *sign;
-   float total, partialTotal, remainingTraffic;
-   float percentage;
-   char formatBuf[32], formatBuf1[32], formatBuf2[32];
-
-   if(revertOrder)
-     sign = "";
-   else
-     sign = "-";
-
-   if(mode == FLAG_HOSTLINK_TEXT_FORMAT) {
-     printSectionTitle("IP Protocol Distribution");
-
- #ifndef EMBEDDED
-     sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		"<iframe frameborder=0 SRC=\"" CONST_PIE_IPPROTO_RL_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
- #endif
-
-     printSectionTitle("Local Traffic");
-
-     total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local.value+
-		     myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local.value)/1024;
-     if(total == 0)
-       printNoDataYet();
-     else {
-       sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-		  "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
-		  "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
-		  "Percentage</TH></TR>\n");
-       if(total == 0) total = 1; /* Avoids divisions by zero */
-       remainingTraffic = 0;
-
-       partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local.value/1024;
-       percentage = ((float)(partialTotal*100))/((float)total);
-       printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
-				 "TCP", "UDP", total, percentage, 0, 0);
-
-       sendString("</TABLE>"TABLE_OFF"<P>\n");
-       sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-		  "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
-		  "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
-		  "Percentage</TH></TR>\n");
-
-       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	 partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local.value/1024;
-
-	 if(partialTotal > 0) {
-	   remainingTraffic += partialTotal;
-	   percentage = ((float)(partialTotal*100))/((float)total);
-	   printTableEntry(buf, sizeof(buf), myGlobals.ipTrafficProtosNames[i],
-			   CONST_COLOR_1, partialTotal, percentage, 0, 0, 0);
-	 }
-       }
-
-       if(total > remainingTraffic)
-	 remainingTraffic = total - remainingTraffic;
-       else
-	 remainingTraffic = 0;
-
-       if(remainingTraffic > 0) {
-	 percentage = ((float)(remainingTraffic*100))/((float)total);
-	 printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
-			 CONST_COLOR_1, remainingTraffic, percentage, 0, 0, 0);
-       }
-
-       sendString("</TABLE>"TABLE_OFF"<P>\n");
-       sendString("</CENTER>\n");
-     }
-
-     /* ********************************************************** */
-
-     total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote2local.value+
-		     myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.remote2local.value)/1024;
-
-     printSectionTitle("Remote to Local Traffic");
-
-     if(total == 0)
-       printNoDataYet();
-     else {
-       sendString("<CENTER>\n");
-       sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-		  "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
-		  "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
-		  "Percentage</TH></TR>\n");
-
-       if(total == 0) total = 1; /* Avoids divisions by zero */
-       remainingTraffic = 0;
-
-       partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote2local.value/1024;
-       percentage = ((float)(partialTotal*100))/((float)total);
-       printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
-				 "TCP", "UDP", total, percentage, 0, 0);
-
-       sendString("</TABLE>"TABLE_OFF);
-       sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-		  "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
-		  "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
-		  "Percentage</TH></TR>\n");
-
-       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	 partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value/1024;
-
-	 if(partialTotal > 0) {
-	   remainingTraffic += partialTotal;
-	   percentage = ((float)(partialTotal*100))/((float)total);
-	   printTableEntry(buf, sizeof(buf), myGlobals.ipTrafficProtosNames[i],
-			   CONST_COLOR_1, partialTotal, percentage, 0, 0, 0);
-	 }
-       }
-
-       if(total > remainingTraffic)
-	 remainingTraffic = total - remainingTraffic;
-       else
-	 remainingTraffic = 0;
-
-       if(remainingTraffic > 0) {
-	 percentage = ((float)(remainingTraffic*100))/((float)total);
-	 printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
-			 CONST_COLOR_1, remainingTraffic, percentage, 0, 0, 0);
-       }
-       sendString("</TABLE>"TABLE_OFF"\n<P>\n");
-       sendString("</CENTER>\n");
-     }
-
-     /* ********************************************************** */
-
-     /* Courtesy of "Burton M. Strauss III" <BStrauss3@attbi.com> */
-
-     printSectionTitle("Remote Traffic");
-
-     total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote.value+
-		     myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.remote.value)/1024;
-     if(total == 0)
-       printNoDataYet();
-     else {
-       sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-		  "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
-		  "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
-		  "Percentage</TH></TR>\n");
-       if(total == 0) total = 1; /* Avoids divisions by zero */
-       remainingTraffic = 0;
-
-       partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote.value/1024;
-       percentage = ((float)(partialTotal*100))/((float)total);
-       printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
-				 "TCP", "UDP", total, percentage, 0, 0);
-
-       sendString("</TABLE>"TABLE_OFF"\n");
-       sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-		  "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
-		  "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
-		  "Percentage</TH></TR>\n");
-
-       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	 partialTotal =
-	   (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote.value/1024;
-
-	 if(partialTotal > 0) {
-	   remainingTraffic += partialTotal;
-	   percentage = ((float)(partialTotal*100))/((float)total);
-	   printTableEntry(buf, sizeof(buf),
-			   myGlobals.ipTrafficProtosNames[i],
-			   CONST_COLOR_1, partialTotal, percentage, 0, 0, 0);
-	 }
-       }
-
-       if(total > remainingTraffic)
-	 remainingTraffic = total - remainingTraffic;
-       else
-	 remainingTraffic = 0;
-
-       if(remainingTraffic > 0) {
-	 percentage = ((float)(remainingTraffic*100))/((float)total);
-	 printTableEntry(buf, sizeof(buf),
-			 "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
-			 CONST_COLOR_1, remainingTraffic, percentage, 0, 0, 0);
-       }
-
-       sendString("</TABLE>"TABLE_OFF"<P>\n");
-       sendString("</CENTER>\n");
-     }
-
-     /* ********************************************************** */
-
-     printSectionTitle("Local to Remote Traffic");
-
-     total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local2remote.value+
-		     myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local2remote.value)/1024;
-     if(total == 0)
-       printNoDataYet();
-     else {
-       sendString("<CENTER>\n");
-       sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-		  "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
-		  "<TH "TH_BG" WIDTH=100>Data</TH>"
-		  "<TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
-
-       if(total == 0) total = 1; /* Avoids divisions by zero */
-       remainingTraffic = 0;
-
-       partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].
-	 tcpGlobalTrafficStats.local2remote.value/1024;
-       percentage = ((float)(partialTotal*100))/((float)total);
-       printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
-				 "TCP", "UDP", total, percentage, 0, 0);
-
-       sendString("</TABLE>"TABLE_OFF);
-       sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-		  "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
-		  "<TH "TH_BG" WIDTH=100>Data</TH>"
-		  "<TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
-
-       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	 partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].
-	   ipProtoStats[i].local2remote.value/1024;
-
-	 if(partialTotal > 0) {
-	   remainingTraffic += partialTotal;
-	   percentage = ((float)(partialTotal*100))/((float)total);
-	   printTableEntry(buf, sizeof(buf), myGlobals.ipTrafficProtosNames[i],
-			   CONST_COLOR_1, partialTotal, percentage, 0, 0, 0);
-	 }
-       }
-
-       if(total > remainingTraffic)
-	 remainingTraffic = total - remainingTraffic;
-       else
-	 remainingTraffic = 0;
-
-       if(remainingTraffic > 0) {
-	 percentage = ((float)(remainingTraffic*100))/((float)total);
-	 printTableEntry(buf, sizeof(buf), "Other&nbsp;IP-based&nbsp;Protocols",
-			 CONST_COLOR_1, remainingTraffic, percentage, 0, 0, 0);
-       }
-       sendString("</TABLE>"TABLE_OFF"<P>\n");
-       sendString("</CENTER>\n");
-     }
-   } else {
-     total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
-
-     if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList) {
-       ProtocolsList *protoList = myGlobals.ipProtosList;
-       int idx1 = 0;
-
-       while(protoList != NULL) {
-	 if(total > (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value)
-	   total -= (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value;
-	 else
-	   total = 0;
-
-	 idx1++, protoList = protoList->next;
-       }
-     }
-
-     if(total == 0)
-       return;
-     else {
-       int numProtosFound = 0;
-       float remainingFlows = 0;
-
-       printSectionTitle("Global TCP/UDP Protocol Distribution");
-
-       sendString("<CENTER>\n");
-       sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">"
-		  "<TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>"
-		  "TCP/UDP&nbsp;Protocol</TH>"
-		  "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG">Flows</TH><TH "TH_BG" COLSPAN=2 width=260>"
-		  "Accumulated Percentage / Historical Protocol View</TH></TR>\n");
-
-       remainingTraffic = 0;
-
-       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	 partialTotal  = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local.value
-	   +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote.value;
-	 partialTotal += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value
-	   +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value;
-	 remainingFlows += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].totalFlows.value;
-
-	 if(partialTotal > 0) {
-	   remainingTraffic += partialTotal;
-	   percentage = ((float)(partialTotal*100))/((float)total);
-	   numProtosFound++;
-	   printTableEntry(buf, sizeof(buf),
-			   myGlobals.ipTrafficProtosNames[i], CONST_COLOR_1,
-			   partialTotal/1024, percentage,
-			   1, myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].totalFlows.value, 1);
-	 }
-       }
-
-       if(total > remainingTraffic)
-	 remainingTraffic = total - remainingTraffic;
-       else
-	 remainingTraffic = 0;
-
-       if(remainingTraffic > 0) {
-	 float totFlows = (float)myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.totalFlows.value +
-	   (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.totalFlows.value;
-
-	 if(remainingFlows > totFlows)
-	   remainingFlows = 0;
-	 else
-	   remainingFlows = totFlows - remainingFlows;
-
-	 percentage = ((float)(remainingTraffic*100))/((float)total);
-	 printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
-			 CONST_COLOR_1, remainingTraffic/1024, percentage,
-			 1, remainingFlows, 0);
-       }
-
-       if((numProtosFound > 0) && printGraph) {
-		   struct stat statbuf;
-
-		   if(strcmp(myGlobals.device[0].name, "pcap-file")) {
-			   sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=LEFT BGCOLOR=white>"
-				   "<iframe  frameborder=0 SRC=\"" CONST_BAR_IPPROTO_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
-
-			   /* RRD */
-			   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-			   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
-				   myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-				   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
-
-			   revertSlashIfWIN32(buf, 0);
-
-			   if((i = stat(buf, &statbuf)) == 0) {
-				   time_t now = time(NULL);
-				   u_char found = 0;
-
-				   /* We need to check whether there are interesting rrd files in the directory */
-				   DIR* directoryPointer = opendir(buf);
-
-				   if(directoryPointer != NULL) {
-					   struct dirent* dp;
-
-					   i = 0;
-
-					   while((dp = readdir(directoryPointer)) != NULL) {
-						   int len = strlen(dp->d_name);
-
-						   if(dp->d_name[0] == '.') continue;
-						   else if(len < 7 /* IP_ + .rrd */ ) continue;
-						   else if(strncmp(dp->d_name, "IP_", 3)) continue;
-						   else if(strstr(dp->d_name, "Flows")) continue;
-						   else found = 1;
-					   }
-				   }
-
-				   if(found) {
-					   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-						   "<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=left BGCOLOR=white>"
-						   "<table border=0><tr><td><IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=4&"
-						   "key=interfaces/%s/&start=now-12h&end=now\" BORDER=0>",
-						   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
-					   sendString(buf);
-
-					   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-						   "</td><td><A HREF=\"/plugins/rrdPlugin?mode=zoom&action=graphSummary&graphId=4&"
-						   "key=interfaces/%s/&start=%u&end=%u\"><IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></tr></table></TD></TR>",
-						   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (u_int)(now - 12 * 3600), (u_int)now);
-					   sendString(buf);
-				   }
-
-				   sendString("</TD></TR>\n");
-			   }
-		   }
-	   }
- 
-       sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=5 ALIGN=LEFT "DARK_BG">"
-		  "Note:\n"
-		  "<ul><li>What is a flow?<br><ul><li>TCP: a flows is a TCP connection."
-		  "<li>UDP: a flow is a set of packets with the same protocol/peers/port.</ul>"
-		  "<li>TCP flows are not accounted for fully (sender and recipient) remote peers."
-		  "</ul>"
-		  "</TD></TR>\n");
-       sendString("</TABLE>"TABLE_OFF"<P>\n");
-
-       /* *********************** */
-              
-       if((remainingTraffic > 0) 
-	  && printGraph 
-	  /* Courtesy of Martin Winter <mwinter@noaccess.com> */
-	  && (myGlobals.device[myGlobals.actualReportDeviceId].ipPorts != NULL)) {
-	 PortCounter **ipPorts;
-	 int idx = 0;
-
-	 ipPorts = (PortCounter**)calloc(MAX_IP_PORT, sizeof(PortCounter*));
-
-	 for(i=0; i<MAX_IP_PORT; i++) {
-	   if(myGlobals.device[myGlobals.actualReportDeviceId].ipPorts[i] != NULL) {
-	     ipPorts[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipPorts[i];
-	     idx++;
-	   }
-	 }
-
-	 if(idx > 0) {
-	   printSectionTitle("TCP/UDP Traffic Port Distribution:<br>Last Minute View");
-
-	   sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-		      "<TH "TH_BG" colspan=2>TCP/UDP Port</TH>"
-		      "<TH "TH_BG">Total</TH><TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>");
-
-	   qsort(ipPorts, idx, sizeof(PortCounter**), cmpPortsFctn);
-
-	   if(idx > 32) idx = 32; /* Limit to 32 entries max */
-
-	   for(i=0; i<idx; i++) {
-	     if(ipPorts[i] != NULL) {
-	       char portBuf[32];
-	       char *symPort = getAllPortByNum(ipPorts[i]->port, portBuf, sizeof(portBuf));
-
-	       if(symPort == NULL) symPort = "";
-
-	       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-			     "<TH "TH_BG" ALIGN=LEFT><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>"
-			     "</th><td align=right>%d</td>"
-			     "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			     "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			     "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			     "</TR>\n",
-			     getRowColor(),
-			     ipPorts[i]->port, symPort, ipPorts[i]->port,
-			     formatBytes(ipPorts[i]->sent+ipPorts[i]->rcvd, 1, formatBuf, sizeof(formatBuf)),
-			     formatBytes(ipPorts[i]->sent, 1, formatBuf1, sizeof(formatBuf1)),
-			     formatBytes(ipPorts[i]->rcvd, 1, formatBuf2, sizeof(formatBuf2)));
-	       sendString(buf);
-	     }
-	   } /* for */
-
-	   sendString("<tr><td align=left "DARK_BG" colspan=5>Notes:<ul>"
-		      "<li>sum(total traffic per port) = 2*(total IP traffic)"
-		      "<br>because the traffic per port is counted twice (sent and received)"
-		      "<li>This report includes broadcast packets</ul></td></tr>\n");
-	 }
-	 free(ipPorts);
-	 sendString("</TABLE>"TABLE_OFF"<P></center>\n");
-	 if(idx >= 32)
-	   sendString("<p>This extract is just a sample of the packets ntop has seen.</p>");
-       } else {
-	 sendString("<p>Note: This report includes broadcast packets.</p>\n");
-	 sendString("</CENTER>\n");
-       }
-     }
-   }
- }
-
- /* ************************ */
-
- void printProtoTraffic(int printGraph) {
-   float total, perc;
-   char buf[2*LEN_GENERAL_WORK_BUFFER], formatBuf[32];
-
-   total = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value/1024; /* total is expressed in KBytes.value */
-
-   if(total == 0)
-     return;
-
-   sendString("<CENTER>\n");
-
-   if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0) {
-     printSectionTitle("Global Protocol Distribution");
-
-     sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>Protocol</TH>"
-		"<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
-
-     perc = 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value/
-		 myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value);
-     if(perc > 100) perc = 100;
-
-     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" WIDTH=150 ALIGN=LEFT "DARK_BG">IP</TH>"
-		   "<TD "TD_BG" WIDTH=50 ALIGN=RIGHT>%s"
-		   "</td><td align=right WIDTH=50>%.1f%%</TD><TD "TD_BG" WIDTH=200>"
-		   "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\">",
-		   getRowColor(),
-		   formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1,
-			       formatBuf, sizeof(formatBuf)),
-		   perc);
-     sendString(buf);
-
-     printTableEntry(buf, sizeof(buf), "TCP", CONST_COLOR_1,
-		     (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/1024,
-		     100*((float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/
-			  myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
-     printTableEntry(buf, sizeof(buf), "UDP", CONST_COLOR_1,
-		     (float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/1024,
-		     100*((float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/
-			  myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
-     printTableEntry(buf, sizeof(buf), "ICMP", CONST_COLOR_1,
-		     (float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/1024,
-		     100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/
-			  myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
-     printTableEntry(buf, sizeof(buf), "ICMPv6", CONST_COLOR_1,
-		     (float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/1024,
-		     100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/
-			  myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
-
-     if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList) {
-       ProtocolsList *protoList = myGlobals.ipProtosList;
-       int idx = 0;
-
-       while(protoList != NULL) {
-	 printTableEntry(buf, sizeof(buf), protoList->protocolName, CONST_COLOR_1,
-			 (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx].value/1024,
-			 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx].value/
-			      myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
-	 idx++, protoList = protoList->next;
-       }
-     }
-
-     printTableEntry(buf, sizeof(buf), "Other&nbsp;IP", CONST_COLOR_1,
-		     (float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/1024,
-		     ((float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/
-		      myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
-
-     sendString("</TABLE>"TABLE_OFF"</TR>");
-   } else
-     printGraph = 0;
-
-   printTableEntry(buf, sizeof(buf), "(R)ARP", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value/1024,
-		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value/
-			myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
-   printTableEntry(buf, sizeof(buf), "DLC", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value/1024,
-		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value/
-			myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
-   printTableEntry(buf, sizeof(buf), "IPX", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value/1024,
-		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value/
-			myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
-   printTableEntry(buf, sizeof(buf), "Decnet", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value/1024,
-		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value/
-			myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
-   printTableEntry(buf, sizeof(buf), "AppleTalk", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value/1024,
-		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value/
-			myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
-   printTableEntry(buf, sizeof(buf), "NetBios", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value/1024,
-		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value/
-			myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
-   printTableEntry(buf, sizeof(buf), "OSI", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value/1024,
-		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value/
-			myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
-   printTableEntry(buf, sizeof(buf), "IPv6", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value/1024,
-		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value/
-			myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
-   printTableEntry(buf, sizeof(buf), "STP", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value/1024,
-		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value/
-			myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
-   printTableEntry(buf, sizeof(buf), "Other", CONST_COLOR_1,
-		   (float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value/1024,
-		   100*((float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value/
-			myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
-   
-   if(printGraph) {
-     sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
-		"<iframe frameborder=0 SRC=\"" CONST_BAR_ALLPROTO_DIST  CHART_FORMAT "\" "
-		"width=650 height=250></iframe>"
-		"</TD></TR>\n");
+    if(remoteToLocal == FLAG_LOCAL_TO_LOCAL_ACCOUNTING)
+      totalBytes /= 2;
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">"
+		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  formatBytes(totalBytes, 1, formatBuf, sizeof(formatBuf)),
+		  formatBytes(totalBytesSent, 1, formatBuf1, sizeof(formatBuf1)),
+		  formatBytes(totalBytesRcvd, 1, formatBuf2, sizeof(formatBuf2)),
+		  formatThroughput((float)(totalBytes/timeDiff), 1, formatBuf3, sizeof(formatBuf3)));
+
+    sendString(buf);
+    sendString("</TABLE>"TABLE_OFF"\n");
+    sendString("</CENTER>\n");
+
+    printFooterHostLink();
+
+  } else
+    printNoDataYet();
+
+  free(tmpTable);
+}
+
+/* ********************************** */
+
+static char* print_flags(IPSession *session, char *buf, int buf_len) {
+  snprintf(buf, buf_len,"%s%s%s%s%s&nbsp;",
+	   (session->lastFlags & TH_SYN) ? " SYN" : "",
+	   (session->lastFlags & TH_ACK) ? " ACK" : "",
+	   (session->lastFlags & TH_FIN) ? " FIN" : "",
+	   (session->lastFlags & TH_RST) ? " RST" : "",
+	   (session->lastFlags & TH_PUSH) ? " PUSH" : "");
+
+  return(buf);
+}
+
+/* ********************************** */
+
+void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
+  int idx;
+  char buf[1500], hostLinkBuf[LEN_GENERAL_WORK_BUFFER], flags_buf[64],
+    hostLinkBuf1[LEN_GENERAL_WORK_BUFFER], *voipStr;
+  int numSessions, printedSessions;
+  char formatBuf[64], formatBuf1[64], formatBuf2[64], formatBuf3[64],
+    formatBuf4[64], formatBuf5[64], formatBuf6[64];
+
+  if(!myGlobals.runningPref.enableSessionHandling) {
+    if(el != NULL) return;
+    printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
+    printNotAvailable("-z or --disable-sessions");
+    return;
+  }
+
+  if((myGlobals.device[actualDeviceId].tcpSession == NULL) ||
+     (myGlobals.device[actualDeviceId].numTcpSessions == 0)) {
+    if(el != NULL) return;
+    printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
+    printNoDataYet();
+    return;
+  }
+
+  /*
+    Due to the way sessions are handled, sessions before those to
+    display need to be skipped
+  */
+  for(idx=1, numSessions=0, printedSessions=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
+    if(el && (printedSessions >= el->numHostSessions)) break;
+    accessMutex(&myGlobals.tcpSessionsMutex, "printActiveTCPSessions");
+
+    if(myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx] != NULL) {
+      char *sport, *dport;
+      Counter dataSent, dataRcvd;
+      IPSession *session = myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx];
+
+      while((session != NULL) && (printedSessions < myGlobals.runningPref.maxNumLines)) {
+#ifndef PARM_PRINT_ALL_SESSIONS
+	if(session->sessionState != FLAG_STATE_ACTIVE) {
+	  session = session->next;
+	  continue;
+	}
+#endif
+
+	if(el && (session->initiator  != el) && (session->remotePeer != el)) {
+	  session = session->next;
+	  continue;
+	}
+
+	if((numSessions++) < pageNum*myGlobals.runningPref.maxNumLines) {
+	  session = session->next;
+	  continue;
+	}
+
+	if(printedSessions == 0) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d Active TCP/UDP Sessions",
+			myGlobals.device[actualDeviceId].numTcpSessions);
+
+	  if(el == NULL)
+	    printHTMLheader(buf, NULL, 0);
+	  else
+	    printSectionTitle(buf);
+
+	  sendString("<CENTER>\n"
+		     ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
+		     "<TH "TH_BG">Client</TH>"
+		     "<TH "TH_BG">Server</TH>"
+		     "<TH "TH_BG">Data&nbsp;Sent</TH>"
+		     "<TH "TH_BG">Data&nbsp;Rcvd</TH>"
+		     "<TH "TH_BG">Active&nbsp;Since</TH>"
+		     "<TH "TH_BG">Last&nbsp;Seen</TH>"
+		     "<TH "TH_BG">Duration</TH>"
+		     "<TH "TH_BG">Inactive</TH>"
+		     "<TH "TH_BG">Latency</TH>"
+		     "<TH "TH_BG">L7 Proto</TH>"
+		     "<TH "TH_BG">Note</TH>");
+#ifdef PARM_PRINT_ALL_SESSIONS
+	  sendString("<TH "TH_BG">State</TH>");
+#endif
+	  sendString("</TR>\n");
+	}
+
+	sport = getPortByNum(session->sport, IPPROTO_TCP);
+	dport = getPortByNum(session->dport, IPPROTO_TCP);
+	dataSent = session->bytesSent.value;
+	dataRcvd = session->bytesRcvd.value;
+
+	if(sport == NULL) {
+	  static char _sport[8];
+	  safe_snprintf(__FILE__, __LINE__, _sport, 8, "%d", session->sport);
+	  sport = _sport;
+	}
+
+	if(dport == NULL) {
+	  static char _dport[8];
+	  safe_snprintf(__FILE__, __LINE__, _dport, 8, "%d", session->dport);
+	  dport = _dport;
+	}
+
+	/* Sanity check */
+	if((myGlobals.actTime < session->firstSeen)
+	   || (session->firstSeen == 0))
+	  session->firstSeen = myGlobals.actTime;
+	if((myGlobals.actTime < session->lastSeen)
+	   || (session->lastSeen == 0))
+	  session->lastSeen = myGlobals.actTime;
+
+	if((session->guessed_protocol != NULL)
+	   && session->voipSession
+	   && strstr(session->guessed_protocol, "skype"))
+	  voipStr = "/skype.gif";
+	else if(session->voipSession)
+	  voipStr = "&nbsp&lt;VoIP&gt;";
+	else
+	  voipStr = "";
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s%s%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s</TD>",
+		      getRowColor(),
+		      makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT,
+				   0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
+		      sport, session->isP2P == 1 ? "&nbsp&lt;P2P&gt;" : "",
+		      voipStr, makeHostLink(session->remotePeer,
+					    FLAG_HOSTLINK_TEXT_FORMAT,
+					    0, 0, hostLinkBuf1,
+					    sizeof(hostLinkBuf1)),
+		      dport);
+	sendString(buf);
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=CENTER NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=LEFT NOWRAP>%s</TD>",
+		      formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),
+		      formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1)),
+		      formatTime(&(session->firstSeen), formatBuf2, sizeof(formatBuf2)),
+		      formatTime(&(session->lastSeen), formatBuf3, sizeof(formatBuf3)),
+		      formatSeconds(session->lastSeen-session->firstSeen, formatBuf4, sizeof(formatBuf4)),
+		      formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
+		      formatLatency(session->nwLatency, session->sessionState, formatBuf6, sizeof(formatBuf6)),
+		      (session->guessed_protocol == NULL) ? "&nbsp;" : session->guessed_protocol,
+		      session->session_info ? session->session_info :
+		      print_flags(session, flags_buf, sizeof(flags_buf)) /* "&nbsp;" */);
+	sendString(buf);
+
+#ifdef PARM_PRINT_ALL_SESSIONS
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
+		      "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
+		      getSessionState(session));
+	sendString(buf);
+#endif
+	sendString("</TR>\n");
+
+	session = session->next;
+	printedSessions++;
+      }
+    }
+
+    releaseMutex(&myGlobals.tcpSessionsMutex);
+  }
+
+  if(printedSessions > 0) {
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");
+
+    if(el == NULL)
+      addPageIndicator(CONST_ACTIVE_TCP_SESSIONS_HTML, pageNum,
+		       myGlobals.device[actualDeviceId].numTcpSessions,
+		       myGlobals.runningPref.maxNumLines, -1, 0, -1);
+
+    printHostColorCode(FALSE, 0);
+
+    printFooterHostLink();
+  } else {
+    if(el == NULL) {
+      printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
+      printNoDataYet();
+    }
+  }
+}
+
+/* ********************************** */
+
+void printIpProtocolUsage(void) {
+  HostTraffic **hosts, *el;
+  u_short clientPorts[MAX_ASSIGNED_IP_PORTS], serverPorts[MAX_ASSIGNED_IP_PORTS];
+  u_int j, idx1, hostsNum=0, numPorts=0, maxHosts;
+  char buf[LEN_GENERAL_WORK_BUFFER], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  PortUsage *ports;
+
+  printHTMLheader("TCP/UDP: Local Protocol Usage", NULL, 0);
+
+  memset(clientPorts, 0, sizeof(clientPorts));
+  memset(serverPorts, 0, sizeof(serverPorts));
+
+  hosts = (HostTraffic**)mallocAndInitWithReportWarn(myGlobals.device[myGlobals.actualReportDeviceId].
+						     hostsno*sizeof(HostTraffic*),
+						     "printIpProtocolUsage");
+  if(hosts == NULL)
+    return;
+
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno;
+
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
+      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+
+    if(el->community && (!isAllowedCommunity(el->community))) continue;
+    if(subnetPseudoLocalHost(el) && (el->hostNumIpAddress[0] != '\0')) {
+      hosts[hostsNum++] = el;
+
+      if(el->portsUsage != NULL) {
+	ports = el->portsUsage;
+	while(ports) {
+	  j = ports->port;
+	  if((clientPorts[j] == 0) && (serverPorts[j] == 0))
+	    numPorts++;
+	  clientPorts[j] += ports->clientUses;
+	  serverPorts[j] += ports->serverUses;
+	  ports = ports->next;
+	}
+      }
+    }
+
+    if(hostsNum >= maxHosts) break;
+  } /* for */
+
+  if(numPorts == 0) {
+    printNoDataYet();
+    free(hosts);
+    return;
+  }
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		"<center><p>Reporting on actual traffic for %d host(s) on %d service port(s)</p></center>\n",
+		hostsNum, numPorts);
+  sendString(buf);
+
+  /* Hosts are now in a contiguous structure (hosts[])... */
+
+  sendString("<CENTER>\n");
+  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG" COLSPAN=2>Service</TH>"
+	     "<TH "TH_BG">Clients</TH><TH "TH_BG">Servers</TH>\n");
+
+  for(j=0; j<MAX_ASSIGNED_IP_PORTS; j++)
+    if((clientPorts[j] > 0) || (serverPorts[j] > 0)) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
+		    "<TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=CENTER>%d</TD>"
+		    "<TD "TD_BG">\n", getRowColor(),
+		    getAllPortByNum(j, portBuf, sizeof(portBuf)), j);
+      sendString(buf);
+
+      if(clientPorts[j] > 0) {
+	sendString("<UL>");
+	for(idx1=0; idx1<hostsNum; idx1++) {
+	  ports = getPortsUsage(hosts[idx1], j, 0);
+	  if((hosts[idx1]->portsUsage != NULL)
+	     && ports && (ports->clientUses > 0)) {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s\n",
+			  makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, hostLinkBuf, sizeof(hostLinkBuf)));
+	    sendString(buf);
+	  }
+	}
+	sendString("</UL>");
+      } else
+	sendString("&nbsp;");
+
+      sendString("</TD><TD "TD_BG">");
+
+      if(serverPorts[j] > 0) {
+	sendString("<UL>");
+	for(idx1=0; idx1<hostsNum; idx1++) {
+	  ports = getPortsUsage(hosts[idx1], j, 0);
+	  if((hosts[idx1]->portsUsage != NULL)
+	     && ports && (ports->serverUses > 0)) {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s\n",
+			  makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, hostLinkBuf, sizeof(hostLinkBuf)));
+	    sendString(buf);
+	  }
+	}
+	sendString("</UL>");
+      } else
+	sendString("&nbsp;");
+
+      sendString("</TD></TR>");
+    } /* for */
+
+  sendString("</TABLE>"TABLE_OFF"<P>\n");
+  sendString("</CENTER>\n");
+
+  printHostColorCode(FALSE, 0);
+
+  printFooterHostLink();
+
+  free(hosts);
+}
+
+/* ********************************** */
+
+void printBar(char *buf, int bufLen,
+	      unsigned short percentageS, /* or the ONLY percentage if R = FLAG_NONSPLITBAR */
+	      unsigned short percentageR,
+	      unsigned short maxPercentage,
+	      unsigned short ratio) {
+
+  /* This shouldn't happen */
+  if(maxPercentage > 100) { maxPercentage = 100; }
+
+  if(percentageR == FLAG_NONSPLITBAR) {
+    /* Single bar */
+    if(percentageS > maxPercentage) { percentageS = maxPercentage; }
+
+    switch(percentageS) {
+    case 0:
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TD "TD_BG" %s>&nbsp;</TD>\n", getActualRowColor());
+      break;
+    default:
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen,
+		    "<TD "TD_BG" ALIGN=LEFT>"
+		    "<IMG ALIGN=ABSMIDDLE SRC=\"/gauge.jpg\" ALT=\"%d%%\" WIDTH=%d HEIGHT=12>"
+		    "&nbsp;</TD>\n",
+		    percentageS, ratio*percentageS);
+      break;
+    }
+  } else {
+    /* Could happen because of rounding */
+    if((percentageS+percentageR) > maxPercentage)
+      percentageR--;
+    if((percentageS+percentageR) > maxPercentage)
+      percentageS--;
+
+    switch(percentageS+percentageR) {
+    case 0:
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TD "TD_BG" %s>&nbsp;</TD>\n", getActualRowColor());
+      break;
+    default:
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen,
+		    "<TD "TD_BG" ALIGN=LEFT>"
+		    "<IMG ALIGN=ABSMIDDLE SRC=\"/gaugeS.jpg\" ALT=\"Sent %d%%\" WIDTH=%d HEIGHT=12>"
+		    "<IMG ALIGN=ABSMIDDLE SRC=\"/gaugeR.jpg\" ALT=\"Received %d%%\" WIDTH=%d HEIGHT=12>"
+		    "&nbsp;</TD>\n",
+		    percentageS, ratio*percentageS, percentageR, ratio*percentageR);
+      break;
+    }
+  }
+
+  sendString(buf);
+}
+
+/* ********************************** */
+
+static int cmpPortsFctn(const void *_a, const void *_b) {
+  if((_a == NULL) || (_b == NULL))
+    return(0);
+  else {
+    PortCounter *a, *b;
+
+    a = *((PortCounter**)_a);
+    b = *((PortCounter**)_b);
+
+    if((a == NULL) || (b == NULL))
+      return(0);
+
+    if((a->sent+a->rcvd) > (b->sent+b->rcvd))
+      return(-1);
+    else
+      return(1);
+  }
+}
+
+/* ********************************** */
+
+void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
+  int i;
+  char buf[4*LEN_GENERAL_WORK_BUFFER], *sign;
+  float total, partialTotal, remainingTraffic;
+  float percentage;
+  char formatBuf[32], formatBuf1[32], formatBuf2[32];
+
+  if(revertOrder)
+    sign = "";
+  else
+    sign = "-";
+
+  if(mode == FLAG_HOSTLINK_TEXT_FORMAT) {
+    printSectionTitle("IP Protocol Distribution");
+
+#ifndef EMBEDDED
+    sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
+	       "<iframe frameborder=0 SRC=\"" CONST_PIE_IPPROTO_RL_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+#endif
+
+    printSectionTitle("Local Traffic");
+
+    total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local.value+
+		    myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local.value)/1024;
+    if(total == 0)
+      printNoDataYet();
+    else {
+      sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+		 "Percentage</TH></TR>\n");
+      if(total == 0) total = 1; /* Avoids divisions by zero */
+      remainingTraffic = 0;
+
+      partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local.value/1024;
+      percentage = ((float)(partialTotal*100))/((float)total);
+      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
+				"TCP", "UDP", total, percentage, 0, 0);
+
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
+		 "Percentage</TH></TR>\n");
+
+      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local.value/1024;
+
+	if(partialTotal > 0) {
+	  remainingTraffic += partialTotal;
+	  percentage = ((float)(partialTotal*100))/((float)total);
+	  printTableEntry(buf, sizeof(buf), myGlobals.ipTrafficProtosNames[i],
+			  CONST_COLOR_1, partialTotal, percentage, 0, 0, 0);
+	}
+      }
+
+      if(total > remainingTraffic)
+	remainingTraffic = total - remainingTraffic;
+      else
+	remainingTraffic = 0;
+
+      if(remainingTraffic > 0) {
+	percentage = ((float)(remainingTraffic*100))/((float)total);
+	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
+			CONST_COLOR_1, remainingTraffic, percentage, 0, 0, 0);
+      }
+
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
+    }
+
+    /* ********************************************************** */
+
+    total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote2local.value+
+		    myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.remote2local.value)/1024;
+
+    printSectionTitle("Remote to Local Traffic");
+
+    if(total == 0)
+      printNoDataYet();
+    else {
+      sendString("<CENTER>\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+		 "Percentage</TH></TR>\n");
+
+      if(total == 0) total = 1; /* Avoids divisions by zero */
+      remainingTraffic = 0;
+
+      partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote2local.value/1024;
+      percentage = ((float)(partialTotal*100))/((float)total);
+      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
+				"TCP", "UDP", total, percentage, 0, 0);
+
+      sendString("</TABLE>"TABLE_OFF);
+      sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
+		 "Percentage</TH></TR>\n");
+
+      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value/1024;
+
+	if(partialTotal > 0) {
+	  remainingTraffic += partialTotal;
+	  percentage = ((float)(partialTotal*100))/((float)total);
+	  printTableEntry(buf, sizeof(buf), myGlobals.ipTrafficProtosNames[i],
+			  CONST_COLOR_1, partialTotal, percentage, 0, 0, 0);
+	}
+      }
+
+      if(total > remainingTraffic)
+	remainingTraffic = total - remainingTraffic;
+      else
+	remainingTraffic = 0;
+
+      if(remainingTraffic > 0) {
+	percentage = ((float)(remainingTraffic*100))/((float)total);
+	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
+			CONST_COLOR_1, remainingTraffic, percentage, 0, 0, 0);
+      }
+      sendString("</TABLE>"TABLE_OFF"\n<P>\n");
+      sendString("</CENTER>\n");
+    }
+
+    /* ********************************************************** */
+
+    /* Courtesy of "Burton M. Strauss III" <BStrauss3@attbi.com> */
+
+    printSectionTitle("Remote Traffic");
+
+    total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote.value+
+		    myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.remote.value)/1024;
+    if(total == 0)
+      printNoDataYet();
+    else {
+      sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+		 "Percentage</TH></TR>\n");
+      if(total == 0) total = 1; /* Avoids divisions by zero */
+      remainingTraffic = 0;
+
+      partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote.value/1024;
+      percentage = ((float)(partialTotal*100))/((float)total);
+      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
+				"TCP", "UDP", total, percentage, 0, 0);
+
+      sendString("</TABLE>"TABLE_OFF"\n");
+      sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
+		 "Percentage</TH></TR>\n");
+
+      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	partialTotal =
+	  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote.value/1024;
+
+	if(partialTotal > 0) {
+	  remainingTraffic += partialTotal;
+	  percentage = ((float)(partialTotal*100))/((float)total);
+	  printTableEntry(buf, sizeof(buf),
+			  myGlobals.ipTrafficProtosNames[i],
+			  CONST_COLOR_1, partialTotal, percentage, 0, 0, 0);
+	}
+      }
+
+      if(total > remainingTraffic)
+	remainingTraffic = total - remainingTraffic;
+      else
+	remainingTraffic = 0;
+
+      if(remainingTraffic > 0) {
+	percentage = ((float)(remainingTraffic*100))/((float)total);
+	printTableEntry(buf, sizeof(buf),
+			"Other&nbsp;TCP/UDP-based&nbsp;Protocols",
+			CONST_COLOR_1, remainingTraffic, percentage, 0, 0, 0);
+      }
+
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
+    }
+
+    /* ********************************************************** */
+
+    printSectionTitle("Local to Remote Traffic");
+
+    total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local2remote.value+
+		    myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local2remote.value)/1024;
+    if(total == 0)
+      printNoDataYet();
+    else {
+      sendString("<CENTER>\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH>"
+		 "<TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
+
+      if(total == 0) total = 1; /* Avoids divisions by zero */
+      remainingTraffic = 0;
+
+      partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].
+	tcpGlobalTrafficStats.local2remote.value/1024;
+      percentage = ((float)(partialTotal*100))/((float)total);
+      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
+				"TCP", "UDP", total, percentage, 0, 0);
+
+      sendString("</TABLE>"TABLE_OFF);
+      sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH>"
+		 "<TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
+
+      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].
+	  ipProtoStats[i].local2remote.value/1024;
+
+	if(partialTotal > 0) {
+	  remainingTraffic += partialTotal;
+	  percentage = ((float)(partialTotal*100))/((float)total);
+	  printTableEntry(buf, sizeof(buf), myGlobals.ipTrafficProtosNames[i],
+			  CONST_COLOR_1, partialTotal, percentage, 0, 0, 0);
+	}
+      }
+
+      if(total > remainingTraffic)
+	remainingTraffic = total - remainingTraffic;
+      else
+	remainingTraffic = 0;
+
+      if(remainingTraffic > 0) {
+	percentage = ((float)(remainingTraffic*100))/((float)total);
+	printTableEntry(buf, sizeof(buf), "Other&nbsp;IP-based&nbsp;Protocols",
+			CONST_COLOR_1, remainingTraffic, percentage, 0, 0, 0);
+      }
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
+    }
+  } else {
+    total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
+
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList) {
+      ProtocolsList *protoList = myGlobals.ipProtosList;
+      int idx1 = 0;
+
+      while(protoList != NULL) {
+	if(total > (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value)
+	  total -= (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value;
+	else
+	  total = 0;
+
+	idx1++, protoList = protoList->next;
+      }
+    }
+
+    if(total == 0)
+      return;
+    else {
+      int numProtosFound = 0;
+      float remainingFlows = 0;
+
+      printSectionTitle("Global TCP/UDP Protocol Distribution");
+
+      sendString("<CENTER>\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">"
+		 "<TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>"
+		 "TCP/UDP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG">Flows</TH><TH "TH_BG" COLSPAN=2 width=260>"
+		 "Accumulated Percentage / Historical Protocol View</TH></TR>\n");
+
+      remainingTraffic = 0;
+
+      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	partialTotal  = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local.value
+	  +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote.value;
+	partialTotal += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value
+	  +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value;
+	remainingFlows += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].totalFlows.value;
+
+	if(partialTotal > 0) {
+	  remainingTraffic += partialTotal;
+	  percentage = ((float)(partialTotal*100))/((float)total);
+	  numProtosFound++;
+	  printTableEntry(buf, sizeof(buf),
+			  myGlobals.ipTrafficProtosNames[i], CONST_COLOR_1,
+			  partialTotal/1024, percentage,
+			  1, myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].totalFlows.value, 1);
+	}
+      }
+
+      if(total > remainingTraffic)
+	remainingTraffic = total - remainingTraffic;
+      else
+	remainingTraffic = 0;
+
+      if(remainingTraffic > 0) {
+	float totFlows = (float)myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.totalFlows.value +
+	  (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.totalFlows.value;
+
+	if(remainingFlows > totFlows)
+	  remainingFlows = 0;
+	else
+	  remainingFlows = totFlows - remainingFlows;
+
+	percentage = ((float)(remainingTraffic*100))/((float)total);
+	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
+			CONST_COLOR_1, remainingTraffic/1024, percentage,
+			1, remainingFlows, 0);
+      }
+
+      if((numProtosFound > 0) && printGraph) {
+	struct stat statbuf;
+
+	if(strcmp(myGlobals.device[0].name, "pcap-file")) {
+	  sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Accumulated View</TH><TD "TD_BG" COLSPAN=4 ALIGN=LEFT BGCOLOR=white>"
+		     "<iframe  frameborder=0 SRC=\"" CONST_BAR_IPPROTO_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+
+	  /* RRD */
+	  /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
+			myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
+			myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+
+	  revertSlashIfWIN32(buf, 0);
+
+	  if((i = stat(buf, &statbuf)) == 0) {
+	    time_t now = time(NULL);
+	    u_char found = 0;
+
+	    /* We need to check whether there are interesting rrd files in the directory */
+	    DIR* directoryPointer = opendir(buf);
+
+	    if(directoryPointer != NULL) {
+	      struct dirent* dp;
+
+	      i = 0;
+
+	      while((dp = readdir(directoryPointer)) != NULL) {
+		int len = strlen(dp->d_name);
+
+		if(dp->d_name[0] == '.') continue;
+		else if(len < 7 /* IP_ + .rrd */ ) continue;
+		else if(strncmp(dp->d_name, "IP_", 3)) continue;
+		else if(strstr(dp->d_name, "Flows")) continue;
+		else found = 1;
+	      }
+	    }
+
+	    if(found) {
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			    "<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=left BGCOLOR=white>"
+			    "<table border=0><tr><td><IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=4&"
+			    "key=interfaces/%s/&start=now-12h&end=now\" BORDER=0>",
+			    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+	      sendString(buf);
+
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			    "</td><td><A HREF=\"/plugins/rrdPlugin?mode=zoom&action=graphSummary&graphId=4&"
+			    "key=interfaces/%s/&start=%u&end=%u\"><IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></tr></table></TD></TR>",
+			    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (u_int)(now - 12 * 3600), (u_int)now);
+	      sendString(buf);
+	    }
+
+	    sendString("</TD></TR>\n");
+	  }
+	}
+      }
+
+      sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=5 ALIGN=LEFT "DARK_BG">"
+		 "Note:\n"
+		 "<ul><li>What is a flow?<br><ul><li>TCP: a flows is a TCP connection."
+		 "<li>UDP: a flow is a set of packets with the same protocol/peers/port.</ul>"
+		 "<li>TCP flows are not accounted for fully (sender and recipient) remote peers."
+		 "</ul>"
+		 "</TD></TR>\n");
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+
+      /* *********************** */
+
+      if((remainingTraffic > 0)
+	 && printGraph
+	 /* Courtesy of Martin Winter <mwinter@noaccess.com> */
+	 && (myGlobals.device[myGlobals.actualReportDeviceId].ipPorts != NULL)) {
+	PortCounter **ipPorts;
+	int idx = 0;
+
+	ipPorts = (PortCounter**)calloc(MAX_IP_PORT, sizeof(PortCounter*));
+
+	for(i=0; i<MAX_IP_PORT; i++) {
+	  if(myGlobals.device[myGlobals.actualReportDeviceId].ipPorts[i] != NULL) {
+	    ipPorts[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipPorts[i];
+	    idx++;
+	  }
+	}
+
+	if(idx > 0) {
+	  printSectionTitle("TCP/UDP Traffic Port Distribution:<br>Last Minute View");
+
+	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
+		     "<TH "TH_BG" colspan=2>TCP/UDP Port</TH>"
+		     "<TH "TH_BG">Total</TH><TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>");
+
+	  qsort(ipPorts, idx, sizeof(PortCounter**), cmpPortsFctn);
+
+	  if(idx > 32) idx = 32; /* Limit to 32 entries max */
+
+	  for(i=0; i<idx; i++) {
+	    if(ipPorts[i] != NULL) {
+	      char portBuf[32];
+	      char *symPort = getAllPortByNum(ipPorts[i]->port, portBuf, sizeof(portBuf));
+
+	      if(symPort == NULL) symPort = "";
+
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
+			    "<TH "TH_BG" ALIGN=LEFT><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>"
+			    "</th><td align=right>%d</td>"
+			    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			    "</TR>\n",
+			    getRowColor(),
+			    ipPorts[i]->port, symPort, ipPorts[i]->port,
+			    formatBytes(ipPorts[i]->sent+ipPorts[i]->rcvd, 1, formatBuf, sizeof(formatBuf)),
+			    formatBytes(ipPorts[i]->sent, 1, formatBuf1, sizeof(formatBuf1)),
+			    formatBytes(ipPorts[i]->rcvd, 1, formatBuf2, sizeof(formatBuf2)));
+	      sendString(buf);
+	    }
+	  } /* for */
+
+	  sendString("<tr><td align=left "DARK_BG" colspan=5>Notes:<ul>"
+		     "<li>sum(total traffic per port) = 2*(total IP traffic)"
+		     "<br>because the traffic per port is counted twice (sent and received)"
+		     "<li>This report includes broadcast packets</ul></td></tr>\n");
+	}
+	free(ipPorts);
+	sendString("</TABLE>"TABLE_OFF"<P></center>\n");
+	if(idx >= 32)
+	  sendString("<p>This extract is just a sample of the packets ntop has seen.</p>");
+      } else {
+	sendString("<p>Note: This report includes broadcast packets.</p>\n");
+	sendString("</CENTER>\n");
+      }
+    }
+  }
+}
+
+/* ************************ */
+
+void printProtoTraffic(int printGraph) {
+  float total, perc;
+  char buf[2*LEN_GENERAL_WORK_BUFFER], formatBuf[32];
+
+  total = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value/1024; /* total is expressed in KBytes.value */
+
+  if(total == 0)
+    return;
+
+  sendString("<CENTER>\n");
+
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0) {
+    printSectionTitle("Global Protocol Distribution");
+
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>Protocol</TH>"
+	       "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
+
+    perc = 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value/
+		myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value);
+    if(perc > 100) perc = 100;
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" WIDTH=150 ALIGN=LEFT "DARK_BG">IP</TH>"
+		  "<TD "TD_BG" WIDTH=50 ALIGN=RIGHT>%s"
+		  "</td><td align=right WIDTH=50>%.1f%%</TD><TD "TD_BG" WIDTH=200>"
+		  "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\">",
+		  getRowColor(),
+		  formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1,
+			      formatBuf, sizeof(formatBuf)),
+		  perc);
+    sendString(buf);
+
+    printTableEntry(buf, sizeof(buf), "TCP", CONST_COLOR_1,
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/1024,
+		    100*((float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/
+			 myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+    printTableEntry(buf, sizeof(buf), "UDP", CONST_COLOR_1,
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/1024,
+		    100*((float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/
+			 myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+    printTableEntry(buf, sizeof(buf), "ICMP", CONST_COLOR_1,
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/1024,
+		    100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/
+			 myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+    printTableEntry(buf, sizeof(buf), "ICMPv6", CONST_COLOR_1,
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/1024,
+		    100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/
+			 myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList) {
+      ProtocolsList *protoList = myGlobals.ipProtosList;
+      int idx = 0;
+
+      while(protoList != NULL) {
+	printTableEntry(buf, sizeof(buf), protoList->protocolName, CONST_COLOR_1,
+			(float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx].value/1024,
+			100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx].value/
+			     myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+	idx++, protoList = protoList->next;
+      }
+    }
+
+    printTableEntry(buf, sizeof(buf), "Other&nbsp;IP", CONST_COLOR_1,
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/1024,
+		    ((float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/
+		     myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+
+    sendString("</TABLE>"TABLE_OFF"</TR>");
+  } else
+    printGraph = 0;
+
+  printTableEntry(buf, sizeof(buf), "(R)ARP", CONST_COLOR_1,
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+  printTableEntry(buf, sizeof(buf), "DLC", CONST_COLOR_1,
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
+  printTableEntry(buf, sizeof(buf), "IPX", CONST_COLOR_1,
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
+  printTableEntry(buf, sizeof(buf), "Decnet", CONST_COLOR_1,
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
+  printTableEntry(buf, sizeof(buf), "AppleTalk", CONST_COLOR_1,
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
+  printTableEntry(buf, sizeof(buf), "NetBios", CONST_COLOR_1,
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
+  printTableEntry(buf, sizeof(buf), "OSI", CONST_COLOR_1,
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
+  printTableEntry(buf, sizeof(buf), "IPv6", CONST_COLOR_1,
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
+  printTableEntry(buf, sizeof(buf), "STP", CONST_COLOR_1,
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
+  printTableEntry(buf, sizeof(buf), "Other", CONST_COLOR_1,
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
+
+  if(printGraph) {
+    sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
+	       "<iframe frameborder=0 SRC=\"" CONST_BAR_ALLPROTO_DIST  CHART_FORMAT "\" "
+	       "width=650 height=250></iframe>"
+	       "</TD></TR>\n");
   }
 
   sendString("</TABLE>"TABLE_OFF"<P></CENTER>\n");
@@ -5146,15 +5146,15 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
 #ifdef WIN32
-	  {
-		  unsigned long driveSerial;
+    {
+      unsigned long driveSerial;
 
-		  get_serial(&driveSerial);
+      get_serial(&driveSerial);
 
-		  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/%u/interfaces/%s/throughput.rrd",
-			  myGlobals.rrdPath != NULL ? myGlobals.spoolPath : ".", driveSerial,
-			  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
-	  }
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/%u/interfaces/%s/throughput.rrd",
+		    myGlobals.rrdPath != NULL ? myGlobals.spoolPath : ".", driveSerial,
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+    }
 #else
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/interfaces/%s/throughput.rrd",
 		  myGlobals.rrdPath != NULL ? myGlobals.spoolPath : ".",
@@ -5176,9 +5176,9 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
 		    0,
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-600), 
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-600),
 		    (unsigned int)now, "Last+10+Minutes+Throughput",
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-600), 
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-600),
 		    (unsigned int)now, "Throughput"
 		    );
       sendString(tmpBuf);
@@ -5187,15 +5187,15 @@ void printThptStats(int sortedColumn _UNUSED_) {
 		    formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
 		    formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
       sendString(tmpBuf);
-    
+
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
 		    1,
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-3600), 
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-3600),
 		    (unsigned int)now, "Last+Hour+Throughput",
 		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-3600),
 		    (unsigned int)now, "Throughput");
       sendString(tmpBuf);
-    } 
+    }
 
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
 		  formatTimeStamp(0, 0, 60, formatBuf, sizeof(formatBuf)),
@@ -5204,9 +5204,9 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
     if(useRRD) {
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		    2, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-86400), 
+		    2, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-86400),
 		    (unsigned int)now, "Current+Day+Throughput",
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-86400), 
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-86400),
 		    (unsigned int)now, "Throughput");
       sendString(tmpBuf);
     }
@@ -5218,9 +5218,9 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
     if(useRRD) {
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		    3, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, 
+		    3, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		    (unsigned int)(now-86400*30), (unsigned int)now, "Last+Month+Throughput",
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, 
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		    (unsigned int)(now-86400*30), (unsigned int)now, "Throughput");
       sendString(tmpBuf);
     }
@@ -5238,7 +5238,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 		    formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
 		    formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
       sendString(tmpBuf);
-    } 
+    }
   }
 
   sendString("<p align=left><b>NOTE</b>: this page is not operational when the <A HREF=/plugins/rrdPlugin>RRD plugin</A> is disabled, misconfigured or missing.</p>");
@@ -5265,7 +5265,7 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
 
   /*
     traceEvent(CONST_TRACE_INFO, "--> [columnSort=%d][network_mode_sort=%d]",
-    myGlobals.columnSort, network_mode_sort); 
+    myGlobals.columnSort, network_mode_sort);
   */
 
   switch(myGlobals.columnSort) {
@@ -5280,7 +5280,7 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
     } else if(network_mode_sort == AS_VIEW) {
       a_ = a->domainHost->hostAS , b_ = b->domainHost->hostAS;
     } else {
-       /* Host */
+      /* Host */
       return(cmpFctnResolvedName(&(a->domainHost), &(b->domainHost)));
     }
     break;
@@ -5289,10 +5289,10 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
        domain, our fallback to hostResolvedName will rule anyway.
     */
     if(a->clusterName && b->clusterName)
-	rc = strcmp(a->clusterName, b->clusterName);
-      else
-	rc = cmpFctnLocationName(a, b);
-      return(rc);
+      rc = strcmp(a->clusterName, b->clusterName);
+    else
+      rc = cmpFctnLocationName(a, b);
+    return(rc);
   case 2: a_  = a->bytesSent.value, b_ = b->bytesSent.value;   break;
   case 3: a_  = a->bytesRcvd.value, b_ = b->bytesRcvd.value;   break;
   case 4: a_  = a->tcpSent.value  , b_ = b->tcpSent.value;     break;
@@ -5321,10 +5321,10 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
 
 /* if myGlobals.runningPref.domainName == NULL -> print all domains */
 void printDomainStats(char* domain_network_name, int network_mode,
-		      int clusterMode, int sortedColumn, 
+		      int clusterMode, int sortedColumn,
 		      int revertOrder, int pageNum) {
   u_int idx, tmpIdx, numEntries=0, printedEntries=0, maxHosts;
-  u_short keyValue=0, i;
+  short keyValue=0, i;
   HostTraffic *el;
   char buf[3*LEN_GENERAL_WORK_BUFFER], buf1[64];
   DomainStats **stats, *tmpStats = NULL, *statsEntry;
@@ -5353,13 +5353,13 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s.name.%s",
 		      (network_mode == NETWORK_VIEW) ? "network" : "as",
 		      domain_network_name);
-	
+
 	if(fetchPrefsValue(buf, sym_nw_name, sizeof(sym_nw_name)) == -1)
 	  sym_nw_name[0] = '\0';
-       
+
 	safe_snprintf(__FILE__, __LINE__, link_name, sizeof(link_name),
 		      " <A HREF=\"%s?key=%s.name.%s\">%s</A>",
-		      CONST_EDIT_PREFS, 
+		      CONST_EDIT_PREFS,
 		      (network_mode == NETWORK_VIEW) ? "network" : "as",
 		      domain_network_name,
 		      "<img class=tooltip alt=\"Change name\" "
@@ -5367,21 +5367,34 @@ void printDomainStats(char* domain_network_name, int network_mode,
       }
 
       if(network_mode == AS_VIEW) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "Statistics for hosts in AS <A HREF=http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%s>%s</A> %s",
 		      domain_network_name, (sym_nw_name[0] == '\0') ? domain_network_name : sym_nw_name,
 		      link_name);
       } else if(network_mode == AS_GRAPH_VIEW) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "Statistics for AS <A HREF=http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%s>%s</A> %s",
 		      domain_network_name, (sym_nw_name[0] == '\0') ? domain_network_name : sym_nw_name,
 		      link_name);
       } else {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		      "Statistics for hosts in %s %s %s",
+	char tmp_buf[64], key[64], my_domain_network_name[64], *placeholder = domain_network_name;
+
+	if(network_mode == NETWORK_VIEW) {
+	  safe_snprintf(__FILE__, __LINE__, my_domain_network_name, sizeof(my_domain_network_name),
+			"%s", subnetId2networkName(atoi(domain_network_name), tmp_buf, sizeof(tmp_buf)));
+	  safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "subnet.name.%s", tmp_buf);
+	  domain_network_name = my_domain_network_name;
+	  sym_nw_name[0] = '\0';
+	  fetchPrefsValue(key, sym_nw_name, sizeof(sym_nw_name));
+	}
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "Statistics for hosts in %s '%s' %s",
 		      (network_mode == NETWORK_VIEW) ? "network" : ((network_mode == AS_VIEW) ? "AS" : "domain"),
 		      (sym_nw_name[0] == '\0') ? domain_network_name : sym_nw_name,
 		      link_name);
+
+	domain_network_name = placeholder;
       }
     }
   } else {
@@ -5441,7 +5454,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
   }
 
   if(debug) traceEvent(CONST_TRACE_WARNING, "totNumClusters=%d", totNumClusters);
-  
+
   printHTMLheader(buf, NULL, 0);
 
   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
@@ -5485,21 +5498,21 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
     if((network_mode == AS_VIEW) && (domain_network_name == NULL)) {
       struct stat statbuf;
-      
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/AS/numAS.rrd", 
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/AS/numAS.rrd",
 		    myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
-      
+
       if((i = stat(buf, &statbuf)) == 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<center>"
 		      "<IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=numAS&arbiface=%s&start=%u&end=%u&counter=&title=%s\">",
-		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600), 
+		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600),
 		      (unsigned int)myGlobals.actTime, "Active+ASs");
 	sendString(buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=numAS&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
 		      "&nbsp;<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A>",
-		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600), 
+		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600),
 		      (unsigned int)myGlobals.actTime, "Active+ASs");
 	sendString(buf);
 
@@ -5516,6 +5529,16 @@ void printDomainStats(char* domain_network_name, int network_mode,
       arrowGif = "&nbsp;" CONST_IMG_ARROW_DOWN;
     }
 
+    if((network_mode == NETWORK_VIEW) && (domain_network_name == NULL)) {
+      for(i=0; i<myGlobals.numKnownSubnets; i++) {
+	statsEntry = &tmpStats[numEntries++];
+	memset(statsEntry, 0, sizeof(DomainStats));
+	statsEntry->known_subnet_id = i;
+	statsEntry->domainHost = NULL;
+	stats[i] = statsEntry;
+      }
+    }
+
     for(el=getFirstHost(myGlobals.actualReportDeviceId);
 	el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
       fillDomainName(el);
@@ -5525,13 +5548,12 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	  if((el->known_subnet_id == UNKNOWN_SUBNET_ID) || (el->known_subnet_id >= myGlobals.numKnownSubnets))
 	    continue;
 	  else if((domain_network_name != NULL) && (domain_network_name[0] != '\0')) {
-	    char *nw_name = host2networkName(el, buf1, sizeof(buf1));
-	    if(strcmp(nw_name, domain_network_name))
+	    if(el->known_subnet_id != atoi(domain_network_name))
 	      continue;
 	  }
 	} else {
 	  getHostAS(el);
-	  if(el->hostAS == 0) 
+	  if(el->hostAS == 0)
 	    continue;
 	  else if((domain_network_name != NULL) && (domain_network_name[0] != '\0')) {
 	    if(el->hostAS != atoi(domain_network_name))
@@ -5544,112 +5566,94 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	  continue;
 	else if(broadcastHost(el))
 	  continue;
-	else {
-	  /*
-	  if(domain_network_name
-	     && el->dnsDomainValue
-	     && (strcmp(el->dnsDomainValue, domain_network_name) != 0))
-	    continue;
+	else {	  
+	    if(domain_network_name
+	       && el->dnsDomainValue
+	       && (strcmp(el->dnsDomainValue, domain_network_name) != 0))
+	      continue;
 
-	  if((el->dnsDomainValue == NULL)
-	     || (el->dnsDomainValue[0] == '\0')
-	     || (el->ip2ccValue == NULL)
-	     || (el->hostResolvedName[0] == '\0')
-	     || (el->ip2ccValue == '\0'))
+	    if((el->dnsDomainValue == NULL)
+	       || (el->dnsDomainValue[0] == '\0')
+	       || (el->hostResolvedName[0] == '\0')
+	       /*
+	       || (el->ip2ccValue == NULL)
+	       || (el->ip2ccValue == '\0') */
+	       )
 	    continue;
-	  */
 	}
       }
 
       if(domain_network_name == NULL) /* All entries */ {
 	if(!clusterMode) {
 	  if(network_mode == NETWORK_VIEW) {
-	    /* Network */
-	    char *nw_name = host2networkName(el, buf1, sizeof(buf1));
+	    int s = (int)el->known_subnet_id;
+	    keyValue = (short)s;
+	  } else if(network_mode == AS_VIEW) {
+	    keyValue = (el->hostAS % maxHosts);
 
-	     for(keyValue=0, tmpIdx=0; nw_name[tmpIdx] != '\0'; tmpIdx++)
-	       keyValue += (tmpIdx+1)*(u_short)nw_name[tmpIdx];
+	    while(stats[keyValue] != NULL) {
+	      if(stats[keyValue]->domainHost->hostAS == el->hostAS)
+		break;
+	      else
+		keyValue = (keyValue+1) % maxHosts;
+	    }
 
-	     keyValue %= maxHosts;
+	    /* traceEvent(CONST_TRACE_INFO, "--> [AS=%d]", el->hostAS); */
+	  } else {
+	    if(el->dnsDomainValue == NULL) continue;
 
-	     while(stats[keyValue] != NULL) {
-	       u_int32_t a, b;
+	    /* Domain */
+	    for(keyValue=0, tmpIdx=0; el->dnsDomainValue[tmpIdx] != '\0'; tmpIdx++)
+	      keyValue += (tmpIdx+1)*(u_short)el->dnsDomainValue[tmpIdx];
 
-	       a = el->hostIpAddress.Ip4Address.s_addr && (0xFFFFFFFF << (32-el->network_mask));
-	       b = stats[keyValue]->domainHost->hostIpAddress.Ip4Address.s_addr
-		 && (0xFFFFFFFF << (32-stats[keyValue]->domainHost->network_mask));
+	    keyValue %= maxHosts;
 
-	       if(a == b)
-		 break;
-	       else
-		 keyValue = (keyValue+1) % maxHosts;
-	     }
-	   } else if(network_mode == AS_VIEW) {
-	     keyValue = (el->hostAS % maxHosts);
+	    while((stats[keyValue] != NULL)
+		  && (strcasecmp(stats[keyValue]->domainHost->dnsDomainValue, el->dnsDomainValue) != 0))
+	      keyValue = (keyValue+1) % maxHosts;
+	  }
+	} else {
+	  /* Cluster */
+	  u_char found = 0;
 
-	     while(stats[keyValue] != NULL) {
-	       if(stats[keyValue]->domainHost->hostAS == el->hostAS)
-		 break;
-	       else
-		 keyValue = (keyValue+1) % maxHosts;
-	     }
+	  if(el->hostIpAddress.hostFamily != AF_INET) continue;
 
-	     /* traceEvent(CONST_TRACE_INFO, "--> [AS=%d]", el->hostAS); */
-	   } else {
-		   if(el->dnsDomainValue == NULL) continue;
+	  keyValue = 0;
+	all_hosts_cluster:
 
-	     /* Domain */
-	     for(keyValue=0, tmpIdx=0; el->dnsDomainValue[tmpIdx] != '\0'; tmpIdx++)
-	       keyValue += (tmpIdx+1)*(u_short)el->dnsDomainValue[tmpIdx];
+	  if(debug) traceEvent(CONST_TRACE_WARNING, "[keyValue=%d][totNumClusters=%d]",
+			       keyValue, totNumClusters);
 
-	     keyValue %= maxHosts;
+	  for(; keyValue<totNumClusters; keyValue++) {
+	    if(__pseudoLocalAddress(&el->hostIpAddress.addr._hostIp4Address,
+				    localNetworks[keyValue], numLocalNetworks[keyValue], NULL, NULL)) {
+	      found = 1;
+	      break;
+	    }
+	  }
 
-	     while((stats[keyValue] != NULL)
-		   && (strcasecmp(stats[keyValue]->domainHost->dnsDomainValue, el->dnsDomainValue) != 0))
-	       keyValue = (keyValue+1) % maxHosts;
-	   }
-	 } else {
-	   /* Cluster */
-	   u_char found = 0;
+	  if((!found) || (keyValue >= totNumClusters  /* due to the goto */)) continue;
+	}
 
-	   if(el->hostIpAddress.hostFamily != AF_INET) continue;
+	if(stats[keyValue] != NULL)
+	  statsEntry = stats[keyValue];
+	else {
+	  statsEntry = &tmpStats[numEntries++];
+	  memset(statsEntry, 0, sizeof(DomainStats));
 
-	   keyValue = 0;
-	 all_hosts_cluster:
+	  if(clusterMode)
+	    statsEntry->clusterName = (char*)clusterNames[keyValue];
+	  else {
+	    if((network_mode == NETWORK_VIEW) && (domain_network_name == NULL) /* All entries */)
+	      statsEntry->known_subnet_id = el->known_subnet_id;
+	    else
+	      statsEntry->known_subnet_id = UNKNOWN_SUBNET_ID;
 
-	   if(debug) traceEvent(CONST_TRACE_WARNING, "[keyValue=%d][totNumClusters=%d]",
-				keyValue, totNumClusters);
-
-	   for(; keyValue<totNumClusters; keyValue++) {
-	     if(__pseudoLocalAddress(&el->hostIpAddress.addr._hostIp4Address,
-				     localNetworks[keyValue], numLocalNetworks[keyValue], NULL, NULL)) {
-	       found = 1;
-	       break;
-	     }
-	   }
-
-	   if((!found) || (keyValue >= totNumClusters  /* due to the goto */)) continue;
-	 }
-
-	 if(stats[keyValue] != NULL)
-	   statsEntry = stats[keyValue];
-	 else {
-	   statsEntry = &tmpStats[numEntries++];
-	   memset(statsEntry, 0, sizeof(DomainStats));
-
-	   if(clusterMode)
-	     statsEntry->clusterName = (char*)clusterNames[keyValue];
-	   else {
-	     if((network_mode == NETWORK_VIEW) && (domain_network_name == NULL) /* All entries */) 
-	       statsEntry->known_subnet_id = el->known_subnet_id;
-	     else
-	       statsEntry->known_subnet_id = UNKNOWN_SUBNET_ID;
-
-	     statsEntry->domainHost = el;
-	   }
+	    statsEntry->domainHost = el;
+	  }
 
 	  stats[keyValue] = statsEntry;
-	  /* traceEvent(CONST_TRACE_INFO, "[%d] %s/%s", numEntries, el->dnsDomainValue, el->ip2ccValue); */
+	  // traceEvent(CONST_TRACE_INFO, "[%d] %s/%s", numEntries, el->dnsDomainValue, el->ip2ccValue); 
 	}
       } else /* Only the selected items */ {
 	if(clusterMode) {
@@ -5664,6 +5668,8 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	if(debug) traceEvent(CONST_TRACE_INFO, "--> Adding %s [ptr=%p]", el->hostNumIpAddress, el);
 	stats[keyValue++] = statsEntry;
       }
+
+      if(statsEntry->domainHost == NULL) statsEntry->domainHost = el;
 
       totBytesSent                += el->bytesSent.value;
       statsEntry->bytesSent.value += el->bytesSent.value;
@@ -5705,7 +5711,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
       totBytesSent = 1;
     if(totBytesRcvd == 0)
       totBytesRcvd = 1;
-  
+
     /* NOTE: col= must be the last parameter */
     if(domain_network_name == NULL) {
       safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?netmode=%d&col=%s",
@@ -5735,7 +5741,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		  "<TH "TH_BG" colspan=\"4\">ICMP</A></TH>"
 		  "<TH "TH_BG">&nbsp;</TH></TR>\n",
 		  theAnchor[0], arrow[0],
-		  theAnchor[1], "Domains",		
+		  theAnchor[1], "Domains",
 		  arrow[1]);
     sendString(buf);
 
@@ -5785,11 +5791,11 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
       if(domain_network_name == NULL) {
 	if(network_mode == NETWORK_VIEW) {
-	  char *nw_name = host2networkName(statsEntry->domainHost, buf1, sizeof(buf1));
+	  char *nw_name;
 	  char sym_nw_name[256];
 
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "network.name.%s",
-			nw_name);
+	  nw_name = subnetId2networkName(statsEntry->known_subnet_id, buf1, sizeof(buf1));
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "network.name.%s", nw_name);
 
 	  if(fetchPrefsValue(buf, sym_nw_name, sizeof(sym_nw_name)) == -1) {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "subnet.name.%s", nw_name);
@@ -5797,16 +5803,26 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	      sym_nw_name[0] = '\0';
 	  }
 
-	  safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
-			"<A HREF=/%s?dom=%s&netmode=%d>%s%s%s%s</A>",
-			CONST_DOMAIN_STATS_HTML, nw_name, network_mode,
-			nw_name,
-			(sym_nw_name[0] == '\0') ? "" : " [",
-			sym_nw_name,
-			(sym_nw_name[0] == '\0') ? "" : "]");
-	
+	  if(statsEntry->domainHost)
+	    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
+			  "<A HREF=/%s?dom=%d&netmode=%d>%s%s%s%s</A>",
+			  CONST_DOMAIN_STATS_HTML, statsEntry->known_subnet_id,
+			  network_mode,
+			  nw_name,
+			  (sym_nw_name[0] == '\0') ? "" : " [",
+			  sym_nw_name,
+			  (sym_nw_name[0] == '\0') ? "" : "]");
+	  else {
+	    /* No traffic yet for this subnet */
+	    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
+			  "%s%s%s%s",
+			  nw_name,
+			  (sym_nw_name[0] == '\0') ? "" : " [",
+			  sym_nw_name,
+			  (sym_nw_name[0] == '\0') ? "" : "]");
+	  }
 	} else if(network_mode == AS_VIEW) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "as.name.%d", 
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "as.name.%d",
 			statsEntry->domainHost->hostAS);
 
 	  if(fetchPrefsValue(buf, sym_as_name, sizeof(sym_as_name)) == -1)
@@ -5826,18 +5842,22 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	int blankId;
 	u_int len;
 
-	accessAddrResMutex("getHostIcon");
+#if 0
+	if(statsEntry->domainHost) {
+	  accessAddrResMutex("getHostIcon");
 
-	blankId = strlen(statsEntry->domainHost->hostResolvedName)-1;
-	if(statsEntry->domainHost->dnsDomainValue != NULL)
-	  blankId -= strlen(statsEntry->domainHost->dnsDomainValue);
+	  blankId = strlen(statsEntry->domainHost->hostResolvedName)-1;
+	  if(statsEntry->domainHost->dnsDomainValue != NULL)
+	    blankId -= strlen(statsEntry->domainHost->dnsDomainValue);
 
-	strncpy(tmpBuf, statsEntry->domainHost->hostResolvedName, sizeof(tmpBuf));
+	  strncpy(tmpBuf, statsEntry->domainHost->hostResolvedName, sizeof(tmpBuf));
 
-	releaseAddrResMutex();
+	  releaseAddrResMutex();
 
-	if((blankId > 0) && (strcmp(&tmpBuf[blankId+1], domain_network_name) == 0))
-	  tmpBuf[blankId] = '\0';
+	  if((blankId > 0) && (strcmp(&tmpBuf[blankId+1], domain_network_name) == 0))
+	    tmpBuf[blankId] = '\0';
+	}
+#endif
 
 	if(network_mode == AS_VIEW) {
 	  makeHostLink(statsEntry->domainHost, FLAG_HOSTLINK_TEXT_FORMAT, 0,
@@ -5845,7 +5865,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	} else {
 	  hostLink = makeHostLink(statsEntry->domainHost, FLAG_HOSTLINK_TEXT_FORMAT, 1,
 				  0, hostLinkBuf, sizeof(hostLinkBuf));
-	
+
 	  len = strlen(hostLink); if(len >= sizeof(htmlAnchor)) len = sizeof(htmlAnchor)-1;
 	  strncpy(htmlAnchor, hostLink, len);
 	  htmlAnchor[len] = '\0';
@@ -5857,14 +5877,15 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>",
 		    getRowColor(), htmlAnchor,
-		    (clusterMode && (!domain_network_name)) ? "&nbsp;" : getHostCountryIconURL(statsEntry->domainHost),
+		    ((clusterMode && (!domain_network_name)) || (!statsEntry->domainHost)) ?
+		    "&nbsp;" : getHostCountryIconURL(statsEntry->domainHost),
 		    formatBytes(statsEntry->bytesSent.value, 1, formatBuf, sizeof(formatBuf)),
 		    (100*((float)statsEntry->bytesSent.value/(float)totBytesSent)),
 		    formatBytes(statsEntry->bytesRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
 		    (100*((float)statsEntry->bytesRcvd.value/(float)totBytesRcvd)));
       sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 		    formatBytes(statsEntry->tcpSent.value, 1, formatBuf2, sizeof(formatBuf2)),
@@ -5874,7 +5895,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		    formatBytes(statsEntry->icmpSent.value, 1, formatBuf6, sizeof(formatBuf6)));
       sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		    formatBytes(statsEntry->icmpRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
 		    formatBytes(statsEntry->icmp6Sent.value, 1, formatBuf8, sizeof(formatBuf8)),
@@ -5882,25 +5903,33 @@ void printDomainStats(char* domain_network_name, int network_mode,
       sendString(buf);
 
       if(sym_as_name[0] != '\0')
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/AS/%s", 
-		      myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/AS/%s",
+		      myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		      sym_as_name);
-      
-      if((sym_as_name[0] != '\0') && ((i = stat(buf, &statbuf)) == 0)) {
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		       "<TD "TD_BG" ALIGN=CENTER><A HREF=\"/%s?netmode=%d&dom=%s\">"
-		       "<img class=tooltip valign=top border=0 src=/graph.gif></A></TD></TR>\n",
-		       CONST_DOMAIN_STATS_HTML, AS_GRAPH_VIEW, sym_as_name);
-	 sendString(buf);
-      } else if(clusterMode && statsEntry && statsEntry->clusterName) {
-	 safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		       "<TD "TD_BG" ALIGN=CENTER><A HREF=\"/" CONST_PLUGINS_HEADER "rrdPlugin?action=list&cluster=%s\">"
-		       "<img class=tooltip valign=top border=0 src=/graph.gif></A></TD></TR>\n",
-		       statsEntry->clusterName);
-	 sendString(buf);
 
-      } else if((network_mode == NETWORK_VIEW) && (statsEntry->domainHost != NULL)) {
+      if((sym_as_name[0] != '\0') && ((i = stat(buf, &statbuf)) == 0)) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<TD "TD_BG" ALIGN=CENTER><A HREF=\"/%s?netmode=%d&dom=%s\">"
+		      "<img class=tooltip valign=top border=0 src=/graph.gif></A></TD></TR>\n",
+		      CONST_DOMAIN_STATS_HTML, AS_GRAPH_VIEW, sym_as_name);
+	sendString(buf);
+      } else if(clusterMode && statsEntry && statsEntry->clusterName) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<TD "TD_BG" ALIGN=CENTER><A HREF=\"/" CONST_PLUGINS_HEADER "rrdPlugin?action=list&cluster=%s\">"
+		      "<img class=tooltip valign=top border=0 src=/graph.gif></A></TD></TR>\n",
+		      statsEntry->clusterName);
+	sendString(buf);
+      } else if((network_mode == NETWORK_VIEW) 
+		&& ((statsEntry->domainHost != NULL))
+		|| (domain_network_name == NULL)) {
 	char rrdBuf[LEN_GENERAL_WORK_BUFFER];
+	HostTraffic dummy;
+	
+	if(statsEntry->domainHost == NULL) {
+	  statsEntry->domainHost = &dummy;
+	  memset(&dummy, 0, sizeof(dummy));
+	  dummy.known_subnet_id = statsEntry->known_subnet_id;
+	}
 
 	hostRRdGraphLink(statsEntry->domainHost,
 			 (domain_network_name == NULL) ? 1 : 0,
@@ -5911,10 +5940,10 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	  sendString(rrdBuf);
 	else
 	  sendString("&nbsp;");
-	
+
 	sendString("</TD>\n");
       } else
-	 sendString("<TD "TD_BG" ALIGN=CENTER>&nbsp;</TD>\n");
+	sendString("<TD "TD_BG" ALIGN=CENTER>&nbsp;</TD>\n");
 
       /* Avoid huge tables */
       if(printedEntries++ > myGlobals.runningPref.maxNumLines)
@@ -5935,7 +5964,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
     addPageIndicator(buf, pageNum, numEntries,
 		     myGlobals.runningPref.maxNumLines,
 		     revertOrder, abs(sortedColumn), network_mode);
-  
+
     /* FIX */
     /* RRDs for domains */
     if(domain_network_name != NULL) {
@@ -5971,7 +6000,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
     if(!clusterMode) {
       sendString("<p align=\"center\"><b>NOTE</b>: ");
       if(network_mode == NETWORK_VIEW)
-	sendString("<small>Hosts without a known network are not displayed in this report</small>\n");
+	sendString("<small>You can define networks using the --known-subnets flag. Networks with no traffic/hosts do not have a hyperlink associated</small>\n");
       else if(network_mode == AS_VIEW)
 	sendString("<small>AS numbers are either received via monitoring protocols (e.g. NetFlow) or read from the AS-list ntop configuration file</small>");
       else
@@ -5993,7 +6022,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
 /* ************************* */
 
-void printNoDataYet(void) {
+  void printNoDataYet(void) {
   printFlagedWarning("<I>No Data To Display (yet)</I>");
 }
 
@@ -6279,21 +6308,21 @@ void printVLANList(unsigned int deviceId) {
 /* ******************************************* */
 
 static int recentlyUsedPort(HostTraffic *el, int portNr, int serverPort) {
-	int i;
+  int i;
 
-	if(el == NULL) return(0);
+  if(el == NULL) return(0);
 
-	for(i=0; i<MAX_NUM_RECENT_PORTS; i++) {
-		if(serverPort) {
-			if(el->recentlyUsedServerPorts[i] == portNr)
-				return(1);
-		} else {
-			if(el->recentlyUsedClientPorts[i] == portNr)
-				return(1);
-		}
-	}
+  for(i=0; i<MAX_NUM_RECENT_PORTS; i++) {
+    if(serverPort) {
+      if(el->recentlyUsedServerPorts[i] == portNr)
+	return(1);
+    } else {
+      if(el->recentlyUsedClientPorts[i] == portNr)
+	return(1);
+    }
+  }
 
-	return(0);
+  return(0);
 }
 
 /* ******************************************* */
@@ -6354,9 +6383,9 @@ void showPortTraffic(u_short portNr) {
   recentlyUsedPortRcvd:
     if(recentlyUsedPort(el, portNr, 1)) {
       if(numRecords == 0) {
-		sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "DARK_BG"><TH>Client</TH><TH>Server</TH></TR>\n");
-		sendString("<TR>\n<TD>\n");
-		sendString("\n&nbsp;\n</TD><TD nowrap><ul>\n");
+	sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "DARK_BG"><TH>Client</TH><TH>Server</TH></TR>\n");
+	sendString("<TR>\n<TD>\n");
+	sendString("\n&nbsp;\n</TD><TD nowrap><ul>\n");
       }
 
       sendString("\n<LI> ");
@@ -6375,13 +6404,13 @@ void showPortTraffic(u_short portNr) {
   }
 
   if(numRecords == 0) {
-	  safe_snprintf(__FILE__, __LINE__, hostLinkBuf, sizeof(hostLinkBuf),
+    safe_snprintf(__FILE__, __LINE__, hostLinkBuf, sizeof(hostLinkBuf),
 		  "<P>No hosts found: the information for this port "
 		  "has been purged in the meantime <br>"
 		  "as each host keeps the last %d server/client ports only.</CENTER><P>\n",
 		  MAX_NUM_RECENT_PORTS);
 
-		  sendString(hostLinkBuf);
+    sendString(hostLinkBuf);
   } else
     sendString("\n&nbsp;\n</ul></TD>\n</TR>\n</TABLE>\n</CENTER>");
 
@@ -6464,9 +6493,9 @@ void printFcHostsTraffic(int reportType,
       if(el->fcCounters->vsanId > MAX_USER_VSAN) continue;
 
       if(((showLocalityMode == showOnlySent) && (el->fcCounters->fcBytesSent.value > 0))
-	  || ((showLocalityMode == showOnlyReceived) && (el->fcCounters->fcBytesRcvd.value > 0))
-	  || ((showLocalityMode == showSentReceived) && ((el->fcCounters->fcBytesSent.value > 0) ||
-							 (el->fcCounters->fcBytesRcvd.value > 0)))) {
+	 || ((showLocalityMode == showOnlyReceived) && (el->fcCounters->fcBytesRcvd.value > 0))
+	 || ((showLocalityMode == showSentReceived) && ((el->fcCounters->fcBytesSent.value > 0) ||
+							(el->fcCounters->fcBytesRcvd.value > 0)))) {
 	tmpTable[numEntries++]=el;
 
 	if(numEntries >= maxHosts)
@@ -6750,10 +6779,10 @@ void purgeHost(char *serialized_serial) {
   HostSerial theSerial;
   HostTraffic *el;
 
-    printHTMLheader("Host Purge", NULL, 0);
-// printFlagedWarning("aaa"); return;
+  printHTMLheader("Host Purge", NULL, 0);
+  // printFlagedWarning("aaa"); return;
 
-str2serial(&theSerial, serialized_serial, strlen(serialized_serial));
+  str2serial(&theSerial, serialized_serial, strlen(serialized_serial));
 
 #if 0
   {
@@ -6779,7 +6808,7 @@ str2serial(&theSerial, serialized_serial, strlen(serialized_serial));
       while(el1 != NULL) {
 	if(el1 == el) {
 	  found = 1;
-			el->to_be_deleted = 1; /* Delete it at the next run */
+	  el->to_be_deleted = 1; /* Delete it at the next run */
 	  break;
 	}
 
@@ -6805,13 +6834,13 @@ str2serial(&theSerial, serialized_serial, strlen(serialized_serial));
 void printInterfaceStats() {
   char buf[64];
   time_t now = time(NULL);
-  
+
   sendString(ctime(&now));
 
-  snprintf(buf, sizeof(buf), "%u %u\n", 
+  snprintf(buf, sizeof(buf), "%u %u\n",
 	   (unsigned int)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value,
 	   (unsigned int)(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value
-			       - myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+			  - myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
   sendString(buf);
   /* traceEvent(CONST_TRACE_ERROR, "%s", buf); */
 }
@@ -6832,13 +6861,13 @@ void findHost(char *key) {
     u_char do_add = 0;
 
     if(el == myGlobals.broadcastEntry) continue;
-    
+
     if((key == NULL) || (key == "")) do_add = 1;
     else if(el->hostNumIpAddress && strstr(el->hostNumIpAddress, key)) do_add = 1;
     else if(strstr(el->ethAddressString, key)) do_add = 1;
     else if(strstr(el->hostResolvedName, key)) do_add = 1;
 
-    if(do_add) {      
+    if(do_add) {
       char *str;
 
       if(el->hostResolvedName[0] != '\0')      str = el->hostResolvedName;
@@ -6847,13 +6876,13 @@ void findHost(char *key) {
 
       makeHostLink(el, FLAG_HOSTLINK_TEXT_LITE_FORMAT, 0, 0, buf1, sizeof(buf1));
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "%s\n\t{ id: \"%d\", value: \"%s\", info: \"%s\" }",
 		    (num > 0) ? "," : "", num, str, buf1);
       sendString(buf);
       num++;
       if(num > 32) break; /* Do not display too many entries */
-    }    
+    }
   }
 
   sendString("\n] }\n");
@@ -6869,7 +6898,7 @@ char* hostRRdGraphLink(HostTraffic *el, u_char is_subnet_host, char *tmpStr, int
   if(is_subnet_host)
     key = host2networkName(el, subnet_buf, sizeof(subnet_buf));
   else {
-    if((!myGlobals.runningPref.dontTrustMACaddr) && subnetPseudoLocalHost(el) 
+    if((!myGlobals.runningPref.dontTrustMACaddr) && subnetPseudoLocalHost(el)
        && (el->ethAddressString[0] != '\0') /* Really safe in case a host that was supposed to be local isn't really so */)
       key = el->ethAddressString;
     else
@@ -6882,12 +6911,12 @@ char* hostRRdGraphLink(HostTraffic *el, u_char is_subnet_host, char *tmpStr, int
 		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		is_subnet_host ? "subnet" : "hosts",
 		dotToSlash(key));
-  
+
   revertSlashIfWIN32(buf, 0);
 
   if(stat(buf, &statbuf) == 0) {
     safe_snprintf(__FILE__, __LINE__, tmpStr, tmpStrLen,
-                  "[ <a href=\"/" CONST_PLUGINS_HEADER 
+                  "[ <a href=\"/" CONST_PLUGINS_HEADER
 		  "rrdPlugin?action=list&amp;key=interfaces/%s/%s/%s&amp;title=%s%%20%s\">"
                   "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
 		  " class=tooltip alt=\"view rrd graphs of historical data for this %s\"></a> ]",

@@ -1091,9 +1091,17 @@ void handleAddressLists(char* addresses, NetworkStats theNetworks[MAX_NUM_NETWOR
 	    d = (int)((network >>  0) & 0xff);
 
 	    traceEvent(CONST_TRACE_INFO,
-		       "-m: Discarded unnecessary parameter %d.%d.%d.%d/%d - this is the local network",
+		       "Discarded unnecessary parameter %d.%d.%d.%d/%d - this is the local network",
 		       a, b, c, d, bits);
 	    found = 1;
+	  }
+	}
+      } else {
+	for(i=0; i<myGlobals.numKnownSubnets; i++) {
+	  if((network == myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY])
+	     && (networkMask == myGlobals.subnetStats[i].address[CONST_NETMASK_ENTRY])) {
+	    found = 1;
+	    break; /* Already present */
 	  }
 	}
       }
