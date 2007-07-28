@@ -1840,7 +1840,7 @@ char* subnetId2networkName(int8_t known_subnet_id, char *buf, u_short buf_len) {
       
   if((known_subnet_id == UNKNOWN_SUBNET_ID)
      || (known_subnet_id < 0)
-     || (known_subnet_id > myGlobals.numKnownSubnets))
+     || (known_subnet_id >= myGlobals.numKnownSubnets))
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "0.0.0.0/0");
   else {
     addr.s_addr = myGlobals.subnetStats[known_subnet_id].address[CONST_NETWORK_ENTRY];
@@ -1868,6 +1868,8 @@ char* host2networkName(HostTraffic *el, char *buf, u_short buf_len) {
 
 void addDeviceNetworkToKnownSubnetList(NtopInterface *device) {
   int i;
+
+  if(device->network.s_addr == 0) return;
 
   for(i=0; i<myGlobals.numKnownSubnets; i++) {
     if((device->network.s_addr == myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY])
