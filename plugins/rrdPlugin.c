@@ -4340,6 +4340,22 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 			    myGlobals.ipTrafficProtosNames[j]);
 	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->rcvdLoc.value+
 			    el->protoIPTrafficInfos[j]->rcvdFromRem.value, 0);
+
+	      if(el->protoIPTrafficInfos[idx]->pktSent.value > 0) {
+		Counter c;
+		
+		c = el->protoIPTrafficInfos[idx]->efficiencySent.value / el->protoIPTrafficInfos[idx]->pktSent.value;
+		safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencySent", protoList->protocolName);	    
+		updateGauge(rrdPath, key, c, 0);
+	      }
+	      
+	      if(el->protoIPTrafficInfos[idx]->pktRcvd.value > 0) {
+		Counter c;
+		
+		c = el->protoIPTrafficInfos[idx]->efficiencyRcvd.value / el->protoIPTrafficInfos[idx]->pktRcvd.value;
+		safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencyRcvd", protoList->protocolName);
+		updateGauge(rrdPath, key, c, 0);
+	      }
 	    }
 	  }
 	}

@@ -149,6 +149,21 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
 /* ************************************ */
 
+static u_int efficiency(int actualDeviceId, u_int pktLen) {
+  u_int pktEfficiency;
+  
+  if(myGlobals.device[actualDeviceId].cellLength == 0)
+    pktEfficiency = 0;
+  else    
+    pktEfficiency = ((pktLen % myGlobals.device[actualDeviceId].cellLength) * 100) 
+      / myGlobals.device[actualDeviceId].cellLength;
+  
+  // traceEvent(CONST_TRACE_WARNING, "[len=%d][efficiency=%d]", pktLen, pktEfficiency);
+  return(pktEfficiency);
+}
+
+/* ************************************ */
+
 int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	     const u_int _length, u_short isPassiveSess,
 	     u_short isVoipSess,
@@ -289,6 +304,14 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].remote, length);
       }
     }
+
+    
+    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->pktRcvd, 1);
+    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->efficiencyRcvd, efficiency(actualDeviceId, length));
+    
+    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->pktSent, 1);
+    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->efficiencySent, efficiency(actualDeviceId, length));
+    
   }
 
   return(idx);
@@ -2165,9 +2188,9 @@ static void processIpPkt(const u_char *bp,
 	  if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	    dumpSuspiciousPacket(actualDeviceId);
 	  }
+
 	  break;
 	}
-
       }
 
       /* ************************************************************* */

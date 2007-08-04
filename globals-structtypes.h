@@ -394,6 +394,8 @@ typedef struct packetStats {
   TrafficCounter badChecksum, tooLong;
 } PacketStats;
 
+/* *********************** */
+
 typedef struct fcPacketStats {
   TrafficCounter upTo36, upTo48, upTo52, upTo68, upTo104;
   TrafficCounter upTo548, upTo1060, upTo2136, above2136;
@@ -411,7 +413,7 @@ typedef struct ttlStats {
 /* *********************** */
 
 typedef struct simpleProtoTrafficInfo {
-  TrafficCounter local, local2remote, remote, remote2local;
+  TrafficCounter local, local2remote, remote, remote2local; /* Bytes */
   TrafficCounter totalFlows;
 } SimpleProtoTrafficInfo;
 
@@ -440,7 +442,9 @@ typedef struct securityHostProbes {
   UsageCounter rejectedTCPConnSent, rejectedTCPConnRcvd;
   UsageCounter establishedTCPConnSent, establishedTCPConnRcvd;
   UsageCounter terminatedTCPConnServer, terminatedTCPConnClient;
+
   /* ********* */
+
   UsageCounter udpToClosedPortSent, udpToClosedPortRcvd;
 
   UsageCounter udpToDiagnosticPortSent, udpToDiagnosticPortRcvd,
@@ -478,9 +482,13 @@ typedef struct securityDeviceProbes {
   TrafficCounter icmpAdminProhibited;
 } SecurityDeviceProbes;
 
+/* *********************** */
+
 typedef struct sapType {
   u_char dsap, ssap;
 } SapType;
+\
+/* *********************** */
 
 typedef struct unknownProto {
   u_char protoType; /* 0=notUsed, 1=Ethernet, 2=SAP, 3=IP */
@@ -490,6 +498,8 @@ typedef struct unknownProto {
     u_int16_t ipType;
   } proto;
 } UnknownProto;
+
+/* *********************** */
 
 typedef struct nonIPTraffic {
   /* NetBIOS */
@@ -518,10 +528,14 @@ typedef struct nonIPTraffic {
   UnknownProto     *unknownProtoSent, *unknownProtoRcvd; /* List of MAX_NUM_UNKNOWN_PROTOS elements */
 } NonIPTraffic;
 
+/* *********************** */
+
 typedef struct trafficDistribution {
   TrafficCounter lastCounterBytesSent, last24HoursBytesSent[25], lastDayBytesSent;
   TrafficCounter lastCounterBytesRcvd, last24HoursBytesRcvd[25], lastDayBytesRcvd;
 } TrafficDistribution;
+
+/* *********************** */
 
 typedef struct portUsage {
   u_short        port, clientUses, serverUses;
@@ -530,11 +544,15 @@ typedef struct portUsage {
   struct portUsage *next;
 } PortUsage;
 
+/* *********************** */
+
 typedef struct virtualHostList {
   char *virtualHostName;
   TrafficCounter bytesSent, bytesRcvd; /* ... by the virtual host */
   struct virtualHostList *next;
 } VirtualHostList;
+
+/* *********************** */
 
 typedef struct userList {
   char *userName;
@@ -542,11 +560,15 @@ typedef struct userList {
   struct userList *next;
 } UserList;
 
+/* *********************** */
+
 typedef struct fileList {
   char *fileName;
   fd_set fileFlags;
   struct fileList *next;
 } FileList;
+
+/* *********************** */
 
 typedef struct storedAddress {
   char   symAddress[MAX_LEN_SYM_HOST_NAME];
@@ -555,10 +577,14 @@ typedef struct storedAddress {
   char   pad; /* Quiet valgrind */
 } StoredAddress;
 
+/* *********************** */
+
 typedef struct macInfo {
   u_char isSpecial;
   char   vendorName[MAX_LEN_VENDOR_NAME];
 } MACInfo;
+
+/* *********************** */
 
 typedef struct serviceStats {
   TrafficCounter numLocalReqSent, numRemReqSent;
@@ -571,6 +597,7 @@ typedef struct serviceStats {
   time_t fastestMicrosecRemReqServed, slowestMicrosecRemReqServed;
 } ServiceStats;
 
+/* *********************** */
 
 typedef struct dhcpStats {
   struct in_addr dhcpServerIpAddress;  /* DHCP server that assigned the address */
@@ -587,11 +614,15 @@ typedef struct dhcpStats {
 #define ICMP6_MAXTYPE 142
 #endif
 
+/* *********************** */
+
 typedef struct icmpHostInfo {
   TrafficCounter icmpMsgSent[ICMP6_MAXTYPE+1];
   TrafficCounter icmpMsgRcvd[ICMP6_MAXTYPE+1];
   time_t        lastUpdated;
 } IcmpHostInfo;
+
+/* *********************** */
 
 typedef struct protocolInfo {
   /* HTTP */
@@ -604,15 +635,22 @@ typedef struct protocolInfo {
   DHCPStats        *dhcpStats;
 } ProtocolInfo;
 
+/* *********************** */
+
 typedef struct shortProtoTrafficInfo {
-  TrafficCounter sent, rcvd;
+  TrafficCounter sent, rcvd; /* Bytes */
 } ShortProtoTrafficInfo;
+
+/* *********************** */
 
 typedef struct protoTrafficInfo {
   TrafficCounter sentLoc, sentRem;
   TrafficCounter rcvdLoc, rcvdFromRem;
+  TrafficCounter pktSent, pktRcvd, efficiencySent, efficiencyRcvd;
   TrafficCounter totalFlows;
 } ProtoTrafficInfo;
+
+/* *********************** */
 
 #define MAX_NUM_NON_IP_PROTO_TRAFFIC_INFO   8
 
@@ -623,10 +661,11 @@ typedef struct nonIpProtoTrafficInfo {
   struct nonIpProtoTrafficInfo *next;
 } NonIpProtoTrafficInfo;
 
+/* *********************** */
+
 /* ************************************* */
 /*         SCSI-specific structures      */
 /* ************************************* */
-
 
 typedef struct scsiLunTrafficInfo {
     struct timeval firstSeen;         /* time when the session has been initiated   */
@@ -1403,7 +1442,8 @@ typedef struct ntopInterface {
   u_short samplingRate;          /* default = 1 */
   u_short droppedSamples;        /* Number of packets dropped due to sampling, since the last processed pkt */
   u_short mtuSize,               /* MTU and header, derived from DLT and table in globals-core.c */
-          headerSize;
+    headerSize,
+    cellLength;                  /* If the traffic is divided in cells (e.g. ATM, cell payload is 47 bytes) this is the cell lenght */
 
   char *filter;                  /* user defined filter expression (if any) */
 
