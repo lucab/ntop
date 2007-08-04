@@ -1156,7 +1156,7 @@ void handleAddressLists(char* addresses, NetworkStats theNetworks[MAX_NUM_NETWOR
 /* ********************************* */
 
 void handleLocalAddresses(char* addresses) {
-  char localAddresses[1024];
+  char localAddresses[2048];
   
   localAddresses[0] = '\0';
 
