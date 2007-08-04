@@ -768,18 +768,18 @@ void resetStats(int deviceId) {
   for(j=FIRST_HOSTS_ENTRY; j<myGlobals.device[deviceId].actualHashSize; j++) {
     HostTraffic *el = myGlobals.device[deviceId].hash_hostTraffic[j], *elNext;
 
-    if(el) lockHostsHashMutex(el, "resetStats");
+    if(el) lockExclusiveHostsHashMutex(el, "resetStats");
 
     while(el != NULL) {
       elNext = el->next;
 
       if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry)) {
-	unlockHostsHashMutex(el);
+	unlockExclusiveHostsHashMutex(el);
 	freeHostInfo(el, deviceId);
-	if(elNext) lockHostsHashMutex(elNext, "resetStats");
+	if(elNext) lockExclusiveHostsHashMutex(elNext, "resetStats");
       } else {
 	if(!elNext) 
-	  unlockHostsHashMutex(el);
+	  unlockExclusiveHostsHashMutex(el);
       }
 
       el = elNext;
@@ -801,10 +801,10 @@ void resetStats(int deviceId) {
   if(myGlobals.device[deviceId].fcSession != NULL) {
     for(j=0; j<MAX_TOT_NUM_SESSIONS; j++)
       if((session = myGlobals.device[deviceId].fcSession[j]) != NULL) {
-          for (i = 0; i < MAX_LUNS_SUPPORTED; i++) {
-              if (session->activeLuns[i] != NULL) {
-                  free (session->activeLuns[i]);
-              }
+          for(i = 0; i < MAX_LUNS_SUPPORTED; i++) {
+	    if(session->activeLuns[i] != NULL) {
+	      free (session->activeLuns[i]);
+	    }
           }
           free(session);
           myGlobals.device[deviceId].fcSession[j] = NULL;

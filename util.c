@@ -2206,6 +2206,30 @@ int signalCondvar(ConditionalVariable *condvarId) {
 
 /* ************************************ */
 
+#undef _lockExclusiveHostsHashMutex
+int _lockExclusiveHostsHashMutex(HostTraffic *host, char *where, char *file, int line) {
+  u_char done = 0;
+
+  while(1) {
+    _accessMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], where, file, line);
+    if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 0)
+      return;
+    else
+      _releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], file, line);
+
+    sleep(1); /* Wait a bit */
+  }
+}
+
+/* ************************************ */
+
+#undef _unlockExclusiveHostsHashMutex
+int _unlockExclusiveHostsHashMutex(HostTraffic *host, char *file, int line) {
+  _releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], file, line);
+}
+
+/* ************************************ */
+
 #undef _lockHostsHashMutex
 int _lockHostsHashMutex(HostTraffic *host, char *where, char *file, int line) {
   int rc = 0;
@@ -2228,7 +2252,9 @@ int _lockHostsHashMutex(HostTraffic *host, char *where, char *file, int line) {
 
     _releaseMutex(&myGlobals.hostsHashLockMutex, file, line);
 #else
-    _accessMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], where, file, line);
+    _accessMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], "_lockHostsHashMutex", file, line);
+    myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]++;
+    _releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], file, line);
 #endif
   } else {
     rc = -1;
@@ -2266,7 +2292,9 @@ int _unlockHostsHashMutex(HostTraffic *host, char *file, int line) {
 
     releaseMutex(&myGlobals.hostsHashLockMutex);
 #else
-    rc = releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket]);
+    _accessMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], "_unlockHostsHashMutex", file, line);
+    myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]--;
+    _releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], file, line);
 #endif
   } else {
     rc = -1;

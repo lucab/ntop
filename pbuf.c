@@ -3683,7 +3683,10 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  lockHostsHashMutex(srcHost, "processPacket-src-5");
 	  allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
-	  if(srcHost->nonIPTraffic == NULL) return;
+	  if(srcHost->nonIPTraffic == NULL) {
+	    unlockHostsHashMutex(srcHost);
+	    return;
+	  }
 	}
 
 	dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
@@ -3697,7 +3700,10 @@ void processPacket(u_char *_deviceId,
 	  /* traceEvent(CONST_TRACE_INFO, "lockHostsHashMutex()"); */
 	  lockHostsHashMutex(dstHost, "processPacket-src-5");
 	  allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
-	  if(dstHost->nonIPTraffic == NULL) return;
+	  if(dstHost->nonIPTraffic == NULL) {
+	    unlockHostsHashMutex(srcHost), unlockHostsHashMutex(dstHost);
+	    return;
+	  }
 	}
 
 	if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
@@ -3714,24 +3720,23 @@ void processPacket(u_char *_deviceId,
 	      addr.hostFamily = AF_INET;
 	      memcpy(&addr.Ip4Address.s_addr, &arpHdr.arp_tpa, sizeof(struct in_addr));
 	      addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
-	      unlockHostsHashMutex(dstHost);
+	      unlockHostsHashMutex(srcHost), unlockHostsHashMutex(dstHost);
+
 	      dstHost = lookupHost(&addr, (u_char*)&arpHdr.arp_tha, vlanId, 0, 0, actualDeviceId);
 	      memcpy(&addr.Ip4Address.s_addr, &arpHdr.arp_spa, sizeof(struct in_addr));
 	      addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
-	      unlockHostsHashMutex(srcHost);
-	      srcHost = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, vlanId, 0, 0, actualDeviceId);
-	      if(srcHost != NULL) {
-		lockHostsHashMutex(srcHost, "processPacket-src-6");
-		allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
-		incrementHostTrafficCounter(srcHost, nonIPTraffic->arpReplyPktsSent, 1);
-	      }
-
 	      if(dstHost != NULL) {
 		lockHostsHashMutex(dstHost, "processPacket-dst-6");
 		allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
 		incrementHostTrafficCounter(dstHost, nonIPTraffic->arpReplyPktsRcvd, 1);
 	      }
 
+	      srcHost = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, vlanId, 0, 0, actualDeviceId);
+	      if(srcHost != NULL) {
+		lockHostsHashMutex(srcHost, "processPacket-src-6");
+		allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
+		incrementHostTrafficCounter(srcHost, nonIPTraffic->arpReplyPktsSent, 1);
+	      }
 	      /* DO NOT ADD A break ABOVE ! */
 	    case ARPOP_REQUEST: /* ARP request */
 	      if(srcHost != NULL) {

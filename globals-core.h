@@ -618,6 +618,11 @@ extern int _lockHostsHashMutex(HostTraffic *host, char *where, char *file, int l
 #define unlockHostsHashMutex(a) _unlockHostsHashMutex(a, __FILE__, __LINE__)
 extern int _unlockHostsHashMutex(HostTraffic *host, char* file, int line);
 
+#define lockExclusiveHostsHashMutex(a, b) _lockExclusiveHostsHashMutex(a, b, __FILE__, __LINE__)
+extern int _lockExclusiveHostsHashMutex(HostTraffic *host, char *where, char *file, int line);
+#define unlockExclusiveHostsHashMutex(a) _unlockExclusiveHostsHashMutex(a, __FILE__, __LINE__)
+extern int _unlockExclusiveHostsHashMutex(HostTraffic *host, char* file, int line);
+
 #define setHolder(a) {							\
     if(fileName != NULL) { strncpy(a.file, fileName, sizeof(a.file)-1); a.file[sizeof(a.file)-1]='\0'; } else \
       { memset(&(a), 0, sizeof(a)); }					\
@@ -815,7 +820,8 @@ extern void l7SessionProtoDetection(IPSession *theSession,
 /* sessions.c */
 #define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)
 extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);
-extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, u_char allocateMemoryIfNeeded, u_char lockMutex);
+extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, 
+			u_char allocateMemoryIfNeeded, u_char lockMutex);
 extern void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
 			  u_char allocateMemoryIfNeeded, u_char lockMutex);
 extern void scanTimedoutTCPSessions(int actualDeviceId);
