@@ -4345,7 +4345,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 		Counter c;
 		
 		c = el->protoIPTrafficInfos[idx]->efficiencySent.value / el->protoIPTrafficInfos[idx]->pktSent.value;
-		safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencySent", protoList->protocolName);	    
+		safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencySent", myGlobals.ipTrafficProtosNames[j]);
 		updateGauge(rrdPath, key, c, 0);
 	      }
 	      
@@ -4353,7 +4353,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 		Counter c;
 		
 		c = el->protoIPTrafficInfos[idx]->efficiencyRcvd.value / el->protoIPTrafficInfos[idx]->pktRcvd.value;
-		safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencyRcvd", protoList->protocolName);
+		safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencyRcvd", myGlobals.ipTrafficProtosNames[j]);
 		updateGauge(rrdPath, key, c, 0);
 	      }
 	    }
