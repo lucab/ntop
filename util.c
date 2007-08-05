@@ -1206,7 +1206,7 @@ static char* read_file(char* path, char* buf, u_int buf_len) {
 /* ********************************* */
 
 void handleKnownAddresses(char* addresses) {
-  char knownSubnets[1024];
+  char knownSubnets[2048];
 
   knownSubnets[0] = '\0';
 
