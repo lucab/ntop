@@ -4341,18 +4341,18 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->rcvdLoc.value+
 			    el->protoIPTrafficInfos[j]->rcvdFromRem.value, 0);
 
-	      if(el->protoIPTrafficInfos[idx]->pktSent.value > 0) {
+	      if(el->protoIPTrafficInfos[j]->pktSent.value > 0) {
 		Counter c;
 		
-		c = el->protoIPTrafficInfos[idx]->efficiencySent.value / el->protoIPTrafficInfos[idx]->pktSent.value;
+		c = el->protoIPTrafficInfos[j]->efficiencySent.value / el->protoIPTrafficInfos[j]->pktSent.value;
 		safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencySent", myGlobals.ipTrafficProtosNames[j]);
 		updateGauge(rrdPath, key, c, 0);
 	      }
 	      
-	      if(el->protoIPTrafficInfos[idx]->pktRcvd.value > 0) {
+	      if(el->protoIPTrafficInfos[j]->pktRcvd.value > 0) {
 		Counter c;
 		
-		c = el->protoIPTrafficInfos[idx]->efficiencyRcvd.value / el->protoIPTrafficInfos[idx]->pktRcvd.value;
+		c = el->protoIPTrafficInfos[j]->efficiencyRcvd.value / el->protoIPTrafficInfos[j]->pktRcvd.value;
 		safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencyRcvd", myGlobals.ipTrafficProtosNames[j]);
 		updateGauge(rrdPath, key, c, 0);
 	      }
