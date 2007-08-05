@@ -1447,7 +1447,7 @@ static void processIpPkt(const u_char *bp,
 	char fingerprint[64];
 	int WIN=0, MSS=-1, WS=-1, S=0, N=0, D=0, T=0;
 	int ttl;
-	char WSS[3], _MSS[5];
+	char WSS[3] = { 0 }, _MSS[5] = { 0 };
 	struct tcphdr *tcp = (struct tcphdr*)(bp+hlen);
 	u_char *tcp_opt = (u_char *)(tcp + 1);
         u_char *tcp_data = (u_char *)(tcp + tp.th_off * 4);

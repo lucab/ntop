@@ -451,6 +451,8 @@ printf("Unable to read serial number\n");
 
       printf("   Processing file %s for parameters...\n", &argv[i][1]);
 
+      safe_strncat(cmdLineBuffer, LEN_CMDLINE_BUFFER, "'");
+
       for (;;) {
 	readBufferWork = fgets(readBuffer, min(LEN_FGETS_BUFFER, fileStat.st_size), fd);
 	/* On EOF, we're finished */
@@ -473,7 +475,7 @@ printf("Unable to read serial number\n");
 	 */
 	readBufferWork = strchr(readBuffer, '\n');
 	if(readBufferWork != NULL) {
-	  readBufferWork[0] = ' ';
+	  readBufferWork[0] = ',';
 	  readBufferWork[1] = '\0';
 	}
 
@@ -491,6 +493,7 @@ printf("Unable to read serial number\n");
       }
 
       fclose(fd);
+      safe_strncat(cmdLineBuffer, LEN_CMDLINE_BUFFER, "' ");
     }
   }
   free(readBuffer);
