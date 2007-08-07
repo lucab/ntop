@@ -1549,6 +1549,8 @@ static char* spacer(char* str, char *tmpStr, int tmpStrLen,
     token_name = "AS";
   else if((token = strstr(str, "Num")) != NULL)
     token_name = "Num";
+  else if((token = strstr(str, "Efficiency")) != NULL)
+    token_name = "Efficiency";
   else
     token = NULL, token_name = NULL;
 
@@ -1782,6 +1784,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
       char *rcvd  = strstr(rrdName, "Rcvd");
       char *pkts  = strstr(rrdName, "Pkts");
       char *flows = strstr(rrdName, "Flows");
+      char *efficiency = strstr(rrdName, "Efficiency");
 
       if(sent || rcvd) {
 	if(sent) sent[0]  = '\0'; else rcvd[0] = '\0';
@@ -1811,6 +1814,8 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	label = "Contacted Peers";
       else if(strstr(rrdName, "knownHosts"))
 	label = "Hosts";
+      else if(efficiency)
+	label = "Efficiency (%)";
       else if(flows)
 	label = "Flows/s";
       else
