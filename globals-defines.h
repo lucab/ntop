@@ -619,10 +619,13 @@
  *  You might increase this if you have really slow dns resolution and are running
  *  asyncronously.
  */
-#define MAX_NUM_DEQUEUE_ADDRESS_THREADS             3
+#define MAX_NUM_DEQUEUE_ADDRESS_THREADS     3
 
 /* Hash size */
 #define CONST_HASH_INITIAL_SIZE             32*1024
+
+/* Number of mutexes used for locking sessions */
+#define NUM_SESSION_MUTEXES                 8     
 
 /*
  * These change the break points for the "Network Traffic: xxxx" reports

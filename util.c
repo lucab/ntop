@@ -3243,7 +3243,6 @@ int fileSanityCheck(char* string, char* parm, int nonFatal) {
   //     Colon, quotes, space
 
   if(string == NULL)  {
-
     if(nonFatal == 1) return(-1);
 
     traceEvent(CONST_TRACE_ERROR, "Invalid (empty) filename specified for option %s", parm);

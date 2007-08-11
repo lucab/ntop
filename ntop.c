@@ -931,7 +931,7 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 
 /* Report statistics and write out the raw packet file */
 RETSIGTYPE cleanup(int signo) {
-  int i, j;
+  int i, j, idx;
   char buf[128];
   static int cleanup_called = 0;
 
@@ -1132,11 +1132,7 @@ RETSIGTYPE cleanup(int signo) {
     if(myGlobals.device[i].packetQueue) 
       free(myGlobals.device[i].packetQueue);
 
-    accessMutex(&myGlobals.tcpSessionsMutex, "cleanup");
-    if(myGlobals.device[i].tcpSession != NULL)
-      free(myGlobals.device[i].tcpSession);
-    releaseMutex(&myGlobals.tcpSessionsMutex);
-
+    free(myGlobals.device[i].tcpSession);
     free(myGlobals.device[i].humanFriendlyName);
     free(myGlobals.device[i].uniqueIfName);
     free(myGlobals.device[i].name);
@@ -1181,8 +1177,11 @@ RETSIGTYPE cleanup(int signo) {
 
   if(myGlobals.startedAs != NULL) free(myGlobals.startedAs);
 
-  tryLockMutex(&myGlobals.tcpSessionsMutex, "cleanup");
-  deleteMutex(&myGlobals.tcpSessionsMutex);
+    for(idx=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
+      tryLockMutex(&myGlobals.tcpSessionsMutex[idx], "cleanup");
+      deleteMutex(&myGlobals.tcpSessionsMutex[idx]);
+    }
+
   tryLockMutex(&myGlobals.purgePortsMutex, "cleanup");
   deleteMutex(&myGlobals.purgePortsMutex);
   tryLockMutex(&myGlobals.securityItemsMutex, "cleanup");

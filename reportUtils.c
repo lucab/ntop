@@ -3200,9 +3200,8 @@ void printHostSessions(HostTraffic *el, int actualDeviceId) {
 */
 
 u_short isHostHealthy(HostTraffic *el) {
-
-  if((hasDuplicatedMac(el)) ||
-     (hasSentIpDataOnZeroPort(el)))
+  if(((myGlobals.runningPref.dontTrustMACaddr == 0) && hasDuplicatedMac(el)) 
+     || hasSentIpDataOnZeroPort(el))
     return(3);
 
   if(hasWrongNetmask(el))

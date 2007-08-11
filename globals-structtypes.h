@@ -2213,8 +2213,8 @@ typedef struct ntopGlobals {
    * Control mutexes
    */
   PthreadMutex gdbmMutex;
-  PthreadMutex tcpSessionsMutex;
-  PthreadMutex fcSessionsMutex;
+  PthreadMutex tcpSessionsMutex[NUM_SESSION_MUTEXES];
+  PthreadMutex fcSessionsMutex; /* One mutex should be enough */
   PthreadMutex purgePortsMutex;
   PthreadMutex securityItemsMutex;
 #ifdef FORPRENPTL

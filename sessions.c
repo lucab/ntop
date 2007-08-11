@@ -479,14 +479,15 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 
   for(_idx=0; _idx<MAX_TOT_NUM_SESSIONS; _idx++) {
     IPSession *nextSession, *prevSession, *theSession;
-
+    int mutex_idx;
+    
     idx = (idx + 1) % MAX_TOT_NUM_SESSIONS;
 
     if(freeSessionCount > purgeLimit) break;
 
+    mutex_idx = idx % NUM_SESSION_MUTEXES;
+    accessMutex(&myGlobals.tcpSessionsMutex[mutex_idx], "purgeIdleHosts");
     prevSession = NULL, theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
-
-    accessMutex(&myGlobals.tcpSessionsMutex, "purgeIdleHosts");
 
     while(theSession != NULL) {
       u_char free_session;
@@ -548,7 +549,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
       }
     } /* while */
 
-    releaseMutex(&myGlobals.tcpSessionsMutex);
+    releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
   } /* end for */
 
 #ifdef DEBUG
@@ -1879,18 +1880,17 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   u_short check, found=0;
   HostTraffic *hostToUpdate = NULL;
   u_char *rcStr, tmpStr[256];
-  int len = 0;
+  int len = 0, mutex_idx;
   char *pnotes, *snotes, *dnotes;
   /* Latency measurement */
   char buf[32], buf1[32];
   memset(&buf, 0, sizeof(buf));
   memset(&buf1, 0, sizeof(buf1));
 
-  accessMutex(&myGlobals.tcpSessionsMutex, "handleTCPSession");
+  idx = computeIdx(&srcHost->hostIpAddress, &dstHost->hostIpAddress, sport, dport) % MAX_TOT_NUM_SESSIONS;
+  mutex_idx = idx % NUM_SESSION_MUTEXES;
 
-  idx = computeIdx(&srcHost->hostIpAddress, &dstHost->hostIpAddress, sport, dport);
-  idx %= MAX_TOT_NUM_SESSIONS;
-
+  accessMutex(&myGlobals.tcpSessionsMutex[mutex_idx], "handleTCPSession");
   prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
 
   while(theSession != NULL) {
@@ -1926,10 +1926,6 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 
   if(!found) {
     /* New Session */
-#ifdef DEBUG
-    printf("DEBUG: NEW ");
-#endif
-
     (*newSession) = 1; /* This is a new session */
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.totalFlows,
 			    2 /* 2 x monodirectional flows */);
@@ -1943,7 +1939,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 		   myGlobals.runningPref.maxNumSessions);
       }
 
-      releaseMutex(&myGlobals.tcpSessionsMutex);
+      releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
       return(NULL);
     }
 
@@ -1969,7 +1965,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 #endif
 
       if((theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) {
-	releaseMutex(&myGlobals.tcpSessionsMutex);
+	releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
 	return(NULL);
       }
 
@@ -2017,7 +2013,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 
     theSession->firstSeen = myGlobals.actTime;
     flowDirection = FLAG_CLIENT_TO_SERVER;
-  }
+  } /* End of new session branch */
 
   if(tp)
     theSession->lastFlags |= tp->th_flags;
@@ -2069,14 +2065,12 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
       handleMsnMsgrSession(h, srcHost, sport, dstHost, dport,
 			    packetDataLength, packetData, theSession,
 			    actualDeviceId);
-    } else if(((sport == IP_TCP_PORT_SMTP) ||
-	       (dport == IP_TCP_PORT_SMTP))
+    } else if(((sport == IP_TCP_PORT_SMTP) || (dport == IP_TCP_PORT_SMTP))
 	      && (theSession->sessionState == FLAG_STATE_ACTIVE)) {
       handleSMTPSession(h, srcHost, sport, dstHost, dport,
 			 packetDataLength, packetData, theSession,
 			 actualDeviceId);
-    } else if(((sport == IP_TCP_PORT_FTP)  ||
-	       (dport == IP_TCP_PORT_FTP))
+    } else if(((sport == IP_TCP_PORT_FTP)  || (dport == IP_TCP_PORT_FTP))
 	      && (theSession->sessionState == FLAG_STATE_ACTIVE)) {
       handleFTPSession(h, srcHost, sport, dstHost, dport,
 			packetDataLength, packetData, theSession,
@@ -2109,7 +2103,8 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
       /* Further decoders */
       if((!theSession->isP2P)
 	 && (packetDataLength > 0)
-	 && ((theSession->bytesProtoSent.value > 0) && (theSession->bytesProtoSent.value < 1400))) {
+	 && ((theSession->bytesProtoSent.value > 0) 
+	     && (theSession->bytesProtoSent.value < 1400))) {
 	rcStr = (u_char*)malloc(len+1);
 	memcpy(rcStr, packetData, len);
 	rcStr[len-1] = '\0';
@@ -2573,7 +2568,6 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	     print_flags(theSession, buf, sizeof(buf)), length);
 #endif
 
-
   if((theSession->sessionState == FLAG_STATE_FIN2_ACK2)
      || (theSession->lastFlags & TH_RST)) /* abortive release */ {
     if(theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK) {
@@ -2632,12 +2626,11 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 #else
     freeSession(theSession, actualDeviceId, 1, 1 /* lock purgeMutex */);
 #endif
-    releaseMutex(&myGlobals.tcpSessionsMutex);
+    releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
     return(NULL);
   }
 
-
-  releaseMutex(&myGlobals.tcpSessionsMutex);
+  releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
   return(theSession);
 }
 

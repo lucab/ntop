@@ -249,26 +249,30 @@ static const char *rrd_summary_packets[] = {
   NULL
 };
 
-static const char *rrd_summary_new_flows[] = { 
-  "NF_numFlows",
-  "NF_numDiscardedFlows",
-  NULL
+struct nameLabel {
+  char *name, *label;
 };
 
-static const char *rrd_summary_new_nf_flows[] = { 
-  "NF_newTcpNetFlows",
-  "NF_newUdpNetFlows",
-  "NF_newIcmpNetFlows",
-  "NF_newOtherNetFlows",
-  NULL
+static const struct nameLabel rrd_summary_new_flows[] = { 
+  { "NF_numFlows", "Total Flows" },
+  { "NF_numDiscardedFlows", "Discarded Flows" },
+  { NULL, NULL }
 };
 
-static const char *rrd_summary_new_nf_flows_size[] = { 
-  "NF_avgTcpNewFlowSize",
-  "NF_avgUdpNewFlowSize",
-  "NF_avgICMPNewFlowSize",
-  "NF_avgOtherNewFlowSize",
-  NULL
+static const struct nameLabel rrd_summary_new_nf_flows[] = { 
+  { "NF_newTcpNetFlows", "TCP" },
+  { "NF_newUdpNetFlows", "UDP" },
+  { "NF_newIcmpNetFlows", "ICMP" },
+  { "NF_newOtherNetFlows", "Other" },
+  { NULL, NULL }
+};
+
+static const struct nameLabel rrd_summary_new_nf_flows_size[] = { 
+  { "NF_avgTcpNewFlowSize", "TCP" },
+  { "NF_avgUdpNewFlowSize", "UDP" },
+  { "NF_avgICMPNewFlowSize", "ICMP" },
+  { "NF_avgOtherNewFlowSize", "Other" },
+  { NULL, NULL }
 };
 
 static const char *rrd_summary_proto_bytes[] = { 
@@ -337,6 +341,19 @@ static const char *rrd_summary_nf_if_pkts[] = {
  NULL
 };
 
+static const struct nameLabel rrd_filters[] = { 
+  { "upTo", "Packet Size" },
+  { "cast", "Broad/Multi-cast" },
+  { "Flow", "Flows" },
+  { "Efficiency", "Transmission Efficiency" },
+  { "NF_", "NetFlow" },
+  /* Generic matches go at the end */
+  { "Sent", "Sent" },
+  { "Rcvd", "Received" },
+  { "Bytes", "Volume" },
+  { "Pkts", "Packets" },
+  { NULL, NULL }
+};
 
 #ifdef MAX_RRD_PROCESS_BUFFER
 static float rrdprocessBuffer[MAX_RRD_PROCESS_BUFFER];

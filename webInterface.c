@@ -6208,7 +6208,14 @@ void printMutexStatusReport(int textPrintFlag) {
     printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
 
   printMutexStatus(textPrintFlag, &myGlobals.hostsHashLockMutex, "hostsHashLockMutex");
-  printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex,   "tcpSessionsMutex");
+  
+  for(i=0; i<NUM_SESSION_MUTEXES; i++) {
+    char buf[32];
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "tcpSessionsMutex[%d]", i);
+    printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex[i], buf);
+  }
+
   printMutexStatus(textPrintFlag, &myGlobals.purgePortsMutex,    "purgePortsMutex");
   printMutexStatus(textPrintFlag, &myGlobals.securityItemsMutex, "securityItemsMutex");
 

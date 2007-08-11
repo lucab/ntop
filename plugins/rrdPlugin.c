@@ -35,21 +35,23 @@ static int sd = -1;
 static struct sockaddr_in cliAddr, remoteServAddr;
 
 #if defined(RRD_DEBUG) && (RRD_DEBUG > 0)
-#define traceEventRRDebug(level, ...) { if(RRD_DEBUG >= level)	\
-      traceEvent(CONST_TRACE_NOISY, "RRD_DEBUG: " __VA_ARGS__); \
+#define traceEventRRDebug(level, ...) { if(RRD_DEBUG >= level)				\
+      traceEvent(CONST_TRACE_NOISY, "RRD_DEBUG: " __VA_ARGS__); 			\
   }
-#define traceEventRRDebugARGV(level)  { if(RRD_DEBUG >= level) {	\
-      int _iARGV;							\
-      for(_iARGV=0; _iARGV<argc; _iARGV++) {				\
+
+#define traceEventRRDebugARGV(level)  { if(RRD_DEBUG >= level) {			\
+      int _iARGV;									\
+      for(_iARGV=0; _iARGV<argc; _iARGV++) {						\
 	traceEvent(CONST_TRACE_NOISY, "RRD_DEBUG: argv[%d] = %s", _iARGV, argv[_iARGV]); \
-      }									\
-    }									\
+      }											\
+    }											\
   }
 #else
 #define traceEventRRDebug
 #define traceEventRRDebugARGV
 #endif
 
+/* ******************************************** */
 
 #ifdef WIN32
 int optind, opterr;
@@ -341,10 +343,13 @@ static int cmpStrings(const void *_a, const void *_b)
 
 /* ******************************************* */
 
-static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
+static void listResource(char *rrdPath, char *rrdTitle, 
+			 char *cluster, char *filterString,
 			 char *startTime, char* endTime) {
-  char path[512], url[512], hasNetFlow, buf[512];
-  DIR* directoryPointer=NULL;
+  char path[512] = { '\0' }, url[512] = { '\0' }, hasNetFlow;
+  char buf[512] = { '\0' }, filter[64] = { '\0' }, titleBuf[128] = { '\0' };
+  char *default_str, *the_filter, rrd_filters_show[64] = { '\0' }; 
+  DIR* directoryPointer = NULL;
   struct dirent* dp;
   int i, debug = 0;
 #if 0
@@ -369,11 +374,16 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 
   printHTMLheader(buf, NULL, 0);
   sendString("<p ALIGN=left>\n");
+  
+  escape(titleBuf, sizeof(titleBuf), rrdTitle);
+
+  if(filterString != NULL)
+    safe_snprintf(__FILE__, __LINE__, filter, sizeof(filter), "&filter=%s", filterString);
 
   safe_snprintf(__FILE__, __LINE__, url, sizeof(url),
 		"/" CONST_PLUGINS_HEADER "%s?action=list&key=%s&title=%s&end=%u&cluster=%s",
 		rrdPluginInfo->pluginURLname,
-		rrdPath, rrdTitle, (unsigned long)now,
+		rrdPath, titleBuf, (unsigned long)now,
 		cluster ? cluster : "");
 
   sendString("<script type=\"text/javascript\">\n"
@@ -385,53 +395,74 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
 	     "	}    \n"
 	     "</script>\n");
 
-  sendString("<form name=myform method=get>\n<b>Presets:</b>&nbsp;\n"
+  sendString("<tr align=left><table>\n<tr><td><form name=myform method=get>\n<b>Presets:</b></td><td align=left>\n"
 	     "<select name=presets onchange=\"send(this)\">\n");
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\" default>-----</option>\n", url, now - 86400);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u%s\" selected>-----</option>\n", url, now - 86400, filter);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\">Last Year</option>\n", url, now - 365*86400);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u%s\">Last Year</option>\n", url, now - 365*86400, filter);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\">Last Month</option>\n", url, now - 30*86400);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u%s\">Last Month</option>\n", url, now - 30*86400, filter);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\">Last Week</option>\n", url, now - 7*86400);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u%s\">Last Week</option>\n", url, now - 7*86400, filter);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\">Last Day</option>\n", url, now - 86400);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u%s\">Last Day</option>\n", url, now - 86400, filter);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\">Last 12h</option>\n", url, now - 12 * 3600);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u%s\">Last 12h</option>\n", url, now - 12 * 3600, filter);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\">Last 6h</option>\n", url, now - 6 * 86400);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u%s\">Last 6h</option>\n", url, now - 6 * 86400, filter);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u\">Last Hour</option>\n", url, now - 86400);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u%s\">Last Hour</option>\n", url, now - 86400, filter);
+  sendString(buf);
+  sendString("</select></form></td></tr>\n");
+
+  /* ************************************************* */
+
+  sendString("<tr align=left><td><form name=myform method=get>\n<b>View:</b></td><td align=left>\n"
+	     "<select name=view_presets onchange=\"send(this)\">\n");
+  
+  if(filterString == NULL) default_str = "selected"; else default_str = "";
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s\" %s>-----</option>\n", url, default_str);
   sendString(buf);
 
-  sendString("</select></form></p>\n<center>\n<p>\n");
+  hasNetFlow = 0;
+
+  /* Check what menu need to be shown up */ 
+  if((directoryPointer = opendir(path)) != NULL) {
+    while((dp = readdir(directoryPointer)) != NULL) {
+      if(strncmp(dp->d_name, "NF_", 3) == 0) hasNetFlow = 1;
+
+      for(i=0; rrd_filters[i].name != NULL; i++) {
+	// traceEvent(CONST_TRACE_WARNING,  "[%s][%s]", dp->d_name, rrd_filters[i].name);
+	if(strcasestr(dp->d_name, rrd_filters[i].name)) {
+	  rrd_filters_show[i] = 1;
+	  break;
+	}
+      }
+    }
+    
+    closedir(directoryPointer);
+  }
+
+  for(i=0; rrd_filters[i].name != NULL; i++) {
+    if(rrd_filters_show[i]) {
+      if(filterString && (!strcmp(filterString, rrd_filters[i].name))) default_str = "selected"; else default_str = "";
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&filter=%s\" %s>%s</option>\n", 
+		    url, rrd_filters[i].name, default_str, rrd_filters[i].label);
+      sendString(buf);
+    }
+  }
+  
+  sendString("</select></form></td></tr></table></tr>\n");
+
+  /* ************************************************* */
+  sendString("<center>\n<p>\n");
+
   sendString("<TABLE BORDER=0 "TABLE_DEFAULTS">\n");
 
   if(cluster == NULL) {
-    directoryPointer = opendir(path);
-
-    if(directoryPointer == NULL) {
-      sendString("</TABLE>");
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Unable to read directory %s", path);
-      traceEvent(CONST_TRACE_INFO, "RRD: %s", buf);
-      printFlagedWarning(buf);
-      sendString("</CENTER>");
-      printHTMLtrailer();
-      return;
-    }
-
-    hasNetFlow = 0;
-    while((dp = readdir(directoryPointer)) != NULL) {
-      if(strncmp(dp->d_name, "NF_", 3) == 0) {
-	hasNetFlow = 1;
-	break;
-      }
-    } /* while */
-
-    closedir(directoryPointer);
-
-    if(hasNetFlow) {
+    if(hasNetFlow 
+       && ((filterString == NULL) || strcasestr(filterString, "flow"))) {
       for(i=0; i<=2; i++) {
 	sendString("<TR><TD align=left>");
 
@@ -474,6 +505,8 @@ static void listResource(char *rrdPath, char *rrdTitle, char *cluster,
       int rc, isGauge;
 
       if(dp->d_name[0] == '.') continue;
+      else if(filterString && (!strcasestr(dp->d_name, filterString))) continue;
+      else if(filterString && strcmp(filterString, "Efficiency") && strcasestr(dp->d_name, "Efficiency")) continue;
       else if(strncmp(dp->d_name, "NF_", 3) == 0) continue;
       else if(strlen(dp->d_name) < strlen(CONST_RRD_EXTENSION)+3)
 	continue;
@@ -949,17 +982,17 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
   char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN];
   char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN], tmpStr[32],
     buf2[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][MAX_BUF_LEN];
-  char fname[384], *label, _rrdName[256];
-  char **rrds = NULL;
+  char fname[384], *label, _rrdName[256], *title;
+  struct nameLabel *rrds = NULL;
   int argc = 0, rc, x, y, i, entryId=0;
   double ymin, ymax;
 
   path[0] = '\0';
 
   switch(graphId) {
-  case 0: rrds = (char**)rrd_summary_new_flows; label = "Flows"; break;
-  case 1: rrds = (char**)rrd_summary_new_nf_flows; label = "Flows"; break;
-  case 2: rrds = (char**)rrd_summary_new_nf_flows_size; label = "Bytes"; break;
+  case 0: rrds = (struct nameLabel*)rrd_summary_new_flows; label = "Flows"; title = "Newly Created Flows: Statistics"; break;
+  case 1: rrds = (struct nameLabel*)rrd_summary_new_nf_flows; label = "Flows"; title = "Newly Created Flows: Protocol Breakdown"; break;
+  case 2: rrds = (struct nameLabel*)rrd_summary_new_nf_flows_size; label = "Bytes"; title = "Newly Created Flows: Average Size"; break;
   }
 
   /* startTime[4] skips the 'now-' */
@@ -1132,31 +1165,33 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
 #endif
   revertDoubleColumnIfWIN32(path);
 
-  for(i=0, entryId=0; rrds[i] != NULL; i++) {
+  for(i=0, entryId=0; rrds[i].name != NULL; i++) {
     struct stat statbuf;
 
-    if(!strcmp(rrds[i], "throughput")) {
+    if(!strcmp(rrds[i].name, "throughput")) {
 #ifdef WIN32
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd",
-		    myGlobals.spoolPath, driveSerial, rrdPath, rrds[i]);
+		    myGlobals.spoolPath, driveSerial, rrdPath, rrds[i].name);
 #else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
-		    myGlobals.spoolPath, rrdPath, rrds[i]);
+		    myGlobals.spoolPath, rrdPath, rrds[i].name);
 #endif
     } else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
-		    myGlobals.rrdPath, rrdPath, rrds[i]);
+		    myGlobals.rrdPath, rrdPath, rrds[i].name);
 
     revertSlashIfWIN32(path, 0);
 
     if(stat(path, &statbuf) == 0) {
       char metric_name[32];
 
+      // traceEvent(CONST_TRACE_WARNING,  "-- 3 --> (%s)", path);
+
       safe_snprintf(__FILE__, __LINE__, buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path);
       argv[argc++] = buf[entryId];
 
       safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-		    entryId, rrd_colors[entryId], spacer(&rrds[i][3], tmpStr, sizeof(tmpStr), metric_name, sizeof(metric_name)));
+		    entryId, rrd_colors[entryId], spacer(rrds[i].label, tmpStr, sizeof(tmpStr), metric_name, sizeof(metric_name)));
       argv[argc++] = buf1[entryId];
 
       safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %3.1lf%s\\t");
@@ -1169,7 +1204,10 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
     } else {
       // traceEvent(CONST_TRACE_WARNING, "RRD: Unable to find file %s", path);
     }
-
+    
+    argv[argc++] = "--title";
+    argv[argc++] = title;
+    
     if(entryId >= MAX_NUM_ENTRIES) break;
 
     if(entryId >= CONST_NUM_BAR_COLORS) {
@@ -1250,8 +1288,6 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
   case 0:  rrds = (char**)rrd_summary_nf_if_octets; label = "Bit/s"; break;
   default: rrds = (char**)rrd_summary_nf_if_pkts; label = "Pkt/s"; break;
   }
-
-  traceEvent(CONST_TRACE_WARNING,  "-- 0 --> (%s)", "Hello");
 
   if(!strcmp(mode, "zoom")) {
     char strbuf[LEN_GENERAL_WORK_BUFFER];
@@ -1510,7 +1546,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
 
     if(++graphErrCount < 50) {
       traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error() ? rrd_get_error() : "");
-      traceEvent(CONST_TRACE_INFO, "RRD: Failing file in netflowSummary() is %s", path);
+      traceEvent(CONST_TRACE_INFO,  "RRD: Failing file in netflowSummary() is %s", path);
     }
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -1535,6 +1571,7 @@ static char* spacer(char* str, char *tmpStr, int tmpStrLen,
   if((strlen(str) > 3) && (!strncmp(str, "IP_", 3))) str += 3;
 
   if(debug) traceEvent(CONST_TRACE_WARNING,  "-- 0 --> (%s)", str);
+
   memset(tmpStr, 0, tmpStrLen);
 
   if((token = strstr(str, "Bytes")) != NULL)
@@ -1616,41 +1653,91 @@ static char* spacer(char* str, char *tmpStr, int tmpStrLen,
 /* ******************************* */
 
 static char* formatTitle(char *str, char *buf, u_short buf_len) {
-  int len, shift = 0;
+  int len, shift = 0, not_found = 0, done = 0;
 
   if(buf_len <= (strlen(str) + 10))
     return(str); /* No much space */
 
   if(!strncmp(str, "IP_", 3)) shift = 3;
-  safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s", &str[shift]);
 
-  len = strlen(buf);
+  //traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s)", &str[shift]);
 
-  if(!strcmp(&buf[len-7], "LocSent")) {
-    buf[len-7] = '\0';
-    strcat(buf, " Sent Locally");
-  } else if(!strcmp(&buf[len-9], "BytesSent")) {
-    buf[len-9] = '\0';
-    strcat(buf, " Sent (Bytes)");
-  } else if(!strcmp(&buf[len-7], "RemSent")) {
-    buf[len-7] = '\0';
-    strcat(buf, " Sent to Remote Hosts");
-  } else if(!strcmp(&buf[len-4], "Sent")) {
-    buf[len-4] = '\0';
-    strcat(buf, " Sent");
-  } else if(!strcmp(&buf[len-9], "BytesRcvd")) {
-    buf[len-9] = '\0';
-    strcat(buf, " Received (Bytes)");
-  } else if(!strcmp(&buf[len-7], "LocRcvd")) {
-    buf[len-7] = '\0';
-    strcat(buf, " Rcvd From Local Hosts");
-  } else if(!strcmp(&buf[len-11], "FromRemRcvd")) {
-    buf[len-11] = '\0';
-    strcat(buf, " Rcvd From Remote Hosts");
-  } else if(!strcmp(&buf[len-4], "Rcvd")) {
-    buf[len-4] = '\0';
-    strcat(buf, " Received");
+  if(!strncmp(&str[shift], "bytesBroadcast", strlen("bytesBroadcast"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Broadcast Traffic");
+  } else if(!strncmp(&str[shift], "bytes", strlen("bytes"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Traffic");
+  } else if(!strncmp(&str[shift], "ip", strlen("ip"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "IP Traffic");
+    done = 1;
+  } else if(!strncmp(&str[shift], "pktBroadcast", strlen("pktBroadcast"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Broadcast Packets");
+  } else if((!strncmp(&str[shift], "pktMulticast", strlen("pktMulticast")))
+	    || (!strncmp(&str[shift], "multicastPkts", strlen("multicastPkts")))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Multicast Packets");
+  } else if(!strncmp(&str[shift], "activeHostSendersNum", strlen("activeHostSendersNum"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Number of Active Hosts");
+  } else if(!strncmp(&str[shift], "totPeers", strlen("totPeers"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Number of Peers");
+  } else if(!strncmp(&str[shift], "udp", strlen("udp"))) {
+    done = 1;
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "UDP Traffic");
+  } else if(!strncmp(&str[shift], "tcp", strlen("tcp"))) {
+    done = 1;
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "TCP Traffic");
+  } else if(!strncmp(&str[shift], "icmp", strlen("icmp"))) {
+    done = 1;
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "ICMP Traffic");
+  } else if(!strncmp(&str[shift], "pkt", strlen("pkt"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Packets");
+  } else if(!strncmp(&str[shift], "upTo", strlen("upTo"))) {
+    int num =  atoi(&str[shift+4]);
+
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Packets Up To %d Bytes", num);
+  } else
+    not_found = 1, safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s", &str[shift]);
+
+  if(!done) {
+    len = strlen(str), buf_len = strlen(buf);
+
+    // traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s)", &str[len-14]);
+
+    if(!strcmp(&str[len-7], "LocSent")) {
+      if(not_found) buf[len-7] = '\0';
+      strcat(buf, " Sent Locally");
+    } else if(!strcmp(&str[len-9], "BytesSent")) {
+      buf[buf_len-9] = '\0';
+      strcat(buf, " Sent");
+    } else if(!strcmp(&str[len-7], "RemSent")) {
+      if(not_found) buf[len-7] = '\0';
+      strcat(buf, " Sent to Remote Hosts");
+    } else if(!strcmp(&str[len-4], "Sent")) {
+      if(not_found) buf[len-4] = '\0';
+      strcat(buf, " Sent");
+    } else if(!strcmp(&str[len-9], "BytesRcvd")) {
+      if(not_found) buf[len-9] = '\0';
+      strcat(buf, " Received");
+    } else if(!strcmp(&str[len-7], "LocRcvd")) {
+      if(not_found) buf[len-7] = '\0';
+      strcat(buf, " Rcvd From Local Hosts");
+    } else if(!strcmp(&str[len-11], "FromRemRcvd")) {
+      if(not_found) buf[len-11] = '\0';
+      strcat(buf, " Rcvd From Remote Hosts");
+    } else if(!strcmp(&str[len-4], "Rcvd")) {
+      if(not_found) str[len-4] = '\0';
+      strcat(buf, " Received");
+    } else if(!strcmp(&str[len-19], "RemoteToRemoteBytes")) {
+      buf[buf_len-19] = '\0';
+      strcat(buf, " Remote to Remote");
+    } else if(!strcmp(&str[len-5], "Bytes")) {
+      buf[buf_len-5] = '\0';
+      strcat(buf, " Traffic");
+    } else if(!strcmp(&str[len-5], "Flows")) {
+      buf[buf_len-5] = '\0';
+      strcat(buf, " Flows");
+    }
   }
+
+  buf[0] = toupper(buf[0]);
 
   return(buf);
 }
@@ -1678,13 +1765,13 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 			 char *startTime, char* endTime, char *rrdPrefix, char *mode) {
   char path[512], *argv[6*MAX_NUM_ENTRIES], tmpStr[32], fname[384], *label, rrdPath_copy[512];
   char buf0[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf1[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf2[2*MAX_BUF_LEN];
-  char buf3[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
+  char buf3[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], metric_name[32], title_buf[64];
   char buf4[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf5[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], _rrdName[256];
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
   int argc = 0, rc, x, y, i, entryId=0, num_rrd_hosts_path = 0, j;
   DIR* directoryPointer;
   char *rrd_custom[MAX_NUM_RRD_ENTRIES], *rrd_hosts_path[MAX_NUM_RRD_HOSTS],
-    *rrd_hosts[MAX_NUM_RRD_HOSTS], file_a[32], file_b[32], title_buf[48], *upside;
+    *rrd_hosts[MAX_NUM_RRD_HOSTS], file_a[32], file_b[32], *upside;
   double ymin,ymax;
   u_int8_t upside_down = 0;
 
@@ -1819,7 +1906,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
       else if(flows)
 	label = "Flows/s";
       else
-	label = "Bytes/s";
+	label = "Bit/s";
     }
 
     break;
@@ -2001,47 +2088,69 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   for(j=0, entryId=0; j<num_rrd_hosts_path; j++) {
     for(i=0; rrds[i] != NULL; i++) {
       struct stat statbuf;
+      int is_efficiency;
+
+      if(strstr(rrds[i], "Efficiency")) is_efficiency = 1; else is_efficiency = 0;
 
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/%s%s",
 		    myGlobals.rrdPath, rrd_hosts_path[j], rrds[i], CONST_RRD_EXTENSION);
       revertSlashIfWIN32(path, 0);
 
-      /* traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s) [%d/%d]", path, j, num_rrd_hosts_path);  */
+      // traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s) [%d/%d]", path, j, num_rrd_hosts_path);  
 
       if(stat(path, &statbuf) == 0) {
-	char metric_name[32], do_upside;
+	char do_upside, *str, *filename;
+	int multiplier = 1;
+	
+	filename = (graphId == 98) ? rrd_hosts[j] : rrds[i];
+
+	if(strcasestr(filename, "Bytes")) multiplier = 1000;
 
 	if(upside_down && (i == 1)) {
 	  safe_snprintf(__FILE__, __LINE__, buf0[entryId], 2*MAX_BUF_LEN,
 			"DEF:my_ctr%d=%s:counter:AVERAGE", entryId, sanitizeRrdPath(path));
 	  argv[argc++] = buf0[entryId];
 	  safe_snprintf(__FILE__, __LINE__, buf2, 2*MAX_BUF_LEN,
-			"CDEF:ctr%d=my_ctr%d,-1,*", entryId, entryId);
+			"CDEF:ctr%d=my_ctr%d,%d,*", entryId, entryId, -1 * multiplier);
 	  argv[argc++] = buf2;
+	  
+	  str = spacer(filename, tmpStr, sizeof(tmpStr),
+		       metric_name, sizeof(metric_name));
+
 	  safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
 			"%s:ctr%d%s:%s", "AREA",
-			entryId, rrd_colors[entryId],
-			spacer((graphId == 98) ? rrd_hosts[j] : rrds[i], tmpStr, sizeof(tmpStr),
-			       metric_name, sizeof(metric_name)));
+			entryId, 
+			((graphId == 99) && is_efficiency) ? "#EBEB00" : rrd_colors[entryId],
+			(graphId == 99) ? "Rcvd" : str);
+
 	  argv[argc++] = buf1[entryId];
 	  do_upside = 1;
 	} else {
+	  str = spacer(filename, tmpStr, sizeof(tmpStr),
+		      metric_name, sizeof(metric_name));
+
 	  safe_snprintf(__FILE__, __LINE__, buf0[entryId], 2*MAX_BUF_LEN,
-			"DEF:ctr%d=%s:counter:AVERAGE", entryId, sanitizeRrdPath(path));
+			"DEF:my_ctr%d=%s:counter:AVERAGE", entryId, sanitizeRrdPath(path));
 	  argv[argc++] = buf0[entryId];
+
+	  safe_snprintf(__FILE__, __LINE__, buf2, 2*MAX_BUF_LEN,
+			"CDEF:ctr%d=my_ctr%d,%d,*", entryId, entryId, multiplier);
+	  argv[argc++] = buf2;
+
 	  safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
 			"%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-			entryId, rrd_colors[entryId],
-			spacer((graphId == 98) ? rrd_hosts[j] : rrds[i], tmpStr, sizeof(tmpStr),
-			       metric_name, sizeof(metric_name)));
+			entryId, 
+			((graphId == 99) && is_efficiency) ? "#B0E1B0" : rrd_colors[entryId],
+			(graphId == 99) ? "Sent" : str);
 	  argv[argc++] = buf1[entryId];
 	  do_upside = 0;
-	}
 
-	/*
-	  safe_snprintf(__FILE__, __LINE__, buf2[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":MIN:Min\\: %3.1lf%s");
-	  argv[argc++] = buf2[entryId];
-	*/
+	  safe_snprintf(__FILE__, __LINE__, title_buf, sizeof(title_buf), 
+			"%s", (!strncmp(rrdName, "IP_", 3)) ? &rrdName[3] : rrdName);
+	  title_buf[strlen(title_buf)-strlen(metric_name)] = '\0';
+	  argv[argc++] = "--title";
+	  argv[argc++] = formatTitle(filename, title_buf, sizeof(title_buf));
+	}
 
 	if(do_upside) upside = "my_"; else upside = "";
 
@@ -2079,6 +2188,8 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   addRrdDelay();
 
   if(0) {
+    traceEvent(CONST_TRACE_ERROR, "upside_down=%d", upside_down);
+
     for(j=0; j<argc; j++)
       traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
   }
@@ -2967,13 +3078,16 @@ static void arbitraryAction(char *rrdName,
 
   /* Security check... it's a file name */
   if(fileSanityCheck(rrdName, "arbitrary rrd request", 1) != 0) {
-    traceEvent(CONST_TRACE_ERROR, "SECURITY: Invalid arbitrary rrd request(filename)... ignored");
+    traceEvent(CONST_TRACE_ERROR, "SECURITY: Invalid arbitrary rrd request(filename[%s])... ignored", rrdName);
     return;
   }
+
+  /*
   if(fileSanityCheck(rrdInterface, "arbitrary rrd request", 1) != 0) {
-    traceEvent(CONST_TRACE_ERROR, "SECURITY: Invalid arbitrary rrd request(interface)... ignored");
+    traceEvent(CONST_TRACE_ERROR, "SECURITY: Invalid arbitrary rrd request(interface[%s])... ignored", rrdInterface);
     return;
   }
+  */
 
   if(rrdIP[0] == '\0') {
     /* Interface level */
@@ -3584,9 +3698,11 @@ static time_t parse_date(char* value) {
 /* ****************************** */
 
 static void handleRRDHTTPrequest(char* url) {
-  char buf[1024], *strtokState, *mainState, *urlPiece,
-    rrdKey[512], rrdName[64], rrdTitle[128], rrdCounter[64], startTime[32], endTime[32],
-    rrdPrefix[32], rrdIP[32], rrdInterface[64], rrdPath[512], mode[32], cluster[32];
+  char buf[1024] = { '\0' }, *strtokState, *mainState, *urlPiece,
+       rrdKey[512] = { '\0' }, rrdName[64] = { '\0' }, rrdTitle[128] = { '\0' }, 
+       rrdCounter[64] = { '\0' }, startTime[32] = { '\0' }, endTime[32] = { '\0' },
+       rrdPrefix[32] = { '\0' }, rrdIP[32] = { '\0' }, rrdInterface[64] = { '\0' },
+       rrdPath[512] = { '\0' }, mode[32] = { '\0' }, cluster[32] = { '\0' }, filterString[64] = { '\0' };
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
   int _dumpDomains, _dumpFlows, _dumpSubnets, _dumpHosts, _dumpInterfaces, _dumpASs, _enableAberrant,
@@ -3634,23 +3750,8 @@ static void handleRRDHTTPrequest(char* url) {
 #endif
   _which=0;
 
-  memset(&buf, 0, sizeof(buf));
-  memset(&rrdKey, 0, sizeof(rrdKey));
-  memset(&rrdName, 0, sizeof(rrdName));
-  memset(&rrdTitle, 0, sizeof(rrdTitle));
-  memset(&rrdCounter, 0, sizeof(rrdCounter));
-  memset(&startTime, 0, sizeof(startTime));
-  memset(&endTime, 0, sizeof(endTime));
-  memset(&rrdPrefix, 0, sizeof(rrdPrefix));
-  memset(&rrdIP, 0, sizeof(rrdIP));
-  memset(&rrdInterface, 0, sizeof(rrdInterface));
-  memset(&rrdPath, 0, sizeof(rrdPath));
-  memset(&mode, 0, sizeof(mode));
-  memset(&cluster, 0, sizeof(cluster));
-
   safe_snprintf(__FILE__, __LINE__, startTime, sizeof(startTime), "%u", now-12*3600);
   safe_snprintf(__FILE__, __LINE__, endTime, sizeof(endTime), "%u", now);
-
 
   if((url != NULL) && (url[0] != '\0')) {
     unescape_url(url);
@@ -3679,6 +3780,8 @@ static void handleRRDHTTPrequest(char* url) {
 	  else if(strcmp(value, "list") == 0)                     action = FLAG_RRD_ACTION_LIST;
 	} else if(strcmp(key, "cluster") == 0) {
 	  safe_snprintf(__FILE__, __LINE__, cluster, sizeof(cluster), "%s", value);
+	} else if(strcmp(key, "filter") == 0) {
+	  safe_snprintf(__FILE__, __LINE__, filterString, sizeof(filterString), "%s", value);
 	} else if(strcmp(key, "key") == 0) {
 	  safe_snprintf(__FILE__, __LINE__, rrdKey, sizeof(rrdKey), "%s", value);
 	  len = strlen(rrdKey);
@@ -3895,7 +3998,8 @@ static void handleRRDHTTPrequest(char* url) {
     interfaceSummary(rrdKey, graphId, startTime, endTime, rrdPrefix, mode);
     return;
   } else if(action == FLAG_RRD_ACTION_LIST) {
-    listResource(rrdKey, rrdTitle, cluster[0] != '\0' ? cluster : NULL, startTime, endTime);
+    listResource(rrdKey, rrdTitle, cluster[0] != '\0' ? cluster : NULL, 
+		 (filterString[0] == '\0') ? NULL : filterString, startTime, endTime);
     return;
   }
 

@@ -1366,11 +1366,13 @@ void printTrafficStatistics(int revertOrder) {
 		    "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
 		    "<TD "TD_BG" align=\"right\">"
 		    "[ <a href=\"/" CONST_PLUGINS_HEADER
-		    "rrdPlugin?action=list&amp;key=interfaces/%s&amp;title=interface%%20%s\">"
+		    "rrdPlugin?action=list&amp;key=interfaces%s%s&amp;title=interface%%20%s\">"
 		    "<img class=tooltip valign=\"top\" border=\"0\" src=\"/graph.gif\""
 		    " alt=\"View rrd charts of historical data for this interface\"></a> ]"
 		    "</TD></TR>\n",
-		    getRowColor(), myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
+		    getRowColor(),
+		    (myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName[0] == '/') ? "" : "/",
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
       sendString(buf);
     }
@@ -3758,8 +3760,13 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     display need to be skipped
   */
   for(idx=1, numSessions=0, printedSessions=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
+    int mutex_idx;
+
     if(el && (printedSessions >= el->numHostSessions)) break;
-    accessMutex(&myGlobals.tcpSessionsMutex, "printActiveTCPSessions");
+
+    mutex_idx = idx % NUM_SESSION_MUTEXES;
+
+    accessMutex(&myGlobals.tcpSessionsMutex[mutex_idx], "printActiveTCPSessions");
 
     if(myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx] != NULL) {
       char *sport, *dport;
@@ -3895,8 +3902,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
       }
     }
 
-    releaseMutex(&myGlobals.tcpSessionsMutex);
-  }
+    releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
+  } /* for */
 
   if(printedSessions > 0) {
     sendString("</TABLE>"TABLE_OFF"<P>\n");
@@ -5985,12 +5992,13 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		      "<td align=\"right\">"
 		      "&nbsp;&nbsp;"
 		      "[ <a href=\"/" CONST_PLUGINS_HEADER
-		      "rrdPlugin?action=list&key=interfaces/%s/domains/%s&title=Domain%%20%s\">"
+		      "rrdPlugin?action=list&key=interfaces%s%s/domains/%s&title=Domain%%20%s\">"
 		      "<img border=\"0\" src=\"/graph.gif\" class=tooltip alt=\"Domain-wide Historical Data\"></a> ]"
 		      "&nbsp;&nbsp;"
 		      "</td>\n"
 		      "</tr></table>\n</center>\n"
 		      "<p>&nbsp;</p>\n",
+		      (myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName[0] == '/') ? "" : "/",
 		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		      domain_network_name,domain_network_name);
 	sendString(buf);
@@ -6917,9 +6925,10 @@ char* hostRRdGraphLink(HostTraffic *el, u_char is_subnet_host, char *tmpStr, int
   if(stat(buf, &statbuf) == 0) {
     safe_snprintf(__FILE__, __LINE__, tmpStr, tmpStrLen,
                   "[ <a href=\"/" CONST_PLUGINS_HEADER
-		  "rrdPlugin?action=list&amp;key=interfaces/%s/%s/%s&amp;title=%s%%20%s\">"
+		  "rrdPlugin?action=list&amp;key=interfaces%s%s/%s/%s&amp;title=%s%%20%s\">"
                   "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
 		  " class=tooltip alt=\"view rrd graphs of historical data for this %s\"></a> ]",
+		  (myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName[0] == '/') ? "" : "/",
                   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		  is_subnet_host ? "subnet" : "hosts",
                   dotToSlash(key),

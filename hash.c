@@ -157,13 +157,15 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
   if(host->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) {
     for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
       IPSession *prevSession, *nextSession, *theSession;
+      int mutex_idx;
 
       if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ )
 	return;
 
       if(host->numHostSessions == 0) return;
 
-      accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions");
+      mutex_idx = i % NUM_SESSION_MUTEXES;
+      accessMutex(&myGlobals.tcpSessionsMutex[mutex_idx], "freeHostSessions");
 
       prevSession = theSession = myGlobals.device[theDevice].tcpSession[i];
 
@@ -192,7 +194,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 	}
       } /* while */
 
-      releaseMutex(&myGlobals.tcpSessionsMutex);
+      releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
       ntop_conditional_sched_yield(); /* Allow other threads to run */
     } /* for */
 
@@ -900,10 +902,11 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 
   if(locked_mutex) releaseMutex(&myGlobals.hostsHashLockMutex);
 
-  if((hostFound == 1) && (vlanId != NO_VLAN) && (vlanId != el->vlanId) && (!isMultivlaned(el))) {
+  if((hostFound == 1) && (vlanId != NO_VLAN) && (el->vlanId != NO_VLAN)
+     && (vlanId != el->vlanId) && (!isMultivlaned(el))) {
     FD_SET(FLAG_HOST_TYPE_MULTIVLANED, &el->flags);
     if(myGlobals.multipleVLANedHostCount == 0) {
-      traceEvent(CONST_TRACE_ERROR, "mVLAN: Host (identical IP/MAC) found on multiple VLANs");
+      traceEvent(CONST_TRACE_ERROR, "mVLAN: Host (identical IP/MAC) found on multiple VLANs [%d][%d]", vlanId, el->vlanId);
       traceEvent(CONST_TRACE_INFO,  "mVLAN: ntop continues but will consolidate and thus probably overcount this traffic");
       traceEvent(CONST_TRACE_NOISY, "mVLAN: Up to %d examples will be printed", MAX_MULTIPLE_VLAN_WARNINGS);
     }

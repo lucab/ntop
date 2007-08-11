@@ -1870,11 +1870,12 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
 		      "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
 		      "<TD "TD_BG" ALIGN=\"right\">"
 		      "[ <a href=\"/" CONST_PLUGINS_HEADER
-		      "rrdPlugin?action=list&amp;key=interfaces/%s/hosts/%s&amp;title=host%%20%s\">"
+		      "rrdPlugin?action=list&amp;key=interfaces%s%s/hosts/%s&amp;title=host%%20%s\">"
 		      "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
 		      " class=tooltip alt=\"view rrd graphs of historical data for this host\"></a> ]"
 		      "</TD></TR>\n",
-		      getRowColor(),
+		      getRowColor(), 
+		      (myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName[0] == '/') ? "" : "/",
 		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		      dotToSlash(key),
 		      el->hostResolvedName[0] != '\0' ? el->hostResolvedName : el->fcCounters->hostNumFcAddress);
