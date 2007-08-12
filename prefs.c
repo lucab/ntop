@@ -179,7 +179,7 @@ void loadPrefs(int argc, char* argv[]) {
   opt_index = 0, optind = 0;
   while ((opt = getopt_long(argc, argv, short_options, long_options, &opt_index)) != EOF) {
     switch (opt) {
-    case 'h':                                /* help */
+    case 'h': /* help */
       usage(stdout);
       exit(0);
 

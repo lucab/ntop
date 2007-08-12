@@ -155,8 +155,8 @@ static u_int efficiency(int actualDeviceId, u_int pktLen) {
   if(myGlobals.device[actualDeviceId].cellLength == 0)
     pktEfficiency = 0;
   else    
-    pktEfficiency = ((pktLen % myGlobals.device[actualDeviceId].cellLength) * 100) 
-      / myGlobals.device[actualDeviceId].cellLength;
+    pktEfficiency = 100 - (((pktLen % myGlobals.device[actualDeviceId].cellLength) * 100) 
+			   / myGlobals.device[actualDeviceId].cellLength);
   
   // traceEvent(CONST_TRACE_WARNING, "[len=%d][efficiency=%d]", pktLen, pktEfficiency);
   return(pktEfficiency);
