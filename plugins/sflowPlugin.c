@@ -3131,8 +3131,8 @@ static void* sflowMainLoop(void* _deviceId) {
   myGlobals.device[deviceId].sflowGlobals->sflowThread = 0;
   myGlobals.device[deviceId].activeDevice = 0;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: SFLOW: thread terminated [p%d, t%lu]...",
-	     getpid(), pthread_self());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: SFLOW: thread terminated [p%d][sflowDeviceId=%d]",
+	     getpid(), pthread_self(), myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
 
   return(NULL);
 }
@@ -4557,12 +4557,12 @@ static void termsFlowFunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
 
     dev = strtok_r(value, ",", &strtokState);
     while(dev != NULL) {
-      int deviceId = atoi(dev);
+      int deviceId, theDeviceId = atoi(dev);
 
-      if((deviceId > 0) && ((deviceId = mapsFlowDeviceToNtopDevice(deviceId)) > 0)) {
+      if((theDeviceId > 0) && ((deviceId = mapsFlowDeviceToNtopDevice(theDeviceId)) > 0)) {
 	termsFlowDevice(deviceId);
       } else
-	traceEvent(CONST_TRACE_WARNING, "SFLOW: requested invalid termination of deviceId=%d", deviceId);
+	traceEvent(CONST_TRACE_INFO, "NETFLOW: [sflowDeviceId=%d] device thread terminated in the meantime", theDeviceId);
 
       dev = strtok_r(NULL, ",", &strtokState);
     }

@@ -822,16 +822,16 @@ typedef struct hostTraffic {
   u_short          refCount;         /* Reference counter */
   HostSerial       hostSerial;
   HostAddr         hostIpAddress;
-  u_int16_t        vlanId;           /* VLAN Id (-1 if not set) */
+  u_int16_t        vlanId;          /* VLAN Id (-1 if not set) */
   u_int16_t        ifId;            /* Interface Id [e.g. for NetFlow] (-1 if not set) */
-  u_int16_t        hostAS;           /* AS to which the host belongs to */
+  u_int16_t        hostAS;          /* AS to which the host belongs to */
   time_t           firstSeen, lastSeen; /* time when this host has sent/rcvd some data  */
   u_char           ethAddress[LEN_ETHERNET_ADDRESS];
   u_char           lastEthAddress[LEN_ETHERNET_ADDRESS]; /* used for remote addresses */
   char             ethAddressString[LEN_ETHERNET_ADDRESS_DISPLAY];
   char             hostNumIpAddress[20] /* xxx.xxx.xxx.xxx */, *dnsDomainValue, *dnsTLDValue;
-  u_int8_t         network_mask; /* IPv6 notation e.g. /24 */
-  int8_t           known_subnet_id;    /* UNKNOWN_SUBNET_ID if the host does not belong to a known subnet */
+  u_int8_t         network_mask;    /* IPv6 notation e.g. /24 */
+  int8_t           known_subnet_id; /* UNKNOWN_SUBNET_ID if the host does not belong to a known subnet */
   char             *hwModel, *description, *community, *ip2ccValue, *fingerprint;
   char             hostResolvedName[MAX_LEN_SYM_HOST_NAME];
   short            hostResolvedNameType;

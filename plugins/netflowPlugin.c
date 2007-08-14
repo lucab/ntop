@@ -269,7 +269,7 @@ static int setNetFlowInSocket(int deviceId) {
 	     (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0)
 #ifdef HAVE_SCTP
        || ((myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket > 0)
-	   && (bind(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket, 
+	   && (bind(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket,
 		    (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0))
 #endif
        ) {
@@ -686,11 +686,13 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   if((srcHost->network_mask == 0) && record->src_mask) {
     srcHost->network_mask = record->src_mask;
     FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &srcHost->flags);
+    updateHostKnownSubnet(srcHost);
   }
 
   if((dstHost->network_mask == 0) && record->dst_mask) {
     dstHost->network_mask = record->dst_mask;
     FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &dstHost->flags);
+    updateHostKnownSubnet(dstHost);
   }
 
   if(srcHost->firstSeen > *firstSeen) srcHost->firstSeen = *firstSeen;
@@ -1830,8 +1832,8 @@ static void* netflowMainLoop(void* _deviceId) {
   }
   myGlobals.device[deviceId].activeDevice = 0;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread terminated [p%d]",
-	     pthread_self(), getpid());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread terminated [p%d][netFlowDeviceId=%d]",
+	     pthread_self(), getpid(), myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
 
   return(NULL);
 }
@@ -2021,7 +2023,9 @@ static int initNetFlowFunct(void) {
       int deviceId = atoi(dev);
 
       if(deviceId > 0) {
-	if((deviceId = createNetFlowDevice(deviceId)) == -1) {
+	int initializedDeviceId;
+
+	if((initializedDeviceId = createNetFlowDevice(deviceId)) == -1) {
 	  pluginActive = 0;
 	  return(-1);
 	}
@@ -3254,24 +3258,24 @@ static void handleNetflowHTTPrequest(char* _url) {
 	} else if(strcmp(device, "name") == 0) {
 	  char old_name[256], new_name[256];
 	  int rc;
-	  
+
 	  sanitize_rrd_string(value);
-		
-	  safe_snprintf(__FILE__, __LINE__, old_name, sizeof(old_name), 
-			"%s/interfaces/%s", myGlobals.rrdPath, 
+
+	  safe_snprintf(__FILE__, __LINE__, old_name, sizeof(old_name),
+			"%s/interfaces/%s", myGlobals.rrdPath,
 			myGlobals.device[deviceId].uniqueIfName);
 	  revertSlashIfWIN32(old_name, 0);
-	  
+
 	  free(myGlobals.device[deviceId].humanFriendlyName);
 	  myGlobals.device[deviceId].humanFriendlyName = strdup(value);
 	  storePrefsValue(nfValue(deviceId, "humanFriendlyName", 1), value);
 	  calculateUniqueInterfaceName(deviceId);
 
 	  safe_snprintf(__FILE__, __LINE__, new_name, sizeof(new_name),
-			"%s/interfaces/%s", myGlobals.rrdPath, 
+			"%s/interfaces/%s", myGlobals.rrdPath,
 			myGlobals.device[deviceId].uniqueIfName);
 	  revertSlashIfWIN32(new_name, 0);
-	  
+
 	  rc = rename(old_name, new_name);
 	} else if(strcmp(device, "debug") == 0) {
 	  if(deviceId > 0) {
@@ -3445,7 +3449,7 @@ static void handleNetflowHTTPrequest(char* _url) {
 
     traceEvent(CONST_TRACE_INFO, "NETFLOW: Device [deviceId=%d][active=%d]",
 	       readDeviceId, myGlobals.device[readDeviceId].activeDevice);
-    
+
     // termNetflowDevice(readDeviceId);
 
     checkReportDevice();
@@ -3589,7 +3593,7 @@ static void handleNetflowHTTPrequest(char* _url) {
 /* ****************************** */
 
 static void termNetflowDevice(int deviceId) {
-  traceEvent(CONST_TRACE_INFO, "NETFLOW: terminating device %s",  
+  traceEvent(CONST_TRACE_INFO, "NETFLOW: terminating device %s",
 	     myGlobals.device[deviceId].humanFriendlyName);
 
   if(!pluginActive) return;
@@ -3649,12 +3653,13 @@ static void termNetflowFunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
 
     dev = strtok_r(value, ",", &strtokState);
     while(dev != NULL) {
-      int deviceId = atoi(dev);
+      int deviceId, theDeviceId = atoi(dev);
 
-      if((deviceId > 0) && ((deviceId = mapNetFlowDeviceToNtopDevice(deviceId)) > 0)) {
+      if((theDeviceId > 0) && ((deviceId = mapNetFlowDeviceToNtopDevice(theDeviceId)) > 0)) {
 	termNetflowDevice(deviceId);
-      } else
-	traceEvent(CONST_TRACE_WARNING, "NETFLOW: requested invalid termination of deviceId=%d", deviceId);
+      } else {
+	traceEvent(CONST_TRACE_INFO, "NETFLOW: [netFlowDeviceId=%d] device thread terminated in the meantime", theDeviceId);
+      }
 
       dev = strtok_r(NULL, ",", &strtokState);
     }

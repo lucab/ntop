@@ -2549,7 +2549,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
       break;
   }
 
-  if(numEntries > 0) {
+  /* if(numEntries > 0) */ {
     int i;
 
     qsort(tmpTable, numEntries, sizeof(HostTraffic*), sortHostFctn);
@@ -2583,31 +2583,35 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     else
       ifStr[0] = '\0';
 
-    sendString("<p><form action=\"../\">\n<b>Traffic Unit</b>:"
-	       "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
+    sendString("<p><table border=0>");
 
-    if(showBytes)
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<option value=\"/%s?col=%d&unit=1%s%s\" selected>Bytes</option>\n"
-		    "<option value=\"/%s?col=%d&unit=0%s%s\">Packets</option>\n</select>\n",
-		    CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr,
-		    CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr);
-    else
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<option value=\"/%s?col=%d&unit=1%s%s\">Bytes</option>\n"
-		    "<option value=\"/%s?col=%d&unit=0%s%s\" selected>Packets</option>\n</select>\n",
-		    CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr,
-		    CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr);
+    if(numEntries > 0) {
+      sendString("<tr><td><form action=\"../\">\n<b>Traffic Unit</b>:</td>"
+		 "<td><select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
 
-    sendString(buf);
-    sendString("</P>\n");
+      if(showBytes)
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<option value=\"/%s?col=%d&unit=1%s%s\" selected>Bytes</option>\n"
+		      "<option value=\"/%s?col=%d&unit=0%s%s\">Packets</option>\n</select>\n",
+		      CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr,
+		      CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr);
+      else
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<option value=\"/%s?col=%d&unit=1%s%s\">Bytes</option>\n"
+		      "<option value=\"/%s?col=%d&unit=0%s%s\" selected>Packets</option>\n</select>\n",
+		      CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr,
+		      CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr);
+
+      sendString(buf);
+      sendString("</td></tr>\n");
+    }
 
     if(foundVlan) {
       u_char found = 0, tmpBuf[64];
       u_int8_t selected;
 
-      sendString("<p><form action=\"../\">\n<b>VLAN</b>:"
-		 "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
+      sendString("<tr><td><form action=\"../\">\n<b>VLAN</b>:</td>"
+		 "<td><select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
 
       for(i=0; i<MAX_VLAN; i++)
 	if(vlanList[i] == 1) {
@@ -2636,16 +2640,15 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 		    selected ? " selected" : "");
 
       sendString(buf);
-
-      sendString("</select>\n</form>\n");
+      sendString("</select>\n</form></td></tr>\n");
     }
 
-    if(foundSubnet) {
+    /* if(foundSubnet) */ {
       u_char found = 0, tmpBuf[64];
       u_int8_t selected;
 
-      sendString("<p><form action=\"../\">\n<b>Subnet</b>:"
-		 "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
+      sendString("<tr><td><form action=\"../\">\n<b>Subnet</b>:</td>"
+		 "<td><select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
 
       for(i=0; i<myGlobals.numKnownSubnets; i++)
 	if(knownSubnets[i] == 1) {
@@ -2691,7 +2694,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
       if(knownSubnetId == ALL_SUBNET_IDS) selected = 1; else selected = 0;
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<option value=\"/%s?unit=%d&subnet=%d\"%s>All</option>\n"
-		    "</select></form>\n<p>\n",
+		    "</select></form>\n</td></tr>\n",
 		    CONST_HOSTS_INFO_HTML, showBytes, ALL_SUBNET_IDS,
 		    selected ? " selected" : "");
 
@@ -2702,7 +2705,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
       u_char found = 0;
       u_int8_t selected;
 
-      sendString("<p><form action=\"../\">\n<b>Interface Id</b>:"
+      sendString("<tr><td><p><form action=\"../\">\n<b>Interface Id</b>:</td><td>"
 		 "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
 
       for(i=0; i<MAX_INTERFACE; i++)
@@ -2725,325 +2728,329 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	selected = 0;
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"/%s?unit=%d\"%s>All</option>\n"
-		    "</select>\n</form>\n",
+		    "</select>\n</form></td></tr>\n",
 		    CONST_HOSTS_INFO_HTML, showBytes, selected ? " selected" : "", i);
 
       sendString(buf);
     }
 
-    if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-		    "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
-		    "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
-		    "<TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
-		    "<TH "TH_BG">%s3\">MAC&nbsp;Address%s</A></TH>\n"
-		    "<TH "TH_BG">%s11\">Community%s</A></TH>\n"
-		    "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
-		    "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
-		    "<TH "TH_BG">%s5\">Nw&nbsp;Board&nbsp;Vendor%s</A></TH>\n"
-		    "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
-		    "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
-		    "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
-		    "<TH "TH_BG">%s10\">AS%s</A></TH>\n"
-		    "</TR>\n",
-		    theAnchor[1], arrow[1],
-		    theAnchor[0], arrow[0],
-		    theAnchor[2], arrow[2],
-		    theAnchor[3], arrow[3],
-		    theAnchor[11], arrow[11],
-		    theAnchor[6], arrow[6],
-		    theAnchor[4], arrow[4],
-		    theAnchor[5], arrow[5],
-		    theAnchor[7], arrow[7],
-		    theAnchor[8], arrow[8],
-		    theAnchor[9], arrow[9],
-		    theAnchor[10], arrow[10]
-		    );
-    } else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-		    "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
-		    "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
-		    "</TH><TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
-		    "<TH "TH_BG">%s11\">Community%s</A></TH>"
-		    "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
-		    "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
-		    "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
-		    "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
-		    "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
-		    "<TH "TH_BG">%s10\">AS%s</A></TH>\n"
-		    "</TR>\n",
-		    theAnchor[1], arrow[1],
-		    theAnchor[0], arrow[0],
-		    theAnchor[2], arrow[2],
-		    theAnchor[6], arrow[6],
-		    theAnchor[11], arrow[11],
-		    theAnchor[4], arrow[4],
-		    theAnchor[7], arrow[7],
-		    theAnchor[8], arrow[8],
-		    theAnchor[9], arrow[9],
-		    theAnchor[10], arrow[10]
-		    );
-    }
-    sendString(buf);
+    sendString("</table>\n");
 
-    for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
-      if(revertOrder)
-	el = tmpTable[numEntries-idx-1];
-      else
-	el = tmpTable[idx];
+    if(numEntries > 0) {
+      if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
+		      "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
+		      "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
+		      "<TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
+		      "<TH "TH_BG">%s3\">MAC&nbsp;Address%s</A></TH>\n"
+		      "<TH "TH_BG">%s11\">Community%s</A></TH>\n"
+		      "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
+		      "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
+		      "<TH "TH_BG">%s5\">Nw&nbsp;Board&nbsp;Vendor%s</A></TH>\n"
+		      "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
+		      "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
+		      "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
+		      "<TH "TH_BG">%s10\">AS%s</A></TH>\n"
+		      "</TR>\n",
+		      theAnchor[1], arrow[1],
+		      theAnchor[0], arrow[0],
+		      theAnchor[2], arrow[2],
+		      theAnchor[3], arrow[3],
+		      theAnchor[11], arrow[11],
+		      theAnchor[6], arrow[6],
+		      theAnchor[4], arrow[4],
+		      theAnchor[5], arrow[5],
+		      theAnchor[7], arrow[7],
+		      theAnchor[8], arrow[8],
+		      theAnchor[9], arrow[9],
+		      theAnchor[10], arrow[10]
+		      );
+      } else {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
+		      "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
+		      "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
+		      "</TH><TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
+		      "<TH "TH_BG">%s11\">Community%s</A></TH>"
+		      "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
+		      "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
+		      "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
+		      "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
+		      "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
+		      "<TH "TH_BG">%s10\">AS%s</A></TH>\n"
+		      "</TR>\n",
+		      theAnchor[1], arrow[1],
+		      theAnchor[0], arrow[0],
+		      theAnchor[2], arrow[2],
+		      theAnchor[6], arrow[6],
+		      theAnchor[11], arrow[11],
+		      theAnchor[4], arrow[4],
+		      theAnchor[7], arrow[7],
+		      theAnchor[8], arrow[8],
+		      theAnchor[9], arrow[9],
+		      theAnchor[10], arrow[10]
+		      );
+      }
+      sendString(buf);
 
-      if(el != NULL) {
-	char *tmpName1, *tmpName2, *tmpName3, sniffedName[MAXDNAME];
-	int displaySniffedName=0;
+      for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
+	if(revertOrder)
+	  el = tmpTable[numEntries-idx-1];
+	else
+	  el = tmpTable[idx];
 
-	tmpName1 = el->hostNumIpAddress;
+	if(el != NULL) {
+	  char *tmpName1, *tmpName2, *tmpName3, sniffedName[MAXDNAME];
+	  int displaySniffedName=0;
 
-	if((tmpName1[0] == '\0') || (strcmp(tmpName1, "0.0.0.0") == 0))
-	  tmpName1 = myGlobals.separator;
+	  tmpName1 = el->hostNumIpAddress;
 
-	if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-	  tmpName2 = getVendorInfo(el->ethAddress, 1);
-	  if(tmpName2[0] == '\0')
+	  if((tmpName1[0] == '\0') || (strcmp(tmpName1, "0.0.0.0") == 0))
+	    tmpName1 = myGlobals.separator;
+
+	  if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
+	    tmpName2 = getVendorInfo(el->ethAddress, 1);
+	    if(tmpName2[0] == '\0')
+	      tmpName2 = myGlobals.separator;
+
+	    tmpName3 = el->ethAddressString;
+	    if((tmpName3[0] == '\0')
+	       || (strcmp(tmpName3, "00:00:00:00:00:00") == 0))
+	      tmpName3 = myGlobals.separator;
+	  } else {
 	    tmpName2 = myGlobals.separator;
-
-	  tmpName3 = el->ethAddressString;
-	  if((tmpName3[0] == '\0')
-	     || (strcmp(tmpName3, "00:00:00:00:00:00") == 0))
 	    tmpName3 = myGlobals.separator;
-	} else {
-	  tmpName2 = myGlobals.separator;
-	  tmpName3 = myGlobals.separator;
-	}
+	  }
 
-	if(!addrnull(&el->hostIpAddress)
-	   && (getSniffedDNSName(el->hostNumIpAddress,
-				 sniffedName, sizeof(sniffedName)))) {
+	  if(!addrnull(&el->hostIpAddress)
+	     && (getSniffedDNSName(el->hostNumIpAddress,
+				   sniffedName, sizeof(sniffedName)))) {
 #ifdef DEBUG
-	  traceEvent(CONST_TRACE_INFO, "%s <=> %s [%s/%s]",
-		     el->hostNumIpAddress, sniffedName,
-		     el->hostResolvedName, el->hostNumIpAddress);
+	    traceEvent(CONST_TRACE_INFO, "%s <=> %s [%s/%s]",
+		       el->hostNumIpAddress, sniffedName,
+		       el->hostResolvedName, el->hostNumIpAddress);
 #endif
 
-	  if((el->hostResolvedName[0] == '\0') || strcmp(sniffedName, el->hostResolvedName)) {
-	    if((el->hostResolvedName[0] == '\0')
-	       || (strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0)) {
-	      if(strlen(sniffedName) >= (MAX_LEN_SYM_HOST_NAME-1))
-		sniffedName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
+	    if((el->hostResolvedName[0] == '\0') || strcmp(sniffedName, el->hostResolvedName)) {
+	      if((el->hostResolvedName[0] == '\0')
+		 || (strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0)) {
+		if(strlen(sniffedName) >= (MAX_LEN_SYM_HOST_NAME-1))
+		  sniffedName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
 
-	      for(i=0; i<strlen(sniffedName); i++) {
-		if(isupper(sniffedName[i]))
-		  sniffedName[i] = tolower(sniffedName[i]);
-	      }
-
-	      setResolvedName(el, sniffedName, FLAG_HOST_SYM_ADDR_TYPE_NAME);
-	    } else
-	      displaySniffedName=1;
-	  }
-	}
-
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>", getRowColor());
-	sendString(buf);
-
-	sendString(makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1, hostLinkBuf, sizeof(hostLinkBuf)));
-
-	if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			tmpName1, tmpName3);
-	} else {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			tmpName1);
-	}
-	sendString(buf);
-
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>",
-		      (el->community == NULL) ? "&nbsp;" : el->community);
-	sendString(buf);
-
-
-	sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
-
-	if(el->nonIPTraffic && displaySniffedName) {
-	  short numAddresses = 0;
-
-	  if(el->nonIPTraffic->nbHostName && el->nonIPTraffic->nbDomainName) {
-	    if((el->nonIPTraffic->nbAccountName != NULL) && ((el->nonIPTraffic->nbAccountName[0] != '0'))) {
-	      if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
-		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName,
-			      el->nonIPTraffic->nbDomainName);
-	      } else {
-		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s@%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName);
-	      }
-	    } else {
-	      if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
-		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			      el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName);
-	      } else {
-		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			      el->nonIPTraffic->nbHostName);
-	      }
-	    }
-	    sendString(buf);
-	    numAddresses++;
-	  } else if(el->nonIPTraffic->nbHostName) {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
-			  el->nonIPTraffic->nbHostName);
-	    sendString(buf);
-	    numAddresses++;
-	  }
-
-	  if(el->nonIPTraffic->nbDescr) {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), ":&nbsp;%s", el->nonIPTraffic->nbDescr);
-	    sendString(buf);
-	  }
-
-	  if(displaySniffedName) {
-	    if(numAddresses > 0) sendString("/");
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", sniffedName);
-	    sendString(buf);
-	    numAddresses++;
-	  }
-
-	  if(el->nonIPTraffic->atNetwork) {
-	    char *nodeName = el->nonIPTraffic->atNodeName;
-
-	    if(numAddresses > 0) sendString("/");
-	    if(nodeName == NULL) nodeName = "";
-
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
-			  getOSFlag(el, "Mac", 0, osBuf, sizeof(osBuf)), nodeName);
-	    sendString(buf);
-
-	    if(el->nonIPTraffic->atNodeType[0] != NULL) {
-	      sendString("(");
-	      for(i=0; i<MAX_NODE_TYPES; i++)
-		if(el->nonIPTraffic->atNodeType[i] == NULL)
-		  break;
-		else {
-		  if(i > 0) sendString("/");
-		  sendString(el->nonIPTraffic->atNodeType[i]);
+		for(i=0; i<strlen(sniffedName); i++) {
+		  if(isupper(sniffedName[i]))
+		    sniffedName[i] = tolower(sniffedName[i]);
 		}
 
-	      sendString(")&nbsp;");
+		setResolvedName(el, sniffedName, FLAG_HOST_SYM_ADDR_TYPE_NAME);
+	      } else
+		displaySniffedName=1;
 	    }
-
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[%d.%d]",
-			  el->nonIPTraffic->atNetwork, el->nonIPTraffic->atNode);
-	    sendString(buf);
-	    numAddresses++;
 	  }
 
-	  if(el->nonIPTraffic->ipxHostName) {
-	    int numSap=0;
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>", getRowColor());
+	  sendString(buf);
 
-	    if(numAddresses > 0) sendString("/");
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
-			  getOSFlag(el, "Novell", 0, osBuf, sizeof(osBuf)),
-			  el->nonIPTraffic->ipxHostName);
-	    sendString(buf);
+	  sendString(makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1, hostLinkBuf, sizeof(hostLinkBuf)));
 
-	    for(i=0; i<el->nonIPTraffic->numIpxNodeTypes; i++) {
-	      char *str = getSAPInfo(el->nonIPTraffic->ipxNodeType[i], 1);
+	  if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+			  tmpName1, tmpName3);
+	  } else {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+			  tmpName1);
+	  }
+	  sendString(buf);
 
-	      if(str[0] != '\0') {
-		if(numSap == 0)
-		  sendString("[");
-		else
-		  sendString("/");
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>",
+			(el->community == NULL) ? "&nbsp;" : el->community);
+	  sendString(buf);
 
-		sendString(str);
-		numSap++;
+
+	  sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
+
+	  if(el->nonIPTraffic && displaySniffedName) {
+	    short numAddresses = 0;
+
+	    if(el->nonIPTraffic->nbHostName && el->nonIPTraffic->nbDomainName) {
+	      if((el->nonIPTraffic->nbAccountName != NULL) && ((el->nonIPTraffic->nbAccountName[0] != '0'))) {
+		if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
+		  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+				el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName,
+				el->nonIPTraffic->nbDomainName);
+		} else {
+		  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s@%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+				el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName);
+		}
+	      } else {
+		if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
+		  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+				el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName);
+		} else {
+		  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+				el->nonIPTraffic->nbHostName);
+		}
 	      }
+	      sendString(buf);
+	      numAddresses++;
+	    } else if(el->nonIPTraffic->nbHostName) {
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s", getOSFlag(el, "Windows", 0, osBuf, sizeof(osBuf)),
+			    el->nonIPTraffic->nbHostName);
+	      sendString(buf);
+	      numAddresses++;
 	    }
 
-	    if(numSap > 0) sendString("]");
+	    if(el->nonIPTraffic->nbDescr) {
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), ":&nbsp;%s", el->nonIPTraffic->nbDescr);
+	      sendString(buf);
+	    }
 
-	    numAddresses++;
+	    if(displaySniffedName) {
+	      if(numAddresses > 0) sendString("/");
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", sniffedName);
+	      sendString(buf);
+	      numAddresses++;
+	    }
+
+	    if(el->nonIPTraffic->atNetwork) {
+	      char *nodeName = el->nonIPTraffic->atNodeName;
+
+	      if(numAddresses > 0) sendString("/");
+	      if(nodeName == NULL) nodeName = "";
+
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
+			    getOSFlag(el, "Mac", 0, osBuf, sizeof(osBuf)), nodeName);
+	      sendString(buf);
+
+	      if(el->nonIPTraffic->atNodeType[0] != NULL) {
+		sendString("(");
+		for(i=0; i<MAX_NODE_TYPES; i++)
+		  if(el->nonIPTraffic->atNodeType[i] == NULL)
+		    break;
+		  else {
+		    if(i > 0) sendString("/");
+		    sendString(el->nonIPTraffic->atNodeType[i]);
+		  }
+
+		sendString(")&nbsp;");
+	      }
+
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[%d.%d]",
+			    el->nonIPTraffic->atNetwork, el->nonIPTraffic->atNode);
+	      sendString(buf);
+	      numAddresses++;
+	    }
+
+	    if(el->nonIPTraffic->ipxHostName) {
+	      int numSap=0;
+
+	      if(numAddresses > 0) sendString("/");
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;%s&nbsp;",
+			    getOSFlag(el, "Novell", 0, osBuf, sizeof(osBuf)),
+			    el->nonIPTraffic->ipxHostName);
+	      sendString(buf);
+
+	      for(i=0; i<el->nonIPTraffic->numIpxNodeTypes; i++) {
+		char *str = getSAPInfo(el->nonIPTraffic->ipxNodeType[i], 1);
+
+		if(str[0] != '\0') {
+		  if(numSap == 0)
+		    sendString("[");
+		  else
+		    sendString("/");
+
+		  sendString(str);
+		  numSap++;
+		}
+	      }
+
+	      if(numSap > 0) sendString("]");
+
+	      numAddresses++;
+	    }
 	  }
-	}
 
-	sendString("&nbsp;</TD>");
-	printBar(buf, sizeof(buf), el->actBandwidthUsageS, el->actBandwidthUsageR, maxBandwidthUsage, 3);
+	  sendString("&nbsp;</TD>");
+	  printBar(buf, sizeof(buf), el->actBandwidthUsageS, el->actBandwidthUsageR, maxBandwidthUsage, 3);
 
-	if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>", tmpName2);
+	  if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>", tmpName2);
+	    sendString(buf);
+	  }
+
+	  {
+	    char shortBuf[8];
+
+	    if(!subnetPseudoLocalHost(el)) {
+	      i = guessHops(el);
+	    } else
+	      i = 0;
+
+	    safe_snprintf(__FILE__, __LINE__, shortBuf, sizeof(shortBuf), "%d", i % 256);
+
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>&nbsp;%s</TD>",
+			  (i == 0) ? "" : shortBuf);
+	    sendString(buf);
+	  }
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%lu</TD>",
+			(unsigned long)(el->totContactedSentPeers+el->totContactedRcvdPeers));
 	  sendString(buf);
-	}
-
-	{
-	  char shortBuf[8];
-
-	  if(!subnetPseudoLocalHost(el)) {
-	    i = guessHops(el);
-	  } else
-	    i = 0;
-
-	  safe_snprintf(__FILE__, __LINE__, shortBuf, sizeof(shortBuf), "%d", i % 256);
-
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>&nbsp;%s</TD>",
-			(i == 0) ? "" : shortBuf);
-	  sendString(buf);
-	}
-
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%lu</TD>",
-		      (unsigned long)(el->totContactedSentPeers+el->totContactedRcvdPeers));
-	sendString(buf);
 
 #if 0
-	/* Time distance */
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s-",
-		      formatLatency(el->minLatency, FLAG_STATE_ACTIVE));
-	sendString(buf);
+	  /* Time distance */
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s-",
+			formatLatency(el->minLatency, FLAG_STATE_ACTIVE));
+	  sendString(buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s</TD>",
-		      formatLatency(el->maxLatency, FLAG_STATE_ACTIVE));
-	sendString(buf);
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s</TD>",
+			formatLatency(el->maxLatency, FLAG_STATE_ACTIVE));
+	  sendString(buf);
 #endif
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td "TD_BG" align=\"right\" nowrap>%s</td>",
-		      formatSeconds(el->lastSeen - el->firstSeen, formatBuf, sizeof(formatBuf)));
-	sendString(buf);
-
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td "TD_BG" align=\"right\" nowrap>%s</td>",
-		      formatSeconds(myGlobals.actTime-el->lastSeen, formatBuf, sizeof(formatBuf)));
-	sendString(buf);
-
-	if(el->hostAS == 0) {
-	  sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>&nbsp;</TD>");
-	} else {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			"<TD "TD_BG" ALIGN=RIGHT NOWRAP>"
-			"<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\" title=\"Lookup ASN (offsite)\">%d</a>"
-			"</TD>",
-			el->hostAS, el->hostAS);
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td "TD_BG" align=\"right\" nowrap>%s</td>",
+			formatSeconds(el->lastSeen - el->firstSeen, formatBuf, sizeof(formatBuf)));
 	  sendString(buf);
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td "TD_BG" align=\"right\" nowrap>%s</td>",
+			formatSeconds(myGlobals.actTime-el->lastSeen, formatBuf, sizeof(formatBuf)));
+	  sendString(buf);
+
+	  if(el->hostAS == 0) {
+	    sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>&nbsp;</TD>");
+	  } else {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			  "<TD "TD_BG" ALIGN=RIGHT NOWRAP>"
+			  "<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\" title=\"Lookup ASN (offsite)\">%d</a>"
+			  "</TD>",
+			  el->hostAS, el->hostAS);
+	    sendString(buf);
+	  }
+
+	  sendString("</TR>\n");
+
+	  printedEntries++;
+
+	  /* Avoid huge tables */
+	  if(printedEntries > myGlobals.runningPref.maxNumLines)
+	    break;
+	} else {
+	  traceEvent(CONST_TRACE_WARNING, "qsort() problem!");
 	}
-
-	sendString("</TR>\n");
-
-	printedEntries++;
-
-	/* Avoid huge tables */
-	if(printedEntries > myGlobals.runningPref.maxNumLines)
-	  break;
-      } else {
-	traceEvent(CONST_TRACE_WARNING, "qsort() problem!");
       }
+
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
+
+      printFooterHostLink();
+
+      printBandwidthFooter();
+
+      addPageIndicator(CONST_HOSTS_INFO_HTML, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
+		       revertOrder, abs(sortedColumn), -1);
     }
-
-    sendString("</TABLE>"TABLE_OFF"<P>\n");
-    sendString("</CENTER>\n");
-
-    printFooterHostLink();
-
-    printBandwidthFooter();
-
-    addPageIndicator(CONST_HOSTS_INFO_HTML, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
-		     revertOrder, abs(sortedColumn), -1);
   }
 
   free(tmpTable);
@@ -6008,9 +6015,9 @@ void printDomainStats(char* domain_network_name, int network_mode,
     if(!clusterMode) {
       sendString("<p align=\"center\"><b>NOTE</b>: ");
       if(network_mode == NETWORK_VIEW)
-	sendString("<small>You can define networks using the --known-subnets flag. Networks with no traffic/hosts do not have a hyperlink associated</small>\n");
+	sendString("<small>You can define networks using the --known-subnets flag. Networks with no traffic/hosts do not have a hyperlink associated.</small>\n");
       else if(network_mode == AS_VIEW)
-	sendString("<small>AS numbers are either received via monitoring protocols (e.g. NetFlow) or read from the AS-list ntop configuration file</small>");
+	sendString("<small>AS numbers are either received via monitoring protocols (e.g. NetFlow) or read from the AS-list ntop configuration file.</small>");
       else
 	sendString("<small>The domain is determined by simply stripping off "
 		   "the first name, so for host x.yz.com, the domain is yz.com and for host "

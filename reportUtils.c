@@ -3677,8 +3677,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     host2networkName(el, subnet_buf, sizeof(subnet_buf));
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		  "<A HREF=\""CONST_DOMAIN_STATS_HTML"?dom=%s&netmode=1\">%s</A></TD></TR>\n", getRowColor(),
-		  "Subnet", subnet_buf, subnet_buf);
+		  "<A HREF=\""CONST_DOMAIN_STATS_HTML"?dom=%d&netmode=1\">%s</A></TD></TR>\n", getRowColor(),
+		  "Subnet", el->known_subnet_id, subnet_buf);
     sendString(buf);
   }
 

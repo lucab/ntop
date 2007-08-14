@@ -1856,12 +1856,24 @@ char* subnetId2networkName(int8_t known_subnet_id, char *buf, u_short buf_len) {
 /* **************************************** */
 
 char* host2networkName(HostTraffic *el, char *buf, u_short buf_len) {
-  if(el != NULL)
-    return(subnetId2networkName(el->known_subnet_id, buf, buf_len));
-  else {
-    buf[0] = '\0';
-    return(buf);
+  buf[0] = '\0';
+
+  if(el != NULL) {
+    if(el->known_subnet_id != UNKNOWN_SUBNET_ID)
+      return(subnetId2networkName(el->known_subnet_id, buf, buf_len));
+    else if((el->network_mask > 0) && (el->hostIpAddress.hostFamily == AF_INET)) {
+      struct in_addr addr;
+      char buf1[32];
+
+      addr.s_addr = el->hostIpAddress.Ip4Address.s_addr & (~(0xFFFFFFFF >> el->network_mask));
+
+      safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s/%d",
+		    _intoa(addr, buf1, sizeof(buf1)),
+		    el->network_mask);
+    }
   }
+  
+  return(buf);
 }
 
 /* **************************************** */

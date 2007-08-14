@@ -1010,7 +1010,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
     struct tm *the_tm;
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("" /* "Arbitrary Graph URL" */, NULL, 0);
+    printHTMLheader("RRD Graph", NULL, 0);
 
     sendString("<center>\n");
 
@@ -1273,13 +1273,29 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
 		_rrdName, (selected == 1) ? "selected" : "", theLabel); sendString(strbuf);
 
 static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix, char *mode) {
-  char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf0[MAX_NUM_ENTRIES][MAX_BUF_LEN];
-  char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN], tmpStr[32], metric_name[32],
-    buf2[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf4[MAX_NUM_ENTRIES][MAX_BUF_LEN];
+  char path[512], *argv[3*MAX_NUM_ENTRIES], **buf, **buf0, **buf1, **buf2, **buf3, **buf4, tmpStr[32], metric_name[32];
   char fname[384], *label, title[64], _rrdName[256];
   char **rrds = NULL;
   int argc = 0, rc, x, y, i, entryId=0;
   double ymin, ymax;
+
+/* ******************** */
+
+  buf  = (char**)malloc(MAX_NUM_ENTRIES*MAX_BUF_LEN);
+  buf0 = (char**)malloc(MAX_NUM_ENTRIES*MAX_BUF_LEN);
+  buf1 = (char**)malloc(MAX_NUM_ENTRIES*MAX_BUF_LEN);
+  buf2 = (char**)malloc(MAX_NUM_ENTRIES*MAX_BUF_LEN);
+  buf3 = (char**)malloc(MAX_NUM_ENTRIES*MAX_BUF_LEN);
+  buf4 = (char**)malloc(MAX_NUM_ENTRIES*MAX_BUF_LEN);
+
+  if((!buf) || (!buf0) || (!buf1) || (!buf2) || (!buf3) || (!buf4)) {
+      traceEvent(CONST_TRACE_WARNING, "RRD: Not enough memory");
+      if(buf) free(buf); if(buf0) free(buf0); if(buf1) free(buf1);
+      if(buf2) free(buf2); if(buf3) free(buf3); if(buf4) free(buf4);
+      return;
+  }
+
+  /* ******************** */
 
   path[0] = '\0';
   safe_snprintf(__FILE__, __LINE__, _rrdName, sizeof(_rrdName), "%s", rrdPath);
@@ -1296,7 +1312,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
     struct tm *the_tm;
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("" /* "Arbitrary Graph URL" */, NULL, 0);
+    printHTMLheader("RRD Graph", NULL, 0);
 
     sendString("<center>\n");
 
@@ -1395,6 +1411,8 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
     sendString("</center>\n");
 
     printHTMLtrailer();
+    if(buf) free(buf); if(buf0) free(buf0); if(buf1) free(buf1);
+    if(buf2) free(buf2); if(buf3) free(buf3); if(buf4) free(buf4);
     return;
   }
 
@@ -1411,6 +1429,8 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
     printHTMLheader("RRD Graph Summary", NULL, 0);
     printFlagedWarning("<I>Error while building graph of the requested file "
 		       "(unknown RRD files)</I>");
+    if(buf) free(buf); if(buf0) free(buf0); if(buf1) free(buf1);
+    if(buf2) free(buf2); if(buf3) free(buf3); if(buf4) free(buf4);
     return;
   }
 
@@ -1559,6 +1579,9 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
   }
 
   releaseMutex(&rrdMutex);
+
+  if(buf) free(buf); if(buf0) free(buf0); if(buf1) free(buf1);
+  if(buf2) free(buf2); if(buf3) free(buf3); if(buf4) free(buf4);
 }
 
 /* ******************************* */
@@ -1764,7 +1787,7 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
 static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 			 char *startTime, char* endTime, char *rrdPrefix, char *mode) {
   char path[512], *argv[6*MAX_NUM_ENTRIES], tmpStr[32], fname[384], *label, rrdPath_copy[512];
-  char buf0[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf1[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf2[2*MAX_BUF_LEN];
+  char buf0[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf1[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf2[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
   char buf3[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], metric_name[32], title_buf[64];
   char buf4[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf5[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], _rrdName[256];
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
@@ -1783,8 +1806,8 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   switch(graphId) {
   case 0: rrds = (char**)rrd_summary_packets;       label = "Pkt/s"; break;
   case 1: rrds = (char**)rrd_summary_packet_sizes;  label = "Pkt/s"; break;
-  case 2: rrds = (char**)rrd_summary_proto_bytes;   label = "Bytes/s"; break;
-  case 3: rrds = (char**)rrd_summary_ipproto_bytes; label = "Bytes/s"; break;
+  case 2: rrds = (char**)rrd_summary_proto_bytes;   label = "Bit/s"; break;
+  case 3: rrds = (char**)rrd_summary_ipproto_bytes; label = "Bit/s"; break;
   case 4:
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s", myGlobals.rrdPath, rrdPath);
 
@@ -1818,11 +1841,11 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
       rrds = (char**)myRRDs;
       closedir(directoryPointer);
     }
-    label = "Bytes/s";
+    label = "Bit/s";
     break;
-  case 5: rrds = (char**)rrd_summary_local_remote_ip_bytes; label = "Bytes/s"; break;
+  case 5: rrds = (char**)rrd_summary_local_remote_ip_bytes; label = "Bit/s"; break;
   case 6: rrds = (char**)rrd_summary_host_sentRcvd_packets; label = "Pkt/s"; break;
-  case 7: rrds = (char**)rrd_summary_host_sentRcvd_bytes; label = "Bytes/s"; break;
+  case 7: rrds = (char**)rrd_summary_host_sentRcvd_bytes; label = "Bit/s"; break;
 
   case 98:
     {
@@ -1919,7 +1942,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     struct tm *the_tm;
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("" /* "Arbitrary Graph URL" */, NULL, 0);
+    printHTMLheader("RRD Graph", NULL, 0);
 
     sendString("<center>\n");
 
@@ -2110,9 +2133,9 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	  safe_snprintf(__FILE__, __LINE__, buf0[entryId], 2*MAX_BUF_LEN,
 			"DEF:my_ctr%d=%s:counter:AVERAGE", entryId, sanitizeRrdPath(path));
 	  argv[argc++] = buf0[entryId];
-	  safe_snprintf(__FILE__, __LINE__, buf2, 2*MAX_BUF_LEN,
+	  safe_snprintf(__FILE__, __LINE__, buf2[entryId], 2*MAX_BUF_LEN,
 			"CDEF:ctr%d=my_ctr%d,%d,*", entryId, entryId, -1 * multiplier);
-	  argv[argc++] = buf2;
+	  argv[argc++] = buf2[entryId];
 	  
 	  str = spacer(filename, tmpStr, sizeof(tmpStr),
 		       metric_name, sizeof(metric_name));
@@ -2133,9 +2156,9 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 			"DEF:my_ctr%d=%s:counter:AVERAGE", entryId, sanitizeRrdPath(path));
 	  argv[argc++] = buf0[entryId];
 
-	  safe_snprintf(__FILE__, __LINE__, buf2, 2*MAX_BUF_LEN,
+	  safe_snprintf(__FILE__, __LINE__, buf2[entryId], 2*MAX_BUF_LEN,
 			"CDEF:ctr%d=my_ctr%d,%d,*", entryId, entryId, multiplier);
-	  argv[argc++] = buf2;
+	  argv[argc++] = buf2[entryId];
 
 	  safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
 			"%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
@@ -2148,8 +2171,15 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	  safe_snprintf(__FILE__, __LINE__, title_buf, sizeof(title_buf), 
 			"%s", (!strncmp(rrdName, "IP_", 3)) ? &rrdName[3] : rrdName);
 	  title_buf[strlen(title_buf)-strlen(metric_name)] = '\0';
-	  argv[argc++] = "--title";
-	  argv[argc++] = formatTitle(filename, title_buf, sizeof(title_buf));
+
+	  if(graphId == 99) {
+	    argv[argc++] = "--title";
+	    argv[argc++] = formatTitle(filename, title_buf, sizeof(title_buf));
+	  } else if(graphId == 4) {
+	    argv[argc++] = "--title";
+	    argv[argc++] = "Historical View";
+	  }
+	  
 	}
 
 	if(do_upside) upside = "my_"; else upside = "";
@@ -2962,7 +2992,7 @@ static void arbitraryAction(char *rrdName,
     char buf1[LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("" /* "Arbitrary Graph URL" */, NULL, 0);
+    printHTMLheader("RRD Graph", NULL, 0);
     escape(buf1, sizeof(buf1), rrdCounter);
     escape(buf2, sizeof(buf2), rrdTitle);
 

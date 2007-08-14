@@ -184,7 +184,6 @@ void daemonizeUnderUnix(void) {
 /* **************************************** */
 
 void detachFromTerminalUnderUnix(int doChdir) {
-
 #ifndef WIN32
 #ifdef MAKE_WITH_SYSLOG
   /* Child processes must log to syslog.
@@ -616,9 +615,7 @@ static void purgeIpPorts(int theDevice) {
 
 /* **************************************** */
 
-
 void* scanIdleLoop(void* notUsed _UNUSED_) {
-
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SIH: Idle host scan thread starting [p%d]",
              pthread_self(), getpid());
 
@@ -638,7 +635,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
     for(i=0; i<myGlobals.numDevices; i++)
       if(!myGlobals.device[i].virtualDevice) {
-        if((!myGlobals.runningPref.stickyHosts) 
+        if((!myGlobals.runningPref.stickyHosts)
 	   && (!myGlobals.runningPref.rFileName))
 	  purged += purgeIdleHosts(i);
 #if !defined(__FreeBSD__)
@@ -774,7 +771,7 @@ static void cleanupThreadIs(char *buf, int sizeofbuf) {
     for(i=0; i<myGlobals.numDevices; i++) {
       if((myGlobals.device[i].netflowGlobals != NULL) &&
          (pthread_self() == myGlobals.device[i].netflowGlobals->netFlowThread)) {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "NF(%s)", 
+        safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "NF(%s)",
 		      myGlobals.device[i].humanFriendlyName);
         break;
       }
@@ -785,7 +782,7 @@ static void cleanupThreadIs(char *buf, int sizeofbuf) {
     for(i=0; i<myGlobals.numDevices; i++) {
       if((myGlobals.device[i].sflowGlobals != NULL) &&
          (pthread_self() == myGlobals.device[i].sflowGlobals->sflowThread)) {
-        safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "SF(%s)", 
+        safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "SF(%s)",
 		      myGlobals.device[i].humanFriendlyName);
         break;
       }
@@ -822,8 +819,7 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
   }
 
   for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
-    if((myGlobals.dequeueAddressThreadId[i] != 0)
-       && (myGlobals.dequeueAddressThreadId[i] != (pthread_t)-1)) {
+    if(myGlobals.dequeueAddressThreadId[i] != 0) {
       if(!do_join) {
 	safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), " DNSAR%d", i+1);
 	safe_strncat(buf, sizeofbuf, buf2);
@@ -911,11 +907,11 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 	  safe_strncat(buf, sizeofbuf, buf2);
 	} else {
 	  traceEvent(CONST_TRACE_INFO, "Signaling thread NPA(%s)",
-		     myGlobals.device[i].humanFriendlyName);	 
+		     myGlobals.device[i].humanFriendlyName);
 	  signalCondvar(&myGlobals.device[i].queueCondvar);
 	  /*
 	  traceEvent(CONST_TRACE_INFO, "Joining thread NPA(%s)",
-		     myGlobals.device[i].humanFriendlyName);	  
+		     myGlobals.device[i].humanFriendlyName);
 	  if(joinThread(&myGlobals.device[i].dequeuePacketThreadId) != 0)
 	    traceEvent(CONST_TRACE_INFO, "joinThread() returned %s", strerror(errno));
 	  else
@@ -1126,10 +1122,10 @@ RETSIGTYPE cleanup(int signo) {
 	  free(myGlobals.device[i].ipPorts[port]);
     }
 
-    if(myGlobals.device[i].ipPorts)    
+    if(myGlobals.device[i].ipPorts)
       free(myGlobals.device[i].ipPorts);
 
-    if(myGlobals.device[i].packetQueue) 
+    if(myGlobals.device[i].packetQueue)
       free(myGlobals.device[i].packetQueue);
 
     free(myGlobals.device[i].tcpSession);
@@ -1155,8 +1151,8 @@ RETSIGTYPE cleanup(int signo) {
         free(tmp);
       }
     }
-#endif  
-    
+#endif
+
     while(myGlobals.device[i].asStats) {
       AsStats *next = myGlobals.device[i].asStats->next;
       free(myGlobals.device[i].asStats);
@@ -1177,7 +1173,7 @@ RETSIGTYPE cleanup(int signo) {
 
   if(myGlobals.startedAs != NULL) free(myGlobals.startedAs);
 
-    for(idx=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
+    for(idx=0; idx<NUM_SESSION_MUTEXES; idx++) {
       tryLockMutex(&myGlobals.tcpSessionsMutex[idx], "cleanup");
       deleteMutex(&myGlobals.tcpSessionsMutex[idx]);
     }
@@ -1218,7 +1214,6 @@ RETSIGTYPE cleanup(int signo) {
   if(myGlobals.runningPref.devices != NULL) free(myGlobals.runningPref.devices);
 
   /* One day we should free myGlobals.countryFlagHead */
-
   free(myGlobals.runningPref.pcapLogBasePath);
   /* free(myGlobals.dbPath); -- later, need this to remove pid */
   if(myGlobals.spoolPath) free(myGlobals.spoolPath);

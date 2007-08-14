@@ -1825,8 +1825,8 @@ int _joinThread(char *file, int line, pthread_t *threadId) {
   int rc;
 
   if(*threadId == 0) {
-    traceEvent(CONST_NOISY_TRACE_LEVEL, file, line, "THREADMGMT: joinThread(0) call...ignored");
-    return(ESRCH);
+    /* traceEvent(CONST_NOISY_TRACE_LEVEL, file, line, "THREADMGMT: joinThread(0) call...ignored"); */
+    return(0);
   }
 
   if((rc = pthread_join(*threadId, NULL)) != 0) {
