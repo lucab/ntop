@@ -167,7 +167,7 @@ EOF
     rm -f ltconfig
     rm -f ltmain.sh
     rm -f missing
-    rm -f mkinstalldirs
+#    rm -f mkinstalldirs
     rm -f INSTALL
     rm -f COPYING
     rm -f texinfo.tex
