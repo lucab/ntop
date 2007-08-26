@@ -261,16 +261,16 @@ extern void allocDeviceMemory(int deviceId);
 
 /* Fix to the free prototype courtesy of Tanner Lovelace <lovelace@opennms.org> */
 /* Fix free() courtesy of Benoit Dolez <bdolez@exosec.fr> */
-#define free(a)       { void *__t = (a); ntop_safefree((void**)&(__t), __FILE__, __LINE__); a = __t; }
+#define free(a)       { void *__t = (a); ntop_safefree((void**)&(__t), (char*)__FILE__, (int)__LINE__); a = __t; }
 extern void           ntop_safefree(void **ptr, char* file, int line);
-#define malloc(sz)    ntop_safemalloc(sz, __FILE__, __LINE__)
+#define malloc(sz)    ntop_safemalloc((unsigned int)sz, (char*)__FILE__, (int)__LINE__)
 extern void*          ntop_safemalloc(unsigned int sz, char* file, int line);
-#define calloc(c,sz)  ntop_safecalloc(c, sz, __FILE__, __LINE__)
+#define calloc(c,sz)  ntop_safecalloc(c, sz, (char*)__FILE__, (int)__LINE__)
 extern void*          ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line);
-#define realloc(p,sz) ntop_saferealloc(p, sz, __FILE__, __LINE__)
+#define realloc(p,sz) ntop_saferealloc(p, sz, (char*)__FILE__, (int)__LINE__)
 extern void*          ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line);
 #undef strdup
-#define strdup(p)     ntop_safestrdup(p, __FILE__, __LINE__)
+#define strdup(p)     ntop_safestrdup(p, (char*)__FILE__, (int)__LINE__)
 extern char* ntop_safestrdup(char *ptr, char* file, int line);
 
 #elif defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
@@ -768,8 +768,8 @@ extern int snprintf(char *str, size_t n, const char *fmt, ...);
 		   (u_int32)*((u_int8_t *)x+0)<<0	\
 		   )
 #else
-#define ptohs(x) *(u_int16_t *)(x)
-#define ptohl(x) *(u_int32 *)(x)
+#define ptohs(x) (*(u_int16_t *)(x))
+#define ptohl(x) (*(u_int32 *)(x))
 #endif
 
 /* Conditional utility functions - code in util.c, activated if it's not already in some library */

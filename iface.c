@@ -328,7 +328,7 @@ struct iface_handler *iface_new(void) {
 
   /* Allocate memory for iface handler
    */
-  if (! (hdlr = (struct iface_handler *)calloc(1,sizeof(struct iface_handler)))){
+  if(!(hdlr = (struct iface_handler *)calloc(1, sizeof(struct iface_handler)))){
     errno = ENOMEM;
     goto failed;
   }
@@ -348,7 +348,7 @@ struct iface_handler *iface_new(void) {
       if (strncmp(itf->name, ifname,IFNAMSIZ) == 0){
 	/* update addresses*/
 	for (it = itf->addrs;it->next != NULL ; it = it->next);
-	ia = (struct iface_addr *) malloc(sizeof(struct iface_addr));
+	ia = (struct iface_addr *)malloc(sizeof(struct iface_addr));
 	ia->family = AF_INET6;
 	ia->ifi = itf;
 	in6_cpy(&ia->af.inet6.addr, &addr);
@@ -778,10 +778,8 @@ char* getIfName(char *hostname, char *community, int ifIdx,
   char buf[64];
   oid anOID[MAX_OID_LEN];
   size_t anOID_len = MAX_OID_LEN;
-
   struct variable_list *vars;
   int status;
-  int count=1;
 
   ifName_buf[0] = '\0';
 
