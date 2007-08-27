@@ -1813,12 +1813,12 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   buf4 = (char**)malloc(i);
   buf5 = (char**)malloc(i);
 
-  if((buf0 != NULL)
-     || (buf1 != NULL)
-     || (buf2 != NULL)
-     || (buf3 != NULL)
-     || (buf4 != NULL)
-     || (buf5 != NULL)) {
+  if((buf0 == NULL)
+     || (buf1 == NULL)
+     || (buf2 == NULL)
+     || (buf3 == NULL)
+     || (buf4 == NULL)
+     || (buf5 == NULL)) {
     traceEvent(CONST_TRACE_WARNING,  "Not enough memory");
     free_buf(buf0);free_buf(buf1);free_buf(buf2);free_buf(buf3);free_buf(buf4);free_buf(buf5);
     return;
