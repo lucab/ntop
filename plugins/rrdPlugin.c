@@ -98,6 +98,8 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
 static void addRrdDelay();
 
 #define MAX_NUM_RRDS 64
+#define alloc_buf(a, b, c)  { for(i=0; i<b; i++) { a[i] = (char*)calloc(sizeof(char),c); if(a[i] == NULL) no_mem = 1; }}
+#define free_buf(a, b)      { for(i=0; i<b; i++) { if(a[i] != NULL) free(a[i]); } }
 
 /* ************************************* */
 
@@ -348,7 +350,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 			 char *startTime, char* endTime) {
   char path[512] = { '\0' }, url[512] = { '\0' }, hasNetFlow;
   char buf[512] = { '\0' }, filter[64] = { '\0' }, titleBuf[128] = { '\0' };
-  char *default_str, *the_filter, rrd_filters_show[64] = { '\0' };
+  char *default_str, rrd_filters_show[64] = { '\0' };
   DIR* directoryPointer = NULL;
   struct dirent* dp;
   int i, debug = 0;
@@ -693,7 +695,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 /* ******************************************* */
 
 static int endsWith(char* label, char* pattern) {
-  int lenLabel, lenPattern;
+  size_t lenLabel, lenPattern;
 
   lenLabel   = strlen(label);
   lenPattern = strlen(pattern);
@@ -1273,25 +1275,26 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
 		_rrdName, (selected == 1) ? "selected" : "", theLabel); sendString(strbuf);
 
 static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix, char *mode) {
-  char path[512], *argv[3*MAX_NUM_ENTRIES], **buf, **buf0, **buf1, **buf2, **buf3, **buf4, tmpStr[32], metric_name[32];
+  char path[512], *argv[3*MAX_NUM_ENTRIES], *buf[MAX_NUM_ENTRIES], *buf0[MAX_NUM_ENTRIES], *buf1[MAX_NUM_ENTRIES], *buf2[MAX_NUM_ENTRIES], *buf3[MAX_NUM_ENTRIES], *buf4[MAX_NUM_ENTRIES], tmpStr[32], metric_name[32];
   char fname[384], *label, title[64], _rrdName[256];
   char **rrds = NULL;
-  int argc = 0, rc, x, y, i, entryId=0;
+  int argc = 0, rc, x, y, i, entryId=0, no_mem = 0;
   double ymin, ymax;
 
 /* ******************** */
+alloc_buf(buf, MAX_NUM_ENTRIES, MAX_BUF_LEN);
+alloc_buf(buf0, MAX_NUM_ENTRIES, MAX_BUF_LEN);
+alloc_buf(buf1, MAX_NUM_ENTRIES, MAX_BUF_LEN);
+alloc_buf(buf2, MAX_NUM_ENTRIES, MAX_BUF_LEN);
+alloc_buf(buf3, MAX_NUM_ENTRIES, MAX_BUF_LEN);
+alloc_buf(buf4, MAX_NUM_ENTRIES, MAX_BUF_LEN);
 
-  buf  = (char**)malloc(MAX_NUM_ENTRIES*MAX_BUF_LEN);
-  buf0 = (char**)malloc(MAX_NUM_ENTRIES*MAX_BUF_LEN);
-  buf1 = (char**)malloc(MAX_NUM_ENTRIES*MAX_BUF_LEN);
-  buf2 = (char**)malloc(MAX_NUM_ENTRIES*MAX_BUF_LEN);
-  buf3 = (char**)malloc(MAX_NUM_ENTRIES*MAX_BUF_LEN);
-  buf4 = (char**)malloc(MAX_NUM_ENTRIES*MAX_BUF_LEN);
 
-  if((!buf) || (!buf0) || (!buf1) || (!buf2) || (!buf3) || (!buf4)) {
+  if(no_mem) {
       traceEvent(CONST_TRACE_WARNING, "RRD: Not enough memory");
-      if(buf) free(buf); if(buf0) free(buf0); if(buf1) free(buf1);
-      if(buf2) free(buf2); if(buf3) free(buf3); if(buf4) free(buf4);
+    free_buf(buf0, MAX_NUM_ENTRIES);free_buf(buf1, MAX_NUM_ENTRIES);
+	free_buf(buf2, MAX_NUM_ENTRIES);free_buf(buf3, MAX_NUM_ENTRIES);
+	free_buf(buf4, MAX_NUM_ENTRIES);free_buf(buf, MAX_NUM_ENTRIES);
       return;
   }
 
@@ -1411,8 +1414,9 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
     sendString("</center>\n");
 
     printHTMLtrailer();
-    if(buf) free(buf); if(buf0) free(buf0); if(buf1) free(buf1);
-    if(buf2) free(buf2); if(buf3) free(buf3); if(buf4) free(buf4);
+    free_buf(buf0, MAX_NUM_ENTRIES);free_buf(buf1, MAX_NUM_ENTRIES);
+	free_buf(buf2, MAX_NUM_ENTRIES);free_buf(buf3, MAX_NUM_ENTRIES);
+	free_buf(buf4, MAX_NUM_ENTRIES);free_buf(buf, MAX_NUM_ENTRIES);
     return;
   }
 
@@ -1429,8 +1433,9 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
     printHTMLheader("RRD Graph Summary", NULL, 0);
     printFlagedWarning("<I>Error while building graph of the requested file "
 		       "(unknown RRD files)</I>");
-    if(buf) free(buf); if(buf0) free(buf0); if(buf1) free(buf1);
-    if(buf2) free(buf2); if(buf3) free(buf3); if(buf4) free(buf4);
+    free_buf(buf0, MAX_NUM_ENTRIES);free_buf(buf1, MAX_NUM_ENTRIES);
+	free_buf(buf2, MAX_NUM_ENTRIES);free_buf(buf3, MAX_NUM_ENTRIES);
+	free_buf(buf4, MAX_NUM_ENTRIES);free_buf(buf, MAX_NUM_ENTRIES);
     return;
   }
 
@@ -1580,8 +1585,9 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* 
 
   releaseMutex(&rrdMutex);
 
-  if(buf) free(buf); if(buf0) free(buf0); if(buf1) free(buf1);
-  if(buf2) free(buf2); if(buf3) free(buf3); if(buf4) free(buf4);
+    free_buf(buf0, MAX_NUM_ENTRIES);free_buf(buf1, MAX_NUM_ENTRIES);
+	free_buf(buf2, MAX_NUM_ENTRIES);free_buf(buf3, MAX_NUM_ENTRIES);
+	free_buf(buf4, MAX_NUM_ENTRIES);free_buf(buf, MAX_NUM_ENTRIES);
 }
 
 /* ******************************* */
@@ -1784,12 +1790,11 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
 #define MAX_NUM_RRD_ENTRIES     3
 #define MAX_NUM_RRD_HOSTS      32
 
-#define free_buf(a)  { if(a != NULL) free(a); }
-
 static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 			 char *startTime, char* endTime, char *rrdPrefix, char *mode) {
   char path[512], *argv[6*MAX_NUM_ENTRIES], tmpStr[32], fname[384], *label, rrdPath_copy[512];
-  char **buf0, **buf1, **buf2, **buf3, **buf4, **buf5;
+  char *buf0[MAX_NUM_ENTRIES], *buf1[MAX_NUM_ENTRIES], *buf2[MAX_NUM_ENTRIES],
+		*buf3[MAX_NUM_ENTRIES], *buf4[MAX_NUM_ENTRIES], *buf5[MAX_NUM_ENTRIES];
   char metric_name[32], title_buf[64];
   char _rrdName[256];
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
@@ -1798,29 +1803,25 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   char *rrd_custom[MAX_NUM_RRD_ENTRIES], *rrd_hosts_path[MAX_NUM_RRD_HOSTS],
     *rrd_hosts[MAX_NUM_RRD_HOSTS], file_a[32], file_b[32], *upside;
   double ymin,ymax;
-  u_int8_t upside_down = 0;
+  u_int8_t upside_down = 0, no_mem = 0;
 
   i = strlen(rrdPath); if((i > 1) && (rrdPath[i-1] == '/')) rrdPath[i-1] = '\0';
 
   path[0] = '\0', label = "";
   safe_snprintf(__FILE__, __LINE__, _rrdName, sizeof(_rrdName), "%s", rrdName);
 
-  i = sizeof(char)*MAX_NUM_ENTRIES*2*MAX_BUF_LEN;
-  buf0 = (char**)malloc(i);
-  buf1 = (char**)malloc(i);
-  buf2 = (char**)malloc(i);
-  buf3 = (char**)malloc(i);
-  buf4 = (char**)malloc(i);
-  buf5 = (char**)malloc(i);
+  alloc_buf(buf0, MAX_NUM_ENTRIES, (2*MAX_BUF_LEN));
+  alloc_buf(buf1, MAX_NUM_ENTRIES, (2*MAX_BUF_LEN));
+  alloc_buf(buf2, MAX_NUM_ENTRIES, (2*MAX_BUF_LEN));
+  alloc_buf(buf3, MAX_NUM_ENTRIES, (2*MAX_BUF_LEN));
+  alloc_buf(buf4, MAX_NUM_ENTRIES, (2*MAX_BUF_LEN));
+  alloc_buf(buf5, MAX_NUM_ENTRIES, (2*MAX_BUF_LEN));
 
-  if((buf0 == NULL)
-     || (buf1 == NULL)
-     || (buf2 == NULL)
-     || (buf3 == NULL)
-     || (buf4 == NULL)
-     || (buf5 == NULL)) {
+  if(no_mem) {
     traceEvent(CONST_TRACE_WARNING,  "Not enough memory");
-    free_buf(buf0);free_buf(buf1);free_buf(buf2);free_buf(buf3);free_buf(buf4);free_buf(buf5);
+    free_buf(buf0, MAX_NUM_ENTRIES);free_buf(buf1, MAX_NUM_ENTRIES);
+	free_buf(buf2, MAX_NUM_ENTRIES);free_buf(buf3, MAX_NUM_ENTRIES);
+	free_buf(buf4, MAX_NUM_ENTRIES);free_buf(buf5, MAX_NUM_ENTRIES);
     return;
   }
 
@@ -2064,7 +2065,9 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
     printHTMLtrailer();
 
-    free_buf(buf0);free_buf(buf1);free_buf(buf2);free_buf(buf3);free_buf(buf4);free_buf(buf5);
+    free_buf(buf0, MAX_NUM_ENTRIES);free_buf(buf1, MAX_NUM_ENTRIES);
+	free_buf(buf2, MAX_NUM_ENTRIES);free_buf(buf3, MAX_NUM_ENTRIES);
+	free_buf(buf4, MAX_NUM_ENTRIES);free_buf(buf5, MAX_NUM_ENTRIES);
     return;
   }
 
@@ -2081,7 +2084,9 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     printHTMLheader("RRD Graph Summary", NULL, 0);
     printFlagedWarning("<I>Error while building graph of the requested file "
 		       "(unknown RRD files)</I>");
-    free_buf(buf0);free_buf(buf1);free_buf(buf2);free_buf(buf3);free_buf(buf4);free_buf(buf5);
+    free_buf(buf0, MAX_NUM_ENTRIES);free_buf(buf1, MAX_NUM_ENTRIES);
+	free_buf(buf2, MAX_NUM_ENTRIES);free_buf(buf3, MAX_NUM_ENTRIES);
+	free_buf(buf4, MAX_NUM_ENTRIES);free_buf(buf5, MAX_NUM_ENTRIES);
     return;
   }
 
@@ -2195,7 +2200,8 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
 	  safe_snprintf(__FILE__, __LINE__, title_buf, sizeof(title_buf),
 			"%s", (!strncmp(rrdName, "IP_", 3)) ? &rrdName[3] : rrdName);
-	  title_buf[strlen(title_buf)-strlen(metric_name)] = '\0';
+	  if(strlen(title_buf) > strlen(metric_name))
+		title_buf[strlen(title_buf)-strlen(metric_name)] = '\0';
 
 	  if(graphId == 99) {
 	    argv[argc++] = "--title";
@@ -2280,7 +2286,9 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
   releaseMutex(&rrdMutex);
 
-  free_buf(buf0);free_buf(buf1);free_buf(buf2);free_buf(buf3);free_buf(buf4);free_buf(buf5);
+    free_buf(buf0, MAX_NUM_ENTRIES);free_buf(buf1, MAX_NUM_ENTRIES);
+	free_buf(buf2, MAX_NUM_ENTRIES);free_buf(buf3, MAX_NUM_ENTRIES);
+	free_buf(buf4, MAX_NUM_ENTRIES);free_buf(buf5, MAX_NUM_ENTRIES);
 }
 
 /* ******************************* */

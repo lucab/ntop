@@ -316,14 +316,17 @@ int main(int argc, char *argv[]) {
 #endif
   int i, rc, userSpecified;
   char ifStr[196] = {0};
-  time_t lastTime, endTime;
+  time_t lastTime;
+#ifndef WIN32
+  time_t endTime;
+#endif
   char *cmdLineBuffer, *readBuffer, *readBufferWork;
   FILE *fd;
   struct stat fileStat;
   int effective_argc;
   char **effective_argv;
-  char main_buf[LEN_GENERAL_WORK_BUFFER];
 #ifndef WIN32
+  char main_buf[LEN_GENERAL_WORK_BUFFER];
   char lib[LEN_GENERAL_WORK_BUFFER],
        env[LEN_GENERAL_WORK_BUFFER],
        buf[LEN_GENERAL_WORK_BUFFER];
@@ -510,6 +513,15 @@ printf("Unable to read serial number\n");
         (cmdLineBuffer[strlen(cmdLineBuffer)-1] == ' ')) {
       cmdLineBuffer[strlen(cmdLineBuffer)-1] = '\0';
   }
+
+#ifdef WIN32
+  {
+	int i;
+
+	for(i=0; i<strlen(cmdLineBuffer); i++)
+		if(cmdLineBuffer[i] == '\\') cmdLineBuffer[i] = '/';
+  }
+#endif
 
   effective_argv = buildargv(cmdLineBuffer); /* Build a new argv[] from the string */
   free(cmdLineBuffer);
