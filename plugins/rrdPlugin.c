@@ -343,12 +343,12 @@ static int cmpStrings(const void *_a, const void *_b)
 
 /* ******************************************* */
 
-static void listResource(char *rrdPath, char *rrdTitle, 
+static void listResource(char *rrdPath, char *rrdTitle,
 			 char *cluster, char *filterString,
 			 char *startTime, char* endTime) {
   char path[512] = { '\0' }, url[512] = { '\0' }, hasNetFlow;
   char buf[512] = { '\0' }, filter[64] = { '\0' }, titleBuf[128] = { '\0' };
-  char *default_str, *the_filter, rrd_filters_show[64] = { '\0' }; 
+  char *default_str, *the_filter, rrd_filters_show[64] = { '\0' };
   DIR* directoryPointer = NULL;
   struct dirent* dp;
   int i, debug = 0;
@@ -374,7 +374,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
   printHTMLheader(buf, NULL, 0);
   sendString("<p ALIGN=left>\n");
-  
+
   escape(titleBuf, sizeof(titleBuf), rrdTitle);
 
   if(filterString != NULL)
@@ -420,14 +420,14 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
   sendString("<tr align=left><td><form name=myform method=get>\n<b>View:</b></td><td align=left>\n"
 	     "<select name=view_presets onchange=\"send(this)\">\n");
-  
+
   if(filterString == NULL) default_str = "selected"; else default_str = "";
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s\" %s>-----</option>\n", url, default_str);
   sendString(buf);
 
   hasNetFlow = 0;
 
-  /* Check what menu need to be shown up */ 
+  /* Check what menu need to be shown up */
   if((directoryPointer = opendir(path)) != NULL) {
     while((dp = readdir(directoryPointer)) != NULL) {
       if(strncmp(dp->d_name, "NF_", 3) == 0) hasNetFlow = 1;
@@ -440,19 +440,19 @@ static void listResource(char *rrdPath, char *rrdTitle,
 	}
       }
     }
-    
+
     closedir(directoryPointer);
   }
 
   for(i=0; rrd_filters[i].name != NULL; i++) {
     if(rrd_filters_show[i]) {
       if(filterString && (!strcmp(filterString, rrd_filters[i].name))) default_str = "selected"; else default_str = "";
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&filter=%s\" %s>%s</option>\n", 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&filter=%s\" %s>%s</option>\n",
 		    url, rrd_filters[i].name, default_str, rrd_filters[i].label);
       sendString(buf);
     }
   }
-  
+
   sendString("</select></form></td></tr></table></tr>\n");
 
   /* ************************************************* */
@@ -461,7 +461,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   sendString("<TABLE BORDER=0 "TABLE_DEFAULTS">\n");
 
   if(cluster == NULL) {
-    if(hasNetFlow 
+    if(hasNetFlow
        && ((filterString == NULL) || strcasestr(filterString, "flow"))) {
       for(i=0; i<=2; i++) {
 	sendString("<TR><TD align=left>");
@@ -1204,10 +1204,10 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* en
     } else {
       // traceEvent(CONST_TRACE_WARNING, "RRD: Unable to find file %s", path);
     }
-    
+
     argv[argc++] = "--title";
     argv[argc++] = title;
-    
+
     if(entryId >= MAX_NUM_ENTRIES) break;
 
     if(entryId >= CONST_NUM_BAR_COLORS) {
@@ -1784,12 +1784,14 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
 #define MAX_NUM_RRD_ENTRIES     3
 #define MAX_NUM_RRD_HOSTS      32
 
+#define free_buf(a)  { if(a != NULL) free(a); }
+
 static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 			 char *startTime, char* endTime, char *rrdPrefix, char *mode) {
   char path[512], *argv[6*MAX_NUM_ENTRIES], tmpStr[32], fname[384], *label, rrdPath_copy[512];
-  char buf0[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf1[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf2[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
-  char buf3[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], metric_name[32], title_buf[64];
-  char buf4[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf5[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], _rrdName[256];
+  char **buf0, **buf1, **buf2, **buf3, **buf4, **buf5;
+  char metric_name[32], title_buf[64];
+  char _rrdName[256];
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
   int argc = 0, rc, x, y, i, entryId=0, num_rrd_hosts_path = 0, j;
   DIR* directoryPointer;
@@ -1802,6 +1804,26 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
   path[0] = '\0', label = "";
   safe_snprintf(__FILE__, __LINE__, _rrdName, sizeof(_rrdName), "%s", rrdName);
+
+  i = sizeof(char)*MAX_NUM_ENTRIES*2*MAX_BUF_LEN;
+  buf0 = (char**)malloc(i);
+  buf1 = (char**)malloc(i);
+  buf2 = (char**)malloc(i);
+  buf3 = (char**)malloc(i);
+  buf4 = (char**)malloc(i);
+  buf5 = (char**)malloc(i);
+
+  if((buf0 != NULL)
+     || (buf1 != NULL)
+     || (buf2 != NULL)
+     || (buf3 != NULL)
+     || (buf4 != NULL)
+     || (buf5 != NULL)) {
+    traceEvent(CONST_TRACE_WARNING,  "Not enough memory");
+    free_buf(buf0);free_buf(buf1);free_buf(buf2);free_buf(buf3);free_buf(buf4);free_buf(buf5);
+    return;
+  }
+
 
   switch(graphId) {
   case 0: rrds = (char**)rrd_summary_packets;       label = "Pkt/s"; break;
@@ -2041,6 +2063,8 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     sendString("</center>\n");
 
     printHTMLtrailer();
+
+    free_buf(buf0);free_buf(buf1);free_buf(buf2);free_buf(buf3);free_buf(buf4);free_buf(buf5);
     return;
   }
 
@@ -2057,6 +2081,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     printHTMLheader("RRD Graph Summary", NULL, 0);
     printFlagedWarning("<I>Error while building graph of the requested file "
 		       "(unknown RRD files)</I>");
+    free_buf(buf0);free_buf(buf1);free_buf(buf2);free_buf(buf3);free_buf(buf4);free_buf(buf5);
     return;
   }
 
@@ -2119,12 +2144,12 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 		    myGlobals.rrdPath, rrd_hosts_path[j], rrds[i], CONST_RRD_EXTENSION);
       revertSlashIfWIN32(path, 0);
 
-      // traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s) [%d/%d]", path, j, num_rrd_hosts_path);  
+      // traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s) [%d/%d]", path, j, num_rrd_hosts_path);
 
       if(stat(path, &statbuf) == 0) {
 	char do_upside, *str, *filename;
 	int multiplier = 1;
-	
+
 	filename = (graphId == 98) ? rrd_hosts[j] : rrds[i];
 
 	if(strcasestr(filename, "Bytes")) multiplier = 1000;
@@ -2136,13 +2161,13 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	  safe_snprintf(__FILE__, __LINE__, buf2[entryId], 2*MAX_BUF_LEN,
 			"CDEF:ctr%d=my_ctr%d,%d,*", entryId, entryId, -1 * multiplier);
 	  argv[argc++] = buf2[entryId];
-	  
+
 	  str = spacer(filename, tmpStr, sizeof(tmpStr),
 		       metric_name, sizeof(metric_name));
 
 	  safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
 			"%s:ctr%d%s:%s", "AREA",
-			entryId, 
+			entryId,
 			((graphId == 99) && is_efficiency) ? "#EBEB00" : rrd_colors[entryId],
 			(graphId == 99) ? "Rcvd" : str);
 
@@ -2162,13 +2187,13 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
 	  safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
 			"%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-			entryId, 
+			entryId,
 			((graphId == 99) && is_efficiency) ? "#B0E1B0" : rrd_colors[entryId],
 			(graphId == 99) ? "Sent" : str);
 	  argv[argc++] = buf1[entryId];
 	  do_upside = 0;
 
-	  safe_snprintf(__FILE__, __LINE__, title_buf, sizeof(title_buf), 
+	  safe_snprintf(__FILE__, __LINE__, title_buf, sizeof(title_buf),
 			"%s", (!strncmp(rrdName, "IP_", 3)) ? &rrdName[3] : rrdName);
 	  title_buf[strlen(title_buf)-strlen(metric_name)] = '\0';
 
@@ -2179,7 +2204,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	    argv[argc++] = "--title";
 	    argv[argc++] = "Historical View";
 	  }
-	  
+
 	}
 
 	if(do_upside) upside = "my_"; else upside = "";
@@ -2254,6 +2279,8 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   }
 
   releaseMutex(&rrdMutex);
+
+  free_buf(buf0);free_buf(buf1);free_buf(buf2);free_buf(buf3);free_buf(buf4);free_buf(buf5);
 }
 
 /* ******************************* */
@@ -3729,7 +3756,7 @@ static time_t parse_date(char* value) {
 
 static void handleRRDHTTPrequest(char* url) {
   char buf[1024] = { '\0' }, *strtokState, *mainState, *urlPiece,
-       rrdKey[512] = { '\0' }, rrdName[64] = { '\0' }, rrdTitle[128] = { '\0' }, 
+       rrdKey[512] = { '\0' }, rrdName[64] = { '\0' }, rrdTitle[128] = { '\0' },
        rrdCounter[64] = { '\0' }, startTime[32] = { '\0' }, endTime[32] = { '\0' },
        rrdPrefix[32] = { '\0' }, rrdIP[32] = { '\0' }, rrdInterface[64] = { '\0' },
        rrdPath[512] = { '\0' }, mode[32] = { '\0' }, cluster[32] = { '\0' }, filterString[64] = { '\0' };
@@ -4028,7 +4055,7 @@ static void handleRRDHTTPrequest(char* url) {
     interfaceSummary(rrdKey, graphId, startTime, endTime, rrdPrefix, mode);
     return;
   } else if(action == FLAG_RRD_ACTION_LIST) {
-    listResource(rrdKey, rrdTitle, cluster[0] != '\0' ? cluster : NULL, 
+    listResource(rrdKey, rrdTitle, cluster[0] != '\0' ? cluster : NULL,
 		 (filterString[0] == '\0') ? NULL : filterString, startTime, endTime);
     return;
   }
@@ -4315,7 +4342,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 
   if(!is_subnet_host) {
     if((el == myGlobals.otherHostEntry) || (el == myGlobals.broadcastEntry)
-       || broadcastHost(el) 
+       || broadcastHost(el)
        || (myGlobals.runningPref.trackOnlyLocalHosts && (!subnetPseudoLocalHost(el)))) {
       return;
     }
@@ -4358,7 +4385,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 
 	return;
       }
-    } else {  
+    } else {
       hostKey = host2networkName(el, subnet_buf, sizeof(subnet_buf));
     }
 
@@ -4369,7 +4396,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 		  is_subnet_host ? "subnet" : "hosts",
 		  adjHostName);
     mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
-    
+
     traceEventRRDebug(2, "Updating %s [%s/%s]", hostKey, el->hostNumIpAddress, el->ethAddressString);
 
     updateTrafficCounter(rrdPath, "pktSent", &el->pktSent, 0);
@@ -4388,7 +4415,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       updateTrafficCounter(rrdPath, "bytesMulticastRcvd", &el->bytesMulticastRcvd, 0);
 
       updateTrafficCounter(rrdPath, "bytesLocSent", &el->bytesSentLoc, 0);
-      updateTrafficCounter(rrdPath, "bytesRemSent", &el->bytesSentRem, 0); 
+      updateTrafficCounter(rrdPath, "bytesRemSent", &el->bytesSentRem, 0);
       updateTrafficCounter(rrdPath, "bytesLocRcvd", &el->bytesRcvdLoc, 0);
       updateTrafficCounter(rrdPath, "bytesFromRemRcvd", &el->bytesRcvdFromRem, 0);
       updateTrafficCounter(rrdPath, "ipBytesSent", &el->ipBytesSent, 0);
@@ -4482,15 +4509,15 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 
 	      if(el->protoIPTrafficInfos[j]->pktSent.value > 0) {
 		Counter c;
-		
+
 		c = el->protoIPTrafficInfos[j]->efficiencySent.value / el->protoIPTrafficInfos[j]->pktSent.value;
 		safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencySent", myGlobals.ipTrafficProtosNames[j]);
 		updateGauge(rrdPath, key, c, 0);
 	      }
-	      
+
 	      if(el->protoIPTrafficInfos[j]->pktRcvd.value > 0) {
 		Counter c;
-		
+
 		c = el->protoIPTrafficInfos[j]->efficiencyRcvd.value / el->protoIPTrafficInfos[j]->pktRcvd.value;
 		safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencyRcvd", myGlobals.ipTrafficProtosNames[j]);
 		updateGauge(rrdPath, key, c, 0);
@@ -4933,7 +4960,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	for(subnetIdx=0; subnetIdx<myGlobals.numKnownSubnets; subnetIdx++) {
 	  myGlobals.device[devIdx].networkHost[subnetIdx].known_subnet_id = subnetIdx;
-	  rrdUpdateIPHostStats(&myGlobals.device[devIdx].networkHost[subnetIdx], devIdx, 1);	
+	  rrdUpdateIPHostStats(&myGlobals.device[devIdx].networkHost[subnetIdx], devIdx, 1);
 	}
       }
     }

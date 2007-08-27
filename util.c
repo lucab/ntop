@@ -2267,7 +2267,7 @@ int _lockHostsHashMutex(HostTraffic *host, char *where, char *file, int line) {
 
 #undef _unlockHostsHashMutex
 int _unlockHostsHashMutex(HostTraffic *host, char *file, int line) {
-  int rc;
+  int rc = 0;
 
   if(host) {
 #if 0
