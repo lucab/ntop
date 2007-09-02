@@ -86,6 +86,9 @@ struct generic_netflow_record {
 
   /* VoIP Extensions */
   char sip_call_id[50], sip_calling_party[50], sip_called_party[50];
+
+  /* Efficiency */
+  u_int8_t efficiency_sent, efficiency_rcvd;
 };
 
 /* ****************************** */
@@ -725,26 +728,32 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
   if((sport != 0) && (dport != 0)) {
     if(dport < sport) {
-      if(handleIP(dport, srcHost, dstHost, len, 0, 0, 0, actualDeviceId, 1) == -1) {
-	if(handleIP(sport, srcHost, dstHost, len, 0, 0, 0, actualDeviceId, 1) == -1) {
+      if(handleIP(dport, srcHost, dstHost, len, 0, 0, 0, actualDeviceId, 1, 
+		  record->efficiency_sent, record->efficiency_rcvd) == -1) {
+	if(handleIP(sport, srcHost, dstHost, len, 0, 0, 0, actualDeviceId, 1, 
+		    record->efficiency_sent, record->efficiency_rcvd) == -1) {
 	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
 	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost,
-		     len, 0, 0, 0, actualDeviceId, 1);
+		     len, 0, 0, 0, actualDeviceId, 1,
+		     record->efficiency_sent, record->efficiency_rcvd);
 	  }
 	}
       }
     } else {
-      if(handleIP(sport, srcHost, dstHost, len, 0, 0, 0, actualDeviceId, 1) == -1) {
-	if(handleIP(dport, srcHost, dstHost, len, 0, 0, 0, actualDeviceId, 1) == -1) {
+      if(handleIP(sport, srcHost, dstHost, len, 0, 0, 0, actualDeviceId, 1, 
+		  record->efficiency_sent, record->efficiency_rcvd) == -1) {
+	if(handleIP(dport, srcHost, dstHost, len, 0, 0, 0, actualDeviceId, 1, 
+		    record->efficiency_sent, record->efficiency_rcvd) == -1) {
 	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
 	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost,
-		     len, 0, 0, 0, actualDeviceId, 1);
+		     len, 0, 0, 0, actualDeviceId, 1, 
+		     record->efficiency_sent, record->efficiency_rcvd);
 	  }
 	}
       }
@@ -1456,16 +1465,25 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		  /* VoIP Extensions */
 		case 130: /* SIP_CALL_ID */
 		  memcpy(&record.sip_call_id, &buffer[displ], 50);
-		  traceEvent(CONST_TRACE_INFO, "SIP: sip_call_id=%s", record.sip_call_id);
+		  if(0) traceEvent(CONST_TRACE_INFO, "SIP: sip_call_id=%s", record.sip_call_id);
 		  break;
 		case 131: /* SIP_CALLING_PARTY */
 		  memcpy(&record.sip_calling_party, &buffer[displ], 50);
-		  traceEvent(CONST_TRACE_INFO, "SIP: sip_calling_party=%s", record.sip_calling_party);
+		  if(0) traceEvent(CONST_TRACE_INFO, "SIP: sip_calling_party=%s", record.sip_calling_party);
 		  break;
 		case 132: /* SIP_CALLED_PARTY */
 		  memcpy(&record.sip_called_party, &buffer[displ], 50);
-		  traceEvent(CONST_TRACE_INFO, "SIP: sip_called_party=%s", record.sip_called_party);
+		  if(0) traceEvent(CONST_TRACE_INFO, "SIP: sip_called_party=%s", record.sip_called_party);
 		  break;
+
+                case 165: /* EFFICIENCY_SENT */
+                  record.efficiency_sent = buffer[displ];
+                  if(0) traceEvent(CONST_TRACE_INFO, "EFFICIENCY: efficiency_sent=%d", (int)record.efficiency_sent);
+                  break;
+                case 166: /* EFFICIENCY_RCVD */
+                  record.efficiency_rcvd = buffer[displ];
+                  if(0) traceEvent(CONST_TRACE_INFO, "EFFICIENCY: efficiency_rcvd=%d", (int)record.efficiency_rcvd);
+                  break;
 		}
 
 		accum_len += ntohs(fields[fieldId].fieldLen);
