@@ -3602,6 +3602,7 @@ static void arbitraryActionPage(void) {
   safe_snprintf(__FILE__, __LINE__, dirPath, sizeof(dirPath), "%s/interfaces", myGlobals.rrdPath);
   revertSlashIfWIN32(dirPath, 0);
   directoryPointer = opendir(dirPath);
+
   if(directoryPointer == NULL) {
     sendString("<p>No rrds found - check configuration.</p>\n");
     return;

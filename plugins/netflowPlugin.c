@@ -1031,7 +1031,7 @@ static void dumpFlow(char *buffer, int bufferLen, int deviceId) {
 
 /* ********************************************************* */
 
-#define DEBUG_FLOWS
+/* #define DEBUG_FLOWS */
 
 #ifdef DEBUG_FLOWS
 static char* nf_hex_dump(char *buf, u_short len) {
@@ -1321,7 +1321,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 	if(bufferLen > (displ+sizeof(V9FlowSet))) {
 	  FlowSetV9 *cursor = myGlobals.device[deviceId].netflowGlobals->templates;
-	  u_short tot_len = 0;
+	  u_short tot_len = 4 /* 4 bytes header */;
 
 	  memcpy(&fs, &buffer[displ], sizeof(V9FlowSet));
 
