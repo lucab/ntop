@@ -817,8 +817,8 @@ char* getIfName(char *hostname, char *community, int ifIdx,
   read_objid(buf, anOID, &anOID_len); snmp_add_null_var(pdu, anOID, anOID_len);
 
   traceEvent(CONST_TRACE_NOISY, 
-	     "Reading SNMP interface name: [host=%s][community=%s][%s]",
-	     hostname, community, buf);
+	     "Reading SNMP interface name: [host=%s][community=%s][ifIdx=%d]",
+	     hostname, community, ifIdx);
   /*
    * Send the Request out.
    */

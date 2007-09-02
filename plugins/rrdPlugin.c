@@ -1683,6 +1683,7 @@ static char* spacer(char* str, char *tmpStr, int tmpStrLen,
 
 static char* formatTitle(char *str, char *buf, u_short buf_len) {
   int len, shift = 0, not_found = 0, done = 0;
+  char *pos;
 
   if(buf_len <= (strlen(str) + 10))
     return(str); /* No much space */
@@ -1718,6 +1719,9 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "ICMP Traffic");
   } else if(!strncmp(&str[shift], "pkt", strlen("pkt"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Packets");
+  } else if((pos = strstr(&str[shift], "Efficiency"))) {
+    pos[0] = '\0';
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s", &str[shift]);
   } else if(!strncmp(&str[shift], "upTo", strlen("upTo"))) {
     int num =  atoi(&str[shift+4]);
 
@@ -2205,6 +2209,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
 	  if(graphId == 99) {
 	    argv[argc++] = "--title";
+	    traceEvent(CONST_TRACE_INFO, "RRD: --> (%s)", filename);
 	    argv[argc++] = formatTitle(filename, title_buf, sizeof(title_buf));
 	  } else if(graphId == 4) {
 	    argv[argc++] = "--title";

@@ -995,12 +995,7 @@ void handleAddressLists(char* addresses, NetworkStats theNetworks[MAX_NUM_NETWOR
     }
 
     if(sscanf(address, "%d.%d.%d.%d", &a, &b, &c, &d) != 4) {
-      traceEvent(CONST_TRACE_WARNING, "%s: Bad format '%s' - ignoring entry",
-		 flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
-		 flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-		 flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" :
-		 flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
-		 flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
+      traceEvent(CONST_TRACE_WARNING, "Bad format '%s' - ignoring entry",
 		 address);
       address = strtok_r(NULL, ",", &strtokState);
       continue;
@@ -1008,12 +1003,7 @@ void handleAddressLists(char* addresses, NetworkStats theNetworks[MAX_NUM_NETWOR
 
     if(bits == CONST_INVALIDNETMASK) {
       /* malformed netmask specification */
-      traceEvent(CONST_TRACE_WARNING, "%s: Net mask '%s' not valid - ignoring entry",
-		 flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
-		 flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-		 flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
-		 flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
-		 flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
+      traceEvent(CONST_TRACE_WARNING, "Net mask '%s' not valid - ignoring entry",
 		 mask);
       address = strtok_r(NULL, ",", &strtokState);
       continue;
@@ -1039,12 +1029,7 @@ void handleAddressLists(char* addresses, NetworkStats theNetworks[MAX_NUM_NETWOR
     if((networkMask >= 0xFFFFFF00) /* Courtesy of Roy-Magne Mo <romo@interpost.no> */
        && ((network & networkMask) != network))  {
       /* malformed network specification */
-      traceEvent(CONST_TRACE_WARNING, "%s: %d.%d.%d.%d/%d is not a valid network - correcting mask",
-		 flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
-		 flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-		 flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
-		 flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
-		 flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
+      traceEvent(CONST_TRACE_WARNING, "%d.%d.%d.%d/%d is not a valid network - correcting mask",
 		 a, b, c, d, bits);
 
       /* correcting network numbers as specified in the netmask */

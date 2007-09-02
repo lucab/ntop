@@ -1031,6 +1031,8 @@ static void dumpFlow(char *buffer, int bufferLen, int deviceId) {
 
 /* ********************************************************* */
 
+#define DEBUG_FLOWS
+
 #ifdef DEBUG_FLOWS
 static char* nf_hex_dump(char *buf, u_short len) {
   static char staticbuf[256] = { 0 };
@@ -1193,6 +1195,9 @@ static void dissectFlow(u_int32_t netflow_device_ip,
     recordSysUpTime = the5Record.flowHeader.sysUptime;
 
     for(i=0; (!done) && (displ < bufferLen) && (i < numEntries); i++) {
+
+      // traceEvent(CONST_TRACE_INFO, "buffer[displ=%d] = 0x%X", displ, buffer[displ] & 0xFF);
+
       /* 1st byte */
       if(buffer[displ] == 0) {
 	u_char isOptionTemplate = (u_char)buffer[displ+1];
@@ -1303,6 +1308,8 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	  myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9BadTemplRcvd++;
 	}
       } else {
+	/* DataFlowset */
+
 #ifdef DEBUG_FLOWS
 	traceEvent(CONST_TRACE_INFO, "Found FlowSet [displ=%d]", displ);
 #endif
@@ -1333,19 +1340,20 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	    int fieldId, init_displ;
 	    V9TemplateField *fields = cursor->fields;
 	    time_t firstSeen, lastSeen;
+	    u_short num_pdu = 1;
 
             /* initialize to zero */
 	    memset(&record, 0, sizeof(record));
 	    record.vlanId = NO_VLAN; /* No VLAN */
 
+#ifdef DEBUG_FLOWS
+	    if(1)
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d [%d...%d][%s]",
+			 fs.templateId, displ, fs.flowsetLen, nf_hex_dump(&buffer[displ], 4));
+#endif
+
 	    init_displ = displ;
 	    displ += sizeof(V9FlowSet);
-
-#ifdef DEBUG_FLOWS
-	    if(0)
-	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d [%d...%d]",
-			 fs.templateId, displ, fs.flowsetLen);
-#endif
 
 	    while(displ < (init_displ + fs.flowsetLen)) {
 	      u_short accum_len = 0;
@@ -1356,13 +1364,15 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 #ifdef DEBUG_FLOWS
 	      if(0)
 		traceEvent(CONST_TRACE_INFO, ">>>>> Stats [%d...%d]", displ, (init_displ + fs.flowsetLen));
-#endif
 
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting PDU %d", num_pdu++);
+#endif
+	      
 	      for(fieldId=0; fieldId<cursor->templateInfo.fieldCount; fieldId++) {
 		if(!(displ < (init_displ + fs.flowsetLen))) break; /* Flow too short */
 
 #ifdef DEBUG_FLOWS
-		if(0)
+		if(1)
 		  traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting flow field "
 			     "[displ=%d/%d][template=%d][fieldType=%d][fieldLen=%d][field=%d/%d] [%d...%d][%s]",
 			     displ, fs.flowsetLen,
@@ -3018,7 +3028,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
     sendString(buf);
   }
 
-#ifdef DEBUG_FLOWS
+#if 0
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
              "<tr " TR_ON ">\n"
              "<th colspan=\"2\" "DARK_BG">Debug></th>\n"
@@ -3735,7 +3745,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 #endif
 
 	    myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd++;
-	    dissectFlow(rawSample, rawSampleLen, deviceId);
+	    dissectFlow(ip.ip_src.s_addr, rawSample, rawSampleLen, deviceId);
 	  }
 	}
       } else {
