@@ -833,6 +833,9 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
     }
   }
 
+  if(myGlobals.allDevs != NULL)
+    pcap_freealldevs(myGlobals.allDevs);
+
   if(myGlobals.device != NULL) {
     for(i=0; i<myGlobals.numDevices; i++) {
       if((myGlobals.device[i].pcapDispatchThreadId != 0) &&

@@ -1491,15 +1491,14 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
   switch (configScr) {
   case showPrefBasicPref:
     {
-      pcap_if_t *devpointer;
+      pcap_if_t *devpointer = myGlobals.allDevs;
       int i, rc;
       char ebuf[CONST_SIZE_PCAP_ERR_BUF];
 
       sendString("<TR><INPUT TYPE=HIDDEN NAME=BASIC_PREFS VALUE=1>"
 		 "<TD ALIGN=LEFT "DARK_BG">Capture Interfaces (-i)</TD><TD ALIGN=LEFT>\n");
 
-      if(((rc = pcap_findalldevs(&devpointer, ebuf)) >= 0) && (devpointer != NULL)) {
-
+      if(devpointer != NULL) {
 	for (i = 0; devpointer != 0; i++) {
 	  if(strcmp(devpointer->name, "any")) {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
@@ -1512,17 +1511,11 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 
 	  devpointer = devpointer->next;
 	}
-
-	pcap_freealldevs(devpointer);
-
       } else {	
 	sendString("<INPUT TYPE=hidden name=\""NTOP_PREF_DEVICES"\" value=\"\">");
 #ifndef WIN32
-	if(myGlobals.userId == 0)
-	  traceEvent(CONST_TRACE_INFO, "pcap_findalldevs failed [rc=%d][%s]\n", rc, ebuf);
-	else
-	  sendString("<font color=red>You cannot set the capture interface: missing privileges.</font><br>"
-		     "You need to start ntop with super-user privileges [-u]");
+	sendString("<font color=red>You cannot set the capture interface: missing privileges.</font><br>"
+		   "You need to start ntop with super-user privileges [-u]");
 #endif
       }
       sendString("</TD></TR>\n");

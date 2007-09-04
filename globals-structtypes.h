@@ -2146,7 +2146,7 @@ typedef struct ntopGlobals {
   bool haveASN, haveVLANs;
 
   /* Physical and Logical network interfaces */
-
+  pcap_if_t *allDevs;      /* all devices available for pcap_open */
   u_short numDevices;      /* total network interfaces */
   NtopInterface *device;   /* pointer to the network interfaces table */
 

@@ -200,6 +200,9 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
   /* NB: we can't init rrdPath here, because initGdbm hasn't been run */
 
+  /* list of available NICs */
+  myGlobals.allDevs = NULL;
+  
   /* the table of enabled NICs */
   myGlobals.numDevices = 0;
   myGlobals.device = NULL;
