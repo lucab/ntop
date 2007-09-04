@@ -42,7 +42,7 @@ binary-arch: build install
 	cp -r ./debian/usr/ ./debian/tmp
 	cp -r ./debian/etc/ ./debian/tmp
 	cp -r ./debian/usr/ ./debian/tmp
-	-find ./debian/tmp -name CVS -exec /bin/rm -rf {} ';'
+	-find ./debian/tmp -name ".svn" -type d -exec /bin/rm -rf {} ';'
 	-find ./debian/tmp -name "*.a" -exec /bin/rm -rf {} ';'
 	dh_link
 	dh_strip

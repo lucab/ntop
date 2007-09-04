@@ -8,7 +8,7 @@ Build-Conflicts:
 
 Package: ntop
 Architecture: i386
-Depends: debconf (>= 0.2.26), librrd2, libpcap0.8, libgdbm3, libpcre3
+Depends: debconf (>= 0.2.26), librrd2, libpcap0.8, libgdbm3, libpcre3, nbox-utils
 Description: display network usage in top-like format
  ntop is a Network Top program. It displays a summary of network usage by
  machines on your network in a format reminiscent of the unix top utility.

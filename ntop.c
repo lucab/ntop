@@ -494,38 +494,52 @@ void handleProtocols(void) {
   }
 
   while(proto != NULL) {
-    char* protoName = strchr(proto, '=');
+    char* protoName;
+    int len, i, ignore_protocol;
 
-    if(protoName == NULL)
-      traceEvent(CONST_TRACE_INFO,
-		 "PROTO_INIT: Unknown protocol '%s'. It has been ignored",
-		 proto);
-    else {
-      char tmpStr[255];
-      int len;
+    ignore_protocol = 0;
 
-      protoName[0] = '\0';
-      memset(tmpStr, 0, sizeof(tmpStr));
-      strncpy(tmpStr, &protoName[1], sizeof(tmpStr));
-      len = strlen(tmpStr);
-
-      if(tmpStr[len-1] != '|') {
-	/* Make sure that the string ends with '|' */
-	tmpStr[len] = '|';
-	tmpStr[len+1] = '\0';
+    len = strlen(proto);
+    for(i=0; i<len; i++) {
+      if(iscntrl(proto[i]) || (!isascii(proto[i]))) {
+	ignore_protocol = 1;
       }
+    }
+
+    if(!ignore_protocol) {
+      protoName = strchr(proto, '=');
+
+      if(protoName == NULL)
+	traceEvent(CONST_TRACE_INFO,
+		   "PROTO_INIT: Unknown protocol '%s'. It has been ignored",
+		   proto);
+      else {
+	char tmpStr[255];
+
+	protoName[0] = '\0';
+	memset(tmpStr, 0, sizeof(tmpStr));
+	strncpy(tmpStr, &protoName[1], sizeof(tmpStr));
+	len = strlen(tmpStr);
+
+	if(tmpStr[len-1] != '|') {
+	  /* Make sure that the string ends with '|' */
+	  tmpStr[len] = '|';
+	  tmpStr[len+1] = '\0';
+	}
 
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "          %30s %s", proto, tmpStr);
+	traceEvent(CONST_TRACE_INFO, "          %30s %s", proto, tmpStr);
 #endif
 
-      handleProtocolList(proto, tmpStr);
+	handleProtocolList(proto, tmpStr);
 
+      }
     }
+
     proto = strtok_r(NULL, ",", &strtokState);
   }
 
-  if(buffer !=NULL)
+  if(buffer != NULL)
     free(buffer);
 }
 

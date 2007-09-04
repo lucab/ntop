@@ -673,7 +673,6 @@ void printTrafficStatistics(int revertOrder) {
     }
   }
 
-
   sendString("</TABLE>"TABLE_OFF);
   sendString("</TD></TR>\n");
 
@@ -4469,6 +4468,8 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 		else if(strstr(dp->d_name, "Flows")) continue;
 		else found = 1;
 	      }
+
+	      closedir(directoryPointer);
 	    }
 
 	    if(found) {
