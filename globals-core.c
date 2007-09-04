@@ -205,7 +205,13 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   
   /* the table of enabled NICs */
   myGlobals.numDevices = 0;
-  myGlobals.device = NULL;
+  myGlobals.device = calloc(MAX_NUM_DEVICES, sizeof(NtopInterface));
+
+  if(myGlobals.device == NULL) {
+    traceEvent(CONST_TRACE_WARNING, "Not enough memory :-(");
+    exit(-1);
+  }
+
 
   /* Databases */
   myGlobals.dnsCacheFile = NULL;

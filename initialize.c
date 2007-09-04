@@ -1097,7 +1097,6 @@ void allocDeviceMemory(int deviceId) {
  */
 void addDevice(char* deviceName, char* deviceDescr) {
   int i, deviceId, mallocLen, memlen;
-  NtopInterface *tmpDevice, *oldDevice;
   char *workDevices = NULL;
   char myName[80], *column = NULL, ebuf[CONST_SIZE_PCAP_ERR_BUF], tmpStr[64];
 
@@ -1109,7 +1108,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
   }
 
   /* Remove unwanted characters */
- sanitizeIfName(deviceName);
+  sanitizeIfName(deviceName);
 
   traceEvent(CONST_TRACE_NOISY, "Adding network device %s", deviceName);
 
@@ -1117,13 +1116,6 @@ void addDevice(char* deviceName, char* deviceDescr) {
     deviceId = createDummyInterface("none");
     traceEvent(CONST_TRACE_INFO, "-i none, so initialized only a dummy device");
   } else {
-    mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
-    tmpDevice = (NtopInterface*)malloc(mallocLen);
-    memset(tmpDevice, 0, mallocLen);
-    memcpy(tmpDevice, myGlobals.device, sizeof(NtopInterface)*(myGlobals.numDevices));
-    oldDevice = myGlobals.device;
-    myGlobals.device = tmpDevice;
-    if (oldDevice != NULL) free(oldDevice);
     deviceId = myGlobals.numDevices;
 
     safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "device.name.%s", deviceName);
@@ -1439,7 +1431,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
     struct in_addr myLocalHostAddress;
 
 
-    if((myGlobals.numDevices < MAX_NUM_DEVICES)
+    if((myGlobals.numDevices < (MAX_NUM_DEVICES-1))
        && strcmp(myGlobals.device[deviceId].name, "none")) {
       traceEvent(CONST_TRACE_INFO, "Checking %s for additional devices", myGlobals.device[deviceId].name);
       for(k=0; k<=MAX_NUM_DEVICES_VIRTUAL; k++) {
@@ -1450,14 +1442,6 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	traceEvent(CONST_TRACE_NOISY, "Checking %s", tmpDeviceName);
 	if(getLocalHostAddress(&myLocalHostAddress, &netmask_v6, tmpDeviceName) == 0) {
 	  /* The virtual interface exists */
-
-	  mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
-	  tmpDevice = (NtopInterface*)malloc(mallocLen);
-	  memset(tmpDevice, 0, mallocLen);
-	  memcpy(tmpDevice, myGlobals.device, sizeof(NtopInterface)*myGlobals.numDevices);
-	  free(myGlobals.device);
-	  myGlobals.device = tmpDevice;
-
 	  myGlobals.device[myGlobals.numDevices].ifAddr.s_addr = myLocalHostAddress.s_addr;
 	  if(myLocalHostAddress.s_addr == myGlobals.device[deviceId].ifAddr.s_addr)
 	    continue; /* No virtual Interfaces */
@@ -1482,8 +1466,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
   initDeviceDatalink(deviceId);
 
   if((myGlobals.actualReportDeviceId == 0) && myGlobals.device[0].dummyDevice)
-    myGlobals.actualReportDeviceId = deviceId;
-  
+    myGlobals.actualReportDeviceId = deviceId;  
 }
 
 /* ******************************* */
@@ -1887,24 +1870,11 @@ u_int createDummyInterface(char *ifName) {
 
   traceEvent(CONST_TRACE_INFO, "Creating dummy interface, '%s'", ifName);
 
-  mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
-  tmpDevice = (NtopInterface*)malloc(mallocLen);
-
-  if(tmpDevice == NULL)
-    return(-1);
-
-  memset(tmpDevice, 0, mallocLen);
-
-  if(myGlobals.numDevices > 0) {
-    NtopInterface *old_ptr = myGlobals.device;
-    memcpy(tmpDevice, myGlobals.device,
-	   sizeof(NtopInterface)*myGlobals.numDevices);
-    myGlobals.device = tmpDevice;
-    free(old_ptr);
+  if(myGlobals.numDevices >= (MAX_NUM_DEVICES-1)) {
+    traceEvent(CONST_TRACE_WARNING, "Too many devices: device '%s' can't be created", ifName);
   } else
-    myGlobals.device = tmpDevice;
+    myGlobals.numDevices++;
 
-  myGlobals.numDevices++;
   memset(&myGlobals.device[deviceId], 0, sizeof(NtopInterface));
 
   resetDevice(deviceId, 1);
