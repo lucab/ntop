@@ -138,7 +138,7 @@ int execCGI(char* cgiName) {
 #if(defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(DARWIN)
 void showPluginsList(char* pluginName) {
   FlowFilterList *flows = myGlobals.flowsList;
-  short doPrintHeader = 0;
+  short doPrintHeader = 0, status_found = 0;
   char tmpBuf[LEN_GENERAL_WORK_BUFFER], *thePlugin, tmpBuf1[LEN_GENERAL_WORK_BUFFER];
   int newPluginStatus = 0, rc=0;
 
@@ -151,6 +151,7 @@ void showPluginsList(char* pluginName) {
       if(pluginName[i] == '=') {
 	pluginName[i] = '\0';
 	newPluginStatus = atoi(&pluginName[i+1]);
+	status_found = 1;
 	break;
       }
   } else
@@ -165,6 +166,7 @@ void showPluginsList(char* pluginName) {
 	 && (flows->pluginStatus.activePlugin != newPluginStatus)) {
 	char key[64];
 
+	if(status_found) {
 	if(newPluginStatus == 0 /* disabled */) {
 	  if(flows->pluginStatus.pluginPtr->termFunct != NULL)
 	    flows->pluginStatus.pluginPtr->termFunct(0 /* term plugin */);
@@ -182,6 +184,7 @@ void showPluginsList(char* pluginName) {
 
 	storePrefsValue(key, newPluginStatus ? "1" : "0");
       }
+	  }
     }
 
     if(!thePlugin || (strcmp(flows->pluginStatus.pluginPtr->pluginURLname, thePlugin) == 0)) {
