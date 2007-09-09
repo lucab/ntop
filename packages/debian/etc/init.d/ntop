@@ -19,7 +19,9 @@ USERUNSV=1
 RUNSV="/usr/local/bin/runsv"
 RUNSV_PIDFILE="/var/run/runsv.ntop"
 TIMETOWAIT=2
-RUNSV_OPT="-p $RUNSV_PIDFILE -s $TIMETOWAIT -- "
+THRESHOLD=30
+RUNSV_OPT="-p $RUNSV_PIDFILE -s $TIMETOWAIT -S $THRESHOLD -L -- "
+
 
 
 ####################
