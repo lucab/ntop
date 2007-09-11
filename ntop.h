@@ -130,13 +130,16 @@ ntop.h
 #include <unistd.h>
 #endif
 
-#include <string.h>
-
 #if defined(__linux__)
+#ifndef  _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE /* glibc2 needs this */
 #endif
 #endif
+
+#include <string.h>
 
 #include <time.h>
 #include <signal.h>

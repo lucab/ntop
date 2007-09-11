@@ -647,6 +647,7 @@ typedef struct protoTrafficInfo {
   TrafficCounter sentLoc, sentRem;
   TrafficCounter rcvdLoc, rcvdFromRem;
   TrafficCounter pktSent, pktRcvd, efficiencySent, efficiencyRcvd;
+  TrafficCounter last_pktSent, last_pktRcvd; /* Used by the RRD plugin */
   TrafficCounter totalFlows;
 } ProtoTrafficInfo;
 

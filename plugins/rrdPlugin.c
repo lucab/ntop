@@ -813,7 +813,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   if((!strcmp(endTime, "now"))
      && (!strcmp(startTime, "now-600s")))
     show_trend = 0;
-
+ 
   rrdGraphicRequests++;
 
   if(stat(path, &statbuf) == 0) {
@@ -1809,7 +1809,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   char *buf0[MAX_NUM_ENTRIES], *buf1[MAX_NUM_ENTRIES], *buf2[MAX_NUM_ENTRIES],
     *buf3[MAX_NUM_ENTRIES], *buf4[MAX_NUM_ENTRIES], *buf5[MAX_NUM_ENTRIES];
   char metric_name[32], title_buf[64];
-  char _rrdName[256];
+  char _rrdName[256], *efficiency = NULL;
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
   int argc = 0, rc, x, y, i, entryId=0, num_rrd_hosts_path = 0, j;
   DIR* directoryPointer;
@@ -1932,7 +1932,8 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
       char *rcvd  = strstr(rrdName, "Rcvd");
       char *pkts  = strstr(rrdName, "Pkts");
       char *flows = strstr(rrdName, "Flows");
-      char *efficiency = strstr(rrdName, "Efficiency");
+      
+      efficiency = strstr(rrdName, "Efficiency");
 
       if(sent || rcvd) {
 	if(sent) sent[0]  = '\0'; else rcvd[0] = '\0';
@@ -2138,6 +2139,13 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     argv[argc++] = formatTitle(rrdName, title_buf, sizeof(title_buf));
   }
 
+  if(efficiency) {
+    argv[argc++] = "--lower-limit";
+    argv[argc++] = "-100";
+    argv[argc++] = "--upper-limit";
+    argv[argc++] = "100";
+  }
+
 #ifdef CONST_RRD_DEFAULT_FONT_NAME
   argv[argc++] = "--font";
 #ifdef CONST_RRD_DEFAULT_FONT_PATH
@@ -2220,7 +2228,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
 	  if(graphId == 99) {
 	    argv[argc++] = "--title";
-	    traceEvent(CONST_TRACE_INFO, "RRD: --> (%s)", filename);
+	    // traceEvent(CONST_TRACE_INFO, "RRD: --> (%s)", filename);
 	    argv[argc++] = formatTitle(filename, title_buf, sizeof(title_buf));
 	  } else if(graphId == 4) {
 	    argv[argc++] = "--title";
@@ -2530,25 +2538,12 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 		    "RRA:HWPREDICT:1440:0.1:0.0035:20");
       argv[argc++] = tempStr;
 
-#if DEBUG
-      if(shownCreate == 0) {
-	char buf[LEN_GENERAL_WORK_BUFFER];
-	int i;
-
-	shownCreate=1;
-
-	memset(buf, 0, sizeof(buf));
-
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", argv[4]);
-
-	for (i=5; i<argc; i++) {
-	  strncat(buf, " ", (sizeof(buf) - strlen(buf) - 1));
-	  strncat(buf, argv[i], (sizeof(buf) - strlen(buf) - 1));
-	}
-
-	traceEvent(CONST_TRACE_INFO, "RRD: rrdtool create --start now-1 file %s", buf);
+      if(0) {
+	int j;
+	
+	for(j=0; j<argc; j++)
+	  traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
       }
-#endif
 
       accessMutex(&rrdMutex, "rrd_create");
       optind=0; /* reset gnu getopt */
@@ -2720,7 +2715,7 @@ static void updateCounter(char *hostPath, char *key, Counter value, char short_s
 /* ******************************* */
 
 static void updateGauge(char *hostPath, char *key, Counter value, char short_step) {
-  /* traceEvent(CONST_TRACE_INFO, "RRD: %s = %u", key, (unsigned long)value); */
+  // traceEvent(CONST_TRACE_INFO, "RRD: %s = %u", key, (unsigned long)value); 
   updateRRD(hostPath, key, value, 0, short_step);
 }
 
@@ -3770,11 +3765,13 @@ static time_t parse_date(char* value) {
   /* 2006-07-11 10:06 */
   struct tm _tm;
 
+  // traceEvent(CONST_TRACE_WARNING, "RRD: --> %s", value);
+
   memset(&_tm, 0, sizeof(_tm));
   if(sscanf(value, "%d-%d-%d %d:%d",
-	    &_tm.tm_year, &_tm.tm_mon, &_tm.tm_mday, &_tm.tm_hour, &_tm.tm_min) == 5) {
-    --_tm.tm_mon, _tm.tm_year -= 1900;
-
+	    &_tm.tm_year, &_tm.tm_mon,
+	    &_tm.tm_mday, &_tm.tm_hour, &_tm.tm_min) == 5) {
+    --_tm.tm_mon, _tm.tm_year -= 1900, _tm.tm_hour--;    
     return(mktime(&_tm));
   } else
     return(0);
@@ -3783,510 +3780,510 @@ static time_t parse_date(char* value) {
 /* ****************************** */
 
 static void handleRRDHTTPrequest(char* url) {
-  char buf[1024] = { '\0' }, *strtokState, *mainState, *urlPiece,
-			       rrdKey[512] = { '\0' }, rrdName[64] = { '\0' }, rrdTitle[128] = { '\0' },
-										 rrdCounter[64] = { '\0' }, startTime[32] = { '\0' }, endTime[32] = { '\0' },
-																	rrdPrefix[32] = { '\0' }, rrdIP[32] = { '\0' }, rrdInterface[64] = { '\0' },
-																							  rrdPath[512] = { '\0' }, mode[32] = { '\0' }, cluster[32] = { '\0' }, filterString[64] = { '\0' };
-																							  u_char action = FLAG_RRD_ACTION_NONE;
-																							  char _which;
-																							  int _dumpDomains, _dumpFlows, _dumpSubnets, _dumpHosts, _dumpInterfaces, _dumpASs, _enableAberrant,
-																							    _dumpMatrix, _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId;
-																							  int i, len, idx;
-																							  time_t date1 = 0, date2 = 0;
-																							  char * _hostsFilter;
+  char buf[1024] = { '\0' }, *strtokState, *mainState, *urlPiece;
+  char rrdKey[512] = { '\0' }, rrdName[64] = { '\0' }, rrdTitle[128] = { '\0' };
+  char rrdCounter[64] = { '\0' }, startTime[32] = { '\0' }, endTime[32] = { '\0' };
+  char rrdPrefix[32] = { '\0' }, rrdIP[32] = { '\0' }, rrdInterface[64] = { '\0' };
+  char rrdPath[512] = { '\0' }, mode[32] = { '\0' }, cluster[32] = { '\0' }, filterString[64] = { '\0' };
+  u_char action = FLAG_RRD_ACTION_NONE;
+  char _which;
+  int _dumpDomains, _dumpFlows, _dumpSubnets, _dumpHosts, _dumpInterfaces, _dumpASs, _enableAberrant,
+    _dumpMatrix, _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId;
+  int i, len, idx;
+  time_t date1 = 0, date2 = 0;
+  char * _hostsFilter;
 #ifndef WIN32
-																							  int _dumpPermissions;
+  int _dumpPermissions;
 #endif
-																							  time_t now = time(NULL);
+  time_t now = time(NULL);
+  
+  if(initialized == 0)
+    commonRRDinit();
 
-																							  if(initialized == 0)
-																							    commonRRDinit();
+  /* Specialty pages */
+  if(strncasecmp(url, CONST_RRD_STATISTICS_HTML, strlen(CONST_RRD_STATISTICS_HTML)) == 0) {
+    statisticsPage();
+    printRRDPluginTrailer();
+    return;
+  } else if(strncasecmp(url, CONST_RRD_ARBGRAPH_HTML, strlen(CONST_RRD_ARBGRAPH_HTML)) == 0) {
+    arbitraryActionPage();
+    printRRDPluginTrailer();
+    return;
+  }
 
-																							  /* Specialty pages */
-																							  if(strncasecmp(url, CONST_RRD_STATISTICS_HTML, strlen(CONST_RRD_STATISTICS_HTML)) == 0) {
-																							    statisticsPage();
-																							    printRRDPluginTrailer();
-																							    return;
-																							  } else if(strncasecmp(url, CONST_RRD_ARBGRAPH_HTML, strlen(CONST_RRD_ARBGRAPH_HTML)) == 0) {
-																							    arbitraryActionPage();
-																							    printRRDPluginTrailer();
-																							    return;
-																							  }
-
-																							  /* Initial values - remember, for checkboxes these need to be OFF (there's no html UNCHECKED option) */
-																							  _dumpDomains=0;
-																							  _dumpFlows=0;
-																							  _dumpSubnets=0;
-																							  _dumpHosts=0;
-																							  _dumpInterfaces=0;
-																							  _dumpASs=0;
-																							  _enableAberrant=0;
-																							  _dumpMatrix=0;
-																							  _dumpDetail=CONST_RRD_DETAIL_DEFAULT;
-																							  _dumpInterval=DEFAULT_RRD_INTERVAL;
-																							  _dumpShortInterval=DEFAULT_RRD_SHORT_INTERVAL;
-																							  _dumpHours=DEFAULT_RRD_HOURS;
-																							  _dumpDays=DEFAULT_RRD_DAYS;
-																							  _dumpMonths=DEFAULT_RRD_MONTHS;
-																							  _hostsFilter = NULL;
+  /* Initial values - remember, for checkboxes these need to be OFF (there's no html UNCHECKED option) */
+  _dumpDomains=0;
+  _dumpFlows=0;
+  _dumpSubnets=0;
+  _dumpHosts=0;
+  _dumpInterfaces=0;
+  _dumpASs=0;
+  _enableAberrant=0;
+  _dumpMatrix=0;
+  _dumpDetail=CONST_RRD_DETAIL_DEFAULT;
+  _dumpInterval=DEFAULT_RRD_INTERVAL;
+  _dumpShortInterval=DEFAULT_RRD_SHORT_INTERVAL;
+  _dumpHours=DEFAULT_RRD_HOURS;
+  _dumpDays=DEFAULT_RRD_DAYS;
+  _dumpMonths=DEFAULT_RRD_MONTHS;
+  _hostsFilter = NULL;
 #ifndef WIN32
-																							  _dumpPermissions = DEFAULT_RRD_PERMISSIONS;
+  _dumpPermissions = DEFAULT_RRD_PERMISSIONS;
 #endif
-																							  _which=0;
+  _which=0;
 
-																							  safe_snprintf(__FILE__, __LINE__, startTime, sizeof(startTime), "%u", now-12*3600);
-																							  safe_snprintf(__FILE__, __LINE__, endTime, sizeof(endTime), "%u", now);
+  safe_snprintf(__FILE__, __LINE__, startTime, sizeof(startTime), "%u", now-12*3600);
+  safe_snprintf(__FILE__, __LINE__, endTime, sizeof(endTime), "%u", now);
 
-																							  if((url != NULL) && (url[0] != '\0')) {
-																							    unescape_url(url);
+  if((url != NULL) && (url[0] != '\0')) {
+    unescape_url(url);
 
-																							    /* traceEvent(CONST_TRACE_INFO, "RRD: URL=%s", url); */
+    /* traceEvent(CONST_TRACE_INFO, "RRD: URL=%s", url); */
 
-																							    urlPiece = strtok_r(url, "&", &mainState);
+    urlPiece = strtok_r(url, "&", &mainState);
 
-																							    while(urlPiece != NULL) {
-																							      char *key, *value;
+    while(urlPiece != NULL) {
+      char *key, *value;
 
-																							      key = strtok_r(urlPiece, "=", &strtokState);
-																							      if(key != NULL) value = strtok_r(NULL, "=", &strtokState); else value = NULL;
+      key = strtok_r(urlPiece, "=", &strtokState);
+      if(key != NULL) value = strtok_r(NULL, "=", &strtokState); else value = NULL;
 
-																							      /* traceEvent(CONST_TRACE_INFO, "RRD: key(%s)=%s", key, value);  */
+      /* traceEvent(CONST_TRACE_INFO, "RRD: key(%s)=%s", key, value);  */
 
-																							      if(value && key) {
+      if(value && key) {
 
-																								if(strcmp(key, "action") == 0) {
-																								  if(strcmp(value, "graph") == 0)     action = FLAG_RRD_ACTION_GRAPH;
-																								  else if(strcmp(value, CONST_ARBITRARY_RRDREQUEST) == 0) action = FLAG_RRD_ACTION_ARBITRARY;
-																								  else if(strcmp(value, "graphSummary") == 0)             action = FLAG_RRD_ACTION_GRAPH_SUMMARY;
-																								  else if(strcmp(value, "netflowSummary") == 0)           action = FLAG_RRD_ACTION_NF_SUMMARY;
-																								  else if(strcmp(value, "interfaceSummary") == 0)         action = FLAG_RRD_ACTION_IF_SUMMARY;
-																								  else if(strcmp(value, "netflowIfSummary") == 0)         action = FLAG_RRD_ACTION_NF_IF_SUMMARY;
-																								  else if(strcmp(value, "list") == 0)                     action = FLAG_RRD_ACTION_LIST;
-																								} else if(strcmp(key, "cluster") == 0) {
-																								  safe_snprintf(__FILE__, __LINE__, cluster, sizeof(cluster), "%s", value);
-																								} else if(strcmp(key, "filter") == 0) {
-																								  safe_snprintf(__FILE__, __LINE__, filterString, sizeof(filterString), "%s", value);
-																								} else if(strcmp(key, "key") == 0) {
-																								  safe_snprintf(__FILE__, __LINE__, rrdKey, sizeof(rrdKey), "%s", value);
-																								  len = strlen(rrdKey);
-																								  for(i=0; i<len; i++) if(rrdKey[i] == '+') rrdKey[i] = ' ';
+	if(strcmp(key, "action") == 0) {
+	  if(strcmp(value, "graph") == 0)     action = FLAG_RRD_ACTION_GRAPH;
+	  else if(strcmp(value, CONST_ARBITRARY_RRDREQUEST) == 0) action = FLAG_RRD_ACTION_ARBITRARY;
+	  else if(strcmp(value, "graphSummary") == 0)             action = FLAG_RRD_ACTION_GRAPH_SUMMARY;
+	  else if(strcmp(value, "netflowSummary") == 0)           action = FLAG_RRD_ACTION_NF_SUMMARY;
+	  else if(strcmp(value, "interfaceSummary") == 0)         action = FLAG_RRD_ACTION_IF_SUMMARY;
+	  else if(strcmp(value, "netflowIfSummary") == 0)         action = FLAG_RRD_ACTION_NF_IF_SUMMARY;
+	  else if(strcmp(value, "list") == 0)                     action = FLAG_RRD_ACTION_LIST;
+	} else if(strcmp(key, "cluster") == 0) {
+	  safe_snprintf(__FILE__, __LINE__, cluster, sizeof(cluster), "%s", value);
+	} else if(strcmp(key, "filter") == 0) {
+	  safe_snprintf(__FILE__, __LINE__, filterString, sizeof(filterString), "%s", value);
+	} else if(strcmp(key, "key") == 0) {
+	  safe_snprintf(__FILE__, __LINE__, rrdKey, sizeof(rrdKey), "%s", value);
+	  len = strlen(rrdKey);
+	  for(i=0; i<len; i++) if(rrdKey[i] == '+') rrdKey[i] = ' ';
 
-																								  if(strncmp(value, "hosts/", strlen("hosts/")) == 0) {
-																								    int plen, ii;
-																								    safe_snprintf(__FILE__, __LINE__, rrdPrefix, sizeof(rrdPrefix), "ip_%s_", &value[6]);
-																								    plen=strlen(rrdPrefix);
-																								    for (ii=0; ii<plen; ii++)
-																								      if( (rrdPrefix[ii] == '.') || (rrdPrefix[ii] == '/') )
-																									rrdPrefix[ii]='_';
-																								  } else {
-																								    rrdPrefix[0] = '\0';
-																								  }
-																								} else if(strcmp(key, CONST_ARBITRARY_IP) == 0) {
-																								  safe_snprintf(__FILE__, __LINE__, rrdIP, sizeof(rrdIP), "%s", value);
-																								} else if(strcmp(key, CONST_ARBITRARY_INTERFACE) == 0) {
-																								  safe_snprintf(__FILE__, __LINE__, rrdInterface, sizeof(rrdInterface), "%s", value);
-																								} else if(strcmp(key, CONST_ARBITRARY_FILE) == 0) {
-																								  safe_snprintf(__FILE__, __LINE__, rrdName, sizeof(rrdName), "%s", value);
-																								} else if(strcmp(key, "mode") == 0) {
-																								  safe_snprintf(__FILE__, __LINE__, mode, sizeof(mode), "%s", value);
-																								} else if(strcmp(key, "graphId") == 0) {
-																								  graphId = atoi(value);
-																								} else if(strcmp(key, "name") == 0) {
-																								  safe_snprintf(__FILE__, __LINE__, rrdName, sizeof(rrdName), "%s", value);
-																								  len = strlen(rrdName);
-																								  for(i=0; i<len; i++) if(rrdName[i] == '+') rrdName[i] = ' ';
-																								} else if(strcmp(key, "counter") == 0) {
-																								  safe_snprintf(__FILE__, __LINE__, rrdCounter, sizeof(rrdCounter), "%s", value);
-																								  len = strlen(rrdCounter);
-																								  for(i=0; i<len; i++) if(rrdCounter[i] == '+') rrdCounter[i] = ' ';
-																								} else if(strcmp(key, "title") == 0) {
-																								  unescape(rrdTitle, sizeof(rrdTitle), value);
-																								} else if(strcmp(key, "start") == 0) {
-																								  safe_snprintf(__FILE__, __LINE__, startTime, sizeof(startTime), "%s", value);
-																								} else if(strcmp(key, "end") == 0) {
-																								  safe_snprintf(__FILE__, __LINE__, endTime, sizeof(endTime), "%s", value);
-																								} else if(strcmp(key, "interval") == 0) {
-																								  _dumpInterval = atoi(value);
-																								  if(_dumpInterval < 1) _dumpInterval = 1 /* Min 1 second */;
-																								} else if(strcmp(key, "shortinterval") == 0) {
-																								  _dumpShortInterval = atoi(value);
-																								  if(_dumpShortInterval < 1) _dumpShortInterval = 1 /* Min 1 second */;
-																								} else if(strcmp(key, "days") == 0) {
-																								  _dumpDays = atoi(value);
-																								  if(_dumpDays < 0) _dumpDays = 0 /* Min none */;
-																								} else if(strcmp(key, "hours") == 0) {
-																								  _dumpHours = atoi(value);
-																								  if(_dumpHours < 0) _dumpHours = 0 /* Min none */;
-																								} else if(strcmp(key, "months") == 0) {
-																								  _dumpMonths = atoi(value);
-																								  if(_dumpMonths < 0) _dumpMonths = 0 /* Min none */;
-																								} else if(strcmp(key, "hostsFilter") == 0) {
-																								  _hostsFilter = strdup(value);
-																								} else if(strcmp(key, "rrdPath") == 0) {
-																								  int vlen = strlen(value)+1;
-																								  idx = 0;
-																								  vlen -= idx;
-																								  if(myGlobals.rrdPath != NULL) free(myGlobals.rrdPath);
-																								  myGlobals.rrdPath  = (char*)malloc(vlen);
-																								  unescape(myGlobals.rrdPath, vlen, &value[idx]);
-																								  revertSlashIfWIN32(myGlobals.rrdPath, 0);
-																								  storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
-																								} else if(strcmp(key, "dumpDomains") == 0) {
-																								  _dumpDomains = 1;
-																								} else if(strcmp(key, "dumpFlows") == 0) {
-																								  _dumpFlows = 1;
-																								} else if(strcmp(key, "dumpSubnets") == 0) {
-																								  _dumpSubnets = 1;
-																								} else if(strcmp(key, "dumpDetail") == 0) {
-																								  _dumpDetail = atoi(value);
-																								  if(_dumpDetail > FLAG_RRD_DETAIL_HIGH) _dumpDetail = FLAG_RRD_DETAIL_HIGH;
-																								  if(_dumpDetail < FLAG_RRD_DETAIL_LOW)  _dumpDetail = FLAG_RRD_DETAIL_LOW;
-																								} else if(strcmp(key, "dumpHosts") == 0) {
-																								  _dumpHosts = 1;
-																								} else if(strcmp(key, "dumpInterfaces") == 0) {
-																								  _dumpInterfaces = 1;
-																								} else if(strcmp(key, "dumpASs") == 0) {
-																								  _dumpASs = 1;
-																								} else if(strcmp(key, "enableAberrant") == 0) {
-																								  _enableAberrant = atoi(value);
-																								} else if(strcmp(key, "dumpMatrix") == 0) {
-																								  _dumpMatrix = 1;
+	  if(strncmp(value, "hosts/", strlen("hosts/")) == 0) {
+	    int plen, ii;
+	    safe_snprintf(__FILE__, __LINE__, rrdPrefix, sizeof(rrdPrefix), "ip_%s_", &value[6]);
+	    plen=strlen(rrdPrefix);
+	    for (ii=0; ii<plen; ii++)
+	      if( (rrdPrefix[ii] == '.') || (rrdPrefix[ii] == '/') )
+		rrdPrefix[ii]='_';
+	  } else {
+	    rrdPrefix[0] = '\0';
+	  }
+	} else if(strcmp(key, CONST_ARBITRARY_IP) == 0) {
+	  safe_snprintf(__FILE__, __LINE__, rrdIP, sizeof(rrdIP), "%s", value);
+	} else if(strcmp(key, CONST_ARBITRARY_INTERFACE) == 0) {
+	  safe_snprintf(__FILE__, __LINE__, rrdInterface, sizeof(rrdInterface), "%s", value);
+	} else if(strcmp(key, CONST_ARBITRARY_FILE) == 0) {
+	  safe_snprintf(__FILE__, __LINE__, rrdName, sizeof(rrdName), "%s", value);
+	} else if(strcmp(key, "mode") == 0) {
+	  safe_snprintf(__FILE__, __LINE__, mode, sizeof(mode), "%s", value);
+	} else if(strcmp(key, "graphId") == 0) {
+	  graphId = atoi(value);
+	} else if(strcmp(key, "name") == 0) {
+	  safe_snprintf(__FILE__, __LINE__, rrdName, sizeof(rrdName), "%s", value);
+	  len = strlen(rrdName);
+	  for(i=0; i<len; i++) if(rrdName[i] == '+') rrdName[i] = ' ';
+	} else if(strcmp(key, "counter") == 0) {
+	  safe_snprintf(__FILE__, __LINE__, rrdCounter, sizeof(rrdCounter), "%s", value);
+	  len = strlen(rrdCounter);
+	  for(i=0; i<len; i++) if(rrdCounter[i] == '+') rrdCounter[i] = ' ';
+	} else if(strcmp(key, "title") == 0) {
+	  unescape(rrdTitle, sizeof(rrdTitle), value);
+	} else if(strcmp(key, "start") == 0) {
+	  safe_snprintf(__FILE__, __LINE__, startTime, sizeof(startTime), "%s", value);
+	} else if(strcmp(key, "end") == 0) {
+	  safe_snprintf(__FILE__, __LINE__, endTime, sizeof(endTime), "%s", value);
+	} else if(strcmp(key, "interval") == 0) {
+	  _dumpInterval = atoi(value);
+	  if(_dumpInterval < 1) _dumpInterval = 1 /* Min 1 second */;
+	} else if(strcmp(key, "shortinterval") == 0) {
+	  _dumpShortInterval = atoi(value);
+	  if(_dumpShortInterval < 1) _dumpShortInterval = 1 /* Min 1 second */;
+	} else if(strcmp(key, "days") == 0) {
+	  _dumpDays = atoi(value);
+	  if(_dumpDays < 0) _dumpDays = 0 /* Min none */;
+	} else if(strcmp(key, "hours") == 0) {
+	  _dumpHours = atoi(value);
+	  if(_dumpHours < 0) _dumpHours = 0 /* Min none */;
+	} else if(strcmp(key, "months") == 0) {
+	  _dumpMonths = atoi(value);
+	  if(_dumpMonths < 0) _dumpMonths = 0 /* Min none */;
+	} else if(strcmp(key, "hostsFilter") == 0) {
+	  _hostsFilter = strdup(value);
+	} else if(strcmp(key, "rrdPath") == 0) {
+	  int vlen = strlen(value)+1;
+	  idx = 0;
+	  vlen -= idx;
+	  if(myGlobals.rrdPath != NULL) free(myGlobals.rrdPath);
+	  myGlobals.rrdPath  = (char*)malloc(vlen);
+	  unescape(myGlobals.rrdPath, vlen, &value[idx]);
+	  revertSlashIfWIN32(myGlobals.rrdPath, 0);
+	  storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
+	} else if(strcmp(key, "dumpDomains") == 0) {
+	  _dumpDomains = 1;
+	} else if(strcmp(key, "dumpFlows") == 0) {
+	  _dumpFlows = 1;
+	} else if(strcmp(key, "dumpSubnets") == 0) {
+	  _dumpSubnets = 1;
+	} else if(strcmp(key, "dumpDetail") == 0) {
+	  _dumpDetail = atoi(value);
+	  if(_dumpDetail > FLAG_RRD_DETAIL_HIGH) _dumpDetail = FLAG_RRD_DETAIL_HIGH;
+	  if(_dumpDetail < FLAG_RRD_DETAIL_LOW)  _dumpDetail = FLAG_RRD_DETAIL_LOW;
+	} else if(strcmp(key, "dumpHosts") == 0) {
+	  _dumpHosts = 1;
+	} else if(strcmp(key, "dumpInterfaces") == 0) {
+	  _dumpInterfaces = 1;
+	} else if(strcmp(key, "dumpASs") == 0) {
+	  _dumpASs = 1;
+	} else if(strcmp(key, "enableAberrant") == 0) {
+	  _enableAberrant = atoi(value);
+	} else if(strcmp(key, "dumpMatrix") == 0) {
+	  _dumpMatrix = 1;
 #ifndef WIN32
-																								} else if(strcmp(key, "permissions") == 0) {
-																								  _dumpPermissions = atoi(value);
-																								  if((_dumpPermissions != CONST_RRD_PERMISSIONS_PRIVATE) &&
-																								     (_dumpPermissions != CONST_RRD_PERMISSIONS_GROUP) &&
-																								     (_dumpPermissions != CONST_RRD_PERMISSIONS_EVERYONE)) {
-																								    _dumpPermissions = DEFAULT_RRD_PERMISSIONS;
-																								  }
+	} else if(strcmp(key, "permissions") == 0) {
+	  _dumpPermissions = atoi(value);
+	  if((_dumpPermissions != CONST_RRD_PERMISSIONS_PRIVATE) &&
+	     (_dumpPermissions != CONST_RRD_PERMISSIONS_GROUP) &&
+	     (_dumpPermissions != CONST_RRD_PERMISSIONS_EVERYONE)) {
+	    _dumpPermissions = DEFAULT_RRD_PERMISSIONS;
+	  }
 #endif
-																								} else if(strcmp(key, "which") == 0) {
-																								  _which = value[0];
-																								} else if(strcmp(key, "date1") == 0) {
-																								  date1 = parse_date(value);
-																								} else if(strcmp(key, "date2") == 0) {
-																								  date2 = parse_date(value);
-																								}
-																							      }
+	} else if(strcmp(key, "which") == 0) {
+	  _which = value[0];
+	} else if(strcmp(key, "date1") == 0) {
+	  date1 = parse_date(value);
+	} else if(strcmp(key, "date2") == 0) {
+	  date2 = parse_date(value);
+	}
+      }
 
-																							      urlPiece = strtok_r(NULL, "&", &mainState);
-																							    }
+      urlPiece = strtok_r(NULL, "&", &mainState);
+    }
 
-																							    if(date1 > 0) safe_snprintf(__FILE__, __LINE__, startTime, sizeof(startTime), "%d", date1);
-																							    if(date2 > 0) safe_snprintf(__FILE__, __LINE__, endTime,   sizeof(endTime),   "%d", date2);
+    if(date1 > 0) safe_snprintf(__FILE__, __LINE__, startTime, sizeof(startTime), "%d", date1);
+    if(date2 > 0) safe_snprintf(__FILE__, __LINE__, endTime,   sizeof(endTime),   "%d", date2);
 
-																							    if(action == FLAG_RRD_ACTION_NONE) {
-																							      dumpInterval = _dumpInterval;
+    if(action == FLAG_RRD_ACTION_NONE) {
+      dumpInterval = _dumpInterval;
 
 
-																							      if(dumpShortInterval != _dumpShortInterval) {
-																								int devIdx;
+      if(dumpShortInterval != _dumpShortInterval) {
+	int devIdx;
 
-																								dumpShortInterval = _dumpShortInterval;
+	dumpShortInterval = _dumpShortInterval;
 
-																								for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
-																								  if((myGlobals.device[devIdx].virtualDevice && (!myGlobals.device[devIdx].sflowGlobals))
-																								     || (!myGlobals.device[devIdx].activeDevice))
-																								    continue;
+	for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
+	  if((myGlobals.device[devIdx].virtualDevice && (!myGlobals.device[devIdx].sflowGlobals))
+	     || (!myGlobals.device[devIdx].activeDevice))
+	    continue;
 
-																								  safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath),
-																										"%s/interfaces/%s/", myGlobals.spoolPath,
-																										myGlobals.device[devIdx].uniqueIfName);
-																								  deleteRRD(rrdPath, "throughput");
-																								}
-																							      }
+	  safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath),
+			"%s/interfaces/%s/", myGlobals.spoolPath,
+			myGlobals.device[devIdx].uniqueIfName);
+	  deleteRRD(rrdPath, "throughput");
+	}
+      }
 
-																							      dumpHours = _dumpHours;
-																							      dumpDays = _dumpDays;
-																							      dumpMonths = _dumpMonths;
-																							      dumpDomains = _dumpDomains;
-																							      dumpFlows = _dumpFlows;
-																							      dumpSubnets = _dumpSubnets;
-																							      dumpHosts = _dumpHosts;
-																							      dumpInterfaces = _dumpInterfaces;
-																							      dumpASs = _dumpASs;
-																							      enableAberrant = _enableAberrant;
-																							      dumpMatrix = _dumpMatrix;
-																							      dumpDetail = _dumpDetail;
+      dumpHours = _dumpHours;
+      dumpDays = _dumpDays;
+      dumpMonths = _dumpMonths;
+      dumpDomains = _dumpDomains;
+      dumpFlows = _dumpFlows;
+      dumpSubnets = _dumpSubnets;
+      dumpHosts = _dumpHosts;
+      dumpInterfaces = _dumpInterfaces;
+      dumpASs = _dumpASs;
+      enableAberrant = _enableAberrant;
+      dumpMatrix = _dumpMatrix;
+      dumpDetail = _dumpDetail;
 #ifndef WIN32
-																							      dumpPermissions = _dumpPermissions;
-																							      setGlobalPermissions(_dumpPermissions);
+      dumpPermissions = _dumpPermissions;
+      setGlobalPermissions(_dumpPermissions);
 #endif
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpInterval);
-																							      storePrefsValue("rrd.dataDumpInterval", buf);
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpShortInterval);
-																							      storePrefsValue("rrd.dumpShortInterval", buf);
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpHours);
-																							      storePrefsValue("rrd.dataDumpHours", buf);
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDays);
-																							      storePrefsValue("rrd.dataDumpDays", buf);
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpMonths);
-																							      storePrefsValue("rrd.dataDumpMonths", buf);
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDomains);
-																							      storePrefsValue("rrd.dataDumpDomains", buf);
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpFlows);
-																							      storePrefsValue("rrd.dataDumpFlows", buf);
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpSubnets);
-																							      storePrefsValue("rrd.dataDumpSubnets", buf);
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpHosts);
-																							      storePrefsValue("rrd.dataDumpHosts", buf);
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpInterfaces);
-																							      storePrefsValue("rrd.dataDumpInterfaces", buf);
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpASs);
-																							      storePrefsValue("rrd.dumpASs", buf);
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", enableAberrant);
-																							      storePrefsValue("rrd.enableAberrant", buf);
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpMatrix);
-																							      storePrefsValue("rrd.dataDumpMatrix", buf);
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDetail);
-																							      storePrefsValue("rrd.dataDumpDetail", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpInterval);
+      storePrefsValue("rrd.dataDumpInterval", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpShortInterval);
+      storePrefsValue("rrd.dumpShortInterval", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpHours);
+      storePrefsValue("rrd.dataDumpHours", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDays);
+      storePrefsValue("rrd.dataDumpDays", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpMonths);
+      storePrefsValue("rrd.dataDumpMonths", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDomains);
+      storePrefsValue("rrd.dataDumpDomains", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpFlows);
+      storePrefsValue("rrd.dataDumpFlows", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpSubnets);
+      storePrefsValue("rrd.dataDumpSubnets", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpHosts);
+      storePrefsValue("rrd.dataDumpHosts", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpInterfaces);
+      storePrefsValue("rrd.dataDumpInterfaces", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpASs);
+      storePrefsValue("rrd.dumpASs", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", enableAberrant);
+      storePrefsValue("rrd.enableAberrant", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpMatrix);
+      storePrefsValue("rrd.dataDumpMatrix", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDetail);
+      storePrefsValue("rrd.dataDumpDetail", buf);
 
-																							      if(_hostsFilter != NULL) {
-																								if(hostsFilter != NULL) free(hostsFilter);
-																								hostsFilter = _hostsFilter;
-																								_hostsFilter = NULL;
-																							      }
-																							      storePrefsValue("rrd.hostsFilter", hostsFilter);
+      if(_hostsFilter != NULL) {
+	if(hostsFilter != NULL) free(hostsFilter);
+	hostsFilter = _hostsFilter;
+	_hostsFilter = NULL;
+      }
+      storePrefsValue("rrd.hostsFilter", hostsFilter);
 #ifndef WIN32
-																							      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpPermissions);
-																							      storePrefsValue("rrd.permissions", buf);
-																							      umask(myGlobals.rrdUmask);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpPermissions);
+      storePrefsValue("rrd.permissions", buf);
+      umask(myGlobals.rrdUmask);
 #ifdef RRD_DEBUG
-																							      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Mask for new directories set to %04o",
-																									 myGlobals.rrdDirectoryPermissions);
-																							      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Mask for new files set to %04o",
-																									 myGlobals.rrdUmask);
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Mask for new directories set to %04o",
+		 myGlobals.rrdDirectoryPermissions);
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Mask for new files set to %04o",
+		 myGlobals.rrdUmask);
 #endif
 #endif
-																							      shownCreate=0;
-																							    }
-																							  }
+      shownCreate=0;
+    }
+  }
 
 
-																							  /* traceEvent(CONST_TRACE_INFO, "RRD: action=%d", action); */
+  /* traceEvent(CONST_TRACE_INFO, "RRD: action=%d", action); */
 
-																							  if(action == FLAG_RRD_ACTION_GRAPH) {
-																							    graphCounter(rrdKey, rrdName, NULL, rrdCounter, startTime, endTime, rrdPrefix);
-																							    return;
-																							  } else if(action == FLAG_RRD_ACTION_ARBITRARY) {
-																							    arbitraryAction(rrdName, rrdInterface, rrdIP, startTime, endTime, rrdCounter, rrdTitle, _which, mode);
-																							    return;
-																							  } else if(action == FLAG_RRD_ACTION_GRAPH_SUMMARY) {
-																							    graphSummary(rrdKey, rrdName, graphId, startTime, endTime, rrdPrefix, mode);
-																							    return;
-																							  } else if(action == FLAG_RRD_ACTION_NF_SUMMARY) {
-																							    netflowSummary(rrdKey, graphId, startTime, endTime, rrdPrefix, mode);
-																							    return;
-																							  } else if((action == FLAG_RRD_ACTION_NF_IF_SUMMARY) || (action == FLAG_RRD_ACTION_IF_SUMMARY)) {
-																							    interfaceSummary(rrdKey, graphId, startTime, endTime, rrdPrefix, mode);
-																							    return;
-																							  } else if(action == FLAG_RRD_ACTION_LIST) {
-																							    listResource(rrdKey, rrdTitle, cluster[0] != '\0' ? cluster : NULL,
-																									 (filterString[0] == '\0') ? NULL : filterString, startTime, endTime);
-																							    return;
-																							  }
+  if(action == FLAG_RRD_ACTION_GRAPH) {
+    graphCounter(rrdKey, rrdName, NULL, rrdCounter, startTime, endTime, rrdPrefix);
+    return;
+  } else if(action == FLAG_RRD_ACTION_ARBITRARY) {
+    arbitraryAction(rrdName, rrdInterface, rrdIP, startTime, endTime, rrdCounter, rrdTitle, _which, mode);
+    return;
+  } else if(action == FLAG_RRD_ACTION_GRAPH_SUMMARY) {
+    graphSummary(rrdKey, rrdName, graphId, startTime, endTime, rrdPrefix, mode);
+    return;
+  } else if(action == FLAG_RRD_ACTION_NF_SUMMARY) {
+    netflowSummary(rrdKey, graphId, startTime, endTime, rrdPrefix, mode);
+    return;
+  } else if((action == FLAG_RRD_ACTION_NF_IF_SUMMARY) || (action == FLAG_RRD_ACTION_IF_SUMMARY)) {
+    interfaceSummary(rrdKey, graphId, startTime, endTime, rrdPrefix, mode);
+    return;
+  } else if(action == FLAG_RRD_ACTION_LIST) {
+    listResource(rrdKey, rrdTitle, cluster[0] != '\0' ? cluster : NULL,
+		 (filterString[0] == '\0') ? NULL : filterString, startTime, endTime);
+    return;
+  }
 
-																							  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-																							  printHTMLheader("RRD Preferences", NULL, 0);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+  printHTMLheader("RRD Preferences", NULL, 0);
 
-																							  if(active == 1)
-																							    sendString("<p>You must restart the rrd plugin for changes here to take affect.</p>\n");
-																							  else
-																							    sendString("<p>Changes here will take effect when the plugin is started.</p>\n");
+  if(active == 1)
+    sendString("<p>You must restart the rrd plugin for changes here to take affect.</p>\n");
+  else
+    sendString("<p>Changes here will take effect when the plugin is started.</p>\n");
 
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-																									"<center><form action=\"/" CONST_PLUGINS_HEADER "%s\" method=GET>\n"
-																									"<table border=\"1\"  width=\"80%%\" "TABLE_DEFAULTS">\n"
-																									"<tr><th align=\"center\" "DARK_BG">Item</th>"
-																									"<th align=\"center\" "DARK_BG">Description and Notes</th></tr>\n"
-																									"<tr><th align=\"left\" "DARK_BG">Dump Interval</th><td>"
-																									"<INPUT NAME=interval SIZE=5 VALUE=",
-																									rrdPluginInfo->pluginURLname);
-																							  sendString(buf);
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpInterval);
-																							  sendString(buf);
-																							  sendString("> seconds<br>Specifies how often data is stored permanently.</td></tr>\n");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		"<center><form action=\"/" CONST_PLUGINS_HEADER "%s\" method=GET>\n"
+		"<table border=\"1\"  width=\"80%%\" "TABLE_DEFAULTS">\n"
+		"<tr><th align=\"center\" "DARK_BG">Item</th>"
+		"<th align=\"center\" "DARK_BG">Description and Notes</th></tr>\n"
+		"<tr><th align=\"left\" "DARK_BG">Dump Interval</th><td>"
+		"<INPUT NAME=interval SIZE=5 VALUE=",
+		rrdPluginInfo->pluginURLname);
+  sendString(buf);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpInterval);
+  sendString(buf);
+  sendString("> seconds<br>Specifies how often data is stored permanently.</td></tr>\n");
 
-																							  sendString("<tr><th align=\"left\" "DARK_BG">Throughput Granularity</th><td>"
-																								     "<INPUT NAME=shortinterval SIZE=5 VALUE=");
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpShortInterval);
-																							  sendString(buf);
-																							  sendString("> seconds<br>Specifies how often <A HREF=/"CONST_SORT_DATA_THPT_STATS_HTML">throughput</A> data is stored permanently.<br>"
-																								     "<FONT COLOR=red><b>Note</b></FONT>: if you change this value the throughput stats will be reset "
-																								     "and past values will be lost. You've been warned!</td></tr>\n");
+  sendString("<tr><th align=\"left\" "DARK_BG">Throughput Granularity</th><td>"
+	     "<INPUT NAME=shortinterval SIZE=5 VALUE=");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpShortInterval);
+  sendString(buf);
+  sendString("> seconds<br>Specifies how often <A HREF=/"CONST_SORT_DATA_THPT_STATS_HTML">throughput</A> data is stored permanently.<br>"
+	     "<FONT COLOR=red><b>Note</b></FONT>: if you change this value the throughput stats will be reset "
+	     "and past values will be lost. You've been warned!</td></tr>\n");
 
-																							  sendString("<tr><th align=\"left\" "DARK_BG">Dump Hours</th><td>"
-																								     "<INPUT NAME=hours SIZE=5 VALUE=");
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpHours);
-																							  sendString(buf);
-																							  sendString("><br>Specifies how many hours of 'interval' data is stored permanently.</td></tr>\n");
+  sendString("<tr><th align=\"left\" "DARK_BG">Dump Hours</th><td>"
+	     "<INPUT NAME=hours SIZE=5 VALUE=");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpHours);
+  sendString(buf);
+  sendString("><br>Specifies how many hours of 'interval' data is stored permanently.</td></tr>\n");
 
-																							  sendString("<tr><th align=\"left\" "DARK_BG">Dump Days</th><td>"
-																								     "<INPUT NAME=days SIZE=5 VALUE=");
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpDays);
-																							  sendString(buf);
-																							  sendString("><br>Specifies how many days of hourly data is stored permanently.</td></tr>\n");
+  sendString("<tr><th align=\"left\" "DARK_BG">Dump Days</th><td>"
+	     "<INPUT NAME=days SIZE=5 VALUE=");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpDays);
+  sendString(buf);
+  sendString("><br>Specifies how many days of hourly data is stored permanently.</td></tr>\n");
 
-																							  sendString("<tr><th align=\"left\" "DARK_BG">Dump Months</th><td>"
-																								     "<INPUT NAME=months SIZE=5 VALUE=");
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpMonths);
-																							  sendString(buf);
-																							  sendString("><br>Specifies how many months (30 days) of daily data is stored permanently.</td></tr>\n");
+  sendString("<tr><th align=\"left\" "DARK_BG">Dump Months</th><td>"
+	     "<INPUT NAME=months SIZE=5 VALUE=");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpMonths);
+  sendString(buf);
+  sendString("><br>Specifies how many months (30 days) of daily data is stored permanently.</td></tr>\n");
 
-																							  sendString("<tr><td align=\"center\" COLSPAN=2><B>WARNING:</B>&nbsp;"
-																								     "Changes to the above values will ONLY affect NEW rrds</td></tr>");
+  sendString("<tr><td align=\"center\" COLSPAN=2><B>WARNING:</B>&nbsp;"
+	     "Changes to the above values will ONLY affect NEW rrds</td></tr>");
 
-																							  sendString("<tr><th align=\"left\" "DARK_BG">RRD Update Delay</th><td>"
-																								     "<INPUT NAME=delay, SIZE=5 VALUE=");
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpDelay);
-																							  sendString(buf);
+  sendString("<tr><th align=\"left\" "DARK_BG">RRD Update Delay</th><td>"
+	     "<INPUT NAME=delay, SIZE=5 VALUE=");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpDelay);
+  sendString(buf);
 
-																							  sendString("><br>Specifies how many ms to wait between two consecutive RRD updates. Increase this value to distribute RRD load on I/O over the time. Note that a combination of large delays and many RRDs to update can slow down the RRD plugin performance</td></tr>\n");
+  sendString("><br>Specifies how many ms to wait between two consecutive RRD updates. Increase this value to distribute RRD load on I/O over the time. Note that a combination of large delays and many RRDs to update can slow down the RRD plugin performance</td></tr>\n");
 
-																							  sendString("<tr><th align=\"left\" "DARK_BG">Data to Dump</th><td>");
+  sendString("<tr><th align=\"left\" "DARK_BG">Data to Dump</th><td>");
 
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpDomains VALUE=1 %s> Domains<br>\n",
-																									dumpDomains ? "CHECKED" : "" );
-																							  sendString(buf);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpDomains VALUE=1 %s> Domains<br>\n",
+		dumpDomains ? "CHECKED" : "" );
+  sendString(buf);
 
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpFlows VALUE=1 %s> Flows<br>\n",
-																									dumpFlows ? "CHECKED" : "" );
-																							  sendString(buf);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpFlows VALUE=1 %s> Flows<br>\n",
+		dumpFlows ? "CHECKED" : "" );
+  sendString(buf);
 
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpSubnets VALUE=1 %s> Subnets<br>\n",
-																									dumpSubnets ? "CHECKED" : "" );
-																							  sendString(buf);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpSubnets VALUE=1 %s> Subnets<br>\n",
+		dumpSubnets ? "CHECKED" : "" );
+  sendString(buf);
 
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpHosts VALUE=1 %s> Hosts<br>\n",
-																									dumpHosts ? "CHECKED" : "");
-																							  sendString(buf);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpHosts VALUE=1 %s> Hosts<br>\n",
+		dumpHosts ? "CHECKED" : "");
+  sendString(buf);
 
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpInterfaces VALUE=1 %s> Interfaces<br>\n",
-																									dumpInterfaces ? "CHECKED" : "");
-																							  sendString(buf);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpInterfaces VALUE=1 %s> Interfaces<br>\n",
+		dumpInterfaces ? "CHECKED" : "");
+  sendString(buf);
 
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpASs VALUE=1 %s> ASs<br>\n",
-																									dumpASs ? "CHECKED" : "");
-																							  sendString(buf);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpASs VALUE=1 %s> ASs<br>\n",
+		dumpASs ? "CHECKED" : "");
+  sendString(buf);
 
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpMatrix VALUE=1 %s> Matrix<br>\n",
-																									dumpMatrix ? "CHECKED" : "");
-																							  sendString(buf);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpMatrix VALUE=1 %s> Matrix<br>\n",
+		dumpMatrix ? "CHECKED" : "");
+  sendString(buf);
 
-																							  sendString("</td></tr>\n");
+  sendString("</td></tr>\n");
 
-																							  if(dumpHosts) {
-																							    sendString("<tr><th align=\"left\" "DARK_BG">Hosts Filter</th><td>"
-																								       "<INPUT NAME=hostsFilter VALUE=\"");
+  if(dumpHosts) {
+    sendString("<tr><th align=\"left\" "DARK_BG">Hosts Filter</th><td>"
+	       "<INPUT NAME=hostsFilter VALUE=\"");
 
-																							    sendString(hostsFilter);
+    sendString(hostsFilter);
 
-																							    sendString("\" SIZE=80><br>A list of networks [e.g. 172.22.0.0/255.255.0.0,192.168.5.0/255.255.255.0]<br>"
-																								       "separated by commas to which hosts that will be<br>"
-																								       "saved must belong to. An empty list means that all the hosts will "
-																								       "be stored on disk</td></tr>\n");
-																							  }
+    sendString("\" SIZE=80><br>A list of networks [e.g. 172.22.0.0/255.255.0.0,192.168.5.0/255.255.255.0]<br>"
+	       "separated by commas to which hosts that will be<br>"
+	       "saved must belong to. An empty list means that all the hosts will "
+	       "be stored on disk</td></tr>\n");
+  }
 
-																							  /* ******************************** */
+  /* ******************************** */
 
-																							  sendString("<tr><th align=\"left\" "DARK_BG">RRD Detail</th><td>");
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Low\n",
-																									FLAG_RRD_DETAIL_LOW, (dumpDetail == FLAG_RRD_DETAIL_LOW) ? "CHECKED" : "");
-																							  sendString(buf);
+  sendString("<tr><th align=\"left\" "DARK_BG">RRD Detail</th><td>");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Low\n",
+		FLAG_RRD_DETAIL_LOW, (dumpDetail == FLAG_RRD_DETAIL_LOW) ? "CHECKED" : "");
+  sendString(buf);
 
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Medium\n",
-																									FLAG_RRD_DETAIL_MEDIUM, (dumpDetail == FLAG_RRD_DETAIL_MEDIUM) ? "CHECKED" : "");
-																							  sendString(buf);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Medium\n",
+		FLAG_RRD_DETAIL_MEDIUM, (dumpDetail == FLAG_RRD_DETAIL_MEDIUM) ? "CHECKED" : "");
+  sendString(buf);
 
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Full\n",
-																									FLAG_RRD_DETAIL_HIGH, (dumpDetail == FLAG_RRD_DETAIL_HIGH) ? "CHECKED" : "");
-																							  sendString(buf);
-																							  sendString("</td></tr>\n");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Full\n",
+		FLAG_RRD_DETAIL_HIGH, (dumpDetail == FLAG_RRD_DETAIL_HIGH) ? "CHECKED" : "");
+  sendString(buf);
+  sendString("</td></tr>\n");
 
-																							  /* ******************************** */
+  /* ******************************** */
 
-																							  sendString("<tr><th align=\"left\" "DARK_BG">Detect Anomalies</th><td>");
+  sendString("<tr><th align=\"left\" "DARK_BG">Detect Anomalies</th><td>");
 
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=enableAberrant VALUE=1 %s>Yes\n",
-																									(enableAberrant == 1) ? "CHECKED" : "");
-																							  sendString(buf);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=enableAberrant VALUE=1 %s>Yes\n",
+		(enableAberrant == 1) ? "CHECKED" : "");
+  sendString(buf);
 
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=enableAberrant VALUE=0 %s>No\n",
-																									(enableAberrant == 0) ? "CHECKED" : "");
-																							  sendString(buf);
-																							  sendString("<br>Toggle RRD <A HREF=http://cricket.sourceforge.net/aberrant/rrd_hw.htm>Aberrant Behavior</A> support");
-																							  sendString("</td></tr>\n");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=enableAberrant VALUE=0 %s>No\n",
+		(enableAberrant == 0) ? "CHECKED" : "");
+  sendString(buf);
+  sendString("<br>Toggle RRD <A HREF=http://cricket.sourceforge.net/aberrant/rrd_hw.htm>Aberrant Behavior</A> support");
+  sendString("</td></tr>\n");
 
-																							  /* ******************************** */
+  /* ******************************** */
 
-																							  sendString("<tr><th align=\"left\" "DARK_BG">RRD Files Path</th><td>"
-																								     "<INPUT NAME=rrdPath SIZE=50 VALUE=\"");
-																							  sendString(myGlobals.rrdPath);
-																							  sendString("\">");
-																							  sendString("<br>NOTE:<ul><li>The rrd files will be in a subdirectory structure, e.g.\n");
+  sendString("<tr><th align=\"left\" "DARK_BG">RRD Files Path</th><td>"
+	     "<INPUT NAME=rrdPath SIZE=50 VALUE=\"");
+  sendString(myGlobals.rrdPath);
+  sendString("\">");
+  sendString("<br>NOTE:<ul><li>The rrd files will be in a subdirectory structure, e.g.\n");
 #ifdef WIN32
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-																									"%s\\interfaces\\interface-name\\12\\239\\98\\199\\xxxxx.rrd ",
-																									myGlobals.rrdPath);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		"%s\\interfaces\\interface-name\\12\\239\\98\\199\\xxxxx.rrd ",
+		myGlobals.rrdPath);
 #else
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-																									"%s/interfaces/interface-name/12/239/98/199/xxxxx.rrd ",
-																									myGlobals.rrdPath);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		"%s/interfaces/interface-name/12/239/98/199/xxxxx.rrd ",
+		myGlobals.rrdPath);
 #endif
-																							  sendString(buf);
-																							  sendString("to limit the number of files per subdirectory.");
-																							  sendString("<li>Do not use the ':' character in the path as it is forbidded by rrd</ul></td></tr>\n");
+  sendString(buf);
+  sendString("to limit the number of files per subdirectory.");
+  sendString("<li>Do not use the ':' character in the path as it is forbidded by rrd</ul></td></tr>\n");
 
 #ifndef WIN32
-																							  sendString("<tr><th align=\"left\" "DARK_BG">File/Directory Permissions</th><td>");
-																							  sendString("<ul>\n");
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li><INPUT TYPE=radio NAME=permissions VALUE=%d %s>Private - ",
-																									CONST_RRD_PERMISSIONS_PRIVATE,
-																									(dumpPermissions == CONST_RRD_PERMISSIONS_PRIVATE) ? "CHECKED" : "");
-																							  sendString(buf);
-																							  sendString("means that ONLY the ntop userid will be able to view the files</li>\n");
+  sendString("<tr><th align=\"left\" "DARK_BG">File/Directory Permissions</th><td>");
+  sendString("<ul>\n");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li><INPUT TYPE=radio NAME=permissions VALUE=%d %s>Private - ",
+		CONST_RRD_PERMISSIONS_PRIVATE,
+		(dumpPermissions == CONST_RRD_PERMISSIONS_PRIVATE) ? "CHECKED" : "");
+  sendString(buf);
+  sendString("means that ONLY the ntop userid will be able to view the files</li>\n");
 
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li><INPUT TYPE=radio NAME=permissions VALUE=%d %s>Group - ",
-																									CONST_RRD_PERMISSIONS_GROUP,
-																									(dumpPermissions == CONST_RRD_PERMISSIONS_GROUP) ? "CHECKED" : "");
-																							  sendString(buf);
-																							  sendString("means that all users in the same group as the ntop userid will be able to view the rrd files.\n");
-																							  sendString("<br><i>(this is a bad choice if ntop's group is 'nobody' along with many other service ids)</i></li>\n");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li><INPUT TYPE=radio NAME=permissions VALUE=%d %s>Group - ",
+		CONST_RRD_PERMISSIONS_GROUP,
+		(dumpPermissions == CONST_RRD_PERMISSIONS_GROUP) ? "CHECKED" : "");
+  sendString(buf);
+  sendString("means that all users in the same group as the ntop userid will be able to view the rrd files.\n");
+  sendString("<br><i>(this is a bad choice if ntop's group is 'nobody' along with many other service ids)</i></li>\n");
 
-																							  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li><INPUT TYPE=radio NAME=permissions VALUE=%d %s>Everyone - ",
-																									CONST_RRD_PERMISSIONS_EVERYONE,
-																									(dumpPermissions == CONST_RRD_PERMISSIONS_EVERYONE) ? "CHECKED" : "");
-																							  sendString(buf);
-																							  sendString("means that everyone on the ntop host system will be able to view the rrd files.</li>\n");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li><INPUT TYPE=radio NAME=permissions VALUE=%d %s>Everyone - ",
+		CONST_RRD_PERMISSIONS_EVERYONE,
+		(dumpPermissions == CONST_RRD_PERMISSIONS_EVERYONE) ? "CHECKED" : "");
+  sendString(buf);
+  sendString("means that everyone on the ntop host system will be able to view the rrd files.</li>\n");
 
-																							  sendString("</ul><br>\n<B>WARNING</B>:&nbsp;Changing this setting affects only new files "
-																								     "and directories! "
-																								     "<i>Unless you go back and fixup existing file and directory permissions:</i><br>\n"
-																								     "<ul><li>Users will retain access to any rrd file or directory they currently have "
-																								     "access to even if you change to a more restrictive setting.</li>\n"
-																								     "<li>Users will not gain access to any rrd file or directory they currently do not "
-																								     "have access to even if you change to a less restrictive setting. Further, existing "
-																								     "directory permissions may prevent them from reading new files created in existing "
-																								     "directories.</li>\n"
-																								     "</ul>\n</td></tr>\n");
+  sendString("</ul><br>\n<B>WARNING</B>:&nbsp;Changing this setting affects only new files "
+	     "and directories! "
+	     "<i>Unless you go back and fixup existing file and directory permissions:</i><br>\n"
+	     "<ul><li>Users will retain access to any rrd file or directory they currently have "
+	     "access to even if you change to a more restrictive setting.</li>\n"
+	     "<li>Users will not gain access to any rrd file or directory they currently do not "
+	     "have access to even if you change to a less restrictive setting. Further, existing "
+	     "directory permissions may prevent them from reading new files created in existing "
+	     "directories.</li>\n"
+	     "</ul>\n</td></tr>\n");
 #endif
 
-																							  sendString("<tr><td colspan=\"2\" align=\"center\">&nbsp;<br><input type=submit value=\"Save Preferences\"><br>&nbsp;</td></tr>\n"
-																								     "</table>\n</form>\n</center>\n");
+  sendString("<tr><td colspan=\"2\" align=\"center\">&nbsp;<br><input type=submit value=\"Save Preferences\"><br>&nbsp;</td></tr>\n"
+	     "</table>\n</form>\n</center>\n");
 
-																							  sendString("<hr>\n<p>Also:</p>\n<ul>");
-																							  for(i=0; rrdExtraPages[i].url != NULL; i++) {
-																							    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-																									  "<li><a href=\"/" CONST_PLUGINS_HEADER "%s/%s\">%s</a></li>\n",
-																									  rrdPluginInfo->pluginURLname,
-																									  rrdExtraPages[i].url,
-																									  rrdExtraPages[i].descr);
-																							    sendString(buf);
-																							  }
-																							  sendString("</ul>\n");
+  sendString("<hr>\n<p>Also:</p>\n<ul>");
+  for(i=0; rrdExtraPages[i].url != NULL; i++) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		  "<li><a href=\"/" CONST_PLUGINS_HEADER "%s/%s\">%s</a></li>\n",
+		  rrdPluginInfo->pluginURLname,
+		  rrdExtraPages[i].url,
+		  rrdExtraPages[i].descr);
+    sendString(buf);
+  }
+  sendString("</ul>\n");
 
-																							  printRRDPluginTrailer();
+  printRRDPluginTrailer();
 }
 
 /* ****************************** */
@@ -4535,19 +4532,35 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 			    el->protoIPTrafficInfos[j]->rcvdFromRem.value, 0);
 
 	      if(el->protoIPTrafficInfos[j]->pktSent.value > 0) {
-		Counter c;
+		Counter c, diff;
 
-		c = el->protoIPTrafficInfos[j]->efficiencySent.value / el->protoIPTrafficInfos[j]->pktSent.value;
-		safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencySent", myGlobals.ipTrafficProtosNames[j]);
-		updateGauge(rrdPath, key, c, 0);
+		diff = el->protoIPTrafficInfos[j]->pktSent.value - el->protoIPTrafficInfos[j]->last_pktSent.value;
+
+		if(diff > 0) {
+		  c = el->protoIPTrafficInfos[j]->efficiencySent.value / diff;
+		  safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencySent", myGlobals.ipTrafficProtosNames[j]);
+		  // traceEvent(CONST_TRACE_WARNING, "--> Sent [val = %u]", c);
+		  updateGauge(rrdPath, key, c, 0);
+		  el->protoIPTrafficInfos[j]->last_pktSent.value = el->protoIPTrafficInfos[j]->pktSent.value;
+		  el->protoIPTrafficInfos[j]->efficiencySent.value = 0; /* Reset value */
+		}
 	      }
 
 	      if(el->protoIPTrafficInfos[j]->pktRcvd.value > 0) {
-		Counter c;
+		Counter c, diff;
 
-		c = el->protoIPTrafficInfos[j]->efficiencyRcvd.value / el->protoIPTrafficInfos[j]->pktRcvd.value;
-		safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencyRcvd", myGlobals.ipTrafficProtosNames[j]);
-		updateGauge(rrdPath, key, c, 0);
+		diff = el->protoIPTrafficInfos[j]->pktRcvd.value - el->protoIPTrafficInfos[j]->last_pktRcvd.value;
+
+		if(diff > 0) {
+		  c = el->protoIPTrafficInfos[j]->efficiencyRcvd.value / el->protoIPTrafficInfos[j]->pktRcvd.value;
+		  safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencyRcvd", myGlobals.ipTrafficProtosNames[j]);
+		  
+		  // traceEvent(CONST_TRACE_WARNING, "--> Rcvd [val = %u]", c);
+		  
+		  updateGauge(rrdPath, key, c, 0);
+		  el->protoIPTrafficInfos[j]->last_pktRcvd.value = el->protoIPTrafficInfos[j]->pktRcvd.value;
+		  el->protoIPTrafficInfos[j]->efficiencyRcvd.value = 0; /* Reset value */
+		}
 	      }
 	    }
 	  }

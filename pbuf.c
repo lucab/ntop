@@ -309,13 +309,18 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
     }
 
     if((efficiencySent == 0) || (efficiencyRcvd == 0)) pkt_efficiency = efficiency(actualDeviceId, length);
-    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->pktRcvd, 1);
     if(efficiencySent == 0) efficiencySent = pkt_efficiency;
-    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->efficiencyRcvd, efficiencySent);
+    if(efficiencyRcvd == 0) efficiencyRcvd = pkt_efficiency;
+
+    if(0)
+      traceEvent(CONST_TRACE_INFO, "Efficiency [sent=%d|rcvd=%d|efficiency=%d][cell=%d][len=%d]", 
+		 efficiencySent, efficiencyRcvd, pkt_efficiency, 
+		 myGlobals.device[actualDeviceId].cellLength, length);
     
     incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->pktSent, 1);
-    if(efficiencyRcvd == 0) efficiencyRcvd = pkt_efficiency;
-    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->efficiencySent, efficiencyRcvd);    
+    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->efficiencySent, efficiencySent);   
+    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->pktRcvd, 1);
+    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->efficiencyRcvd, efficiencyRcvd);    
   }
 
   return(idx);
