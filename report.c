@@ -1471,7 +1471,7 @@ void printHostsTraffic(int reportTypeReq,
   struct tm t;
   HostTraffic *el;
   HostTraffic** tmpTable;
-  char buf[LEN_GENERAL_WORK_BUFFER*2], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER*2], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
   float sentPercent=0, rcvdPercent=0, totPercent=0;
   Counter totIpBytesSent=0, totIpBytesRcvd=0, totIpBytes=0;
   Counter totEthBytesSent=0, totEthBytesRcvd=0, totEthBytes=0;
@@ -2134,7 +2134,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   HostTraffic** tmpTable;
   char buf[LEN_GENERAL_WORK_BUFFER], *sign, *theAnchor[6], *arrow[6], *arrowGif;
   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32];
-  char htmlAnchor[64], htmlAnchor1[64], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char htmlAnchor[64], htmlAnchor1[64], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
 
   printHTMLheader("Multicast Statistics", NULL, 0);
 
@@ -2253,7 +2253,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 #define REMOTE_COLOR    "lightsteelblue1"
 
 static int addNodeInfo(FILE *fd, HostTraffic *el) {
-  char buf0[128], buf1[128];
+  char buf0[128], buf1[2*LEN_GENERAL_WORK_BUFFER];
 
   makeHostName(el, buf0, sizeof(buf0));
   makeHostLink(el, FLAG_HOSTLINK_TEXT_LITE_FORMAT, 0, 0, buf1, sizeof(buf1));
@@ -2451,7 +2451,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   HostTraffic** tmpTable;
   char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[12], *theAnchor[12], osBuf[160];
   char htmlAnchor[64], htmlAnchor1[64];
-  char formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char formatBuf[32], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
   u_char *vlanList, foundVlan = 0, vlanStr[16], ifStr[16], foundIf = 0, *ifList;
   u_int8_t *knownSubnets, foundSubnet = 0;
 
@@ -3067,7 +3067,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
   u_int16_t vlanId = NO_VLAN;
   HostTraffic *el=NULL;
   char buf[LEN_GENERAL_WORK_BUFFER];
-  char formatBuf[32], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char formatBuf[32], portBuf[32], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
   u_short found = 0,
     foundFcHost = 0,
     vsanId = 0;
@@ -3405,7 +3405,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 /* ************************************ */
 
 void printLocalRoutersList(int actualDeviceId) {
-  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
   HostTraffic *el, *router;
   u_int i, j, numEntries=0;
   HostSerial routerList[MAX_NUM_ROUTERS];
@@ -3499,7 +3499,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
   Counter totalBytesSent, totalBytesRcvd, totalBytes, a=0, b=0;
   float sentpct, rcvdpct;
   time_t timeDiff = time(NULL)-myGlobals.initialSniffTime;
-  char *arrowGif, *arrow[48], *theAnchor[48], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char *arrowGif, *arrow[48], *theAnchor[48], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
   char htmlAnchor[64], htmlAnchor1[64];
   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32];
 
@@ -3740,8 +3740,8 @@ static char* print_flags(IPSession *session, char *buf, int buf_len) {
 
 void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   int idx;
-  char buf[1500], hostLinkBuf[LEN_GENERAL_WORK_BUFFER], flags_buf[64],
-    hostLinkBuf1[LEN_GENERAL_WORK_BUFFER], *voipStr;
+  char buf[1500], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER], flags_buf[64],
+    hostLinkBuf1[2*LEN_GENERAL_WORK_BUFFER], *voipStr;
   int numSessions, printedSessions;
   char formatBuf[64], formatBuf1[64], formatBuf2[64], formatBuf3[64],
     formatBuf4[64], formatBuf5[64], formatBuf6[64];
@@ -3937,7 +3937,7 @@ void printIpProtocolUsage(void) {
   HostTraffic **hosts, *el;
   u_short clientPorts[MAX_ASSIGNED_IP_PORTS], serverPorts[MAX_ASSIGNED_IP_PORTS];
   u_int j, idx1, hostsNum=0, numPorts=0, maxHosts;
-  char buf[LEN_GENERAL_WORK_BUFFER], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], portBuf[32], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
   PortUsage *ports;
 
   printHTMLheader("TCP/UDP: Local Protocol Usage", NULL, 0);
@@ -4008,7 +4008,8 @@ void printIpProtocolUsage(void) {
 	  if((hosts[idx1]->portsUsage != NULL)
 	     && ports && (ports->clientUses > 0)) {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s\n",
-			  makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, hostLinkBuf, sizeof(hostLinkBuf)));
+			  makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, 
+				       hostLinkBuf, sizeof(hostLinkBuf)));
 	    sendString(buf);
 	  }
 	}
@@ -4025,7 +4026,8 @@ void printIpProtocolUsage(void) {
 	  if((hosts[idx1]->portsUsage != NULL)
 	     && ports && (ports->serverUses > 0)) {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s\n",
-			  makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, hostLinkBuf, sizeof(hostLinkBuf)));
+			  makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0,
+				       hostLinkBuf, sizeof(hostLinkBuf)));
 	    sendString(buf);
 	  }
 	}
@@ -4697,7 +4699,7 @@ void printProtoTraffic(int printGraph) {
 
 void printIpTrafficMatrix(void) {
   int i, j, numEntries=0, numConsecutiveEmptyCells;
-  char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
   short *activeHosts;
   Counter minTraffic=(Counter)LONG_MAX, maxTraffic=0, avgTraffic;
   Counter avgTrafficLow, avgTrafficHigh, tmpCounter;
@@ -4840,7 +4842,7 @@ void printIpTrafficMatrix(void) {
 void printThptStatsMatrix(int sortedColumn) {
   int i, dataSent;
   char label[32], label1[32], buf[LEN_GENERAL_WORK_BUFFER],
-    formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+    formatBuf[32], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
   time_t tmpTime;
   struct tm t;
   HostTraffic *el;
@@ -5348,7 +5350,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
   Counter totBytesSent=0, totBytesRcvd=0;
   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32], formatBuf4[32],
     formatBuf5[32], formatBuf6[32], formatBuf7[32], formatBuf8[32], formatBuf9[32],
-    hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+    hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
   NetworkStats localNetworks[MAX_NUM_CLUSTERS][MAX_NUM_NETWORKS]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
   u_short numLocalNetworks[MAX_NUM_CLUSTERS], totNumClusters=0;
   u_char *clusterNames[MAX_NUM_CLUSTERS], debug = 0;
@@ -6198,7 +6200,7 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
   u_int numEntries=0, i, maxHosts;
   HostTraffic **tmpTable, *el;
   char buf[LEN_GENERAL_WORK_BUFFER];
-  char formatBuf[32], formatBuf1[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char formatBuf[32], formatBuf1[32], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
 
   maxHosts = ifName->hostsno; /* save it as it can change */
 
@@ -6347,7 +6349,7 @@ void showPortTraffic(u_short portNr) {
   char buf[LEN_GENERAL_WORK_BUFFER], *str;
   int numRecords = 0, firstRun = 1;
   HostTraffic *el;
-  char portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char portBuf[32], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
 
   str = getAllPortByNum(portNr, portBuf, sizeof(portBuf));
 
@@ -6447,7 +6449,7 @@ void printFcHostsTraffic(int reportType,
   HostTraffic *el;
   HostTraffic** tmpTable;
   char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[8][32], vsanBuf[LEN_MEDIUM_WORK_BUFFER];
-  char hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
   float sentPercent=0, rcvdPercent=0, totPercent=0;
   Counter totFcBytesSent=0, totFcBytesRcvd=0, totFcBytes=0;
 
@@ -6866,7 +6868,7 @@ void printInterfaceStats() {
 void findHost(char *key) {
   HostTraffic *el=NULL;
   int num = 0;
-  char buf[256], buf1[256];
+  char buf[256], buf1[2*LEN_GENERAL_WORK_BUFFER];
 
   /* traceEvent(CONST_TRACE_INFO, "----------> findHost(%s)", key ? key : "<null>"); */
 
