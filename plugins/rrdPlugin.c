@@ -796,6 +796,15 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 		    myGlobals.rrdPath, rrdPath, rrdName);
   }
 
+  /* Check if the output directory has been deleted in the meantime */
+  safe_snprintf(__FILE__, __LINE__, fname, sizeof(fname), "%s/%s",
+		myGlobals.rrdPath, rrd_subdirs[0]);
+  revertSlashIfWIN32(fname, 0);
+  if(stat(fname, &statbuf) != 0) {
+    /* The directory does not exist: better to create it */
+    mkdir_p("RRD", fname, myGlobals.rrdDirectoryPermissions);
+  }
+
   /* startTime[4] skips the 'now-' */
   safe_snprintf(__FILE__, __LINE__, fname, sizeof(fname), "%s/%s/%s-%s%s%s",
 		myGlobals.rrdPath, rrd_subdirs[0], startTime, rrdPrefix, rrdName,
@@ -992,6 +1001,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
   struct nameLabel *rrds = NULL;
   int argc = 0, rc, x, y, i, entryId=0;
   double ymin, ymax;
+  struct stat statbuf;
 
   // if((!active) || (!initialized)) return;
 
@@ -1001,6 +1011,15 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
   case 0: rrds = (struct nameLabel*)rrd_summary_new_flows; label = "Flows"; title = "Newly Created Flows: Statistics"; break;
   case 1: rrds = (struct nameLabel*)rrd_summary_new_nf_flows; label = "Flows"; title = "Newly Created Flows: Protocol Breakdown"; break;
   case 2: rrds = (struct nameLabel*)rrd_summary_new_nf_flows_size; label = "Bytes"; title = "Newly Created Flows: Average Size"; break;
+  }
+
+  /* Check if the output directory has been deleted in the meantime */
+  safe_snprintf(__FILE__, __LINE__, fname, sizeof(fname), "%s/%s",
+                myGlobals.rrdPath, rrd_subdirs[0]);
+  revertSlashIfWIN32(fname, 0);
+  if(stat(fname, &statbuf) != 0) {
+    /* The directory does not exist: better to create it */
+    mkdir_p("RRD", fname, myGlobals.rrdDirectoryPermissions);
   }
 
   /* startTime[4] skips the 'now-' */
@@ -1174,8 +1193,6 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
   revertDoubleColumnIfWIN32(path);
 
   for(i=0, entryId=0; rrds[i].name != NULL; i++) {
-    struct stat statbuf;
-
     if(!strcmp(rrds[i].name, "throughput")) {
 #ifdef WIN32
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd",
@@ -1508,8 +1525,6 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
 #endif
 
   for(i=0, entryId=0; rrds[i] != NULL; i++) {
-    struct stat statbuf;
-
     if(!strcmp(rrds[i], "throughput")) {
 #ifdef WIN32
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s/%s/%s.rrd",

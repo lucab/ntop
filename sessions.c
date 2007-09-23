@@ -1331,7 +1331,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
                               HostTraffic *dstHost, u_short dport,
                               u_int packetDataLength, u_char* packetData,
                               IPSession *theSession, int actualDeviceId) {
-  char *rcStr, tmpStr[256];
+  char *rcStr, tmpStr[256] = { '\0' };
   struct timeval tvstrct;
 
   if (sport == IP_TCP_PORT_HTTP) FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &srcHost->flags);
