@@ -1305,6 +1305,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
   char **rrds = NULL;
   int argc = 0, rc, x, y, i, entryId=0, no_mem = 0;
   double ymin, ymax;
+  struct stat statbuf;
 
   // if((!active) || (!initialized)) return;
 
