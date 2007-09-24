@@ -3891,7 +3891,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		    "%s</TD></TR>\n", getRowColor(),
 		    "Host&nbsp;Location", 
-		    "Local (inside specified/local subnet)");
+		    "Local (inside specified/local subnet or known network list)");
     } else {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(),

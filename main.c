@@ -661,7 +661,6 @@ printf("Unable to read serial number\n");
   startSniffer();
 
 #ifndef WIN32
-
   while(myGlobals.ntopRunState == FLAG_NTOPSTATE_RUN) {
 
     ntopSleepWhileSameState(PARM_SLEEP_LIMIT);

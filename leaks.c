@@ -26,6 +26,7 @@
 
 #include "ntop.h"
 
+/* #define DEBUG */
 /* #define USE_GC */
 
 /* ****************************************** *
