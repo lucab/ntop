@@ -1364,16 +1364,10 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
       if(srcHost->protocolInfo == NULL) srcHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
       if(dstHost->protocolInfo == NULL) dstHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
 
-      if(srcHost->protocolInfo->httpStats == NULL) {
-	srcHost->protocolInfo->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-	memset(srcHost->protocolInfo->httpStats, 0, sizeof(ServiceStats));
-      }
-
-      if(dstHost->protocolInfo->httpStats == NULL) {
-	dstHost->protocolInfo->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-	memset(dstHost->protocolInfo->httpStats, 0, sizeof(ServiceStats));
-      }
-
+      /* Fix courtesy of Ronald Roskens <ronr@econet.com> */
+      allocHostTrafficCounterMemory(srcHost, protocolInfo->httpStats, sizeof(ServiceStats));
+      allocHostTrafficCounterMemory(dstHost, protocolInfo->httpStats, sizeof(ServiceStats));
+ 
       rc = atoi(&tmpStr[9]);
 
       if(rc == 200) /* HTTP/1.1 200 OK */ {
@@ -1449,14 +1443,9 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 	if(srcHost->protocolInfo == NULL) srcHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
 	if(dstHost->protocolInfo == NULL) dstHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
 
-	if(srcHost->protocolInfo->httpStats == NULL) {
-	  srcHost->protocolInfo->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-	  memset(srcHost->protocolInfo->httpStats, 0, sizeof(ServiceStats));
-	}
-	if(dstHost->protocolInfo->httpStats == NULL) {
-	  dstHost->protocolInfo->httpStats = (ServiceStats*)malloc(sizeof(ServiceStats));
-	  memset(dstHost->protocolInfo->httpStats, 0, sizeof(ServiceStats));
-	}
+	/* Fix courtesy of Ronald Roskens <ronr@econet.com> */
+	allocHostTrafficCounterMemory(srcHost, protocolInfo->httpStats, sizeof(ServiceStats));
+	allocHostTrafficCounterMemory(dstHost, protocolInfo->httpStats, sizeof(ServiceStats));
 
 	if(subnetLocalHost(dstHost)) {
 	  incrementHostTrafficCounter(srcHost, protocolInfo->httpStats->numLocalReqSent, 1);
