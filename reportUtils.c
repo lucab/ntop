@@ -2218,7 +2218,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
      if(totalSent > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		    "<IMG SRC=hostFragmentDistrib-%s%s"CHART_FORMAT"?1 ALT=\"Sent Fragment Distribution for %s%s\"></TD>",
+		    "<IMG SRC=\"hostFragmentDistrib-%s%s"CHART_FORMAT"?1\" ALT=\"Sent Fragment Distribution for %s%s\"></TD>",
 		    linkName, vlanStr, 
 		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress, vlanStr);
 	sendString(buf);
@@ -2228,15 +2228,15 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 
       if(totalRcvd > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		    "<IMG SRC=hostFragmentDistrib-%s%s"CHART_FORMAT" ALT=\"Received Fragment Distribution for %s%s\"></TD>",
-		    linkName, vlanStr,
-		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress, vlanStr);
+		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
+		      "<IMG SRC=\"hostFragmentDistrib-%s%s"CHART_FORMAT"\" ALT=\"Received Fragment Distribution for %s%s\"></TD>",
+		      linkName, vlanStr,
+		      el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress, vlanStr);
 	sendString(buf);
       } else {
 	sendString("<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
       }
-
+      
       sendString("</TD></TR>");
 
       /* ***************************************** */
