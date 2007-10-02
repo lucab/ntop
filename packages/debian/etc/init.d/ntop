@@ -93,8 +93,9 @@ stop_ntop() {
 default_ntop() { 
     if [ ! -d $PERSISTENT_DIR ] && [ ! -h  $PERSISTENT_DIR ]; then
 	mkdir -p $PERSISTENT_DIR/rrd
+	chown -R nobody $PERSISTENT_DIR
+	chmod gou+w $PERSISTENT_DIR
     fi
-    chown -R nobody $PERSISTENT_DIR/rrd
 
     if [ ! -f $PERSISTENT_DIR/ntop_pw.db ]; then
 	$NTOP_PATH -u nobody -P $PERSISTENT_DIR -Q $SPOOL_DIR --set-admin-password=admin
@@ -108,17 +109,11 @@ default_ntop() {
 	echo "-u nobody" >> $NTOP_CONF
     fi
 
-    if [ ! -d $PERSISTENT_DIR ]; then
-	mkdir -p $PERSISTENT_DIR
-	chmod gou+w $PERSISTENT_DIR
-    fi
-
     if [ ! -d $SPOOL_DIR ]; then
 	mkdir -p $SPOOL_DIR
 	chmod gou+w $SPOOL_DIR
+	chown -R nobody $SPOOL_DIR
     fi
-
-    chown -R nobody $PERSISTENT_DIR $SPOOL_DIR
 }
 
 ########
