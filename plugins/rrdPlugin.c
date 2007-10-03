@@ -2615,6 +2615,9 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	rrd_clear_error();
 	addRrdDelay();
 	rrd_update(argc, argv);	  
+	numRRDUpdates++;
+	numTotalRRDUpdates++;
+	releaseMutex(&rrdMutex);
       }
     }
 
