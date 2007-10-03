@@ -829,8 +829,6 @@ void resetStats(int deviceId) {
     myGlobals.otherHostEntry->hostSerial.serialType = SERIAL_IPV4;
     myGlobals.otherHostEntry->hostSerial.value.ipSerial.ipAddress.Ip4Address.s_addr = -1;
     myGlobals.otherHostEntry->next = NULL;
-    FD_SET(FLAG_BROADCAST_HOST, &(myGlobals.broadcastEntry->flags));
-    myGlobals.otherHostEntry->next = NULL;
   }
 
   if(myGlobals.purgeMutex.isInitialized)

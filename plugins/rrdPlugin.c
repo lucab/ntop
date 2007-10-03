@@ -2768,7 +2768,7 @@ static void setGlobalPermissions(int permissionsFlag) {
 /* ******************************* */
 
 static void commonRRDinit(void) {
-  char value[1024];
+  char value[4096];
 
 #ifdef WIN32
   get_serial(&driveSerial);
@@ -2912,8 +2912,8 @@ static void commonRRDinit(void) {
 		    (int) ((netmask >> 24) & 0xff), (int) ((netmask >> 16) & 0xff),
 		    (int) ((netmask >>  8) & 0xff), (int) ((netmask >>  0) & 0xff));
 
-      if(value[0] != '\0') strcat(value, ",");
-      strcat(value, buf);
+      if(value[0] != '\0') snprintf(&value[strlen(value)], sizeof(value)-strlen(value)-1, ",");
+      snprintf(&value[strlen(value)], sizeof(value)-strlen(value)-1, "%s", buf);
     }
 
     hostsFilter = strdup(value);
