@@ -2603,7 +2603,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	argv[argc++] = "rrd_update";
 	argv[argc++] = path;
 	
-	safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%0",
+	safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:0",
 		      (unsigned int)myGlobals.initialSniffTime);
 	argv[argc++] = cmd;
 	
