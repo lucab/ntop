@@ -2593,6 +2593,31 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
     }
 #endif
 
+
+    if(!createdCounter) {
+      time_t now = time(NULL);
+
+      /* Avoid peaks */
+      if((now-myGlobals.initialSniffTime) < dumpInterval) {
+	argc = 0;
+	argv[argc++] = "rrd_update";
+	argv[argc++] = path;
+	
+	safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%0",
+		      (unsigned int)myGlobals.initialSniffTime);
+	argv[argc++] = cmd;
+	
+	accessMutex(&rrdMutex, "rrd_update");
+	optind=0; /* reset gnu getopt */
+	opterr=0; /* no error messages */
+	
+	fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
+	rrd_clear_error();
+	addRrdDelay();
+	rrd_update(argc, argv);	  
+      }
+    }
+
     argc = 0;
     argv[argc++] = "rrd_update";
     argv[argc++] = path;
