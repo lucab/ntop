@@ -5474,7 +5474,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
   printHTMLheader(buf, NULL, 0);
 
-  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  maxHosts = max(myGlobals.device[myGlobals.actualReportDeviceId].hostsno, myGlobals.numKnownSubnets);
   tmpStats = (DomainStats*)mallocAndInitWithReportWarn(maxHosts*sizeof(DomainStats), "printDomainStats");
   if(tmpStats == NULL)
     return;
@@ -6924,7 +6924,7 @@ char* hostRRdGraphLink(HostTraffic *el, u_char is_subnet_host, char *tmpStr, int
   }
 
   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/%s/%s",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/%s/%s/bytesSent.rrd",
 		myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		is_subnet_host ? "subnet" : "hosts",
