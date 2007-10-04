@@ -1509,30 +1509,7 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
 
   /* Use en standard for this per RFC */
   // strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, localtime_r(&theTime, &t));
-  /* Sometimes localtime_r has troubles on Linux
-  #0  0x004d2402 in __kernel_vsyscall ()
-  #1  0x001e9a2e in __lll_mutex_lock_wait () from /lib/libc.so.6
-  #2  0x001901bb in _L_lock_1782 () from /lib/libc.so.6
-  #3  0x0018ff54 in __tz_convert () from /lib/libc.so.6
-  #4  0x0018e5ac in localtime_r () from /lib/libc.so.6
-  #5  0x003c5494 in sendHTTPHeader (mimeType=1, headerFlags=5888, useCompressionIfAvailable=0) at http.c:1511
-  #6  0x003c6ae1 in returnHTTPspecialStatusCode (statusFlag=-4, additionalText=0x0) at http.c:1439
-  #7  0x003c6cbd in quitNow (signo=14) at http.c:1840
-  #8  <signal handler called>
-  #9  0x004d2402 in __kernel_vsyscall ()
-  #10 0x001e9a2e in __lll_mutex_lock_wait () from /lib/libc.so.6
-  #11 0x001901bb in _L_lock_1782 () from /lib/libc.so.6
-  #12 0x0018ff54 in __tz_convert () from /lib/libc.so.6
-  #13 0x0018e5ac in localtime_r () from /lib/libc.so.6
-  #14 0x003c5494 in sendHTTPHeader (mimeType=1, headerFlags=0, useCompressionIfAvailable=1) at http.c:1511
-  #15 0x003cbf5e in handleHTTPrequest (from=
-  {hostFamily = 10, addr = {_hostIp4Address = {s_addr = 0}, _hostIp6Address = {in6_u = {u6_addr8 = "\000\000\000\000\000\000\000\000\034\000\000\000?$D", u6_addr16 = {0, 0, 0, 0, 28, 0, 9408, 68}, u6_addr32 = {0, 0, 28, 4465856}}}}}) at http.c:2878
-  #16 0x00403d20 in handleSingleWebConnection (fdmask=0xb2613334) at webInterface.c:8884
-  #17 0x0040428d in handleWebConnections (notUsed=0x0) at webInterface.c:8827
-  #18 0x0038b2db in start_thread () from /lib/libpthread.so.0
-  #19 0x001dd12e in clone () from /lib/libc.so.6
-  */
-  strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, localtime(&theTime));
+  strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, gmtime_r(&theTime, &t));
   theDate[sizeof(theDate)-1] = '\0';
   safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Date: %s\r\n", theDate);
   sendString(tmpStr);
