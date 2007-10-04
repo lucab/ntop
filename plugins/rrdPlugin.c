@@ -524,7 +524,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
       if(strcmp(rsrcName, CONST_RRD_EXTENSION))
 	continue;
 
-#if 0
+ #if 0
       if(sumCounter(rrdPath, dp->d_name, "FAILURES", startTime, endTime, &total, &average) >= 0)
 	numFailures += total;
 #endif
@@ -540,11 +540,13 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
 	/* if(strcmp(rsrcName, "pktSent") || strcmp(rsrcName, "pktRcvd")) continue; */
 
+	/* traceEvent(CONST_TRACE_WARNING, "RRD: [%s]", dp->d_name); */
+
 	if(strncmp(rsrcName, "IP_", 3)
 	   || strncmp(rsrcName, "tcp", 3)
 	   || strncmp(rsrcName, "udp", 3)
 	   ) {
-	  if(!strstr(rsrcName, "Rcvd")) {
+	  /* if(!strstr(rsrcName, "Rcvd")) */ {
 	    sendString("<TR><TD align=left>\n");
 
 	    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "<img class=tooltip src=\"/" CONST_PLUGINS_HEADER "%s?"

@@ -6932,12 +6932,12 @@ char* hostRRdGraphLink(HostTraffic *el, u_char is_subnet_host, char *tmpStr, int
 
   safe_snprintf(__FILE__, __LINE__, rrd_buf, sizeof(rrd_buf), "%s/bytesRcvd.rrd", buf);
   revertSlashIfWIN32(rrd_buf, 0);
-  rc = stat(buf, &statbuf);
+  rc = stat(rrd_buf, &statbuf);
 
   if(rc != 0) {
     safe_snprintf(__FILE__, __LINE__, rrd_buf, sizeof(rrd_buf), "%s/bytesSent.rrd", buf);
     revertSlashIfWIN32(rrd_buf, 0);
-    rc = stat(buf, &statbuf);
+    rc = stat(rrd_buf, &statbuf);
   }
 
   if(rc == 0) {
