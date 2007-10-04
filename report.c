@@ -6910,8 +6910,8 @@ void findHost(char *key) {
 
 char* hostRRdGraphLink(HostTraffic *el, u_char is_subnet_host, char *tmpStr, int tmpStrLen) {
   struct stat statbuf;
-  char *key;
-  char buf[256], subnet_buf[32];
+  char *key, buf[256], rrd_buf[256], subnet_buf[32];
+  int rc;
 
   if(is_subnet_host)
     key = host2networkName(el, subnet_buf, sizeof(subnet_buf));
@@ -6924,15 +6924,23 @@ char* hostRRdGraphLink(HostTraffic *el, u_char is_subnet_host, char *tmpStr, int
   }
 
   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/%s/%s/bytesSent.rrd",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/%s/%s/",
 		myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		is_subnet_host ? "subnet" : "hosts",
 		dotToSlash(key));
 
-  revertSlashIfWIN32(buf, 0);
+  safe_snprintf(__FILE__, __LINE__, rrd_buf, sizeof(rrd_buf), "%s/bytesRcvd.rrd", buf);
+  revertSlashIfWIN32(rrd_buf, 0);
+  rc = stat(buf, &statbuf);
 
-  if(stat(buf, &statbuf) == 0) {
+  if(rc != 0) {
+    safe_snprintf(__FILE__, __LINE__, rrd_buf, sizeof(rrd_buf), "%s/bytesSent.rrd", buf);
+    revertSlashIfWIN32(rrd_buf, 0);
+    rc = stat(buf, &statbuf);
+  }
+
+  if(rc == 0) {
     safe_snprintf(__FILE__, __LINE__, tmpStr, tmpStrLen,
                   "[ <a href=\"/" CONST_PLUGINS_HEADER
 		  "rrdPlugin?action=list&amp;key=interfaces%s%s/%s/%s&amp;title=%s%%20%s\">"
