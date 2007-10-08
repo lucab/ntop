@@ -4761,7 +4761,7 @@ static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
 
 static void* rrdMainLoop(void* notUsed _UNUSED_) {
   char value[512 /* leave it big for hosts filter */],
-    rrdPath[512],
+    rrdPath[4096],
     dname[256],
     endTime[32];
   int i, j, sleep_tm, devIdx, idx;
