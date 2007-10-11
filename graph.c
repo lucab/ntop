@@ -173,11 +173,12 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     
     if(theHost->nonIPTraffic != NULL)
       totTraffic.value += theHost->nonIPTraffic->stpSent.value+
-	theHost->nonIPTraffic->ipxSent.value+theHost->nonIPTraffic->osiSent.value+
+	theHost->nonIPTraffic->ipxSent.value+
 	theHost->nonIPTraffic->dlcSent.value+
-	theHost->nonIPTraffic->arp_rarpSent.value+theHost->nonIPTraffic->decnetSent.value+
+	theHost->nonIPTraffic->arp_rarpSent.value+
 	theHost->nonIPTraffic->appletalkSent.value+
-	theHost->nonIPTraffic->netbiosSent.value+theHost->nonIPTraffic->otherSent.value;
+	theHost->nonIPTraffic->netbiosSent.value+
+	theHost->nonIPTraffic->otherSent.value;
 
     idx = 0;
     while(protoList != NULL) {
@@ -192,9 +193,12 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
     if(theHost->nonIPTraffic != NULL)
       totTraffic.value += theHost->nonIPTraffic->stpRcvd.value
-	+theHost->nonIPTraffic->ipxRcvd.value+theHost->nonIPTraffic->osiRcvd.value+theHost->nonIPTraffic->dlcRcvd.value+
-	theHost->nonIPTraffic->arp_rarpRcvd.value+theHost->nonIPTraffic->decnetRcvd.value+theHost->nonIPTraffic->appletalkRcvd.value+
-	theHost->nonIPTraffic->netbiosRcvd.value+theHost->nonIPTraffic->otherRcvd.value;
+	+theHost->nonIPTraffic->ipxRcvd.value
+	+theHost->nonIPTraffic->dlcRcvd.value
+	+theHost->nonIPTraffic->arp_rarpRcvd.value
+	+theHost->nonIPTraffic->appletalkRcvd.value
+	+theHost->nonIPTraffic->netbiosRcvd.value
+	+theHost->nonIPTraffic->otherRcvd.value;
     
     idx = 0;
     while(protoList != NULL) {
@@ -244,9 +248,9 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DLC";
 	}
 
-	if(theHost->nonIPTraffic->osiSent.value > 0) {
-	  p[num] = (float)((100*theHost->nonIPTraffic->osiSent.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "OSI";
+	if(theHost->greSent.value > 0) {
+	  p[num] = (float)((100*theHost->greSent.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "GRE";
 	}
 
 	if(theHost->nonIPTraffic->arp_rarpSent.value > 0) {
@@ -254,9 +258,9 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "(R)ARP";
 	}
 
-	if(theHost->nonIPTraffic->decnetSent.value > 0) {
-	  p[num] = (float)((100*theHost->nonIPTraffic->decnetSent.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DECNET";
+	if(theHost->ipsecSent.value > 0) {
+	  p[num] = (float)((100*theHost->ipsecSent.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPSEC";
 	}
 
 	if(theHost->nonIPTraffic->appletalkSent.value > 0) {
@@ -313,9 +317,9 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DLC";
 	}
 
-	if(theHost->nonIPTraffic->osiRcvd.value > 0) {
-	  p[num] = (float)((100*theHost->nonIPTraffic->osiRcvd.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "OSI";
+	if(theHost->greRcvd.value > 0) {
+	  p[num] = (float)((100*theHost->greRcvd.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "GRE";
 	}
 
 	if(theHost->nonIPTraffic->arp_rarpRcvd.value > 0) {
@@ -323,9 +327,9 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "(R)ARP";
 	}
 
-	if(theHost->nonIPTraffic->decnetRcvd.value > 0) {
-	  p[num] = (float)((100*theHost->nonIPTraffic->decnetRcvd.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DECNET";
+	if(theHost->ipsecRcvd.value > 0) {
+	  p[num] = (float)((100*theHost->ipsecRcvd.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPSEC";
 	}
 
 	if(theHost->nonIPTraffic->appletalkRcvd.value > 0) {
@@ -919,14 +923,14 @@ void drawGlobalProtoDistribution(void) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value; lbl[idx] = "DLC"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value; lbl[idx] = "IPX"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value;lbl[idx] = "Decnet";  idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ipsecBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipsecBytes.value;lbl[idx] = "IPsec";  idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value; lbl[idx] = "AppleTalk"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value; lbl[idx] = "NetBios"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value; lbl[idx] = "OSI"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].greBytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].greBytes.value; lbl[idx] = "GRE"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value; lbl[idx] = "IPv6"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value > 0) {

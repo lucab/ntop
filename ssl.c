@@ -30,23 +30,23 @@
 int verify_callback(int ok, X509_STORE_CTX *ctx);
 
 void ntop_ssl_error_report(char * whyMe) {
-    unsigned long l;
-    char buf[200];
-    const char *file,*data;
-    int line,flags;
-    unsigned long es;
+  unsigned long l;
+  char buf[200];
+  const char *file,*data;
+  int line,flags;
+  unsigned long es;
 
-    es=CRYPTO_thread_id();
-    while ((l=ERR_get_error_line_data(&file,&line,&data,&flags)) != 0) {
-        ERR_error_string_n(l, buf, sizeof buf);
-        traceEvent(CONST_TRACE_ERROR, "SSL(%s)ERROR [Thread %lu]: %s at %s(%d) %s",
-                                whyMe,
-                                es,
-                                buf,
-                                file,
-                                line,
-                                (flags&ERR_TXT_STRING)?data:"");
-    }
+  es=CRYPTO_thread_id();
+  while ((l=ERR_get_error_line_data(&file,&line,&data,&flags)) != 0) {
+    ERR_error_string_n(l, buf, sizeof buf);
+    traceEvent(CONST_TRACE_INFO, "SSL(%s)ERROR [Thread %lu]: %s at %s(%d) %s",
+	       whyMe,
+	       es,
+	       buf,
+	       file,
+	       line,
+	       (flags&ERR_TXT_STRING)?data:"");
+  }
 }
 
 int init_ssl(void) {
@@ -74,7 +74,7 @@ int init_ssl(void) {
    * If necessary, initialize the prng for ssl...
    */
   if (RAND_status() == 0) {
-     struct timeval TOD;
+    struct timeval TOD;
     /*
      * If we get here, we need to add some entropy, because it's not there by default
      * and because we don't have egd running.
@@ -97,36 +97,36 @@ int init_ssl(void) {
 
     gettimeofday(&TOD, NULL);
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d%u%u%x%x%x", 
-                    getpid(),
-                    TOD.tv_sec,
-                    TOD.tv_usec,
-                    myGlobals.startedAs,
-                    myGlobals.udpSvc,
-                    myGlobals.tcpSvc );
+		  getpid(),
+		  TOD.tv_sec,
+		  TOD.tv_usec,
+		  myGlobals.startedAs,
+		  myGlobals.udpSvc,
+		  myGlobals.tcpSvc );
     RAND_add(buf, strlen(buf), (double)24.0);
 
     directoryPointer = opendir(myGlobals.dbPath);
     if (directoryPointer == NULL) {
-        traceEvent(CONST_TRACE_WARNING, "SSL_PRNG: Unable to find directory '%s' for additional randomness", myGlobals.dbPath);
+      traceEvent(CONST_TRACE_WARNING, "SSL_PRNG: Unable to find directory '%s' for additional randomness", myGlobals.dbPath);
     } else {
-        while((dp = readdir(directoryPointer)) != NULL) {
-            if (dp->d_name[0] != '.') {
-                safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%s", myGlobals.dbPath, dp->d_name);
-                if (stat(buf, &fStat) == 0) {
-                    RAND_add(&fStat, sizeof(fStat), (double)16.0);
-                }
-            }
-        }
-        closedir(directoryPointer);
+      while((dp = readdir(directoryPointer)) != NULL) {
+	if (dp->d_name[0] != '.') {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%s", myGlobals.dbPath, dp->d_name);
+	  if (stat(buf, &fStat) == 0) {
+	    RAND_add(&fStat, sizeof(fStat), (double)16.0);
+	  }
+	}
+      }
+      closedir(directoryPointer);
     }
 
     if (RAND_status() == 0) {
-        traceEvent(CONST_TRACE_WARNING, "SSL_PRNG: Unsuccessfully initialized - https:// may not work.");
+      traceEvent(CONST_TRACE_WARNING, "SSL_PRNG: Unsuccessfully initialized - https:// may not work.");
     } else {
-        traceEvent(CONST_TRACE_INFO, "SSL_PRNG: Successfully initialized.");
+      traceEvent(CONST_TRACE_INFO, "SSL_PRNG: Successfully initialized.");
     }
   } else {
-      traceEvent(CONST_TRACE_INFO, "SSL_PRNG: Automatically initialized!");
+    traceEvent(CONST_TRACE_INFO, "SSL_PRNG: Automatically initialized!");
   }
 
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
@@ -161,8 +161,8 @@ int init_ssl(void) {
 
   if ((!SSL_CTX_load_verify_locations(myGlobals.ctx, NULL, NULL)) ||
       (!SSL_CTX_set_default_verify_paths(myGlobals.ctx))) {
-      ntop_ssl_error_report("ssl_init-verify");
-    }
+    ntop_ssl_error_report("ssl_init-verify");
+  }
 
   SSL_CTX_set_session_id_context(myGlobals.ctx,
 				 (void*)&s_server_session_id_context,
@@ -258,7 +258,7 @@ int accept_ssl_connection(int fd) {
     if(myGlobals.ssl[i].ctx == NULL) {
       myGlobals.ssl[i].ctx = SSL_new(myGlobals.ctx);
       if (myGlobals.ssl[i].ctx==NULL)
-          exit (1);
+	exit (1);
       SSL_clear(myGlobals.ssl[i].ctx);
       SSL_set_fd(myGlobals.ssl[i].ctx, fd);
       myGlobals.ssl[i].socketId = fd;

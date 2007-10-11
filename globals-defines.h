@@ -739,7 +739,7 @@
  * This defines the maximum number of entries in the ntop pwFile
  * note that both 'users' and 'urls' are stored in here.
  */
-#define MAX_NUM_PWFILE_ENTRIES              32
+#define MAX_NUM_PWFILE_ENTRIES              64
 
 /*
  * This is an IPv4 convention - it's the upper port # that is "officially assigned" (reserved)
@@ -2613,7 +2613,17 @@
 
 /* Internet Group Management Protocol */
 #ifndef IPPROTO_IGMP
- #define IPPROTO_IGMP                       2
+#define IPPROTO_IGMP                       2
+#endif
+
+/* IPSec Encapsulating Security Protocol (ESP) */
+#ifndef IPPROTO_IPSEC_ESP
+#define IPPROTO_IPSEC_ESP 0x32
+#endif
+
+/* IPSec Authentication Header (AH) */
+#ifndef IPPROTO_IPSEC_AH
+#define IPPROTO_IPSEC_AH  0x33
 #endif
 
 /* ******************************* */

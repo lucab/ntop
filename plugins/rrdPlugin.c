@@ -2905,8 +2905,8 @@ static void commonRRDinit(void) {
   }
 
   if(fetchPrefsValue("rrd.dumpASs", value, sizeof(value)) == -1) {
-    storePrefsValue("rrd.dumpASs", "1");
-    dumpASs = 1;
+    storePrefsValue("rrd.dumpASs", "0");
+    dumpASs = 0;
   } else {
     dumpASs = atoi(value);
   }
@@ -4508,14 +4508,16 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       updateTrafficCounter(rrdPath, "icmpFragmentsRcvd", &el->icmpFragmentsRcvd, 0);
       updateTrafficCounter(rrdPath, "ipv6Sent", &el->ipv6Sent, 0);
       updateTrafficCounter(rrdPath, "ipv6Rcvd", &el->ipv6Rcvd, 0);
+      updateTrafficCounter(rrdPath, "greSent", &el->greSent, 0);
+      updateTrafficCounter(rrdPath, "greRcvd", &el->greRcvd, 0);
+      updateTrafficCounter(rrdPath, "ipsecSent", &el->ipsecSent, 0);
+      updateTrafficCounter(rrdPath, "ipsecRcvd", &el->ipsecRcvd, 0);
 
       if(el->nonIPTraffic) {
 	updateTrafficCounter(rrdPath, "stpSent", &el->nonIPTraffic->stpSent, 0);
 	updateTrafficCounter(rrdPath, "stpRcvd", &el->nonIPTraffic->stpRcvd, 0);
 	updateTrafficCounter(rrdPath, "ipxSent", &el->nonIPTraffic->ipxSent, 0);
 	updateTrafficCounter(rrdPath, "ipxRcvd", &el->nonIPTraffic->ipxRcvd, 0);
-	updateTrafficCounter(rrdPath, "osiSent", &el->nonIPTraffic->osiSent, 0);
-	updateTrafficCounter(rrdPath, "osiRcvd", &el->nonIPTraffic->osiRcvd, 0);
 	updateTrafficCounter(rrdPath, "dlcSent", &el->nonIPTraffic->dlcSent, 0);
 	updateTrafficCounter(rrdPath, "dlcRcvd", &el->nonIPTraffic->dlcRcvd, 0);
 	updateTrafficCounter(rrdPath, "arp_rarpSent", &el->nonIPTraffic->arp_rarpSent, 0);
@@ -4523,8 +4525,6 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	updateTrafficCounter(rrdPath, "arpReqPktsSent", &el->nonIPTraffic->arpReqPktsSent, 0);
 	updateTrafficCounter(rrdPath, "arpReplyPktsSent", &el->nonIPTraffic->arpReplyPktsSent, 0);
 	updateTrafficCounter(rrdPath, "arpReplyPktsRcvd", &el->nonIPTraffic->arpReplyPktsRcvd, 0);
-	updateTrafficCounter(rrdPath, "decnetSent", &el->nonIPTraffic->decnetSent, 0);
-	updateTrafficCounter(rrdPath, "decnetRcvd", &el->nonIPTraffic->decnetRcvd, 0);
 	updateTrafficCounter(rrdPath, "appletalkSent", &el->nonIPTraffic->appletalkSent, 0);
 	updateTrafficCounter(rrdPath, "appletalkRcvd", &el->nonIPTraffic->appletalkRcvd, 0);
 	updateTrafficCounter(rrdPath, "netbiosSent", &el->nonIPTraffic->netbiosSent, 0);
@@ -4645,7 +4645,8 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
 
     adjHostName = dotToSlash(hostKey);
 
-    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
+    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), 
+		  "%s/interfaces/%s/hosts/%s/",
 		  myGlobals.rrdPath, myGlobals.device[devIdx].uniqueIfName,
 		  adjHostName);
     mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
@@ -4656,6 +4657,8 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
     updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd, 0);
     updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent, 0);
     updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd, 0);
+    updateCounter(rrdPath, "totContactedPeersSent", el->totContactedSentPeers, 0);
+    updateCounter(rrdPath, "totContactedPeersRcvd", el->totContactedRcvdPeers, 0);
 
     if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
       updateTrafficCounter(rrdPath, "fcFcpBytesSent", &el->fcCounters->fcFcpBytesSent, 0);
@@ -4682,11 +4685,6 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
       updateTrafficCounter(rrdPath, "class3Rcvd", &el->fcCounters->class3Rcvd, 0);
       updateTrafficCounter(rrdPath, "classFSent", &el->fcCounters->classFSent, 0);
       updateTrafficCounter(rrdPath, "classFRcvd", &el->fcCounters->classFRcvd, 0);
-    }
-
-    if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
-      updateCounter(rrdPath, "totContactedPeersSent", el->totContactedSentPeers, 0);
-      updateCounter(rrdPath, "totContactedPeersRcvd", el->totContactedRcvdPeers, 0);
     }
 
     if(adjHostName != NULL)
@@ -5105,60 +5103,61 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		      myGlobals.device[devIdx].udpGlobalTrafficStats.remote.value +
 		      myGlobals.device[devIdx].icmpGlobalTrafficStats.remote.value, 0);
 
-	if(myGlobals.device[devIdx].netflowGlobals != NULL) {
-	  updateCounter(rrdPath, "NF_numFlowPkts", myGlobals.device[devIdx].netflowGlobals->numNetFlowsPktsRcvd, 0);
-	  updateCounter(rrdPath, "NF_numFlows", myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd, 0);
-	  updateCounter(rrdPath, "NF_numDiscardedFlows",
-			myGlobals.device[devIdx].netflowGlobals->numBadFlowPkts+
-			myGlobals.device[devIdx].netflowGlobals->numBadFlowBytes+
-			myGlobals.device[devIdx].netflowGlobals->numBadFlowReality+
-			myGlobals.device[devIdx].netflowGlobals->numNetFlowsV9UnknTemplRcvd, 0);
+	if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
+	  if(myGlobals.device[devIdx].netflowGlobals != NULL) {
+	    updateCounter(rrdPath, "NF_numFlowPkts", myGlobals.device[devIdx].netflowGlobals->numNetFlowsPktsRcvd, 0);
+	    updateCounter(rrdPath, "NF_numFlows", myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd, 0);
+	    updateCounter(rrdPath, "NF_numDiscardedFlows",
+			  myGlobals.device[devIdx].netflowGlobals->numBadFlowPkts+
+			  myGlobals.device[devIdx].netflowGlobals->numBadFlowBytes+
+			  myGlobals.device[devIdx].netflowGlobals->numBadFlowReality+
+			  myGlobals.device[devIdx].netflowGlobals->numNetFlowsV9UnknTemplRcvd, 0);
 
-	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd > 0)
-	    updateGauge(rrdPath, "NF_avgTcpNewFlowSize",
-			myGlobals.device[devIdx].netflowGlobals->totalNetFlowsTCPSize/
+	    if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd > 0)
+	      updateGauge(rrdPath, "NF_avgTcpNewFlowSize",
+			  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsTCPSize/
+			  myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd, 0);
+
+	    if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd > 0)
+	      updateGauge(rrdPath, "NF_avgUdpNewFlowSize",
+			  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsUDPSize/
+			  myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd, 0);
+
+	    if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd > 0)
+	      updateGauge(rrdPath, "NF_avgICMPNewFlowSize",
+			  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsICMPSize/
+			  myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd, 0);
+
+	    if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd > 0)
+	      updateGauge(rrdPath, "NF_avgOtherFlowSize",
+			  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsOtherSize/
+			  myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd, 0);
+
+	    updateGauge(rrdPath, "NF_newTcpNetFlows",
 			myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd, 0);
-
-	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd > 0)
-	    updateGauge(rrdPath, "NF_avgUdpNewFlowSize",
-			myGlobals.device[devIdx].netflowGlobals->totalNetFlowsUDPSize/
+	    updateGauge(rrdPath, "NF_newUdpNetFlows",
 			myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd, 0);
-
-	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd > 0)
-	    updateGauge(rrdPath, "NF_avgICMPNewFlowSize",
-			myGlobals.device[devIdx].netflowGlobals->totalNetFlowsICMPSize/
+	    updateGauge(rrdPath, "NF_newIcmpNetFlows",
 			myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd, 0);
-
-	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd > 0)
-	    updateGauge(rrdPath, "NF_avgOtherFlowSize",
-			myGlobals.device[devIdx].netflowGlobals->totalNetFlowsOtherSize/
+	    updateGauge(rrdPath, "NF_newOtherNetFlows",
 			myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd, 0);
 
-	  updateGauge(rrdPath, "NF_newTcpNetFlows",
-		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd, 0);
-	  updateGauge(rrdPath, "NF_newUdpNetFlows",
-		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd, 0);
-	  updateGauge(rrdPath, "NF_newIcmpNetFlows",
-		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd, 0);
-	  updateGauge(rrdPath, "NF_newOtherNetFlows",
-		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd, 0);
+	    updateGauge(rrdPath, "NF_numNetFlows",
+			myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd-
+			myGlobals.device[devIdx].netflowGlobals->lastNumNetFlowsRcvd, 0);
 
-	  updateGauge(rrdPath, "NF_numNetFlows",
-		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd-
-		      myGlobals.device[devIdx].netflowGlobals->lastNumNetFlowsRcvd, 0);
-
-	  /* Update Counters */
-	  myGlobals.device[devIdx].netflowGlobals->lastNumNetFlowsRcvd =
-	    myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd;
-	  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsTCPSize = 0;
-	  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsUDPSize = 0;
-	  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsICMPSize = 0;
-	  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsOtherSize = 0;
-	  myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd = 0;
-	  myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd = 0;
-	  myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd = 0;
-	  myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd = 0;
-
+	    /* Update Counters */
+	    myGlobals.device[devIdx].netflowGlobals->lastNumNetFlowsRcvd =
+	      myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd;
+	    myGlobals.device[devIdx].netflowGlobals->totalNetFlowsTCPSize = 0;
+	    myGlobals.device[devIdx].netflowGlobals->totalNetFlowsUDPSize = 0;
+	    myGlobals.device[devIdx].netflowGlobals->totalNetFlowsICMPSize = 0;
+	    myGlobals.device[devIdx].netflowGlobals->totalNetFlowsOtherSize = 0;
+	    myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd = 0;
+	    myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd = 0;
+	    myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd = 0;
+	    myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd = 0;
+	  }
 	}
 
 	if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
@@ -5171,12 +5170,12 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  updateCounter(rrdPath, "dlcBytes", myGlobals.device[devIdx].dlcBytes.value, 0);
 	  updateCounter(rrdPath, "ipxBytes", myGlobals.device[devIdx].ipxBytes.value, 0);
 	  updateCounter(rrdPath, "stpBytes", myGlobals.device[devIdx].stpBytes.value, 0);
-	  updateCounter(rrdPath, "decnetBytes", myGlobals.device[devIdx].decnetBytes.value, 0);
+	  updateCounter(rrdPath, "ipsecBytes", myGlobals.device[devIdx].ipsecBytes.value, 0);
 	  updateCounter(rrdPath, "netbiosBytes", myGlobals.device[devIdx].netbiosBytes.value, 0);
 	  updateCounter(rrdPath, "arpRarpBytes", myGlobals.device[devIdx].arpRarpBytes.value, 0);
 	  updateCounter(rrdPath, "atalkBytes", myGlobals.device[devIdx].atalkBytes.value, 0);
 	  updateCounter(rrdPath, "egpBytes", myGlobals.device[devIdx].egpBytes.value, 0);
-	  updateCounter(rrdPath, "osiBytes", myGlobals.device[devIdx].osiBytes.value, 0);
+	  updateCounter(rrdPath, "greBytes", myGlobals.device[devIdx].greBytes.value, 0);
 	  updateCounter(rrdPath, "ipv6Bytes", myGlobals.device[devIdx].ipv6Bytes.value, 0);
 	  updateCounter(rrdPath, "otherBytes", myGlobals.device[devIdx].otherBytes.value, 0);
 	  updateCounter(rrdPath, "upTo64Pkts", myGlobals.device[devIdx].rcvdPktStats.upTo64.value, 0);

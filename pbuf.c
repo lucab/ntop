@@ -1267,8 +1267,7 @@ static void processIpPkt(const u_char *bp,
     }
 
   ctr.value = h->len;
-  updatePacketCount(srcHost, &srcAddr, dstHost, &dstAddr,
-		    ctr, 1, actualDeviceId);
+  updatePacketCount(srcHost, &srcAddr, dstHost, &dstAddr, ctr, 1, actualDeviceId);
 
   if((!myGlobals.runningPref.dontTrustMACaddr) && (!myGlobals.device[actualDeviceId].dummyDevice)) {
     checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
@@ -1336,14 +1335,30 @@ static void processIpPkt(const u_char *bp,
       incrementHostTrafficCounter(srcHost, tcpFragmentsSent, length);
       incrementHostTrafficCounter(dstHost, tcpFragmentsRcvd, length);
       break;
+
     case IPPROTO_UDP:
       incrementHostTrafficCounter(srcHost, udpFragmentsSent, length);
       incrementHostTrafficCounter(dstHost, udpFragmentsRcvd, length);
       break;
+
     case IPPROTO_ICMP:
       incrementHostTrafficCounter(srcHost, icmpFragmentsSent, length);
       incrementHostTrafficCounter(dstHost, icmpFragmentsRcvd, length);
       break;
+
+    case IPPROTO_GRE:
+      incrementHostTrafficCounter(srcHost, greSent, length);
+      incrementHostTrafficCounter(dstHost, greRcvd, length);
+      incrementTrafficCounter(&myGlobals.device[actualDeviceId].greBytes, length);
+      break;
+
+    case IPPROTO_IPSEC_ESP:
+    case IPPROTO_IPSEC_AH:
+      incrementHostTrafficCounter(srcHost, ipsecSent, length);
+      incrementHostTrafficCounter(dstHost, ipsecRcvd, length);
+      incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipsecBytes, length);
+      break;
+      
 #ifdef INET6
     case IPPROTO_ICMPV6:
       incrementHostTrafficCounter(srcHost, icmp6FragmentsSent, length);
@@ -1806,6 +1821,10 @@ static void processIpPkt(const u_char *bp,
 	    if(ntpRole ==  4 /* NTP Server */)
 	      FD_SET(FLAG_HOST_TYPE_SVC_NTP_SERVER, &srcHost->flags);
 	  }
+	} else if(sport == 500) /* IPSEC IKE */ {
+	  incrementHostTrafficCounter(srcHost, ipsecSent, length);
+	  incrementHostTrafficCounter(dstHost, ipsecRcvd, length);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipsecBytes, length);
 	} else {
 	  if(myGlobals.runningPref.enablePacketDecoding)
 	    handleNetbios(srcHost, dstHost, sport, dport,
@@ -3577,14 +3596,6 @@ void processPacket(u_char *_deviceId,
 		if(myGlobals.runningPref.enableOtherPacketDump)
 		  dumpOtherPacket(actualDeviceId);
 	      }
-	    } else if(myGlobals.runningPref.enablePacketDecoding
-		      && ((sap_type == 0x06)
-			  || (sap_type == 0xFE)
-			  || (sap_type == 0xFC))) {  /* OSI */
-
-	      incrementHostTrafficCounter(srcHost, nonIPTraffic->osiSent, length);
-	      incrementHostTrafficCounter(dstHost, nonIPTraffic->osiRcvd, length);
-	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].osiBytes, length);
 	    } else {
 	      /* Unknown Protocol */
 #ifdef UNKNOWN_PACKET_DEBUG
@@ -3813,12 +3824,6 @@ void processPacket(u_char *_deviceId,
 	    incrementHostTrafficCounter(dstHost, nonIPTraffic->arp_rarpRcvd, length);
 	  }
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].arpRarpBytes, length);
-	  break;
-
-	case ETHERTYPE_DN: /* Decnet */
-	  incrementHostTrafficCounter(srcHost, nonIPTraffic->decnetSent, length);
-	  incrementHostTrafficCounter(dstHost, nonIPTraffic->decnetRcvd, length);
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].decnetBytes, length);
 	  break;
 
 	case ETHERTYPE_ATALK: /* AppleTalk */

@@ -1755,7 +1755,7 @@ void printHostsTraffic(int reportTypeReq,
 			formatBytes(el->icmp6Rcvd.value, 1, formatBuf4, sizeof(formatBuf4)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->dlcRcvd.value, 1, formatBuf5, sizeof(formatBuf5)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->ipxRcvd.value, 1, formatBuf6, sizeof(formatBuf6)),
-			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->decnetRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
+			formatBytes(el->ipsecRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpRcvd.value, 1, formatBuf8, sizeof(formatBuf8)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->appletalkRcvd.value, 1, formatBuf9, sizeof(formatBuf9))
 			);
@@ -1767,7 +1767,7 @@ void printHostsTraffic(int reportTypeReq,
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
-			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->osiRcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
+			formatBytes(el->greRcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
 			formatBytes(el->ipv6Rcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpRcvd.value, 1, formatBuf4, sizeof(formatBuf4)));
 	  sendString(buf);
@@ -1802,7 +1802,7 @@ void printHostsTraffic(int reportTypeReq,
 			formatBytes(el->icmp6Sent.value, 1, formatBuf4, sizeof(formatBuf4)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->dlcSent.value, 1, formatBuf5, sizeof(formatBuf5)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->ipxSent.value, 1, formatBuf6, sizeof(formatBuf6)),
-			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->decnetSent.value, 1, formatBuf7, sizeof(formatBuf7)),
+			formatBytes(el->ipsecSent.value, 1, formatBuf7, sizeof(formatBuf7)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpSent.value, 1, formatBuf8, sizeof(formatBuf8)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->appletalkSent.value, 1, formatBuf9, sizeof(formatBuf9))
 			);
@@ -1815,7 +1815,7 @@ void printHostsTraffic(int reportTypeReq,
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosSent.value, 1, formatBuf, sizeof(formatBuf)),
-			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->osiSent.value, 1, formatBuf1, sizeof(formatBuf1)),
+			formatBytes(el->greSent.value, 1, formatBuf1, sizeof(formatBuf1)),
 			formatBytes(el->ipv6Sent.value, 1, formatBuf2, sizeof(formatBuf2)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpSent.value, 1, formatBuf3, sizeof(formatBuf3)));
 	  sendString(buf);
@@ -1858,8 +1858,7 @@ void printHostsTraffic(int reportTypeReq,
 				    1, formatBuf5, sizeof(formatBuf5)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->ipxSent.value+el->nonIPTraffic->ipxRcvd.value,
 				    1, formatBuf6, sizeof(formatBuf6)),
-			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->decnetSent.value+el->nonIPTraffic->decnetRcvd.value,
-				    1, formatBuf7, sizeof(formatBuf7)),
+			formatBytes(el->ipsecSent.value+el->ipsecRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpSent.value+el->nonIPTraffic->arp_rarpRcvd.value,
 				    1, formatBuf8, sizeof(formatBuf8)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->appletalkSent.value+el->nonIPTraffic->appletalkRcvd.value,
@@ -1875,8 +1874,7 @@ void printHostsTraffic(int reportTypeReq,
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosSent.value+el->nonIPTraffic->netbiosRcvd.value,
 				    1, formatBuf, sizeof(formatBuf)),
-			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->osiSent.value+el->nonIPTraffic->osiRcvd.value,
-				    1, formatBuf1, sizeof(formatBuf1)),
+			formatBytes(el->greSent.value+el->greRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
 			formatBytes(el->ipv6Sent.value+el->ipv6Rcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpSent.value+el->nonIPTraffic->stpRcvd.value,
 				    1, formatBuf3, sizeof(formatBuf3)));
@@ -4656,9 +4654,9 @@ void printProtoTraffic(int printGraph) {
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value/
 		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
-  printTableEntry(buf, sizeof(buf), "Decnet", CONST_COLOR_1,
-		  (float)myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value/
+  printTableEntry(buf, sizeof(buf), "IPsec", CONST_COLOR_1,
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipsecBytes.value/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipsecBytes.value/
 		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
   printTableEntry(buf, sizeof(buf), "AppleTalk", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value/1024,
@@ -4668,9 +4666,9 @@ void printProtoTraffic(int printGraph) {
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value/
 		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
-  printTableEntry(buf, sizeof(buf), "OSI", CONST_COLOR_1,
-		  (float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value/
+  printTableEntry(buf, sizeof(buf), "GRE", CONST_COLOR_1,
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].greBytes.value/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].greBytes.value/
 		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
   printTableEntry(buf, sizeof(buf), "IPv6", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value/1024,

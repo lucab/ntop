@@ -517,11 +517,9 @@ typedef struct nonIPTraffic {
   /* Non IP */
   TrafficCounter   stpSent, stpRcvd; /* Spanning Tree */
   TrafficCounter   ipxSent, ipxRcvd;
-  TrafficCounter   osiSent, osiRcvd;
   TrafficCounter   dlcSent, dlcRcvd;
   TrafficCounter   arp_rarpSent, arp_rarpRcvd;
   TrafficCounter   arpReqPktsSent, arpReplyPktsSent, arpReplyPktsRcvd;
-  TrafficCounter   decnetSent, decnetRcvd;
   TrafficCounter   appletalkSent, appletalkRcvd;
   TrafficCounter   netbiosSent, netbiosRcvd;
   TrafficCounter   otherSent, otherRcvd; /* Other traffic we cannot classify */
@@ -838,6 +836,9 @@ typedef struct hostTraffic {
   short            hostResolvedNameType;
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
   struct timeval   minLatency, maxLatency;
+
+  TrafficCounter   greSent, greRcvd;
+  TrafficCounter   ipsecSent, ipsecRcvd;
 
   NonIPTraffic     *nonIPTraffic;
   NonIpProtoTrafficInfo *nonIpProtoTrafficInfos; /* Info about further non IP protos */
@@ -1495,12 +1496,12 @@ typedef struct ntopInterface {
   TrafficCounter dlcBytes;
   TrafficCounter ipxBytes;
   TrafficCounter stpBytes;        /* Spanning Tree */
-  TrafficCounter decnetBytes;
+  TrafficCounter ipsecBytes;
   TrafficCounter netbiosBytes;
   TrafficCounter arpRarpBytes;
   TrafficCounter atalkBytes;
   TrafficCounter egpBytes;
-  TrafficCounter osiBytes;
+  TrafficCounter greBytes;
   TrafficCounter ipv6Bytes;
   TrafficCounter icmp6Bytes;
   TrafficCounter otherBytes;
