@@ -3673,7 +3673,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if((el->known_subnet_id != UNKNOWN_SUBNET_ID) 
      && (el->known_subnet_id < myGlobals.numKnownSubnets)) {
-    char addr_buf[32], subnet_buf[48];
+    char subnet_buf[48];
 
     host2networkName(el, subnet_buf, sizeof(subnet_buf));
 

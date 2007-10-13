@@ -2611,6 +2611,10 @@
  #define IPPROTO_OSPF                       89
 #endif
 
+#ifndef IPPROTO_GRE
+ #define IPPROTO_GRE                       47
+#endif
+
 /* Internet Group Management Protocol */
 #ifndef IPPROTO_IGMP
 #define IPPROTO_IGMP                       2

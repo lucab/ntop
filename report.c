@@ -2641,7 +2641,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     }
 
     /* if(foundSubnet) */ {
-      u_char found = 0, tmpBuf[64];
+      u_char found = 0;
       u_int8_t selected;
 
       sendString("<tr><td><form action=\"../\">\n<b>Subnet</b>:</td>"
@@ -5853,11 +5853,13 @@ void printDomainStats(char* domain_network_name, int network_mode,
 			clusterMode ? statsEntry->clusterName : statsEntry->domainHost->dnsDomainValue,
 			clusterMode ? statsEntry->clusterName : statsEntry->domainHost->dnsDomainValue);
       } else {
-	char tmpBuf[64], *hostLink;
-	int blankId;
+	char *hostLink;
 	u_int len;
 
 #if 0
+	int blankId;
+	char tmpBuf[64];
+
 	if(statsEntry->domainHost) {
 	  accessAddrResMutex("getHostIcon");
 

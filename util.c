@@ -2198,19 +2198,21 @@ int _lockExclusiveHostsHashMutex(HostTraffic *host, char *where, char *file, int
   while(1) {
     _accessMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], where, file, line);
     if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 0)
-      return;
+      return(0);
     else
       _releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], file, line);
 
     sleep(1); /* Wait a bit */
   }
+
+  return(0);
 }
 
 /* ************************************ */
 
 #undef _unlockExclusiveHostsHashMutex
 int _unlockExclusiveHostsHashMutex(HostTraffic *host, char *file, int line) {
-  _releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], file, line);
+  return(_releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], file, line));
 }
 
 /* ************************************ */
@@ -2691,7 +2693,6 @@ void traceEvent(int eventTraceLevel, char* file,
 
 	if(myGlobals.runningPref.traceLevel >= CONST_DETAIL_TRACE_LEVEL) {
 	  unsigned int messageid = 0;
-	  int i;
 
 #ifdef LONG_FORMAT
 	  safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[t%lu %s:%d] ",
