@@ -508,7 +508,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
       if(dp->d_name[0] == '.') continue;
       else if(filterString && (!strcasestr(dp->d_name, filterString))) continue;
-      else if(filterString && strcmp(filterString, "Efficiency") && strcasestr(dp->d_name, "Efficiency")) continue;
+      else if(filterString && strcasecmp(filterString, "Efficiency") && strcasestr(dp->d_name, "Efficiency")) continue;
       else if(strncmp(dp->d_name, "NF_", 3) == 0) continue;
       else if(strlen(dp->d_name) < strlen(CONST_RRD_EXTENSION)+3)
 	continue;
@@ -1673,7 +1673,7 @@ static char* spacer(char* str, char *tmpStr, int tmpStrLen,
     token_name = "AS";
   else if((token = strstr(str, "Num")) != NULL)
     token_name = "Num";
-  else if((token = strstr(str, "Efficiency")) != NULL)
+  else if((token = strcasestr(str, "Efficiency")) != NULL)
     token_name = "Efficiency";
   else
     token = NULL, token_name = NULL;
@@ -1992,7 +1992,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
       char *pkts  = strstr(rrdName, "Pkts");
       char *flows = strstr(rrdName, "Flows");
       
-      efficiency = strstr(rrdName, "Efficiency");
+      efficiency = strcasestr(rrdName, "Efficiency");
 
       if(sent || rcvd) {
 	if(sent) sent[0]  = '\0'; else rcvd[0] = '\0';
@@ -2226,7 +2226,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
       struct stat statbuf;
       int is_efficiency;
 
-      if(strstr(rrds[i], "Efficiency")) is_efficiency = 1; else is_efficiency = 0;
+      if(strcasestr(rrds[i], "Efficiency")) is_efficiency = 1; else is_efficiency = 0;
 
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/%s%s",
 		    myGlobals.rrdPath, rrd_hosts_path[j], rrds[i], CONST_RRD_EXTENSION);
