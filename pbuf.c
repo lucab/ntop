@@ -151,13 +151,13 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
 static u_int efficiency(int actualDeviceId, u_int pktLen) {
   u_int pktEfficiency;
-  
+
   if(myGlobals.device[actualDeviceId].cellLength == 0)
     pktEfficiency = 0;
-  else    
-    pktEfficiency = 100 - (((pktLen % myGlobals.device[actualDeviceId].cellLength) * 100) 
+  else
+    pktEfficiency = 100 - (((pktLen % myGlobals.device[actualDeviceId].cellLength) * 100)
 			   / myGlobals.device[actualDeviceId].cellLength);
-  
+
   // traceEvent(CONST_TRACE_WARNING, "[len=%d][efficiency=%d]", pktLen, pktEfficiency);
   return(pktEfficiency);
 }
@@ -169,7 +169,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	     u_short isVoipSess,
 	     u_short p2pSessionIdx, int actualDeviceId,
 	     u_short newSession,
-	     u_int efficiencySent /* 0 = unknown */, 
+	     u_int efficiencySent /* 0 = unknown */,
 	     u_int efficiencyRcvd /* 0 = unknown */) {
   int idx;
   u_int pkt_efficiency = 0;
@@ -313,14 +313,16 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
     if(efficiencyRcvd == 0) efficiencyRcvd = pkt_efficiency;
 
     if(0)
-      traceEvent(CONST_TRACE_INFO, "Efficiency [sent=%d|rcvd=%d|efficiency=%d][cell=%d][len=%d]", 
-		 efficiencySent, efficiencyRcvd, pkt_efficiency, 
+      traceEvent(CONST_TRACE_INFO, "Efficiency [sent=%d|rcvd=%d|efficiency=%d][cell=%d][len=%d]",
+		 efficiencySent, efficiencyRcvd, pkt_efficiency,
 		 myGlobals.device[actualDeviceId].cellLength, length);
-    
+
     incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->pktSent, 1);
-    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->efficiencySent, efficiencySent);   
+    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->efficiencySent, efficiencySent);
+    incrementHostTrafficCounter(srcHost, efficiencySent, efficiencySent);
     incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->pktRcvd, 1);
-    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->efficiencyRcvd, efficiencyRcvd);    
+    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->efficiencyRcvd, efficiencyRcvd);
+    incrementHostTrafficCounter(dstHost, efficiencyRcvd, efficiencyRcvd);
   }
 
   return(idx);
@@ -952,7 +954,7 @@ static void updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
   AsStats *stats, *prev_stats = NULL;
   u_char found_src = 0, found_dst = 0;
 
-  if(0) 
+  if(0)
     traceEvent(CONST_TRACE_INFO, "updateASTraffic(actualDeviceId=%d, src_as_id=%d, dst_as_id=%d, octets=%d)",
 	       actualDeviceId, src_as_id, dst_as_id, octets);
 
@@ -1002,15 +1004,15 @@ static void updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
 
     if((myGlobals.actTime-stats->lastUpdate) > PARM_AS_MAXIMUM_IDLE) {
       AsStats *next = stats->next;
-            
+
       if(0) traceEvent(CONST_TRACE_INFO, "Purging stats about AS %d", stats->as_id);
       if(prev_stats == NULL)
 	myGlobals.device[actualDeviceId].asStats = next;
       else
 	prev_stats->next = next;
-      
+
       free(stats);
-      stats = next;      
+      stats = next;
     } else {
       prev_stats = stats;
       stats = stats->next;
@@ -1358,7 +1360,7 @@ static void processIpPkt(const u_char *bp,
       incrementHostTrafficCounter(dstHost, ipsecRcvd, length);
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipsecBytes, length);
       break;
-      
+
 #ifdef INET6
     case IPPROTO_ICMPV6:
       incrementHostTrafficCounter(srcHost, icmp6FragmentsSent, length);
@@ -1531,7 +1533,7 @@ static void processIpPkt(const u_char *bp,
 		  /* Suspicious packet: maybe the TCP options are wrong */
 		  break;
 		}
-	      }	     
+	      }
 	    }
 
 	    if(WS == -1)
@@ -1742,7 +1744,7 @@ static void processIpPkt(const u_char *bp,
 	      } else {
 		incrementHostTrafficCounter(srcHost, protocolInfo->dnsStats->numRemReqSent, 1);
 	      }
-	      
+
 	      if(subnetLocalHost(srcHost)) {
 		incrementHostTrafficCounter(dstHost, protocolInfo->dnsStats->numLocalReqRcvd, 1);
 	      } else {
@@ -2191,7 +2193,7 @@ static void processIpPkt(const u_char *bp,
 
       if(icmp6Pkt.icmp6_type <= ICMP6_MAXTYPE) {
 	short dumpPacket = 1;
-	
+
 	allocHostTrafficCounterMemory(srcHost, icmpInfo, sizeof(IcmpHostInfo));
 	if(srcHost->icmpInfo == NULL) return;
 
@@ -2496,7 +2498,7 @@ void queuePacket(u_char *_deviceId,
       myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].h.caplen = len;
     }
 
-    myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].deviceId = 
+    myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].deviceId =
       (int)((long)((void*)_deviceId));
     myGlobals.device[deviceId].packetQueueHead = (myGlobals.device[deviceId].packetQueueHead+1)
       % CONST_PACKET_QUEUE_LENGTH;
@@ -3129,10 +3131,10 @@ void processPacket(u_char *_deviceId,
 	if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
 	memcpy((char *)&ipxPkt, (char *)p+sizeof(struct ether_header), sizeof(IPXpacket));
-	
+
 	allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
 	allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
-	
+
 	if(ntohs(ipxPkt.dstSocket) == 0x0452) {
 	  /* SAP */
 	  int displ = sizeof(struct ether_header);
@@ -3187,7 +3189,7 @@ void processPacket(u_char *_deviceId,
 	allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
 	allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
 	if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-	
+
 	incrementHostTrafficCounter(srcHost, nonIPTraffic->otherSent, length);
 	incrementHostTrafficCounter(dstHost, nonIPTraffic->otherRcvd, length);
 	incrementUnknownProto(srcHost, 0 /* sent */, eth_type /* eth */, 0 /* dsap */, 0 /* ssap */, 0 /* ip */);
@@ -3245,7 +3247,7 @@ void processPacket(u_char *_deviceId,
 	  allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
 	  allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
 	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-	  
+
 	  incrementHostTrafficCounter(srcHost, nonIPTraffic->ipxSent, length);
 	  incrementHostTrafficCounter(dstHost, nonIPTraffic->ipxRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
@@ -3397,7 +3399,7 @@ void processPacket(u_char *_deviceId,
 		    serverName[i] = '\0';
 		    break;
 		  }
-		
+
 		incrementHostTrafficCounter(srcHost, nonIPTraffic->ipxSent, length);
 		incrementHostTrafficCounter(dstHost, nonIPTraffic->ipxRcvd, length);
 
@@ -3820,7 +3822,7 @@ void processPacket(u_char *_deviceId,
 	  }
 
 	  if(dstHost != NULL) {
-	    
+
 	    incrementHostTrafficCounter(dstHost, nonIPTraffic->arp_rarpRcvd, length);
 	  }
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].arpRarpBytes, length);
