@@ -2514,26 +2514,6 @@
 
 #endif /* MAKE_NTOP_PACKETSZ_DECLARATIONS */
 
-#ifndef INT16SZ
- #define HFIXEDSZ      12              /* #/bytes of fixed data in header */
- #define INT32SZ       4               /* for systems without 32-bit ints */
- #define INT16SZ       2               /* for systems without 16-bit ints */
- #define INADDRSZ      4               /* IPv4 T_A */
- #define IN6ADDRSZ     16              /* IPv6 T_AAAA */
-#endif /* INT16SZ */
-
-#ifndef NS_INT16SZ
- #define NS_INT16SZ                         sizeof(u_int16_t)  /* #/bytes of data in a u_int16_t */
-#endif
-
-#ifndef NS_CMPRSFLGS
- #define NS_CMPRSFLGS                       0xc0
-#endif
-
-#ifndef NS_MAXCDNAME
- #define NS_MAXCDNAME                       255
-#endif
-
 /* End the <arpa/nameser_compat.h> stuff */
 
 /* ******************************* */

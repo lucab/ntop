@@ -317,15 +317,15 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 
     /* ******************************** */
 
-    el->actualRcvdPktThpt    = (float)(el->pktRcvd.value-el->lastPktRcvd.value)/timeDiff;
+    el->actualRcvdPktThpt    = (float)(el->pktRcvd.value-el->lastThptPktRcvd.value)/timeDiff;
     if(el->peakRcvdPktThpt   < el->actualRcvdPktThpt) el->peakRcvdPktThpt = el->actualRcvdPktThpt;
-    el->actualSentPktThpt    = (float)(el->pktSent.value-el->lastPktSent.value)/timeDiff;
+    el->actualSentPktThpt    = (float)(el->pktSent.value-el->lastThptPktSent.value)/timeDiff;
     if(el->peakSentPktThpt   < el->actualSentPktThpt) el->peakSentPktThpt = el->actualSentPktThpt;
-    el->actualTPktThpt       = (float)(el->pktRcvd.value-el->lastPktRcvd.value+
-				       el->pktSent.value-el->lastPktSent.value)/timeDiff;
+    el->actualTPktThpt       = (float)(el->pktRcvd.value-el->lastThptPktRcvd.value+
+				       el->pktSent.value-el->lastThptPktSent.value)/timeDiff;
     if(el->peakTPktThpt      < el->actualTPktThpt) el->peakTPktThpt = el->actualTPktThpt;
-    el->lastPktSent          = el->pktSent;
-    el->lastPktRcvd          = el->pktRcvd;
+    el->lastThptPktSent          = el->pktSent;
+    el->lastThptPktRcvd          = el->pktRcvd;
 
     /* ******************************** */
 

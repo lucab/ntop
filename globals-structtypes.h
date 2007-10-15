@@ -645,7 +645,7 @@ typedef struct protoTrafficInfo {
   TrafficCounter sentLoc, sentRem;
   TrafficCounter rcvdLoc, rcvdFromRem;
   TrafficCounter pktSent, pktRcvd, efficiencySent, efficiencyRcvd;
-  TrafficCounter last_pktSent, last_pktRcvd; /* Used by the RRD plugin */
+  TrafficCounter lastEfficiencyPktSent, lastEfficiencyPktRcvd; /* Used by the RRD plugin */
   TrafficCounter totalFlows;
 } ProtoTrafficInfo;
 
@@ -845,8 +845,8 @@ typedef struct hostTraffic {
 
   fd_set           flags;
   TrafficCounter   pktSent, pktRcvd, pktSentSession, pktRcvdSession,
-    pktDuplicatedAckSent, pktDuplicatedAckRcvd;
-  TrafficCounter   lastPktSent, lastPktRcvd;
+    pktDuplicatedAckSent, pktDuplicatedAckRcvd, efficiencySent, efficiencyRcvd;
+  TrafficCounter   lastThptPktSent, lastThptPktRcvd, lastEfficiencyPktSent, lastEfficiencyPktRcvd;
   TrafficCounter   pktBroadcastSent, bytesBroadcastSent;
   TrafficCounter   pktMulticastSent, bytesMulticastSent,
     pktMulticastRcvd, bytesMulticastRcvd;

@@ -30,7 +30,7 @@
 #endif
 
 #define REMOTE_SERVER_PORT 2005
-static u_char useDaemon = 0;
+static u_char useDaemon = 0, calculateEfficiency = 1;
 static int sd = -1;
 static struct sockaddr_in cliAddr, remoteServAddr;
 
@@ -2595,7 +2595,6 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
     }
 #endif
 
-
     if(!createdCounter) {
       time_t now = time(NULL);
 
@@ -4475,6 +4474,31 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
     updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd, 0);
 
     if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
+
+      if(calculateEfficiency) {
+	if(el->pktSent.value > 0) {
+	  Counter c, diff = el->pktSent.value - el->lastEfficiencyPktSent.value;
+	  
+	  if(diff > 0) {
+	    c = el->efficiencySent.value / diff;
+	    updateGauge(rrdPath, "efficiencySent", c, 0);
+	    el->lastEfficiencyPktSent.value = el->pktSent.value;
+	    el->efficiencySent.value = 0;
+	  }
+	}
+	
+	if(el->pktRcvd.value > 0) {
+	  Counter c, diff = el->pktRcvd.value - el->lastEfficiencyPktRcvd.value;
+
+	  if(diff > 0) {
+	    c = el->efficiencyRcvd.value / diff;
+	    updateGauge(rrdPath, "efficiencyRcvd", c, 0);
+	    el->lastEfficiencyPktRcvd.value = el->pktRcvd.value;
+	    el->efficiencyRcvd.value = 0;
+	  }
+	}
+      }
+
       updateTrafficCounter(rrdPath, "pktDuplicatedAckSent", &el->pktDuplicatedAckSent, 0);
       updateTrafficCounter(rrdPath, "pktDuplicatedAckRcvd", &el->pktDuplicatedAckRcvd, 0);
       updateTrafficCounter(rrdPath, "pktBroadcastSent", &el->pktBroadcastSent, 0);
@@ -4577,35 +4601,37 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->rcvdLoc.value+
 			    el->protoIPTrafficInfos[j]->rcvdFromRem.value, 0);
 
-	      if(el->protoIPTrafficInfos[j]->pktSent.value > 0) {
-		Counter c, diff;
+	      if(calculateEfficiency) {
+		if(el->protoIPTrafficInfos[j]->pktSent.value > 0) {
+		  Counter c, diff;
 
-		diff = el->protoIPTrafficInfos[j]->pktSent.value - el->protoIPTrafficInfos[j]->last_pktSent.value;
+		  diff = el->protoIPTrafficInfos[j]->pktSent.value - el->protoIPTrafficInfos[j]->lastEfficiencyPktSent.value;
 
-		if(diff > 0) {
-		  c = el->protoIPTrafficInfos[j]->efficiencySent.value / diff;
-		  safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencySent", myGlobals.ipTrafficProtosNames[j]);
-		  // traceEvent(CONST_TRACE_WARNING, "--> Sent [val = %u]", c);
-		  updateGauge(rrdPath, key, c, 0);
-		  el->protoIPTrafficInfos[j]->last_pktSent.value = el->protoIPTrafficInfos[j]->pktSent.value;
-		  el->protoIPTrafficInfos[j]->efficiencySent.value = 0; /* Reset value */
+		  if(diff > 0) {
+		    c = el->protoIPTrafficInfos[j]->efficiencySent.value / diff;
+		    safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencySent", myGlobals.ipTrafficProtosNames[j]);
+		    // traceEvent(CONST_TRACE_WARNING, "--> Sent [val = %u]", c);
+		    updateGauge(rrdPath, key, c, 0);
+		    el->protoIPTrafficInfos[j]->lastEfficiencyPktSent.value = el->protoIPTrafficInfos[j]->pktSent.value;
+		    el->protoIPTrafficInfos[j]->efficiencySent.value = 0; /* Reset value */
+		  }
 		}
-	      }
 
-	      if(el->protoIPTrafficInfos[j]->pktRcvd.value > 0) {
-		Counter c, diff;
+		if(el->protoIPTrafficInfos[j]->pktRcvd.value > 0) {
+		  Counter c, diff;
 
-		diff = el->protoIPTrafficInfos[j]->pktRcvd.value - el->protoIPTrafficInfos[j]->last_pktRcvd.value;
+		  diff = el->protoIPTrafficInfos[j]->pktRcvd.value - el->protoIPTrafficInfos[j]->lastEfficiencyPktRcvd.value;
 
-		if(diff > 0) {
-		  c = el->protoIPTrafficInfos[j]->efficiencyRcvd.value / el->protoIPTrafficInfos[j]->pktRcvd.value;
-		  safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencyRcvd", myGlobals.ipTrafficProtosNames[j]);
+		  if(diff > 0) {
+		    c = el->protoIPTrafficInfos[j]->efficiencyRcvd.value / el->protoIPTrafficInfos[j]->pktRcvd.value;
+		    safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencyRcvd", myGlobals.ipTrafficProtosNames[j]);
 		  
-		  // traceEvent(CONST_TRACE_WARNING, "--> Rcvd [val = %u]", c);
+		    // traceEvent(CONST_TRACE_WARNING, "--> Rcvd [val = %u]", c);
 		  
-		  updateGauge(rrdPath, key, c, 0);
-		  el->protoIPTrafficInfos[j]->last_pktRcvd.value = el->protoIPTrafficInfos[j]->pktRcvd.value;
-		  el->protoIPTrafficInfos[j]->efficiencyRcvd.value = 0; /* Reset value */
+		    updateGauge(rrdPath, key, c, 0);
+		    el->protoIPTrafficInfos[j]->lastEfficiencyPktRcvd.value = el->protoIPTrafficInfos[j]->pktRcvd.value;
+		    el->protoIPTrafficInfos[j]->efficiencyRcvd.value = 0; /* Reset value */
+		  }
 		}
 	      }
 	    }
