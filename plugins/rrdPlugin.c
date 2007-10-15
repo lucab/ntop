@@ -540,30 +540,61 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
 	/* if(strcmp(rsrcName, "pktSent") || strcmp(rsrcName, "pktRcvd")) continue; */
 
-	/* traceEvent(CONST_TRACE_WARNING, "RRD: [%s]", dp->d_name); */
-
 	if(strncmp(rsrcName, "IP_", 3)
 	   || strncmp(rsrcName, "tcp", 3)
 	   || strncmp(rsrcName, "udp", 3)
 	   ) {
-	  /* if(!strstr(rsrcName, "Rcvd")) */ {
+	  u_char do_show = 1;
+	  char *subname = strstr(rsrcName, "Rcvd");
+
+	  // traceEvent(CONST_TRACE_WARNING, "RRD: [%s]", dp->d_name); 
+
+	  if(subname) {
+	    DIR* directoryPointer1;
+	    struct dirent* dp1;
+	    char rsrcName1[64];
+	    
+	    safe_snprintf(__FILE__, __LINE__, rsrcName1, sizeof(rsrcName1), "%s", rsrcName);
+	    subname = strstr(rsrcName1, "Rcvd");
+	    subname[0] = 'S';
+	    subname[1] = 'e';
+	    subname[2] = 'n';
+	    subname[3] = 't';
+
+	    // traceEvent(CONST_TRACE_WARNING, "RRD: -> (%s) [%s]", rsrcName1, path);
+
+	    if((directoryPointer1 = opendir(path)) != NULL) {
+	      while((dp1 = readdir(directoryPointer1)) != NULL) {
+		// traceEvent(CONST_TRACE_WARNING, "RRD: (%s) (%s)", dp1->d_name, rsrcName1);
+		if(strcmp(dp1->d_name, rsrcName1) == 0) {
+		  do_show = 0;
+		  break;
+		}
+	      }
+	      closedir(directoryPointer1);
+	    }
+	  }
+	  
+
+	  if(do_show) {
 	    sendString("<TR><TD align=left>\n");
 
-	    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "<img class=tooltip src=\"/" CONST_PLUGINS_HEADER "%s?"
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<img class=tooltip src=\"/" CONST_PLUGINS_HEADER "%s?"
 			  "action=graphSummary&graphId=99&key=%s/&name=%s&title=%s&start=%s&end=%s\">\n",
 			  rrdPluginInfo->pluginURLname,
 			  rrdPath, rsrcName, rsrcName, startTime, endTime);
-	    sendString(path);
+	    sendString(buf);
 
-	    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "</td><td align=right><A HREF=\"/" CONST_PLUGINS_HEADER "%s?"
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "</td><td align=right><A HREF=\"/" CONST_PLUGINS_HEADER "%s?"
 			  "mode=zoom&action=graphSummary&graphId=99&key=%s/&name=%s&title=%s&start=%s&end=%s\">"
 			  "<IMG valign=top class=tooltip SRC=/graph_zoom.gif border=0></A><p>\n",
 			  rrdPluginInfo->pluginURLname, rrdPath, rsrcName, rsrcName, startTime, endTime);
-	    sendString(path);
+	    sendString(buf);
 
 	    sendString("</TD></TR>\n");
 	  }
 	}
+	 
       }
     } /* while */
 
@@ -1721,6 +1752,12 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
 
   if(!strncmp(&str[shift], "bytesBroadcast", strlen("bytesBroadcast"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Broadcast Traffic");
+    done = 1;
+  } else if(!strncmp(&str[shift], "bytesMulticast", strlen("bytesMulticast"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Multicast Traffic");
+    done = 1;
+  } else if(!strncmp(&str[shift], "bytesRem", strlen("bytesRem"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Remote Traffic");
   } else if(!strncmp(&str[shift], "bytes", strlen("bytes"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Traffic");
   } else if(!strncmp(&str[shift], "ip", strlen("ip"))) {
@@ -1744,6 +1781,9 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
   } else if(!strncmp(&str[shift], "icmp", strlen("icmp"))) {
     done = 1;
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "ICMP Traffic");
+  } else if(!strncmp(&str[shift], "arp_rarp", strlen("arp_rarp"))) {
+    done = 1;
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "(R)ARP");
   } else if(!strncmp(&str[shift], "pkt", strlen("pkt"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Packets");
   } else if((pos = strstr(&str[shift], "Efficiency"))) {
@@ -1826,7 +1866,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   char path[512], *argv[6*MAX_NUM_ENTRIES], tmpStr[32], fname[384], *label, rrdPath_copy[512];
   char *buf0[MAX_NUM_ENTRIES], *buf1[MAX_NUM_ENTRIES], *buf2[MAX_NUM_ENTRIES],
     *buf3[MAX_NUM_ENTRIES], *buf4[MAX_NUM_ENTRIES], *buf5[MAX_NUM_ENTRIES];
-  char metric_name[32], title_buf[64];
+  char metric_name[32], title_buf[64], ip_buf[64];
   char _rrdName[256], *efficiency = NULL;
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
   int argc = 0, rc, x, y, i, entryId=0, num_rrd_hosts_path = 0, j;
@@ -1835,6 +1875,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     *rrd_hosts[MAX_NUM_RRD_HOSTS], file_a[32], file_b[32], *upside;
   double ymin,ymax;
   u_int8_t upside_down = 0, no_mem = 0;
+  u_char titleAlreadySent = 0;
 
   // if((!active) || (!initialized)) return;
 
@@ -2152,9 +2193,10 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   argv[argc++] = endTime;
   argv[argc++] = "--slope-mode";
 
-  if(graphId == 98) {
+  if((graphId == 98) || (graphId == 99)) {
     argv[argc++] = "--title";
     argv[argc++] = formatTitle(rrdName, title_buf, sizeof(title_buf));
+    titleAlreadySent = 1;
   }
 
   if(efficiency) {
@@ -2239,20 +2281,21 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	  argv[argc++] = buf1[entryId];
 	  do_upside = 0;
 
-	  safe_snprintf(__FILE__, __LINE__, title_buf, sizeof(title_buf),
+	  safe_snprintf(__FILE__, __LINE__, ip_buf, sizeof(ip_buf),
 			"%s", (!strncmp(rrdName, "IP_", 3)) ? &rrdName[3] : rrdName);
-	  if(strlen(title_buf) > strlen(metric_name))
-	    title_buf[strlen(title_buf)-strlen(metric_name)] = '\0';
+	  if(strlen(ip_buf) > strlen(metric_name))
+	    ip_buf[strlen(ip_buf)-strlen(metric_name)] = '\0';
 
-	  if(graphId == 99) {
-	    argv[argc++] = "--title";
-	    // traceEvent(CONST_TRACE_INFO, "RRD: --> (%s)", filename);
-	    argv[argc++] = formatTitle(filename, title_buf, sizeof(title_buf));
-	  } else if(graphId == 4) {
-	    argv[argc++] = "--title";
-	    argv[argc++] = "Historical View";
+	  if(!titleAlreadySent) {
+	    if(graphId == 99) {
+	      argv[argc++] = "--title";
+	      // traceEvent(CONST_TRACE_INFO, "RRD: --> (%s)", filename);
+	      argv[argc++] = formatTitle(filename, title_buf, sizeof(title_buf));
+	    } else if(graphId == 4) {
+	      argv[argc++] = "--title";
+	      argv[argc++] = "Historical View";
+	    }
 	  }
-
 	}
 
 	if(do_upside) upside = "my_"; else upside = "";
