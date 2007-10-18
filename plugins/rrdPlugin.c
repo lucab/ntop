@@ -1748,7 +1748,7 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
 
   if(!strncmp(str, "IP_", 3)) shift = 3;
 
-  //traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s)", &str[shift]);
+  // traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s)", &str[shift]);
 
   if(!strncmp(&str[shift], "bytesBroadcast", strlen("bytesBroadcast"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Broadcast Traffic");
@@ -1757,9 +1757,25 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Multicast Traffic");
     done = 1;
   } else if(!strncmp(&str[shift], "bytesRem", strlen("bytesRem"))) {
-    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Remote Traffic");
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Traffic: Sent to Remote");
+    done = 1;
+  } else if(!strncmp(&str[shift], "bytesFromRem", strlen("bytesFromRem"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Traffic: Rcvd from Remote");
+    done = 1;
+  } else if(!strncmp(&str[shift], "bytesLocSent", strlen("bytesLocSent"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Traffic: Sent Locally");
+    done = 1;
+  } else if(!strncmp(&str[shift], "bytesLoc", strlen("bytesLoc"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Traffic: Local Traffic");
+    done = 1;
+  } else if(!strncmp(&str[shift], "other", strlen("other"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Unclassified Traffic");
+    done = 1;
   } else if(!strncmp(&str[shift], "bytes", strlen("bytes"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Traffic");
+  } else if(!strncmp(&str[shift], "ipsec", strlen("ipsec"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "IPSEC Traffic");
+    done = 1;
   } else if(!strncmp(&str[shift], "ip", strlen("ip"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "IP Traffic");
     done = 1;
@@ -1773,13 +1789,13 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
   } else if(!strncmp(&str[shift], "totPeers", strlen("totPeers"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Number of Peers");
   } else if(!strncmp(&str[shift], "udp", strlen("udp"))) {
-    done = 1;
+    done = 2;
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "UDP Traffic");
   } else if(!strncmp(&str[shift], "tcp", strlen("tcp"))) {
-    done = 1;
+    done = 2;
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "TCP Traffic");
   } else if(!strncmp(&str[shift], "icmp", strlen("icmp"))) {
-    done = 1;
+    done = 2;
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "ICMP Traffic");
   } else if(!strncmp(&str[shift], "arp_rarp", strlen("arp_rarp"))) {
     done = 1;
@@ -1796,7 +1812,20 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
   } else
     not_found = 1, safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s", &str[shift]);
 
-  if(!done) {
+  if(done == 2) {
+    // traceEvent(CONST_TRACE_WARNING,  "-- 2 --> (%s)", &str[shift]);
+
+    if(strstr(&str[shift], "LocSent"))
+      safe_snprintf(__FILE__, __LINE__, &buf[strlen(buf)], buf_len-strlen(buf), ": Sent Locally");
+    else if(strstr(&str[shift], "FromRemRcvd"))
+      safe_snprintf(__FILE__, __LINE__, &buf[strlen(buf)], buf_len-strlen(buf), ": Rcvd from Remote");
+    else if((strstr(&str[shift], "RemSent")) || (strstr(&str[shift], "Rem")))
+      safe_snprintf(__FILE__, __LINE__, &buf[strlen(buf)], buf_len-strlen(buf), ": Sent Remotely");
+    else if(strstr(&str[shift], "Loc"))
+      safe_snprintf(__FILE__, __LINE__, &buf[strlen(buf)], buf_len-strlen(buf), ": Local Traffic");
+    else if(strstr(&str[shift], "Fragments"))
+      safe_snprintf(__FILE__, __LINE__, &buf[strlen(buf)], buf_len-strlen(buf), ": Fragmented Traffic");
+  } else if(!done) {
     len = strlen(str), buf_len = strlen(buf);
 
     // traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s)", &str[len-14]);
@@ -2642,7 +2671,8 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
       time_t now = time(NULL);
 
       /* Avoid peaks */
-      if((now-myGlobals.initialSniffTime) < dumpInterval) {
+      if(((now-myGlobals.initialSniffTime) < (2*dumpInterval))
+	 && (checkLast(path) < myGlobals.initialSniffTime)) {
 	argc = 0;
 	argv[argc++] = "rrd_update";
 	argv[argc++] = path;

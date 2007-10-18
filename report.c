@@ -5279,8 +5279,8 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
   }
 
   /*
-    traceEvent(CONST_TRACE_INFO, "--> [columnSort=%d][network_mode_sort=%d]",
-    myGlobals.columnSort, network_mode_sort);
+  traceEvent(CONST_TRACE_INFO, "--> [columnSort=%d][network_mode_sort=%d]",
+	     myGlobals.columnSort, network_mode_sort);
   */
 
   switch(myGlobals.columnSort) {
@@ -5288,10 +5288,12 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
     if(network_mode_sort == NETWORK_VIEW) {
       char buf1[64], buf2[64];
 
-      char *nw_name_a = host2networkName(a->domainHost, buf1, sizeof(buf1));
-      char *nw_name_b = host2networkName(b->domainHost, buf2, sizeof(buf2));
-      rc = strcmp(nw_name_a, nw_name_b);
+      char *nw_name_a = subnetId2networkName(a->known_subnet_id, buf1, sizeof(buf1));
+      char *nw_name_b = subnetId2networkName(b->known_subnet_id, buf2, sizeof(buf2));
 
+      /* traceEvent(CONST_TRACE_INFO, "--> [%s][%s]", nw_name_a, nw_name_b); */
+
+      return(strcmp(nw_name_a, nw_name_b));
     } else if(network_mode_sort == AS_VIEW) {
       a_ = a->domainHost->hostAS , b_ = b->domainHost->hostAS;
     } else {
@@ -5519,15 +5521,19 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
       if((i = stat(buf, &statbuf)) == 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<center>"
-		      "<IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=numAS&arbiface=%s&start=%u&end=%u&counter=&title=%s\">",
-		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600),
+		      "<IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=numAS"
+		      "&arbiface=%s&start=%u&end=%u&counter=&title=%s\">",
+		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, 
+		      (unsigned int)(myGlobals.actTime-3600),
 		      (unsigned int)myGlobals.actTime, "Active+ASs");
 	sendString(buf);
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=numAS&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
+		      "<A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=numAS&"
+		      "arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
 		      "&nbsp;<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A>",
-		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600),
+		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, 
+		      (unsigned int)(myGlobals.actTime-3600),
 		      (unsigned int)myGlobals.actTime, "Active+ASs");
 	sendString(buf);
 
