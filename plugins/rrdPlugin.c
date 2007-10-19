@@ -1776,10 +1776,14 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
   } else if(!strncmp(&str[shift], "ipsec", strlen("ipsec"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "IPSEC Traffic");
     done = 1;
+  } else if(!strncmp(&str[shift], "ipv6", strlen("ipv6"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "IPv6 Traffic");
+    //done = 1;
   } else if(!strncmp(&str[shift], "ip", strlen("ip"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "IP Traffic");
-    done = 1;
-  } else if(!strncmp(&str[shift], "pktBroadcast", strlen("pktBroadcast"))) {
+    //done = 1;
+  } else if((!strncmp(&str[shift], "pktBroadcast", strlen("pktBroadcast")))
+	    || (!strncmp(&str[shift], "broadcastPkts", strlen("broadcastPkts")))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Broadcast Packets");
   } else if((!strncmp(&str[shift], "pktMulticast", strlen("pktMulticast")))
 	    || (!strncmp(&str[shift], "multicastPkts", strlen("multicastPkts")))) {
@@ -1797,7 +1801,8 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
   } else if(!strncmp(&str[shift], "icmp", strlen("icmp"))) {
     done = 2;
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "ICMP Traffic");
-  } else if(!strncmp(&str[shift], "arp_rarp", strlen("arp_rarp"))) {
+  } else if((!strncmp(&str[shift], "arp_rarp", strlen("arp_rarp"))) 
+	    || (!strncmp(&str[shift], "arpRarp", strlen("arpRarp")))) {
     done = 1;
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "(R)ARP");
   } else if(!strncmp(&str[shift], "pkt", strlen("pkt"))) {
@@ -1805,16 +1810,25 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
   } else if((pos = strstr(&str[shift], "Efficiency"))) {
     pos[0] = '\0';
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s", &str[shift]);
+  } else if((pos = strstr(&str[shift], "Flows"))) {
+    pos[0] = '\0';
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s F%s", &str[shift], &pos[1]);
+    buf[strlen(buf)-4] = '\0';
+    done = 1;
   } else if(!strncmp(&str[shift], "upTo", strlen("upTo"))) {
     int num =  atoi(&str[shift+4]);
 
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Packets Up To %d Bytes", num);
+  } else if((pos = strstr(&str[shift], "Bytes"))) {
+    pos[0] = '\0';
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s Traffic", &str[shift]);
+    done = 1;
   } else
     not_found = 1, safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s", &str[shift]);
 
   if(done == 2) {
-    // traceEvent(CONST_TRACE_WARNING,  "-- 2 --> (%s)", &str[shift]);
-
+    //traceEvent(CONST_TRACE_WARNING,  "-- 2 --> (%s)", &str[shift]);
+    
     if(strstr(&str[shift], "LocSent"))
       safe_snprintf(__FILE__, __LINE__, &buf[strlen(buf)], buf_len-strlen(buf), ": Sent Locally");
     else if(strstr(&str[shift], "FromRemRcvd"))
@@ -1828,7 +1842,7 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
   } else if(!done) {
     len = strlen(str), buf_len = strlen(buf);
 
-    // traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s)", &str[len-14]);
+    //traceEvent(CONST_TRACE_WARNING,  "-- ** --> (%s)", &str[2]);
 
     if(!strcmp(&str[len-7], "LocSent")) {
       if(not_found) buf[len-7] = '\0';
@@ -1845,9 +1859,12 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
     } else if(!strcmp(&str[len-9], "BytesRcvd")) {
       if(not_found) buf[len-9] = '\0';
       strcat(buf, " Received");
-    } else if(!strcmp(&str[len-7], "LocRcvd")) {
+    } else if(strstr(&str[shift], "LocalToLocal")) {
       if(not_found) buf[len-7] = '\0';
-      strcat(buf, " Rcvd From Local Hosts");
+      strcat(buf, " Local to Local");
+    } else if(strstr(&str[shift], "RemoteToRemote")) {
+      if(not_found) buf[len-7] = '\0';
+      strcat(buf, " Remote to Remote");
     } else if(!strcmp(&str[len-11], "FromRemRcvd")) {
       if(not_found) buf[len-11] = '\0';
       strcat(buf, " Rcvd From Remote Hosts");
@@ -4617,8 +4634,8 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	updateTrafficCounter(rrdPath, "ipxRcvd", &el->nonIPTraffic->ipxRcvd, 0);
 	updateTrafficCounter(rrdPath, "dlcSent", &el->nonIPTraffic->dlcSent, 0);
 	updateTrafficCounter(rrdPath, "dlcRcvd", &el->nonIPTraffic->dlcRcvd, 0);
-	updateTrafficCounter(rrdPath, "arp_rarpSent", &el->nonIPTraffic->arp_rarpSent, 0);
-	updateTrafficCounter(rrdPath, "arp_rarpRcvd", &el->nonIPTraffic->arp_rarpRcvd, 0);
+	updateTrafficCounter(rrdPath, "arpRarpSent", &el->nonIPTraffic->arp_rarpSent, 0);
+	updateTrafficCounter(rrdPath, "arpRarpRcvd", &el->nonIPTraffic->arp_rarpRcvd, 0);
 	updateTrafficCounter(rrdPath, "arpReqPktsSent", &el->nonIPTraffic->arpReqPktsSent, 0);
 	updateTrafficCounter(rrdPath, "arpReplyPktsSent", &el->nonIPTraffic->arpReplyPktsSent, 0);
 	updateTrafficCounter(rrdPath, "arpReplyPktsRcvd", &el->nonIPTraffic->arpReplyPktsRcvd, 0);
