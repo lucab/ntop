@@ -847,8 +847,10 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
     }
   }
 
-  if(myGlobals.allDevs != NULL)
+  if(myGlobals.allDevs != NULL) {
     pcap_freealldevs(myGlobals.allDevs);
+    myGlobals.allDevs = NULL;
+  }
 
   if(myGlobals.device != NULL) {
     for(i=0; i<myGlobals.numDevices; i++) {
@@ -948,15 +950,16 @@ RETSIGTYPE cleanup(int signo) {
   char buf[128];
   static int cleanup_called = 0;
 
-  if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_SHUTDOWN) {
-    static u_char caught_signal = 0;
-    traceEvent(CONST_TRACE_INFO, "CLEANUP[t%lu]: ntop caught signal %d", pthread_self(), signo);
+  if(myGlobals.ntopRunState < FLAG_NTOPSTATE_RUN) {
+    cleanup_called = 1; /* Terminate immediately */
+  }
 
-    if(caught_signal){
-      traceEvent(CONST_TRACE_INFO, "ntop is now quitting...");
-      exit(0);
-    } else
-      caught_signal = 1;
+  traceEvent(CONST_TRACE_INFO, "CLEANUP[t%lu]: ntop caught signal %d [state=%d]", 
+	     pthread_self(), signo, myGlobals.ntopRunState);
+
+  if(cleanup_called) {
+    traceEvent(CONST_TRACE_INFO, "ntop is now quitting...");
+    exit(0);
   }
 
 #ifndef WIN32

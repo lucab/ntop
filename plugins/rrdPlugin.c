@@ -33,6 +33,7 @@
 static u_char useDaemon = 0, calculateEfficiency = 1;
 static int sd = -1;
 static struct sockaddr_in cliAddr, remoteServAddr;
+static char* rrdVolatilePath;
 
 #if defined(RRD_DEBUG) && (RRD_DEBUG > 0)
 #define traceEventRRDebug(level, ...) { if(RRD_DEBUG >= level)				\
@@ -819,10 +820,10 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     if(!strcmp(rrdName, "throughput")) {
 #ifdef WIN32
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd",
-		    myGlobals.spoolPath, driveSerial, rrdPath, rrdName);
+		    myGlobals.rrdVolatilePath, driveSerial, rrdPath, rrdName);
 #else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
-		    myGlobals.spoolPath, rrdPath, rrdName);
+		    myGlobals.rrdVolatilePath, rrdPath, rrdName);
 #endif
     } else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
@@ -846,10 +847,11 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   revertSlashIfWIN32(path, 0);
   revertSlashIfWIN32(fname, 0);
 
-  /* traceEvent(CONST_TRACE_INFO, "--> '%s'", path); */
+  /* traceEvent(CONST_TRACE_INFO, "--> '%s'", path);  */
 
   if(endsWith(rrdName, "Bytes")) label = "Bytes/s";
   else if(endsWith(rrdName, "Pkts")) label = "Pkt/s";
+  else if(strstr(rrdName, "knownHostsNum")) label = "Number of Peers";
   else label = capitalizeInitial(rrdName);
 
   if((!strcmp(endTime, "now"))
@@ -1229,10 +1231,10 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
     if(!strcmp(rrds[i].name, "throughput")) {
 #ifdef WIN32
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd",
-		    myGlobals.spoolPath, driveSerial, rrdPath, rrds[i].name);
+		    myGlobals.rrdVolatilePath, driveSerial, rrdPath, rrds[i].name);
 #else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
-		    myGlobals.spoolPath, rrdPath, rrds[i].name);
+		    myGlobals.rrdVolatilePath, rrdPath, rrds[i].name);
 #endif
     } else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
@@ -1286,6 +1288,14 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
   rrd_clear_error();
   addRrdDelay();
   rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);
+
+    if(0) {
+      int j;
+
+      for(j=0; j<argc; j++)
+	traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
+    }
+
 
   calfree();
 
@@ -1562,10 +1572,10 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
     if(!strcmp(rrds[i], "throughput")) {
 #ifdef WIN32
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s/%s/%s.rrd",
-		    myGlobals.spoolPath, driveSerial, rrd_subdirs[2], rrdPath, rrds[i]);
+		    myGlobals.rrdVolatilePath, driveSerial, rrd_subdirs[2], rrdPath, rrds[i]);
 #else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/%s/%s.rrd",
-		    myGlobals.spoolPath, rrd_subdirs[2], rrdPath, rrds[i]);
+		    myGlobals.rrdVolatilePath, rrd_subdirs[2], rrdPath, rrds[i]);
 #endif
     } else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s/%s/%s.rrd",
@@ -1606,6 +1616,13 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
   }
 
   /* traceEventRRDebugARGV(0);  */
+
+  if(0) {
+    int j;
+    
+    for(j=0; j<argc; j++)
+      traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
+  }
 
   accessMutex(&rrdMutex, "rrd_graph");
   optind=0; /* reset gnu getopt */
@@ -1771,17 +1788,15 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
   } else if(!strncmp(&str[shift], "other", strlen("other"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Unclassified Traffic");
     done = 1;
-  } else if(!strncmp(&str[shift], "bytes", strlen("bytes"))) {
-    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Traffic");
-  } else if(!strncmp(&str[shift], "ipsec", strlen("ipsec"))) {
-    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "IPSEC Traffic");
-    done = 1;
   } else if(!strncmp(&str[shift], "ipv6", strlen("ipv6"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "IPv6 Traffic");
     //done = 1;
   } else if(!strncmp(&str[shift], "ip", strlen("ip"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "IP Traffic");
     //done = 1;
+  } else if(!strncmp(&str[shift], "ipsec", strlen("ipsec"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "IPSEC Traffic");
+    done = 1;
   } else if((!strncmp(&str[shift], "pktBroadcast", strlen("pktBroadcast")))
 	    || (!strncmp(&str[shift], "broadcastPkts", strlen("broadcastPkts")))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Broadcast Packets");
@@ -1789,7 +1804,7 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
 	    || (!strncmp(&str[shift], "multicastPkts", strlen("multicastPkts")))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Multicast Packets");
   } else if(!strncmp(&str[shift], "activeHostSendersNum", strlen("activeHostSendersNum"))) {
-    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Number of Active Hosts");
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Number of Active Host Senders");
   } else if(!strncmp(&str[shift], "totPeers", strlen("totPeers"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Number of Peers");
   } else if(!strncmp(&str[shift], "udp", strlen("udp"))) {
@@ -1807,9 +1822,16 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "(R)ARP");
   } else if(!strncmp(&str[shift], "pkt", strlen("pkt"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Packets");
+  } else if(!strncmp(&str[shift], "bytes", strlen("bytes"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Traffic");
+  } else if(pos = strstr(&str[shift], "Pkts")) {
+    pos[0] = '\0';
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s Packets", &str[shift]);
+  } else if(!strncmp(&str[shift], "efficiency", strlen("efficiency"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Overall Efficiency");
   } else if((pos = strstr(&str[shift], "Efficiency"))) {
     pos[0] = '\0';
-    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s", &str[shift]);
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s Efficiency", &str[shift]);
   } else if((pos = strstr(&str[shift], "Flows"))) {
     pos[0] = '\0';
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s F%s", &str[shift], &pos[1]);
@@ -1822,6 +1844,10 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
   } else if((pos = strstr(&str[shift], "Bytes"))) {
     pos[0] = '\0';
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s Traffic", &str[shift]);
+    done = 1;
+  } else if((pos = strstr(&str[shift], "knownHostsNum"))) {
+    pos[0] = '\0';
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Number of Known Hosts");
     done = 1;
   } else
     not_found = 1, safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s", &str[shift]);
@@ -1862,6 +1888,12 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
     } else if(strstr(&str[shift], "LocalToLocal")) {
       if(not_found) buf[len-7] = '\0';
       strcat(buf, " Local to Local");
+    } else if(strstr(&str[shift], "LocalToRemote")) {
+      if(not_found) buf[len-7] = '\0';
+      strcat(buf, " Local to Remote");
+    } else if(strstr(&str[shift], "RemoteToLocal")) {
+      if(not_found) buf[len-7] = '\0';
+      strcat(buf, " Remote to Local");
     } else if(strstr(&str[shift], "RemoteToRemote")) {
       if(not_found) buf[len-7] = '\0';
       strcat(buf, " Remote to Remote");
@@ -1875,10 +1907,12 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
       buf[buf_len-19] = '\0';
       strcat(buf, " Remote to Remote");
     } else if(!strcmp(&str[len-5], "Bytes")) {
-      buf[buf_len-5] = '\0';
-      strcat(buf, " Traffic");
+      if(strncmp(&buf[buf_len-5], "Bytes", strlen("Bytes")) == 0)
+	buf[buf_len-5] = '\0';
+      strcat(buf, " Volume");
     } else if(!strcmp(&str[len-5], "Flows")) {
-      buf[buf_len-5] = '\0';
+      if(strncmp(&buf[buf_len-5], "Flows", strlen("Flows")) == 0)
+	buf[buf_len-5] = '\0';
       strcat(buf, " Flows");
     }
   }
@@ -2068,6 +2102,8 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	label = "Contacted Peers";
       else if(strstr(rrdName, "knownHosts"))
 	label = "Hosts";
+      else if(strstr(rrdName, "Senders"))
+	label = "Peers";
       else if(efficiency)
 	label = "Efficiency (%)";
       else if(flows)
@@ -2286,7 +2322,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
 	filename = (graphId == 98) ? rrd_hosts[j] : rrds[i];
 
-	if(strcasestr(filename, "Bytes")) multiplier = 1000;
+	if(strcasestr(filename, "Bytes")) multiplier = 8;
 
 	if(upside_down && (i == 1)) {
 	  safe_snprintf(__FILE__, __LINE__, buf0[entryId], 2*MAX_BUF_LEN,
@@ -2371,6 +2407,11 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     }
   }
 
+  if(0) {
+    for(j=0; j<argc; j++)
+      traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
+  }
+  
   accessMutex(&rrdMutex, "rrd_graph");
   optind = 0; /* reset gnu getopt */
   opterr = 0; /* no error messages */
@@ -2687,14 +2728,20 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
     if(!createdCounter) {
       time_t now = time(NULL);
 
+      /*
+	traceEvent(CONST_TRACE_WARNING, "RRD: about to reset(%s) [last=%u][initial=%u][now-initial=%d][dumpInterval=%d]",
+		 path, checkLast(path), myGlobals.initialSniffTime,
+		 (now-myGlobals.initialSniffTime), dumpInterval);
+      */
+
       /* Avoid peaks */
-      if(((now-myGlobals.initialSniffTime) < (2*dumpInterval))
+      if(((now-myGlobals.initialSniffTime) < 600 /* Don't check after the first 10 min */)
 	 && (checkLast(path) < myGlobals.initialSniffTime)) {
 	argc = 0;
 	argv[argc++] = "rrd_update";
 	argv[argc++] = path;
 	
-	safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:0",
+	safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:NaN",
 		      (unsigned int)myGlobals.initialSniffTime);
 	argv[argc++] = cmd;
 	
@@ -2709,6 +2756,8 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	numRRDUpdates++;
 	numTotalRRDUpdates++;
 	releaseMutex(&rrdMutex);
+
+	// traceEvent(CONST_TRACE_WARNING, "RRD: reset(%s)", path);
       }
     }
 
@@ -3079,6 +3128,32 @@ static void commonRRDinit(void) {
     unescape(myGlobals.rrdPath, vlen, value);
   }
 
+  if(fetchPrefsValue("rrd.rrdVolatilePath", value, sizeof(value)) == -1) {
+    char *thePath = "/rrd";
+    int len = strlen(myGlobals.spoolPath)+strlen(thePath)+16, idx = 0;
+
+    if(myGlobals.rrdVolatilePath) free(myGlobals.rrdVolatilePath);
+    myGlobals.rrdVolatilePath = (char*)malloc(len);
+
+#ifdef WIN32
+    safe_snprintf(__FILE__, __LINE__, myGlobals.rrdVolatilePath, len,
+		  "%s/%u%s", myGlobals.spoolPath, driveSerial, thePath);
+    revertSlashIfWIN32(myGlobals.rrdVolatilePath, 0);
+#else
+    safe_snprintf(__FILE__, __LINE__, myGlobals.rrdVolatilePath,
+		  len, "%s%s", myGlobals.spoolPath, thePath);
+#endif
+
+    len = strlen(myGlobals.rrdVolatilePath);
+    if(myGlobals.rrdVolatilePath[len-1] == '/') myGlobals.rrdVolatilePath[len-1] = '\0';
+    storePrefsValue("rrd.myGlobals.rrdVolatilePath", myGlobals.rrdVolatilePath);
+  } else {
+    int vlen = strlen(value)+1;
+
+    myGlobals.rrdVolatilePath  = (char*)malloc(vlen);
+    unescape(myGlobals.rrdVolatilePath, vlen, value);
+  }
+
 #ifndef WIN32
   if(fetchPrefsValue("rrd.permissions", value, sizeof(value)) == -1) {
     safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", DEFAULT_RRD_PERMISSIONS);
@@ -3114,7 +3189,7 @@ static void commonRRDinit(void) {
              (dumpDetail == FLAG_RRD_DETAIL_MEDIUM ? "medium" : "low"));
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     hostsFilter %s", hostsFilter);
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     rrdPath %s [normal]", myGlobals.rrdPath);
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     rrdPath %s [throughput]", myGlobals.spoolPath);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     rrdPath %s [dynamic/volatile]", myGlobals.rrdVolatilePath);
 #ifndef WIN32
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     umask %04o", myGlobals.rrdUmask);
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     DirPerms %04o", myGlobals.rrdDirectoryPermissions);
@@ -3171,8 +3246,6 @@ static void arbitraryAction(char *rrdName,
   if(atol(startTime) > atol(endTime)) {
     startTime = endTime;
   }
-
-
 
   if(!strcmp(mode, "zoom")) {
     char buf1[LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
@@ -3376,10 +3449,10 @@ static void arbitraryAction(char *rrdName,
     if(!strcmp(rrdName, "throughput")) {
 #ifdef WIN32
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd",
-		    myGlobals.spoolPath, driveSerial, rrdKey, rrdName);
+		    myGlobals.rrdVolatilePath, driveSerial, rrdKey, rrdName);
 #else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
-		    myGlobals.spoolPath, rrdKey, rrdName);
+		    myGlobals.rrdVolatilePath, rrdKey, rrdName);
 #endif
     } else
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
@@ -4064,6 +4137,15 @@ static void handleRRDHTTPrequest(char* url) {
 	  unescape(myGlobals.rrdPath, vlen, &value[idx]);
 	  revertSlashIfWIN32(myGlobals.rrdPath, 0);
 	  storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
+	} else if(strcmp(key, "rrdVolatilePath") == 0) {
+	  int vlen = strlen(value)+1;
+	  idx = 0;
+	  vlen -= idx;
+	  if(myGlobals.rrdVolatilePath != NULL) free(myGlobals.rrdVolatilePath);
+	  myGlobals.rrdVolatilePath  = (char*)malloc(vlen);
+	  unescape(myGlobals.rrdVolatilePath, vlen, &value[idx]);
+	  revertSlashIfWIN32(myGlobals.rrdVolatilePath, 0);
+	  storePrefsValue("rrd.rrdVolatilePath", myGlobals.rrdVolatilePath);
 	} else if(strcmp(key, "dumpDomains") == 0) {
 	  _dumpDomains = 1;
 	} else if(strcmp(key, "dumpFlows") == 0) {
@@ -4123,7 +4205,7 @@ static void handleRRDHTTPrequest(char* url) {
 	    continue;
 
 	  safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath),
-			"%s/interfaces/%s/", myGlobals.spoolPath,
+			"%s/interfaces/%s/", myGlobals.rrdVolatilePath,
 			myGlobals.device[devIdx].uniqueIfName);
 	  deleteRRD(rrdPath, "throughput");
 	}
@@ -4244,7 +4326,7 @@ static void handleRRDHTTPrequest(char* url) {
 	     "<INPUT NAME=shortinterval SIZE=5 VALUE=");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpShortInterval);
   sendString(buf);
-  sendString("> seconds<br>Specifies how often <A HREF=/"CONST_SORT_DATA_THPT_STATS_HTML">throughput</A> data is stored permanently.<br>"
+  sendString("> seconds<br>Specifies how often <A HREF=/"CONST_SORT_DATA_THPT_STATS_HTML">throughput</A> data is stored permanently.<p>"
 	     "<FONT COLOR=red><b>Note</b></FONT>: if you change this value the throughput stats will be reset "
 	     "and past values will be lost. You've been warned!</td></tr>\n");
 
@@ -4353,10 +4435,18 @@ static void handleRRDHTTPrequest(char* url) {
   /* ******************************** */
 
   sendString("<tr><th align=\"left\" "DARK_BG">RRD Files Path</th><td>"
-	     "<INPUT NAME=rrdPath SIZE=50 VALUE=\"");
+	     "<table border=0><tr><th align=left>Normal RRDs: </th><td align=left><INPUT NAME=rrdPath SIZE=50 VALUE=\"");
   sendString(myGlobals.rrdPath);
-  sendString("\">");
-  sendString("<br>NOTE:<ul><li>The rrd files will be in a subdirectory structure, e.g.\n");
+  sendString("\"></td></tr>");
+  sendString("<tr><th align=left>Dynamic/Volatile RRDs: </th><td align=left><INPUT NAME=rrdVolatilePath SIZE=50 VALUE=\"");
+  sendString(myGlobals.rrdVolatilePath);
+  sendString("\"></td></tr></table>");
+
+  sendString("<p>NOTE:<ul>"
+	     "<li>Dynamic/volatile RRDs are those such as <A HREF=/"CONST_SORT_DATA_THPT_STATS_HTML">throughput</A> "
+	     "RRDs that change very frequently and that some users "
+	     " might want to save onto a separate directory (e.g. on a ramdisk). Normal RRDs are all the other RRDs.\n"
+	     "<li>The rrd files will be in a subdirectory structure, e.g.\n");
 #ifdef WIN32
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"%s\\interfaces\\interface-name\\12\\239\\98\\199\\xxxxx.rrd ",
@@ -4849,12 +4939,11 @@ static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
 
 #ifdef WIN32
       safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/%u/interfaces/%s/",
-		    myGlobals.spoolPath, driveSerial,
+		    myGlobals.rrdVolatilePath, driveSerial,
                     myGlobals.device[devIdx].uniqueIfName);
 #else
       safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/",
-		    myGlobals.spoolPath,
-                    myGlobals.device[devIdx].uniqueIfName);
+		    myGlobals.rrdVolatilePath, myGlobals.device[devIdx].uniqueIfName);
 #endif
       mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
@@ -5306,9 +5395,12 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  if(myGlobals.device[devIdx].ipProtosList != NULL) {
 	    protoList = myGlobals.ipProtosList, idx=0;
 	    while(protoList != NULL) {
-	      Counter c = myGlobals.device[devIdx].ipProtosList[idx].value;
+	      char protobuf[64];
 
-	      if(c > 0) updateCounter(rrdPath, protoList->protocolName, c, 0);
+	      Counter c = myGlobals.device[devIdx].ipProtosList[idx].value;
+	      
+	      safe_snprintf(__FILE__, __LINE__, protobuf, sizeof(protobuf), "%sBytes", protoList->protocolName);
+	      if(c > 0) updateCounter(rrdPath, protobuf, c, 0);
 	      idx++, protoList = protoList->next;
 	    }
 	  }

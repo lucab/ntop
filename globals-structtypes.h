@@ -2364,7 +2364,7 @@ typedef struct ntopGlobals {
   int numChildren;
 
   /* rrd */
-  char *rrdPath;
+  char *rrdPath, *rrdVolatilePath;
   mode_t rrdDirectoryPermissions, rrdUmask;
 
   /* http.c */

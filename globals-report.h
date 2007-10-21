@@ -265,7 +265,9 @@ extern void handleNtopConfig (char *url, UserPrefDisplayPage page, int postLen);
 extern void purgeHost(char *serialized_serial);
 extern void printInterfaceStats(void);
 extern void findHost(char *key);
-extern char* hostRRdGraphLink(HostTraffic *el, u_char is_subnet_host, 
+extern char* hostRRdGraphLink(HostTraffic *el, 
+			      int network_mode,
+			      u_char is_subnet_host, 
 			      char *tmpStr, int tmpStrLen);
 
 /* webInterface.c */

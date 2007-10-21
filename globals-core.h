@@ -254,9 +254,6 @@ extern void allocDeviceMemory(int deviceId);
 
 /* leaks.c */
 
-#define memorycheck(a, b) {}
-#define _memorycheck(a, b, c, d) {}
-
 #ifdef MAKE_WITH_SAFER_ROUTINES
 
 /* Fix to the free prototype courtesy of Tanner Lovelace <lovelace@opennms.org> */
@@ -341,6 +338,14 @@ extern void           ntop_free(void **ptr, char* file, int line);
 #elif defined(MEMORY_DEBUG) 
 #else
 #endif /* MAKE_WITH_SAFER_ROUTINES / MEMORY_DEBUG */
+
+#ifndef memorycheck
+#define memorycheck(a, b) {}
+#endif
+
+#ifndef _memorycheck
+#define _memorycheck(a, b, c, d) {}
+#endif
 
 /* Serialized replacements for gdbm routines... */
 

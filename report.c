@@ -21,10 +21,6 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-#define NETWORK_VIEW         1
-#define AS_VIEW              2
-#define AS_GRAPH_VIEW        3
-
 static int network_mode_sort;
 
 /* *************************** */
@@ -5167,12 +5163,12 @@ void printThptStats(int sortedColumn _UNUSED_) {
       get_serial(&driveSerial);
 
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/%u/interfaces/%s/throughput.rrd",
-		    myGlobals.rrdPath != NULL ? myGlobals.spoolPath : ".", driveSerial,
+		    myGlobals.rrdPath != NULL ? myGlobals.rrdVolatilePath : ".", driveSerial,
 		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
     }
 #else
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/interfaces/%s/throughput.rrd",
-		  myGlobals.rrdPath != NULL ? myGlobals.spoolPath : ".",
+		  myGlobals.rrdPath != NULL ? myGlobals.rrdVolatilePath : ".",
 		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
 #endif
 
@@ -5362,7 +5358,8 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
     if(domain_network_name == NULL)
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Statistics for all %s",
-		    (network_mode == NETWORK_VIEW) ? "Networks" : ((network_mode == AS_VIEW) ? "ASs" : "Domains"));
+		    (network_mode == NETWORK_VIEW) ? "Networks" 
+		    : ((network_mode == AS_VIEW) ? "ASs" : "Domains"));
     else {
       char link_name[256] = { 0 };
 
@@ -5407,7 +5404,8 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "Statistics for hosts in %s '%s' %s",
-		      (network_mode == NETWORK_VIEW) ? "network" : ((network_mode == AS_VIEW) ? "AS" : "domain"),
+		      (network_mode == NETWORK_VIEW) ? "network" 
+		      : ((network_mode == AS_VIEW) ? "AS" : "domain"),
 		      (sym_nw_name[0] == '\0') ? domain_network_name : sym_nw_name,
 		      link_name);
 
@@ -5427,7 +5425,8 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	   && (!strncmp(key.dptr, CLUSTER_HEADER, CLUSTER_HEADER_LEN))) {
 	  localAddresses[0] = '\0';
 	  numLocalNetworks[totNumClusters] = 0;
-	  handleAddressLists(val, localNetworks[totNumClusters], &numLocalNetworks[totNumClusters],
+	  handleAddressLists(val, localNetworks[totNumClusters], 
+			     &numLocalNetworks[totNumClusters],
 			     localAddresses, sizeof(localAddresses),
 			     CONST_HANDLEADDRESSLISTS_CLUSTERS);
 	  clusterNames[totNumClusters] = (u_char*)strdup((char*)&key.dptr[CLUSTER_HEADER_LEN]);
@@ -5954,7 +5953,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	  dummy.known_subnet_id = statsEntry->known_subnet_id;
 	}
 
-	hostRRdGraphLink(statsEntry->domainHost,
+	hostRRdGraphLink(statsEntry->domainHost, network_mode,
 			 (domain_network_name == NULL) ? 1 : 0,
 			 rrdBuf, sizeof(rrdBuf));
 	sendString("<TD "TD_BG" ALIGN=CENTER>");
@@ -5965,8 +5964,10 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	  sendString("&nbsp;");
 
 	sendString("</TD>\n");
-      } else
+      } else {
+	traceEvent(CONST_TRACE_WARNING, "--> hostRRdGraphLink(%s)", network_mode);
 	sendString("<TD "TD_BG" ALIGN=CENTER>&nbsp;</TD>\n");
+      }
 
       /* Avoid huge tables */
       if(printedEntries++ > myGlobals.runningPref.maxNumLines)
@@ -5987,39 +5988,6 @@ void printDomainStats(char* domain_network_name, int network_mode,
     addPageIndicator(buf, pageNum, numEntries,
 		     myGlobals.runningPref.maxNumLines,
 		     revertOrder, abs(sortedColumn), network_mode);
-
-    /* FIX */
-    /* RRDs for domains */
-    if(domain_network_name != NULL) {
-      struct stat statbufDomain;
-
-      /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/domains/%s",
-		    myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,domain_network_name);
-
-      revertSlashIfWIN32(buf, 0);
-
-      if((i = stat(buf, &statbufDomain)) == 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<p>&nbsp;</p>\n"
-		      "<center><table border=\"0\"><tr>"
-		      "<td valign=\"middle\" align=\"right\">Show domain-wide traffic charts:</td>\n"
-		      "<td align=\"right\">"
-		      "&nbsp;&nbsp;"
-		      "[ <a href=\"/" CONST_PLUGINS_HEADER
-		      "rrdPlugin?action=list&key=interfaces%s%s/domains/%s&title=Domain%%20%s\">"
-		      "<img border=\"0\" src=\"/graph.gif\" class=tooltip alt=\"Domain-wide Historical Data\"></a> ]"
-		      "&nbsp;&nbsp;"
-		      "</td>\n"
-		      "</tr></table>\n</center>\n"
-		      "<p>&nbsp;</p>\n",
-		      (myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName[0] == '/') ? "" : "/",
-		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
-		      domain_network_name,domain_network_name);
-	sendString(buf);
-      }
-    }
 
     if(!clusterMode) {
       sendString("<p align=\"center\"><b>NOTE</b>: ");
@@ -6914,14 +6882,19 @@ void findHost(char *key) {
 
 /* ************************************************** */
 
-char* hostRRdGraphLink(HostTraffic *el, u_char is_subnet_host, char *tmpStr, int tmpStrLen) {
+char* hostRRdGraphLink(HostTraffic *el, int network_mode, 
+		       u_char is_subnet_host, 
+		       char *tmpStr, int tmpStrLen) {
   struct stat statbuf;
   char *key, buf[256], rrd_buf[256], subnet_buf[32];
   int rc;
 
-  if(is_subnet_host)
-    key = host2networkName(el, subnet_buf, sizeof(subnet_buf));
-  else {
+  if(is_subnet_host) {
+    if(network_mode == DOMAIN_VIEW) {
+      key = el->dnsDomainValue;
+    } else
+      key = host2networkName(el, subnet_buf, sizeof(subnet_buf));
+    } else {
     if((!myGlobals.runningPref.dontTrustMACaddr) && subnetPseudoLocalHost(el)
        && (el->ethAddressString[0] != '\0') /* Really safe in case a host that was supposed to be local isn't really so */)
       key = el->ethAddressString;
@@ -6933,8 +6906,8 @@ char* hostRRdGraphLink(HostTraffic *el, u_char is_subnet_host, char *tmpStr, int
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/%s/%s/",
 		myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
-		is_subnet_host ? "subnet" : "hosts",
-		dotToSlash(key));
+		is_subnet_host ? ((network_mode == DOMAIN_VIEW) ? "domains" : "subnet") : "hosts",
+		(network_mode == DOMAIN_VIEW) ? key : dotToSlash(key)); 
 
   safe_snprintf(__FILE__, __LINE__, rrd_buf, sizeof(rrd_buf), "%s/bytesRcvd.rrd", buf);
   revertSlashIfWIN32(rrd_buf, 0);
@@ -6949,16 +6922,16 @@ char* hostRRdGraphLink(HostTraffic *el, u_char is_subnet_host, char *tmpStr, int
   if(rc == 0) {
     safe_snprintf(__FILE__, __LINE__, tmpStr, tmpStrLen,
                   "[ <a href=\"/" CONST_PLUGINS_HEADER
-		  "rrdPlugin?action=list&amp;key=interfaces%s%s/%s/%s&amp;title=%s%%20%s\">"
+		  "rrdPlugin?action=list&amp;key=interfaces%s%s/%s/%s&amp;title=%s+%s\">"
                   "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
 		  " class=tooltip alt=\"view rrd graphs of historical data for this %s\"></a> ]",
 		  (myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName[0] == '/') ? "" : "/",
                   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
-		  is_subnet_host ? "subnet" : "hosts",
-                  dotToSlash(key),
-		  is_subnet_host ? "subnet+" : "host+",
-		  is_subnet_host ? subnet_buf : (el->hostResolvedName[0] != '\0' ? el->hostResolvedName : el->hostNumIpAddress),
-		  is_subnet_host ? "subnet" : "hosts");
+		  is_subnet_host ? ((network_mode == DOMAIN_VIEW) ? "domains" : "subnet") : "hosts",
+                  (network_mode == DOMAIN_VIEW) ? key : dotToSlash(key),
+		  is_subnet_host ? ((network_mode == DOMAIN_VIEW) ? "subnet+" : "network+") : "host+",
+		  is_subnet_host ? ((network_mode == DOMAIN_VIEW) ? key : subnet_buf) : (el->hostResolvedName[0] != '\0' ? el->hostResolvedName : el->hostNumIpAddress),
+		  is_subnet_host ? ((network_mode == DOMAIN_VIEW) ? "domain" : "subnet") : "host");
   } else
     tmpStr[0] = '\0';
 

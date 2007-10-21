@@ -28,7 +28,7 @@ static void* netflowMainLoop(void* _deviceId);
 static void* netflowUtilsLoop(void* _deviceId);
 #endif
 
-/* #define DEBUG_FLOWS */
+// #define DEBUG_FLOWS
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -79,6 +79,7 @@ struct generic_netflow_record {
   u_int8_t  src_mask;   /* source route's mask bits */
 
   /* v9 */
+  char src_mac[LEN_ETHERNET_ADDRESS], src_mac_set, dst_mac[LEN_ETHERNET_ADDRESS], dst_mac_set;
   u_int16_t vlanId;
 
   /* Latency extensions */
@@ -662,8 +663,8 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   }
 #endif
 
-  addrput(AF_INET,&addr1,&b);
-  addrput(AF_INET,&addr2,&a);
+  addrput(AF_INET, &addr1, &b);
+  addrput(AF_INET, &addr2, &a);
 
   if(!skipDST)
     dstHost = lookupHost(&addr1, NULL, record->vlanId, 0, 1, deviceId);
@@ -719,6 +720,24 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   if(srcAS != 0) srcHost->hostAS = srcAS;
   if(dstAS != 0) dstHost->hostAS = dstAS;
 
+  if(record->src_mac_set) {
+    char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+
+    memcpy(srcHost->ethAddress, record->src_mac, LEN_ETHERNET_ADDRESS);
+    strncpy(srcHost->ethAddressString, 
+	    etheraddr_string(srcHost->ethAddress, etherbuf), 
+	    sizeof(srcHost->ethAddressString));
+  }
+
+  if(record->dst_mac_set) {
+    char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+
+    memcpy(dstHost->ethAddress, record->dst_mac, LEN_ETHERNET_ADDRESS);
+    strncpy(dstHost->ethAddressString,
+            etheraddr_string(dstHost->ethAddress, etherbuf),
+            sizeof(dstHost->ethAddressString));
+
+  }
   srcHost->ifId = record->input, dstHost->ifId = record->output;
 
 #ifdef DEBUG_FLOWS
@@ -1062,7 +1081,7 @@ static char* nf_hex_dump(char *buf, u_short len) {
 static void dissectFlow(u_int32_t netflow_device_ip,
 			char *buffer, int bufferLen, int deviceId) {
   NetFlow5Record the5Record;
-  int flowVersion;
+  int flowVersion, debug = 1;
   time_t recordActTime = 0, recordSysUpTime = 0;
   struct generic_netflow_record record;
 
@@ -1365,23 +1384,28 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	    displ += sizeof(V9FlowSet);
 
 	    while(displ < (init_displ + fs.flowsetLen)) {
-	      u_short accum_len = 0;
+	      u_short accum_len = 0, full_flow;
 
 	      /* Defaults */
 	      record.nw_latency_sec = record.nw_latency_usec = htonl(0);
 
 #ifdef DEBUG_FLOWS
-	      if(0)
+	      if(debug) 
 		traceEvent(CONST_TRACE_INFO, ">>>>> Stats [%d...%d]", displ, (init_displ + fs.flowsetLen));
 
-	      traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting PDU %d", num_pdu++);
+	      if(debug) traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting PDU %d", num_pdu++);
 #endif
 	      
+	      full_flow = 1;
+
 	      for(fieldId=0; fieldId<cursor->templateInfo.fieldCount; fieldId++) {
-		if(!(displ < (init_displ + fs.flowsetLen))) break; /* Flow too short */
+		if(!(displ < (init_displ + fs.flowsetLen))) {
+		  full_flow = 0;
+		  break; /* Flow too short */
+		}
 
 #ifdef DEBUG_FLOWS
-		if(1)
+		if(debug)
 		  traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting flow field "
 			     "[displ=%d/%d][template=%d][fieldType=%d][fieldLen=%d][field=%d/%d] [%d...%d][%s]",
 			     displ, fs.flowsetLen,
@@ -1413,6 +1437,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		  break;
 		case 8: /* IP_SRC_ADDR */
 		  memcpy(&record.srcaddr, &buffer[displ], 4);
+		  // if(record.srcaddr == 0) traceEvent(CONST_TRACE_INFO, "--> srcaddr: %d", record.srcaddr);
 		  break;
 		case 9: /* SRC_MASK */
 		  memcpy(&record.src_mask, &buffer[displ], 1);
@@ -1425,6 +1450,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		  break;
 		case 12: /* IP_DST_ADDR */
 		  memcpy(&record.dstaddr, &buffer[displ], 4);
+		  // if(record.dstaddr == 0) traceEvent(CONST_TRACE_INFO, "--> dstaddr: %d", record.dstaddr);
 		  break;
 		case 13: /* DST_MASK */
 		  memcpy(&record.dst_mask, &buffer[displ], 1);
@@ -1449,6 +1475,14 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		  break;
 		case 24: /* OUT_PKTS */
 		  memcpy(&record.sentPkts, &buffer[displ], 4);
+		  break;
+		case 56: /* IN_SRC_MAC */
+		  memcpy(&record.src_mac, &buffer[displ], LEN_ETHERNET_ADDRESS);
+		  record.src_mac_set = 1;
+		  break;		  
+		case 57: /* OUT_DST_MAC */
+		  memcpy(&record.dst_mac, &buffer[displ], LEN_ETHERNET_ADDRESS);
+		  record.dst_mac_set = 1;
 		  break;
 		case 58: /* SRC_VLAN */
 		case 59: /* DST_VLAN */
@@ -1497,36 +1531,38 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		v9 flows and bidirectional. This means that if there's some
 		bidirectional traffic, handleGenericFlow is called twice.
 	      */
-	      handleGenericFlow(netflow_device_ip, recordActTime,
-				recordSysUpTime, &record,
-				deviceId, &firstSeen, &lastSeen);
+	      if(full_flow) {
+		handleGenericFlow(netflow_device_ip, recordActTime,
+				  recordSysUpTime, &record,
+				  deviceId, &firstSeen, &lastSeen);
 
 #ifdef DEBUG_FLOWS
-	      if(0)
-		traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d][save=%d]",
-			   accum_len, myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB);
+		if(debug)
+		  traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d][save=%d]",
+			     accum_len, myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB);
 #endif
 
-	      tot_len += accum_len;
+		tot_len += accum_len;
 
-	      if(record.rcvdPkts > 0) {
-		u_int32_t tmp;
+		if(record.rcvdPkts > 0) {
+		  u_int32_t tmp;
 
-		record.sentPkts   = record.rcvdPkts;
-		record.sentOctets = record.rcvdOctets;
+		  record.sentPkts   = record.rcvdPkts;
+		  record.sentOctets = record.rcvdOctets;
 
-		tmp = record.srcaddr;
-		record.srcaddr = record.dstaddr;
-		record.dstaddr = tmp;
-		tmp = record.srcport;
-		record.srcport = record.dstport;
-		record.dstport = tmp;
+		  tmp = record.srcaddr;
+		  record.srcaddr = record.dstaddr;
+		  record.dstaddr = tmp;
+		  tmp = record.srcport;
+		  record.srcport = record.dstport;
+		  record.dstport = tmp;
 
-		handleGenericFlow(netflow_device_ip, recordActTime, recordSysUpTime, &record,
-				  deviceId, &firstSeen, &lastSeen);
+		  handleGenericFlow(netflow_device_ip, recordActTime, recordSysUpTime, &record,
+				    deviceId, &firstSeen, &lastSeen);
+		}
+
+		myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd++;
 	      }
-
-	      myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd++;
 	    }
 
 	    if(tot_len < fs.flowsetLen) {
@@ -1537,16 +1573,18 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 			   tot_len, fs.flowsetLen);
 	      } else {
 #ifdef DEBUG_FLOWS
-		traceEvent(CONST_TRACE_INFO, ">>>>> %d bytes padding [tot_len=%d][flow_len=%d]",
-			   padding, tot_len, fs.flowsetLen);
+		if(debug)
+		  traceEvent(CONST_TRACE_INFO, ">>>>> %d bytes padding [tot_len=%d][flow_len=%d]",
+			     padding, tot_len, fs.flowsetLen);
 #endif
 		displ += padding;
 	      }
 	    }
 	  } else {
 #ifdef DEBUG_FLOWS
-	    traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with UNKNOWN template %d [displ=%d][len=%d]",
-		       fs.templateId, displ, fs.flowsetLen);
+	    if(debug)
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with UNKNOWN template %d [displ=%d][len=%d]",
+			 fs.templateId, displ, fs.flowsetLen);
 #endif
 	    myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd++;
 	    displ += fs.flowsetLen;
@@ -3600,8 +3638,8 @@ static void handleNetflowHTTPrequest(char* _url) {
 	       "a try.</p>\n"
 	       "<p>If you are looking for a cheap, dedicated hardware NetFlow probe you "
 	       "should look into "
-	       "<a href=\"http://www.ntop.org/nBox86/\" "
-	       "title=\"nBox86 page\"><b>nBox<sup>86</sup></b></a> "
+	       "<a href=\"http://www.nmon.net/nBox_nmon.html\" "
+	       "title=\"nBox86 page\"><b>nBox</b></a> "
 	       "<img class=tooltip src=\"/nboxLogo.gif\" alt=\"nBox logo\">.</p>\n"
 	       "</td>\n"
 	       "<td width=\"10%\">&nbsp;</td>\n</tr>\n</table>\n");
@@ -3715,14 +3753,22 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
     u_int caplen = h->caplen;
     u_int length = h->len;
     unsigned short eth_type;
-    u_int8_t flags = 0;
+    u_int8_t flags = 0, debug = 0;
     struct ip ip;
 
     deviceId = 1; /* Dummy value */
 
 #ifdef DEBUG_FLOWS
-    if(0)
-      traceEvent(CONST_TRACE_INFO, "Rcvd packet to dissect [caplen=%d][len=%d]", caplen, length);
+ {
+   static long numPkt=0;
+
+   ++numPkt;
+
+    if(1 ||debug)
+      traceEvent(CONST_TRACE_INFO, "Rcvd packet to dissect [caplen=%d][len=%d][num_pkt=%d]", 
+		 caplen, length, numPkt);
+ }
+
 #endif
 
     if(caplen >= sizeof(struct ether_header)) {
@@ -3734,7 +3780,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 	u_short sport, dport;
 
 #ifdef DEBUG_FLOWS
-	if(0)
+	if(debug)
 	  traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect");
 #endif
 
@@ -3745,7 +3791,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 	plen = length-sizeof(struct ether_header);
 
 #ifdef DEBUG_FLOWS
-	if(0)
+	if(debug)
 	  traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect "
 		     "[deviceId=%d][sender=%s][proto=%d][len=%d][hlen=%d]",
 		     deviceId, intoa(ip.ip_src), ip.ip_p, plen, hlen);
@@ -3757,7 +3803,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 	    int   rawSampleLen = h->caplen-(sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
 
 #ifdef DEBUG_FLOWS
-	    if(0)
+	    if(debug)
 	      traceEvent(CONST_TRACE_INFO, "Rcvd from from %s [netflowGlobals=%x]", intoa(ip.ip_src),
 			 myGlobals.device[deviceId].netflowGlobals);
 #endif
@@ -3768,7 +3814,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 	}
       } else {
 #ifdef DEBUG_FLOWS
-	if(0)
+	if(debug)
 	  traceEvent(CONST_TRACE_INFO, "Rcvd non-IP [0x%04X] packet to dissect", eth_type);
 #endif
       }

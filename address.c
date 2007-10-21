@@ -49,10 +49,8 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 
   /* Search the instance and update its name */
 
-  if(myGlobals.device[actualDeviceId].virtualDevice) return;
-
   for(el=getFirstHost(actualDeviceId); el != NULL; el = getNextHost(actualDeviceId, el)) {
-    if((el->hostNumIpAddress != NULL) && (addrcmp(&el->hostIpAddress, &addr) == 0)) {
+    if(addrcmp(&el->hostIpAddress, &addr) == 0) {
       accessAddrResMutex("updateHostNameInfo");
 
       if(el != NULL) {
@@ -64,6 +62,8 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 	for(i=0; i<strlen(symbolic); i++)
 	  if(isupper(symbolic[i])) symbolic[i] = tolower(symbolic[i]);
 
+	/* traceEvent(CONST_TRACE_INFO, "--> %s", symbolic); */
+
 	setResolvedName(el, symbolic, type);
       }
 
@@ -74,11 +74,13 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 
 /* **************************************** */
 
-  static void updateHostNameInfo(HostAddr addr, char* symbolic, int type) {
+static void updateHostNameInfo(HostAddr addr, char* symbolic, int type) {
   int i;
 
-  for(i=0; i<myGlobals.numDevices; i++)
-    updateDeviceHostNameInfo(addr, symbolic, i, type);
+  for(i=0; i<myGlobals.numDevices; i++) {
+    if(!myGlobals.device[i].virtualDevice)
+      updateDeviceHostNameInfo(addr, symbolic, i, type);
+  }
 }
 
 /* ************************************ */
@@ -670,7 +672,7 @@ void* dequeueAddress(void *_i) {
         break;
 
       if (size == sizeof(struct in_addr)) {
-	/*addrput(AF_INET, &addr, data_data.dptr);*/
+	/* addrput(AF_INET, &addr, data_data.dptr); */
 	addr.hostFamily = AF_INET;
 	memcpy(&addr.Ip4Address.s_addr, data_data.dptr, size);
       }
@@ -908,7 +910,7 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
 /* This function automatically updates the instance name */
 
 void ipaddr2str(HostAddr hostIpAddress, int updateHost) {
-  char buf[MAX_LEN_SYM_HOST_NAME+1];
+  char buf[MAX_LEN_SYM_HOST_NAME+1] = { '\0' };
   int type;
 
   myGlobals.numipaddr2strCalls++;

@@ -2886,6 +2886,11 @@ struct ip6_hdr
 #define DEFAULT_NTOP_HTML_INSTALL       "/usr/local/share/ntop"
 #define DEFAULT_NTOP_CFG_CONFIGFILE_DIR "/usr/local/etc/ntop"
 
+#define DOMAIN_VIEW          0
+#define NETWORK_VIEW         1
+#define AS_VIEW              2
+#define AS_GRAPH_VIEW        3
+
 /* *************************** */
 
 #define MAX_NUM_INTERFACE_NETWORKS      128

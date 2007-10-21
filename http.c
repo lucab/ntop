@@ -2019,7 +2019,7 @@ static int returnHTTPPage(char* pageName,
 			  char *ifModificedSince,
 			  int isPostMethod) {
   char *questionMark, *pageURI, *token;
-  int sortedColumn = 0, printTrailer=1, idx, networkMode = 0;
+  int sortedColumn = 0, printTrailer=1, idx, networkMode = 0 /* DOMAIN_VIEW */;
   int errorCode=0, pageNum = 0, found=0, portNr=0;
   struct stat statbuf;
   FILE *fd = NULL;
