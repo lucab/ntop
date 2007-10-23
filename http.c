@@ -2282,7 +2282,6 @@ static int returnHTTPPage(char* pageName,
     }
   }
 
-
 #ifdef URL_DEBUG
   traceEvent(CONST_TRACE_INFO, "URL_DEBUG: tmpStr=%s - fd=0x%x", tmpStr, fd);
 #endif
@@ -2505,9 +2504,12 @@ static int returnHTTPPage(char* pageName,
     printTrailer=0;
     printMutexStatusReport(0);
   } else if(strncasecmp(pageName, CONST_FIND_HOST_JSON, strlen(CONST_FIND_HOST_JSON)) == 0) {
+    char buf[64];
+
     sendHTTPHeader(FLAG_HTTP_TYPE_JSON, 0, 1);
     printTrailer=0;
-    findHost(db_key);
+    unescape(buf, sizeof(buf), db_key);
+    findHost(buf);
   } else if(strncasecmp(pageName, CONST_EDIT_PREFS, strlen(CONST_EDIT_PREFS)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     edit_prefs(db_key, db_val);

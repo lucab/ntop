@@ -6844,7 +6844,7 @@ void findHost(char *key) {
   int num = 0;
   char buf[256], buf1[2*LEN_GENERAL_WORK_BUFFER];
 
-  /* traceEvent(CONST_TRACE_INFO, "----------> findHost(%s)", key ? key : "<null>"); */
+  /* traceEvent(CONST_TRACE_INFO, "----------> findHost(%s)", key ? key : "<null>");  */
 
   sendString("{ results: [");
 
@@ -6855,9 +6855,15 @@ void findHost(char *key) {
     if(el == myGlobals.broadcastEntry) continue;
 
     if((key == NULL) || (key == "")) do_add = 1;
-    else if(el->hostNumIpAddress && strstr(el->hostNumIpAddress, key)) do_add = 1;
-    else if(strstr(el->ethAddressString, key)) do_add = 1;
-    else if(strstr(el->hostResolvedName, key)) do_add = 1;
+    else if(el->hostNumIpAddress && strcasestr(el->hostNumIpAddress, key)) do_add = 1;
+    else if(strcasestr(el->ethAddressString, key)) do_add = 2;
+    else if(strcasestr(el->hostResolvedName, key)) do_add = 1;
+    
+    /*
+    traceEvent(CONST_TRACE_INFO, "----------> findHost(%s) [%s][%s] = %d", 
+	       key ? key : "<null>", el->ethAddressString, 
+	       el->hostResolvedName, do_add); 
+    */
 
     if(do_add) {
       char *str;
@@ -6865,8 +6871,19 @@ void findHost(char *key) {
       if(el->hostResolvedName[0] != '\0')      str = el->hostResolvedName;
       else if(el->ethAddressString[0] != '\0') str = el->ethAddressString;
       else str = "";
+      
+      if(do_add == 2) {
+	int i;
 
-      makeHostLink(el, FLAG_HOSTLINK_TEXT_LITE_FORMAT, 0, 0, buf1, sizeof(buf1));
+	safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1),
+		      "<A HREF=/%s.html>%s</A>",
+		      el->ethAddressString,
+		      el->ethAddressString);
+
+	for(i=0; i<strlen(buf1); i++) if(buf1[i] == ':') buf1[i] = '_';
+	str = el->ethAddressString;
+      } else
+	makeHostLink(el, FLAG_HOSTLINK_TEXT_LITE_FORMAT, 0, 0, buf1, sizeof(buf1));
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "%s\n\t{ id: \"%d\", value: \"%s\", info: \"%s\" }",
