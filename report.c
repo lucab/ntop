@@ -6876,9 +6876,7 @@ void findHost(char *key) {
 	int i;
 
 	safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1),
-		      "<A HREF=/%s.html>%s</A>",
-		      el->ethAddressString,
-		      el->ethAddressString);
+		      "/%s.html", el->ethAddressString);
 
 	for(i=0; i<strlen(buf1); i++) if(buf1[i] == ':') buf1[i] = '_';
 	str = el->ethAddressString;
