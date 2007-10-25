@@ -319,9 +319,9 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   if(el == NULL)
     return("&nbsp;");
-
-  if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
-      return makeFcHostLink (el, mode, cutName, TRUE, buf, bufLen);
+  
+  if(el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
+    return makeFcHostLink (el, mode, cutName, TRUE, buf, bufLen);
   }
 
   memset(&symIp, 0, sizeof(symIp));
@@ -389,12 +389,13 @@ char* makeHostLink(HostTraffic *el, short mode,
       else
         return("&lt;other&gt;<!-- cmpSerial() match -->");
     }
-
+    
     /* User other names if we have them, but follow (High->Low) the numerical
      * sequence of FLAG_HOST_SYM_ADDR_TYPE_xxx so it still sorts right
      */
-    if(el->hostNumIpAddress[0] != '\0') {
-      /* We have the IP, so the DNS is probably still getting the entry name */
+  if((el->hostNumIpAddress[0] != '\0') 
+     && (!((el->ethAddressString[0] == '\0') && subnetPseudoLocalHost(el)))) {
+    /* We have the IP, so the DNS is probably still getting the entry name */
       strncpy(symIp, el->hostNumIpAddress, sizeof(symIp));
 #ifndef CMPFCTN_DEBUG
       if(myGlobals.runningPref.debugMode == 1)
@@ -441,7 +442,13 @@ char* makeHostLink(HostTraffic *el, short mode,
   } else {
     /* Got it? Use it! */
     strncpy(symIp, el->hostResolvedName, sizeof(symIp));
-    strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
+
+    if((el->ethAddressString[0] != '\0') && subnetPseudoLocalHost(el)) {
+      strncpy(linkName, el->ethAddressString, sizeof(linkName));
+      usedEthAddress = 1;      
+    } else
+      strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
+    
     if(el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NETBIOS) {
         strncat(noteBuf, " [NetBIOS]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
     }

@@ -3785,6 +3785,13 @@ void processPacket(u_char *_deviceId,
 	      /* DO NOT ADD A break ABOVE ! */
 	    case ARPOP_REQUEST: /* ARP request */
 	      if(srcHost != NULL) {
+		HostTraffic *srcHost1;
+
+		addr.hostFamily = AF_INET;
+		memcpy(&addr.Ip4Address.s_addr, &arpHdr.arp_spa, sizeof(struct in_addr));
+		addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
+		srcHost1 = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, vlanId, 0, 0, actualDeviceId);
+
 		srcHost->hostIpAddress.hostFamily = AF_INET;
 		memcpy(&srcHost->hostIpAddress.Ip4Address.s_addr, arpHdr.arp_spa, sizeof(struct in_addr));
 		srcHost->hostIpAddress.Ip4Address.s_addr = ntohl(srcHost->hostIpAddress.Ip4Address.s_addr);
@@ -3797,12 +3804,22 @@ void processPacket(u_char *_deviceId,
 		if(myGlobals.runningPref.numericFlag == 0)
 		  ipaddr2str(srcHost->hostIpAddress, 1);
 
-		if(isPseudoLocalAddress(&srcHost->hostIpAddress, actualDeviceId, NULL, NULL)) {
-		  FD_SET(FLAG_SUBNET_LOCALHOST, &srcHost->flags);
+		if(srcHost != srcHost1) {
+		  /* The netmask is probably wrong of this network interface has some aliases
+		     as the same host is seen as both local and remote */
+		  FD_SET(FLAG_HOST_WRONG_NETMASK, &srcHost->flags);
 		  FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &srcHost->flags);
+		  FD_SET(FLAG_SUBNET_LOCALHOST, &srcHost->flags);
+
+		  FD_SET(FLAG_HOST_WRONG_NETMASK, &srcHost1->flags);
 		} else {
-		  FD_CLR(FLAG_SUBNET_LOCALHOST, &srcHost->flags);
-		  FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &srcHost->flags);
+		  if(isPseudoLocalAddress(&srcHost->hostIpAddress, actualDeviceId, NULL, NULL)) {
+		    FD_SET(FLAG_SUBNET_LOCALHOST, &srcHost->flags);
+		    FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &srcHost->flags);
+		  } else {
+		    FD_CLR(FLAG_SUBNET_LOCALHOST, &srcHost->flags);
+		    FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &srcHost->flags);
+		  }
 		}
 
 		updateHostKnownSubnet(srcHost);

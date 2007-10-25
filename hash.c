@@ -70,15 +70,13 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
   } else if(memcmp(ether_addr, myGlobals.broadcastEntry->ethAddress, LEN_ETHERNET_ADDRESS) == 0) {
     *el = myGlobals.broadcastEntry;
     return(BROADCAST_HOSTS_ENTRY);
-  } else if(hostIpAddress == NULL) {
+  } else if((hostIpAddress == NULL) 
+	    || isPseudoLocalAddress(hostIpAddress, actualDeviceId, NULL, NULL)) {
     memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(u_int)], sizeof(u_int));
     (*useIPAddressForSearching) = 0;
   } else if(isBroadcastAddress(hostIpAddress, NULL, NULL)) {
     *el = myGlobals.broadcastEntry;
     return(BROADCAST_HOSTS_ENTRY);
-  } else if(isPseudoLocalAddress(hostIpAddress, actualDeviceId, NULL, NULL)) {
-    memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(u_int)], sizeof(u_int));
-    (*useIPAddressForSearching) = 0;
   } else {
     if(hostIpAddress != NULL) {
       if(myGlobals.runningPref.trackOnlyLocalHosts
@@ -780,16 +778,11 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   u_int32_t the_local_network, the_local_network_mask;
 
   if((hostIpAddress == NULL) && (ether_addr == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "Both Ethernet and IP addresses are NULL in lookupHost()[%s:%d]", file, line);
+    traceEvent(CONST_TRACE_WARNING, 
+	       "Both Ethernet and IP addresses are NULL in lookupHost()[%s:%d]", 
+	       file, line);
     return(NULL);
   }
-
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_NOISY, "DEBUG: lookupHost(%s, %s, m=%u, f=%u, dev=%d, vlan=%d)",
-             addrtostr(hostIpAddress),
-             etheraddr_string(ether_addr, buf),
-             checkForMultihoming, forceUsingIPaddress, actualDeviceId, vlanId);
-#endif
 
 #ifdef HASH_DEBUG
   hashSanityCheck();
@@ -798,6 +791,21 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   idx = hashHost(hostIpAddress, ether_addr,
 		 &useIPAddressForSearching,
 		 &el, actualDeviceId);
+
+#ifdef DEBUG
+  if(0)
+    traceEvent(CONST_TRACE_NOISY, "DEBUG: lookupHost(%s, %s, m=%u, f=%u, dev=%d, vlan=%d) [idx=%d]",
+	       addrtostr(hostIpAddress),
+	       etheraddr_string(ether_addr, buf),
+	       checkForMultihoming, forceUsingIPaddress, actualDeviceId, vlanId, idx);
+  else
+    traceEvent(CONST_TRACE_WARNING, "DEBUG: lookupHost(%s, %s, isLocalAddress=%u, _pseudoLocalAddress=%u) [idx=%d]",
+	       hostIpAddress ? addrtostr(hostIpAddress) : "<null>",
+	       etheraddr_string(ether_addr, buf),
+	       hostIpAddress ? isLocalAddress(hostIpAddress, actualDeviceId, NULL, NULL) : 0,
+	       hostIpAddress ? _pseudoLocalAddress(hostIpAddress, NULL, NULL) : 0,
+	       idx);
+#endif
 
   /* Remember the side effect of above routine - if -o | --no-mac is set,\
    * useIPAddressForSearching is now 1
@@ -839,8 +847,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       if(useIPAddressForSearching == 0) {
 	/* compare with the ethernet-address then the IP address */
 	if(memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0) {
-	  if((hostIpAddress != NULL) &&
-	     (hostIpAddress->hostFamily == el->hostIpAddress.hostFamily)) {
+	  if((hostIpAddress != NULL) && (hostIpAddress->hostFamily == el->hostIpAddress.hostFamily)) {
 	    if((!isMultihomed) && checkForMultihoming) {
 	      /* This is a local address hence this is a potential multihomed host. */
 
@@ -854,7 +861,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	    }
 	    hostFound = 1;
 	    break;
-	  } else if(hostIpAddress == NULL){  /* Only Mac Addresses */
+	  } else if(hostIpAddress == NULL) {  /* Only Mac Addresses */
 	    hostFound = 1;
 	    break;
 	  } else { /* MAC match found and we have the IP - need to update... */
@@ -890,7 +897,8 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	}
       } else {
 	/* -o | --no-mac (or NetFlow, which doesn't have MACs) - compare with only the IP address */
-	if(addrcmp(&el->hostIpAddress, hostIpAddress) == 0) {
+	if((addrcmp(&el->hostIpAddress, hostIpAddress) == 0) 
+	   || (memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0)) {
 	  hostFound = 1;
 	  break;
 	}
