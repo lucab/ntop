@@ -61,7 +61,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
     return;
   }
 
-  pluginEntryFctnPtr = (void*)dlsym(pluginPtr, "PluginEntryFctn" /* CONST_PLUGIN_ENTRY_FCTN_NAME */);
+  pluginEntryFctnPtr = (void*)dlsym(pluginPtr, CONST_PLUGIN_ENTRY_FCTN_NAME);
 
   if(pluginEntryFctnPtr == NULL) {
 #ifdef WIN32

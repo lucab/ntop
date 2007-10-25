@@ -100,7 +100,9 @@ typedef short int16_t;
 typedef char int8_t;
 #endif
 
-typedef unsigned char bool;
+#ifndef bool
+#define u_int8_t bool
+#endif
 
 #include "fcUtils.h"
 #include "scsiUtils.h"
