@@ -443,7 +443,10 @@ char* makeHostLink(HostTraffic *el, short mode,
     /* Got it? Use it! */
     strncpy(symIp, el->hostResolvedName, sizeof(symIp));
 
-    if((el->ethAddressString[0] != '\0') && subnetPseudoLocalHost(el)) {
+    if((el->ethAddressString[0] != '\0') 
+       && subnetPseudoLocalHost(el)
+       && hasWrongNetmask(el)
+       ) {
       strncpy(linkName, el->ethAddressString, sizeof(linkName));
       usedEthAddress = 1;      
     } else

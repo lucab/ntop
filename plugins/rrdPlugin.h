@@ -345,7 +345,7 @@ static const struct nameLabel rrd_filters[] = {
   { "upTo", "Packet Size" },
   { "cast", "Broad/Multi-cast" },
   { "Flow", "Flows" },
-  { "Efficiency", "Transmission Efficiency" },
+  { "Efficiency", "Network Efficiency" },
   { "NF_", "NetFlow" },
   /* Generic matches go at the end */
   { "Sent", "Sent" },

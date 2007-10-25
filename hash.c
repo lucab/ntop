@@ -898,7 +898,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       } else {
 	/* -o | --no-mac (or NetFlow, which doesn't have MACs) - compare with only the IP address */
 	if((addrcmp(&el->hostIpAddress, hostIpAddress) == 0) 
-	   || (memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0)) {
+	   || (ether_addr && (memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0))) {
 	  hostFound = 1;
 	  break;
 	}
