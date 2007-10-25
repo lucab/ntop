@@ -507,9 +507,9 @@ if test ".${LOCALEDIR}" = "."; then
 fi
 
 dnl> Add /usr/local/
-CFLAGS="${CFLAGS} -I/usr/local/include"
-CPPFLAGS="${CPPFLAGS} -I/usr/local/include"
-LDFLAGS="${LDFLAGS} -L/usr/local/lib"
+CFLAGS="${CFLAGS} -I/usr/local/include -I/opt/local/include"
+CPPFLAGS="${CPPFLAGS} -I/usr/local/include -I/opt/local/include"
+LDFLAGS="${LDFLAGS} -L/usr/local/lib -L/opt/local/lib"
 
 
 
