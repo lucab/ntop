@@ -101,7 +101,7 @@ typedef char int8_t;
 #endif
 
 #ifndef bool
-#define u_int8_t bool
+#define bool u_int8_t
 #endif
 
 #include "fcUtils.h"
