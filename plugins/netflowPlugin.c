@@ -28,7 +28,7 @@ static void* netflowMainLoop(void* _deviceId);
 static void* netflowUtilsLoop(void* _deviceId);
 #endif
 
-// #define DEBUG_FLOWS
+#define DEBUG_FLOWS
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -452,7 +452,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 			     time_t recordActTime, time_t recordSysUpTime,
 			     struct generic_netflow_record *record,
 			     int deviceId, time_t *firstSeen, time_t *lastSeen) {
-  int actualDeviceId;
+  int actualDeviceId, debug = 0;
   Counter len;
   char theFlags[256], srcPseudoLocal, dstPseudoLocal;
   u_int16_t srcAS, dstAS;
@@ -678,8 +678,9 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
   if((srcHost == NULL) ||(dstHost == NULL)) {
 #ifdef DEBUG_FLOWS
-    traceEvent(CONST_TRACE_INFO, "DEBUG: srcHost=%x, dstHost=%x\n",
-	       srcHost, dstHost);
+    if(debug)
+      traceEvent(CONST_TRACE_INFO, "DEBUG: srcHost=%x, dstHost=%x\n",
+		 srcHost, dstHost);
 #endif
     return(0);
   }
@@ -1081,7 +1082,7 @@ static char* nf_hex_dump(char *buf, u_short len) {
 static void dissectFlow(u_int32_t netflow_device_ip,
 			char *buffer, int bufferLen, int deviceId) {
   NetFlow5Record the5Record;
-  int flowVersion, debug = 1;
+  int flowVersion, debug = 0;
   time_t recordActTime = 0, recordSysUpTime = 0;
   struct generic_netflow_record record;
 
@@ -1232,8 +1233,10 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 	/* Template */
 #ifdef DEBUG_FLOWS
-	traceEvent(CONST_TRACE_INFO, "Found Template [displ=%d]", displ);
-	traceEvent(CONST_TRACE_INFO, "Found Template Type: %d", isOptionTemplate);
+	if(debug) {
+	  traceEvent(CONST_TRACE_INFO, "Found Template [displ=%d]", displ);
+	  traceEvent(CONST_TRACE_INFO, "Found Template Type: %d", isOptionTemplate);
+	}
 #endif
 
 	myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9TemplRcvd++;
@@ -1254,7 +1257,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	    template.flowsetLen = ntohs(template.flowsetLen);
 
 #ifdef DEBUG_FLOWS
-	    if(1)
+	    if(debug)
 	      traceEvent(CONST_TRACE_INFO, "Template [id=%d] fields: %d",
 			 template.templateId, template.fieldCount);
 #endif
@@ -1268,7 +1271,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 	      len += 4; /* Field Type (2) + Field Length (2) */
 #ifdef DEBUG_FLOWS
-	      if(1)
+	      if(debug)
 		traceEvent(CONST_TRACE_INFO, "[%d] fieldLen=%d/len=%d",
 			   1+fieldId, htons(set->flowsetLen), len);
 #endif
@@ -1294,15 +1297,17 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 	      if(found) {
 #ifdef DEBUG_FLOWS
-		traceEvent(CONST_TRACE_INFO, ">>>>> Redefined existing template [id=%d]",
-			   template.templateId);
+		if(debug)
+		  traceEvent(CONST_TRACE_INFO, ">>>>> Redefined existing template [id=%d]",
+			     template.templateId);
 #endif
 
 		free(cursor->fields);
 	      } else {
 #ifdef DEBUG_FLOWS
-		traceEvent(CONST_TRACE_INFO, ">>>>> Found new flow template definition [id=%d]",
-			   template.templateId);
+		if(debug)
+		  traceEvent(CONST_TRACE_INFO, ">>>>> Found new flow template definition [id=%d]",
+			     template.templateId);
 #endif
 
 		cursor = (FlowSetV9*)malloc(sizeof(FlowSetV9));
@@ -1326,7 +1331,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	  }
 
 #ifdef DEBUG_FLOWS
-	  traceEvent(CONST_TRACE_INFO, "Moving ahead of %d bytes", template.flowsetLen);
+	  if(debug) traceEvent(CONST_TRACE_INFO, "Moving ahead of %d bytes", template.flowsetLen);
 #endif
 
 	  /* Skip template definition */
@@ -1339,7 +1344,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	/* DataFlowset */
 
 #ifdef DEBUG_FLOWS
-	traceEvent(CONST_TRACE_INFO, "Found FlowSet [displ=%d]", displ);
+	if(debug) traceEvent(CONST_TRACE_INFO, "Found FlowSet [displ=%d]", displ);
 #endif
 	foundRecord = 1;
       }
@@ -1375,7 +1380,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	    record.vlanId = NO_VLAN; /* No VLAN */
 
 #ifdef DEBUG_FLOWS
-	    if(1)
+	    if(debug)
 	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d [%d...%d][%s]",
 			 fs.templateId, displ, fs.flowsetLen, nf_hex_dump(&buffer[displ], 4));
 #endif
@@ -1532,9 +1537,10 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		bidirectional traffic, handleGenericFlow is called twice.
 	      */
 	      if(full_flow) {
-		handleGenericFlow(netflow_device_ip, recordActTime,
-				  recordSysUpTime, &record,
-				  deviceId, &firstSeen, &lastSeen);
+		if(ntohl(record.sentPkts) > 0)
+		  handleGenericFlow(netflow_device_ip, recordActTime,
+				    recordSysUpTime, &record,
+				    deviceId, &firstSeen, &lastSeen);
 
 #ifdef DEBUG_FLOWS
 		if(debug)
@@ -1544,7 +1550,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 		tot_len += accum_len;
 
-		if(record.rcvdPkts > 0) {
+		if(ntohl(record.rcvdPkts) > 0) {
 		  u_int32_t tmp;
 
 		  record.sentPkts   = record.rcvdPkts;
@@ -2031,7 +2037,7 @@ static void initNetFlowDevice(int deviceId) {
 
   if(fetchPrefsValue(nfValue(deviceId, "debug", 1), value, sizeof(value)) == -1) {
     storePrefsValue(nfValue(deviceId, "debug", 1), "0");
-    myGlobals.device[deviceId].netflowGlobals->netFlowDebug = 0;
+    myGlobals.device[deviceId].netflowGlobals->netFlowDebug = 1;
   } else {
     myGlobals.device[deviceId].netflowGlobals->netFlowDebug = atoi(value);
   }
@@ -3764,7 +3770,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 
    ++numPkt;
 
-    if(1 ||debug)
+    if(debug)
       traceEvent(CONST_TRACE_INFO, "Rcvd packet to dissect [caplen=%d][len=%d][num_pkt=%d]", 
 		 caplen, length, numPkt);
  }

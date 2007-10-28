@@ -30,7 +30,7 @@
 #endif
 
 #define REMOTE_SERVER_PORT 2005
-static u_char useDaemon = 0, calculateEfficiency = 1;
+static u_char useDaemon = 0, calculateEfficiency = 1, debug_rrd_graph = 0;
 static int sd = -1;
 static struct sockaddr_in cliAddr, remoteServAddr;
 static char* rrdVolatilePath;
@@ -956,7 +956,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     argv[argc++] = "VDEF:ninetyfive=ctr,95,PERCENT";
     argv[argc++] = "LINE1.2:ninetyfive#ff00ffBB:95th Percentile";
 
-    if(0) {
+    if(debug_rrd_graph) {
       int j;
 
       for(j=0; j<argc; j++)
@@ -1230,14 +1230,14 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
   for(i=0, entryId=0; rrds[i].name != NULL; i++) {
     if(!strcmp(rrds[i].name, "throughput")) {
 #ifdef WIN32
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/%s%s.rrd",
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/interfaces/%s/%s.rrd",
 		    myGlobals.rrdVolatilePath, driveSerial, rrdPath, rrds[i].name);
 #else
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/%s.rrd",
 		    myGlobals.rrdVolatilePath, rrdPath, rrds[i].name);
 #endif
     } else
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s%s.rrd",
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/%s.rrd",
 		    myGlobals.rrdPath, rrdPath, rrds[i].name);
 
     revertSlashIfWIN32(path, 0);
@@ -1289,13 +1289,12 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
   addRrdDelay();
   rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);
 
-    if(0) {
-      int j;
-
-      for(j=0; j<argc; j++)
-	traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
-    }
-
+  if(debug_rrd_graph) {
+    int j;
+    
+    for(j=0; j<argc; j++)
+      traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
+  }
 
   calfree();
 
@@ -1462,7 +1461,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
       If the graph size changes, please update the zoom.js file (search for L.Deri)
     */
     safe_snprintf(__FILE__, __LINE__, strbuf, sizeof(strbuf),
-                  "<img id=zoomGraphImage src=\"/" CONST_PLUGINS_HEADER "%s?action=netflowSummary"
+                  "<img id=zoomGraphImage src=\"/" CONST_PLUGINS_HEADER "%s?action=netflowIfSummary"
 		  "&graphId=%d"
 		  "&key=%s"
 		  "&name=%s"
@@ -1617,7 +1616,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
 
   /* traceEventRRDebugARGV(0);  */
 
-  if(0) {
+  if(debug_rrd_graph) {
     int j;
     
     for(j=0; j<argc; j++)
@@ -1633,7 +1632,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
   addRrdDelay();
   rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);
 
-  traceEventRRDebugARGV(3); // FIX
+  // traceEventRRDebugARGV(3); // FIX
 
   calfree();
 
@@ -2407,7 +2406,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     }
   }
 
-  if(0) {
+  if(debug_rrd_graph) {
     for(j=0; j<argc; j++)
       traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
   }
