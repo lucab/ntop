@@ -336,7 +336,8 @@ static void updateInterfaceName(InterfaceStats *ifStats) {
 
 /* *************************** */
 
-static void updateNetFlowIfStats(u_int32_t netflow_device_ip, int deviceId, u_int32_t ifId,
+static void updateNetFlowIfStats(u_int32_t netflow_device_ip,
+				 int deviceId, u_int32_t ifId,
 				 u_char selfUpdate, u_char sentStats,
 				 u_int32_t _pkts, u_int32_t _octets) {
   if(_pkts == 0)
@@ -419,7 +420,8 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip, int deviceId, u_in
 
 /* *************************** */
 
-static void updateInterfaceStats(u_int32_t netflow_device_ip, int deviceId, struct generic_netflow_record *record) {
+static void updateInterfaceStats(u_int32_t netflow_device_ip, 
+				 int deviceId, struct generic_netflow_record *record) {
 
   if((myGlobals.device[deviceId].netflowGlobals == NULL) || (record == NULL)) {
     traceEvent(CONST_TRACE_WARNING, "NETFLOW: internal error, NULL interface stats");
@@ -433,15 +435,20 @@ static void updateInterfaceStats(u_int32_t netflow_device_ip, int deviceId, stru
 	       ntohl(record->sentPkts), ntohl(record->sentOctets),
 	       ntohl(record->rcvdPkts), ntohl(record->rcvdOctets));
 
-  updateNetFlowIfStats(netflow_device_ip, deviceId, record->output, 0, 1, ntohl(record->sentPkts), ntohl(record->sentOctets));
+  updateNetFlowIfStats(netflow_device_ip, deviceId, record->output, 0, 1,
+		       ntohl(record->sentPkts), ntohl(record->sentOctets));
 
   if(record->input == record->output)
-    updateNetFlowIfStats(netflow_device_ip, deviceId, record->input,  1 /* self update */, 0, ntohl(2*record->sentPkts), ntohl(2*record->sentOctets));
+    updateNetFlowIfStats(netflow_device_ip, deviceId, record->input, 
+			 1 /* self update */, 0, ntohl(2*record->sentPkts),
+			 ntohl(2*record->sentOctets));
   else if(ntohl(record->rcvdPkts) != 0) {
-    updateNetFlowIfStats(netflow_device_ip, deviceId, record->input,  0, 0, ntohl(record->rcvdPkts), ntohl(record->rcvdOctets));
+    updateNetFlowIfStats(netflow_device_ip, deviceId, record->input, 0, 0, 
+			 ntohl(record->rcvdPkts), ntohl(record->rcvdOctets));
   } else {
     /* pre v9 */
-    updateNetFlowIfStats(netflow_device_ip, deviceId, record->input,  0, 0, ntohl(record->sentPkts), ntohl(record->sentOctets));
+    updateNetFlowIfStats(netflow_device_ip, deviceId, record->input, 0, 0,
+			 ntohl(record->sentPkts), ntohl(record->sentOctets));
   }
 
 }
@@ -611,8 +618,6 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   }
 
   /* accessMutex(&myGlobals.hostsHashMutex, "processNetFlowPacket"); */
-
-  record->input = ntohs(record->input), record->output = ntohs(record->output);
 
   updateInterfaceStats(netflow_device_ip, deviceId, record);
 
@@ -1537,6 +1542,8 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		bidirectional traffic, handleGenericFlow is called twice.
 	      */
 	      if(full_flow) {
+		record.input = ntohs(record.input), record.output = ntohs(record.output);
+		
 		if(ntohl(record.sentPkts) > 0)
 		  handleGenericFlow(netflow_device_ip, recordActTime,
 				    recordSysUpTime, &record,
