@@ -454,7 +454,20 @@ static void updateInterfaceStats(u_int32_t netflow_device_ip,
     updateNetFlowIfStats(netflow_device_ip, deviceId, record->input, 0, 0,
 			 ntohl(record->sentPkts), ntohl(record->sentOctets));
   }
+}
 
+/* *************************** */
+
+static void de_endianFlow(struct generic_netflow_record *record) {
+  
+  NTOHS(record->input); NTOHS(record->output);
+  NTOHL(record->sentPkts); NTOHL(record->sentOctets);
+  NTOHL(record->first); NTOHL(record->last);
+  NTOHL(record->srcaddr); NTOHL(record->dstaddr);
+  NTOHS(record->srcport); NTOHS(record->dstport);
+  NTOHS(record->src_as); NTOHS(record->dst_as);
+  NTOHL(record->nw_latency_sec); NTOHL(record->nw_latency_usec);
+  NTOHS(record->vlanId);
 }
 
 /* *************************** */
@@ -1541,17 +1554,10 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		bidirectional traffic, handleGenericFlow is called twice.
 	      */
 	      if(full_flow) {
-		NTOHS(record.input); NTOHS(record.output);
-		NTOHL(record.sentPkts); NTOHL(record.sentOctets);
+		de_endianFlow(&record);
 		NTOHL(recordActTime); NTOHL(recordSysUpTime);
-		NTOHL(record.first); NTOHL(record.last);
-		NTOHL(record.srcaddr); NTOHL(record.dstaddr);
-		NTOHS(record.srcport); NTOHS(record.dstport);
-		NTOHS(record.src_as); NTOHS(record.dst_as);
-		NTOHL(record.nw_latency_sec); NTOHL(record.nw_latency_usec);
-		NTOHS(record.vlanId);
 
-		if(ntohl(record.sentPkts) > 0)
+		if(record.sentPkts > 0)
 		  handleGenericFlow(netflow_device_ip, recordActTime,
 				    recordSysUpTime, &record,
 				    deviceId, &firstSeen, &lastSeen);
@@ -1564,7 +1570,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 		tot_len += accum_len;
 
-		if(ntohl(record.rcvdPkts) > 0) {
+		if(record.rcvdPkts > 0) {
 		  u_int32_t tmp;
 
 		  record.sentPkts   = record.rcvdPkts;
@@ -1634,6 +1640,8 @@ static void dissectFlow(u_int32_t netflow_device_ip,
     record.vlanId = NO_VLAN; /* No VLAN */
     record.nw_latency_sec = record.nw_latency_usec = htonl(0);
 
+    NTOHL(recordActTime); NTOHL(recordSysUpTime);
+
     for(i=0; i<numFlows; i++) {
       time_t firstSeen, lastSeen;
 
@@ -1655,6 +1663,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
       record.dst_mask   = the5Record.flowRecord[i].dst_mask;
       record.src_mask   = the5Record.flowRecord[i].src_mask;
 
+      de_endianFlow(&record);
       handleGenericFlow(netflow_device_ip, recordActTime,
 			recordSysUpTime, &record,
 			deviceId, &firstSeen, &lastSeen);
