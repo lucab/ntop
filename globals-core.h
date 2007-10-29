@@ -906,6 +906,10 @@ extern int h_errno; /* netdb.h */
 #define NTOHL(x)    (x) = ntohl(x)
 #endif
 
+#ifndef NTOHS
+#define NTOHS(x)    (x) = ntohs(x)
+#endif
+
 #ifndef BufferTooSmall
 #define BufferTooSmall(buf, len) traceEvent(CONST_TRACE_ERROR, "Buffer [buffer len=%d] too small @ %s:%d", len,  __FILE__,__LINE__)
 #endif

@@ -35,6 +35,10 @@ static void* netflowUtilsLoop(void* _deviceId);
 #define valueOf(a) (a == NULL ? "" : a)
 #define isEmpty(a) ((a == NULL) || (a[0] == '\0') ? 1 : 0)
 
+
+#define SWAP16(a,b) { u_int16_t c = a; a = b; b = c; }
+#define SWAP32(a,b) { u_int32_t c = a; a = b; b = c; }
+
 /* ********************************* */
 
 /* Forward */
@@ -485,8 +489,8 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
   myGlobals.device[deviceId].netflowGlobals->numNetFlowsRcvd++;
 
-  numPkts = ntohl(record->sentPkts);
-  len     = (Counter)ntohl(record->sentOctets);
+  numPkts = record->sentPkts;
+  len     = (Counter)record->sentOctets;
 
   /* Bad flow(zero packets) */
   if(numPkts == 0) {
@@ -507,13 +511,10 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   }
 
   myGlobals.actTime = time(NULL);
-  recordActTime   = ntohl(recordActTime);
-  recordSysUpTime = ntohl(recordSysUpTime);
-
   initTime = recordActTime-(recordSysUpTime/1000);
 
-  *firstSeen = (ntohl(record->first)/1000) + initTime;
-  *lastSeen  = (ntohl(record->last)/1000) + initTime;
+  *firstSeen = (record->first/1000) + initTime;
+  *lastSeen  = (record->last/1000) + initTime;
 
   /* Sanity check */
   if(*lastSeen > myGlobals.actTime) *lastSeen = myGlobals.actTime;
@@ -521,13 +522,13 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
   myGlobals.device[deviceId].netflowGlobals->numNetFlowsProcessed++;
 
-  a.s_addr = ntohl(record->srcaddr);
-  b.s_addr = ntohl(record->dstaddr);
-  sport    = ntohs(record->srcport);
-  dport    = ntohs(record->dstport);
+  a.s_addr = record->srcaddr;
+  b.s_addr = record->dstaddr;
+  sport    = record->srcport;
+  dport    = record->dstport;
   proto    = record->proto;
-  srcAS    = ntohs(record->src_as);
-  dstAS    = ntohs(record->dst_as);
+  srcAS    = record->src_as;
+  dstAS    = record->dst_as;
 
 #ifdef DEBUG_FLOWS
   if(0) {
@@ -622,7 +623,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   updateInterfaceStats(netflow_device_ip, deviceId, record);
 
   if(!skipSRC) {
-    switch((skipSRC = isOKtoSave(ntohl(record->srcaddr),
+    switch((skipSRC = isOKtoSave(record->srcaddr,
 				 myGlobals.device[deviceId].netflowGlobals->whiteNetworks,
 				 myGlobals.device[deviceId].netflowGlobals->blackNetworks,
 				 myGlobals.device[deviceId].netflowGlobals->numWhiteNets,
@@ -640,7 +641,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   }
 
   if(!skipDST) {
-    switch((skipDST = isOKtoSave(ntohl(record->dstaddr),
+    switch((skipDST = isOKtoSave(record->dstaddr,
 				 myGlobals.device[deviceId].netflowGlobals->whiteNetworks,
 				 myGlobals.device[deviceId].netflowGlobals->blackNetworks,
 				 myGlobals.device[deviceId].netflowGlobals->numWhiteNets,
@@ -660,10 +661,10 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 #ifdef DEBUG_FLOWS
   if(0) {
     traceEvent(CONST_TRACE_INFO, "DEBUG: isOKtoSave(%08x) - src - returned %s",
-	       ntohl(record->srcaddr),
+	       record->srcaddr,
 	       skipSRC == 0 ? "OK" : skipSRC == 1 ? "failed White list" : "failed Black list");
     traceEvent(CONST_TRACE_INFO, "DEBUG: isOKtoSave(%08x) - dst - returned %s",
-	       ntohl(record->dstaddr),
+	       record->dstaddr,
 	       skipDST == 0 ? "OK" : skipDST == 1 ? "failed White list" : "failed Black list");
   }
 #endif
@@ -714,7 +715,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   if(0)
     traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [last=%d][first=%d][last-first=%d]",
 	       srcHost->hostNumIpAddress, sport,
-	       dstHost->hostNumIpAddress, dport, ntohl(record->last), ntohl(record->first),
+	       dstHost->hostNumIpAddress, dport, record->last, record->first,
 	       (*lastSeen - *firstSeen));
 #endif
 
@@ -964,8 +965,6 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
     session->lastSeen = recordActTime;
 
-    record->nw_latency_sec = ntohl(record->nw_latency_sec),
-      record->nw_latency_usec = ntohl(record->nw_latency_usec);
     if(record->nw_latency_sec || record->nw_latency_usec) {
 
       /*
@@ -992,12 +991,12 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
   if(myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB)
     insert_flow_record(deviceId,
-		       ntohl(record->srcaddr),  ntohl(record->dstaddr),
-		       record->input,  record->output,
-		       ntohl(record->sentPkts), ntohl(record->sentOctets),
-		       ntohl(record->rcvdPkts), ntohl(record->rcvdOctets),
+		       record->srcaddr, record->dstaddr,
+		       record->input, record->output,
+		       record->sentPkts, record->sentOctets,
+		       record->rcvdPkts, record->rcvdOctets,
 		       *firstSeen, *lastSeen,
-		       ntohs(record->srcport),  ntohs(record->dstport),
+		       record->srcport, record->dstport,
 		       record->tcp_flags,
 		       record->proto, record->tos, record->vlanId);
   return(0);
@@ -1542,8 +1541,16 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		bidirectional traffic, handleGenericFlow is called twice.
 	      */
 	      if(full_flow) {
-		record.input = ntohs(record.input), record.output = ntohs(record.output);
-		
+		NTOHS(record.input); NTOHS(record.output);
+		NTOHL(record.sentPkts); NTOHL(record.sentOctets);
+		NTOHL(recordActTime); NTOHL(recordSysUpTime);
+		NTOHL(record.first); NTOHL(record.last);
+		NTOHL(record.srcaddr); NTOHL(record.dstaddr);
+		NTOHS(record.srcport); NTOHS(record.dstport);
+		NTOHS(record.src_as); NTOHS(record.dst_as);
+		NTOHL(record.nw_latency_sec); NTOHL(record.nw_latency_usec);
+		NTOHS(record.vlanId);
+
 		if(ntohl(record.sentPkts) > 0)
 		  handleGenericFlow(netflow_device_ip, recordActTime,
 				    recordSysUpTime, &record,
@@ -1563,14 +1570,13 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		  record.sentPkts   = record.rcvdPkts;
 		  record.sentOctets = record.rcvdOctets;
 
-		  tmp = record.srcaddr;
-		  record.srcaddr = record.dstaddr;
-		  record.dstaddr = tmp;
-		  tmp = record.srcport;
-		  record.srcport = record.dstport;
-		  record.dstport = tmp;
+		  SWAP32(record.srcaddr, record.dstaddr);
+		  SWAP16(record.srcport, record.dstport);
+		  SWAP16(record.src_as, record.dst_as);
+		  SWAP16(record.input, record.output);
 
-		  handleGenericFlow(netflow_device_ip, recordActTime, recordSysUpTime, &record,
+		  handleGenericFlow(netflow_device_ip,
+				    recordActTime, recordSysUpTime, &record,
 				    deviceId, &firstSeen, &lastSeen);
 		}
 
