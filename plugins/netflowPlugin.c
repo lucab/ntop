@@ -436,38 +436,39 @@ static void updateInterfaceStats(u_int32_t netflow_device_ip,
     traceEvent(CONST_TRACE_INFO, "NETFLOW: updateInterfaceStats(%d/%d) "
 	       "[sent_pkts=%d][sent_bytes=%d][rcvd_pkts=%d][rcvd_bytes=%d]",
 	       record->input, record->output,
-	       ntohl(record->sentPkts), ntohl(record->sentOctets),
-	       ntohl(record->rcvdPkts), ntohl(record->rcvdOctets));
+	       record->sentPkts, record->sentOctets,
+	       record->rcvdPkts, record->rcvdOctets);
 
   updateNetFlowIfStats(netflow_device_ip, deviceId, record->output, 0, 1,
-		       ntohl(record->sentPkts), ntohl(record->sentOctets));
+		       record->sentPkts, record->sentOctets);
 
   if(record->input == record->output)
     updateNetFlowIfStats(netflow_device_ip, deviceId, record->input, 
-			 1 /* self update */, 0, ntohl(2*record->sentPkts),
-			 ntohl(2*record->sentOctets));
-  else if(ntohl(record->rcvdPkts) != 0) {
+			 1 /* self update */, 0, (2*record->sentPkts),
+			 (2*record->sentOctets));
+  else if(record->rcvdPkts != 0) {
     updateNetFlowIfStats(netflow_device_ip, deviceId, record->input, 0, 0, 
-			 ntohl(record->rcvdPkts), ntohl(record->rcvdOctets));
+			 record->rcvdPkts, record->rcvdOctets);
   } else {
     /* pre v9 */
     updateNetFlowIfStats(netflow_device_ip, deviceId, record->input, 0, 0,
-			 ntohl(record->sentPkts), ntohl(record->sentOctets));
+			 record->sentPkts, record->sentOctets);
   }
 }
 
 /* *************************** */
 
 static void de_endianFlow(struct generic_netflow_record *record) {
-  
-  NTOHS(record->input); NTOHS(record->output);
-  NTOHL(record->sentPkts); NTOHL(record->sentOctets);
-  NTOHL(record->first); NTOHL(record->last);
   NTOHL(record->srcaddr); NTOHL(record->dstaddr);
+  NTOHL(record->nexthop);  
+  NTOHS(record->input); NTOHS(record->output);
+  NTOHL(record->sentPkts); NTOHL(record->rcvdPkts);
+  NTOHL(record->sentOctets); NTOHL(record->rcvdOctets);
+  NTOHL(record->first); NTOHL(record->last);
   NTOHS(record->srcport); NTOHS(record->dstport);
   NTOHS(record->src_as); NTOHS(record->dst_as);
-  NTOHL(record->nw_latency_sec); NTOHL(record->nw_latency_usec);
   NTOHS(record->vlanId);
+  NTOHL(record->nw_latency_sec); NTOHL(record->nw_latency_usec);
 }
 
 /* *************************** */
@@ -1239,6 +1240,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
     recordActTime = the5Record.flowHeader.unix_secs;
     recordSysUpTime = the5Record.flowHeader.sysUptime;
+    NTOHL(recordActTime); NTOHL(recordSysUpTime);
 
     for(i=0; (!done) && (displ < bufferLen) && (i < numEntries); i++) {
 
@@ -1392,10 +1394,6 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	    time_t firstSeen, lastSeen;
 	    u_short num_pdu = 1;
 
-            /* initialize to zero */
-	    memset(&record, 0, sizeof(record));
-	    record.vlanId = NO_VLAN; /* No VLAN */
-
 #ifdef DEBUG_FLOWS
 	    if(debug)
 	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d [%d...%d][%s]",
@@ -1407,6 +1405,10 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 	    while(displ < (init_displ + fs.flowsetLen)) {
 	      u_short accum_len = 0, full_flow;
+
+	      /* initialize to zero */
+	      memset(&record, 0, sizeof(record));
+	      record.vlanId = NO_VLAN; /* No VLAN */
 
 	      /* Defaults */
 	      record.nw_latency_sec = record.nw_latency_usec = htonl(0);
@@ -1555,7 +1557,6 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	      */
 	      if(full_flow) {
 		de_endianFlow(&record);
-		NTOHL(recordActTime); NTOHL(recordSysUpTime);
 
 		if(record.sentPkts > 0)
 		  handleGenericFlow(netflow_device_ip, recordActTime,
