@@ -1096,7 +1096,7 @@ void allocDeviceMemory(int deviceId) {
 void addDevice(char* deviceName, char* deviceDescr) {
   int i, deviceId, mallocLen, memlen;
   char *workDevices = NULL;
-  char myName[80], *column = NULL, ebuf[CONST_SIZE_PCAP_ERR_BUF], tmpStr[64];
+  char myName[255], *column = NULL, ebuf[CONST_SIZE_PCAP_ERR_BUF], tmpStr[64];
 
   ebuf[0] = '\0', myName[0] = '\0';
 
@@ -1495,7 +1495,7 @@ void initDevices(char* devices) {
   int defaultIdx = -1;
   int found = 0, intfc;
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
-  char myName[80];
+  char myName[255];
 
   ebuf[0] = '\0', myName[0] = '\0';
 
@@ -1528,8 +1528,9 @@ void initDevices(char* devices) {
 		      myGlobals.device[0].uniqueIfName :
 		      myGlobals.device[0].name);
       else
-	safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s.ntop-suspicious-pkts.pcap",
-		      myGlobals.runningPref.rFileName);
+	safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.pcap",
+		      myGlobals.runningPref.pcapLogBasePath,    /* Added by David Moore */
+		      CONST_PATH_SEP);
 
         myGlobals.device[0].pcapErrDumper = pcap_dump_open(myGlobals.device[0].pcapPtr, myName);
 
