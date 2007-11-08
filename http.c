@@ -1339,7 +1339,8 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipByt
       msSpent = 0;
 
     /* Use standard Apache format per http://httpd.apache.org/docs/logs.html */
-    strftime(theDate, sizeof(theDate), CONST_APACHELOG_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
+    localtime_r(&myGlobals.actTime, &t);
+    strftime(theDate, sizeof(theDate), CONST_APACHELOG_TIMESPEC, &t);
 
     gmtoffset =  (myGlobals.thisZone < 0) ? -myGlobals.thisZone : myGlobals.thisZone;
     safe_snprintf(__FILE__, __LINE__, theZone, sizeof(theZone), "%c%2.2ld%2.2ld",
@@ -1509,15 +1510,16 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
     }
 
     if(myGlobals.runningPref.P3Puri != NULL) {
-      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "policyref=\"%s\"", myGlobals.runningPref.P3Puri);
+      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), 
+		    "policyref=\"%s\"", myGlobals.runningPref.P3Puri);
       sendString(tmpStr);
     }
     sendString("\r\n");
   }
 
   /* Use en standard for this per RFC */
-  // strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, localtime_r(&theTime, &t));
-  strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, gmtime_r(&theTime, &t));
+  localtime_r(&theTime, &t);
+  strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, &t);
   theDate[sizeof(theDate)-1] = '\0';
   safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Date: %s\r\n", theDate);
   sendString(tmpStr);
@@ -1526,7 +1528,7 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
     sendString("Cache-Control: max-age=3600, must-revalidate, public\r\n");
 
     theTime += 3600;
-    strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, localtime_r(&theTime, &t));
+    strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, &t);
     theDate[sizeof(theDate)-1] = '\0';
     safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Expires: %s\r\n", theDate);
     sendString(tmpStr);
@@ -1539,7 +1541,8 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
     sendString("Connection: close\n");
   }
 
-  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Server: ntop/%s (%s)\r\n", version, osName);
+  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), 
+		"Server: ntop/%s (%s)\r\n", version, osName);
   sendString(tmpStr);
 
   if(headerFlags & BITFLAG_HTTP_NEED_AUTHENTICATION) {
