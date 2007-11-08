@@ -36,6 +36,7 @@ static void* netflowUtilsLoop(void* _deviceId);
 #define isEmpty(a) ((a == NULL) || (a[0] == '\0') ? 1 : 0)
 
 
+#define SWAP8(a,b)  { u_int8_t  c = a; a = b; b = c; }
 #define SWAP16(a,b) { u_int16_t c = a; a = b; b = c; }
 #define SWAP32(a,b) { u_int32_t c = a; a = b; b = c; }
 
@@ -1574,13 +1575,21 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		if(record.rcvdPkts > 0) {
 		  u_int32_t tmp;
 
-		  record.sentPkts   = record.rcvdPkts;
-		  record.sentOctets = record.rcvdOctets;
-
+		  SWAP32(record.sentPkts, record.rcvdPkts);
+		  SWAP32(record.sentOctets, record.rcvdOctets);
 		  SWAP32(record.srcaddr, record.dstaddr);
 		  SWAP16(record.srcport, record.dstport);
 		  SWAP16(record.src_as, record.dst_as);
 		  SWAP16(record.input, record.output);
+		  SWAP8(record.efficiency_sent, record.efficiency_rcvd);
+
+		  if(record.src_mac_set && record.dst_mac_set) {
+		    char tmp_mac[LEN_ETHERNET_ADDRESS];
+
+		    memcpy(tmp_mac, record.src_mac, LEN_ETHERNET_ADDRESS);
+		    memcpy(record.src_mac, record.dst_mac, LEN_ETHERNET_ADDRESS);
+		    memcpy(record.dst_mac, tmp_mac, LEN_ETHERNET_ADDRESS);
+		  }
 
 		  handleGenericFlow(netflow_device_ip,
 				    recordActTime, recordSysUpTime, &record,
