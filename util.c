@@ -4313,7 +4313,8 @@ u_int numActiveSenders(u_int deviceId) {
 
   for(el=getFirstHost(deviceId);
       el != NULL; el = getNextHost(deviceId, el)) {
-    if(broadcastHost(el) || (el->pktSent.value == 0))
+    if(broadcastHost(el) 
+       || ((myGlobals.actTime-el->lastSeen) > PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES))
       continue;
     else if (isFcHost (el) && (el->fcCounters->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
       continue;
