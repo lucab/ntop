@@ -36,7 +36,7 @@
 #define FLAG_RRD_DETAIL_LOW                 0
 #define FLAG_RRD_DETAIL_MEDIUM              1
 #define FLAG_RRD_DETAIL_HIGH                2
-#define CONST_RRD_DETAIL_DEFAULT            FLAG_RRD_DETAIL_HIGH
+#define CONST_RRD_DETAIL_DEFAULT            FLAG_RRD_DETAIL_MEDIUM
 
 #define FLAG_RRD_ACTION_NONE                0
 #define FLAG_RRD_ACTION_GRAPH               1

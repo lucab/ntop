@@ -1423,13 +1423,13 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	  if((myGlobals.ipTrafficProtosNames[j] != NULL) && (!shortView)) {
 	    if(j > 0) endWriteKey(fDescr, lang, "\t\t", hostKey, ',');
 	    initWriteKey(fDescr, lang, "\t\t", (hostKey = myGlobals.ipTrafficProtosNames[j]), numEntries);
-	    wrtLlongItm(fDescr, lang,"\t\t\t","local",
+	    wrtLlongItm(fDescr, lang, "\t\t\t", "local",
 			myGlobals.device[i].ipProtoStats[j].local, ',', numEntries);
-	    wrtLlongItm(fDescr, lang,"\t\t\t","local2remote",
+	    wrtLlongItm(fDescr, lang, "\t\t\t", "local2remote",
 			myGlobals.device[i].ipProtoStats[j].local2remote, ',', numEntries);
-	    wrtLlongItm(fDescr, lang,"\t\t\t","remote2local",
+	    wrtLlongItm(fDescr, lang, "\t\t\t", "remote2local",
 			myGlobals.device[i].ipProtoStats[j].remote2local, ',', numEntries);
-	    wrtLlongItm(fDescr, lang,"\t\t\t","remote",
+	    wrtLlongItm(fDescr, lang, "\t\t\t", "remote",
 			myGlobals.device[i].ipProtoStats[j].remote, ' ', numEntries);
 	  } else {
 	    TrafficCounter ctr;
