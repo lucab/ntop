@@ -3857,7 +3857,8 @@ static void arbitraryActionPage(void) {
 
   if(myGlobals.device[0].ipProtoStats != NULL) {
     for(idx=0; idx<myGlobals.numIpProtosToMonitor; idx++) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"IP_%sSentBytes\">%s Sent Bytes</option>\n"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<option value=\"IP_%sSentBytes\">%s Sent Bytes</option>\n"
 		    "<option value=\"IP_%sRcvdBytes\">%s Rcvd Bytes</option>\n"
 		    "<option value=\"IP_%sBytes\">%s Bytes (interface level)</option>\n",
                     myGlobals.ipTrafficProtosNames[idx],
@@ -4653,7 +4654,6 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
     updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd, 0);
 
     if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
-
       if(calculateEfficiency) {
 	if(el->pktSent.value > 0) {
 	  Counter c, diff = el->pktSent.value - el->lastEfficiencyPktSent.value;
@@ -4752,7 +4752,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       }
     }
 
-    if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
+    if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
       updateCounter(rrdPath, "totPeersSent", el->totContactedSentPeers, 0);
       updateCounter(rrdPath, "totPeersRcvd", el->totContactedRcvdPeers, 0);
 
@@ -5405,7 +5405,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  }
 	}
 
-	if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
+	if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
 	  if(myGlobals.device[devIdx].ipProtoStats != NULL) {
 	    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/IP_",
 			  myGlobals.rrdPath,  myGlobals.device[devIdx].uniqueIfName);

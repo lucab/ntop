@@ -3859,6 +3859,7 @@ static int createsFlowDevice(int sflowDeviceId) {
     myGlobals.device[deviceId].activeDevice = 1;
     myGlobals.device[deviceId].sflowGlobals->sflowDeviceId = sflowDeviceId;
     initsFlowDevice(deviceId);
+    createDeviceIpProtosList(deviceId);
 
     if(fetchPrefsValue(sfValue(deviceId, "humanFriendlyName", 1), value, sizeof(value)) != -1) {
       free(myGlobals.device[deviceId].humanFriendlyName);

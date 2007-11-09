@@ -28,7 +28,7 @@ static void* netflowMainLoop(void* _deviceId);
 static void* netflowUtilsLoop(void* _deviceId);
 #endif
 
-#define DEBUG_FLOWS
+/* #define DEBUG_FLOWS */
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -3235,7 +3235,8 @@ static int createNetFlowDevice(int netFlowDeviceId) {
     myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId = netFlowDeviceId;
     initNetFlowDevice(deviceId);
     setNetFlowInterfaceMatrix(deviceId);
-
+    createDeviceIpProtosList(deviceId);
+    
     if(fetchPrefsValue(nfValue(deviceId, "humanFriendlyName", 1),
 		       value, sizeof(value)) != -1) {
       free(myGlobals.device[deviceId].humanFriendlyName);
