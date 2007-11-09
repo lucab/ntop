@@ -165,7 +165,7 @@ static u_int efficiency(int actualDeviceId, u_int pktLen) {
 /* ************************************ */
 
 int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
-	     const u_int _length, u_short isPassiveSess,
+	     const u_int numPkts, const u_int _length, u_short isPassiveSess,
 	     u_short isVoipSess,
 	     u_short p2pSessionIdx, int actualDeviceId,
 	     u_short newSession,
@@ -317,12 +317,12 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 		 efficiencySent, efficiencyRcvd, pkt_efficiency,
 		 myGlobals.device[actualDeviceId].cellLength, length);
 
-    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->pktSent, 1);
-    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->efficiencySent, efficiencySent);
-    incrementHostTrafficCounter(srcHost, efficiencySent, efficiencySent);
-    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->pktRcvd, 1);
-    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->efficiencyRcvd, efficiencyRcvd);
-    incrementHostTrafficCounter(dstHost, efficiencyRcvd, efficiencyRcvd);
+    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->pktSent, numPkts);
+    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->efficiencySent, efficiencySent*numPkts);
+    incrementHostTrafficCounter(srcHost, efficiencySent, efficiencySent*numPkts);
+    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->pktRcvd, numPkts);
+    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->efficiencyRcvd, efficiencyRcvd*numPkts);
+    incrementHostTrafficCounter(dstHost, efficiencyRcvd, efficiencyRcvd*numPkts);
   }
 
   return(idx);
@@ -1651,18 +1651,18 @@ static void processIpPkt(const u_char *bp,
 	  /* traceEvent(CONST_TRACE_INFO, "[1] sportIdx(%d)=%d - dportIdx(%d)=%d", sport,
 	     sportIdx, dport, dportIdx); */
 
-	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess, isVoipSess,
+	  if(handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession, 0, 0) == -1)
-	    handleIP(sport, srcHost, dstHost, length, isPassiveSess, isVoipSess,
+	    handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		     theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession, 0, 0);
 	} else {
 	  /*
 	    traceEvent(CONST_TRACE_INFO, "[2] sportIdx(%d)=%d - dportIdx(%d)=%d",
 	    sport, sportIdx, dport, dportIdx); */
 
-	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSess, isVoipSess,
+	  if(handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession, 0, 0) == -1)
-	    handleIP(dport, srcHost, dstHost, length, isPassiveSess, isVoipSess,
+	    handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		     theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession, 0, 0);
 	}
       }
@@ -1939,14 +1939,14 @@ static void processIpPkt(const u_char *bp,
 	   (BMS 12-2001)
 	*/
         if(dport < sport) {
-	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess, isVoipSess,
+	  if(handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		      0, actualDeviceId, newSession, 0, 0) == -1)
-	    handleIP(sport, srcHost, dstHost, length, isPassiveSess, isVoipSess,
+	    handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		     0, actualDeviceId, newSession, 0, 0);
         } else {
-	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSess, isVoipSess,
+	  if(handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		      0, actualDeviceId, newSession, 0, 0) == -1)
-	    handleIP(dport, srcHost, dstHost, length, isPassiveSess, isVoipSess,
+	    handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		     0, actualDeviceId, newSession, 0, 0);
         }
       }

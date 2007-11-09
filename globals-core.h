@@ -384,7 +384,8 @@ extern RETSIGTYPE cleanup(int signo);
 /* pbuf.c */
 extern void allocateSecurityHostPkts(HostTraffic *srcHost);
 extern int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
-		    const u_int _length, u_short isPassiveSess, u_short isVoipSess,
+		    const u_int numPkts, const u_int _length,
+		    u_short isPassiveSess, u_short isVoipSess,
 		    u_short p2pSessionIdx, int actualDeviceId, u_short newSession,
 		    u_int efficiencySent /* 0 = unknown */,
 		    u_int efficiencyRcvd /* 0 = unknown */);
