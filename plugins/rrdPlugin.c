@@ -3995,7 +3995,7 @@ static void handleRRDHTTPrequest(char* url) {
   char rrdPath[512] = { '\0' }, mode[32] = { '\0' }, cluster[32] = { '\0' }, filterString[64] = { '\0' };
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
-  int _dumpDomains, _dumpFlows, _dumpSubnets, _dumpHosts, _dumpInterfaces, _dumpASs, _enableAberrant,
+  int _dumpDomains, _dumpFlows, _dumpSubnets, _dumpHosts, _dumpInterfaces, _dumpASs, _enableAberrant, _delay,
     _dumpMatrix, _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId;
   int i, len, idx;
   time_t date1 = 0, date2 = 0;
@@ -4097,6 +4097,13 @@ static void handleRRDHTTPrequest(char* url) {
 	  safe_snprintf(__FILE__, __LINE__, mode, sizeof(mode), "%s", value);
 	} else if(strcmp(key, "graphId") == 0) {
 	  graphId = atoi(value);
+	} else if(strcmp(key, "delay") == 0) {
+	  _delay = atoi(value);
+	  if(_delay < 0) _delay = 0;
+	  dumpDelay = _delay;
+	  safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", dumpDelay);
+	  storePrefsValue("rrd.rrdDumpDelay", value);
+	  traceEvent(CONST_TRACE_ERROR, "---> %s", value);
 	} else if(strcmp(key, "name") == 0) {
 	  safe_snprintf(__FILE__, __LINE__, rrdName, sizeof(rrdName), "%s", value);
 	  len = strlen(rrdName);
@@ -4352,15 +4359,18 @@ static void handleRRDHTTPrequest(char* url) {
 	     "Changes to the above values will ONLY affect NEW rrds</td></tr>");
 
   sendString("<tr><th align=\"left\" "DARK_BG">RRD Update Delay</th><td>"
-	     "<INPUT NAME=delay, SIZE=5 VALUE=");
+	     "<INPUT NAME=delay SIZE=5 VALUE=");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpDelay);
   sendString(buf);
 
-  sendString("><br>Specifies how many ms to wait between two consecutive RRD updates. Increase this value to distribute RRD load on I/O over the time. Note that a combination of large delays and many RRDs to update can slow down the RRD plugin performance</td></tr>\n");
+  sendString("><br>Specifies how many ms to wait between two consecutive RRD updates. "
+	     "Increase this value to distribute RRD load on I/O over the time. "
+	     "Note that a combination of large delays and many RRDs to update can "
+	     "slow down the RRD plugin performance</td></tr>\n");
 
   sendString("<tr><th align=\"left\" "DARK_BG">Data to Dump</th><td>");
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpDomains VALUE=1 %s> Domains<br>\n",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpDomains VALUE=1 %s> Internet Domains<br>\n",
 		dumpDomains ? "CHECKED" : "" );
   sendString(buf);
 
