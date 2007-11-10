@@ -3132,7 +3132,7 @@ static void* sflowMainLoop(void* _deviceId) {
   myGlobals.device[deviceId].activeDevice = 0;
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: SFLOW: thread terminated [p%d][sflowDeviceId=%d]",
-	     getpid(), pthread_self(), myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
+	     pthread_self(), getpid(), myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
 
   return(NULL);
 }
