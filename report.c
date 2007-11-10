@@ -46,9 +46,11 @@ void printBandwidthFooter(void) {
 	     "values will NOT be 100% as local traffic will be counted TWICE (once as "
 	     "sent and again as received).</i></li>\n"
 	     "<li>The SENT bandwidth is shown as "
-	     "<img class=tooltip  align=\"absmiddle\" src=\"/gaugeS.jpg\" alt=\"Sent\" title=\"Sent\" WIDTH=\"25\" HEIGHT=\"12\">"
+	     "<img class=tooltip  align=\"absmiddle\" src=\"/gaugeS.jpg\" alt=\"Sent\" "
+	     "title=\"Sent\" WIDTH=\"25\" HEIGHT=\"12\">"
 	     " and the RECEIVED bandwidth is shown as "
-	     "<img class=tooltip align=\"absmiddle\" src=\"/gaugeR.jpg\" alt=\"Received\" title=\"Received\" WIDTH=\"25\" HEIGHT=\"12\"></li>\n"
+	     "<img class=tooltip align=\"absmiddle\" src=\"/gaugeR.jpg\" alt=\"Received\" "
+	     "title=\"Received\" WIDTH=\"25\" HEIGHT=\"12\"></li>\n"
 	     "</ul></p>");
 }
 

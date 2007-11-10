@@ -552,14 +552,13 @@ void addURL(char* url) {
 
     sendString("</SELECT>\n</TD></TR>\n");
 
-    sendString("</TABLE>"TABLE_OFF"\n");
-
     if(url == NULL)
-      sendString("<BLOCKQUOTE>\n<DIV ALIGN=left>\n"
-		 "<B><U>NOTE</U>: if you leave the URL field empty then the "
-		 "access is restricted to <I>all</I> ntop pages, otherwise, this "
+      sendString( "<tr><td colspan=2 align=left><U>NOTE</U>: if you leave the URL field empty then the "
+		 "access is restricted to <I>all</I> ntop pages, otherwise,<br>this "
 		 "entry matches all the pages begining with the specified string.</B>\n"
-		 "</DIV>\n</BLOCKQUOTE>\n");
+		  "</td>\n</tr>\n");
+
+    sendString("</TABLE>"TABLE_OFF"\n");
 
     safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 	     "<INPUT TYPE=submit VALUE=\"%s\">&nbsp;&nbsp;&nbsp;<INPUT TYPE=reset VALUE=Reset>\n",
@@ -568,7 +567,6 @@ void addURL(char* url) {
 
     sendString("</FORM>\n");
     sendString("</CENTER>\n");
-
   }
   sendMenuFooter(0, 2);
 }

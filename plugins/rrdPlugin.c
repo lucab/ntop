@@ -4103,7 +4103,6 @@ static void handleRRDHTTPrequest(char* url) {
 	  dumpDelay = _delay;
 	  safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", dumpDelay);
 	  storePrefsValue("rrd.rrdDumpDelay", value);
-	  traceEvent(CONST_TRACE_ERROR, "---> %s", value);
 	} else if(strcmp(key, "name") == 0) {
 	  safe_snprintf(__FILE__, __LINE__, rrdName, sizeof(rrdName), "%s", value);
 	  len = strlen(rrdName);

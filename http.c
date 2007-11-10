@@ -1850,7 +1850,7 @@ static RETSIGTYPE quitNow(int signo _UNUSED_) {
   /* Don't use traceEvent below as it can be blocked as the call to this function
      is triggered by an alarm */
   printf("ERROR: http generation failed, alarm() tripped. Please report this to ntop-dev list!");
-  returnHTTPrequestTimedOut();
+  /* returnHTTPrequestTimedOut(); */
   exit(0);
 }
 #endif

@@ -3437,9 +3437,16 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   u_short as=0;
   HostTraffic *theHost, tmpEl;
   char formatBuf[LEN_TIMEFORMAT_BUFFER], formatBuf1[LEN_TIMEFORMAT_BUFFER], 
-    formatBuf2[32], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
+    formatBuf2[32], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER], custom_host_name[128];
 
   accessAddrResMutex("printAllSessionsHTML");
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "hostname.%s",
+		(el->hostNumIpAddress[0] != '\0') ? el->hostNumIpAddress : el->ethAddressString);
+  
+  if(fetchPrefsValue(buf, custom_host_name, sizeof(custom_host_name)) == -1) {
+    custom_host_name[0] = '\0';
+  }
 
   buf1[0]=0;
   if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) {
@@ -3451,24 +3458,27 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
 		  "TITLE=\"Link to web server on host, if available\" class=external>%s %s</A>\n",
-                el->hostResolvedName,
-		el->hostResolvedName, buf1);
+		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName,
+		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName, buf1);
 
     safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s", el->hostResolvedName);
   } else if(el->hostNumIpAddress[0] != '\0') {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
-		" <A HREF=\"http://%s%s%s/\" TARGET=\"_blank\" "
+		  " <A HREF=\"http://%s%s%s/\" TARGET=\"_blank\" "
 		  "TITLE=\"Link to web server on host, if available\" class=tooltip>%s %s</A>\n",
-                el->hostIpAddress.hostFamily == AF_INET6 ? "[" : "",
-		el->hostNumIpAddress,
-                el->hostIpAddress.hostFamily == AF_INET6 ? "]" : "",
-		el->hostNumIpAddress, buf1);
+		  el->hostIpAddress.hostFamily == AF_INET6 ? "[" : "",
+		  el->hostNumIpAddress,
+		  el->hostIpAddress.hostFamily == AF_INET6 ? "]" : "",
+		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostNumIpAddress, buf1);
 
-    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s", el->hostNumIpAddress);
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s", 
+		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostNumIpAddress);
   } else {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about %s", el->ethAddressString);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about %s", 
+		  (custom_host_name[0] != '\0') ? custom_host_name : el->ethAddressString);
 
-    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s", el->ethAddressString);
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s", 
+		  (custom_host_name[0] != '\0') ? custom_host_name : el->ethAddressString);
   }
 
   releaseAddrResMutex();
@@ -3653,6 +3663,18 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       sendString("</TABLE>"TABLE_OFF"</TD></TR>\n");
     }
   }
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		"<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Custom Host Name</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>"
+		"<FORM METHOD=GET ACTION=/editPrefs.html>"
+		"<INPUT TYPE=hidden name=key value=\"hostname.%s\">"
+		"<input type=text name=val value=\"%s\">"
+		"<INPUT TYPE=image src=/edit.gif value=\"Submit\" alt=\"Set custom host name\"></TD></TR>\n",
+		getRowColor(),
+		(el->hostNumIpAddress[0] != '\0') ? el->hostNumIpAddress : el->ethAddressString,
+		custom_host_name);
+  sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 	      "<TD "TD_BG" ALIGN=RIGHT>"

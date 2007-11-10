@@ -313,13 +313,20 @@ char* makeHostLink(HostTraffic *el, short mode,
   char symIp[256], linkName[256], flag[256], colorSpec[64], vlanStr[8], mapStr[1024];
   char osBuf[128], titleBuf[256], noteBuf[256], noteBufAppend[64], tooltip[256];
   char *dhcpBootpStr, *p2pStr, *multihomedStr, *multivlanedStr, *gwStr, *brStr, *dnsStr, *printStr,
-       *smtpStr, *healthStr, *userStr, *httpStr, *ntpStr, *voipHostStr;
+    *smtpStr, *healthStr, *userStr, *httpStr, *ntpStr, *voipHostStr, custom_host_name[128];
   short usedEthAddress=0;
   int i;
 
   if(el == NULL)
     return("&nbsp;");
   
+  safe_snprintf(__FILE__, __LINE__, symIp, sizeof(symIp), "hostname.%s",
+		(el->hostNumIpAddress[0] != '\0') ? el->hostNumIpAddress : el->ethAddressString);
+  
+  if(fetchPrefsValue(symIp, custom_host_name, sizeof(custom_host_name)) == -1) {
+    custom_host_name[0] = '\0';
+  }
+
   if(el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
     return makeFcHostLink (el, mode, cutName, TRUE, buf, bufLen);
   }
@@ -661,7 +668,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		  "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s&nbsp;&nbsp;&nbsp;</th>%s\n",
 		  tooltip, linkName, vlanStr,
 		  titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
-		  symIp,
+		  (custom_host_name[0] != '\0') ? custom_host_name : symIp,
 		  noteBuf,
 		  getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)),
 		  dhcpBootpStr, multihomedStr, multivlanedStr,
@@ -678,7 +685,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		  makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)),
 		  titleBuf[0] != '\0' ? "title=\"" : "", 
 		  titleBuf, titleBuf[0] != '\0' ? "\"" : "",
-		  symIp,
+		  (custom_host_name[0] != '\0') ? custom_host_name : symIp,
 		  noteBuf,
 		  dhcpBootpStr, multihomedStr, multivlanedStr,
 		  usedEthAddress ? CONST_IMG_NIC_CARD : "",
