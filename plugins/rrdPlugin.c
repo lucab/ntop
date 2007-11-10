@@ -2337,7 +2337,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	  safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
 			"%s:ctr%d%s:%s", "AREA",
 			entryId,
-			((graphId == 99) && is_efficiency) ? "#EBEB00" : rrd_colors[entryId],
+			((graphId == 99) && is_efficiency) ? "#EBEB00" : rrd_colors[1],
 			(graphId == 99) ? "Rcvd" : str);
 
 	  argv[argc++] = buf1[entryId];
