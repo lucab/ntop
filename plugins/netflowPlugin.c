@@ -614,7 +614,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   updateDevicePacketStats((u_int)(len/numPkts), actualDeviceId);
 
   myGlobals.device[actualDeviceId].ethernetBytes.value += len;
-  myGlobals.device[actualDeviceId].ipBytes.value       += len;
+  myGlobals.device[actualDeviceId].ipv4Bytes.value     += len;
 
   if (numPkts > 0) {
     u_int ratio = len/numPkts;
@@ -737,7 +737,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   /* Commented out ... already done in updatePacketCount()                         */
   /* srcHost->pktSent.value     += numPkts, dstHost->pktRcvd.value     += numPkts; */
   /* srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;     */
-  srcHost->ipBytesSent.value += len,        dstHost->ipBytesRcvd.value += len;
+  srcHost->ipv4BytesSent.value += len,      dstHost->ipv4BytesRcvd.value += len;
 
   if(srcAS != 0) srcHost->hostAS = srcAS;
   if(dstAS != 0) dstHost->hostAS = dstAS;
@@ -835,14 +835,16 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   h.ts.tv_sec = recordActTime, h.ts.tv_usec = 0;
 
   switch(proto) {
-  case 1: /* ICMP */
+  case IPPROTO_ICMP: /* ICMP */
     myGlobals.device[actualDeviceId].icmpBytes.value += len;
-    srcHost->icmpSent.value += len, dstHost->icmpRcvd.value += len;
+    incrementHostTrafficCounter(srcHost, icmpSent, len);
+    incrementHostTrafficCounter(dstHost, icmpRcvd, len);
+
     myGlobals.device[actualDeviceId].netflowGlobals->numNetFlowsICMPRcvd++,
       myGlobals.device[actualDeviceId].netflowGlobals->totalNetFlowsICMPSize += len;
     break;
 
-  case 6: /* TCP */
+  case IPPROTO_TCP: /* TCP */
     myGlobals.device[actualDeviceId].tcpBytes.value += len;
     myGlobals.device[actualDeviceId].netflowGlobals->numNetFlowsTCPRcvd++,
       myGlobals.device[actualDeviceId].netflowGlobals->totalNetFlowsTCPSize += len;
@@ -891,7 +893,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 			      &tp, 0, NULL, actualDeviceId, &newSession, 0);
     break;
 
-  case 17: /* UDP */
+  case IPPROTO_UDP: /* UDP */
     myGlobals.device[actualDeviceId].netflowGlobals->numNetFlowsUDPRcvd++,
       myGlobals.device[actualDeviceId].netflowGlobals->totalNetFlowsUDPSize += len;
 
@@ -937,6 +939,19 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling)
       session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport,
 			      len, NULL, 0, NULL, actualDeviceId, &newSession, 0);
+    break;
+
+  case IPPROTO_GRE:
+    incrementHostTrafficCounter(srcHost, greSent, len);
+    incrementHostTrafficCounter(dstHost, greRcvd, len);
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].greBytes, len);
+    break;
+
+  case IPPROTO_IPSEC_ESP:
+  case IPPROTO_IPSEC_AH:
+    incrementHostTrafficCounter(srcHost, ipsecSent, len);
+    incrementHostTrafficCounter(dstHost, ipsecRcvd, len);
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipsecBytes, len);
     break;
 
   default:

@@ -843,9 +843,10 @@ void printTrafficStatistics(int revertOrder) {
 		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value, formatBuf, sizeof(formatBuf)));
     sendString(buf);
 
-    if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value > 0)
       sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		 "<iframe frameborder=0 SRC=\"" CONST_PIE_PKT_CAST_DIST CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
+		 "<iframe frameborder=0 SRC=\"" CONST_PIE_PKT_CAST_DIST CHART_FORMAT "\" "
+		 "width=400 height=250></iframe></TH></TR>\n");
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       /*
@@ -955,7 +956,7 @@ void printTrafficStatistics(int revertOrder) {
       sendString(buf);
 #endif /* MAKE_WITH_JUMBO_FRAMES */
 
-      if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
+      if(myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value > 0)
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
 		   "<iframe frameborder=0 SRC=\"" CONST_PIE_PKT_SIZE_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
 
@@ -1154,25 +1155,25 @@ void printTrafficStatistics(int revertOrder) {
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">IPv4 Traffic</th>"
 		  "<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
-		  getRowColor(), formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1, formatBuf, sizeof(formatBuf)),
+		  getRowColor(), formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value, 1, formatBuf, sizeof(formatBuf)),
 		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value, formatBuf1, sizeof(formatBuf1)));
     sendString(buf);
 
-    if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0) {
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value > 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Fragmented IPv4 Traffic</th>"
 		    "<TD "TD_BG" align=right COLSPAN=2>%s [%.1f%%]</td></TR>\n",
 		    getRowColor(),
 		    formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].fragmentedIpBytes.value, 1, formatBuf, sizeof(formatBuf)),
 		    (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].fragmentedIpBytes.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value);
+		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value);
       sendString(buf);
     }
 
     /* Just in case... */
     if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value >
-       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value)
+       myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value)
       dummyCounter = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value-
-	myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
+	myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value;
     else
       dummyCounter = 0;
 
@@ -1661,8 +1662,8 @@ void printHostsTraffic(int reportTypeReq,
 
       for(idx=0; idx<numEntries; idx++) {
 	if(tmpTable[idx] != NULL) {
-	  totIpBytesSent += tmpTable[idx]->ipBytesSent.value;
-	  totIpBytesRcvd += tmpTable[idx]->ipBytesRcvd.value;
+	  totIpBytesSent += tmpTable[idx]->ipv4BytesSent.value;
+	  totIpBytesRcvd += tmpTable[idx]->ipv4BytesRcvd.value;
 	}
       }
 
@@ -1675,8 +1676,8 @@ void printHostsTraffic(int reportTypeReq,
 
       for(idx=0; idx<numEntries; idx++) {
 	if(tmpTable[idx] != NULL) {
-	  totIpBytes += tmpTable[idx]->ipBytesSent.value +
-	    tmpTable[idx]->ipBytesRcvd.value;
+	  totIpBytes += tmpTable[idx]->ipv4BytesSent.value +
+	    tmpTable[idx]->ipv4BytesRcvd.value;
 	}
       }
 
@@ -1711,11 +1712,11 @@ void printHostsTraffic(int reportTypeReq,
 	  break;
 	case SORT_DATA_RECEIVED_IP:
 	case SORT_DATA_SENT_IP:
-	  sentPercent = (100*(float)el->ipBytesSent.value)/totIpBytesSent;
-	  rcvdPercent = (100*(float)el->ipBytesRcvd.value)/totIpBytesRcvd;
+	  sentPercent = (100*(float)el->ipv4BytesSent.value)/totIpBytesSent;
+	  rcvdPercent = (100*(float)el->ipv4BytesRcvd.value)/totIpBytesRcvd;
 	  break;
 	case SORT_DATA_IP:
-	  totPercent = (100*(float) (el->ipBytesSent.value + el->ipBytesRcvd.value) )/totIpBytes;
+	  totPercent = (100*(float) (el->ipv4BytesSent.value + el->ipv4BytesRcvd.value) )/totIpBytes;
 	  break;
 	case SORT_DATA_RECEIVED_THPT:
 	case SORT_DATA_RCVD_HOST_TRAFFIC:
@@ -1767,7 +1768,7 @@ void printHostsTraffic(int reportTypeReq,
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
 			formatBytes(el->greRcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
-			formatBytes(el->ipv6Rcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
+			formatBytes(el->ipv6BytesRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpRcvd.value, 1, formatBuf4, sizeof(formatBuf4)));
 	  sendString(buf);
 
@@ -1815,7 +1816,7 @@ void printHostsTraffic(int reportTypeReq,
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosSent.value, 1, formatBuf, sizeof(formatBuf)),
 			formatBytes(el->greSent.value, 1, formatBuf1, sizeof(formatBuf1)),
-			formatBytes(el->ipv6Sent.value, 1, formatBuf2, sizeof(formatBuf2)),
+			formatBytes(el->ipv6BytesSent.value, 1, formatBuf2, sizeof(formatBuf2)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpSent.value, 1, formatBuf3, sizeof(formatBuf3)));
 	  sendString(buf);
 
@@ -1874,7 +1875,7 @@ void printHostsTraffic(int reportTypeReq,
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosSent.value+el->nonIPTraffic->netbiosRcvd.value,
 				    1, formatBuf, sizeof(formatBuf)),
 			formatBytes(el->greSent.value+el->greRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
-			formatBytes(el->ipv6Sent.value+el->ipv6Rcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
+			formatBytes(el->ipv6BytesSent.value+el->ipv6BytesRcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpSent.value+el->nonIPTraffic->stpRcvd.value,
 				    1, formatBuf3, sizeof(formatBuf3)));
 	  sendString(buf);
@@ -1907,7 +1908,7 @@ void printHostsTraffic(int reportTypeReq,
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
 			  getRowColor(), webHostName,
-			  formatBytes(el->ipBytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
+			  formatBytes(el->ipv4BytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
 			  rcvdPercent, myGlobals.separator);
 	    sendString(buf);
 
@@ -1924,8 +1925,8 @@ void printHostsTraffic(int reportTypeReq,
 	    }
 
 	    /* Rounding may cause troubles */
-	    if(el->ipBytesRcvd.value > totalIPTraffic)
-	      totalIPTraffic = el->ipBytesRcvd.value - totalIPTraffic;
+	    if(el->ipv4BytesRcvd.value > totalIPTraffic)
+	      totalIPTraffic = el->ipv4BytesRcvd.value - totalIPTraffic;
 	    else
 	      totalIPTraffic = 0;
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
@@ -1940,7 +1941,7 @@ void printHostsTraffic(int reportTypeReq,
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
 			  getRowColor(), webHostName,
-			  formatBytes(el->ipBytesSent.value, 1, formatBuf, sizeof(formatBuf)),
+			  formatBytes(el->ipv4BytesSent.value, 1, formatBuf, sizeof(formatBuf)),
 			  sentPercent, myGlobals.separator);
 	    sendString(buf);
 
@@ -1958,8 +1959,8 @@ void printHostsTraffic(int reportTypeReq,
 	    }
 
 	    /* Rounding may cause troubles */
-	    if(el->ipBytesSent.value > totalIPTraffic)
-	      totalIPTraffic = el->ipBytesSent.value - totalIPTraffic;
+	    if(el->ipv4BytesSent.value > totalIPTraffic)
+	      totalIPTraffic = el->ipv4BytesSent.value - totalIPTraffic;
 	    else
 	      totalIPTraffic = 0;
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
@@ -1974,7 +1975,7 @@ void printHostsTraffic(int reportTypeReq,
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
 			  getRowColor(), webHostName,
-			  formatBytes(el->ipBytesSent.value+el->ipBytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
+			  formatBytes(el->ipv4BytesSent.value+el->ipv4BytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
 			  totPercent, myGlobals.separator);
 	    sendString(buf);
 
@@ -1995,8 +1996,8 @@ void printHostsTraffic(int reportTypeReq,
 	    }
 
 	    /* Rounding may cause troubles */
-	    if(el->ipBytesSent.value+el->ipBytesRcvd.value > totalIPTraffic)
-	      totalIPTraffic = el->ipBytesSent.value + el->ipBytesRcvd.value - totalIPTraffic;
+	    if(el->ipv4BytesSent.value+el->ipv4BytesRcvd.value > totalIPTraffic)
+	      totalIPTraffic = el->ipv4BytesSent.value + el->ipv4BytesRcvd.value - totalIPTraffic;
 	    else
 	      totalIPTraffic = 0;
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
@@ -4360,7 +4361,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       sendString("</CENTER>\n");
     }
   } else {
-    total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
+    total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value;
 
     if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList) {
       ProtocolsList *protoList = myGlobals.ipProtosList;
@@ -4582,13 +4583,13 @@ void printProtoTraffic(int printGraph) {
 
   sendString("<CENTER>\n");
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0) {
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value > 0) {
     printSectionTitle("Global Protocol Distribution");
 
     sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>Protocol</TH>"
 	       "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
 
-    perc = 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value/
+    perc = 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value/
 		myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value);
     if(perc > 100) perc = 100;
 
@@ -4597,7 +4598,7 @@ void printProtoTraffic(int printGraph) {
 		  "</td><td align=right WIDTH=50>%.1f%%</TD><TD "TD_BG" WIDTH=200>"
 		  "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\">",
 		  getRowColor(),
-		  formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1,
+		  formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value, 1,
 			      formatBuf, sizeof(formatBuf)),
 		  perc);
     sendString(buf);
@@ -4605,19 +4606,19 @@ void printProtoTraffic(int printGraph) {
     printTableEntry(buf, sizeof(buf), "TCP", CONST_COLOR_1,
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/1024,
 		    100*((float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/
-			 myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+			 myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value), 0, 0, 0);
     printTableEntry(buf, sizeof(buf), "UDP", CONST_COLOR_1,
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/1024,
 		    100*((float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/
-			 myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+			 myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value), 0, 0, 0);
     printTableEntry(buf, sizeof(buf), "ICMP", CONST_COLOR_1,
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/1024,
 		    100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/
-			 myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+			 myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value), 0, 0, 0);
     printTableEntry(buf, sizeof(buf), "ICMPv6", CONST_COLOR_1,
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/1024,
 		    100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/
-			 myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+			 myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value), 0, 0, 0);
 
     if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList) {
       ProtocolsList *protoList = myGlobals.ipProtosList;
@@ -4627,7 +4628,7 @@ void printProtoTraffic(int printGraph) {
 	printTableEntry(buf, sizeof(buf), protoList->protocolName, CONST_COLOR_1,
 			(float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx].value/1024,
 			100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx].value/
-			     myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+			     myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value), 0, 0, 0);
 	idx++, protoList = protoList->next;
       }
     }
@@ -4635,7 +4636,7 @@ void printProtoTraffic(int printGraph) {
     printTableEntry(buf, sizeof(buf), "Other&nbsp;IP", CONST_COLOR_1,
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/1024,
 		    ((float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/
-		     myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+		     myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value), 0, 0, 0);
 
     sendString("</TABLE>"TABLE_OFF"</TR>");
   } else
@@ -4644,7 +4645,7 @@ void printProtoTraffic(int printGraph) {
   printTableEntry(buf, sizeof(buf), "(R)ARP", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0, 0);
+		       myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value), 0, 0, 0);
   printTableEntry(buf, sizeof(buf), "DLC", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value/
@@ -6833,9 +6834,9 @@ void printInterfaceStats() {
   sendString(ctime(&now));
 
   snprintf(buf, sizeof(buf), "%u %u\n",
-	   (unsigned int)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value,
+	   (unsigned int)myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value,
 	   (unsigned int)(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value
-			  - myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+			  - myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value));
   sendString(buf);
   /* traceEvent(CONST_TRACE_ERROR, "%s", buf); */
 }

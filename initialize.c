@@ -310,7 +310,7 @@ void resetDevice(int devIdx, short fullReset) {
   resetTrafficCounter(&myGlobals.device[devIdx].multicastPkts);
   resetTrafficCounter(&myGlobals.device[devIdx].ipPkts);
   resetTrafficCounter(&myGlobals.device[devIdx].ethernetBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].ipBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].ipv4Bytes);
   resetTrafficCounter(&myGlobals.device[devIdx].fragmentedIpBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].tcpBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].udpBytes);

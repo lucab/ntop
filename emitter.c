@@ -649,10 +649,10 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
     if(checkFilter(filter, "pktRcvd"))
       wrtLlongItm(fDescr, lang, "\t", "pktRcvd", el->pktRcvd, ',', numEntries);
 
-    if(checkFilter(filter, "ipBytesSent"))
-      wrtLlongItm(fDescr, lang, "\t", "ipBytesSent", el->ipBytesSent, ',', numEntries);
-    if(checkFilter(filter, "ipBytesRcvd"))
-      wrtLlongItm(fDescr, lang, "\t", "ipBytesRcvd", el->ipBytesRcvd, ',', numEntries);
+    if(checkFilter(filter, "ipv4BytesSent"))
+      wrtLlongItm(fDescr, lang, "\t", "ipv4BytesSent", el->ipv4BytesSent, ',', numEntries);
+    if(checkFilter(filter, "ipv4BytesRcvd"))
+      wrtLlongItm(fDescr, lang, "\t", "ipv4BytesRcvd", el->ipv4BytesRcvd, ',', numEntries);
 
     /* *************************************** */
 
@@ -745,18 +745,17 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	wrtFloatItm(fDescr, lang, "\t", "averageTPktThpt",el->averageTPktThpt, ',', numEntries);
       if(checkFilter(filter, "peakTPktThpt"))
 	wrtFloatItm(fDescr, lang, "\t", "peakTPktThpt", el->peakTPktThpt, ',', numEntries);
-
     }
 
-    if(checkFilter(filter, "ipBytesSent"))
-      wrtLlongItm(fDescr, lang, "\t", "ipBytesSent", el->ipBytesSent, ',', numEntries);
-    if(checkFilter(filter, "ipBytesRcvd"))
-      wrtLlongItm(fDescr, lang, "\t", "ipBytesRcvd", el->ipBytesRcvd, ',', numEntries);
+    if(checkFilter(filter, "ipv4BytesSent"))
+      wrtLlongItm(fDescr, lang, "\t", "ipv4BytesSent", el->ipv4BytesSent, ',', numEntries);
+    if(checkFilter(filter, "ipv4BytesRcvd"))
+      wrtLlongItm(fDescr, lang, "\t", "ipv4BytesRcvd", el->ipv4BytesRcvd, ',', numEntries);
 
-    if(checkFilter(filter, "ipv6Sent"))
-      wrtLlongItm(fDescr, lang, "\t", "ipv6Sent", el->ipv6Sent, ',', numEntries);
-    if(checkFilter(filter, "ipv6Rcvd"))
-      wrtLlongItm(fDescr, lang, "\t", "ipv6Rcvd", el->ipv6Rcvd, ',', numEntries);
+    if(checkFilter(filter, "ipv6BytesSent"))
+      wrtLlongItm(fDescr, lang, "\t", "ipv6BytesSent", el->ipv6BytesSent, ',', numEntries);
+    if(checkFilter(filter, "ipv6BytesRcvd"))
+      wrtLlongItm(fDescr, lang, "\t", "ipv6BytesRcvd", el->ipv6BytesRcvd, ',', numEntries);
 
     ctr.value = el->tcpSentLoc.value+el->tcpSentRem.value;
     if(checkFilter(filter, "tcpBytesSent"))
@@ -1269,8 +1268,8 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
       wrtLlongItm(fDescr, lang, "\t", "multicastPkts",myGlobals.device[i].multicastPkts, ',', numEntries);
     if(checkFilter(filter, "ethernetBytes"))
       wrtLlongItm(fDescr, lang, "\t", "ethernetBytes",myGlobals.device[i].ethernetBytes, ',', numEntries);
-    if(checkFilter(filter, "ipBytes"))
-      wrtLlongItm(fDescr, lang, "\t", "ipBytes",myGlobals.device[i].ipBytes, ',', numEntries);
+    if(checkFilter(filter, "ipv4Bytes"))
+      wrtLlongItm(fDescr, lang, "\t", "ipBytes",myGlobals.device[i].ipv4Bytes, ',', numEntries);
 
     if(!shortView) {
       if(checkFilter(filter, "fragmentedIpBytes"))

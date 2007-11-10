@@ -169,7 +169,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   if(dataSent) {
     totTraffic.value = theHost->tcpSentLoc.value+theHost->tcpSentRem.value+
       theHost->udpSentLoc.value+theHost->udpSentRem.value+
-      theHost->icmpSent.value+theHost->ipv6Sent.value;
+      theHost->icmpSent.value+theHost->ipv6BytesSent.value;
     
     if(theHost->nonIPTraffic != NULL)
       totTraffic.value += theHost->nonIPTraffic->stpSent.value+
@@ -189,7 +189,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   } else {
     totTraffic.value = theHost->tcpRcvdLoc.value+theHost->tcpRcvdFromRem.value+
       theHost->udpRcvdLoc.value+theHost->udpRcvdFromRem.value+
-      theHost->icmpRcvd.value+theHost->ipv6Rcvd.value;
+      theHost->icmpRcvd.value+theHost->ipv6BytesRcvd.value;
 
     if(theHost->nonIPTraffic != NULL)
       totTraffic.value += theHost->nonIPTraffic->stpRcvd.value
@@ -227,8 +227,8 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "ICMP";
       }
 
-      if(theHost->ipv6Sent.value > 0) {
-	p[num] = (float)((100*theHost->ipv6Sent.value)/totTraffic.value);
+      if(theHost->ipv6BytesSent.value > 0) {
+	p[num] = (float)((100*theHost->ipv6BytesSent.value)/totTraffic.value);
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPv6";
       }
 
@@ -296,8 +296,8 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "ICMP";     
       }
 
-      if(theHost->ipv6Rcvd.value > 0) {
-	p[num] = (float)((100*theHost->ipv6Rcvd.value)/totTraffic.value);
+      if(theHost->ipv6BytesRcvd.value > 0) {
+	p[num] = (float)((100*theHost->ipv6BytesRcvd.value)/totTraffic.value);
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPv6";
       }
 
@@ -551,11 +551,11 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
   TrafficCounter totFragmentedTraffic, totTraffic;
 
   if(dataSent) {
-    totTraffic.value = theHost->ipBytesSent.value;
+    totTraffic.value = theHost->ipv4BytesSent.value;
     totFragmentedTraffic.value = theHost->tcpFragmentsSent.value+theHost->udpFragmentsSent.value
       +theHost->icmpFragmentsSent.value;
   } else {
-    totTraffic.value = theHost->ipBytesRcvd.value;
+    totTraffic.value = theHost->ipv4BytesRcvd.value;
     totFragmentedTraffic.value = theHost->tcpFragmentsRcvd.value+theHost->udpFragmentsRcvd.value
       +theHost->icmpFragmentsRcvd.value;
   }
@@ -595,9 +595,9 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   diffTraffic.value = 0;
 
   if(dataSent)
-    totalIPTraffic.value = theHost->ipBytesSent.value;
+    totalIPTraffic.value = theHost->ipv4BytesSent.value;
   else
-    totalIPTraffic.value = theHost->ipBytesRcvd.value;
+    totalIPTraffic.value = theHost->ipv4BytesRcvd.value;
 
   if(totalIPTraffic.value > 0) {
     for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
@@ -887,7 +887,7 @@ void drawTrafficPie(void) {
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value == 0) return;
 
-  ip.value = myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
+  ip.value = myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value;
 
   p[0] = ip.value*100/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value; num++;
   p[1] = 100-p[0];
@@ -902,12 +902,9 @@ void drawTrafficPie(void) {
 /* ************************ */
 
 void drawGlobalProtoDistribution(void) {
-  TrafficCounter ip;
   float p[256]; /* Fix courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
   char	*lbl[16];
   int idx = 0;
-
-  ip.value = myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value; lbl[idx] = "TCP";  idx++; }
@@ -973,7 +970,8 @@ void drawGlobalIpProtoDistribution(void) {
   ProtocolsList *protoList = myGlobals.ipProtosList;
   float total, partialTotal = 0;
 
-  total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
+  total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value
+    + (float)myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList) {
     while(protoList != NULL) {

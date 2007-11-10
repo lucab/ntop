@@ -4700,8 +4700,8 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       updateTrafficCounter(rrdPath, "bytesRemSent", &el->bytesSentRem, 0);
       updateTrafficCounter(rrdPath, "bytesLocRcvd", &el->bytesRcvdLoc, 0);
       updateTrafficCounter(rrdPath, "bytesFromRemRcvd", &el->bytesRcvdFromRem, 0);
-      updateTrafficCounter(rrdPath, "ipBytesSent", &el->ipBytesSent, 0);
-      updateTrafficCounter(rrdPath, "ipBytesRcvd", &el->ipBytesRcvd, 0);
+      updateTrafficCounter(rrdPath, "ipv4BytesSent", &el->ipv4BytesSent, 0);
+      updateTrafficCounter(rrdPath, "ipv4BytesRcvd", &el->ipv4BytesRcvd, 0);
       updateTrafficCounter(rrdPath, "tcpLocSent", &el->tcpSentLoc, 0);
       updateTrafficCounter(rrdPath, "tcpRemSent", &el->tcpSentRem, 0);
       updateTrafficCounter(rrdPath, "udpLocSent", &el->udpSentLoc, 0);
@@ -4718,8 +4718,8 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       updateTrafficCounter(rrdPath, "udpFragmentsRcvd", &el->udpFragmentsRcvd, 0);
       updateTrafficCounter(rrdPath, "icmpFragmentsSent", &el->icmpFragmentsSent, 0);
       updateTrafficCounter(rrdPath, "icmpFragmentsRcvd", &el->icmpFragmentsRcvd, 0);
-      updateTrafficCounter(rrdPath, "ipv6Sent", &el->ipv6Sent, 0);
-      updateTrafficCounter(rrdPath, "ipv6Rcvd", &el->ipv6Rcvd, 0);
+      updateTrafficCounter(rrdPath, "ipv6BytesSent", &el->ipv6BytesSent, 0);
+      updateTrafficCounter(rrdPath, "ipv6BytesRcvd", &el->ipv6BytesRcvd, 0);
       updateTrafficCounter(rrdPath, "greSent", &el->greSent, 0);
       updateTrafficCounter(rrdPath, "greRcvd", &el->greRcvd, 0);
       updateTrafficCounter(rrdPath, "ipsecSent", &el->ipsecSent, 0);
@@ -5301,7 +5301,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	updateCounter(rrdPath, "ethernetBytes", myGlobals.device[devIdx].ethernetBytes.value, 0);
 	updateGauge(rrdPath,   "knownHostsNum", myGlobals.device[devIdx].hostsno, 0);
 	updateGauge(rrdPath,   "activeHostSendersNum",  numActiveSenders(devIdx), 0);
-	updateCounter(rrdPath, "ipBytes",       myGlobals.device[devIdx].ipBytes.value, 0);
+	updateCounter(rrdPath, "ipv4Bytes",     myGlobals.device[devIdx].ipv4Bytes.value, 0);
 
 	updateCounter(rrdPath, "ipLocalToLocalBytes",  myGlobals.device[devIdx].tcpGlobalTrafficStats.local.value +
 		      myGlobals.device[devIdx].udpGlobalTrafficStats.local.value +

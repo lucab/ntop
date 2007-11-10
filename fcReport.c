@@ -497,7 +497,7 @@ int cmpFcFctn(const void *_a, const void *_b)
 	  b_ = 0;
       }
     } else {
-      a_ = (*a)->ipBytesRcvd.value, b_ = (*b)->ipBytesRcvd.value;
+      a_ = (*a)->ipv4BytesRcvd.value, b_ = (*b)->ipv4BytesRcvd.value;
 
       if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
 	/* other IP */
@@ -599,7 +599,7 @@ int cmpFcFctn(const void *_a, const void *_b)
 	  b_ = 0;
       }
     } else {
-      a_ = (*a)->ipBytesSent.value, b_ = (*b)->ipBytesSent.value;
+      a_ = (*a)->ipv4BytesSent.value, b_ = (*b)->ipv4BytesSent.value;
 
       if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
 	/* other IP */
@@ -705,8 +705,8 @@ int cmpFcFctn(const void *_a, const void *_b)
 	  b_ = 0;
       }
     } else {
-      a_ = (*a)->ipBytesRcvd.value+(*a)->ipBytesSent.value;
-      b_ = (*b)->ipBytesRcvd.value+(*b)->ipBytesSent.value;
+      a_ = (*a)->ipv4BytesRcvd.value+(*a)->ipv4BytesSent.value;
+      b_ = (*b)->ipv4BytesRcvd.value+(*b)->ipv4BytesSent.value;
 
       if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
         /* other IP */

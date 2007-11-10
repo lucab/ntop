@@ -1189,7 +1189,7 @@ int cmpFctn(const void *_a, const void *_b) {
       b_ = (*b)->greRcvd.value;
       break;
     case 14:
-      a_ = (*a)->ipv6Rcvd.value, b_ = (*b)->ipv6Rcvd.value;
+      a_ = (*a)->ipv6BytesRcvd.value, b_ = (*b)->ipv6BytesRcvd.value;
       break;
     case 15:
       a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->stpRcvd.value;
@@ -1227,7 +1227,7 @@ int cmpFctn(const void *_a, const void *_b) {
 	  b_ = 0;
       }
     } else {
-      a_ = (*a)->ipBytesRcvd.value, b_ = (*b)->ipBytesRcvd.value;
+      a_ = (*a)->ipv4BytesRcvd.value, b_ = (*b)->ipv4BytesRcvd.value;
 
       if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
 	/* other IP */
@@ -1328,7 +1328,7 @@ int cmpFctn(const void *_a, const void *_b) {
       b_ = (*b)->greSent.value;
       break;
     case 14:
-      a_ = (*a)->ipv6Sent.value, b_ = (*b)->ipv6Sent.value;
+      a_ = (*a)->ipv6BytesSent.value, b_ = (*b)->ipv6BytesSent.value;
       break;
     case 15:
       a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->stpSent.value;
@@ -1366,7 +1366,7 @@ int cmpFctn(const void *_a, const void *_b) {
 	  b_ = 0;
       }
     } else {
-      a_ = (*a)->ipBytesSent.value, b_ = (*b)->ipBytesSent.value;
+      a_ = (*a)->ipv4BytesSent.value, b_ = (*b)->ipv4BytesSent.value;
 
       if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
 	/* other IP */
@@ -1469,7 +1469,7 @@ int cmpFctn(const void *_a, const void *_b) {
       b_ = (*b)->greSent.value + (*b)->greRcvd.value;
       break;
     case 14:
-      a_ = (*a)->ipv6Rcvd.value+(*a)->ipv6Sent.value, b_ = (*b)->ipv6Rcvd.value+(*b)->ipv6Sent.value;
+      a_ = (*a)->ipv6BytesRcvd.value+(*a)->ipv6BytesSent.value, b_ = (*b)->ipv6BytesRcvd.value+(*b)->ipv6BytesSent.value;
       break;
     case 15:
       a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->stpSent.value+(*a)->nonIPTraffic->stpRcvd.value;
@@ -1513,8 +1513,8 @@ int cmpFctn(const void *_a, const void *_b) {
 	  b_ = 0;
       }
     } else {
-      a_ = (*a)->ipBytesRcvd.value+(*a)->ipBytesSent.value;
-      b_ = (*b)->ipBytesRcvd.value+(*b)->ipBytesSent.value;
+      a_ = (*a)->ipv4BytesRcvd.value+(*a)->ipv4BytesSent.value;
+      b_ = (*b)->ipv4BytesRcvd.value+(*b)->ipv4BytesSent.value;
 
       if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
         /* other IP */
@@ -2404,7 +2404,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   ProtocolsList *protoList;
 
   totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value;
-  totalSent += el->icmpSent.value+el->icmp6Sent.value+el->ipv6Sent.value;
+  totalSent += el->icmpSent.value+el->icmp6Sent.value+el->ipv6BytesSent.value;
 
   if(el->nonIPTraffic != NULL)
     totalSent += el->nonIPTraffic->ipxSent.value+el->nonIPTraffic->dlcSent.value+el->nonIPTraffic->arp_rarpSent.value +
@@ -2413,7 +2413,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   
   totalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value;
   totalRcvd += el->udpRcvdLoc.value+el->udpRcvdFromRem.value;
-  totalRcvd += el->icmpRcvd.value+el->icmp6Rcvd.value+el->ipv6Rcvd.value;
+  totalRcvd += el->icmpRcvd.value+el->icmp6Rcvd.value+el->ipv6BytesRcvd.value;
 
   if(el->nonIPTraffic != NULL)
     totalRcvd += el->nonIPTraffic->ipxRcvd.value+el->nonIPTraffic->dlcRcvd.value+el->nonIPTraffic->arp_rarpRcvd.value +
@@ -2470,10 +2470,10 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
                         (float)el->icmp6Rcvd.value/1024,
                         100*((float)SD(el->icmp6Rcvd.value, totalRcvd)));
 
-  printTableDoubleEntry(buf, sizeof(buf), "IPv6", CONST_COLOR_1, (float)el->ipv6Sent.value/1024,
-			100*((float)SD(el->ipv6Sent.value, totalSent)),
-			(float)el->ipv6Rcvd.value/1024,
-			100*((float)SD(el->ipv6Rcvd.value, totalRcvd)));
+  printTableDoubleEntry(buf, sizeof(buf), "IPv6", CONST_COLOR_1, (float)el->ipv6BytesSent.value/1024,
+			100*((float)SD(el->ipv6BytesSent.value, totalSent)),
+			(float)el->ipv6BytesRcvd.value/1024,
+			100*((float)SD(el->ipv6BytesRcvd.value, totalRcvd)));
 
   if(el->nonIPTraffic != NULL) {
     printTableDoubleEntry(buf, sizeof(buf), "(R)ARP", CONST_COLOR_1, (float)el->nonIPTraffic->arp_rarpSent.value/1024,
@@ -2540,11 +2540,11 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   {
     totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+
       el->udpSentLoc.value+el->udpSentRem.value+
-      el->icmpSent.value+el->icmp6Sent.value+el->ipv6Sent.value;
+      el->icmpSent.value+el->icmp6Sent.value+el->ipv6BytesSent.value;
 
     totalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value+
       el->udpRcvdLoc.value+el->udpRcvdFromRem.value+
-      el->icmpRcvd.value+el->icmp6Rcvd.value+el->ipv6Rcvd.value;
+      el->icmpRcvd.value+el->icmp6Rcvd.value+el->ipv6BytesRcvd.value;
 
     if(el->nonIPTraffic) {
       totalSent += el->nonIPTraffic->stpSent.value+
@@ -4012,7 +4012,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 			      "Local", "Rem", -1, percentage, 0, 0);
 
     if(el->bytesSent.value > 0) {
-      percentage = (((float)el->ipBytesSent.value*100)/el->bytesSent.value);
+      percentage = (((float)el->ipv4BytesSent.value*100)/el->bytesSent.value);
       printTableEntryPercentage(buf, sizeof(buf), "IP&nbsp;vs.&nbsp;Non-IP&nbsp;Sent",
 				"IP", "Non-IP", -1, percentage, 0, 0);
     }
@@ -4038,7 +4038,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 				"Local", "Rem", -1, percentage, 0, 0);
 
   if(el->bytesRcvd.value > 0) {
-    percentage = (((float)el->ipBytesRcvd.value*100)/el->bytesRcvd.value);
+    percentage = (((float)el->ipv4BytesRcvd.value*100)/el->bytesRcvd.value);
     printTableEntryPercentage(buf, sizeof(buf), "IP&nbsp;vs.&nbsp;Non-IP&nbsp;Rcvd",
 			      "IP", "Non-IP", -1, percentage, 0, 0);
   }

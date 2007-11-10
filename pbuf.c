@@ -1120,7 +1120,7 @@ static void processIpPkt(const u_char *bp,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipv6Bytes, length /* ntohs(ip.ip_len) */);
   else
 #endif
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipBytes, length /* ntohs(ip.ip_len) */);
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipv4Bytes, length /* ntohs(ip.ip_len) */);
 
 #ifdef INET6
   if(ip6 == NULL) {
@@ -1279,13 +1279,13 @@ static void processIpPkt(const u_char *bp,
 
 #ifdef INET6
   if(ip6) {
-    incrementHostTrafficCounter(srcHost, ipv6Sent, length);
-    incrementHostTrafficCounter(dstHost, ipv6Rcvd, length);
+    incrementHostTrafficCounter(srcHost, ipv6BytesSent, length);
+    incrementHostTrafficCounter(dstHost, ipv6BytesRcvd, length);
   } else
 #endif
     {
-      incrementHostTrafficCounter(srcHost, ipBytesSent, length);
-      incrementHostTrafficCounter(dstHost, ipBytesRcvd, length);
+      incrementHostTrafficCounter(srcHost, ipv4BytesSent, length);
+      incrementHostTrafficCounter(dstHost, ipv4BytesRcvd, length);
     }
 
   if(subnetPseudoLocalHost(srcHost)) {
@@ -1369,7 +1369,6 @@ static void processIpPkt(const u_char *bp,
 #endif
     }
   }
-
 
 #ifdef INET6
   if(ip6) {
@@ -3854,8 +3853,8 @@ void processPacket(u_char *_deviceId,
 
 	case ETHERTYPE_IPv6:
 	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
-	  incrementHostTrafficCounter(srcHost, ipv6Sent, length);
-	  incrementHostTrafficCounter(dstHost, ipv6Rcvd, length);
+	  incrementHostTrafficCounter(srcHost, ipv6BytesSent, length);
+	  incrementHostTrafficCounter(dstHost, ipv6BytesRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipv6Bytes, length);
 	  break;
 

@@ -875,7 +875,7 @@ typedef struct hostTraffic {
   /* Don't change the recentl... to unsigned ! */
   int              recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS], recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS];
   int              otherIpPortsRcvd[MAX_NUM_RECENT_PORTS], otherIpPortsSent[MAX_NUM_RECENT_PORTS];
-  TrafficCounter   ipBytesSent, ipBytesRcvd, ipv6Sent, ipv6Rcvd;
+  TrafficCounter   ipv4BytesSent, ipv4BytesRcvd, ipv6BytesSent, ipv6BytesRcvd;
   TrafficCounter   tcpSentLoc, tcpSentRem, udpSentLoc, udpSentRem, icmpSent,icmp6Sent;
   TrafficCounter   tcpRcvdLoc, tcpRcvdFromRem, udpRcvdLoc, udpRcvdFromRem, icmpRcvd, icmp6Rcvd;
 
@@ -1488,7 +1488,7 @@ typedef struct ntopInterface {
    * The bytes section
    */
   TrafficCounter ethernetBytes;  /* # bytes captured */
-  TrafficCounter ipBytes;
+  TrafficCounter ipv4Bytes;
   TrafficCounter fragmentedIpBytes;
   TrafficCounter tcpBytes;
   TrafficCounter udpBytes;
