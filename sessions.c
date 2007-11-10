@@ -1858,7 +1858,8 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
                                    u_short fragmentedData, u_int tcpWin,
                                    HostTraffic *srcHost, u_short sport,
                                    HostTraffic *dstHost, u_short dport,
-                                   u_int length, struct tcphdr *tp,
+				   u_int sent_length, u_int rcvd_length /* Always 0 except for NetFlow v9 */,
+				   struct tcphdr *tp,
                                    u_int packetDataLength, u_char* packetData,
                                    int actualDeviceId, u_short *newSession) {
   IPSession *prevSession;
@@ -2475,7 +2476,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     if((ack == theSession->lastAckIdI2R) && (ack == theSession->lastAckIdR2I)) {
       if(theSession->initiator == srcHost) {
 	theSession->numDuplicatedAckI2R++;
-	incrementTrafficCounter(&theSession->bytesRetranI2R, length);
+	incrementTrafficCounter(&theSession->bytesRetranI2R, sent_length+rcvd_length);
 	incrementTrafficCounter(&theSession->initiator->pktDuplicatedAckSent, 1);
 	incrementTrafficCounter(&theSession->remotePeer->pktDuplicatedAckRcvd, 1);
 
@@ -2486,7 +2487,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 #endif
       } else {
 	theSession->numDuplicatedAckR2I++;
-	incrementTrafficCounter(&theSession->bytesRetranR2I, length);
+	incrementTrafficCounter(&theSession->bytesRetranR2I, sent_length+rcvd_length);
 	incrementTrafficCounter(&theSession->remotePeer->pktDuplicatedAckSent, 1);
 	incrementTrafficCounter(&theSession->initiator->pktDuplicatedAckRcvd, 1);
 #ifdef DEBUG
@@ -2593,12 +2594,14 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   /* Update session stats */
   if(flowDirection == FLAG_CLIENT_TO_SERVER) {
     incrementTrafficCounter(&theSession->bytesProtoSent, packetDataLength);
-    incrementTrafficCounter(&theSession->bytesSent, length);
+    incrementTrafficCounter(&theSession->bytesSent, sent_length);
+    incrementTrafficCounter(&theSession->bytesRcvd, rcvd_length);
     theSession->pktSent++;
     if(fragmentedData) incrementTrafficCounter(&theSession->bytesFragmentedSent, packetDataLength);
   } else {
     incrementTrafficCounter(&theSession->bytesProtoRcvd, packetDataLength);
-    incrementTrafficCounter(&theSession->bytesRcvd, length);
+    incrementTrafficCounter(&theSession->bytesRcvd, sent_length);
+    incrementTrafficCounter(&theSession->bytesSent, rcvd_length);
     theSession->pktRcvd++;
     if(fragmentedData) incrementTrafficCounter(&theSession->bytesFragmentedRcvd, packetDataLength);
   }
@@ -2628,7 +2631,8 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 static void handleUDPSession(const struct pcap_pkthdr *h,
                              u_short fragmentedData, HostTraffic *srcHost,
                              u_short sport, HostTraffic *dstHost,
-                             u_short dport, u_int length,
+                             u_short dport,
+			     u_int sent_length, u_int rcvd_length /* Always 0 except for NetFlow v9 */,
                              u_char* packetData,
 			     int actualDeviceId, u_short *newSession) {
   /*
@@ -2651,7 +2655,8 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
                          u_short fragmentedData, u_int tcpWin,
                          HostTraffic *srcHost, u_short sport,
                          HostTraffic *dstHost, u_short dport,
-                         u_int length, struct tcphdr *tp,
+                         u_int sent_length, u_int rcvd_length /* Always 0 except for NetFlow v9 */,
+			 struct tcphdr *tp,
                          u_int packetDataLength, u_char* packetData,
                          int actualDeviceId, u_short *newSession,
 			 u_char real_session /* vs. faked/netflow-session */) {
@@ -2739,7 +2744,8 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 
 	theSession = handleTCPSession(h, fragmentedData, tcpWin, srcHost, sport,
-				      dstHost, dport, length, tp, packetDataLength,
+				      dstHost, dport, sent_length, rcvd_length,
+				      tp, packetDataLength,
 				      packetData, actualDeviceId, newSession);
       } else {
 #ifdef DEBUG
@@ -2754,7 +2760,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
     } else if(sessionType == IPPROTO_UDP) {
       /* We don't create any permanent structures for UDP sessions */
       handleUDPSession(h, fragmentedData, srcHost, sport, dstHost, dport,
-		       length, packetData, actualDeviceId, newSession);
+		       sent_length, rcvd_length, packetData, actualDeviceId, newSession);
     }
 
   if((sport == IP_L4_PORT_ECHO)       || (dport == IP_L4_PORT_ECHO)

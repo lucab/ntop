@@ -220,13 +220,19 @@ void printTrafficSummary (int revertOrder) {
 	     "<TH "TH_BG" "DARK_BG">Header</TH><TH "TH_BG" "DARK_BG">Address</TH>");
 
 #ifdef INET6
-  sendString("<TH "TH_BG" "DARK_BG">IPv6 Addresses</TH></TR>\n");
+  sendString("<TH "TH_BG" "DARK_BG">IPv6 Addresses</TH>");
 #endif
+  sendString("</TR>\n");
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].activeDevice) {
-      char buf1[128];
+      char buf1[128], custom_if_name[64];
       NtopIfaceAddr *ifaddr;
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "device.name.%s", myGlobals.device[i].name);
+      custom_if_name[0] = '\0';
+      fetchPrefsValue(buf, custom_if_name, sizeof(custom_if_name));
 
       if(myGlobals.device[i].sflowGlobals || myGlobals.device[i].netflowGlobals)
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
@@ -237,7 +243,9 @@ void printTrafficSummary (int revertOrder) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
 		      "%s <A HREF=\""CONST_EDIT_PREFS"?key=device.name.%s\">"
 		      "<img class=tooltip alt=\"Change name\" src=/"CONST_EDIT_IMG" border=\"0\"></A></TD>",
-		      myGlobals.device[i].uniqueIfName[0] != '\0' ? myGlobals.device[i].uniqueIfName : "&nbsp;",
+		      custom_if_name,
+		      (custom_if_name[0] != '\0') ? custom_if_name 
+		      : ((myGlobals.device[i].uniqueIfName[0] != '\0') ? myGlobals.device[i].uniqueIfName : "&nbsp;"),
 		      myGlobals.device[i].name);
 
       sendString(buf);
@@ -600,13 +608,19 @@ void printTrafficStatistics(int revertOrder) {
 	     "<TH "TH_BG" "DARK_BG">Header</TH><TH "TH_BG" "DARK_BG">Address</TH>");
 
 #ifdef INET6
-  sendString("<TH "TH_BG" "DARK_BG">IPv6 Addresses</TH></TR>\n");
+  sendString("<TH "TH_BG" "DARK_BG">IPv6 Addresses</TH>");
 #endif
+  sendString("</TR>\n");
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].activeDevice) {
-      char buf1[128];
+      char buf1[128], custom_if_name[64];
       NtopIfaceAddr *ifaddr;
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "device.name.%s", myGlobals.device[i].name);
+      custom_if_name[0] = '\0';
+      fetchPrefsValue(buf, custom_if_name, sizeof(custom_if_name));
 
       if(myGlobals.device[i].sflowGlobals || myGlobals.device[i].netflowGlobals)
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
@@ -617,8 +631,9 @@ void printTrafficStatistics(int revertOrder) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">"
 		      "%s <A HREF=\""CONST_EDIT_PREFS"?key=device.name.%s\">"
 		      "<img class=tooltip alt=\"Change name\" src=/"CONST_EDIT_IMG" border=\"0\"></A></TD>",
-		      myGlobals.device[i].uniqueIfName[0] != '\0' ? myGlobals.device[i].uniqueIfName : "&nbsp;",
-		      myGlobals.device[i].name);
+		      (custom_if_name[0] != '\0') ? custom_if_name
+                      : ((myGlobals.device[i].uniqueIfName[0] != '\0') ? myGlobals.device[i].uniqueIfName : "&nbsp;"),
+                      myGlobals.device[i].name);
       sendString(buf);
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",

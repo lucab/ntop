@@ -4281,7 +4281,8 @@ void escape(char *dest, int destLen, char *src) {
 /* ******************************** */
 
 void incrementTrafficCounter(TrafficCounter *ctr, Counter value) {
-  ctr->value += value, ctr->modified = 1;
+  if(value > 0)
+    ctr->value += value, ctr->modified = 1;
 }
 
 /* ******************************** */

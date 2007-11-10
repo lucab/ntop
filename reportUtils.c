@@ -3670,7 +3670,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		"<FORM METHOD=GET ACTION=/editPrefs.html>"
 		"<INPUT TYPE=hidden name=key value=\"hostname.%s\">"
 		"<input type=text name=val value=\"%s\">"
-		"<INPUT TYPE=image src=/edit.gif value=\"Submit\" alt=\"Set custom host name\"></TD></TR>\n",
+		"<INPUT TYPE=image src=/"CONST_EDIT_IMG" value=\"Submit\" alt=\"Set custom host name\"></TD></TR>\n",
 		getRowColor(),
 		(el->hostNumIpAddress[0] != '\0') ? el->hostNumIpAddress : el->ethAddressString,
 		custom_host_name);

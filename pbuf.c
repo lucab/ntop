@@ -644,7 +644,7 @@ static void resetHourTraffic(u_short hourId) {
 
 void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
 		       HostTraffic *dstHost, HostAddr *dstAddr,
-		       TrafficCounter length, Counter numPkts,
+		       TrafficCounter bytes, Counter numPkts,
 		       int actualDeviceId) {
   static u_short lastHourId=0;
   u_short hourId;
@@ -655,7 +655,7 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
     return;
   }
 
-  updateASTraffic(actualDeviceId, srcHost->hostAS, dstHost->hostAS, length.value);
+  updateASTraffic(actualDeviceId, srcHost->hostAS, dstHost->hostAS, bytes.value);
 
   if (!myGlobals.runningPref.printIpOnly) {
     if (srcHost == dstHost) {
@@ -697,9 +697,9 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
 
     allocHostTrafficCounterMemory(srcHost, trafficDistribution, sizeof(TrafficDistribution));
     if(srcHost->trafficDistribution == NULL) return;
-    incrementHostTrafficCounter(srcHost, trafficDistribution->last24HoursBytesSent[hourId], length.value);
-    incrementHostTrafficCounter(srcHost, bytesSent, length.value);
-    incrementHostTrafficCounter(srcHost, bytesSentSession, length.value);
+    incrementHostTrafficCounter(srcHost, trafficDistribution->last24HoursBytesSent[hourId], bytes.value);
+    incrementHostTrafficCounter(srcHost, bytesSent, bytes.value);
+    incrementHostTrafficCounter(srcHost, bytesSentSession, bytes.value);
   }
 
   if(dstHost != myGlobals.otherHostEntry) {
@@ -708,15 +708,15 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
 
     allocHostTrafficCounterMemory(dstHost, trafficDistribution, sizeof(TrafficDistribution));
     if(dstHost->trafficDistribution == NULL) return;
-    incrementHostTrafficCounter(dstHost, trafficDistribution->last24HoursBytesRcvd[hourId], length.value);
-    incrementHostTrafficCounter(dstHost, bytesRcvd, length.value);
-    incrementHostTrafficCounter(dstHost, bytesRcvdSession, length.value);
+    incrementHostTrafficCounter(dstHost, trafficDistribution->last24HoursBytesRcvd[hourId], bytes.value);
+    incrementHostTrafficCounter(dstHost, bytesRcvd, bytes.value);
+    incrementHostTrafficCounter(dstHost, bytesRcvdSession, bytes.value);
   }
 
   if(broadcastHost(dstHost)) {
     if(srcHost != myGlobals.otherHostEntry) {
       incrementHostTrafficCounter(srcHost, pktBroadcastSent, numPkts);
-      incrementHostTrafficCounter(srcHost, bytesBroadcastSent, length.value);
+      incrementHostTrafficCounter(srcHost, bytesBroadcastSent, bytes.value);
     }
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].broadcastPkts, numPkts);
   } else if(isMulticastAddress(&(dstHost->hostIpAddress), NULL, NULL)) {
@@ -726,12 +726,12 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
 #endif
     if(srcHost != myGlobals.otherHostEntry) {
       incrementHostTrafficCounter(srcHost, pktMulticastSent, numPkts);
-      incrementHostTrafficCounter(srcHost, bytesMulticastSent, length.value);
+      incrementHostTrafficCounter(srcHost, bytesMulticastSent, bytes.value);
     }
 
     if(dstHost != myGlobals.otherHostEntry) {
       incrementHostTrafficCounter(dstHost, pktMulticastRcvd, numPkts);
-      incrementHostTrafficCounter(dstHost, bytesMulticastRcvd, length.value);
+      incrementHostTrafficCounter(dstHost, bytesMulticastRcvd, bytes.value);
     }
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].multicastPkts, numPkts);
   }
@@ -1602,14 +1602,14 @@ static void processIpPkt(const u_char *bp,
 	  if(ip6)
 	    theSession = handleSession(h, fragmented, tp.th_win,
 				       srcHost, sport, dstHost,
-				       dport, ntohs(ip6->ip6_plen), &tp,
-				       tcpDataLength,
+				       dport, ntohs(ip6->ip6_plen), 0, &tp,
+				       tcpDataLength, 
 				       theData, actualDeviceId, &newSession, 1);
 	  else
 #endif
 	    theSession = handleSession(h, (off & 0x3fff), tp.th_win,
 				       srcHost, sport, dstHost,
-				       dport, ip_len, &tp,
+				       dport, ip_len, 0, &tp,
 				       tcpDataLength,
 				       theData, actualDeviceId, &newSession, 1);
 	  if(theSession == NULL)
@@ -1902,17 +1902,17 @@ static void processIpPkt(const u_char *bp,
 	  if(ip6)
 	    theSession =  handleSession(h, fragmented, 0,
 					srcHost, sport, dstHost,
-					dport, ntohs(ip6->ip6_plen), NULL,
+					dport, ntohs(ip6->ip6_plen), 0, NULL,
 					udpDataLength,
 					(u_char*)(bp+hlen+sizeof(struct udphdr)),
 					actualDeviceId, &newSession, 1);
 	  else
 #endif
-	    theSession =  handleSession (h, (off & 0x3fff), 0,
-					 srcHost, sport, dstHost,
-					 dport, ip_len, NULL, udpDataLength,
-					 (u_char*)(bp+hlen+sizeof(struct udphdr)),
-					 actualDeviceId, &newSession, 1);
+	    theSession =  handleSession(h, (off & 0x3fff), 0,
+					srcHost, sport, dstHost,
+					dport, ip_len, 0, NULL, udpDataLength,
+					(u_char*)(bp+hlen+sizeof(struct udphdr)),
+					actualDeviceId, &newSession, 1);
 	}
 
 	isPassiveSess = 0;
