@@ -69,7 +69,8 @@ static unsigned short initialized = 0, active = 0, colorWarn = 0, graphErrCount 
 static unsigned short dumpDays, dumpHours, dumpMonths, dumpDelay;
 static char *hostsFilter = NULL;
 static Counter numRRDUpdates = 0, numTotalRRDUpdates = 0;
-static unsigned long numRuns = 0, numRRDerrors = 0, numRRDCycles=0;
+static unsigned long numRuns = 0, numRRDerrors = 0,
+  numRRDCycles=0, lastRRDupdateDuration = 0, rrdcmaxDuration = 0;
 static time_t start_tm, end_tm, rrdTime;
 
 static u_short dumpDomains, dumpFlows, dumpHosts, dumpSubnets,
@@ -3652,11 +3653,18 @@ static void statisticsPage(void) {
   sendString(buf);
 
   sendString("<tr><th align=\"left\" "DARK_BG">Files Updated</th><td align=\"right\">");
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)numTotalRRDUpdates);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu [%.1f updates/cycle]</td></tr>\n", 
+		(unsigned long)numTotalRRDUpdates, 
+		(numRRDCycles > 0) ? (float)numTotalRRDUpdates/(float)numRRDCycles : 0);
   sendString(buf);
 
   sendString("<tr><th align=\"left\" "DARK_BG">Update Errors</th><td align=\"right\">");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)numRRDerrors);
+  sendString(buf);
+
+  sendString("<tr><th align=\"left\" "DARK_BG">Update Cycle Duration</th><td align=\"right\">");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[last: %u sec][max: %u sec]</td></tr>\n", 
+		lastRRDupdateDuration, rrdcmaxDuration);
   sendString(buf);
 
   sendString("<tr><th align=\"left\" "DARK_BG">Graphic Requests</th><td align=\"right\">");
@@ -3787,14 +3795,12 @@ static void statisticsPage(void) {
     sendString(buf);
 
     sendString("<tr><th align=\"left\" "DARK_BG">Maximum ever</th><td align=\"right\">");
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", rrdcmaxLength);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.6f</td></tr>\n", rrdcmaxDuration);
     sendString(buf);
 
     sendString("</table>\n</center>\n");
   } else {
-
     printNoDataYet();
-
   }
 
 #endif /* MAX_RRD_CYCLE_BUFFER */
@@ -5127,7 +5133,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     numRRDUpdates = 0;
     numRuns++;
-    rrdTime =  time(NULL);
+    rrdTime = time(NULL);
 
     /* ****************************************************** */
 
@@ -5620,12 +5626,15 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     elapsed = timeval_subtract(rrdEndOfCycle, rrdStartOfCycle);
 #ifdef MAX_RRD_CYCLE_BUFFER
     rrdcycleBuffer[++rrdcycleBufferCount & (MAX_RRD_CYCLE_BUFFER - 1)] = elapsed;
-    if(elapsed > rrdcmaxLength)
-      rrdcmaxLength = elapsed;
 #endif
 
+    if(elapsed > rrdcmaxDuration)
+      rrdcmaxDuration = elapsed;
+    
     traceEvent(CONST_TRACE_NOISY, "RRD: Cycle %lu ended, %llu RRDs updated, %.3f seconds",
                numRRDCycles, numRRDUpdates, elapsed);
+
+    lastRRDupdateDuration = elapsed;
 
     /*
      * If it's FLAG_NTOPSTATE_STOPCAP, and we're still running, then this
