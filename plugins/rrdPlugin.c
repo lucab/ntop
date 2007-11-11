@@ -4358,8 +4358,8 @@ static void handleRRDHTTPrequest(char* url) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpShortInterval);
   sendString(buf);
   sendString("> seconds<br>Specifies how often <A HREF=/"CONST_SORT_DATA_THPT_STATS_HTML">throughput</A> data is stored permanently.<p>"
-	     "<FONT COLOR=red><b>Note</b></FONT>: if you change this value the throughput stats will be reset "
-	     "and past values will be lost. You've been warned!</td></tr>\n");
+	     "<FONT COLOR=red><b>Note</b></FONT>: if you change this value the throughput stats will be <u>reset</u> "
+	     "and past values will be <u>lost</u>. You've been warned!</td></tr>\n");
 
   sendString("<tr><th align=\"left\" "DARK_BG">Heartbeat</th><td>\n"
              "<SELECT NAME=heartbeat>\n");
@@ -4370,7 +4370,7 @@ static void handleRRDHTTPrequest(char* url) {
 		  i, (dumpHeartbeatMultiplier == i) ? "selected" : "", i);
   sendString(buf);
   }
-  sendString("</select>\n<br>The heartbeat specifies the maximum amount of time between two RRD updates. In a nutshell every 'dump interval' seconds, ntop starts updating rrds. ntop must complete the update within 'dump interval' * heartbeat seconds. If not, even if an update arrives the value is considered unknown and you will see holes in your graph. Expecially on large networks with many rrds to save, this update process can take a lot of time. In this cases you must use large heartbeat values, in order to guarantee that the updates will happen within the specified boundaries. <br><font color=red>Note</font>: heartbeat is a <u>multiplier</u> of the 'dump interval' and <u>not</u> an absolute value.</td></tr>\n");
+  sendString("</select>\n<br>The heartbeat specifies the maximum amount of time between two RRD updates. In a nutshell every 'dump interval' seconds, ntop starts updating rrds. ntop must complete the update within 'dump interval' * heartbeat seconds. If not, even if an update arrives the value is considered unknown and you will see holes in your graph. Expecially on large networks with many rrds to save, this update process can take a lot of time. In this cases you must use large heartbeat values, in order to guarantee that the updates will happen within the specified boundaries. <p><font color=red><b>Note</b></font>: heartbeat is a <u>multiplier</u> of the 'dump interval' and <u>not</u> an absolute value.</td></tr>\n");
 
   sendString("<tr><th align=\"left\" "DARK_BG">Dump Hours</th><td>"
 	     "<INPUT NAME=hours SIZE=5 VALUE=");
@@ -5104,7 +5104,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	     pthread_self(), getpid());
 
   for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
-
     numRRDCycles++;
 
     do {
@@ -5114,9 +5113,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     sleep_tm = end_tm - start_tm;
     strftime(endTime, sizeof(endTime), CONST_LOCALE_TIMESPEC, localtime_r(&end_tm, &workT));
     traceEventRRDebug(0, "Sleeping for %d seconds (interval %d, end at %s)",
-		      sleep_tm,
-		      dumpInterval,
-		      endTime);
+		      sleep_tm, dumpInterval, endTime);
 
     ntopSleepWhileSameState(sleep_tm);
     if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_STOPCAP) {
@@ -5624,6 +5621,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     gettimeofday(&rrdEndOfCycle, NULL);
     elapsed = timeval_subtract(rrdEndOfCycle, rrdStartOfCycle);
+    if(elapsed == 0) elapsed == 1; /* Rounding */
+
 #ifdef MAX_RRD_CYCLE_BUFFER
     rrdcycleBuffer[++rrdcycleBufferCount & (MAX_RRD_CYCLE_BUFFER - 1)] = elapsed;
 #endif
@@ -5649,7 +5648,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
   termUdp();
   rrdThread = 0;
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: RRD: Data collection thread terminated [p%d]", pthread_self(), getpid());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: RRD: Data collection thread terminated [p%d]", 
+	     pthread_self(), getpid());
 
   return(0);
 }
