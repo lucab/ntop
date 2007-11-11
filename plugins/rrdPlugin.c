@@ -65,7 +65,7 @@ static PthreadMutex rrdMutex;
 static pthread_t rrdThread, rrdTrafficThread;
 
 static unsigned short initialized = 0, active = 0, colorWarn = 0, graphErrCount = 0,
-  dumpInterval, dumpShortInterval, dumpDetail;
+  dumpInterval, dumpShortInterval, dumpDetail, dumpHeartbeatMultiplier;
 static unsigned short dumpDays, dumpHours, dumpMonths, dumpDelay;
 static char *hostsFilter = NULL;
 static Counter numRRDUpdates = 0, numTotalRRDUpdates = 0;
@@ -2609,7 +2609,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
       char minStr[32], maxStr[32], daysStr[32], monthsStr[32];
       char tempStr[64];
 
-      int step;
+      int step, heartbeat;
       int value1, value2, rrdDumpInterval;
       unsigned long topValue;
 
@@ -2624,6 +2624,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	topValue /= 8 /* 8 bytes */;
       }
 
+      heartbeat = dumpHeartbeatMultiplier * step;
       argv[argc++] = "rrd_create";
       argv[argc++] = path;
       argv[argc++] = "--start";
@@ -2637,14 +2638,14 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 
       if(isCounter) {
 	safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr),
-		      "DS:counter:COUNTER:%d:0:%u", 2*step, topValue);
+		      "DS:counter:COUNTER:%d:0:%u", heartbeat, topValue);
       } else {
 	/*
 	  Unlimited (sort of)
 	  Well I have decided to add a limit too in order to avoid crazy values.
 	*/
 	safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr),
-		      "DS:counter:GAUGE:%d:0:%u", 2*step, topValue);
+		      "DS:counter:GAUGE:%d:0:%u", heartbeat, topValue);
       }
       argv[argc++] = counterStr;
 
@@ -2958,6 +2959,15 @@ static void commonRRDinit(void) {
     memset(&rrdprocessBuffer, 0, sizeof(rrdprocessBuffer));
   }
 #endif
+
+  if(fetchPrefsValue("rrd.dumpHeartbeatMultiplier", value, sizeof(value)) == -1) {
+    safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", 
+		  DEFAULT_RRD_HEARTBEAT_MULTIPLIER);
+    storePrefsValue("rrd.dumpHeartbeatMultiplier", value);
+    dumpHeartbeatMultiplier = DEFAULT_RRD_HEARTBEAT_MULTIPLIER;
+  } else {
+    dumpHeartbeatMultiplier = atoi(value);
+  }
 
   if(fetchPrefsValue("rrd.dataDumpInterval", value, sizeof(value)) == -1) {
     safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", DEFAULT_RRD_INTERVAL);
@@ -3996,7 +4006,8 @@ static void handleRRDHTTPrequest(char* url) {
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
   int _dumpDomains, _dumpFlows, _dumpSubnets, _dumpHosts, _dumpInterfaces, _dumpASs, _enableAberrant, _delay,
-    _dumpMatrix, _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId;
+    _dumpMatrix, _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId,
+    _heartbeat;
   int i, len, idx;
   time_t date1 = 0, date2 = 0;
   char * _hostsFilter;
@@ -4028,12 +4039,13 @@ static void handleRRDHTTPrequest(char* url) {
   _dumpASs=0;
   _enableAberrant=0;
   _dumpMatrix=0;
-  _dumpDetail=CONST_RRD_DETAIL_DEFAULT;
-  _dumpInterval=DEFAULT_RRD_INTERVAL;
-  _dumpShortInterval=DEFAULT_RRD_SHORT_INTERVAL;
-  _dumpHours=DEFAULT_RRD_HOURS;
-  _dumpDays=DEFAULT_RRD_DAYS;
-  _dumpMonths=DEFAULT_RRD_MONTHS;
+  _heartbeat = DEFAULT_RRD_HEARTBEAT_MULTIPLIER;
+  _dumpDetail = CONST_RRD_DETAIL_DEFAULT;
+  _dumpInterval = DEFAULT_RRD_INTERVAL;
+  _dumpShortInterval = DEFAULT_RRD_SHORT_INTERVAL;
+  _dumpHours = DEFAULT_RRD_HOURS;
+  _dumpDays = DEFAULT_RRD_DAYS;
+  _dumpMonths = DEFAULT_RRD_MONTHS;
   _hostsFilter = NULL;
 #ifndef WIN32
   _dumpPermissions = DEFAULT_RRD_PERMISSIONS;
@@ -4120,6 +4132,9 @@ static void handleRRDHTTPrequest(char* url) {
 	} else if(strcmp(key, "interval") == 0) {
 	  _dumpInterval = atoi(value);
 	  if(_dumpInterval < 1) _dumpInterval = 1 /* Min 1 second */;
+	} else if(strcmp(key, "heartbeat") == 0) {
+	  _heartbeat = atoi(value);
+	  if(_heartbeat < 2) _heartbeat = 2 /* Min 2 second */;
 	} else if(strcmp(key, "shortinterval") == 0) {
 	  _dumpShortInterval = atoi(value);
 	  if(_dumpShortInterval < 1) _dumpShortInterval = 1 /* Min 1 second */;
@@ -4233,6 +4248,8 @@ static void handleRRDHTTPrequest(char* url) {
       dumpPermissions = _dumpPermissions;
       setGlobalPermissions(_dumpPermissions);
 #endif
+      dumpHeartbeatMultiplier = _heartbeat;
+
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpInterval);
       storePrefsValue("rrd.dataDumpInterval", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpShortInterval);
@@ -4261,6 +4278,8 @@ static void handleRRDHTTPrequest(char* url) {
       storePrefsValue("rrd.dataDumpMatrix", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDetail);
       storePrefsValue("rrd.dataDumpDetail", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpHeartbeatMultiplier);
+      storePrefsValue("rrd.dumpHeartbeatMultiplier", buf);
 
       if(_hostsFilter != NULL) {
 	if(hostsFilter != NULL) free(hostsFilter);
@@ -4336,23 +4355,34 @@ static void handleRRDHTTPrequest(char* url) {
 	     "<FONT COLOR=red><b>Note</b></FONT>: if you change this value the throughput stats will be reset "
 	     "and past values will be lost. You've been warned!</td></tr>\n");
 
+  sendString("<tr><th align=\"left\" "DARK_BG">Heartbeat</th><td>\n"
+             "<SELECT NAME=heartbeat>\n");
+
+  for(i=2; i<10; i++) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<OPTION VALUE=%d %s>%dx</option>\n", 
+		  i, (dumpHeartbeatMultiplier == i) ? "selected" : "", i);
+  sendString(buf);
+  }
+  sendString("</select>\n<br>The heartbeat specifies the maximum amount of time between two RRD updates. In a nutshell every 'dump interval' seconds, ntop starts updating rrds. ntop must complete the update within 'dump interval' * heartbeat seconds. If not, even if an update arrives the value is considered unknown and you will see holes in your graph. Expecially on large networks with many rrds to save, this update process can take a lot of time. In this cases you must use large heartbeat values, in order to guarantee that the updates will happen within the specified boundaries. <br><font color=red>Note</font>: heartbeat is a <u>multiplier</u> of the 'dump interval' and <u>not</u> an absolute value.</td></tr>\n");
+
   sendString("<tr><th align=\"left\" "DARK_BG">Dump Hours</th><td>"
 	     "<INPUT NAME=hours SIZE=5 VALUE=");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpHours);
   sendString(buf);
-  sendString("><br>Specifies how many hours of 'interval' data is stored permanently.</td></tr>\n");
+  sendString("> hours<br>Specifies how many hours of 'interval' data is stored permanently.</td></tr>\n");
 
   sendString("<tr><th align=\"left\" "DARK_BG">Dump Days</th><td>"
 	     "<INPUT NAME=days SIZE=5 VALUE=");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpDays);
   sendString(buf);
-  sendString("><br>Specifies how many days of hourly data is stored permanently.</td></tr>\n");
+  sendString("> days<br>Specifies how many days of hourly data is stored permanently.</td></tr>\n");
 
   sendString("<tr><th align=\"left\" "DARK_BG">Dump Months</th><td>"
 	     "<INPUT NAME=months SIZE=5 VALUE=");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpMonths);
   sendString(buf);
-  sendString("><br>Specifies how many months (30 days) of daily data is stored permanently.</td></tr>\n");
+  sendString("> months<br>Specifies how many months (30 days) of daily data is stored permanently.</td></tr>\n");
 
   sendString("<tr><td align=\"center\" COLSPAN=2><B>WARNING:</B>&nbsp;"
 	     "Changes to the above values will ONLY affect NEW rrds</td></tr>");
@@ -4362,7 +4392,7 @@ static void handleRRDHTTPrequest(char* url) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpDelay);
   sendString(buf);
 
-  sendString("><br>Specifies how many ms to wait between two consecutive RRD updates. "
+  sendString("> msec<br>Specifies how many ms to wait between two consecutive RRD updates. "
 	     "Increase this value to distribute RRD load on I/O over the time. "
 	     "Note that a combination of large delays and many RRDs to update can "
 	     "slow down the RRD plugin performance</td></tr>\n");
