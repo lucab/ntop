@@ -88,7 +88,8 @@ struct generic_netflow_record {
   u_int16_t vlanId;
 
   /* Latency extensions */
-  u_int32_t nw_latency_sec, nw_latency_usec;
+  u_int32_t client_nw_latency_sec, client_nw_latency_usec;
+  u_int32_t server_nw_latency_sec, server_nw_latency_usec;
 
   /* VoIP Extensions */
   char sip_call_id[50], sip_calling_party[50], sip_called_party[50];
@@ -469,7 +470,8 @@ static void de_endianFlow(struct generic_netflow_record *record) {
   NTOHS(record->srcport); NTOHS(record->dstport);
   NTOHS(record->src_as); NTOHS(record->dst_as);
   NTOHS(record->vlanId);
-  NTOHL(record->nw_latency_sec); NTOHL(record->nw_latency_usec);
+  NTOHL(record->client_nw_latency_sec); NTOHL(record->client_nw_latency_usec);
+  NTOHL(record->server_nw_latency_sec); NTOHL(record->server_nw_latency_usec);
 }
 
 /* *************************** */
@@ -1040,17 +1042,14 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
     session->lastSeen = recordActTime;
 
-    if(record->nw_latency_sec || record->nw_latency_usec) {
-
-      /*
-	traceEvent(CONST_TRACE_INFO, "DEBUG: Nw Latency=%d.%d [%s:%d -> %s:%d]",
-	record->nw_latency_sec, record->nw_latency_usec,
-	srcHost->hostNumIpAddress, sport,
-	dstHost->hostNumIpAddress, dport);
-      */
-
-      session->nwLatency.tv_sec = record->nw_latency_sec,
-	session->nwLatency.tv_usec = record->nw_latency_usec;
+    if(record->client_nw_latency_sec || record->client_nw_latency_usec
+       || record->server_nw_latency_sec || record->server_nw_latency_usec) {
+      session->nwLatency.tv_sec = record->client_nw_latency_sec+record->server_nw_latency_sec;
+      session->nwLatency.tv_usec = record->client_nw_latency_usec+record->server_nw_latency_usec;
+      if(session->nwLatency.tv_usec > 1000) {
+	session->nwLatency.tv_usec -= 1000;
+	session->nwLatency.tv_sec  += 1;
+      }
     }
   }
 
@@ -1472,7 +1471,8 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	      record.vlanId = NO_VLAN; /* No VLAN */
 
 	      /* Defaults */
-	      record.nw_latency_sec = record.nw_latency_usec = htonl(0);
+	      record.client_nw_latency_sec = record.client_nw_latency_usec = htonl(0);
+	      record.server_nw_latency_sec = record.server_nw_latency_usec = htonl(0);
 
 #ifdef DEBUG_FLOWS
 	      if(debug)
@@ -1574,11 +1574,17 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		  memcpy(&record.vlanId, &buffer[displ], 2);
 		  record.vlanId = ntohs(record.vlanId);
 		  break;
-		case 92: /* NW_LATENCY_SEC */
-		  memcpy(&record.nw_latency_sec, &buffer[displ], 4);
+		case 82: /* CLIENT_NW_LATENCY_SEC */
+		  memcpy(&record.client_nw_latency_sec, &buffer[displ], 4);
 		  break;
-		case 93: /* NW_LATENCY_USEC */
-		  memcpy(&record.nw_latency_usec, &buffer[displ], 4);
+		case 83: /* CLIENT_NW_LATENCY_USEC */
+		  memcpy(&record.client_nw_latency_usec, &buffer[displ], 4);
+		  break;
+		case 84: /* SERVER_NW_LATENCY_SEC */
+		  memcpy(&record.server_nw_latency_sec, &buffer[displ], 4);
+		  break;
+		case 85: /* SERVER_NW_LATENCY_USEC */
+		  memcpy(&record.server_nw_latency_usec, &buffer[displ], 4);
 		  break;
 
 		  /* VoIP Extensions */
@@ -1683,7 +1689,8 @@ static void dissectFlow(u_int32_t netflow_device_ip,
     */
     memset(&record, 0, sizeof(record));
     record.vlanId = NO_VLAN; /* No VLAN */
-    record.nw_latency_sec = record.nw_latency_usec = htonl(0);
+    record.client_nw_latency_sec = record.client_nw_latency_usec = htonl(0);
+    record.server_nw_latency_sec = record.server_nw_latency_usec = htonl(0);
 
     NTOHL(recordActTime); NTOHL(recordSysUpTime);
 
