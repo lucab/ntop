@@ -839,8 +839,9 @@ typedef struct hostTraffic {
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
   struct timeval   minLatency, maxLatency;
 
-  TrafficCounter   greSent, greRcvd;
-  TrafficCounter   ipsecSent, ipsecRcvd;
+  TrafficCounter   greSent, greRcvd, greEfficiencySent, greEfficiencyRcvd, lastGreSent, lastGreRcvd;
+  TrafficCounter   ipsecSent, ipsecRcvd, ipsecEfficiencySent, ipsecEfficiencyRcvd,
+    lastIpsecSent, lastIpsecRcvd;
 
   NonIPTraffic     *nonIPTraffic;
   NonIpProtoTrafficInfo *nonIpProtoTrafficInfos; /* Info about further non IP protos */

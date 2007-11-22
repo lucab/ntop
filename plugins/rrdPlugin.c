@@ -549,13 +549,13 @@ static void listResource(char *rrdPath, char *rrdTitle,
 	  u_char do_show = 1;
 	  char *subname = strstr(rsrcName, "Rcvd");
 
-	  // traceEvent(CONST_TRACE_WARNING, "RRD: [%s]", dp->d_name); 
+	  // traceEvent(CONST_TRACE_WARNING, "RRD: [%s]", dp->d_name);
 
 	  if(subname) {
 	    DIR* directoryPointer1;
 	    struct dirent* dp1;
 	    char rsrcName1[64];
-	    
+
 	    safe_snprintf(__FILE__, __LINE__, rsrcName1, sizeof(rsrcName1), "%s", rsrcName);
 	    subname = strstr(rsrcName1, "Rcvd");
 	    subname[0] = 'S';
@@ -576,7 +576,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 	      closedir(directoryPointer1);
 	    }
 	  }
-	  
+
 
 	  if(do_show) {
 	    sendString("<TR><TD align=left>\n");
@@ -596,7 +596,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 	    sendString("</TD></TR>\n");
 	  }
 	}
-	 
+
       }
     } /* while */
 
@@ -858,7 +858,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   if((!strcmp(endTime, "now"))
      && (!strcmp(startTime, "now-600s")))
     show_trend = 0;
- 
+
   rrdGraphicRequests++;
 
   if(stat(path, &statbuf) == 0) {
@@ -1292,7 +1292,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
 
   if(debug_rrd_graph) {
     int j;
-    
+
     for(j=0; j<argc; j++)
       traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
   }
@@ -1619,7 +1619,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
 
   if(debug_rrd_graph) {
     int j;
-    
+
     for(j=0; j<argc; j++)
       traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
   }
@@ -1816,7 +1816,7 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
   } else if(!strncmp(&str[shift], "icmp", strlen("icmp"))) {
     done = 2;
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "ICMP Traffic");
-  } else if((!strncmp(&str[shift], "arp_rarp", strlen("arp_rarp"))) 
+  } else if((!strncmp(&str[shift], "arp_rarp", strlen("arp_rarp")))
 	    || (!strncmp(&str[shift], "arpRarp", strlen("arpRarp")))) {
     done = 1;
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "(R)ARP");
@@ -1854,7 +1854,7 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
 
   if(done == 2) {
     //traceEvent(CONST_TRACE_WARNING,  "-- 2 --> (%s)", &str[shift]);
-    
+
     if(strstr(&str[shift], "LocSent"))
       safe_snprintf(__FILE__, __LINE__, &buf[strlen(buf)], buf_len-strlen(buf), ": Sent Locally");
     else if(strstr(&str[shift], "FromRemRcvd"))
@@ -2071,7 +2071,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
       char *rcvd  = strstr(rrdName, "Rcvd");
       char *pkts  = strstr(rrdName, "Pkts");
       char *flows = strstr(rrdName, "Flows");
-      
+
       efficiency = strcasestr(rrdName, "Efficiency");
 
       if(sent || rcvd) {
@@ -2411,7 +2411,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     for(j=0; j<argc; j++)
       traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
   }
-  
+
   accessMutex(&rrdMutex, "rrd_graph");
   optind = 0; /* reset gnu getopt */
   opterr = 0; /* no error messages */
@@ -2689,7 +2689,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 
       if(0) {
 	int j;
-	
+
 	for(j=0; j<argc; j++)
 	  traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
       }
@@ -2741,19 +2741,19 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	argc = 0;
 	argv[argc++] = "rrd_update";
 	argv[argc++] = path;
-	
+
 	safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:NaN",
 		      (unsigned int)myGlobals.initialSniffTime);
 	argv[argc++] = cmd;
-	
+
 	accessMutex(&rrdMutex, "rrd_update");
 	optind=0; /* reset gnu getopt */
 	opterr=0; /* no error messages */
-	
+
 	fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
 	rrd_clear_error();
 	addRrdDelay();
-	rrd_update(argc, argv);	  
+	rrd_update(argc, argv);
 	numRRDUpdates++;
 	numTotalRRDUpdates++;
 	releaseMutex(&rrdMutex);
@@ -2900,7 +2900,7 @@ static void updateCounter(char *hostPath, char *key, Counter value, char short_s
 /* ******************************* */
 
 static void updateGauge(char *hostPath, char *key, Counter value, char short_step) {
-  // traceEvent(CONST_TRACE_INFO, "RRD: %s = %u", key, (unsigned long)value); 
+  // traceEvent(CONST_TRACE_INFO, "RRD: %s = %u", key, (unsigned long)value);
   updateRRD(hostPath, key, value, 0, short_step);
 }
 
@@ -2962,7 +2962,7 @@ static void commonRRDinit(void) {
 #endif
 
   if(fetchPrefsValue("rrd.dumpHeartbeatMultiplier", value, sizeof(value)) == -1) {
-    safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", 
+    safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d",
 		  DEFAULT_RRD_HEARTBEAT_MULTIPLIER);
     storePrefsValue("rrd.dumpHeartbeatMultiplier", value);
     dumpHeartbeatMultiplier = DEFAULT_RRD_HEARTBEAT_MULTIPLIER;
@@ -3653,8 +3653,8 @@ static void statisticsPage(void) {
   sendString(buf);
 
   sendString("<tr><th align=\"left\" "DARK_BG">Files Updated</th><td align=\"right\">");
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu [%.1f updates/cycle]</td></tr>\n", 
-		(unsigned long)numTotalRRDUpdates, 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu [%.1f updates/cycle]</td></tr>\n",
+		(unsigned long)numTotalRRDUpdates,
 		(numRRDCycles > 0) ? (float)numTotalRRDUpdates/(float)numRRDCycles : 0);
   sendString(buf);
 
@@ -3663,7 +3663,7 @@ static void statisticsPage(void) {
   sendString(buf);
 
   sendString("<tr><th align=\"left\" "DARK_BG">Update Cycle Duration</th><td align=\"right\">");
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[last: %u sec][max: %u sec]</td></tr>\n", 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[last: %u sec][max: %u sec]</td></tr>\n",
 		lastRRDupdateDuration, rrdcmaxDuration);
   sendString(buf);
 
@@ -3873,7 +3873,7 @@ static void arbitraryActionPage(void) {
 
   if(myGlobals.device[0].ipProtoStats != NULL) {
     for(idx=0; idx<myGlobals.numIpProtosToMonitor; idx++) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<option value=\"IP_%sSentBytes\">%s Sent Bytes</option>\n"
 		    "<option value=\"IP_%sRcvdBytes\">%s Rcvd Bytes</option>\n"
 		    "<option value=\"IP_%sBytes\">%s Bytes (interface level)</option>\n",
@@ -3995,7 +3995,7 @@ static time_t parse_date(char* value) {
   if(sscanf(value, "%d-%d-%d %d:%d",
 	    &_tm.tm_year, &_tm.tm_mon,
 	    &_tm.tm_mday, &_tm.tm_hour, &_tm.tm_min) == 5) {
-    --_tm.tm_mon, _tm.tm_year -= 1900, _tm.tm_hour--;    
+    --_tm.tm_mon, _tm.tm_year -= 1900, _tm.tm_hour--;
     return(mktime(&_tm));
   } else
     return(0);
@@ -4021,7 +4021,7 @@ static void handleRRDHTTPrequest(char* url) {
   int _dumpPermissions;
 #endif
   time_t now = time(NULL);
-  
+
   if(initialized == 0)
     commonRRDinit();
 
@@ -4365,8 +4365,8 @@ static void handleRRDHTTPrequest(char* url) {
              "<SELECT NAME=heartbeat>\n");
 
   for(i=2; i<10; i++) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		  "<OPTION VALUE=%d %s>%dx</option>\n", 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		  "<OPTION VALUE=%d %s>%dx</option>\n",
 		  i, (dumpHeartbeatMultiplier == i) ? "selected" : "", i);
   sendString(buf);
   }
@@ -4702,7 +4702,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       if(calculateEfficiency) {
 	if(el->pktSent.value > 0) {
 	  Counter c, diff = el->pktSent.value - el->lastEfficiencyPktSent.value;
-	  
+
 	  if(diff > 0) {
 	    c = el->efficiencySent.value / diff;
 	    updateGauge(rrdPath, "efficiencySent", c, 0);
@@ -4710,7 +4710,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	    el->efficiencySent.value = 0;
 	  }
 	}
-	
+
 	if(el->pktRcvd.value > 0) {
 	  Counter c, diff = el->pktRcvd.value - el->lastEfficiencyPktRcvd.value;
 
@@ -4760,6 +4760,47 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       updateTrafficCounter(rrdPath, "greRcvd", &el->greRcvd, 0);
       updateTrafficCounter(rrdPath, "ipsecSent", &el->ipsecSent, 0);
       updateTrafficCounter(rrdPath, "ipsecRcvd", &el->ipsecRcvd, 0);
+      if(calculateEfficiency) {
+	Counter c, diff;
+
+	if(el->greSent.value > 0) {
+	  if((diff = el->greSent.value - el->lastGreSent.value) > 0) {
+	    c = el->greEfficiencySent.value / diff;
+	    updateGauge(rrdPath, "greEfficiencySent", c, 0);
+	    el->lastGreSent.value = el->greSent.value;
+	    el->greEfficiencySent.value = 0; /* Reset value */
+	  }
+	}
+
+	if(el->greRcvd.value > 0) {
+	  if((diff = el->greRcvd.value - el->lastGreRcvd.value) > 0) {
+	    c = el->greEfficiencyRcvd.value / diff;
+	    updateGauge(rrdPath, "greEfficiencyRcvd", c, 0);
+	    el->lastGreRcvd.value = el->greRcvd.value;
+	    el->greEfficiencyRcvd.value = 0; /* Reset value */
+	  }
+	}
+	
+	/* ********************************************* */
+
+	if(el->ipsecSent.value > 0) {
+	  if((diff = el->ipsecSent.value - el->lastIpsecSent.value) > 0) {
+	    c = el->ipsecEfficiencySent.value / diff;
+	    updateGauge(rrdPath, "ipsecEfficiencySent", c, 0);
+	    el->lastIpsecSent.value = el->ipsecSent.value;
+	    el->ipsecEfficiencySent.value = 0; /* Reset value */
+	  }
+	}
+
+	if(el->ipsecRcvd.value > 0) {
+	  if((diff = el->ipsecRcvd.value - el->lastIpsecRcvd.value) > 0) {
+	    c = el->ipsecEfficiencyRcvd.value / diff;
+	    updateGauge(rrdPath, "ipsecEfficiencyRcvd", c, 0);
+	    el->lastIpsecRcvd.value = el->ipsecRcvd.value;
+	    el->ipsecEfficiencyRcvd.value = 0; /* Reset value */
+	  }
+	}	
+      }
 
       if(el->nonIPTraffic) {
 	updateTrafficCounter(rrdPath, "stpSent", &el->nonIPTraffic->stpSent, 0);
@@ -4849,9 +4890,9 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 		  if(diff > 0) {
 		    c = el->protoIPTrafficInfos[j]->efficiencyRcvd.value / el->protoIPTrafficInfos[j]->pktRcvd.value;
 		    safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencyRcvd", myGlobals.ipTrafficProtosNames[j]);
-		  
+
 		    // traceEvent(CONST_TRACE_WARNING, "--> Rcvd [val = %u]", c);
-		  
+
 		    updateGauge(rrdPath, key, c, 0);
 		    el->protoIPTrafficInfos[j]->lastEfficiencyPktRcvd.value = el->protoIPTrafficInfos[j]->pktRcvd.value;
 		    el->protoIPTrafficInfos[j]->efficiencyRcvd.value = 0; /* Reset value */
@@ -4895,7 +4936,7 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
 
     adjHostName = dotToSlash(hostKey);
 
-    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), 
+    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath),
 		  "%s/interfaces/%s/hosts/%s/",
 		  myGlobals.rrdPath, myGlobals.device[devIdx].uniqueIfName,
 		  adjHostName);
@@ -5439,7 +5480,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      char protobuf[64];
 
 	      Counter c = myGlobals.device[devIdx].ipProtosList[idx].value;
-	      
+
 	      safe_snprintf(__FILE__, __LINE__, protobuf, sizeof(protobuf), "%sBytes", protoList->protocolName);
 	      if(c > 0) updateCounter(rrdPath, protobuf, c, 0);
 	      idx++, protoList = protoList->next;
@@ -5629,7 +5670,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     if(elapsed > rrdcmaxDuration)
       rrdcmaxDuration = elapsed;
-    
+
     traceEvent(CONST_TRACE_NOISY, "RRD: Cycle %lu ended, %llu RRDs updated, %.3f seconds",
                numRRDCycles, numRRDUpdates, elapsed);
 
@@ -5648,7 +5689,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
   termUdp();
   rrdThread = 0;
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: RRD: Data collection thread terminated [p%d]", 
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: RRD: Data collection thread terminated [p%d]",
 	     pthread_self(), getpid());
 
   return(0);
@@ -5742,7 +5783,7 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
   if(hostsFilter != NULL) free(hostsFilter);
   if(myGlobals.rrdPath != NULL) free(myGlobals.rrdPath);
 
-  /* 
+  /*
      The line below is not needed as the mutex/rrd-plugin
      can be used (for drawing images for instance) even
      when the plugin is disabled

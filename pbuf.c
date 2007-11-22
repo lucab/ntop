@@ -1330,6 +1330,8 @@ static void processIpPkt(const u_char *bp,
     Courtesy of Andreas Pfaller
   */
   if(fragmented) {
+    u_int pkt_efficiency;
+
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].fragmentedIpBytes, length);
 
     switch(nh) {
@@ -1349,15 +1351,21 @@ static void processIpPkt(const u_char *bp,
       break;
 
     case IPPROTO_GRE:
+      pkt_efficiency = efficiency(actualDeviceId, length);
       incrementHostTrafficCounter(srcHost, greSent, length);
       incrementHostTrafficCounter(dstHost, greRcvd, length);
+      incrementHostTrafficCounter(srcHost, greEfficiencySent, pkt_efficiency);
+      incrementHostTrafficCounter(dstHost, greEfficiencyRcvd, pkt_efficiency);
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].greBytes, length);
       break;
 
     case IPPROTO_IPSEC_ESP:
     case IPPROTO_IPSEC_AH:
+      pkt_efficiency = efficiency(actualDeviceId, length);
       incrementHostTrafficCounter(srcHost, ipsecSent, length);
       incrementHostTrafficCounter(dstHost, ipsecRcvd, length);
+      incrementHostTrafficCounter(srcHost, ipsecEfficiencySent, pkt_efficiency);
+      incrementHostTrafficCounter(dstHost, ipsecEfficiencyRcvd, pkt_efficiency);
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipsecBytes, length);
       break;
 
