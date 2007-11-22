@@ -480,12 +480,11 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 			     time_t recordActTime, time_t recordSysUpTime,
 			     struct generic_netflow_record *record,
 			     int deviceId, time_t *firstSeen, time_t *lastSeen) {
-  int actualDeviceId, debug = 0;
+  int actualDeviceId;
   char theFlags[256], srcPseudoLocal, dstPseudoLocal;
   u_int16_t srcAS, dstAS;
   struct in_addr a, b;
   HostAddr addr1, addr2;
-  u_int numPkts;
   HostTraffic *srcHost=NULL, *dstHost=NULL;
   u_short sport, dport, proto, newSession = 0;
   TrafficCounter ctr;
@@ -1160,7 +1159,7 @@ static char* nf_hex_dump(char *buf, u_short len) {
 static void dissectFlow(u_int32_t netflow_device_ip,
 			char *buffer, int bufferLen, int deviceId) {
   NetFlow5Record the5Record;
-  int flowVersion, debug = 0;
+  int flowVersion;
   time_t recordActTime = 0, recordSysUpTime = 0;
   struct generic_netflow_record record;
 
@@ -1452,7 +1451,6 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	    int fieldId, init_displ;
 	    V9TemplateField *fields = cursor->fields;
 	    time_t firstSeen, lastSeen;
-	    u_short num_pdu = 1;
 
 #ifdef DEBUG_FLOWS
 	    if(debug)

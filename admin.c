@@ -1490,8 +1490,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
   case showPrefBasicPref:
     {
       pcap_if_t *devpointer = myGlobals.allDevs;
-      int i, rc;
-      char ebuf[CONST_SIZE_PCAP_ERR_BUF];
+      int i;
 
       sendString("<TR><INPUT TYPE=HIDDEN NAME=BASIC_PREFS VALUE=1>"
 		 "<TD ALIGN=LEFT "DARK_BG">Capture Interfaces (-i)</TD><TD ALIGN=LEFT>\n");

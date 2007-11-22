@@ -295,7 +295,7 @@ SSL* getSSLsocket(int fd) {
 /* ********************* */
 
 int term_ssl_connection(int fd) {
-  int i, rc;
+  int i, rc = 0;
 
   if(!myGlobals.sslInitialized) return(0);
 

@@ -1864,8 +1864,10 @@ void startSniffer(void) {
 /* ***************************** */
 
 u_int createDummyInterface(char *ifName) {
-  u_int mallocLen, deviceId = myGlobals.numDevices;
-  NtopInterface *tmpDevice;
+#ifdef NOT_YET
+  u_int mallocLen;
+#endif
+  u_int deviceId = myGlobals.numDevices;
 
   traceEvent(CONST_TRACE_INFO, "Creating dummy interface, '%s'", ifName);
 

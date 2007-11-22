@@ -33,7 +33,9 @@
 static u_char useDaemon = 0, calculateEfficiency = 1, debug_rrd_graph = 0;
 static int sd = -1;
 static struct sockaddr_in cliAddr, remoteServAddr;
+#ifdef WIN32
 static char* rrdVolatilePath;
+#endif
 
 #if defined(RRD_DEBUG) && (RRD_DEBUG > 0)
 #define traceEventRRDebug(level, ...) { if(RRD_DEBUG >= level)				\
@@ -1033,7 +1035,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
   char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN];
   char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN], tmpStr[32],
     buf2[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][MAX_BUF_LEN];
-  char fname[384], *label, _rrdName[256], *title;
+  char fname[384], *label = NULL, _rrdName[256], *title = NULL;
   struct nameLabel *rrds = NULL;
   int argc = 0, rc, x, y, i, entryId=0;
   double ymin, ymax;
@@ -1824,7 +1826,7 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Packets");
   } else if(!strncmp(&str[shift], "bytes", strlen("bytes"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Total Traffic");
-  } else if(pos = strstr(&str[shift], "Pkts")) {
+  } else if((pos = strstr(&str[shift], "Pkts")) != NULL) {
     pos[0] = '\0';
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s Packets", &str[shift]);
   } else if(!strncmp(&str[shift], "efficiency", strlen("efficiency"))) {
@@ -3140,7 +3142,7 @@ static void commonRRDinit(void) {
 
   if(fetchPrefsValue("rrd.rrdVolatilePath", value, sizeof(value)) == -1) {
     char *thePath = "/rrd";
-    int len = strlen(myGlobals.spoolPath)+strlen(thePath)+16, idx = 0;
+    int len = strlen(myGlobals.spoolPath)+strlen(thePath)+16;
 
     if(myGlobals.rrdVolatilePath) free(myGlobals.rrdVolatilePath);
     myGlobals.rrdVolatilePath = (char*)malloc(len);
@@ -5184,7 +5186,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     /* ****************************************************** */
 
     if(dumpDomains) {
-      DomainStats **stats, *tmpStats, *statsEntry;
+      DomainStats **stats, *tmpStats, *statsEntry = NULL;
       u_int maxHosts = 0;
       Counter totBytesSent = 0;
       Counter totBytesRcvd = 0;
@@ -5662,7 +5664,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     gettimeofday(&rrdEndOfCycle, NULL);
     elapsed = timeval_subtract(rrdEndOfCycle, rrdStartOfCycle);
-    if(elapsed == 0) elapsed == 1; /* Rounding */
+    if(elapsed == 0) elapsed = 1; /* Rounding */
 
 #ifdef MAX_RRD_CYCLE_BUFFER
     rrdcycleBuffer[++rrdcycleBufferCount & (MAX_RRD_CYCLE_BUFFER - 1)] = elapsed;

@@ -313,9 +313,9 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
     if(efficiencyRcvd == 0) efficiencyRcvd = pkt_efficiency;
 
     if(0)
-      traceEvent(CONST_TRACE_INFO, "Efficiency [sent=%d|rcvd=%d|efficiency=%d][cell=%d][len=%d]",
+      traceEvent(CONST_TRACE_INFO, "Efficiency [sent=%d|rcvd=%d|efficiency=%d][cell=%d][len=%u]",
 		 efficiencySent, efficiencyRcvd, pkt_efficiency,
-		 myGlobals.device[actualDeviceId].cellLength, length);
+		 myGlobals.device[actualDeviceId].cellLength, (unsigned int)length);
 
     incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->pktSent, numPkts);
     incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->efficiencySent, efficiencySent*numPkts);
@@ -1054,17 +1054,17 @@ static void processIpPkt(const u_char *bp,
 #ifdef INET6
   struct ip6_hdr *ip6;
   struct icmp6_hdr icmp6Pkt;
-  u_int advance;
-  u_char *cp;
-  u_char *snapend;
-  u_int icmp6len;
+  u_int advance = 0;
+  u_char *cp = NULL;
+  u_char *snapend = NULL;
+  u_int icmp6len = 0;
 #endif
   u_int nh;
   int fragmented = 0;
   struct tcphdr tp;
   struct udphdr up;
   struct icmp icmpPkt;
-  u_int hlen, ip_len,tcpDataLength, udpDataLength, off, tcpUdpLen, idx;
+  u_int hlen, ip_len,tcpDataLength, udpDataLength, off=0, tcpUdpLen, idx;
   char *proto;
   HostTraffic *srcHost=NULL, *dstHost=NULL;
   HostAddr srcAddr, dstAddr; /* Protocol Independent addresses */

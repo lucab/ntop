@@ -2619,7 +2619,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     }
 
     if(foundVlan) {
-      u_char found = 0, tmpBuf[64];
+      u_char tmpBuf[64];
       u_int8_t selected;
 
       sendString("<tr><td><form action=\"../\">\n<b>VLAN</b>:</td>"
@@ -2656,7 +2656,6 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     }
 
     /* if(foundSubnet) */ {
-      u_char found = 0;
       u_int8_t selected;
 
       sendString("<tr><td><form action=\"../\">\n<b>Subnet</b>:</td>"
@@ -5279,7 +5278,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 static int cmpStatsFctn(const void *_a, const void *_b) {
   DomainStats *a = (DomainStats *)_a;
   DomainStats *b = (DomainStats *)_b;
-  Counter a_, b_;
+  Counter a_=0, b_=0;
   int rc;
 
   if((a == NULL) && (b != NULL)) {
@@ -5961,8 +5960,8 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		      statsEntry->clusterName);
 	sendString(buf);
       } else if((network_mode == NETWORK_VIEW) 
-		&& ((statsEntry->domainHost != NULL))
-		|| (domain_network_name == NULL)) {
+		&& ((statsEntry->domainHost != NULL)
+		    || (domain_network_name == NULL))) {
 	char rrdBuf[LEN_GENERAL_WORK_BUFFER];
 	HostTraffic dummy;
 	
@@ -5984,7 +5983,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
 	sendString("</TD>\n");
       } else {
-	traceEvent(CONST_TRACE_WARNING, "--> hostRRdGraphLink(%s)", network_mode);
+	traceEvent(CONST_TRACE_WARNING, "--> hostRRdGraphLink(%d)", network_mode);
 	sendString("<TD "TD_BG" ALIGN=CENTER>&nbsp;</TD>\n");
       }
 

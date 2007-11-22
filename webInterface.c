@@ -6748,7 +6748,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printInfoSectionTitle(textPrintFlag, "Networks");
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    char addr_buf[32], mask_buf[32], adapter_buf[128];
+    char addr_buf[32], adapter_buf[128];
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%d", 
 		  _intoa(myGlobals.device[i].network, addr_buf, sizeof(addr_buf)),
@@ -7032,7 +7032,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   float qminDelay=99999.0, qmaxDelay=0.0,
         /*stddev:*/ qM, qT, qQ, qR, qSD, qXBAR,
         pminDelay=99999.0, pmaxDelay=0.0,
-    /*stddev:*/ pM, pT, pQ, pR, pSD, pXBAR;    
+    /*stddev:*/ pM=0, pT=0, pQ=0, pR=0, pSD=0, pXBAR;    
 
   if(myGlobals.queueBufferCount >= MAX_PROCESS_BUFFER) {
 
@@ -8127,7 +8127,7 @@ void printNtopProblemReport(void) {
 void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   int sockopt = 1, rc;
 #if defined(INET6) && !defined(WIN32)
-  struct addrinfo hints, *ai, *aitop;
+  struct addrinfo hints, *ai = NULL, *aitop;
   char strport[32];
   char ntop[1024];
 #endif

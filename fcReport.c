@@ -36,7 +36,7 @@
 
 char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
                       short compactWWN, char *buf, int buflen) {
-  char *tmpStr, tmpbuf[64], colorSpec[64], *linkStr;
+  char *tmpStr, tmpbuf[64], colorSpec[64], *linkStr = NULL;
   char noLink = FALSE;        /* don't create link for certain spl addr */
   char *devTypeStr, *vendorStr, *vendorName;
 

@@ -1914,9 +1914,6 @@ void updateHostKnownSubnet(HostTraffic *el) {
   if(el->hostIpAddress.hostFamily != AF_INET /* v4 */) return;
 
   for(i=0; i<myGlobals.numKnownSubnets; i++) {
-    struct in_addr addr;
-    char addr_buf[32];
-
     if((el->hostIpAddress.addr._hostIp4Address.s_addr & myGlobals.subnetStats[i].address[CONST_NETMASK_ENTRY])
        == myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY]) {
       el->known_subnet_id = i;

@@ -281,8 +281,8 @@ unsigned long in6_hash(struct in6_addr *addr) {
 /* *************************************** */
 
 unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport) {
+  unsigned short idx = 0;
 
-  unsigned short idx;
   if (srcAddr->hostFamily != dstAddr->hostFamily)
     return -1;
   switch (srcAddr->hostFamily) {
@@ -312,7 +312,8 @@ unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int d
 /* ******************************************** */
 
 u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport) {
-  u_int16_t transactionId;
+  u_int16_t transactionId = 0;
+
   if (srcAddr->hostFamily != dstAddr->hostFamily)
     return -1;
   switch (srcAddr->hostFamily) {
@@ -2193,8 +2194,6 @@ int signalCondvar(ConditionalVariable *condvarId) {
 
 #undef _lockExclusiveHostsHashMutex
 int _lockExclusiveHostsHashMutex(HostTraffic *host, char *where, char *file, int line) {
-  u_char done = 0;
-
   while(1) {
     _accessMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], where, file, line);
     if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] == 0)
@@ -2692,8 +2691,6 @@ void traceEvent(int eventTraceLevel, char* file,
 #endif
 
 	if(myGlobals.runningPref.traceLevel >= CONST_DETAIL_TRACE_LEVEL) {
-	  unsigned int messageid = 0;
-
 #ifdef LONG_FORMAT
 	  safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[t%lu %s:%d] ",
 			pthread_self(), &mFile[beginFileIdx], line);

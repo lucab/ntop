@@ -45,8 +45,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
   PluginInfo* (*pluginJumpFunc)();
 #endif
   FlowFilterList *newFlow,
-                 *work,
-                 *prev;
+    *work, *prev = NULL;
 
   safe_snprintf(__FILE__, __LINE__, pluginPath, sizeof(pluginPath), "%s/%s", dirName != NULL ? dirName : ".", pluginName);
 
