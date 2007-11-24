@@ -399,7 +399,7 @@ extern void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
 			      HostTraffic *dstHost, HostAddr *dstAddr,
 			      TrafficCounter length, Counter numPkts,
 			      int actualDeviceId);
-
+extern u_int efficiency(int actualDeviceId, u_int pktLen);
 extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h, const u_char *p);
 extern void cleanupPacketQueue(void);
 extern void *dequeuePacket(void* notUsed);

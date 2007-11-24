@@ -525,8 +525,12 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
     if (!myGlobals.runningPref.defaultVsan)
       myGlobals.runningPref.defaultVsan = DEFAULT_VSAN;
   }
+
   myGlobals.fcMatrixHashCollisions = 0;
   myGlobals.fcMatrixHashUnresCollisions = 0;
+
+  myGlobals.calculateEfficiency = 1;
+  myGlobals.cellLength = 47; /* FIX - this is valid only for ATM */
 }
 
 /* ********************************* */

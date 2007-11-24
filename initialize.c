@@ -1758,8 +1758,6 @@ void initDeviceDatalink(int deviceId) {
     }
   }
 
-  myGlobals.device[deviceId].cellLength = 47; /* FIX */
-
   traceEvent(CONST_TRACE_INFO, "DLT: Device %d [%s] is %d, mtu %d, header %d",
 	       deviceId,
 	       myGlobals.device[deviceId].name,

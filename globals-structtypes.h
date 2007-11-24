@@ -839,9 +839,10 @@ typedef struct hostTraffic {
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
   struct timeval   minLatency, maxLatency;
 
-  TrafficCounter   greSent, greRcvd, greEfficiencySent, greEfficiencyRcvd, lastGreSent, lastGreRcvd;
+  TrafficCounter   greSent, greRcvd, greEfficiencySent, greEfficiencyRcvd,
+    grePktSent, grePktRcvd, lastGrePktSent, lastGrePktRcvd;
   TrafficCounter   ipsecSent, ipsecRcvd, ipsecEfficiencySent, ipsecEfficiencyRcvd,
-    lastIpsecSent, lastIpsecRcvd;
+    ipsecPktSent, ipsecPktRcvd, lastIpsecPktSent, lastIpsecPktRcvd;
 
   NonIPTraffic     *nonIPTraffic;
   NonIpProtoTrafficInfo *nonIpProtoTrafficInfos; /* Info about further non IP protos */
@@ -1447,8 +1448,7 @@ typedef struct ntopInterface {
   u_short samplingRate;          /* default = 1 */
   u_short droppedSamples;        /* Number of packets dropped due to sampling, since the last processed pkt */
   u_short mtuSize,               /* MTU and header, derived from DLT and table in globals-core.c */
-    headerSize,
-    cellLength;                  /* If the traffic is divided in cells (e.g. ATM, cell payload is 47 bytes) this is the cell lenght */
+    headerSize;
 
   char *filter;                  /* user defined filter expression (if any) */
 
@@ -2469,5 +2469,9 @@ typedef struct ntopGlobals {
 #ifdef PARM_ENABLE_EXPERIMENTAL
   u_short experimentalFlagSet;  /* Is the 'experimental' flag set? */
 #endif
+
+  u_int8_t  calculateEfficiency;
+  /* If the traffic is divided in cells (e.g. ATM, cell payload is 47 bytes) this is the cell lenght */
+  u_int16_t cellLength; 
 } NtopGlobals;
 

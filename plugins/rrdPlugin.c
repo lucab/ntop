@@ -30,7 +30,7 @@
 #endif
 
 #define REMOTE_SERVER_PORT 2005
-static u_char useDaemon = 0, calculateEfficiency = 1, debug_rrd_graph = 0;
+static u_char useDaemon = 0, debug_rrd_graph = 0;
 static int sd = -1;
 static struct sockaddr_in cliAddr, remoteServAddr;
 #ifdef WIN32
@@ -1793,12 +1793,12 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
   } else if(!strncmp(&str[shift], "ipv6", strlen("ipv6"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "IPv6 Traffic");
     //done = 1;
+  } else if(!strncmp(&str[shift], "ipsec", strlen("ipsec"))) {
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "IPsec Traffic");
+    done = 1;
   } else if(!strncmp(&str[shift], "ip", strlen("ip"))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "IP Traffic");
     //done = 1;
-  } else if(!strncmp(&str[shift], "ipsec", strlen("ipsec"))) {
-    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "IPSEC Traffic");
-    done = 1;
   } else if((!strncmp(&str[shift], "pktBroadcast", strlen("pktBroadcast")))
 	    || (!strncmp(&str[shift], "broadcastPkts", strlen("broadcastPkts")))) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "Broadcast Packets");
@@ -1949,7 +1949,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   char *buf0[MAX_NUM_ENTRIES], *buf1[MAX_NUM_ENTRIES], *buf2[MAX_NUM_ENTRIES],
     *buf3[MAX_NUM_ENTRIES], *buf4[MAX_NUM_ENTRIES], *buf5[MAX_NUM_ENTRIES];
   char metric_name[32], title_buf[64], ip_buf[64];
-  char _rrdName[256], *efficiency = NULL;
+  char _rrdName[256], *net_efficiency = NULL;
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
   int argc = 0, rc, x, y, i, entryId=0, num_rrd_hosts_path = 0, j;
   DIR* directoryPointer;
@@ -2074,7 +2074,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
       char *pkts  = strstr(rrdName, "Pkts");
       char *flows = strstr(rrdName, "Flows");
 
-      efficiency = strcasestr(rrdName, "Efficiency");
+      net_efficiency = strcasestr(rrdName, "Efficiency");
 
       if(sent || rcvd) {
 	if(sent) sent[0]  = '\0'; else rcvd[0] = '\0';
@@ -2106,7 +2106,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	label = "Hosts";
       else if(strstr(rrdName, "Senders"))
 	label = "Peers";
-      else if(efficiency)
+      else if(net_efficiency)
 	label = "Efficiency (%)";
       else if(flows)
 	label = "Flows/s";
@@ -2283,7 +2283,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     titleAlreadySent = 1;
   }
 
-  if(efficiency) {
+  if(net_efficiency) {
     argv[argc++] = "--lower-limit";
     argv[argc++] = "-100";
     argv[argc++] = "--upper-limit";
@@ -4700,23 +4700,23 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
     updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent, 0);
     updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd, 0);
 
-    if(calculateEfficiency) {
+    if(myGlobals.calculateEfficiency) {
       Counter c, diff;
 
       if(el->greSent.value > 0) {
-	if((diff = el->greSent.value - el->lastGreSent.value) > 0) {
+	if((diff = el->grePktSent.value - el->lastGrePktSent.value) > 0) {
 	  c = el->greEfficiencySent.value / diff;
 	  updateGauge(rrdPath, "greEfficiencySent", c, 0);
-	  el->lastGreSent.value = el->greSent.value;
+	  el->lastGrePktSent.value = el->grePktSent.value;
 	  el->greEfficiencySent.value = 0; /* Reset value */
 	}
       }
 
       if(el->greRcvd.value > 0) {
-	if((diff = el->greRcvd.value - el->lastGreRcvd.value) > 0) {
+	if((diff = el->grePktRcvd.value - el->lastGrePktRcvd.value) > 0) {
 	  c = el->greEfficiencyRcvd.value / diff;
 	  updateGauge(rrdPath, "greEfficiencyRcvd", c, 0);
-	  el->lastGreRcvd.value = el->greRcvd.value;
+	  el->lastGrePktRcvd.value = el->grePktRcvd.value;
 	  el->greEfficiencyRcvd.value = 0; /* Reset value */
 	}
       }
@@ -4724,26 +4724,26 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       /* ********************************************* */
 
       if(el->ipsecSent.value > 0) {
-	if((diff = el->ipsecSent.value - el->lastIpsecSent.value) > 0) {
+	if((diff = el->ipsecPktSent.value - el->lastIpsecPktSent.value) > 0) {
 	  c = el->ipsecEfficiencySent.value / diff;
 	  updateGauge(rrdPath, "ipsecEfficiencySent", c, 0);
-	  el->lastIpsecSent.value = el->ipsecSent.value;
+	  el->lastIpsecPktSent.value = el->ipsecPktSent.value;
 	  el->ipsecEfficiencySent.value = 0; /* Reset value */
 	}
       }
 
       if(el->ipsecRcvd.value > 0) {
-	if((diff = el->ipsecRcvd.value - el->lastIpsecRcvd.value) > 0) {
+	if((diff = el->ipsecPktRcvd.value - el->lastIpsecPktRcvd.value) > 0) {
 	  c = el->ipsecEfficiencyRcvd.value / diff;
 	  updateGauge(rrdPath, "ipsecEfficiencyRcvd", c, 0);
-	  el->lastIpsecRcvd.value = el->ipsecRcvd.value;
+	  el->lastIpsecPktRcvd.value = el->ipsecPktRcvd.value;
 	  el->ipsecEfficiencyRcvd.value = 0; /* Reset value */
 	}
       }	
     }
 
     if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
-      if(calculateEfficiency) {
+      if(myGlobals.calculateEfficiency) {
 	if(el->pktSent.value > 0) {
 	  Counter c, diff = el->pktSent.value - el->lastEfficiencyPktSent.value;
 
@@ -4869,7 +4869,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->rcvdLoc.value+
 			    el->protoIPTrafficInfos[j]->rcvdFromRem.value, 0);
 
-	      if(calculateEfficiency) {
+	      if(myGlobals.calculateEfficiency) {
 		if(el->protoIPTrafficInfos[j]->pktSent.value > 0) {
 		  Counter c, diff;
 
