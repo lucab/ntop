@@ -4700,6 +4700,48 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
     updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent, 0);
     updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd, 0);
 
+    if(calculateEfficiency) {
+      Counter c, diff;
+
+      if(el->greSent.value > 0) {
+	if((diff = el->greSent.value - el->lastGreSent.value) > 0) {
+	  c = el->greEfficiencySent.value / diff;
+	  updateGauge(rrdPath, "greEfficiencySent", c, 0);
+	  el->lastGreSent.value = el->greSent.value;
+	  el->greEfficiencySent.value = 0; /* Reset value */
+	}
+      }
+
+      if(el->greRcvd.value > 0) {
+	if((diff = el->greRcvd.value - el->lastGreRcvd.value) > 0) {
+	  c = el->greEfficiencyRcvd.value / diff;
+	  updateGauge(rrdPath, "greEfficiencyRcvd", c, 0);
+	  el->lastGreRcvd.value = el->greRcvd.value;
+	  el->greEfficiencyRcvd.value = 0; /* Reset value */
+	}
+      }
+	
+      /* ********************************************* */
+
+      if(el->ipsecSent.value > 0) {
+	if((diff = el->ipsecSent.value - el->lastIpsecSent.value) > 0) {
+	  c = el->ipsecEfficiencySent.value / diff;
+	  updateGauge(rrdPath, "ipsecEfficiencySent", c, 0);
+	  el->lastIpsecSent.value = el->ipsecSent.value;
+	  el->ipsecEfficiencySent.value = 0; /* Reset value */
+	}
+      }
+
+      if(el->ipsecRcvd.value > 0) {
+	if((diff = el->ipsecRcvd.value - el->lastIpsecRcvd.value) > 0) {
+	  c = el->ipsecEfficiencyRcvd.value / diff;
+	  updateGauge(rrdPath, "ipsecEfficiencyRcvd", c, 0);
+	  el->lastIpsecRcvd.value = el->ipsecRcvd.value;
+	  el->ipsecEfficiencyRcvd.value = 0; /* Reset value */
+	}
+      }	
+    }
+
     if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
       if(calculateEfficiency) {
 	if(el->pktSent.value > 0) {
@@ -4762,47 +4804,6 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       updateTrafficCounter(rrdPath, "greRcvd", &el->greRcvd, 0);
       updateTrafficCounter(rrdPath, "ipsecSent", &el->ipsecSent, 0);
       updateTrafficCounter(rrdPath, "ipsecRcvd", &el->ipsecRcvd, 0);
-      if(calculateEfficiency) {
-	Counter c, diff;
-
-	if(el->greSent.value > 0) {
-	  if((diff = el->greSent.value - el->lastGreSent.value) > 0) {
-	    c = el->greEfficiencySent.value / diff;
-	    updateGauge(rrdPath, "greEfficiencySent", c, 0);
-	    el->lastGreSent.value = el->greSent.value;
-	    el->greEfficiencySent.value = 0; /* Reset value */
-	  }
-	}
-
-	if(el->greRcvd.value > 0) {
-	  if((diff = el->greRcvd.value - el->lastGreRcvd.value) > 0) {
-	    c = el->greEfficiencyRcvd.value / diff;
-	    updateGauge(rrdPath, "greEfficiencyRcvd", c, 0);
-	    el->lastGreRcvd.value = el->greRcvd.value;
-	    el->greEfficiencyRcvd.value = 0; /* Reset value */
-	  }
-	}
-	
-	/* ********************************************* */
-
-	if(el->ipsecSent.value > 0) {
-	  if((diff = el->ipsecSent.value - el->lastIpsecSent.value) > 0) {
-	    c = el->ipsecEfficiencySent.value / diff;
-	    updateGauge(rrdPath, "ipsecEfficiencySent", c, 0);
-	    el->lastIpsecSent.value = el->ipsecSent.value;
-	    el->ipsecEfficiencySent.value = 0; /* Reset value */
-	  }
-	}
-
-	if(el->ipsecRcvd.value > 0) {
-	  if((diff = el->ipsecRcvd.value - el->lastIpsecRcvd.value) > 0) {
-	    c = el->ipsecEfficiencyRcvd.value / diff;
-	    updateGauge(rrdPath, "ipsecEfficiencyRcvd", c, 0);
-	    el->lastIpsecRcvd.value = el->ipsecRcvd.value;
-	    el->ipsecEfficiencyRcvd.value = 0; /* Reset value */
-	  }
-	}	
-      }
 
       if(el->nonIPTraffic) {
 	updateTrafficCounter(rrdPath, "stpSent", &el->nonIPTraffic->stpSent, 0);
