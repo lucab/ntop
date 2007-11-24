@@ -169,7 +169,8 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   if(dataSent) {
     totTraffic.value = theHost->tcpSentLoc.value+theHost->tcpSentRem.value+
       theHost->udpSentLoc.value+theHost->udpSentRem.value+
-      theHost->icmpSent.value+theHost->ipv6BytesSent.value;
+      theHost->icmpSent.value+theHost->ipv6BytesSent.value+
+      theHost->greSent.value+theHost->ipsecSent.value;
     
     if(theHost->nonIPTraffic != NULL)
       totTraffic.value += theHost->nonIPTraffic->stpSent.value+
@@ -189,7 +190,8 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   } else {
     totTraffic.value = theHost->tcpRcvdLoc.value+theHost->tcpRcvdFromRem.value+
       theHost->udpRcvdLoc.value+theHost->udpRcvdFromRem.value+
-      theHost->icmpRcvd.value+theHost->ipv6BytesRcvd.value;
+      theHost->icmpRcvd.value+theHost->ipv6BytesRcvd.value+
+      theHost->greRcvd.value+theHost->ipsecRcvd.value;
 
     if(theHost->nonIPTraffic != NULL)
       totTraffic.value += theHost->nonIPTraffic->stpRcvd.value
@@ -232,6 +234,16 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPv6";
       }
 
+	if(theHost->greSent.value > 0) {
+	  p[num] = (float)((100*theHost->greSent.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "GRE";
+	}
+
+	if(theHost->ipsecSent.value > 0) {
+	  p[num] = (float)((100*theHost->ipsecSent.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPSEC";
+	}
+
       if(theHost->nonIPTraffic != NULL) {
 	if(theHost->nonIPTraffic->stpSent.value > 0) {
 	  p[num] = (float)((100*theHost->nonIPTraffic->stpSent.value)/totTraffic.value);
@@ -248,19 +260,9 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DLC";
 	}
 
-	if(theHost->greSent.value > 0) {
-	  p[num] = (float)((100*theHost->greSent.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "GRE";
-	}
-
 	if(theHost->nonIPTraffic->arp_rarpSent.value > 0) {
 	  p[num] = (float)((100*theHost->nonIPTraffic->arp_rarpSent.value)/totTraffic.value);
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "(R)ARP";
-	}
-
-	if(theHost->ipsecSent.value > 0) {
-	  p[num] = (float)((100*theHost->ipsecSent.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPSEC";
 	}
 
 	if(theHost->nonIPTraffic->appletalkSent.value > 0) {
@@ -301,6 +303,16 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPv6";
       }
 
+      if(theHost->greRcvd.value > 0) {
+	p[num] = (float)((100*theHost->greRcvd.value)/totTraffic.value);
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "GRE";
+      }
+      
+      if(theHost->ipsecRcvd.value > 0) {
+	p[num] = (float)((100*theHost->ipsecRcvd.value)/totTraffic.value);
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPSEC";
+      }
+      
       if(theHost->nonIPTraffic != NULL) {
 	if(theHost->nonIPTraffic->stpRcvd.value > 0) {
 	  p[num] = (float)((100*theHost->nonIPTraffic->stpRcvd.value)/totTraffic.value);
@@ -317,19 +329,9 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DLC";
 	}
 
-	if(theHost->greRcvd.value > 0) {
-	  p[num] = (float)((100*theHost->greRcvd.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "GRE";
-	}
-
 	if(theHost->nonIPTraffic->arp_rarpRcvd.value > 0) {
 	  p[num] = (float)((100*theHost->nonIPTraffic->arp_rarpRcvd.value)/totTraffic.value);
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "(R)ARP";
-	}
-
-	if(theHost->ipsecRcvd.value > 0) {
-	  p[num] = (float)((100*theHost->ipsecRcvd.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPSEC";
 	}
 
 	if(theHost->nonIPTraffic->appletalkRcvd.value > 0) {
@@ -600,6 +602,17 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
     totalIPTraffic.value = theHost->ipv4BytesRcvd.value;
 
   if(totalIPTraffic.value > 0) {
+    if(dataSent)
+      traffic.value = theHost->ipsecSent.value;    
+    else
+      traffic.value = theHost->ipsecRcvd.value;
+ 
+    if(traffic.value > 0) {
+      p[num] = (float)((100*traffic.value)/totalIPTraffic.value);
+      diffTraffic.value += traffic.value;
+      lbl[num++] = "IPSEC";
+    }
+
     for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
       if(theHost->protoIPTrafficInfos[i]) {
 	if(dataSent)

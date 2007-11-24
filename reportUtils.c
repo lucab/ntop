@@ -2405,6 +2405,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
   totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value;
   totalSent += el->icmpSent.value+el->icmp6Sent.value+el->ipv6BytesSent.value;
+  totalSent += el->greSent.value + el->ipsecSent.value;
 
   if(el->nonIPTraffic != NULL)
     totalSent += el->nonIPTraffic->ipxSent.value+el->nonIPTraffic->dlcSent.value+el->nonIPTraffic->arp_rarpSent.value +
@@ -2414,6 +2415,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   totalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value;
   totalRcvd += el->udpRcvdLoc.value+el->udpRcvdFromRem.value;
   totalRcvd += el->icmpRcvd.value+el->icmp6Rcvd.value+el->ipv6BytesRcvd.value;
+  totalRcvd += el->greRcvd.value + el->ipsecRcvd.value;
 
   if(el->nonIPTraffic != NULL)
     totalRcvd += el->nonIPTraffic->ipxRcvd.value+el->nonIPTraffic->dlcRcvd.value+el->nonIPTraffic->arp_rarpRcvd.value +
@@ -2475,6 +2477,17 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 			(float)el->ipv6BytesRcvd.value/1024,
 			100*((float)SD(el->ipv6BytesRcvd.value, totalRcvd)));
 
+  printTableDoubleEntry(buf, sizeof(buf), "GRE", CONST_COLOR_1, (float)el->greSent.value/1024,
+			100*((float)SD(el->greSent.value, totalSent)),
+			(float)el->greRcvd.value/1024,
+			100*((float)SD(el->greRcvd.value, totalRcvd)));
+  
+  printTableDoubleEntry(buf, sizeof(buf), "IPsec", CONST_COLOR_1, 
+			(float)el->ipsecSent.value/1024,
+			100*((float)SD(el->ipsecSent.value, totalSent)),
+			(float)el->ipsecRcvd.value/1024,
+			100*((float)SD(el->ipsecRcvd.value, totalRcvd)));
+  
   if(el->nonIPTraffic != NULL) {
     printTableDoubleEntry(buf, sizeof(buf), "(R)ARP", CONST_COLOR_1, (float)el->nonIPTraffic->arp_rarpSent.value/1024,
 			  100*((float)SD(el->nonIPTraffic->arp_rarpSent.value, totalSent)),
@@ -2491,12 +2504,6 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 			  (float)el->nonIPTraffic->ipxRcvd.value/1024,
 			  100*((float)SD(el->nonIPTraffic->ipxRcvd.value, totalRcvd)));
 
-    printTableDoubleEntry(buf, sizeof(buf), "IPsec", CONST_COLOR_1, 
-			  (float)el->ipsecSent.value/1024,
-			  100*((float)SD(el->ipsecSent.value, totalSent)),
-			  (float)el->ipsecRcvd.value/1024,
-			  100*((float)SD(el->ipsecRcvd.value, totalRcvd)));
-
     printTableDoubleEntry(buf, sizeof(buf), "AppleTalk", CONST_COLOR_1, (float)el->nonIPTraffic->appletalkSent.value/1024,
 			  100*((float)SD(el->nonIPTraffic->appletalkSent.value, totalSent)),
 			  (float)el->nonIPTraffic->appletalkRcvd.value/1024,
@@ -2506,11 +2513,6 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 			  100*((float)SD(el->nonIPTraffic->netbiosSent.value, totalSent)),
 			  (float)el->nonIPTraffic->netbiosRcvd.value/1024,
 			  100*((float)SD(el->nonIPTraffic->netbiosRcvd.value, totalRcvd)));
-
-    printTableDoubleEntry(buf, sizeof(buf), "GRE", CONST_COLOR_1, (float)el->greSent.value/1024,
-			  100*((float)SD(el->greSent.value, totalSent)),
-			  (float)el->greRcvd.value/1024,
-			  100*((float)SD(el->greRcvd.value, totalRcvd)));
 
     printTableDoubleEntry(buf, sizeof(buf), "STP", CONST_COLOR_1, (float)el->nonIPTraffic->stpSent.value/1024,
 			  100*((float)SD(el->nonIPTraffic->stpSent.value, totalSent)),
@@ -2540,11 +2542,13 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   {
     totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+
       el->udpSentLoc.value+el->udpSentRem.value+
-      el->icmpSent.value+el->icmp6Sent.value+el->ipv6BytesSent.value;
+      el->icmpSent.value+el->icmp6Sent.value+el->ipv6BytesSent.value+
+      el->greSent.value+el->ipsecSent.value;
 
     totalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value+
       el->udpRcvdLoc.value+el->udpRcvdFromRem.value+
-      el->icmpRcvd.value+el->icmp6Rcvd.value+el->ipv6BytesRcvd.value;
+      el->icmpRcvd.value+el->icmp6Rcvd.value+el->ipv6BytesRcvd.value+
+      el->greRcvd.value+el->ipsecRcvd.value;
 
     if(el->nonIPTraffic) {
       totalSent += el->nonIPTraffic->stpSent.value+
@@ -2590,8 +2594,8 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
      if(totalSent > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		    "<iframe frameborder=0 SRC=\"hostTrafficDistrib-%s%s"CHART_FORMAT"?1\"  width=400 height=250></iframe></TD>",
+		      "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
+		      "<iframe frameborder=0 SRC=\"hostTrafficDistrib-%s%s"CHART_FORMAT"?1\"  width=400 height=250></iframe></TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -2600,8 +2604,8 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
       if(totalRcvd > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white><iframe frameborder=0 SRC=hostTrafficDistrib-"
-		    "%s%s"CHART_FORMAT"  width=400 height=250></iframe></TD>",
+		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white><iframe frameborder=0 SRC=\"hostTrafficDistrib-"
+		    "%s%s"CHART_FORMAT"\" width=400 height=250></iframe></TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -3743,10 +3747,11 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
     vendorName = getVendorInfo(el->ethAddress, 1);
     if(vendorName[0] != '\0') {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT NOWRAP>%s%s</TD></TR>\n",
-		  getRowColor(), "Nw&nbsp;Board&nbsp;Vendor",
-		  vendorName,
-		  myGlobals.separator /* it avoids empty cells not to be rendered */);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s%s</TD></TR>\n",
+		    getRowColor(), "Nw&nbsp;Board&nbsp;Vendor",
+		    vendorName,
+		    myGlobals.separator /* it avoids empty cells not to be rendered */);
       sendString(buf);
     }
   }

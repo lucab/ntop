@@ -6117,8 +6117,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
    */
   if(isFcHost (el)) {
     printSectionTitle("FibreChannel Port Traffic Stats");
-  }
-  else {
+  } else {
     printSectionTitle("Host Traffic Stats");
   }
 

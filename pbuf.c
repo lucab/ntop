@@ -1831,8 +1831,11 @@ static void processIpPkt(const u_char *bp,
 	      FD_SET(FLAG_HOST_TYPE_SVC_NTP_SERVER, &srcHost->flags);
 	  }
 	} else if(sport == 500) /* IPSEC IKE */ {
+	  u_int pkt_efficiency = efficiency(actualDeviceId, length);
 	  incrementHostTrafficCounter(srcHost, ipsecSent, length);
 	  incrementHostTrafficCounter(dstHost, ipsecRcvd, length);
+	  incrementHostTrafficCounter(srcHost, ipsecEfficiencySent, pkt_efficiency);
+	  incrementHostTrafficCounter(dstHost, ipsecEfficiencyRcvd, pkt_efficiency);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipsecBytes, length);
 	} else {
 	  if(myGlobals.runningPref.enablePacketDecoding)
