@@ -1,8 +1,9 @@
 /*
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ *
  *                          http://www.ntop.org
  *
- * Copyright (C) 1998-2007 Luca Deri <deri@ntop.org>
+ *          Copyright (C) 1998-2007 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -149,7 +150,7 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
 /* ************************************ */
 
-u_int efficiency(int actualDeviceId, u_int pktLen) {
+u_int computeEfficiency(u_int pktLen) {
   u_int pktEfficiency;
 
   if(myGlobals.cellLength == 0)
@@ -308,9 +309,10 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
     }
 
     if(myGlobals.calculateEfficiency) {
-      if((efficiencySent == 0) || (efficiencyRcvd == 0)) pkt_efficiency = efficiency(actualDeviceId, length);
+      if((efficiencySent == 0) || (efficiencyRcvd == 0)) pkt_efficiency = computeEfficiency(length);
       if(efficiencySent == 0) efficiencySent = pkt_efficiency;
       if(efficiencyRcvd == 0) efficiencyRcvd = pkt_efficiency;
+      efficiencySent *= numPkts, efficiencyRcvd *= numPkts;
     }
 
     if(0)
@@ -322,14 +324,48 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
     incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->pktRcvd, numPkts);
 
     if(myGlobals.calculateEfficiency) {      
-      incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->efficiencySent, efficiencySent*numPkts);
-      incrementHostTrafficCounter(srcHost, efficiencySent, efficiencySent*numPkts);
-      incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->efficiencyRcvd, efficiencyRcvd*numPkts);
-      incrementHostTrafficCounter(dstHost, efficiencyRcvd, efficiencyRcvd*numPkts);
+      incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->efficiencySent, efficiencySent);
+      incrementHostTrafficCounter(srcHost, efficiencySent, efficiencySent);
+      incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->efficiencyRcvd, efficiencyRcvd);
+      incrementHostTrafficCounter(dstHost, efficiencyRcvd, efficiencyRcvd);
     }
   }
 
   return(idx);
+}
+
+/* ************************************ */
+
+void updateGreEfficiency(HostTraffic *srcHost, HostTraffic *dstHost,
+			 u_int numPkts, u_int numBytes,
+			 int actualDeviceId) {
+  if(myGlobals.calculateEfficiency && (numPkts > 0)) {
+    u_int pkt_efficiency = computeEfficiency(numBytes/numPkts)*numPkts;
+
+    incrementHostTrafficCounter(srcHost, greEfficiencySent, pkt_efficiency);
+    incrementHostTrafficCounter(srcHost, efficiencySent, pkt_efficiency);    
+    incrementHostTrafficCounter(dstHost, greEfficiencyRcvd, pkt_efficiency);
+    incrementHostTrafficCounter(dstHost, efficiencyRcvd, pkt_efficiency);
+    incrementHostTrafficCounter(srcHost, grePktSent, numPkts);
+    incrementHostTrafficCounter(dstHost, grePktRcvd, numPkts);
+  } 
+}
+
+/* ************************************ */
+
+void updateIpsecEfficiency(HostTraffic *srcHost, HostTraffic *dstHost,
+			   u_int numPkts, u_int numBytes,
+			   int actualDeviceId) {
+  if(myGlobals.calculateEfficiency && (numPkts > 0)) {
+    u_int pkt_efficiency = computeEfficiency(numBytes/numPkts)*numPkts;
+
+    incrementHostTrafficCounter(srcHost, ipsecEfficiencySent, pkt_efficiency);
+    incrementHostTrafficCounter(srcHost, efficiencySent, pkt_efficiency);    
+    incrementHostTrafficCounter(dstHost, ipsecEfficiencyRcvd, pkt_efficiency);
+    incrementHostTrafficCounter(dstHost, efficiencyRcvd, pkt_efficiency);
+    incrementHostTrafficCounter(srcHost, ipsecPktSent, numPkts);
+    incrementHostTrafficCounter(dstHost, ipsecPktRcvd, numPkts);
+  } 
 }
 
 /* ************************************ */
@@ -1208,7 +1244,7 @@ static void processIpPkt(const u_char *bp,
     IMPORTANT:
     do NOT change the order of the lines below (see isBroadcastAddress call)
   */
-  dstHost = lookupHost(&dstAddr, ether_dst, vlanId, 1 , 0 ,actualDeviceId);
+  dstHost = lookupHost(&dstAddr, ether_dst, vlanId, 1 , 0, actualDeviceId);
   if(dstHost == NULL) {
     /* Sanity check */
     if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (2) [Low memory?]");
@@ -1358,12 +1394,7 @@ static void processIpPkt(const u_char *bp,
       incrementHostTrafficCounter(srcHost, greSent, length);
       incrementHostTrafficCounter(dstHost, greRcvd, length);
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].greBytes, length);
-
-      if(myGlobals.calculateEfficiency) {
-	pkt_efficiency = efficiency(actualDeviceId, length);
-	incrementHostTrafficCounter(srcHost, greEfficiencySent, pkt_efficiency);
-	incrementHostTrafficCounter(dstHost, greEfficiencyRcvd, pkt_efficiency);
-      }
+      updateGreEfficiency(srcHost, dstHost, 1, length, actualDeviceId);
       break;
 
     case IPPROTO_IPSEC_ESP:
@@ -1371,12 +1402,7 @@ static void processIpPkt(const u_char *bp,
       incrementHostTrafficCounter(srcHost, ipsecSent, length);
       incrementHostTrafficCounter(dstHost, ipsecRcvd, length);
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipsecBytes, length);
-
-      if(myGlobals.calculateEfficiency) {
-	pkt_efficiency = efficiency(actualDeviceId, length);
-	incrementHostTrafficCounter(srcHost, ipsecEfficiencySent, pkt_efficiency);
-	incrementHostTrafficCounter(dstHost, ipsecEfficiencyRcvd, pkt_efficiency);
-      }
+      updateIpsecEfficiency(srcHost, dstHost, 1, length, actualDeviceId);
       break;
 
 #ifdef INET6
@@ -1844,12 +1870,7 @@ static void processIpPkt(const u_char *bp,
 	  incrementHostTrafficCounter(srcHost, ipsecSent, length);
 	  incrementHostTrafficCounter(dstHost, ipsecRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipsecBytes, length);
-
-	  if(myGlobals.calculateEfficiency) {
-	    u_int pkt_efficiency = efficiency(actualDeviceId, length);
-	    incrementHostTrafficCounter(srcHost, ipsecEfficiencySent, pkt_efficiency);
-	    incrementHostTrafficCounter(dstHost, ipsecEfficiencyRcvd, pkt_efficiency);
-	  }
+	  updateIpsecEfficiency(srcHost, dstHost, 1, length, actualDeviceId);
 	} else {
 	  if(myGlobals.runningPref.enablePacketDecoding)
 	    handleNetbios(srcHost, dstHost, sport, dport,

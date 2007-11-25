@@ -993,19 +993,8 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     incrementHostTrafficCounter(dstHost, grePktRcvd, record->sentPkts);
     incrementHostTrafficCounter(srcHost, grePktRcvd, record->rcvdPkts);
     incrementHostTrafficCounter(dstHost, grePktSent, record->rcvdPkts);
-
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].greBytes, total_bytes);
-    if(myGlobals.calculateEfficiency) {
-      if(record->sentPkts > 0) {
-	pkt_efficiency = efficiency(actualDeviceId, record->sentOctets/record->sentPkts);
-	incrementHostTrafficCounter(srcHost, greEfficiencySent, pkt_efficiency*record->sentPkts);
-      }
-
-      if(record->rcvdPkts > 0) {
-	pkt_efficiency = efficiency(actualDeviceId, record->rcvdOctets/record->rcvdPkts);
-	incrementHostTrafficCounter(dstHost, greEfficiencyRcvd, pkt_efficiency*record->rcvdPkts);
-      }
-    }
+    updateGreEfficiency(srcHost, dstHost, record->sentPkts, record->sentOctets, actualDeviceId);
     break;
 
   case IPPROTO_IPSEC_ESP:
@@ -1018,19 +1007,8 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     incrementHostTrafficCounter(dstHost, ipsecPktRcvd, record->sentPkts);
     incrementHostTrafficCounter(srcHost, ipsecPktRcvd, record->rcvdPkts);
     incrementHostTrafficCounter(dstHost, ipsecPktSent, record->rcvdPkts);
-
-    if(myGlobals.calculateEfficiency) {
-      if(record->sentPkts > 0) {
-	pkt_efficiency = efficiency(actualDeviceId, record->sentOctets/record->sentPkts);
-	incrementHostTrafficCounter(srcHost, ipsecEfficiencySent, pkt_efficiency*record->sentPkts);
-      }
-
-      if(record->rcvdPkts > 0) {
-	pkt_efficiency = efficiency(actualDeviceId, record->rcvdOctets/record->rcvdPkts);
-	incrementHostTrafficCounter(dstHost, ipsecEfficiencyRcvd, pkt_efficiency*record->rcvdPkts);
-      }
-    }
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipsecBytes, total_bytes);
+    updateIpsecEfficiency(srcHost, dstHost, record->sentPkts, record->sentOctets, actualDeviceId);
     break;
 
   default:
