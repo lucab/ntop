@@ -5559,6 +5559,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 			  "%s/interfaces/%s/AS/", myGlobals.rrdPath,
 			  myGlobals.device[devIdx].uniqueIfName);
 	    mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
+      safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
+        "%s/interfaces/%s/", myGlobals.rrdPath,
+        myGlobals.device[devIdx].uniqueIfName);
 	    updateGauge(rrdIfPath, "numAS", totAS, 0);
 	    // traceEvent(CONST_TRACE_WARNING, "numAS=%d", totAS);
 	  }
