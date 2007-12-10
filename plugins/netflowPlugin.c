@@ -133,7 +133,7 @@ static PluginInfo netflowPluginInfo[] = {
     handleNetflowHTTPrequest,
     NULL, /* no host creation/deletion handle */
 #ifdef DEBUG_FLOWS
-    "udp and (port 2055)",
+    "udp and (port 2055 or port 1024)",
 #else
     NULL, /* no capture */
 #endif
@@ -489,6 +489,9 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   u_short sport, dport, proto, newSession = 0;
   TrafficCounter ctr;
   int skipSRC=0, skipDST=0;
+#ifdef DEBUG_FLOWS
+  int debug = 1;
+#endif
   struct pcap_pkthdr h;
   struct tcphdr tp;
   IPSession *session = NULL;
@@ -503,6 +506,10 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     netflowEndOfFlowProcessing;
 
   gettimeofday(&netflowStartOfFlowProcessing, NULL);
+#endif
+
+#ifdef DEBUG_FLOWS
+  traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: handleGenericFlow() called");
 #endif
 
   myGlobals.device[deviceId].netflowGlobals->numNetFlowsRcvd++;
@@ -734,7 +741,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   if(dstHost->lastSeen < *lastSeen)   dstHost->lastSeen = *lastSeen;
 
 #ifdef DEBUG_FLOWS
-  if(0)
+  if(1)
     traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [last=%d][first=%d][last-first=%d]",
 	       srcHost->hostNumIpAddress, sport,
 	       dstHost->hostNumIpAddress, dport, record->last, record->first,
@@ -1173,8 +1180,9 @@ static void dissectFlow(u_int32_t netflow_device_ip,
   int flowVersion;
   time_t recordActTime = 0, recordSysUpTime = 0;
   struct generic_netflow_record record;
-
 #ifdef DEBUG_FLOWS
+  static int num_pdu = 0;
+  int debug = 1;
   char buf[LEN_SMALL_WORK_BUFFER], buf1[LEN_SMALL_WORK_BUFFER];
 #endif
 
@@ -1634,16 +1642,10 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	      if(full_flow) {
 		de_endianFlow(&record);
 
-		if(record.sentPkts > 0)
+		// if(record.sentPkts > 0)
 		  handleGenericFlow(netflow_device_ip, recordActTime,
 				    recordSysUpTime, &record,
 				    deviceId, &firstSeen, &lastSeen);
-
-#ifdef DEBUG_FLOWS
-		if(debug)
-		  traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d][save=%d]",
-			     accum_len, myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB);
-#endif
 
 		tot_len += accum_len;
 		myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd++;
