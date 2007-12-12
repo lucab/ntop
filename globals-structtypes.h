@@ -960,18 +960,19 @@ typedef struct ipSession {
   HostTraffic *remotePeer;          /* remote peer address                        */
   HostAddr remotePeerRealIp;        /* Real IP address (if masqueraded and known) */
   char *virtualPeerName;            /* Name of a virtual host (e.g. HTTP virtual host) */
-  u_short dport;                    /* remote peer address (port)                       */
-  time_t firstSeen;                 /* time when the session has been initiated         */
-  time_t lastSeen;                  /* time when the session has been closed            */
+  u_short dport;                    /* remote peer address (port)               */
+  time_t firstSeen;                 /* time when the session has been initiated */
+  time_t lastSeen;                  /* time when the session has been closed    */
   u_long pktSent, pktRcvd;
-  TrafficCounter bytesSent;         /* # bytes sent (initiator -> peer) [IP]            */
+  TrafficCounter bytesSent;         /* # bytes sent (initiator -> peer) [IP]    */
   TrafficCounter bytesRcvd;         /* # bytes rcvd (peer -> initiator)[IP]     */
   TrafficCounter bytesProtoSent;    /* # bytes sent (Protocol [e.g. HTTP])      */
   TrafficCounter bytesProtoRcvd;    /* # bytes rcvd (Protocol [e.g. HTTP])      */
   TrafficCounter bytesFragmentedSent;     /* IP Fragments                       */
   TrafficCounter bytesFragmentedRcvd;     /* IP Fragments                       */
   u_int minWindow, maxWindow;       /* TCP window size                          */
-  struct timeval nwLatency;         /* Network Latency                          */
+  struct timeval synTime, synAckTime, ackTime; /* Used to calcolate nw delay */
+  struct timeval clientNwDelay, serverNwDelay; /* Network Delay/Latency         */
   u_short numFin;                   /* # FIN pkts rcvd                          */
   u_short numFinAcked;              /* # ACK pkts rcvd                          */
   u_int32_t lastAckIdI2R;           /* ID of the last ACK rcvd                  */

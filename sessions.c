@@ -320,7 +320,9 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 
   if(((sessionToPurge->bytesProtoSent.value == 0)
       || (sessionToPurge->bytesProtoRcvd.value == 0))
-     && ((sessionToPurge->nwLatency.tv_sec != 0) || (sessionToPurge->nwLatency.tv_usec != 0))
+     && ((sessionToPurge->clientNwDelay.tv_sec != 0) || (sessionToPurge->clientNwDelay.tv_usec != 0)
+	 || (sessionToPurge->serverNwDelay.tv_sec != 0) || (sessionToPurge->serverNwDelay.tv_usec != 0)
+	 )
      /*
        "Valid" TCP session used to skip faked sessions (e.g. portscans
        with one faked packet + 1 response [RST usually])
@@ -1580,8 +1582,9 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
   char tmpStr[256];
 
   if((theSession->sessionState == FLAG_STATE_ACTIVE)
-     && ((theSession->nwLatency.tv_sec != 0)
-	 || (theSession->nwLatency.tv_usec != 0))
+     && ((theSession->clientNwDelay.tv_sec != 0) || (theSession->clientNwDelay.tv_usec != 0)
+	 || (theSession->serverNwDelay.tv_sec != 0) || (theSession->serverNwDelay.tv_usec != 0)
+	 )
      ) {
     /* This session started *after* ntop started (i.e. ntop
        didn't miss the beginning of the session). If the session
@@ -1852,6 +1855,25 @@ static int portRange(int sport, int dport, int minPort, int maxPort) {
 	 || ((dport >= minPort) && (dport <= maxPort)));
 }
 
+/* ****************************************************** */
+
+static void timeval_diff(struct timeval *begin, 
+			 struct timeval *end, struct timeval *result) {
+  if(end->tv_sec >= begin->tv_sec) {
+    result->tv_sec = end->tv_sec-begin->tv_sec;
+    
+    if((end->tv_usec - begin->tv_usec) < 0) {
+      result->tv_usec = 1000000 + end->tv_usec - begin->tv_usec;
+      if(result->tv_usec > 1000000) begin->tv_usec = 1000000;
+      result->tv_sec--;
+    } else
+      result->tv_usec = end->tv_usec-begin->tv_usec;
+    
+    result->tv_sec /= 2, result->tv_usec /= 2;
+  } else
+    result->tv_sec = 0, result->tv_usec = 0;
+}
+
 /* *********************************** */
 
 static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
@@ -1963,9 +1985,40 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     addedNewEntry = 1;
 
     if(tp && (tp->th_flags == TH_SYN)) {
-      theSession->nwLatency.tv_sec = h->ts.tv_sec;
-      theSession->nwLatency.tv_usec = h->ts.tv_usec;
+      theSession->synTime.tv_sec = h->ts.tv_sec;
+      theSession->synTime.tv_usec = h->ts.tv_usec;
       theSession->sessionState = FLAG_STATE_SYN;
+    } else if(tp && (tp->th_flags == (TH_SYN | TH_ACK))) {
+      theSession->synAckTime.tv_sec = h->ts.tv_sec;
+      theSession->synAckTime.tv_usec = h->ts.tv_usec;
+      if((theSession->synTime.tv_sec != 0) && (theSession->synAckTime.tv_sec == 0)) {
+	theSession->synAckTime.tv_sec  = h->ts.tv_sec;
+	theSession->synAckTime.tv_usec = h->ts.tv_usec;
+	timeval_diff(&theSession->synTime, (struct timeval*)&h->ts, &theSession->serverNwDelay);
+	/* Sanity check */
+	if(theSession->serverNwDelay.tv_sec > 1000) {
+	  /*
+	    This value seems to be wrong so it's better to ignore it
+	    rather than showing a false/wrong/dummy value
+	  */
+	  theSession->serverNwDelay.tv_usec = theSession->serverNwDelay.tv_sec = 0;
+	}
+      }
+    } else if(tp && (tp->th_flags == TH_ACK)) {
+      theSession->ackTime.tv_sec = h->ts.tv_sec;
+      theSession->ackTime.tv_usec = h->ts.tv_usec;
+
+      if(theSession->synTime.tv_sec > 0) { 
+	timeval_diff(&theSession->synAckTime, (struct timeval*)&h->ts, &theSession->clientNwDelay);
+	/* Sanity check */
+	if(theSession->clientNwDelay.tv_sec > 1000) {
+	  /*
+	    This value seems to be wrong so it's better to ignore it
+	    rather than showing a false/wrong/dummy value
+	  */
+	  theSession->clientNwDelay.tv_usec = theSession->clientNwDelay.tv_sec = 0;
+	}
+      }
     }
 
     theSession->magic = CONST_MAGIC_NUMBER;
@@ -2289,54 +2342,17 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   if((theSession->lastFlags == (TH_SYN|TH_ACK)) && (theSession->sessionState == FLAG_STATE_SYN))  {
     theSession->sessionState = FLAG_FLAG_STATE_SYN_ACK;
   } else if((theSession->lastFlags == TH_ACK) && (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK)) {
-    if(h->ts.tv_sec >= theSession->nwLatency.tv_sec) {
-      theSession->nwLatency.tv_sec = h->ts.tv_sec-theSession->nwLatency.tv_sec;
-
-      if((h->ts.tv_usec - theSession->nwLatency.tv_usec) < 0) {
-	theSession->nwLatency.tv_usec = 1000000 + h->ts.tv_usec - theSession->nwLatency.tv_usec;
-	if(theSession->nwLatency.tv_usec > 1000000) theSession->nwLatency.tv_usec = 1000000;
-	theSession->nwLatency.tv_sec--;
-      } else
-	theSession->nwLatency.tv_usec = h->ts.tv_usec-theSession->nwLatency.tv_usec;
-
-      theSession->nwLatency.tv_sec /= 2;
-      theSession->nwLatency.tv_usec /= 2;
-
-      /* Sanity check */
-      if(theSession->nwLatency.tv_sec > 1000) {
-	/*
-	  This value seems to be wrong so it's better to ignore it
-	  rather than showing a false/wrong/dummy value
-	*/
-	theSession->nwLatency.tv_usec = theSession->nwLatency.tv_sec = 0;
-#ifdef LATENCY_DEBUG
-        traceEvent(CONST_TRACE_NOISY, "LATENCY: %s:%d->%s:%d invalid (too big), ignored",
-                   _addrtostr(&theSession->initiatorRealIp, buf, sizeof(buf)),
-                   theSession->sport,
-                   _addrtostr(&theSession->remotePeerRealIp, buf1, sizeof(buf1)),
-                   theSession->dport);
-#endif
-      } else {
-        if(0)
-	  traceEvent(CONST_TRACE_NOISY, "LATENCY: %s:%d->%s:%d is %d us",
-		     _addrtostr(&theSession->initiatorRealIp, buf, sizeof(buf)),
-		     theSession->sport,
-		     _addrtostr(&theSession->remotePeerRealIp, buf1, sizeof(buf1)),
-		     theSession->dport,
-		     (int)(theSession->nwLatency.tv_sec * 1000000 + theSession->nwLatency.tv_usec));
-      }
-
+    if(1)
+      traceEvent(CONST_TRACE_NOISY, "LATENCY: %s:%d->%s:%d [CND: %d us][SND: %d us]",
+		 _addrtostr(&theSession->initiatorRealIp, buf, sizeof(buf)),
+		 theSession->sport,
+		 _addrtostr(&theSession->remotePeerRealIp, buf1, sizeof(buf1)),
+		 theSession->dport,
+		 (int)(theSession->clientNwDelay.tv_sec * 1000000 + theSession->clientNwDelay.tv_usec),
+		 (int)(theSession->serverNwDelay.tv_sec * 1000000 + theSession->serverNwDelay.tv_usec)
+		 );
+    
       theSession->sessionState = FLAG_STATE_ACTIVE;
-    } else {
-      /* The latency value is negative. There's something wrong so let's drop it */
-      theSession->nwLatency.tv_usec = theSession->nwLatency.tv_sec = 0;
-#ifdef LATENCY_DEBUG
-      traceEvent(CONST_TRACE_NOISY, "LATENCY: %s:%d->%s:%d invalid (negative), ignored",
-                 _addrtostr(&theSession->initiatorRealIp, buf, sizeof(buf)),
-                 theSession->sport,
-                 _addrtostr(&theSession->remotePeerRealIp, buf1, sizeof(buf1)),
-                 theSession->dport);
-#endif
     }
 
     if(subnetLocalHost(srcHost)) {
@@ -2351,19 +2367,23 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 
       a = hostToUpdate->minLatency.tv_usec + 1000*hostToUpdate->minLatency.tv_sec;
       b = hostToUpdate->maxLatency.tv_usec + 1000*hostToUpdate->maxLatency.tv_sec;
-      c = theSession->nwLatency.tv_usec + 1000*theSession->nwLatency.tv_sec;
+      c = theSession->clientNwDelay.tv_usec + 1000*theSession->clientNwDelay.tv_sec
+	+ theSession->serverNwDelay.tv_usec + 1000*theSession->serverNwDelay.tv_sec;
 
       if(a > c) {
-	hostToUpdate->minLatency.tv_usec = theSession->nwLatency.tv_usec;
-	hostToUpdate->minLatency.tv_sec  = theSession->nwLatency.tv_sec;
+	hostToUpdate->minLatency.tv_sec  = theSession->clientNwDelay.tv_sec + theSession->serverNwDelay.tv_sec;
+	hostToUpdate->minLatency.tv_usec = theSession->clientNwDelay.tv_usec + theSession->serverNwDelay.tv_usec;
+	if(hostToUpdate->minLatency.tv_usec > 1000)
+	  hostToUpdate->minLatency.tv_usec -= 1000, hostToUpdate->minLatency.tv_sec++;
       }
 
       if(b < c) {
-	hostToUpdate->maxLatency.tv_usec = theSession->nwLatency.tv_usec;
-	hostToUpdate->maxLatency.tv_sec  = theSession->nwLatency.tv_sec;
+	hostToUpdate->maxLatency.tv_sec  = theSession->clientNwDelay.tv_sec + theSession->serverNwDelay.tv_sec;
+	hostToUpdate->maxLatency.tv_usec = theSession->clientNwDelay.tv_usec + theSession->serverNwDelay.tv_usec;
+	if(hostToUpdate->maxLatency.tv_usec > 1000)
+	  hostToUpdate->maxLatency.tv_usec -= 1000, hostToUpdate->maxLatency.tv_sec++;
       }
-    }
-  } else if ((addedNewEntry == 0)
+    } else if ((addedNewEntry == 0)
 	     && ((theSession->sessionState == FLAG_STATE_SYN)
 		 || (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK))
 	     && (!(theSession->lastFlags & TH_RST))) {
@@ -2373,7 +2393,8 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
       - we don't set the state to initialized
     */
 
-    theSession->nwLatency.tv_usec = theSession->nwLatency.tv_sec = 0;
+      theSession->clientNwDelay.tv_usec = theSession->clientNwDelay.tv_sec = 0;
+      theSession->serverNwDelay.tv_usec = theSession->serverNwDelay.tv_sec = 0;
 
 #ifdef LATENCY_DEBUG
     traceEvent(CONST_TRACE_NOISY, "LATENCY: (%s ->0x%x%s%s%s%s%s) %s:%d->%s:%d invalid (lost packet?), ignored",

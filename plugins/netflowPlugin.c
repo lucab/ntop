@@ -90,6 +90,7 @@ struct generic_netflow_record {
   /* Latency extensions */
   u_int32_t client_nw_latency_sec, client_nw_latency_usec;
   u_int32_t server_nw_latency_sec, server_nw_latency_usec;
+  u_int32_t appl_latency_sec, appl_latency_usec;
 
   /* VoIP Extensions */
   char sip_call_id[50], sip_calling_party[50], sip_called_party[50];
@@ -472,6 +473,7 @@ static void de_endianFlow(struct generic_netflow_record *record) {
   NTOHS(record->vlanId);
   NTOHL(record->client_nw_latency_sec); NTOHL(record->client_nw_latency_usec);
   NTOHL(record->server_nw_latency_sec); NTOHL(record->server_nw_latency_usec);
+  NTOHL(record->appl_latency_sec); NTOHL(record->appl_latency_usec);
 }
 
 /* *************************** */
@@ -1059,15 +1061,8 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
     session->lastSeen = recordActTime;
 
-    if(record->client_nw_latency_sec || record->client_nw_latency_usec
-       || record->server_nw_latency_sec || record->server_nw_latency_usec) {
-      session->nwLatency.tv_sec = record->client_nw_latency_sec+record->server_nw_latency_sec;
-      session->nwLatency.tv_usec = record->client_nw_latency_usec+record->server_nw_latency_usec;
-      if(session->nwLatency.tv_usec > 1000) {
-	session->nwLatency.tv_usec -= 1000;
-	session->nwLatency.tv_sec  += 1;
-      }
-    }
+    session->clientNwDelay.tv_sec = record->client_nw_latency_sec, session->clientNwDelay.tv_usec = record->client_nw_latency_usec;
+    session->serverNwDelay.tv_sec = record->server_nw_latency_sec, session->serverNwDelay.tv_usec = record->server_nw_latency_usec;
   }
 
   /* releaseMutex(&myGlobals.hostsHashMutex); */
@@ -1490,6 +1485,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	      /* Defaults */
 	      record.client_nw_latency_sec = record.client_nw_latency_usec = htonl(0);
 	      record.server_nw_latency_sec = record.server_nw_latency_usec = htonl(0);
+	      record.appl_latency_sec = record.appl_latency_usec = htonl(0);
 
 #ifdef DEBUG_FLOWS
 	      if(debug)
@@ -1602,6 +1598,12 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		  break;
 		case 85: /* SERVER_NW_LATENCY_USEC */
 		  memcpy(&record.server_nw_latency_usec, &buffer[displ], 4);
+		  break;
+		case 86: /* APPL_LATENCY_SEC */
+		  memcpy(&record.appl_latency_sec, &buffer[displ], 4);
+		  break;
+		case 87: /* APPL_LATENCY_USEC */
+		  memcpy(&record.appl_latency_usec, &buffer[displ], 4);
 		  break;
 
 		  /* VoIP Extensions */

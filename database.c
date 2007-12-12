@@ -242,7 +242,8 @@ static int init_database(char *db_host, char* user, char *pw, char *db_name) {
 		"`bytesRcvd` int(11) NOT NULL default '0',"
 		"`firstSeen` int(11) NOT NULL default '0',"
 		"`lastSeen` int(11) NOT NULL default '0',"
-		"`nwLatency` float(6,2) NOT NULL default '0.00',"
+		"`clientNwDelay` float(6,2) NOT NULL default '0.00',"
+		"`serverNwDelay` float(6,2) NOT NULL default '0.00',"
 		"`isP2P` smallint(1) NOT NULL default '0',"
 		"`isVoIP` smallint(1) NOT NULL default '0',"
 		"`isPassiveFtp` smallint(1) NOT NULL default '0',"
@@ -285,24 +286,24 @@ int dump_session_to_db(IPSession *sess) {
   if((!mysql_initialized) || (sess == NULL)) {
     return(-2);
   } else {
-    char sql[1024], tmp[32] = { 0 };
+    char sql[1024], clientNwDelay[32] = { 0 }, serverNwDelay[32] = { 0 };
 
     if((sess->lastFlags == 0) || (sess->nwLatency.tv_sec > 100))
       tmp[0] = '\0';
     else {
       int len;
 
-      formatLatency(sess->nwLatency, sess->sessionState, tmp, sizeof(tmp));
-
-      len = strlen(tmp);
-
-      if(len > 8) tmp[len-8] = '\0';
+      formatLatency(sess->clientNwDelay, sess->sessionState, clientNwDelay, sizeof(clientNwDelay));
+      len = strlen(clientNwDelay); if(len > 8) clientNwDelay[len-8] = '\0';
+      formatLatency(sess->serverNwDelay, sess->sessionState, serverNwDelay, sizeof(serverNwDelay));
+      len = strlen(serverNwDelay); if(len > 8) serverNwDelay[len-8] = '\0';
     }
 
     safe_snprintf(__FILE__, __LINE__, sql, sizeof(sql),
 		  "INSERT INTO sessions (proto, src, dst, sport, dport,"
 		  "pktSent, pktRcvd, bytesSent, bytesRcvd, firstSeen, lastSeen, "
-		  "nwLatency, isP2P, isVoIP, isPassiveFtp, info, guessedProto) VALUES "
+		  "clientNwDelay, serverNwDelay, isP2P, isVoIP, "
+		  "isPassiveFtp, info, guessedProto) VALUES "
 		  "('%d', '%s', '%s',  '%d', '%d', "
 		  " '%lu', '%lu', '%lu', '%lu', '%lu', '%lu', "
 		  " '%s',  '%d',  '%d',  '%d',  '%s',  '%s')",
@@ -310,8 +311,9 @@ int dump_session_to_db(IPSession *sess) {
 		  sess->initiator->hostNumIpAddress,
 		  sess->remotePeer->hostNumIpAddress, sess->sport, sess->dport,
 		  sess->pktSent, sess->pktRcvd, (unsigned long)sess->bytesSent.value,
-		  (unsigned long)sess->bytesRcvd.value, (unsigned long)sess->firstSeen, (unsigned long)sess->lastSeen,
-		  tmp, sess->isP2P, sess->voipSession, sess->passiveFtpSession,
+		  (unsigned long)sess->bytesRcvd.value, (unsigned long)sess->firstSeen,
+		  (unsigned long)sess->lastSeen,
+		  clientNwDelay, serverNwDelay, sess->isP2P, sess->voipSession, sess->passiveFtpSession,
 		  (sess->session_info == NULL) ? "" : sess->session_info,
 		  (sess->guessed_protocol == NULL) ? "" : sess->guessed_protocol);
 

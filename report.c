@@ -3756,7 +3756,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     hostLinkBuf1[2*LEN_GENERAL_WORK_BUFFER], *voipStr;
   int numSessions, printedSessions;
   char formatBuf[64], formatBuf1[64], formatBuf2[64], formatBuf3[64],
-    formatBuf4[64], formatBuf5[64], formatBuf6[64];
+    formatBuf4[64], formatBuf5[64], formatBuf6[64], formatBuf7[64];
 
   if(!myGlobals.runningPref.enableSessionHandling) {
     if(el != NULL) return;
@@ -3810,13 +3810,10 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	}
 
 	if(printedSessions == 0) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d Active TCP/UDP Sessions",
-			myGlobals.device[actualDeviceId].numTcpSessions);
-
 	  if(el == NULL)
-	    printHTMLheader(buf, NULL, 0);
+	    printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
 	  else
-	    printSectionTitle(buf);
+	    printSectionTitle("Active TCP/UDP Sessions");
 
 	  sendString("<CENTER>\n"
 		     ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
@@ -3828,7 +3825,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		     "<TH "TH_BG">Last&nbsp;Seen</TH>"
 		     "<TH "TH_BG">Duration</TH>"
 		     "<TH "TH_BG">Inactive</TH>"
-		     "<TH "TH_BG">Latency</TH>"
+		     "<TH "TH_BG" COLSPAN=2>Network RTT/Delay</TH>"
 		     "<TH "TH_BG">L7 Proto</TH>"
 		     "<TH "TH_BG">Note</TH>");
 #ifdef PARM_PRINT_ALL_SESSIONS
@@ -3892,7 +3889,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>Client %s</TD><TD "TD_BG" ALIGN=RIGHT NOWRAP>Server %s</TD>"
 		      "<TD "TD_BG" ALIGN=CENTER NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=LEFT NOWRAP>%s</TD>",
 		      formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),
@@ -3901,10 +3898,10 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      formatTime(&(session->lastSeen), formatBuf3, sizeof(formatBuf3)),
 		      formatSeconds(session->lastSeen-session->firstSeen, formatBuf4, sizeof(formatBuf4)),
 		      formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
-		      formatLatency(session->nwLatency, session->sessionState, formatBuf6, sizeof(formatBuf6)),
+		      formatLatency(session->clientNwDelay, session->sessionState, formatBuf6, sizeof(formatBuf6)),
+		      formatLatency(session->serverNwDelay, session->sessionState, formatBuf7, sizeof(formatBuf7)),
 		      (session->guessed_protocol == NULL) ? "&nbsp;" : session->guessed_protocol,
-		      session->session_info ? session->session_info :
-		      print_flags(session, flags_buf, sizeof(flags_buf)) /* "&nbsp;" */);
+		      session->session_info ? session->session_info : print_flags(session, flags_buf, sizeof(flags_buf)) /* "&nbsp;" */);
 	sendString(buf);
 
 #ifdef PARM_PRINT_ALL_SESSIONS
