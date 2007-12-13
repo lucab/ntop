@@ -194,7 +194,13 @@ void detachFromTerminalUnderUnix(int doChdir) {
     myGlobals.runningPref.useSyslog = DEFAULT_SYSLOG_FACILITY;
 #endif /* MAKE_WITH_SYSLOG */
 
-  if(doChdir) (void)chdir("/");
+  if(doChdir) {
+    int ret = chdir("/");
+
+    if(ret != 0)
+      traceEvent(CONST_TRACE_WARNING, "Chdir(/) failed");
+  }
+
   setsid();  /* detach from the terminal */
 
   fclose(stdin);

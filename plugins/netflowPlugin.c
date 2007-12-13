@@ -478,6 +478,12 @@ static void de_endianFlow(struct generic_netflow_record *record) {
 
 /* *************************** */
 
+inline int is_zero_timeval(struct timeval *tv) {
+  return(((tv->tv_sec == 0) && (tv->tv_usec == 0)) ? 1 : 0);
+}
+
+/* *************************** */
+
 static int handleGenericFlow(u_int32_t netflow_device_ip,
 			     time_t recordActTime, time_t recordSysUpTime,
 			     struct generic_netflow_record *record,
@@ -1055,14 +1061,26 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 		 dstHost->hostNumIpAddress, dport,
 		 timeDiff, recordActTime, (*lastSeen - *firstSeen));
 #endif
-
-    if(session->firstSeen > timeDiff)
-      session->firstSeen = timeDiff;
-
-    session->lastSeen = recordActTime;
-
-    session->clientNwDelay.tv_sec = record->client_nw_latency_sec, session->clientNwDelay.tv_usec = record->client_nw_latency_usec;
-    session->serverNwDelay.tv_sec = record->server_nw_latency_sec, session->serverNwDelay.tv_usec = record->server_nw_latency_usec;
+    
+    if(
+       ((record->client_nw_latency_sec > 0)
+	|| (record->client_nw_latency_usec > 0)
+	|| (record->server_nw_latency_sec > 0)
+	|| (record->server_nw_latency_usec > 0))
+       /* Avoid to update twice */
+       && is_zero_timeval(&session->clientNwDelay)
+       && is_zero_timeval(&session->serverNwDelay)
+       && is_zero_timeval(&session->synAckTime)
+       ) {
+      gettimeofday(&session->synAckTime, NULL);
+      memcpy(&session->synTime, &session->synAckTime, sizeof(struct timeval));
+      memcpy(&session->ackTime, &session->synAckTime, sizeof(struct timeval));
+      session->clientNwDelay.tv_sec = record->client_nw_latency_sec,
+	session->clientNwDelay.tv_usec = record->client_nw_latency_usec;
+      session->serverNwDelay.tv_sec = record->server_nw_latency_sec,
+	session->serverNwDelay.tv_usec = record->server_nw_latency_usec;
+      updateSessionDelayStats(session);
+    }
   }
 
   /* releaseMutex(&myGlobals.hostsHashMutex); */

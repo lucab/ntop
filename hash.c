@@ -466,7 +466,8 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   if(host->icmpInfo != NULL) free(host->icmpInfo);
   if(host->trafficDistribution != NULL) free(host->trafficDistribution);
-
+  if(host->clientDelay != NULL) free(host->clientDelay);
+  if(host->serverDelay != NULL) free(host->serverDelay);
   if(host->dnsDomainValue != NULL) free(host->dnsDomainValue);
   host->dnsDomainValue = NULL;
   if(host->dnsTLDValue != NULL) free(host->dnsTLDValue);

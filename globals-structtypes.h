@@ -809,9 +809,14 @@ typedef struct fcScsiCounters {
 
 /* **************************** */
 
+typedef struct networkDelay {
+  struct timeval when, nw_delay;
+} NetworkDelay;
+
+/* **************************** */
+
 #define hostIp4Address hostIpAddress.Ip4Address
 #define hostIp6Address hostIpAddress.Ip6Address
-
 
 /* Host Traffic */
 typedef struct hostTraffic {
@@ -873,6 +878,9 @@ typedef struct hostTraffic {
 
   /* IP */
   PortUsage        *portsUsage; /* 0...MAX_ASSIGNED_IP_PORTS */
+
+  /* NetworkDelay Stats */
+  NetworkDelay *clientDelay /* 0..MAX_NUM_NET_DELAY_STATS-1 */, *serverDelay /* 0 ..MAX_NUM_NET_DELAY_STATS-1 */;
 
   /* Don't change the recentl... to unsigned ! */
   int              recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS], recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS];

@@ -612,6 +612,9 @@
 /* Maximum number of queued addresses waiting to be resolved */
 #define MAX_NUM_QUEUED_ADDRESSES          16384
 
+/* Maximum length of network delay statistics */
+#define MAX_NUM_NET_DELAY_STATS              16
+
 /*
  * Number of (optional) "AR - Address Resolution" threads,
  *    i.e. dequeueAddressThreadId[] and numDequeueThreads in myGlobals.
@@ -2005,7 +2008,7 @@
  * Flags for sessionState in typedef struct ipSession {}
  */
 #define FLAG_STATE_SYN                      0
-#define FLAG_FLAG_STATE_SYN_ACK             1
+#define FLAG_STATE_SYN_ACK                  1
 #define FLAG_STATE_ACK                      2
 #define FLAG_STATE_ACTIVE                   FLAG_STATE_ACK
 #define FLAG_STATE_BEGIN                    FLAG_STATE_ACTIVE

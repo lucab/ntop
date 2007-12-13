@@ -3072,6 +3072,32 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
 /* ************************************ */
 
+static void printHostNwDelay(NetworkDelay *delay) {
+  int i;
+  
+  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
+	     "<TH "TH_BG">Time</TH><TH "TH_BG">Delay (ms)</TH></TR>\n");
+
+  for(i=0; i<MAX_NUM_NET_DELAY_STATS; i++) {
+    char buf[512];
+    time_t when;
+    float f;
+    
+    if(delay[i].when.tv_sec == 0) break;
+
+    when = delay[i].when.tv_sec;
+    f = delay[i].nw_delay.tv_sec * 1000 + ((float)delay[i].nw_delay.tv_usec)/1000;
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<TR "TR_ON" %s><TD "TD_BG">%s</TH><TH "TH_BG">%.02f</TH></TR>\n",
+		  getRowColor(), ctime(&when), f);
+    sendString(buf);
+  }
+
+  sendString("</TABLE>"TABLE_OFF"<P>\n");
+}
+
+/* ************************************ */
+
 void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 			  int revertOrder, int pageNum, char *url,
 			  int hostInfoPage) {
@@ -3224,10 +3250,12 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 	}
 
 	if(svc != NULL) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+			"<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 			"<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), svc, idx);
 	} else {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%d</TH>"
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%d</TH>"
 			"<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), idx, idx);
 	}
 
@@ -3407,6 +3435,30 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     }
 
     sendString("\n</ol></TD></TR></TABLE></CENTER>\n");
+  }
+
+  /* *************************************************** */
+  
+  if(el->clientDelay || el ->serverDelay) {
+    printSectionTitle("Recent Sessions: Network Delay");
+    
+    sendString("<P>\n<CENTER>\n");
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
+	       "<TH "TH_BG" NOWRAP>Client</TH><TH "TH_BG" NOWRAP>Server</TH></TR>\n");
+    sendString("<TR><TD ALIGN=CENTER VALIGN=TOP>");
+
+    if(el->clientDelay)
+      printHostNwDelay(el->clientDelay);
+    else
+      sendString("&nbsp;");
+
+    sendString("</TD><TD ALIGN=CENTER VALIGN=TOP>");
+ 
+    if(el->serverDelay)
+      printHostNwDelay(el->serverDelay);
+    else
+      sendString("&nbsp;");
+    sendString("</TD></TR>\n</TABLE></CENTER>\n<P>\n");
   }
 
   /* *************************************************** */
@@ -3825,7 +3877,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		     "<TH "TH_BG">Last&nbsp;Seen</TH>"
 		     "<TH "TH_BG">Duration</TH>"
 		     "<TH "TH_BG">Inactive</TH>"
-		     "<TH "TH_BG" COLSPAN=2>Network RTT/Delay</TH>"
+		     "<TH "TH_BG" COLSPAN=2>Client/Server Network Delay</TH>"
 		     "<TH "TH_BG">L7 Proto</TH>"
 		     "<TH "TH_BG">Note</TH>");
 #ifdef PARM_PRINT_ALL_SESSIONS
@@ -3889,7 +3941,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>Client %s</TD><TD "TD_BG" ALIGN=RIGHT NOWRAP>Server %s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD><TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=CENTER NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=LEFT NOWRAP>%s</TD>",
 		      formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),

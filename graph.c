@@ -38,37 +38,37 @@ struct bar_elements {
 /* ******************************************************************* */
 
 static void send_graph_header(u_char is_pie) {
-sendString("<HTML>\n"
-"<HEAD>\n"
-"<META HTTP-EQUIV=REFRESH CONTENT=30>\n"
-"<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n"
-"<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n"
-"<script type=\"text/javascript\" src=\"/MochiKit/MochiKit.js\"></script>\n"
-"<script type=\"text/javascript\" src=\"/PlotKit/excanvas.js\"></script>\n"
-"<script type=\"text/javascript\" src=\"/PlotKit/Base.js\"></script>\n"
-"<script type=\"text/javascript\" src=\"/PlotKit/Layout.js\"></script>\n"
-"<script type=\"text/javascript\" src=\"/PlotKit/Canvas.js\"></script>\n"
-"<script type=\"text/javascript\" src=\"/PlotKit/SweetCanvas.js\"></script>\n"
-"<script type=\"text/javascript\" src=\"/PlotKit/EasyPlot.js\"></script>\n"
-"<style type=\"text/css\">\n"
-"body {\n"
-	   "font-family: \"Lucida Grande\", \"Tahoma\", \"Verdana\", \"Sans\", \"sans-serif\";\n"
-	   "font-size: 12px;\n"
-"}\n"
-"</style>\n"
-"<script type=\"text/javascript\">\n"
-"//<![CDATA[\n"
-"function drawchart() {\n"
-"   var hasCanvas = CanvasRenderer.isSupported();\n"
-"\n"
-"   var opts = {\n"
-);
-
-if(is_pie) sendString("   \"pieRadius\": 0.42,	  \n");
-
- sendString("    \"colorScheme\": PlotKit.Base.palette(PlotKit.Base.baseColors()[0]),\n");
- if(is_pie) sendString("   \"backgroundColor\": PlotKit.Base.baseColors()[0].lighterColorWithLevel(1),\n" );
- sendString("   \"xTicks\": [");
+  sendString("<HTML>\n"
+	     "<HEAD>\n"
+	     "<META HTTP-EQUIV=REFRESH CONTENT=30>\n"
+	     "<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n"
+	     "<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n"
+	     "<script type=\"text/javascript\" src=\"/MochiKit/MochiKit.js\"></script>\n"
+	     "<script type=\"text/javascript\" src=\"/PlotKit/excanvas.js\"></script>\n"
+	     "<script type=\"text/javascript\" src=\"/PlotKit/Base.js\"></script>\n"
+	     "<script type=\"text/javascript\" src=\"/PlotKit/Layout.js\"></script>\n"
+	     "<script type=\"text/javascript\" src=\"/PlotKit/Canvas.js\"></script>\n"
+	     "<script type=\"text/javascript\" src=\"/PlotKit/SweetCanvas.js\"></script>\n"
+	     "<script type=\"text/javascript\" src=\"/PlotKit/EasyPlot.js\"></script>\n"
+	     "<style type=\"text/css\">\n"
+	     "body {\n"
+	     "font-family: \"Lucida Grande\", \"Tahoma\", \"Verdana\", \"Sans\", \"sans-serif\";\n"
+	     "font-size: 12px;\n"
+	     "}\n"
+	     "</style>\n"
+	     "<script type=\"text/javascript\">\n"
+	     "//<![CDATA[\n"
+	     "function drawchart() {\n"
+	     "   var hasCanvas = CanvasRenderer.isSupported();\n"
+	     "\n"
+	     "   var opts = {\n"
+	     );
+  
+  if(is_pie) sendString("   \"pieRadius\": 0.42,	  \n");
+  
+  sendString("    \"colorScheme\": PlotKit.Base.palette(PlotKit.Base.baseColors()[0]),\n");
+  if(is_pie) sendString("   \"backgroundColor\": PlotKit.Base.baseColors()[0].lighterColorWithLevel(1),\n" );
+  sendString("   \"xTicks\": [");
 }
  
 /**********************************************************/

@@ -23,7 +23,7 @@
 
 #include "ntop.h"
 
-/* #define SESSION_TRACE_DEBUG 1 */
+/* #define SESSION_TRACE_DEBUG 1  */
 
 #define tcp_flags(a, b) ((a & (b)) == (b))
 
@@ -1666,16 +1666,17 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
   /*
    * Security checks based on TCP Flags
    */
-  if((tp->th_flags == TH_ACK) && (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK)) {
+  if((tp->th_flags == TH_ACK) && (theSession->sessionState == FLAG_STATE_SYN_ACK)) {
     allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
     incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent, dstHost, actualDeviceId);
     incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd, srcHost, actualDeviceId);
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.establishedTCPConn, 1);
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
+    theSession->sessionState = FLAG_STATE_ACTIVE;
   }
   else if ((addedNewEntry == 0)
 	   && ((theSession->sessionState == FLAG_STATE_SYN)
-	       || (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK))
+	       || (theSession->sessionState == FLAG_STATE_SYN_ACK))
 	   && (!(tp->th_flags & TH_RST))) {
     allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
     if(sport > dport) {
@@ -1876,6 +1877,58 @@ static void timeval_diff(struct timeval *begin,
 
 /* *********************************** */
 
+static void updateNetworkDelay(NetworkDelay *delayStats,
+			       struct timeval *delay,
+			       struct timeval *when) {
+  int i;
+
+  if((when->tv_sec == 0) && (when->tv_usec == 0)) gettimeofday(when, NULL);
+  if(memcmp(when, &delayStats[0].when, sizeof(struct timeval)) == 0) return;
+
+ /* Shift data */
+  for(i=MAX_NUM_NET_DELAY_STATS-1; i>0; i--) {
+    memcpy(&delayStats[i], &delayStats[i-1], sizeof(NetworkDelay));
+  }
+
+  memcpy(&delayStats[0].when,     when, sizeof(struct timeval));
+  memcpy(&delayStats[0].nw_delay, delay, sizeof(struct timeval));
+}
+
+/* *********************************** */
+
+void updateSessionDelayStats(IPSession* session) {
+  /* traceEvent(CONST_TRACE_WARNING, "----------> updateSessionDelayStats()");  */
+
+  if((session->clientNwDelay.tv_sec > 0) || (session->clientNwDelay.tv_usec > 0)) {
+    if(session->initiator->clientDelay == NULL) 
+      session->initiator->clientDelay = (NetworkDelay*)calloc(sizeof(NetworkDelay), MAX_NUM_NET_DELAY_STATS);
+
+    if(session->initiator->clientDelay == NULL) {
+      traceEvent(CONST_TRACE_ERROR, "Sanity check failed [Low memory?]");
+      return;
+    }
+
+    updateNetworkDelay(session->initiator->clientDelay, 
+		       &session->clientNwDelay,
+		       &session->synAckTime);
+  }
+  
+  if((session->serverNwDelay.tv_sec > 0) || (session->serverNwDelay.tv_usec > 0)) {
+    if(session->remotePeer->serverDelay == NULL) 
+      session->remotePeer->serverDelay = (NetworkDelay*)calloc(sizeof(NetworkDelay), MAX_NUM_NET_DELAY_STATS);
+    if(session->remotePeer->serverDelay == NULL) {
+      traceEvent(CONST_TRACE_ERROR, "Sanity check failed [Low memory?]");
+      return;
+    }
+
+    updateNetworkDelay(session->remotePeer->serverDelay, 
+		       &session->serverNwDelay,
+		       &session->ackTime);
+  }
+}
+
+/* *********************************** */
+
 static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
                                    u_short fragmentedData, u_int tcpWin,
                                    HostTraffic *srcHost, u_short sport,
@@ -1905,6 +1958,15 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   accessMutex(&myGlobals.tcpSessionsMutex[mutex_idx], "handleTCPSession");
   prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
 
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "handleTCPSession [%s%s%s%s%s]",
+	     (tp->th_flags & TH_SYN) ? " SYN" : "",
+	     (tp->th_flags & TH_ACK) ? " ACK" : "",
+	     (tp->th_flags & TH_FIN) ? " FIN" : "",
+	     (tp->th_flags & TH_RST) ? " RST" : "",
+	     (tp->th_flags & TH_PUSH) ? " PUSH" : "");
+#endif
+  
   while(theSession != NULL) {
     if(theSession && (theSession->next == theSession)) {
       traceEvent(CONST_TRACE_WARNING, "Internal Error (4) (idx=%d)", idx);
@@ -1988,38 +2050,8 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
       theSession->synTime.tv_sec = h->ts.tv_sec;
       theSession->synTime.tv_usec = h->ts.tv_usec;
       theSession->sessionState = FLAG_STATE_SYN;
-    } else if(tp && (tp->th_flags == (TH_SYN | TH_ACK))) {
-      theSession->synAckTime.tv_sec = h->ts.tv_sec;
-      theSession->synAckTime.tv_usec = h->ts.tv_usec;
-      if((theSession->synTime.tv_sec != 0) && (theSession->synAckTime.tv_sec == 0)) {
-	theSession->synAckTime.tv_sec  = h->ts.tv_sec;
-	theSession->synAckTime.tv_usec = h->ts.tv_usec;
-	timeval_diff(&theSession->synTime, (struct timeval*)&h->ts, &theSession->serverNwDelay);
-	/* Sanity check */
-	if(theSession->serverNwDelay.tv_sec > 1000) {
-	  /*
-	    This value seems to be wrong so it's better to ignore it
-	    rather than showing a false/wrong/dummy value
-	  */
-	  theSession->serverNwDelay.tv_usec = theSession->serverNwDelay.tv_sec = 0;
-	}
-      }
-    } else if(tp && (tp->th_flags == TH_ACK)) {
-      theSession->ackTime.tv_sec = h->ts.tv_sec;
-      theSession->ackTime.tv_usec = h->ts.tv_usec;
-
-      if(theSession->synTime.tv_sec > 0) { 
-	timeval_diff(&theSession->synAckTime, (struct timeval*)&h->ts, &theSession->clientNwDelay);
-	/* Sanity check */
-	if(theSession->clientNwDelay.tv_sec > 1000) {
-	  /*
-	    This value seems to be wrong so it's better to ignore it
-	    rather than showing a false/wrong/dummy value
-	  */
-	  theSession->clientNwDelay.tv_usec = theSession->clientNwDelay.tv_sec = 0;
-	}
-      }
-    }
+      /* traceEvent(CONST_TRACE_ERROR, "DEBUG: SYN [%d.%d]", h->ts.tv_sec, h->ts.tv_usec); */
+    } 
 
     theSession->magic = CONST_MAGIC_NUMBER;
 
@@ -2057,6 +2089,55 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     theSession->firstSeen = myGlobals.actTime;
     flowDirection = FLAG_CLIENT_TO_SERVER;
   } /* End of new session branch */
+
+  /* traceEvent(CONST_TRACE_ERROR, "--> DEBUG: [state=%d][flags=%d]", theSession->sessionState, tp->th_flags); */
+  if(tp 
+     && (theSession->sessionState == FLAG_STATE_SYN)
+     && (tp->th_flags == (TH_SYN | TH_ACK))) {
+      theSession->synAckTime.tv_sec  = h->ts.tv_sec;
+      theSession->synAckTime.tv_usec = h->ts.tv_usec;
+      timeval_diff(&theSession->synTime, (struct timeval*)&h->ts, &theSession->serverNwDelay);
+      /* Sanity check */
+      if(theSession->serverNwDelay.tv_sec > 1000) {
+	/*
+	  This value seems to be wrong so it's better to ignore it
+	  rather than showing a false/wrong/dummy value
+	*/
+	theSession->serverNwDelay.tv_usec = theSession->serverNwDelay.tv_sec = 0;
+      }
+    
+    theSession->sessionState = FLAG_STATE_SYN_ACK;
+    /* traceEvent(CONST_TRACE_ERROR, "DEBUG: SYN_ACK [%d.%d]", h->ts.tv_sec, h->ts.tv_usec); */
+  } else if(tp 
+	    && (theSession->sessionState == FLAG_STATE_SYN_ACK)
+	    && (tp->th_flags == TH_ACK)) {
+    theSession->ackTime.tv_sec = h->ts.tv_sec;
+    theSession->ackTime.tv_usec = h->ts.tv_usec;
+    
+    /* traceEvent(CONST_TRACE_ERROR, "DEBUG: ACK [%d.%d]", h->ts.tv_sec, h->ts.tv_usec); */
+
+    if(theSession->synTime.tv_sec > 0) { 
+      timeval_diff(&theSession->synAckTime, (struct timeval*)&h->ts, &theSession->clientNwDelay);
+      /* Sanity check */
+      if(theSession->clientNwDelay.tv_sec > 1000) {
+	/*
+	  This value seems to be wrong so it's better to ignore it
+	  rather than showing a false/wrong/dummy value
+	*/
+	theSession->clientNwDelay.tv_usec = theSession->clientNwDelay.tv_sec = 0;
+      }
+      
+      updateSessionDelayStats(theSession);
+    }
+
+    /*
+    traceEvent(CONST_TRACE_ERROR, "DEBUG: ** FLAG_STATE_ACTIVE ** [client=%d.%d][server=%d.%d]",
+	       theSession->clientNwDelay.tv_sec, theSession->clientNwDelay.tv_usec,
+	       theSession->serverNwDelay.tv_sec, theSession->serverNwDelay.tv_usec);
+    */
+       
+    theSession->sessionState = FLAG_STATE_ACTIVE;
+  }
 
   if(tp)
     theSession->lastFlags |= tp->th_flags;
@@ -2335,13 +2416,9 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   if((theSession->maxWindow < tcpWin) || (theSession->maxWindow == 0))
     theSession->maxWindow = tcpWin;
 
-#ifdef DEBUG
-  printf("DEBUG: sessionsState=%d\n", theSession->sessionState);
-#endif
-
   if((theSession->lastFlags == (TH_SYN|TH_ACK)) && (theSession->sessionState == FLAG_STATE_SYN))  {
-    theSession->sessionState = FLAG_FLAG_STATE_SYN_ACK;
-  } else if((theSession->lastFlags == TH_ACK) && (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK)) {
+    theSession->sessionState = FLAG_STATE_SYN_ACK;
+  } else if((theSession->lastFlags == TH_ACK) && (theSession->sessionState == FLAG_STATE_SYN_ACK)) {
     if(1)
       traceEvent(CONST_TRACE_NOISY, "LATENCY: %s:%d->%s:%d [CND: %d us][SND: %d us]",
 		 _addrtostr(&theSession->initiatorRealIp, buf, sizeof(buf)),
@@ -2352,9 +2429,13 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 		 (int)(theSession->serverNwDelay.tv_sec * 1000000 + theSession->serverNwDelay.tv_usec)
 		 );
     
-      theSession->sessionState = FLAG_STATE_ACTIVE;
-    }
+    theSession->sessionState = FLAG_STATE_ACTIVE;
+  }
 
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_WARNING, "DEBUG: sessionsState=%d\n", theSession->sessionState);
+#endif
+	    
     if(subnetLocalHost(srcHost)) {
       hostToUpdate = dstHost;
     } else if(subnetLocalHost(dstHost)) {
@@ -2385,7 +2466,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
       }
     } else if ((addedNewEntry == 0)
 	     && ((theSession->sessionState == FLAG_STATE_SYN)
-		 || (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK))
+		 || (theSession->sessionState == FLAG_STATE_SYN_ACK))
 	     && (!(theSession->lastFlags & TH_RST))) {
     /*
       We might have lost a packet so:
@@ -2393,8 +2474,10 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
       - we don't set the state to initialized
     */
 
+      /*
       theSession->clientNwDelay.tv_usec = theSession->clientNwDelay.tv_sec = 0;
       theSession->serverNwDelay.tv_usec = theSession->serverNwDelay.tv_sec = 0;
+      */
 
 #ifdef LATENCY_DEBUG
     traceEvent(CONST_TRACE_NOISY, "LATENCY: (%s ->0x%x%s%s%s%s%s) %s:%d->%s:%d invalid (lost packet?), ignored",
@@ -2581,11 +2664,11 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 
   if((theSession->sessionState == FLAG_STATE_FIN2_ACK2)
      || (theSession->lastFlags & TH_RST)) /* abortive release */ {
-    if(theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK) {
+    if(theSession->sessionState == FLAG_STATE_SYN_ACK) {
       /*
 	Rcvd RST packet before to complete the 3-way handshake.
 	Note that the message is emitted only of the reset is received
-	while in FLAG_FLAG_STATE_SYN_ACK. In fact if it has been received in
+	while in FLAG_STATE_SYN_ACK. In fact if it has been received in
 	FLAG_STATE_SYN this message has not to be emitted because this is
 	a rejected session.
       */
@@ -2717,7 +2800,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 #ifdef SESSION_TRACE_DEBUG
   {
     char buf[32], buf1[32];
-
+    
     traceEvent(CONST_TRACE_INFO, "DEBUG: [%s] %s:%d -> %s:%d",
 	       sessionType == IPPROTO_UDP ? "UDP" : "TCP",
 	       _addrtostr(&srcHost->hostIpAddress, buf, sizeof(buf)), sport,
@@ -2755,15 +2838,6 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 	  ended into the same flow. In this case it will not be added as it will be
 	  immediately purged
 	*/
-#ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "Handled session [%s%s%s%s%s]",
-		   (tp->th_flags & TH_SYN) ? " SYN" : "",
-		   (tp->th_flags & TH_ACK) ? " ACK" : "",
-		   (tp->th_flags & TH_FIN) ? " FIN" : "",
-		   (tp->th_flags & TH_RST) ? " RST" : "",
-		   (tp->th_flags & TH_PUSH) ? " PUSH" : "");
-#endif
-
 	theSession = handleTCPSession(h, fragmentedData, tcpWin, srcHost, sport,
 				      dstHost, dport, sent_length, rcvd_length,
 				      tp, packetDataLength,

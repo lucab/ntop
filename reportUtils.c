@@ -3165,7 +3165,7 @@ char *getSessionState(IPSession *session) {
   switch (session->sessionState) {
   case FLAG_STATE_SYN:
     return("Sent&nbsp;Syn");
-  case FLAG_FLAG_STATE_SYN_ACK:
+  case FLAG_STATE_SYN_ACK:
     return("Rcvd&nbsp;Syn/Ack");
   case FLAG_STATE_ACTIVE:
     return("Active");
