@@ -874,7 +874,8 @@ static void processSSI(const char *ssiRequest) {
     ssiPARMstart[0] = '\0';
     ssiPARMstart++;
 #ifdef HTTP_DEBUG
-    traceEvent(CONST_TRACE_INFO, "HTTP_DEBUG: SSI: Adjusted URI = '%s' PARM = '%s'", ssiURIstart, ssiPARMstart);
+    traceEvent(CONST_TRACE_INFO, "HTTP_DEBUG: SSI: Adjusted URI = '%s' PARM = '%s'",
+	       ssiURIstart, ssiPARMstart);
   } else {
     traceEvent(CONST_TRACE_INFO, "HTTP_DEBUG: SSI: Adjusted URI = '%s'", ssiURIstart);
 #endif
@@ -938,15 +939,12 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
     return;
 
   if((allowSSI == 1) && ((ssiStart = strstr(theString, "<!--#include")) != NULL)) {
-
 #ifdef HTTP_DEBUG
     traceEvent(CONST_TRACE_INFO, "HTTP_DEBUG: SSI: Found <!--#include");
 #endif
 
     if((ssiEnd = strstr(ssiStart, "-->")) != NULL) {
-
       ssiEnd = &ssiEnd[strlen("-->")];
-
       /*
        * If we've found an SSI, we need to process the thirds -
        * before, the SSI itself and after. Either end can be empty.
@@ -1001,9 +999,11 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
     if(compressFile) {
       if(compressFileFd == NULL) {
 #ifdef WIN32
-	safe_snprintf(__FILE__, __LINE__, compressedFilePath, sizeof(compressedFilePath), "gzip-%d.ntop", fileSerial++);
+	safe_snprintf(__FILE__, __LINE__, compressedFilePath, sizeof(compressedFilePath), 
+		      "gzip-%d.ntop", fileSerial++);
 #else
-	safe_snprintf(__FILE__, __LINE__, compressedFilePath, sizeof(compressedFilePath), "/tmp/ntop-gzip-%d", getpid());
+	safe_snprintf(__FILE__, __LINE__, compressedFilePath, sizeof(compressedFilePath), 
+		      "/tmp/ntop-gzip-%d", getpid());
 #endif
 
 	compressFileFd = gzopen(compressedFilePath, "wb");
@@ -1117,7 +1117,9 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
     sendString("<!-- w3c requires --><title>ntop page</title>\n");
 
   if((headerFlags & BITFLAG_HTML_NO_REFRESH) == 0) {
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<META HTTP-EQUIV=REFRESH CONTENT=%d>\n", myGlobals.runningPref.refreshRate);
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, 
+		  "<META HTTP-EQUIV=REFRESH CONTENT=%d>\n", 
+		  myGlobals.runningPref.refreshRate);
     sendString(buf);
   }
 
@@ -1263,7 +1265,8 @@ void printHTMLtrailer(void) {
     for(i=len=numRealDevices=0; i<myGlobals.numDevices; i++, len=strlen(buf)) {
       if((!myGlobals.device[i].virtualDevice) && myGlobals.device[i].activeDevice) {
 	safe_snprintf(__FILE__, __LINE__, &buf[len], LEN_GENERAL_WORK_BUFFER - len, "%s%s",
-		      (numRealDevices>0) ? "," : "Listening on [", myGlobals.device[i].humanFriendlyName);
+		      (numRealDevices>0) ? "," : "Listening on [", 
+		      myGlobals.device[i].humanFriendlyName);
 	numRealDevices++;
       }
     }
@@ -1290,7 +1293,8 @@ void printHTMLtrailer(void) {
   sendString(buf);
 
   if(!myGlobals.runningPref.mergeInterfaces) {
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "Web reports include only interface \"%s\"",
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, 
+		  "Web reports include only interface \"%s\"",
                   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
     sendString(buf);
   } else {
@@ -2026,7 +2030,7 @@ static int returnHTTPPage(char* pageName,
   int errorCode=0, pageNum = 0, found=0, portNr=0;
   struct stat statbuf;
   FILE *fd = NULL;
-  char tmpStr[512], *domainNameParm = NULL, *minus;
+  char tmpStr[512], *domainNameParm = NULL, *minus, *host = NULL;
   char *db_key = NULL, *db_val = NULL;
   int revertOrder=0, vlanId=NO_VLAN, ifId=NO_INTERFACE, subnetId = ALL_SUBNET_IDS;
   struct tm t;
@@ -2067,6 +2071,8 @@ static int returnHTTPPage(char* pageName,
 	idx = atoi(&tkn[4]);
 	if(tkn[4] == '-') revertOrder=1;
 	sortedColumn = abs(idx);
+      } else if(strncmp(tkn, "host=", 5) == 0) {
+	host = strdup(&tkn[5]);
       } else if(strncmp(tkn, "dom=", 4) == 0) {
 	domainNameParm = strdup(&tkn[4]);
       } else if(strncmp(tkn, "netmode=", 8) == 0) {
@@ -2174,6 +2180,7 @@ static int returnHTTPPage(char* pageName,
       sendString("<p>ERROR: Can not locate image map file, request ignored</p>\n");
       traceEvent(CONST_TRACE_ERROR, "Can not locate image map file '%s', ignored...", tmpStr);
       free(pageURI);
+      if(host != NULL)           free(host);
       if(domainNameParm != NULL) free(domainNameParm);
       if(db_key != NULL) free(db_key);
       if(db_val != NULL) free(db_val);
@@ -2184,6 +2191,7 @@ static int returnHTTPPage(char* pageName,
       sendString("<p>ERROR: Can not open image map file, request ignored</p>\n");
       traceEvent(CONST_TRACE_ERROR, "Can not open image map file '%s', ignored...", tmpStr);
       free(pageURI);
+      if(host != NULL)           free(host);
       if(domainNameParm != NULL) free(domainNameParm);
       if(db_key != NULL) free(db_key);
       if(db_val != NULL) free(db_val);
@@ -2363,6 +2371,7 @@ static int returnHTTPPage(char* pageName,
     fclose(fd);
     /* closeNwSocket(&myGlobals.newSock); */
     free(pageURI);
+    if(host != NULL)           free(host);
     if(domainNameParm != NULL) free(domainNameParm);
     if(db_key != NULL) free(db_key);
     if(db_val != NULL) free(db_val);
@@ -2821,7 +2830,7 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
         drawVsanSwilsProtoDistribution(vsanId);
 	printTrailer=0;
-      } else if(strncasecmp(pageName, CONST_BAR_VSAN_TRAF_DIST_SENT,
+     } else if(strncasecmp(pageName, CONST_BAR_VSAN_TRAF_DIST_SENT,
 			    strlen(CONST_BAR_VSAN_TRAF_DIST_SENT)) == 0) {
         sscanf (pageName, CONST_BAR_VSAN_TRAF_DIST_SENT "-%d", &vsanId);
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -2841,6 +2850,30 @@ static int returnHTTPPage(char* pageName,
 			    strlen(CONST_PIE_PKT_CAST_DIST)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	pktCastDistribPie();
+	printTrailer=0;
+      } else if(strncasecmp(pageName, CONST_LINE_HOST_NW_DELAY,
+			    strlen(CONST_LINE_HOST_NW_DELAY)) == 0) {
+        HostTraffic *el=NULL;
+
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+
+        for(el=getFirstHost(myGlobals.actualReportDeviceId);
+            el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+	  if(!isFcHost(el)) {
+	    if((el != myGlobals.broadcastEntry)
+	       && (el->hostNumIpAddress != NULL)
+	       && ((el->vlanId <= 0) || (el->vlanId == vlanId))
+	       && ((strcmp(el->hostNumIpAddress, host) == 0)
+		   || (strcmp(el->ethAddressString, host) == 0)))
+	      break;
+	  }
+        }
+
+        if(el != NULL)
+	  hostNetworkDelay(el, networkMode);
+	else
+	  printNoDataYet();
+
 	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_PIE_PKT_SIZE_DIST,
 			    strlen(CONST_PIE_PKT_SIZE_DIST)) == 0) {

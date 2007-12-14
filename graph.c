@@ -151,9 +151,9 @@ static void build_chart(u_char is_pie, char *the_type, int num, float *p,
   send_graph_footer(the_type, width, height);
 }
 
-#define build_pie(a, b, c) build_chart(1, "pie", a, b, c, 350, 200)
-#define build_line(a, b, c) build_chart(0, "line", a, b, c, 600, 200)
-#define build_bar(a, b, c) build_chart(0, "bar", a, b, c, 600, 200)
+#define build_pie(a, b, c)  build_chart(1, "pie", a, b, c, 350, 200)
+#define build_line(a, b, c) build_chart(0, "line", a, b, c, 350, 200)
+#define build_bar(a, b, c)  build_chart(0, "bar", a, b, c, 600, 200)
 
 /* ******************************************************************* */
 
@@ -436,6 +436,44 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     if(num == 1) p[0] = 100; /* just to be safe */
     build_pie(num, p, lbl);
   }
+}
+
+/* ************************ */
+
+void hostNetworkDelay(HostTraffic *theHost, u_char clientDelay) {
+  float p[20];
+  char label[MAX_NUM_NET_DELAY_STATS][8];
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "",
+		   "", "", "", "", "", "", "", "", "", "" };
+  int num = 0, i;
+  NetworkDelay *delay;
+
+  if(clientDelay)
+    delay = theHost->clientDelay;
+  else
+    delay = theHost->serverDelay;
+
+  if(delay == NULL) {
+    traceEvent(CONST_TRACE_WARNING, "Graph failure: empty delay (%d)", clientDelay);
+    return;
+  }
+
+  for(i=0; i<MAX_NUM_NET_DELAY_STATS; i++) {
+    if(delay[i].nw_delay.tv_sec || delay[i].nw_delay.tv_usec) {
+      p[num] = (((float)delay[i].nw_delay.tv_sec)*1000) 
+	+ (((float)delay[i].nw_delay.tv_usec)/1000);
+      safe_snprintf(__FILE__, __LINE__, label[i], 8, "%d", i+1);
+      lbl[num++] = label[i];
+    } else
+      break;
+  }
+  
+  if(num == 0) {
+    traceEvent(CONST_TRACE_WARNING, "Graph failure: no data to graph");
+    return; /* TODO: this has to be handled better */
+  }
+  
+  build_line(num, p, lbl);
 }
 
 /* ************************ */

@@ -2595,7 +2595,8 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
      if(totalSent > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		      "<iframe frameborder=0 SRC=\"hostTrafficDistrib-%s%s"CHART_FORMAT"?1\"  width=400 height=250></iframe></TD>",
+		      "<iframe frameborder=0 SRC=\"hostTrafficDistrib-%s%s"CHART_FORMAT"?1\""
+		      "  width=400 height=250></iframe></TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -2616,15 +2617,17 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value
 	  +el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value+el->udpRcvdLoc.value+el->udpRcvdFromRem.value) > 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">IP Distribution</TH>",
-		    getRowColor());
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">"
+		      "IP Distribution</TH>",
+		      getRowColor());
 	sendString(buf);
-
+	
 	if((el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value) > 0) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		      "<iframe frameborder=0 SRC=\"hostIPTrafficDistrib-%s%s"CHART_FORMAT"?1\"  width=400 height=250></iframe></TD>",
-		      linkName, vlanStr);
+			"<iframe frameborder=0 SRC=\"hostIPTrafficDistrib-%s%s"CHART_FORMAT"?1\""
+			"  width=400 height=250></iframe></TD>",
+			linkName, vlanStr);
 	  sendString(buf);
 	} else
 	  sendString("<TD "TD_BG" COLSPAN=2 WIDTH=250>&nbsp;</TD>");

@@ -811,6 +811,8 @@ typedef struct fcScsiCounters {
 
 typedef struct networkDelay {
   struct timeval when, nw_delay;
+  HostSerial     peer;
+  u_int16_t      peer_port;
 } NetworkDelay;
 
 /* **************************** */

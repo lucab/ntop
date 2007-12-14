@@ -3071,29 +3071,65 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 }
 
 /* ************************************ */
-
-static void printHostNwDelay(NetworkDelay *delay) {
+static void printHostNwDelay(HostTraffic *el, int actualDeviceId, 
+			     NetworkDelay *delay, u_int clientDelay) {
   int i;
-  
+  char buf[2*LEN_GENERAL_WORK_BUFFER], linkName[64];
+
   sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-	     "<TH "TH_BG">Time</TH><TH "TH_BG">Delay (ms)</TH></TR>\n");
+	     "<TH "TH_BG">Time</TH><TH "TH_BG">Peer</TH>"
+	     "<TH "TH_BG">Port</TH><TH "TH_BG">Delay</TH></TR>\n");
 
   for(i=0; i<MAX_NUM_NET_DELAY_STATS; i++) {
-    char buf[512];
     time_t when;
     float f;
-    
+    HostTraffic *peerHost, tmpEl;
+    char webHostName[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
+
     if(delay[i].when.tv_sec == 0) break;
+
+    if(emptySerial(&delay[i].peer))
+      strncpy(webHostName, "&nbsp;", sizeof(webHostName));
+    else {
+      peerHost = quickHostLink(delay[i].peer, actualDeviceId, &tmpEl);
+      strncpy(webHostName, makeHostLink(peerHost, FLAG_HOSTLINK_TEXT_FORMAT, 0,
+					0, hostLinkBuf, sizeof(hostLinkBuf)),
+	      sizeof(webHostName));
+    }
 
     when = delay[i].when.tv_sec;
     f = delay[i].nw_delay.tv_sec * 1000 + ((float)delay[i].nw_delay.tv_usec)/1000;
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		  "<TR "TR_ON" %s><TD "TD_BG">%s</TH><TH "TH_BG">%.02f</TH></TR>\n",
-		  getRowColor(), ctime(&when), f);
+		  "<TR "TR_ON" %s><TD "TD_BG">%s</TD>"
+		  "<TD "TD_BG">%s</TD><TD "TD_BG" ALIGN=CENTER>%d</TD>"
+		  "<TD "TH_BG">%.02f ms</TD></TR>\n",
+		  getRowColor(), ctime(&when), webHostName, delay[i].peer_port, f);
     sendString(buf);
   }
 
-  sendString("</TABLE>"TABLE_OFF"<P>\n");
+  sendString("</TABLE>"TABLE_OFF"\n");
+
+#if 0
+  sendString("<p>\n<iframe frameborder=0 SRC=\"");
+
+  if(el->hostNumIpAddress[0] != '\0')
+    strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
+  else
+    strncpy(linkName, el->ethAddressString, sizeof(linkName));
+  
+  /* For Ethernet and Ipv6 addresses */
+  urlFixupToRFC1945Inplace(linkName);
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		"%s%s?host=%s&netmode=%d",
+		CONST_LINE_HOST_NW_DELAY,
+		CHART_FORMAT,		
+		linkName, 
+		clientDelay);
+  
+  sendString(buf);
+  sendString("\" width=400 height=250></iframe>\n");
+#endif
 }
 
 /* ************************************ */
@@ -3448,17 +3484,25 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     sendString("<TR><TD ALIGN=CENTER VALIGN=TOP>");
 
     if(el->clientDelay)
-      printHostNwDelay(el->clientDelay);
+      printHostNwDelay(el, actualDeviceId, el->clientDelay, 1);
     else
       sendString("&nbsp;");
 
     sendString("</TD><TD ALIGN=CENTER VALIGN=TOP>");
  
     if(el->serverDelay)
-      printHostNwDelay(el->serverDelay);
+      printHostNwDelay(el, actualDeviceId, el->serverDelay, 0);
     else
       sendString("&nbsp;");
-    sendString("</TD></TR>\n</TABLE></CENTER>\n<P>\n");
+    sendString("</TD></TR>\n<p>\n");
+    sendString("<tr><td colspan=2 align=left><ul><li>Scenario: client &lt;--&gt; ntop &lt;--&gt; server"
+	       "<li>Client Delay: the network delay (computed as RTT/2) taken"
+	       "<br>by a packet sent by the client to reach ntop"
+	       "<li>Server Delay: the network delay (computed as RTT/2) taken"
+	       "<br>by a packet sent by the server to reach ntop"
+	       "<li>All times are majored during TCP session establishment"
+	       "</td></tr>\n");
+    sendString("</TABLE></CENTER>\n<P>\n");
   }
 
   /* *************************************************** */

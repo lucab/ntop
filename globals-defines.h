@@ -1168,6 +1168,7 @@
 #define CONST_IP_L_2_R_HTML                 "ipL2R.html"
 #define CONST_IP_PROTO_DISTRIB_HTML         "ipProtoDistrib.html"
 #define CONST_PIE_IPPROTO_RL_DIST           "ipProtoDistribPie"
+#define CONST_LINE_HOST_NW_DELAY            "hostNetworkDelay"
 #define CONST_BAR_IPPROTO_DIST              "ipProtoDistribution"
 #define CONST_IP_PROTO_USAGE_HTML           "ipProtoUsage.html"
 #define CONST_IP_R_2_L_HTML                 "ipR2L.html"

@@ -478,7 +478,7 @@ static void de_endianFlow(struct generic_netflow_record *record) {
 
 /* *************************** */
 
-inline int is_zero_timeval(struct timeval *tv) {
+static inline int is_zero_timeval(struct timeval *tv) {
   return(((tv->tv_sec == 0) && (tv->tv_usec == 0)) ? 1 : 0);
 }
 

@@ -1878,6 +1878,7 @@ static void timeval_diff(struct timeval *begin,
 /* *********************************** */
 
 static void updateNetworkDelay(NetworkDelay *delayStats,
+			       HostSerial *peer, u_int16_t peer_port,
 			       struct timeval *delay,
 			       struct timeval *when) {
   int i;
@@ -1892,6 +1893,8 @@ static void updateNetworkDelay(NetworkDelay *delayStats,
 
   memcpy(&delayStats[0].when,     when, sizeof(struct timeval));
   memcpy(&delayStats[0].nw_delay, delay, sizeof(struct timeval));
+  memcpy(&delayStats[0].peer, peer, sizeof(HostSerial));
+  delayStats[0].peer_port = peer_port;
 }
 
 /* *********************************** */
@@ -1901,7 +1904,8 @@ void updateSessionDelayStats(IPSession* session) {
 
   if((session->clientNwDelay.tv_sec > 0) || (session->clientNwDelay.tv_usec > 0)) {
     if(session->initiator->clientDelay == NULL) 
-      session->initiator->clientDelay = (NetworkDelay*)calloc(sizeof(NetworkDelay), MAX_NUM_NET_DELAY_STATS);
+      session->initiator->clientDelay = (NetworkDelay*)calloc(sizeof(NetworkDelay),
+							      MAX_NUM_NET_DELAY_STATS);
 
     if(session->initiator->clientDelay == NULL) {
       traceEvent(CONST_TRACE_ERROR, "Sanity check failed [Low memory?]");
@@ -1909,19 +1913,24 @@ void updateSessionDelayStats(IPSession* session) {
     }
 
     updateNetworkDelay(session->initiator->clientDelay, 
+		       &session->remotePeer->hostSerial,
+		       session->dport,
 		       &session->clientNwDelay,
 		       &session->synAckTime);
   }
   
   if((session->serverNwDelay.tv_sec > 0) || (session->serverNwDelay.tv_usec > 0)) {
     if(session->remotePeer->serverDelay == NULL) 
-      session->remotePeer->serverDelay = (NetworkDelay*)calloc(sizeof(NetworkDelay), MAX_NUM_NET_DELAY_STATS);
+      session->remotePeer->serverDelay = (NetworkDelay*)calloc(sizeof(NetworkDelay),
+							       MAX_NUM_NET_DELAY_STATS);
     if(session->remotePeer->serverDelay == NULL) {
       traceEvent(CONST_TRACE_ERROR, "Sanity check failed [Low memory?]");
       return;
     }
 
     updateNetworkDelay(session->remotePeer->serverDelay, 
+		       &session->initiator->hostSerial, 
+		       session->sport,
 		       &session->serverNwDelay,
 		       &session->ackTime);
   }
