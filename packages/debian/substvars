@@ -1,1 +1,1 @@
-shlibs:Depends=libc6 (>= 2.3.6-6), libgdbm3, libpcap0.8 (>= 0.9.3-1), libpcre3 (>= 4.5), librrd2, libssl0.9.8 (>= 0.9.8c-1), zlib1g (>= 1:1.2.1)
+shlibs:Depends=libc6 (>= 2.3.6-6), libgdbm3, libpcap0.8 (>= 0.9.3-1), librrd2, libssl0.9.8 (>= 0.9.8c-1), zlib1g (>= 1:1.2.1)
