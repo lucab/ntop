@@ -2851,30 +2851,6 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	pktCastDistribPie();
 	printTrailer=0;
-      } else if(strncasecmp(pageName, CONST_LINE_HOST_NW_DELAY,
-			    strlen(CONST_LINE_HOST_NW_DELAY)) == 0) {
-        HostTraffic *el=NULL;
-
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-
-        for(el=getFirstHost(myGlobals.actualReportDeviceId);
-            el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-	  if(!isFcHost(el)) {
-	    if((el != myGlobals.broadcastEntry)
-	       && (el->hostNumIpAddress != NULL)
-	       && ((el->vlanId <= 0) || (el->vlanId == vlanId))
-	       && ((strcmp(el->hostNumIpAddress, host) == 0)
-		   || (strcmp(el->ethAddressString, host) == 0)))
-	      break;
-	  }
-        }
-
-        if(el != NULL)
-	  hostNetworkDelay(el, networkMode);
-	else
-	  printNoDataYet();
-
-	printTrailer=0;
       } else if(strncasecmp(pageName, CONST_PIE_PKT_SIZE_DIST,
 			    strlen(CONST_PIE_PKT_SIZE_DIST)) == 0) {
 	if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {

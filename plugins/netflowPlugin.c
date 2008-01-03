@@ -750,7 +750,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
 #ifdef DEBUG_FLOWS
   if(1)
-    traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [last=%d][first=%d][last-first=%d]",
+    traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [last=%u][first=%u][last-first=%d]",
 	       srcHost->hostNumIpAddress, sport,
 	       dstHost->hostNumIpAddress, dport, record->last, record->first,
 	       (*lastSeen - *firstSeen));
@@ -941,7 +941,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling)
       session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport,
 			      record->sentOctets, record->rcvdOctets,
-			      &tp, 0, NULL, actualDeviceId, &newSession, 0);
+			      &tp, 0, NULL, actualDeviceId, &newSession, 1 /* FIX 0 */);
     break;
 
   case IPPROTO_UDP: /* UDP */
@@ -1081,7 +1081,41 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 	session->serverNwDelay.tv_usec = record->server_nw_latency_usec;
       updateSessionDelayStats(session);
     }
+  } else {
+    /* The session has been discarded (e.g. the NetFlow plugins might has
+       been configured to discard sessions) so in case we have network delay 
+       we need to handle it directly */
+    struct timeval clientNwDelay, serverNwDelay, when;
+    int port, port_idx;
+
+    gettimeofday(&when, NULL);
+    clientNwDelay.tv_sec = record->client_nw_latency_sec, clientNwDelay.tv_usec = record->client_nw_latency_usec;
+    serverNwDelay.tv_sec = record->server_nw_latency_sec, serverNwDelay.tv_usec = record->server_nw_latency_usec;
+
+    port = dport;
+    if((port_idx = mapGlobalToLocalIdx(port)) == -1) {
+      port = sport;
+      if((port_idx = mapGlobalToLocalIdx(port)) == -1) {
+	return;
+      }
+    }
+
+    updatePeersDelayStats(srcHost,
+			  &dstHost->hostSerial,
+			  port,
+			  &clientNwDelay,
+			  &when,
+			  NULL, 1 /* client */, port_idx);
+    
+    updatePeersDelayStats(dstHost,
+			  &srcHost->hostSerial,
+			  port,
+			  &serverNwDelay,
+			  NULL,
+			  &when,
+			  0 /* server */, port_idx);
   }
+
 
   /* releaseMutex(&myGlobals.hostsHashMutex); */
 
@@ -1334,8 +1368,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
     NTOHL(recordActTime); NTOHL(recordSysUpTime);
 
     for(i=0; (!done) && (displ < bufferLen) && (i < numEntries); i++) {
-
-      // traceEvent(CONST_TRACE_INFO, "buffer[displ=%d] = 0x%X", displ, buffer[displ] & 0xFF);
+      /* traceEvent(CONST_TRACE_INFO, "buffer[displ=%d] = 0x%X", displ, buffer[displ] & 0xFF); */
 
       /* 1st byte */
       if(buffer[displ] == 0) {
@@ -1697,7 +1730,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	    displ += fs.flowsetLen;
 	  }
 	}
-      }
+      }      
     } /* for */
   } else if(the5Record.flowHeader.version == htons(5)) {
     int i, numFlows = ntohs(the5Record.flowHeader.count);

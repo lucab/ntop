@@ -84,7 +84,9 @@ ntop.h
 /*
  * This allows to hide the (minimal) differences between linux and BSD
  */
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 #include <features.h>
 

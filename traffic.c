@@ -548,7 +548,7 @@ int isMatrixHost(HostTraffic *host, int actualDeviceId) {
 /* ******************************* */
 
 unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash) {
-  unsigned long hash;
+  unsigned long hash = 0;
   char tmpBuf[80], *str;
   int c;
 

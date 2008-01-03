@@ -991,12 +991,14 @@ void reinitMutexes (void) {
 void initThreads(void) {
   int i;
 
+  /*
   for(i=0; i<myGlobals.numDevices; i++) {
     createThread(&myGlobals.device[i].dequeuePacketThreadId, dequeuePacket, (void*)((long)i));
     traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NPA: Started thread for network packet analyzer (%s)",
 	       (long)myGlobals.device[i].dequeuePacketThreadId,
 	       myGlobals.device[i].humanFriendlyName);
   }
+  */
 
   /*
    * Create the thread (3) - SFP - Scan Fingerprints
@@ -1499,7 +1501,7 @@ void initDevices(char* devices) {
 
   ebuf[0] = '\0', myName[0] = '\0';
 
-  traceEvent(CONST_TRACE_NOISY, "Initializing network devices");
+  traceEvent(CONST_TRACE_NOISY, "Initializing network devices [%s]", devices ? devices : "");
 
   if(myGlobals.runningPref.rFileName != NULL) {
     createDummyInterface("none");

@@ -3071,39 +3071,48 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 }
 
 /* ************************************ */
+
 static void printHostNwDelay(HostTraffic *el, int actualDeviceId, 
 			     NetworkDelay *delay, u_int clientDelay) {
   int i;
   char buf[2*LEN_GENERAL_WORK_BUFFER], linkName[64];
 
   sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-	     "<TH "TH_BG">Time</TH><TH "TH_BG">Peer</TH>"
-	     "<TH "TH_BG">Port</TH><TH "TH_BG">Delay</TH></TR>\n");
+	     "<TH "TH_BG">Last Time</TH><TH "TH_BG">Service</TH>"
+	     "<TH "TH_BG">Last ");
+  if(!clientDelay) sendString("Client"); else sendString(" Server");
+  sendString(" Contact</TH><TH "TH_BG">");
+  if(clientDelay) sendString("Client"); else sendString("Server");
+  sendString(" Delay [min/avg/max]</TH></TR>\n");
 
-  for(i=0; i<MAX_NUM_NET_DELAY_STATS; i++) {
+  for(i=0; i<myGlobals.ipPortMapper.numSlots; i++) {
     time_t when;
     float f;
     HostTraffic *peerHost, tmpEl;
     char webHostName[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
 
-    if(delay[i].when.tv_sec == 0) break;
+    if(delay[i].num_samples == 0) continue;
 
-    if(emptySerial(&delay[i].peer))
+    if(emptySerial(&delay[i].last_peer))
       strncpy(webHostName, "&nbsp;", sizeof(webHostName));
     else {
-      peerHost = quickHostLink(delay[i].peer, actualDeviceId, &tmpEl);
+      peerHost = quickHostLink(delay[i].last_peer, actualDeviceId, &tmpEl);
       strncpy(webHostName, makeHostLink(peerHost, FLAG_HOSTLINK_TEXT_FORMAT, 0,
 					0, hostLinkBuf, sizeof(hostLinkBuf)),
 	      sizeof(webHostName));
     }
 
-    when = delay[i].when.tv_sec;
-    f = delay[i].nw_delay.tv_sec * 1000 + ((float)delay[i].nw_delay.tv_usec)/1000;
+    when = delay[i].last_update.tv_sec;
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 		  "<TR "TR_ON" %s><TD "TD_BG">%s</TD>"
-		  "<TD "TD_BG">%s</TD><TD "TD_BG" ALIGN=CENTER>%d</TD>"
-		  "<TD "TH_BG">%.02f ms</TD></TR>\n",
-		  getRowColor(), ctime(&when), webHostName, delay[i].peer_port, f);
+		  "<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG">%s</TD>"
+		  "<TD "TH_BG" ALIGN=RIGHT>%.02f/%.02f/%.02f ms</TD></TR>\n",
+		  getRowColor(), ctime(&when),
+		  myGlobals.ipTrafficProtosNames[i] ? myGlobals.ipTrafficProtosNames[i] : "???",
+		  webHostName, 
+		  ((float)delay[i].min_nw_delay)/1000, 
+		  delay[i].total_delay/(delay[i].num_samples*1000),
+		  ((float)delay[i].max_nw_delay)/1000);
     sendString(buf);
   }
 
@@ -3137,7 +3146,7 @@ static void printHostNwDelay(HostTraffic *el, int actualDeviceId,
 void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 			  int revertOrder, int pageNum, char *url,
 			  int hostInfoPage) {
-  u_int idx, i;
+  u_int idx, i, cols = 0;
   u_int16_t vlanId = NO_VLAN;
   HostTraffic *el=NULL;
   char buf[LEN_GENERAL_WORK_BUFFER];
@@ -3479,28 +3488,31 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     printSectionTitle("Recent Sessions: Network Delay");
     
     sendString("<P>\n<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
-	       "<TH "TH_BG" NOWRAP>Client</TH><TH "TH_BG" NOWRAP>Server</TH></TR>\n");
-    sendString("<TR><TD ALIGN=CENTER VALIGN=TOP>");
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">");
+    if(el->clientDelay)  sendString("<TH "TH_BG" NOWRAP>Client Mode</TH>");
+    if(el ->serverDelay) sendString("<TH "TH_BG" NOWRAP>Server Mode</TH></TR>\n");
+    sendString("<TR>");
 
-    if(el->clientDelay)
-      printHostNwDelay(el, actualDeviceId, el->clientDelay, 1);
-    else
-      sendString("&nbsp;");
+    if(el->clientDelay) {
+      sendString("<TD ALIGN=CENTER VALIGN=TOP colspan=100%>");
+      printHostNwDelay(el, actualDeviceId, el->clientDelay, 1), cols++;
+      sendString("</TD>");
+    }
 
-    sendString("</TD><TD ALIGN=CENTER VALIGN=TOP>");
- 
-    if(el->serverDelay)
-      printHostNwDelay(el, actualDeviceId, el->serverDelay, 0);
-    else
-      sendString("&nbsp;");
-    sendString("</TD></TR>\n<p>\n");
-    sendString("<tr><td colspan=2 align=left><ul><li>Scenario: client &lt;--&gt; ntop &lt;--&gt; server"
+    if(el->serverDelay) {
+      sendString("<TD ALIGN=CENTER VALIGN=TOP colspan=100%>");
+      printHostNwDelay(el, actualDeviceId, el->serverDelay, 0), cols++;
+      sendString("</TD>");
+    }
+    
+    sendString("</TR>\n<p>\n<tr><td");
+    if(cols > 1) sendString(" colspan=2");
+    sendString(" align=left><ul><li>Scenario: client &lt;--&gt; ntop &lt;--&gt; server"
 	       "<li>Client Delay: the network delay (computed as RTT/2) taken"
 	       "<br>by a packet sent by the client to reach ntop"
 	       "<li>Server Delay: the network delay (computed as RTT/2) taken"
 	       "<br>by a packet sent by the server to reach ntop"
-	       "<li>All times are majored during TCP session establishment"
+	       "<li>All times are majored during TCP 3-way handshake"
 	       "</td></tr>\n");
     sendString("</TABLE></CENTER>\n<P>\n");
   }

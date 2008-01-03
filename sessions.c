@@ -23,7 +23,7 @@
 
 #include "ntop.h"
 
-/* #define SESSION_TRACE_DEBUG 1  */
+/* #define SESSION_TRACE_DEBUG 1 */
 
 #define tcp_flags(a, b) ((a & (b)) == (b))
 
@@ -361,7 +361,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
     traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: Session terminated: %s:%d<->%s:%d (lastSeend=%d) (# sessions = %d)",
 	       _addrtostr(&sessionToPurge->initiatorRealIp, buf, sizeof(buf)), sessionToPurge->sport,
 	       _addrtostr(&sessionToPurge->remotePeerRealIp, buf1, sizeof(buf1)), sessionToPurge->dport,
-	       sessionToPurge->lastSeen,  myGlobals.device[actualDeviceId].numTcpSessions);
+	       sessionToPurge->lastSeen,  myGlobals.device[actualDeviceId].numTcpSessions-1);
   }
 #endif
 
@@ -1880,60 +1880,119 @@ static void timeval_diff(struct timeval *begin,
 static void updateNetworkDelay(NetworkDelay *delayStats,
 			       HostSerial *peer, u_int16_t peer_port,
 			       struct timeval *delay,
-			       struct timeval *when) {
-  int i;
+			       struct timeval *when,
+			       int port_idx) {
+  u_long int_delay;
 
+  if(0)
+    traceEvent(CONST_TRACE_WARNING, 
+	       "updateNetworkDelay(port=%d [idx=%d], delay=%.2f ms)", 
+	       peer_port, port_idx, (float)int_delay/1000);
+  
+  if(port_idx == -1) return;
+
+  int_delay = delay->tv_sec * 1000000 + delay->tv_usec;
   if((when->tv_sec == 0) && (when->tv_usec == 0)) gettimeofday(when, NULL);
-  if(memcmp(when, &delayStats[0].when, sizeof(struct timeval)) == 0) return;
+  memcpy(&delayStats[port_idx].last_update, when, sizeof(struct timeval));
 
- /* Shift data */
-  for(i=MAX_NUM_NET_DELAY_STATS-1; i>0; i--) {
-    memcpy(&delayStats[i], &delayStats[i-1], sizeof(NetworkDelay));
+  if(delayStats[port_idx].min_nw_delay == 0)
+    delayStats[port_idx].min_nw_delay = int_delay;
+  else
+    delayStats[port_idx].min_nw_delay = min(delayStats[port_idx].min_nw_delay, int_delay);
+
+  if(delayStats[port_idx].max_nw_delay == 0)
+    delayStats[port_idx].max_nw_delay = int_delay;
+  else
+    delayStats[port_idx].max_nw_delay = max(delayStats[port_idx].max_nw_delay, int_delay);
+
+  delayStats[port_idx].total_delay += int_delay, delayStats[port_idx].num_samples++;
+  delayStats[port_idx].peer_port = peer_port;
+  memcpy(&delayStats[port_idx].last_peer, peer, sizeof(HostSerial));
+}
+
+/* *********************************** */
+
+void updatePeersDelayStats(HostTraffic *peer_a,
+			   HostSerial *peer_b_serial,
+			   u_int16_t port,
+			   struct timeval *nwDelay,
+			   struct timeval *synAckTime,
+			   struct timeval *ackTime,
+			   u_char is_client_delay,
+			   int port_idx) {
+  /* traceEvent(CONST_TRACE_WARNING, "----------> updateSessionDelayStats()");  */
+
+  if((!subnetPseudoLocalHost(peer_a)) || (port_idx == -1)) return;
+
+  if(is_client_delay) {
+    if((nwDelay->tv_sec > 0) || (nwDelay->tv_usec > 0)) {
+      if(peer_a->clientDelay == NULL) 
+	peer_a->clientDelay = (NetworkDelay*)calloc(sizeof(NetworkDelay),
+						    myGlobals.ipPortMapper.numSlots);
+      
+      if(peer_a->clientDelay == NULL) {
+	traceEvent(CONST_TRACE_ERROR, "Sanity check failed [Low memory?]");
+	return;
+      }
+
+      updateNetworkDelay(peer_a->clientDelay, 
+			 peer_b_serial,
+			 port,
+			 nwDelay,
+			 synAckTime,
+			 port_idx);
+    } 
+  } else {
+    if((nwDelay->tv_sec > 0) || (nwDelay->tv_usec > 0)) {
+      if(peer_a->serverDelay == NULL) 
+	peer_a->serverDelay = (NetworkDelay*)calloc(sizeof(NetworkDelay),
+						    myGlobals.ipPortMapper.numSlots);
+      if(peer_a->serverDelay == NULL) {
+	traceEvent(CONST_TRACE_ERROR, "Sanity check failed [Low memory?]");
+	return;
+      }
+
+      updateNetworkDelay(peer_a->serverDelay, 
+			 peer_b_serial,
+			 port,
+			 nwDelay,
+			 ackTime,
+			 port_idx);
+    }
   }
-
-  memcpy(&delayStats[0].when,     when, sizeof(struct timeval));
-  memcpy(&delayStats[0].nw_delay, delay, sizeof(struct timeval));
-  memcpy(&delayStats[0].peer, peer, sizeof(HostSerial));
-  delayStats[0].peer_port = peer_port;
 }
 
 /* *********************************** */
 
 void updateSessionDelayStats(IPSession* session) {
+  int port_idx, port;
+
   /* traceEvent(CONST_TRACE_WARNING, "----------> updateSessionDelayStats()");  */
 
-  if((session->clientNwDelay.tv_sec > 0) || (session->clientNwDelay.tv_usec > 0)) {
-    if(session->initiator->clientDelay == NULL) 
-      session->initiator->clientDelay = (NetworkDelay*)calloc(sizeof(NetworkDelay),
-							      MAX_NUM_NET_DELAY_STATS);
-
-    if(session->initiator->clientDelay == NULL) {
-      traceEvent(CONST_TRACE_ERROR, "Sanity check failed [Low memory?]");
+  port = session->dport;
+  if((port_idx = mapGlobalToLocalIdx(port)) == -1) {
+    port = session->sport;
+    if((port_idx = mapGlobalToLocalIdx(port)) == -1) {
       return;
     }
-
-    updateNetworkDelay(session->initiator->clientDelay, 
-		       &session->remotePeer->hostSerial,
-		       session->dport,
-		       &session->clientNwDelay,
-		       &session->synAckTime);
   }
+
+  if(subnetPseudoLocalHost(session->initiator))
+    updatePeersDelayStats(session->initiator,
+			  &session->remotePeer->hostSerial,
+			  port,
+			  &session->clientNwDelay,
+			  &session->synAckTime,
+			  NULL, 1 /* client */, port_idx);
   
-  if((session->serverNwDelay.tv_sec > 0) || (session->serverNwDelay.tv_usec > 0)) {
-    if(session->remotePeer->serverDelay == NULL) 
-      session->remotePeer->serverDelay = (NetworkDelay*)calloc(sizeof(NetworkDelay),
-							       MAX_NUM_NET_DELAY_STATS);
-    if(session->remotePeer->serverDelay == NULL) {
-      traceEvent(CONST_TRACE_ERROR, "Sanity check failed [Low memory?]");
-      return;
-    }
-
-    updateNetworkDelay(session->remotePeer->serverDelay, 
-		       &session->initiator->hostSerial, 
-		       session->sport,
-		       &session->serverNwDelay,
-		       &session->ackTime);
-  }
+  if(subnetPseudoLocalHost(session->remotePeer))
+    updatePeersDelayStats(session->remotePeer,
+			  &session->initiator->hostSerial,
+			  port,
+			  &session->serverNwDelay,
+			  NULL,
+			  &session->ackTime,
+			  0 /* server */, port_idx);
 }
 
 /* *********************************** */
@@ -2652,6 +2711,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	      printf("ERROR: unable to handle received ACK (%u) !\n", ack);
 #endif
 	    }
+
 	    break;
 	  }
 	}
@@ -2841,7 +2901,8 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 		|| ((sport > 1024) && (dport == IP_TCP_PORT_SCCP)) /* Needed for SCCP */))
 	   )) {
       if((real_session)
-	 || ((!tcp_flags(tp->th_flags, TH_SYN|TH_RST)) && (!tcp_flags(tp->th_flags, TH_SYN|TH_FIN)))) {
+	 || ((!tcp_flags(tp->th_flags, TH_SYN|TH_RST)) && (!tcp_flags(tp->th_flags, TH_SYN|TH_FIN)))
+	 ) {
 	/*
 	  If this is a netflow session that is not self-contained (i.e. that started and
 	  ended into the same flow. In this case it will not be added as it will be

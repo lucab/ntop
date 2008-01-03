@@ -318,7 +318,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
     if(0)
       traceEvent(CONST_TRACE_INFO, "Efficiency [sent=%d|rcvd=%d|efficiency=%d][cell=%d][len=%u]",
 		 efficiencySent, efficiencyRcvd, pkt_efficiency,
-		 myGlobals.cellLength, (unsigned int)length);
+		 (int)myGlobals.cellLength, (unsigned int)length);
 
     incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->pktSent, numPkts);
     incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->pktRcvd, numPkts);
@@ -1370,8 +1370,6 @@ static void processIpPkt(const u_char *bp,
     Courtesy of Andreas Pfaller
   */
   if(fragmented) {
-    u_int pkt_efficiency;
-
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].fragmentedIpBytes, length);
 
     switch(nh) {

@@ -4158,7 +4158,6 @@ unsigned long _ntopSleepMSWhileSameState(char *file, int line, unsigned long ulD
 		   (int)sleepAmount.tv_nsec);
 
         if((nanosleep(&sleepAmount, &remAmount) != 0) && (errno == EINTR)) {
-
           if(ntopRunStateSave != myGlobals.ntopRunState) {
             ulDelay = ulDelay - ulSlice + remAmount.tv_sec * 1000L + remAmount.tv_nsec / 1000L;
             traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "ntopSleepMS() terminating due to runstate %lu remained", ulDelay);
@@ -4184,16 +4183,15 @@ unsigned long _ntopSleepMSWhileSameState(char *file, int line, unsigned long ulD
 
 /* ----- */
 
-unsigned int _ntopSleepWhileSameState(char *file, int line, unsigned int uSeconds) {
+unsigned int _ntopSleepWhileSameState(char *file, int line, unsigned int secs) {
   unsigned int rc;
-  rc = _ntopSleepMSWhileSameState(file, line, 1000L*uSeconds) / 1000L;
+  rc = _ntopSleepMSWhileSameState(file, line, 1000L*secs) / 1000L;
   return(rc);
 }
 
 /* ---------- */
 
 void ntopSleepUntilStateRUN(void) {
-
   traceEvent(CONST_TRACE_BEYONDNOISY, "WAIT[t%lu]: for ntopState RUN", pthread_self());
 
   while(myGlobals.ntopRunState < FLAG_NTOPSTATE_RUN) {
@@ -4211,7 +4209,6 @@ void ntopSleepUntilStateRUN(void) {
   }
 
   traceEvent(CONST_TRACE_BEYONDNOISY, "WAIT[t%lu]: ntopState is RUN", pthread_self());
-
 }
 
 /* ---------- */

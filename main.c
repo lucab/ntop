@@ -662,7 +662,6 @@ printf("Unable to read serial number\n");
 
 #ifndef WIN32
   while(myGlobals.ntopRunState == FLAG_NTOPSTATE_RUN) {
-
     ntopSleepWhileSameState(PARM_SLEEP_LIMIT);
 
     /* Periodic recheck of the version status */
@@ -670,7 +669,6 @@ printf("Unable to read serial number\n");
        (time(NULL) > myGlobals.checkVersionStatusAgain) &&
        (myGlobals.ntopRunState == FLAG_NTOPSTATE_RUN))
       checkVersion(NULL);
-
   }
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: Main thread shutting down", pthread_self());

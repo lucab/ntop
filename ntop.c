@@ -90,8 +90,6 @@ void* pcapDispatch(void *_i) {
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NPS(%s): pcapDispatch thread running [p%d]",
 	     pthread_self(), myGlobals.device[i].humanFriendlyName, getpid());
 
-  /* Skip ntopSleepUntilStateRUN(), just start processing packets as soon as this starts */
-
   for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
     rc = pcap_dispatch(myGlobals.device[i].pcapPtr, -1, queuePacket, (u_char*)_i);
 

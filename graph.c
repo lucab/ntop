@@ -440,44 +440,6 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
 
 /* ************************ */
 
-void hostNetworkDelay(HostTraffic *theHost, u_char clientDelay) {
-  float p[20];
-  char label[MAX_NUM_NET_DELAY_STATS][8];
-  char	*lbl[] = { "", "", "", "", "", "", "", "", "",
-		   "", "", "", "", "", "", "", "", "", "" };
-  int num = 0, i;
-  NetworkDelay *delay;
-
-  if(clientDelay)
-    delay = theHost->clientDelay;
-  else
-    delay = theHost->serverDelay;
-
-  if(delay == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Graph failure: empty delay (%d)", clientDelay);
-    return;
-  }
-
-  for(i=0; i<MAX_NUM_NET_DELAY_STATS; i++) {
-    if(delay[i].nw_delay.tv_sec || delay[i].nw_delay.tv_usec) {
-      p[num] = (((float)delay[i].nw_delay.tv_sec)*1000) 
-	+ (((float)delay[i].nw_delay.tv_usec)/1000);
-      safe_snprintf(__FILE__, __LINE__, label[i], 8, "%d", i+1);
-      lbl[num++] = label[i];
-    } else
-      break;
-  }
-  
-  if(num == 0) {
-    traceEvent(CONST_TRACE_WARNING, "Graph failure: no data to graph");
-    return; /* TODO: this has to be handled better */
-  }
-  
-  build_line(num, p, lbl);
-}
-
-/* ************************ */
-
 void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
   float p[24];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",

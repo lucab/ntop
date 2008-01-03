@@ -851,6 +851,13 @@ extern IPSession* handleSession(const struct pcap_pkthdr *h,
 				u_char real_session /* vs. faked/netflow-session */);
 extern void updateHostUsers(char *userName, int userType, HostTraffic *theHost);
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
+extern void updatePeersDelayStats(HostTraffic *peer_a, HostSerial *peer_b_serial,
+				  u_int16_t port,
+				  struct timeval *nwDelay,
+				  struct timeval *synAckTime, 
+				  struct timeval *ackTime,
+				  u_char is_client_delay, 
+				  int port_idx);
 extern void updateSessionDelayStats(IPSession* session);
 extern FCSession* handleFcSession(const struct pcap_pkthdr *h,
 				  u_short fragmentedData,

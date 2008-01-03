@@ -810,9 +810,12 @@ typedef struct fcScsiCounters {
 /* **************************** */
 
 typedef struct networkDelay {
-  struct timeval when, nw_delay;
-  HostSerial     peer;
-  u_int16_t      peer_port;
+  struct timeval last_update;
+  u_long min_nw_delay, max_nw_delay;
+  u_int num_samples;
+  double total_delay;
+  u_int16_t peer_port;
+  HostSerial last_peer;
 } NetworkDelay;
 
 /* **************************** */
