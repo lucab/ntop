@@ -149,7 +149,7 @@ void initIPServices(void) {
   memset(myGlobals.tcpSvc, 0, len);
 
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
-    char tmpStr[64];
+    char tmpStr[256];
 
     safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%s/services", myGlobals.configFileDirs[idx]);
     fd = fopen(tmpStr, "r");

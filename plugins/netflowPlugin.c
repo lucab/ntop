@@ -2821,7 +2821,7 @@ static void printNetFlowConfiguration(int deviceId) {
              "peer-to-peer traffic also is high port to high port. "
              "However, in limited situations, this option enables you to obtain a more "
              "correct view of your traffic.</p>\n"
-             "<p align=\"right\"><i>This option takes effect IMMEDIATELY</i></p>\n"
+             "<p align=\"left\"><i>This option takes effect IMMEDIATELY</i></p>\n"
 	     "</td>\n</tr>\n");
 
   /* *************************************** */
@@ -2840,10 +2840,9 @@ static void printNetFlowConfiguration(int deviceId) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",
 		myGlobals.device[deviceId].netflowGlobals->dumpInterval);
   sendString(buf);
-  sendString("\"> <input type=\"submit\" value=\"Set Dump Interval\"></p>\n</form>\n"
+  sendString("\"> sec <input type=\"submit\" value=\"Set Dump Interval\"></p>\n</form>\n"
              "<p>Specifies how often data is stored permanently. "
 	     "Set it to 0 (zero) to disable dumping</p>\n</td>\n</tr>\n");
-
 
   sendString("<tr><th "DARK_BG">Dump File Path</th>\n");
   sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
@@ -2857,7 +2856,8 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(myGlobals.device[deviceId].netflowGlobals->dumpPath == NULL ?
 	     "./netflow-dump" : myGlobals.device[deviceId].netflowGlobals->dumpPath);
   sendString("\"> <input type=\"submit\" value=\"Set Dump File Path\"></p>\n</form>\n"
-             "<p>Specifies the directory where dump files will be saved.</p>\n</td>\n</tr>\n");
+             "<p>Specifies the directory where dump files will be saved. Please make sure that "
+	     "ntop has write access to the specified directory.</p>\n</td>\n</tr>\n");
 
   sendString("<tr><td colspan=\"3\">You can instrument ntop to save incoming flows on disk so"
 	     " that you can use them for integration with other applications or for "

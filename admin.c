@@ -152,36 +152,36 @@ void addUser(char* user) {
 	       "<TD ALIGN=left><INPUT TYPE=password NAME=pw1 SIZE=20></TD></TR>\n");
 
     /*********** Communities **********/
-    
+
     {
       int i, numUsers=0, len = strlen(COMMUNITY_PREFIX);
       datum key_data, return_data;
       char *aubuf=NULL, *userCommunities[20], communities[128], key[256];
-      
+
       sendString("<TR><TH ALIGN=right VALIGN=top>Authorised Communities:&nbsp;</TH>"
 		 "<TD ALIGN=left>\n<SELECT NAME=communities MULTIPLE>\n");
-      
+
       memset(userCommunities, 0, sizeof(userCommunities));
 
       if(user != NULL) {
 	snprintf(key, sizeof(key), "%s%s", COMMUNITY_PREFIX, &user[1]);
-	
+
 	if(fetchPwValue(key, communities, sizeof(communities)) == 0) {
 	  char *strtokState, *item;
-	  
+
 	  item = strtok_r(communities, "&", &strtokState);
 	  for(i=0; (item != NULL) && (i < sizeof(userCommunities)-1); i++) {
 	    userCommunities[i] = item;
 	    item = strtok_r(NULL, "&", &strtokState);
 	  }
-	  
+
 	  if(item != NULL)
 	    traceEvent(CONST_TRACE_ERROR, "Too many communities for user='%s'", &user[1]);
-	  
+
 	  userCommunities[i] = NULL;
 	}
       }
-      
+
       return_data = gdbm_firstkey(myGlobals.prefsFile);
 
       while(return_data.dptr != NULL) {
@@ -202,7 +202,7 @@ void addUser(char* user) {
 	  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 			"<option value=%s %s>%s</option>\n",
 			communityName,
-			found ? "SELECTED" : "", 
+			found ? "SELECTED" : "",
 			communityName);
 	  sendString(tmpStr);
 	  numUsers++;
@@ -277,7 +277,7 @@ void deleteUser(char* user) {
 void doAddUser(int len) {
   char *err=NULL, key_str[64], value_str[256];
   int j;
-  
+
   if(len <= 0) {
     err = "ERROR: both user and password must be non empty fields.";
   } else {
@@ -300,7 +300,7 @@ void doAddUser(int len) {
 	else if(strcmp(key, "communities") == 0) {
 	  if(num_communities+1 < MAX_NUM_COMMUNITIES) {
 	    communities[num_communities] = strdup(&postData[i+1]);
-	    
+
 	    for(j=0; j<strlen(communities[num_communities]); j++)
 	      if(communities[num_communities][j] == '&') {
 		communities[num_communities][j] = '\0';
@@ -363,22 +363,22 @@ void doAddUser(int len) {
 
       snprintf(key_str, sizeof(key_str), "%s%s", COMMUNITY_PREFIX, user);
       value_str[0] = '\0';
-      
+
       if(num_communities > 0) {
 	strcat(value_str, communities[0]);
-	
+
 	for(j=1; j<num_communities; j++) {
 	  strcat(value_str, "&");
 	  strcat(value_str, communities[j]);
 	}
-	
+
 	//traceEvent(CONST_TRACE_INFO, "========-----> [%s][%s]", key_str, value_str);
 	storePwValue(key_str, value_str);
       }
-      
+
       if(gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE) != 0)
 	err = "FATAL ERROR: unable to add the new user.";
-      
+
       /* Added user, clear the list */
       clearUserUrlList();
 
@@ -749,7 +749,7 @@ int doChangeFilter(int len) {
 	   || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
 	  traceEvent(CONST_TRACE_ERROR,
 		     "Wrong filter '%s' (%s) on interface %s - using old filter",
-		     myGlobals.runningPref.currentFilterExpression, 
+		     myGlobals.runningPref.currentFilterExpression,
 		     pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
 
 	  err="The syntax of the defined filter is wrong.";
@@ -809,7 +809,7 @@ int doChangeFilter(int len) {
                      "Wrong filter '%s' (%s) on interface %s - using old filter",
                      myGlobals.runningPref.currentFilterExpression,
                      pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
-	  
+
         }
 
         pcap_freecode(&fcode);
@@ -962,7 +962,7 @@ static void addKeyIfMissing(char* key, char* value,
 	 * Courtesy of Ambrose Li <a.c.li@ieee.org>
 	 *
 	 */
-	traceEvent(CONST_TRACE_FATALERROR, 
+	traceEvent(CONST_TRACE_FATALERROR,
 		   "No password for admin user - please re-run ntop in non-daemon mode first");
 	exit(1); /* Just in case */
       }
@@ -1155,7 +1155,7 @@ void addDefaultAdminUser(void) {
        if(!strcmp(key, NTOP_PREF_DEVICES))
 	 foundDevices = value;
      }
-     
+
      token = strtok_r(NULL, "&", &mainState);
    }
 
@@ -1204,7 +1204,7 @@ void addDefaultAdminUser(void) {
      if (basic_prefs && myGlobals.savedPref.daemonMode && !tmpPrefs.daemonMode) {
        processNtopPref(NTOP_PREF_DAEMON, FALSE, savePref, &tmpPrefs);
      }
-   
+
      if (display_prefs && myGlobals.savedPref.noInvalidLunDisplay &&
 	 !tmpPrefs.noInvalidLunDisplay) {
        processNtopPref(NTOP_PREF_NO_INVLUN, FALSE, savePref, &tmpPrefs);
@@ -1302,8 +1302,15 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
-		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;</p>",
-		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+#ifdef HAVE_MYSQL_H
+		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;"
+#endif
+		  "</p>",
+		  theLink, theLink, theLink, theLink, theLink, theLink
+#ifdef HAVE_MYSQL_H
+		  , theLink
+#endif
+		  );
     break;
 
   case showPrefDisplayPref:
@@ -1314,8 +1321,15 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
-		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;</p>",
-		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+#ifdef HAVE_MYSQL_H
+		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;"
+#endif
+		  "</p>",
+		  theLink, theLink, theLink, theLink, theLink, theLink
+#ifdef HAVE_MYSQL_H
+		  , theLink
+#endif
+		  );
     break;
 
   case showPrefIPPref:
@@ -1326,8 +1340,15 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
-		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;</p>",
-		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+#ifdef HAVE_MYSQL_H
+		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;"
+#endif
+		  "</p>",
+		  theLink, theLink, theLink, theLink, theLink, theLink
+#ifdef HAVE_MYSQL_H
+		  , theLink
+#endif
+		  );
     break;
 
   case showPrefFCPref:
@@ -1338,8 +1359,15 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  "[ <B>FC Prefs</B> ]&nbsp;"
 		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
-		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;</p>",
-		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+#ifdef HAVE_MYSQL_H
+		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;"
+#endif
+		  "</p>",
+		  theLink, theLink, theLink, theLink, theLink, theLink
+#ifdef HAVE_MYSQL_H
+		  , theLink
+#endif
+		  );
     break;
 
   case showPrefAdvPref:
@@ -1350,8 +1378,15 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
 		  "[ <B>Advanced Prefs</B> ]&nbsp;"
 		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
-		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;</p>",
-		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+#ifdef HAVE_MYSQL_H
+		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;"
+#endif
+		  "</p>",
+		  theLink, theLink, theLink, theLink, theLink, theLink
+#ifdef HAVE_MYSQL_H
+		  , theLink
+#endif
+		  );
     break;
 
   case showPrefDbgPref:
@@ -1362,10 +1397,18 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
 		  "[ <B>Debugging Prefs</B> ]&nbsp;"
-		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;</p>",
-		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+#ifdef HAVE_MYSQL_H
+		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;"
+#endif
+		  "</p>",
+		  theLink, theLink, theLink, theLink, theLink, theLink
+#ifdef HAVE_MYSQL_H
+		  , theLink
+#endif
+		  );
     break;
 
+#ifdef HAVE_MYSQL_H
   case showPrefDBPref:
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
 		  "[ <A HREF=%s1>Basic Prefs</A> ]&nbsp;"
@@ -1376,6 +1419,7 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
 		  "[ <B>DB Prefs</B> ]&nbsp;</p>",
 		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+#endif
     break;
   }
 
@@ -1508,7 +1552,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 
 	  devpointer = devpointer->next;
 	}
-      } else {	
+      } else {
 	sendString("<INPUT TYPE=hidden name=\""NTOP_PREF_DEVICES"\" value=\"\">");
 #ifndef WIN32
 	sendString("<font color=red>You cannot set the capture interface: missing privileges.</font><br>"
@@ -1693,7 +1737,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		     50, pref->fcNSCacheFile,
 		     "Location of file mapping VSAN/FC_ID to WWN/Alias");
     break;
-    
+
   case showPrefAdvPref:
     sendString("<INPUT TYPE=HIDDEN NAME=ADVANCED_PREFS VALUE=1>");
 
@@ -1790,6 +1834,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		       " and unlocks of the protective mutexes Ntop uses");
     break;
 
+#ifdef HAVE_MYSQL_H
   case showPrefDBPref:
     sendString("<INPUT TYPE=HIDDEN NAME=DB_PREFS VALUE=1>");
 
@@ -1802,23 +1847,24 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
       CONFIG_RADIO_ENTRY(DARK_BG, "Save Sessions into DB",
 			 NTOP_PREF_SAVE_SESSIONS_INTO_DB,
 			 pref->saveSessionsIntoDb,
-			 "Enable/disable ntop to save TCP/UDP sessiond into the SQL (MySQL) database.");      
+			 "Enable/disable ntop to save TCP/UDP sessions into the SQL (MySQL) database.");
     } else
       pref->saveSessionsIntoDb = 0;
 
-    CONFIG_STR_ENTRY(DARK_BG, "DB Configuration", 
+    CONFIG_STR_ENTRY(DARK_BG, "DB Configuration",
 		     NTOP_PREF_SQL_DB_CONFIG, 20, pref->sqlDbConfig,
 		     "Database (MySQL) database configuration: format &lt;Db host&gt;:&lt;DB user&gt;:&lt;DB User Pw&gt;.<br>"
 		     "Note that the credentials must allow this user to create tables,<br>"
 		     " hence make sure that the user privileges are properly specified.<p>"
 		     "<b>Note</b>: changes will have effect at the next ntop restart");
 
-    CONFIG_INT_ENTRY(DARK_BG, "DB Max record lifetime", 
+    CONFIG_INT_ENTRY(DARK_BG, "DB Max record lifetime",
 		     NTOP_PREF_SQL_REC_LIFETIME, 5,
 		     pref->sqlRecDaysLifetime,
 		     "Maximum database (MySQL) records (flows and netflows) persistence [days] in the database after which <br>"
 		     "will be automatically removed. Set this parameter to 0 (zero) to disable record purge.");
     break;
+#endif
   }
 
   sendString ("</TABLE>");

@@ -59,8 +59,8 @@ static int exec_sql_query(char *sql) {
   if(mysql_query(&mysql, sql)) {
     int err_id = mysql_errno(&mysql);
 
-    traceEvent(CONST_TRACE_ERROR, "MySQL error: %s [%d]",
-	       mysql_error(&mysql), err_id);
+    traceEvent(CONST_TRACE_ERROR, "MySQL error: %s [%d][%s]",
+	       mysql_error(&mysql), err_id, sql);
 
     if(err_id == CR_SERVER_GONE_ERROR) {
       // mysql_close(&mysql);
@@ -288,8 +288,11 @@ int dump_session_to_db(IPSession *sess) {
   } else {
     char sql[1024], clientNwDelay[32] = { 0 }, serverNwDelay[32] = { 0 };
 
-    if((sess->lastFlags == 0) || (sess->nwLatency.tv_sec > 100))
-      tmp[0] = '\0';
+    if((sess->lastFlags == 0) 
+       || (sess->clientNwDelay.tv_sec > 100) /* Too large */
+       || (sess->serverNwDelay.tv_sec > 100) /* Too large */
+       )
+      clientNwDelay[0] = '\0', serverNwDelay[0] = '\0';
     else {
       int len;
 
@@ -306,7 +309,7 @@ int dump_session_to_db(IPSession *sess) {
 		  "isPassiveFtp, info, guessedProto) VALUES "
 		  "('%d', '%s', '%s',  '%d', '%d', "
 		  " '%lu', '%lu', '%lu', '%lu', '%lu', '%lu', "
-		  " '%s',  '%d',  '%d',  '%d',  '%s',  '%s')",
+		  " '%s', '%s', '%d',  '%d',  '%d',  '%s',  '%s')",
 		  (sess->lastFlags == 0) ? 17 /* udp */ : 6 /* tcp */,
 		  sess->initiator->hostNumIpAddress,
 		  sess->remotePeer->hostNumIpAddress, sess->sport, sess->dport,
