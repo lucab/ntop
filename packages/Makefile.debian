@@ -1,4 +1,7 @@
 all:
+	#
+	# Remember to configure the package with --enable-mysql 
+	#
 	rm -rf debian/tmp
 	cd ..;make install install-data-as
 	#cd ./debian/tmp; find usr -type d > ../dirs
