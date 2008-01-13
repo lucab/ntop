@@ -1300,6 +1300,11 @@ typedef struct {
 
 #define MAX_INTERFACE_STATS_QUEUE_LEN  32
 
+typedef struct optionTemplate {
+  u_int16_t templateId;
+  struct optionTemplate *next;
+} OptionTemplate;
+
 typedef struct netFlowGlobals {
   u_char netFlowDebug;
 
@@ -1329,7 +1334,8 @@ typedef struct netFlowGlobals {
     numSrcNetFlowsEntryAccepted,
     numDstNetFlowsEntryFailedBlackList, numDstNetFlowsEntryFailedWhiteList,
     numDstNetFlowsEntryAccepted;
-  u_long numNetFlowsV9TemplRcvd, numNetFlowsV9BadTemplRcvd, numNetFlowsV9UnknTemplRcvd;
+  u_long numNetFlowsV9TemplRcvd, numNetFlowsV9BadTemplRcvd, numNetFlowsV9UnknTemplRcvd,
+    numNetFlowsV9OptionFlowsRcvd;
 
   /* Stats */
   ProbeInfo probeList[MAX_NUM_PROBES];
@@ -1340,6 +1346,7 @@ typedef struct netFlowGlobals {
   Counter flowProcessedBytes;
   HostTraffic *dummyHost;
   FlowSetV9 *templates;
+  OptionTemplate *optionTemplates;
 
   pthread_t netFlowThread;
   int threadActive;
@@ -1352,7 +1359,6 @@ typedef struct netFlowGlobals {
   PthreadMutex ifStatsQueueMutex;
   ConditionalVariable ifStatsQueueCondvar;
 #endif
-
 } NetFlowGlobals;
 
 /* *********************************** */
