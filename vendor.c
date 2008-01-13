@@ -485,66 +485,68 @@ void createVendorTable(struct stat *dbStat) {
                           5000,
                           tmpLine, sizeof(tmpLine),
                           &numRead) == 0) {
+	int len;
 
-	    myGlobals.numVendorLookupRead++;
-	    if( (strstr(tmpLine, "(base") == NULL) &&
-		(strstr(tmpLine, "(special") == NULL) ) {
-	      continue;
-	    }
-	    tmpMAC = strtok_r(tmpLine, " \t", &strtokState);
-	    if(tmpMAC == NULL) continue;
-	    tmpTag1 = strtok_r(NULL, " \t", &strtokState);
-	    if(tmpTag1 == NULL) continue;
-	    if((strcmp(tmpTag1, "(base") == 0) || (strcmp(tmpTag1, "(special") == 0)) {
-	      tmpTag2 = strtok_r(NULL, " \t", &strtokState);
-	      if(tmpTag2 == NULL) continue;
-	      tmpVendor = strtok_r(NULL, "\n", &strtokState);
-	      if(tmpVendor == NULL) continue;
-	      /* Skip leading blanks and tabs*/
-	      while ( (tmpVendor[0] == ' ') || (tmpVendor[0] == '\t') ) tmpVendor++;
-	      memset(&macInfoEntry, 0, sizeof(macInfoEntry));
-	      if(strcmp(tmpTag1, "(special") == 0) {
-		macInfoEntry.isSpecial = 's';
-	      } else {
-		macInfoEntry.isSpecial = 'r';
-	      }
-	      memcpy(&(macInfoEntry.vendorName[0]),
-		     tmpVendor,
-		     min(strlen(tmpVendor)+1, sizeof(macInfoEntry.vendorName)-1));
-	      data_data.dptr = (void*)(&macInfoEntry);
-	      data_data.dsize = sizeof(macInfoEntry);
-	      tmpMACkey[0]='\0';
-	      strncat(tmpMACkey, tmpMAC, 2);
-	      strncat(tmpMACkey, ":", (sizeof(tmpMACkey) - strlen(tmpMACkey) - 1));
-	      strncat(tmpMACkey, tmpMAC+2, 2);
-	      strncat(tmpMACkey, ":", (sizeof(tmpMACkey) - strlen(tmpMACkey) - 1));
-	      strncat(tmpMACkey, tmpMAC+4, 2);
-	      if(strcmp(tmpTag2, "48)") == 0) {
-		/* special 48 - full tag */
-		strncat(tmpMACkey, ":", (sizeof(tmpMACkey) - strlen(tmpMACkey) - 1));
-		strncat(tmpMACkey, tmpMAC+6, 2);
-		strncat(tmpMACkey, ":", (sizeof(tmpMACkey) - strlen(tmpMACkey) - 1));
-		strncat(tmpMACkey, tmpMAC+8, 2);
-		strncat(tmpMACkey, ":", (sizeof(tmpMACkey) - strlen(tmpMACkey) - 1));
-		strncat(tmpMACkey, tmpMAC+10, 2);
-	      }
-	      key_data.dptr = tmpMACkey;
-	      key_data.dsize = strlen(tmpMACkey)+1;
-	      if(gdbm_store(myGlobals.macPrefixFile, key_data, data_data, GDBM_REPLACE) != 0) {
-		traceEvent(CONST_TRACE_WARNING,
-                           "VENDOR: unable to add record '%s': {%d, %s} - skipped",
-			   tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
-	      } else {
-		numLoaded++;
-		myGlobals.numVendorLookupAdded++;
-		if(macInfoEntry.isSpecial == 's')
-		  myGlobals.numVendorLookupAddedSpecial++;
+	myGlobals.numVendorLookupRead++;
+	if( (strstr(tmpLine, "(base") == NULL) &&
+	    (strstr(tmpLine, "(special") == NULL) ) {
+	  continue;
+	}
+	tmpMAC = strtok_r(tmpLine, " \t", &strtokState);
+	if(tmpMAC == NULL) continue;
+	tmpTag1 = strtok_r(NULL, " \t", &strtokState);
+	if(tmpTag1 == NULL) continue;
+	if((strcmp(tmpTag1, "(base") == 0) || (strcmp(tmpTag1, "(special") == 0)) {
+	  tmpTag2 = strtok_r(NULL, " \t", &strtokState);
+	  if(tmpTag2 == NULL) continue;
+	  tmpVendor = strtok_r(NULL, "\n", &strtokState);
+	  if(tmpVendor == NULL) continue;
+	  /* Skip leading blanks and tabs*/
+	  while ( (tmpVendor[0] == ' ') || (tmpVendor[0] == '\t') ) tmpVendor++;
+	  memset(&macInfoEntry, 0, sizeof(macInfoEntry));
+	  if(strcmp(tmpTag1, "(special") == 0) {
+	    macInfoEntry.isSpecial = 's';
+	  } else {
+	    macInfoEntry.isSpecial = 'r';
+	  }
+
+	  if(strlen(tmpVendor) >= (MAX_LEN_VENDOR_NAME-1))
+	    tmpVendor[MAX_LEN_VENDOR_NAME-1] = '\0';
+	  strcmp(macInfoEntry.vendorName, tmpVendor);
+	  data_data.dptr = (void*)(&macInfoEntry);
+	  data_data.dsize = sizeof(macInfoEntry);
+	  memset(tmpMACkey, 0, sizeof(tmpMACkey));
+	  strncat(tmpMACkey, tmpMAC, 2); len = 2; tmpMACkey[len] = '\0';
+	  strcat(tmpMACkey, ":"); len++; tmpMACkey[len] = '\0';
+	  strncat(tmpMACkey, &tmpMAC[2], 2); len += 2; tmpMACkey[len] = '\0';
+	  strcat(tmpMACkey, ":"); len++; tmpMACkey[len] = '\0';
+	  strncat(tmpMACkey, &tmpMAC[4], 2); len += 2; tmpMACkey[len] = '\0';
+	  if(strcmp(tmpTag2, "48)") == 0) {
+	    /* special 48 - full tag */
+	    strcat(tmpMACkey, ":"); len++; tmpMACkey[len] = '\0';
+	    strncat(tmpMACkey, &tmpMAC[6], 2); len +=2; tmpMACkey[len] = '\0';
+	    strcat(tmpMACkey, ":"); len++; tmpMACkey[len] = '\0';
+	    strncat(tmpMACkey, &tmpMAC[8], 2); len +=2; tmpMACkey[len] = '\0';
+	    strcat(tmpMACkey, ":");len++; tmpMACkey[len] = '\0';
+	    strncat(tmpMACkey, &tmpMAC[10], 2); len +=2; tmpMACkey[len] = '\0';
+	  }
+	  key_data.dptr = tmpMACkey;
+	  key_data.dsize = strlen(tmpMACkey)+1;
+	  if(gdbm_store(myGlobals.macPrefixFile, key_data, data_data, GDBM_REPLACE) != 0) {
+	    traceEvent(CONST_TRACE_WARNING,
+		       "VENDOR: unable to add record '%s': {%d, %s} - skipped",
+		       tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
+	  } else {
+	    numLoaded++;
+	    myGlobals.numVendorLookupAdded++;
+	    if(macInfoEntry.isSpecial == 's')
+	      myGlobals.numVendorLookupAddedSpecial++;
 #ifdef VENDOR_DEBUG
-		traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Added '%s': {%c, %s}",
-			   tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
+	    traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Added '%s': {%c, %s}",
+		       tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
 #endif
-	      }
-            }
+	  }
+	}
       } /* while ! eof */
 
       traceEvent(CONST_TRACE_INFO, "VENDOR: ...loaded %d records", numLoaded);
@@ -556,35 +558,35 @@ void createVendorTable(struct stat *dbStat) {
   } /* for macInputFiles */
 
   if (!myGlobals.runningPref.printFcOnly) {
-      traceEvent(CONST_TRACE_INFO, "Fingerprint: Loading signature file");
+    traceEvent(CONST_TRACE_INFO, "Fingerprint: Loading signature file");
       
-      fd = checkForInputFile("Fingerprint", "Fingerprint file...",
-			     CONST_OSFINGERPRINT_FILE, NULL, &compressedFormat);
+    fd = checkForInputFile("Fingerprint", "Fingerprint file...",
+			   CONST_OSFINGERPRINT_FILE, NULL, &compressedFormat);
 
-      if(fd != NULL) {
-          char line[384], lineKey[8];
-          int numEntries=0;
+    if(fd != NULL) {
+      char line[384], lineKey[8];
+      int numEntries=0;
           
-          numLoaded = 0;
+      numLoaded = 0;
           
-          while(readInputFile(fd, NULL, FALSE, compressedFormat, 0, line, sizeof(line), &numLoaded) == 0) {
-              if((line[0] == '\0') || (line[0] == '#') || (strlen(line) < 30)) continue;
-              line[strlen(line)-1] = '\0';
+      while(readInputFile(fd, NULL, FALSE, compressedFormat, 0, line, sizeof(line), &numLoaded) == 0) {
+	if((line[0] == '\0') || (line[0] == '#') || (strlen(line) < 30)) continue;
+	line[strlen(line)-1] = '\0';
               
-              safe_snprintf(__FILE__, __LINE__, lineKey, sizeof(lineKey), "%d", numEntries++);
-              memset(&key_data, 0, sizeof(key_data));
-              key_data.dptr   = lineKey; key_data.dsize  = strlen(key_data.dptr);
+	safe_snprintf(__FILE__, __LINE__, lineKey, sizeof(lineKey), "%d", numEntries++);
+	memset(&key_data, 0, sizeof(key_data));
+	key_data.dptr   = lineKey; key_data.dsize  = strlen(key_data.dptr);
               
-              memset(&data_data, 0, sizeof(data_data));
-              data_data.dptr  = line; data_data.dsize = strlen(line);
+	memset(&data_data, 0, sizeof(data_data));
+	data_data.dptr  = line; data_data.dsize = strlen(line);
               
-              if(gdbm_store(myGlobals.fingerprintFile, key_data, data_data, GDBM_REPLACE) != 0)
-                  traceEvent(CONST_TRACE_ERROR, "While adding %s=%s.", lineKey, line);       
-          }
+	if(gdbm_store(myGlobals.fingerprintFile, key_data, data_data, GDBM_REPLACE) != 0)
+	  traceEvent(CONST_TRACE_ERROR, "While adding %s=%s.", lineKey, line);       
+      }
           
-          traceEvent(CONST_TRACE_INFO, "Fingerprint: ...loaded %d records", numEntries);
-      } else
-          traceEvent(CONST_TRACE_NOISY, "Unable to find fingeprint signature file.");
+      traceEvent(CONST_TRACE_INFO, "Fingerprint: ...loaded %d records", numEntries);
+    } else
+      traceEvent(CONST_TRACE_NOISY, "Unable to find fingeprint signature file.");
   }
 }
 
