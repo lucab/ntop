@@ -459,7 +459,7 @@ void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
       p[num] = traf.value;
       switch(i) {
       case 0:
-	lbl[num++] = "12PM-1AM";
+	lbl[num++] = "12-1AM";
 	break;
       case 1:
 	lbl[num++] = "1-2AM";
@@ -492,10 +492,10 @@ void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
 	lbl[num++] = "10-11AM";
 	break;
       case 11:
-	lbl[num++] = "11-12AM";
+	lbl[num++] = "11AM-12PM";
 	break;
       case 12:
-	lbl[num++] = "12AM-1PM";
+	lbl[num++] = "12-1PM";
 	break;
       case 13:
 	lbl[num++] = "1-2PM";
@@ -528,7 +528,7 @@ void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
 	lbl[num++] = "10-11PM";
 	break;
       case 23:
-	lbl[num++] = "11-12PM";
+	lbl[num++] = "11PM-12AM";
 	break;
       }
     }
