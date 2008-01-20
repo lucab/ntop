@@ -709,7 +709,13 @@ void* dequeueAddress(void *_i) {
   myGlobals.dequeueAddressThreadId[dqaIndex] = 0;
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Address resolution thread terminated [p%d]",
-             pthread_self(), dqaIndex+1, getpid());
+             pthread_self(), dqaIndex+1, 
+#ifndef WIN32
+			 getpid()
+#else
+			 0
+#endif
+			 );
 
   return(NULL);
 }

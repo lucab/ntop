@@ -36,11 +36,22 @@
 #define EOPNOTSUPP              WSAEOPNOTSUPP
 #endif
 
+#ifndef NS_INT16SZ
+#define NS_INT16SZ	2
+#endif
+
+#ifndef NS_CMPRSFLGS
+#define NS_CMPRSFLGS	0xc0
+#endif
+
+#ifndef NS_MAXCDNAME
+#define NS_MAXCDNAME	255
+#endif
+
 /* Courtesy of Wies-Software <wies@wiessoft.de> */
 extern char* getadminpass(const char *prompt);
 extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
 extern u_char isNtopAservice;
-extern const char *inet_ntop(int af, const void *src, char *dst, size_t size);
 
 extern char _wdir[], VERSION[];
 
