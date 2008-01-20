@@ -1375,6 +1375,7 @@ void* invokeNtop(LPTSTR szAppParameters) {
     }
 
   ntop_main(dwNewArgc, lpszNewArgv);
+  SetEvent(hServerStopEvent); // Signal main thread that we're leaving
   return(NULL);
 }
 
