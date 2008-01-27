@@ -36,6 +36,9 @@
 #              RedHat 9
 #              SuSE 9.3
 #
+# 2008/01 Tested:
+#              Ubuntu 7.10 - Gutsy
+#
 
 #  Released under GPL...
 
@@ -156,6 +159,10 @@ function checkEtcIssue() {
 function processReleaseFile() {
 
     if test "x${releaseFile}" = "x/etc/issue"; then
+      return
+    fi
+
+    if test ! -f ${releaseFile} ; then
       return
     fi
 
