@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-07 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 2002-08 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -2640,8 +2640,15 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
       argv[argc++] = stepStr;
 
       if(isCounter) {
+	/*
+	  The use of DERIVE should avoid spikes on graphs when
+	  ntop is restarted.
+	  Patch courtesy of Graeme Fowler <graeme@graemef.net>
+	 */
 	safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr),
-		      "DS:counter:COUNTER:%d:0:%u", heartbeat, topValue);
+		      "DS:counter:%s:%d:0:%u", 
+		      "DERIVE" /* "COUNTER" */,
+		      heartbeat, topValue);
       } else {
 	/*
 	  Unlimited (sort of)
