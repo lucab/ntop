@@ -2621,7 +2621,9 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 
       topValue = 1000000000 /* 1 Gbit/s */;
 
-      if(strncmp(key, "pkt", 3) == 0) {
+      if(strstr(key, "throughput")) {
+	; /* Nothing to do as throughput is saved in Mbps */
+      } else if(strncmp(key, "pkt", 3) == 0) {
 	topValue /= 8*64 /* 64 bytes is the shortest packet we care of */;
       } else {
 	topValue /= 8 /* 8 bytes */;
@@ -2696,7 +2698,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 		    "RRA:HWPREDICT:1440:0.1:0.0035:20");
       argv[argc++] = tempStr;
 
-      if(0) {
+      if(1) {
 	int j;
 
 	for(j=0; j<argc; j++)
