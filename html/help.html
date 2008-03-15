@@ -50,7 +50,7 @@ for packets may be incorrect and that will confuse <b>ntop</b>.</p>
 <h2><i><img src="Risk_high.gif" alt="High risk" width="12" height="14" border="0">&nbsp;
 High risk - problems which are rarely benign</i></h2>
 
-<h3><a name="#2">Duplicated MAC</a></h3>
+<h3><a name="2">Duplicated MAC</a></h3>
 <p><b>ntop</b> will report this problem for hosts where a single MAC address (layer 2) is 
 found on packets from several IP (layer 3) addresses. 
 There are a number of possible causes:</p>
@@ -75,7 +75,7 @@ to the host.  If <b>ntop</b> is monitoring these multiple segments, it will see
 <p class="flagcounter">Flag/Counter:&nbsp;HOST_DUPLICATED_MAC</p>
 <br />
 
-<h3><a name="#3">Port Zero Traffic</a></h3>
+<h3><a name="3">Port Zero Traffic</a></h3>
 <p><b>ntop</b> will report this problem for those hosts that produced traffic on ports 
 where we should see no traffic (e.g. port zero). Port 0 is a reserved port in 
 tcp/ip networking,
@@ -90,7 +90,7 @@ do not block it, even if the device blocks everything else), so check it out!</p
 <h2><i><img src="Risk_medium.gif" alt="Medium risk" width="11" height="13" border="0">&nbsp;
 Unexpected packets (e.g. traffic to closed port or connection reset)</i></h2>
 
-<h3><a name="#1">Wrong network mask</a></h3>
+<h3><a name="1">Wrong network mask</a></h3>
 <p><b>ntop</b> has detected an anomalyous situation with the network mask for a host.
 This occurs if <b>ntop</b> determines that the address is a broadcast address, but the 
 actual packet destination is different.</p>
@@ -112,7 +112,7 @@ own NIC.  So if <b>ntop</b>'s NIC has a different configuration it will tag traf
 the wrong mask.</p>
 <p class="flagcounter">Flag/Counter:&nbsp;HOST_WRONG_NETMASK</p>
 
-<h3><a name="#4">Too many host contacts</a></h3>
+<h3><a name="4">Too many host contacts</a></h3>
 <p><b>ntop</b> keeps tabs on the number of hosts contacted by each host being monitored, called
 'peers'.  Usually a host contacts a limited number of hosts in a short amount of time. This flag indicates
 that the flagged host has contacted a large number of hosts.</p>
@@ -127,7 +127,7 @@ indicative of a worm.  If you see this flag, you should carefully analyze the ho
 to see whether it is infected.</p>
 <p class="flagcounter">Flag/Counter:&nbsp;totContactedSentPeers and/or totContactedRcvdPeers</p>
 
-<h3><a name="#5">(Sent:syn-fin)</a></h3>
+<h3><a name="5">(Sent:syn-fin)</a></h3>
 <p><b>ntop</b> has seen one or more packets with both the <i>SYN</i> and <i>FIN</i> flags set.
 This violates the tcp/ip protocol and is most often part of a port scan or denial of service
 attack. The flagged host is the SENDER of these malformed packets and should be investigated.</p>
@@ -177,7 +177,7 @@ packets, which often indicate a failing router or bad network connection.</p>
 <hr />
 
 <h2><img src="Risk_low.gif" alt="Low risk" width="11" height="13" border="0">&nbsp;
-<a name="#6">Unexpected packets</a> (e.g. traffic to closed port or connection reset)</h2>
+<a name="6">Unexpected packets</a> (e.g. traffic to closed port or connection reset)</h2>
 
 <h3>(Rcvd:rejected)</h3>
 <p><b>ntop</b> has seen one or more packets with the <i>ACK</i> and <i>RST</i> flags set.
