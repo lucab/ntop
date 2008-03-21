@@ -5123,19 +5123,21 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     traceEvent(CONST_TRACE_INFO, "RRD: Created base directory (%s)", dname);
   }
 
-  for (i=0; i<sizeof(rrd_subdirs)/sizeof(rrd_subdirs[0]); i++) {
+  if ( sizeof(rrd_subdirs[0]) > 0 ) {
+    for (i=0; i<sizeof(rrd_subdirs)/sizeof(rrd_subdirs[0]); i++) {
     safe_snprintf(__FILE__, __LINE__, dname, sizeof(dname), "%s/%s", myGlobals.rrdPath, rrd_subdirs[i]);
     revertSlashIfWIN32(dname, 0);
 
-    if(ntop_mkdir(dname, myGlobals.rrdDirectoryPermissions) == -1) {
-      if(errno != EEXIST) {
-	traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)", errno, dname);
-        setPluginStatus("Disabled - unable to create rrd subdirectory.");
-	/* Return w/o creating the rrd thread ... disabled */
-	return(NULL);
+      if(ntop_mkdir(dname, myGlobals.rrdDirectoryPermissions) == -1) {
+        if(errno != EEXIST) {
+          traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)", errno, dname);
+          setPluginStatus("Disabled - unable to create rrd subdirectory.");
+          /* Return w/o creating the rrd thread ... disabled */
+          return(NULL);
+        }
+      } else {
+        traceEvent(CONST_TRACE_INFO, "RRD: Created directory (%s)", dname);
       }
-    } else {
-      traceEvent(CONST_TRACE_INFO, "RRD: Created directory (%s)", dname);
     }
   }
 
