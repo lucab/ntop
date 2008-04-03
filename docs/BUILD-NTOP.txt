@@ -160,19 +160,6 @@ Compile problems
 Notes
 =====
 
-   ntop 2.2.1+
-
-      A frozen version of rrd is in the myrrd subdirectory and used
-      by ntop.
-
-      gdchart has been replaced entirely by code in graph.c
-
-      Graphics are no longer optional.
-
-      We no longer include static versions of the helper libraries
-      (gd, libpng and libz).  Instead we use the installed versions,
-      hence the 'increase' in the # of required packages.  
-
    ntop 3.3 (3.2.2+ development)
 
       Any parameters specified on ./autogen.sh which are not recognized
@@ -206,6 +193,20 @@ Notes
      create it, by running  ./autogen.sh with the --noconfig option, then run
      ./configure --help.
 
+   ntop 2.2.1+
+
+      A frozen version of rrd is in the myrrd subdirectory and used
+      by ntop.
+
+      gdchart has been replaced entirely by code in graph.c
+
+      Graphics are no longer optional.
+
+      We no longer include static versions of the helper libraries
+      (gd, libpng and libz).  Instead we use the installed versions,
+      hence the 'increase' in the # of required packages.  
+
+
 ----------------------------------------
 Luca Deri <deri@ntop.org> - January 2001
 Updated - June 2002
@@ -214,3 +215,4 @@ Updated - January 2003 (automake 1.6+ vs. 1.5+)
 Updated - July 2003 (2.2.1+ changes)
 Updated - March 2004 (3.0 final changes)
 Updated - May 2006 (replace ./configure with ./autogen.sh)
+Updated - April 2008
