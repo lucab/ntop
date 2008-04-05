@@ -2698,7 +2698,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 		    "RRA:HWPREDICT:1440:0.1:0.0035:20");
       argv[argc++] = tempStr;
 
-      if(1) {
+      if(0) {
 	int j;
 
 	for(j=0; j<argc; j++)

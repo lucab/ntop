@@ -754,10 +754,6 @@ void sanitizeIfName(char *deviceDescr) {
 /* ********************************************************************** */
 
 void calculateUniqueInterfaceName(int deviceId) {
-#ifdef WIN32
-  int i;
-#endif
-
   if(myGlobals.device[deviceId].uniqueIfName) 
     free(myGlobals.device[deviceId].uniqueIfName);
 

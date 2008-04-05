@@ -3075,7 +3075,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 static void printHostNwDelay(HostTraffic *el, int actualDeviceId, 
 			     NetworkDelay *delay, u_int clientDelay) {
   int i;
-  char buf[2*LEN_GENERAL_WORK_BUFFER], linkName[64];
+  char buf[2*LEN_GENERAL_WORK_BUFFER];
 
   sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
 	     "<TH "TH_BG">Last Time</TH><TH "TH_BG">Service</TH>"
@@ -3087,7 +3087,6 @@ static void printHostNwDelay(HostTraffic *el, int actualDeviceId,
 
   for(i=0; i<myGlobals.ipPortMapper.numSlots; i++) {
     time_t when;
-    float f;
     HostTraffic *peerHost, tmpEl;
     char webHostName[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
 
@@ -3117,28 +3116,6 @@ static void printHostNwDelay(HostTraffic *el, int actualDeviceId,
   }
 
   sendString("</TABLE>"TABLE_OFF"\n");
-
-#if 0
-  sendString("<p>\n<iframe frameborder=0 SRC=\"");
-
-  if(el->hostNumIpAddress[0] != '\0')
-    strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
-  else
-    strncpy(linkName, el->ethAddressString, sizeof(linkName));
-  
-  /* For Ethernet and Ipv6 addresses */
-  urlFixupToRFC1945Inplace(linkName);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		"%s%s?host=%s&netmode=%d",
-		CONST_LINE_HOST_NW_DELAY,
-		CHART_FORMAT,		
-		linkName, 
-		clientDelay);
-  
-  sendString(buf);
-  sendString("\" width=400 height=250></iframe>\n");
-#endif
 }
 
 /* ************************************ */

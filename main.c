@@ -317,20 +317,16 @@ int main(int argc, char *argv[]) {
   int i, rc, userSpecified;
   char ifStr[196] = {0};
   time_t lastTime;
-#ifndef WIN32
-  time_t endTime;
-#endif
   char *cmdLineBuffer, *readBuffer, *readBufferWork;
   FILE *fd;
   struct stat fileStat;
   int effective_argc;
   char **effective_argv;
-#ifndef WIN32
+  time_t endTime;
   char main_buf[LEN_GENERAL_WORK_BUFFER];
   char lib[LEN_GENERAL_WORK_BUFFER],
        env[LEN_GENERAL_WORK_BUFFER],
        buf[LEN_GENERAL_WORK_BUFFER];
-#endif
 
   /*
   unsigned long driveSerial;
@@ -660,7 +656,7 @@ printf("Unable to read serial number\n");
    */
   startSniffer();
 
-#ifndef WIN32
+// #ifndef WIN32
   while(myGlobals.ntopRunState == FLAG_NTOPSTATE_RUN) {
     ntopSleepWhileSameState(PARM_SLEEP_LIMIT);
 
@@ -689,7 +685,14 @@ printf("Unable to read serial number\n");
   traceEvent(CONST_TRACE_INFO, "        ntop is shutdown...        ");
   traceEvent(CONST_TRACE_INFO, "===================================");
 
+  /*
+#else
+  if(myGlobals.runningPref.rFileName != NULL) {
+	while(1) 
+		sleep(30);
+  }
 #endif
+*/
 
   return(0);
 }

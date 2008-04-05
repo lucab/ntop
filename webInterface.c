@@ -6251,7 +6251,9 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 #ifndef WIN32
   char mainbuf[LEN_GENERAL_WORK_BUFFER];
 #endif
+#ifndef WIN32
   char lib[LEN_GENERAL_WORK_BUFFER], env[LEN_GENERAL_WORK_BUFFER];
+#endif
   char formatBuf[48];
   int i, bufLength, bufPosition, bufUsed;
   unsigned int idx, minLen, maxLen;

@@ -1096,7 +1096,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     if((port_idx = mapGlobalToLocalIdx(port)) == -1) {
       port = sport;
       if((port_idx = mapGlobalToLocalIdx(port)) == -1) {
-	return;
+	return(-1);
       }
     }
 
