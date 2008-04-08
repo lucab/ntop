@@ -1035,9 +1035,9 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
   char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN];
   char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN], tmpStr[32],
     buf2[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][MAX_BUF_LEN];
-  char fname[384], *label = NULL, _rrdName[256], *title = NULL;
+  char fname[384], *label = NULL, _rrdName[256], *title = NULL, *str;
   struct nameLabel *rrds = NULL;
-  int argc = 0, rc, x, y, i, entryId=0;
+  int argc = 0, rc, x, y, i, entryId = 0, pathIdx;
   double ymin, ymax;
   struct stat statbuf;
 
@@ -1228,59 +1228,66 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
   argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" CONST_RRD_DEFAULT_FONT_NAME;
 #endif
 #endif
-  revertDoubleColumnIfWIN32(path);
-
-  for(i=0, entryId=0; rrds[i].name != NULL; i++) {
-    if(!strcmp(rrds[i].name, "throughput")) {
-#ifdef WIN32
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/interfaces/%s/%s.rrd",
-		    myGlobals.rrdVolatilePath, driveSerial, rrdPath, rrds[i].name);
-#else
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/%s.rrd",
-		    myGlobals.rrdVolatilePath, rrdPath, rrds[i].name);
-#endif
-    } else
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/%s.rrd",
-		    myGlobals.rrdPath, rrdPath, rrds[i].name);
-
-    revertSlashIfWIN32(path, 0);
-
-    if(stat(path, &statbuf) == 0) {
-      char metric_name[32];
-
-      // traceEvent(CONST_TRACE_WARNING,  "-- 3 --> (%s)", path);
-
-      safe_snprintf(__FILE__, __LINE__, buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path);
-      argv[argc++] = buf[entryId];
-
-      safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-		    entryId, rrd_colors[entryId], spacer(rrds[i].label, tmpStr, sizeof(tmpStr), metric_name, sizeof(metric_name)));
-      argv[argc++] = buf1[entryId];
-
-      safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %3.1lf%s\\t");
-      argv[argc++] = buf2[entryId];
-
-      safe_snprintf(__FILE__, __LINE__, buf3[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Last\\: %3.1lf%s\\n");
-      argv[argc++] = buf3[entryId];
-
-      entryId++;
-    } else {
-      // traceEvent(CONST_TRACE_WARNING, "RRD: Unable to find file %s", path);
-    }
 
     argv[argc++] = "--title";
     argv[argc++] = title;
 
-    if(entryId >= MAX_NUM_ENTRIES) break;
+	str = "interfaces/";
+	i = strlen(str);
+	if(!strncmp(rrdPath, str, i))
+		pathIdx = i;
+	else
+		pathIdx = 0;
 
-    if(entryId >= CONST_NUM_BAR_COLORS) {
-      if(colorWarn == 0) {
-        traceEvent(CONST_TRACE_WARNING, "RRD: Number of defined bar colors less than max entries. Some graph(s) truncated");
-        colorWarn = 1;
-      }
+	for(i=0, entryId=0; rrds[i].name != NULL; i++) {
+		char metric_name[32];
 
-      break;
-    }
+		if(!strcmp(rrds[i].name, "throughput")) {
+#ifdef WIN32
+			safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/interfaces/%s/%s.rrd",
+				myGlobals.rrdVolatilePath, driveSerial, &rrdPath[pathIdx], rrds[i].name);
+#else
+			safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/%s.rrd",
+				myGlobals.rrdVolatilePath, rrdPath, rrds[i].name);
+#endif
+		} else
+			safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/%s.rrd",
+			myGlobals.rrdPath, &rrdPath[pathIdx], rrds[i].name);
+
+		revertSlashIfWIN32(path, 0);
+
+		if(stat(path, &statbuf) == 0) {
+			// traceEvent(CONST_TRACE_WARNING,  "-- 3 --> (%s)", path);
+			revertDoubleColumnIfWIN32(path);
+			safe_snprintf(__FILE__, __LINE__, buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path);
+		argv[argc++] = buf[entryId];
+
+		safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
+			entryId, rrd_colors[entryId], spacer(rrds[i].label, tmpStr, sizeof(tmpStr), metric_name, sizeof(metric_name)));
+		argv[argc++] = buf1[entryId];
+
+		safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %3.1lf%s\\t");
+		argv[argc++] = buf2[entryId];
+
+		safe_snprintf(__FILE__, __LINE__, buf3[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Last\\: %3.1lf%s\\n");
+		argv[argc++] = buf3[entryId];
+
+		entryId++;
+
+	if(entryId >= MAX_NUM_ENTRIES) break;
+
+	if(entryId >= CONST_NUM_BAR_COLORS) {
+		if(colorWarn == 0) {
+			traceEvent(CONST_TRACE_WARNING, "RRD: Number of defined bar colors less than max entries. Some graph(s) truncated");
+			colorWarn = 1;
+		}
+
+		break;
+
+				} else {
+			// traceEvent(CONST_TRACE_WARNING, "RRD: Unable to find file %s", path);
+		}
+	}
   }
 
   accessMutex(&rrdMutex, "rrd_graph");
@@ -1288,9 +1295,6 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
   opterr=0; /* no error messages */
 
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
-  rrd_clear_error();
-  addRrdDelay();
-  rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);
 
   if(debug_rrd_graph) {
     int j;
@@ -1299,6 +1303,9 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
       traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
   }
 
+  rrd_clear_error();
+  addRrdDelay();
+  rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);
   calfree();
 
   if(rc == 0) {
