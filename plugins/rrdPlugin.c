@@ -1591,8 +1591,9 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
 		    myGlobals.rrdPath, rrd_subdirs[2], rrdPath, rrds[i]);
 
     revertSlashIfWIN32(path, 0);
-
     if(stat(path, &statbuf) == 0) {
+    revertDoubleColumnIfWIN32(path);
+    sanitizeRrdPath(path);
       safe_snprintf(__FILE__, __LINE__, buf[entryId], MAX_BUF_LEN, "DEF:bctr%d=%s:counter:AVERAGE", entryId, path);
       argv[argc++] = buf[entryId];
 
@@ -2378,6 +2379,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	    ip_buf[strlen(ip_buf)-strlen(metric_name)] = '\0';
 
 	  if(!titleAlreadySent) {
+		  titleAlreadySent = 1;
 	    if(graphId == 99) {
 	      argv[argc++] = "--title";
 	      // traceEvent(CONST_TRACE_INFO, "RRD: --> (%s)", filename);
