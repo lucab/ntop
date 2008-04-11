@@ -7,7 +7,6 @@
 #include <iwlib.h>
 #include <netinet/ether.h>
 
-#include "main.h"
 #include "iwtan_analyze.h"
 
 int main (int argc, char** argv){
