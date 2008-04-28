@@ -185,7 +185,7 @@ int printStation(iwtan_station* sta, iwtan_ap* ap, int i){
   int j=0;
   while (*(timeBuf+j) != '\n') j++; *(timeBuf+j) = '\0';
     
-  printf("Station n. %d\nMAC: %s\nAssociated to AP: %s (%s)\nIP4: %s\nIP6: %s\nLast seen:%s\n\n",i, ether_ntoa_r(sta->mac, stMacBuf), ether_ntoa_r(ap->mac, apMacBuf), ap->essid, iwtan_ip4toa(sta->ip4, stIp4Buf), iwtan_ip6toa(sta->ip6, stIp6Buf), timeBuf);
+  printf("Station n. %d\nMAC: %s\nAssociated to AP: %s (%s)\nIP4: %s\nIP6: %s\nLast seen:%s\n\n",i, ether_ntoa_r(sta->mac, stMacBuf), ether_ntoa_r(ap->bssId, apMacBuf), ap->essid, iwtan_ip4toa(sta->ip4, stIp4Buf), iwtan_ip6toa(sta->ip6, stIp6Buf), timeBuf);
 
   free (stMacBuf);
   free (apMacBuf);
@@ -195,14 +195,13 @@ int printStation(iwtan_station* sta, iwtan_ap* ap, int i){
 }
 
 int printAP(iwtan_ap* ap){
-  char* apMacBuf = calloc(18,sizeof(char));
   char* bssidBuf = calloc(18,sizeof(char));
   char* timeBuf = calloc(26,sizeof(char));
   ctime_r(&(ap->lastSeen), timeBuf);
   int j=0;
   while (*(timeBuf+j) != '\n') j++; *(timeBuf+j) = '\0';
   
-  printf("Access Point\nMAC: %s\n", ether_ntoa_r(ap->mac, apMacBuf));
+  printf("Access Point\nBSS ID: %s\n", ether_ntoa_r(ap->bssId, bssidBuf));
   (ap->WEPped) ? printf("WEP is on.\n") : printf("WEP is off.\n");
   printf("Data rate: %d Mbps\nAntenna: %d\nFrequency: %d MHz\n", ap->dataRate, ap->antenna, ap->frequency);
   switch (ap->type){
@@ -210,9 +209,8 @@ int printAP(iwtan_ap* ap){
   case 1: printf("Type: 802.11b\n"); break;
   }
   printf("Signal strength: %d\n", ap->signal);
-  printf("BSS id: %s\nESSID: %s\nDescription: %s\nAssociated clients: %d\nLast seen:%s\n\n", ether_ntoa_r(ap->bssId, bssidBuf), ap->essid, ap->description, ap->associations, timeBuf);
+  printf("ESSID: %s\nDescription: %s\nAssociated clients: %d\nLast seen:%s\n\n", ap->essid, ap->description, ap->associations, timeBuf);
   
-  free (apMacBuf);
   free (bssidBuf);
   free (timeBuf);
 }

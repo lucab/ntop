@@ -61,17 +61,17 @@ int iwtan_context_destroy(iwtan_context* context){
 /* +++++++++++++++++++++++ DATA BROWSING FUNCTIONS ++++++++++++++++++++++++++ */
 
 /*
-  Get a linked list of wi_stations_el containing a copy of the stations currently associated to the AP with the given MAC address.
+  Get a linked list of wi_stations_el containing a copy of the stations currently part of the BSS with the given id.
   All the stations properties are copied so that they may be used thread-safely.
   The function iwtan_free_stations_ll() should be called when the list and the stations are no longer needed.
   Returns NULL if no associations were found, otherwise a reference to the first element of the list.
   Function is thread-safe.*/
-iwtan_station_el* iwtan_get_by_AP(mac_address* apMac, iwtan_context* context){
+iwtan_station_el* iwtan_get_by_AP(mac_address* bssId, iwtan_context* context){
   int i;
   pthread_mutex_lock(&(context->mutex));
   iwtan_station_el* ret;
 
-  int firstPos = _iwtan_first_bsearch_by_AP(apMac, context);
+  int firstPos = _iwtan_first_bsearch_by_AP(bssId, context);
   if (firstPos == -1) {
     ret = NULL;
   }
@@ -85,7 +85,7 @@ iwtan_station_el* iwtan_get_by_AP(mac_address* apMac, iwtan_context* context){
     currentAss = context->ap_ass + currentAssI;
 
     iwtan_station_el* currListEl = firstListEl;
-    while (currentAssI < context->assN && !iwtan_cmp_mac(currentAss->ap->mac, apMac)){
+    while (currentAssI < context->assN && !iwtan_cmp_mac(currentAss->ap->bssId, bssId)){
       currListEl->next = malloc(sizeof(iwtan_station_el));
       currListEl = currListEl->next;
       currListEl->station = _iwtan_copy_station(currentAss->station);
@@ -228,7 +228,6 @@ iwtan_ap* iwtan_get_by_essid(char* essid, iwtan_context* context){
   Free an access point and all its elements. Returns 0 only on success.
 */
 int iwtan_free_AP(iwtan_ap* ap){
-  free(ap->mac);
   free(ap->bssId);
   free(ap->essid);
   free(ap->description);
@@ -343,8 +342,8 @@ char* iwtan_ip6toa(ip6_address ip6, char* result){
   If the AP was not present in the database, a new one is created.
   Returns 0 if the new association has been made, !=0 on errors.
 */
-int _iwtan_add_association(mac_address* ap_mac, mac_address* station_mac, iwtan_context* context){
-  if (ap_mac == NULL || station_mac == NULL) return 1;
+int _iwtan_add_association(mac_address* bssId, mac_address* station_mac, iwtan_context* context){
+  if (bssId == NULL || station_mac == NULL) return 1;
 
   /* Search for previousely existing associations for the station MAC address*/
   iwtan_station* station;
@@ -354,11 +353,11 @@ int _iwtan_add_association(mac_address* ap_mac, mac_address* station_mac, iwtan_
     station = calloc(1, sizeof(iwtan_station));
     _iwtan_init_station(station_mac, station);
 
-    iwtan_ap** ap_ref = _iwtan_bsearch_AP(ap_mac, context);
+    iwtan_ap** ap_ref = _iwtan_bsearch_AP(bssId, context);
     iwtan_ap* ap=NULL;
     if (ap_ref == NULL){
       /*If the access point is not present in the database, we have to create the new access point.*/
-      ap = _iwtan_add_new_AP(ap_mac, context);
+      ap = _iwtan_add_new_AP(bssId, context);
     } else
       ap = *ap_ref;
     
@@ -372,12 +371,12 @@ int _iwtan_add_association(mac_address* ap_mac, mac_address* station_mac, iwtan_
     ass->station->lastSeen = time(NULL);
     iwtan_ap* oldAP = ass->ap;
     oldAP->associations--;
-    iwtan_ap** newAP_ref = _iwtan_bsearch_AP(ap_mac, context);
+    iwtan_ap** newAP_ref = _iwtan_bsearch_AP(bssId, context);
     iwtan_ap* newAP;
 
     if (newAP_ref == NULL){
       /*If the access point is not present in the database, we have to create the new access point.*/
-      newAP = _iwtan_add_new_AP(ap_mac, context);
+      newAP = _iwtan_add_new_AP(bssId, context);
     } else {
       newAP = *newAP_ref;
     }
@@ -387,7 +386,7 @@ int _iwtan_add_association(mac_address* ap_mac, mac_address* station_mac, iwtan_
     ass->ap = newAP; //in any case edit the st_ass
     
     /*Find the association in ap_ass to the old access point and copy to it.*/
-    int APPosI = _iwtan_first_bsearch_by_AP(oldAP->mac, context);
+    int APPosI = _iwtan_first_bsearch_by_AP(oldAP->bssId, context);
     while (iwtan_cmp_mac(station_mac, ((iwtan_association*)(context->ap_ass + APPosI))->station->mac)) APPosI++;
     *(context->ap_ass + APPosI) = *ass;
   }
@@ -420,18 +419,18 @@ int _iwtan_remove_AP (iwtan_ap* ap, iwtan_context* context){
 }
 
 /*
-  Add an access point with the given MAC address to the list of access points. The AP should not be present in the list before calling this function.
+  Add an access point with the given BSS Id to the list of access points. The AP should not be present in the list before calling this function.
   The list gets ordered by the access points MAC address.
   Not thread safe.
   Returns a pointer to the Access Point
 */
-iwtan_ap* _iwtan_add_new_AP(mac_address* mac, iwtan_context* context){
+iwtan_ap* _iwtan_add_new_AP(mac_address* bssId, iwtan_context* context){
   if (context->apN == context->allAP){
     context->allAP *= 2;
     context->ap_list = realloc(context->ap_list, context->allAP * sizeof(iwtan_ap*));
   }
   iwtan_ap* newAP = calloc(1, sizeof(iwtan_ap));
-  _iwtan_init_AP(mac, newAP);
+  _iwtan_init_AP(bssId, newAP);
   *(context->ap_list + context->apN) = newAP;
   context->apN++;
   qsort(context->ap_list, context->apN, sizeof(iwtan_ap*), (int(*)(const void *, const void *))_iwtan_cmp_AP);
@@ -487,17 +486,13 @@ int _iwtan_add_new_association(iwtan_station* station, iwtan_ap* ap, iwtan_conte
   description: a pointer to the AP description set by the user. NULL => non significant.
   lastSeen: the time this access point was seen for the last time. NULL => non significant.
 */
-int _iwtan_update_AP (iwtan_ap* ap, short wepped, unsigned int dataRate, unsigned short antenna, unsigned int frequency, short type, short signal, mac_address* mac, mac_address* bssId, char* essid, char* description, time_t lastSeen){
+int _iwtan_update_AP (iwtan_ap* ap, short wepped, unsigned int dataRate, unsigned short antenna, unsigned int frequency, short type, short signal, mac_address* bssId, char* essid, char* description, time_t lastSeen){
   if (wepped != -1) ap->WEPped = wepped;
   if (dataRate != 0) ap->dataRate = dataRate;
   if (antenna != 0) ap->antenna = antenna;
   if (frequency != 0) ap->frequency = frequency;
   if (type !=0) ap->type = type;
   if (signal != 0) ap->signal = signal;
-  if (mac && (mac != ap->mac)) {
-    free(ap->mac);
-    ap->mac = mac; //TODO: may be optimized...
-  }
   if (bssId && (bssId != ap->bssId)) {
     free(ap->bssId);
     ap->bssId = bssId;
@@ -572,10 +567,10 @@ iwtan_station*  _iwtan_bsearch_station(mac_address* st_mac, iwtan_context* con){
 /*
   Search for an access point in the list and return its index. The context mutex must be locked before calling this function. Returns a pointer to the address where the Access Point is allocated.
 */
-iwtan_ap** _iwtan_bsearch_AP(mac_address* ap_mac, iwtan_context* context){
+iwtan_ap** _iwtan_bsearch_AP(mac_address* bssId, iwtan_context* context){
   iwtan_ap hypAP;
   const iwtan_ap* hypAP_ref = &hypAP;
-  hypAP.mac = ap_mac;
+  hypAP.bssId = bssId;
   return bsearch(&hypAP_ref, context->ap_list, context->apN, sizeof(iwtan_ap*), (int(*)(const void*, const void*))_iwtan_cmp_AP);
 }
 
@@ -585,11 +580,11 @@ iwtan_ap** _iwtan_bsearch_AP(mac_address* ap_mac, iwtan_context* context){
   The associations list must be ordered by the Access Point MAC address.
   The context mutex must be locked before calling this function.
 */
-int _iwtan_first_bsearch_by_AP(mac_address* ap_mac, iwtan_context* con){
+int _iwtan_first_bsearch_by_AP(mac_address* bssId, iwtan_context* con){
   iwtan_association hypApAss; //an hypotetical association whose AP has the given mac address
   iwtan_ap hypAP;
   hypApAss.ap = &hypAP;
-  hypAP.mac = ap_mac;
+  hypAP.bssId = bssId;
 
   iwtan_association* el = bsearch(&hypApAss, con->ap_ass, con->assN, sizeof(iwtan_association), (int(*)(const void*, const void*))_iwtan_cmp_assoc_by_AP);
   if (el==NULL) return -1;
@@ -598,7 +593,7 @@ int _iwtan_first_bsearch_by_AP(mac_address* ap_mac, iwtan_context* con){
   iwtan_association* assNext;
   while (i>=1){
     assNext = con->ap_ass+i-1;
-    if (iwtan_cmp_mac(assNext->ap->mac, ap_mac)) return i;
+    if (iwtan_cmp_mac(assNext->ap->bssId, bssId)) return i;
     i--;
   }
   return 0;
@@ -607,8 +602,8 @@ int _iwtan_first_bsearch_by_AP(mac_address* ap_mac, iwtan_context* con){
 /*
   Initialize an empty AP with the given MAC address
 */
-int _iwtan_init_AP(mac_address* ap_mac, iwtan_ap* ap){
-  ap->mac = ap_mac;
+int _iwtan_init_AP(mac_address* bssId, iwtan_ap* ap){
+  ap->bssId = bssId;
   ap->associations=0;
   ap->lastSeen = time(NULL);
   return 0;
@@ -627,7 +622,7 @@ int _iwtan_init_station(mac_address* st_mac, iwtan_station* station){
   Compare two associations by their Access Point mac address.
 */
 int _iwtan_cmp_assoc_by_AP(const iwtan_association* ass1, const iwtan_association* ass2){
-  return iwtan_cmp_mac(ass1->ap->mac, ass2->ap->mac);
+  return iwtan_cmp_mac(ass1->ap->bssId, ass2->ap->bssId);
 }
 
 /*
@@ -638,12 +633,12 @@ int _iwtan_cmp_assoc_by_station(const iwtan_association* ass1, const iwtan_assoc
 }
 
 /*
-  Compare two access points by their mac address.
+  Compare two access points by their BSS Id.
 */
 int _iwtan_cmp_AP(const iwtan_ap** ap1_ref, const iwtan_ap** ap2_ref){
   const iwtan_ap* ap1 = *ap1_ref;
   const iwtan_ap* ap2 = *ap2_ref;
-  return iwtan_cmp_mac(ap1->mac, ap2->mac);
+  return iwtan_cmp_mac(ap1->bssId, ap2->bssId);
 }
 
 /*
@@ -675,9 +670,7 @@ iwtan_ap* _iwtan_copy_AP (iwtan_ap* ap){
     newAP->description = calloc(strlen(ap->description) + 1, sizeof(char));
     strcpy(newAP->description, ap->description);}
 
-  newAP->mac = _iwtan_copy_mac(ap->mac);
-  if (ap->bssId)
-    newAP->bssId = _iwtan_copy_mac(ap->bssId);
+  newAP->bssId = _iwtan_copy_mac(ap->bssId);
 
   return newAP;
 }

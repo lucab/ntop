@@ -61,7 +61,7 @@ int print_ass_ord(iwtan_context* cont, int ordering){
     while (*(timeBuff1+j) != '\n') j++; *(timeBuff1+j) = '\0';
     while (*(timeBuff2+j) != '\n') j++; *(timeBuff2+j) = '\0';
 
-    printf("%s (%p) (last seen: %s)--> %s (%p) (last seen: %s)\n", ether_ntoa_r(assI->station->mac, macBuff1), assI->station, timeBuff1, ether_ntoa_r(assI->ap->mac, macBuff2), assI->ap, timeBuff2);
+    printf("%s (%p) (last seen: %s)--> %s (%p) (last seen: %s)\n", ether_ntoa_r(assI->station->mac, macBuff1), assI->station, timeBuff1, ether_ntoa_r(assI->ap->bssId, macBuff2), assI->ap, timeBuff2);
   }
   printf("\n");
   free(macBuff1);
@@ -75,7 +75,7 @@ int print_AP_list(iwtan_context* cont){
   int i;
   for (i=0; i< cont->apN; i++){
     iwtan_ap* apI = *(cont->ap_list + i);
-    printf("%i: %s %p [associations: %d]\n", i, ether_ntoa(apI->mac), apI, apI->associations);
+    printf("%i: %s %p [associations: %d]\n", i, ether_ntoa(apI->bssId), apI, apI->associations);
   }
 }
 
@@ -202,7 +202,7 @@ int main (int argc, char** argv){
   iwtan_ap* ap =  iwtan_get_by_station(st3_mac, &con);
   printf("\n+++++++ OTHER BROWSING FUNCTIONS +++++++");
   printf ("\nget AP by station - Station:[%s] ", ether_ntoa(st3_mac));
-  printf ("returned AP: [%s]\n", ether_ntoa(ap->mac));
+  printf ("returned AP: [%s]\n", ether_ntoa(ap->bssId));
   iwtan_free_AP(ap);
 
   
@@ -228,7 +228,7 @@ int main (int argc, char** argv){
   printf ("\nlist of all the AP filed in the database (ordered by mac):\n");
   while (current_ap_el){
     currAP = current_ap_el->ap;
-    printf("[%s]\n", ether_ntoa(currAP->mac));
+    printf("[%s]\n", ether_ntoa(currAP->bssId));
     current_ap_el = current_ap_el->next;
   }
   iwtan_free_AP_ll(first_ap_el);
@@ -247,7 +247,7 @@ int main (int argc, char** argv){
     ap_i = ass_i->ap;
     st_i = ass_i->station;
     printf("[%s] --> ", ether_ntoa(st_i->mac));
-    printf("[%s]\n", ether_ntoa(ap_i->mac));
+    printf("[%s]\n", ether_ntoa(ap_i->bssId));
   }
   
   iwtan_free_ass_array(ass_b,elN);

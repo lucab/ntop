@@ -42,7 +42,6 @@ typedef struct { // when you edit this structure, also edit _iwtan_copy_AP()
   short signal; //signal strenght in decibel
   
   //data obtained by the beacon frame
-  mac_address* mac;
   mac_address* bssId;
 
   //data obtained by the wlan management frame
@@ -90,7 +89,7 @@ typedef struct{
   iwtan_association* st_ass; //associations ordered by station mac address
   unsigned int apN; //number of access points in the list
   unsigned int allAP; //number of allocated positions in the access points list
-  iwtan_ap** ap_list; //list of access points ordered by mac address
+  iwtan_ap** ap_list; //list of access points ordered by BSS Id
 } iwtan_context;
 
 /* ++++++++++++++++++++++++++++++ Functions +++++++++++++++++++++++++++++++++ */
@@ -100,7 +99,7 @@ int iwtan_context_initialize(iwtan_context* context);
 int iwtan_context_destroy(iwtan_context* context);
 
 /* Data browsing functions */
-iwtan_station_el* iwtan_get_by_AP(mac_address* apMac, iwtan_context* context);
+iwtan_station_el* iwtan_get_by_AP(mac_address* bssId, iwtan_context* context);
 iwtan_ap* iwtan_get_by_station(mac_address* stMac, iwtan_context* context);
 iwtan_station_el* iwtan_get_all_stations(iwtan_context* context);
 iwtan_ap_el* iwtan_get_all_APs(iwtan_context* context);
@@ -118,21 +117,21 @@ char* iwtan_ip4toa(ip4_address ip4, char* result);
 char* iwtan_ip6toa(ip6_address ip6, char* result);
 
 /* Internal Data editing functions */
-int _iwtan_add_association(mac_address* ap_mac, mac_address* station_mac, iwtan_context* context);
+int _iwtan_add_association(mac_address* bssId, mac_address* station_mac, iwtan_context* context);
 int _iwtan_remove_AP (iwtan_ap* ap, iwtan_context* context);
-iwtan_ap* _iwtan_add_new_AP(mac_address* mac, iwtan_context* context);
+iwtan_ap* _iwtan_add_new_AP(mac_address* bssId, iwtan_context* context);
 int _iwtan_add_new_association(iwtan_station* station, iwtan_ap* ap, iwtan_context* context);
-int _iwtan_update_AP (iwtan_ap* ap, short wepped, unsigned int dataRate, unsigned short antenna, unsigned int frequency, short type, short signal, mac_address* mac, mac_address* bssId, char* essid, char* description, time_t lastSeen);
+int _iwtan_update_AP (iwtan_ap* ap, short wepped, unsigned int dataRate, unsigned short antenna, unsigned int frequency, short type, short signal, mac_address* bssId, char* essid, char* description, time_t lastSeen);
 int _iwtan_update_station (iwtan_station* st, ip4_address ip4, mac_address* mac, ip6_address ip6, time_t lastSeen);
 
 /* Internal Utility functions */
 int  _iwtan_bsearch_by_station(mac_address* st_mac, iwtan_context* con);
 iwtan_station*  _iwtan_bsearch_station(mac_address* st_mac, iwtan_context* con);
-iwtan_ap** _iwtan_bsearch_AP(mac_address* ap_mac, iwtan_context* context);
+iwtan_ap** _iwtan_bsearch_AP(mac_address* bssId, iwtan_context* context);
 
-int _iwtan_first_bsearch_by_AP(mac_address* ap_mac, iwtan_context* con);
+int _iwtan_first_bsearch_by_AP(mac_address* bssId, iwtan_context* con);
 
-int _iwtan_init_AP(mac_address* ap_mac, iwtan_ap* ap);
+int _iwtan_init_AP(mac_address* bssId, iwtan_ap* ap);
 int _iwtan_init_station(mac_address* st_mac, iwtan_station* station);
 
 int _iwtan_cmp_assoc_by_AP(const iwtan_association* ass1, const iwtan_association* ass2);

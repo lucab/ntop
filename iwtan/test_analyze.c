@@ -134,13 +134,13 @@ int main (int argc, char** argv){
   ip6_address stIp6 = NULL;
 
   //data obtained by an ethernet-emulated packet
-  mac_address* srcMac = NULL;
+  /*  mac_address* srcMac = NULL;
   mac_address* destMac = NULL;
   ip4_address srcIp4 = NULL;
   ip6_address srcIp6 = NULL;
   ip4_address destIp4 = NULL;
   ip6_address destIp6 = NULL;
-  
+  */
 
 
   while ((packetBody = pcap_next(handle, &header))!=NULL) {
@@ -160,12 +160,7 @@ int main (int argc, char** argv){
     essid = NULL;
     stIp4 = NULL;
     stIp6 = NULL;
-    srcMac=NULL;
-    destMac=NULL;
-    srcIp4 = NULL;
-    srcIp6 = NULL;
-    destIp4 = NULL;
-    destIp6 = NULL;
+
     
 
     //determine what's the kind of the analyzed packet
@@ -177,9 +172,6 @@ int main (int argc, char** argv){
       break;
     case DLT_IEEE802_11:
       _iwtan_process_802_11(packetBody, header.len, &apMac, &stMac, &bssId, &essid, &stIp4, &stIp6);
-      break;
-    case DLT_EN10MB:
-      _iwtan_process_ethernet(packetBody, header.len, &srcMac, &destMac, &srcIp4, &srcIp6, &destIp4, &destIp6);
       break;
     default:
       printf("Cannot process data of this type.\n");
@@ -203,9 +195,6 @@ int main (int argc, char** argv){
     if (pktDlt == DLT_IEEE802_11 || pktDlt == DLT_IEEE802_11_RADIO)
       printf ("++++++++ Data obtained by the 802.11 header:\nAP mac: %s\nSTA mac: %s\nbss ID: %s\nessid: %s\nstation ip4: %s\nstation ip6: %s\n\n", apMac ? ether_ntoa_r(apMac, macBuf1) : NULL, stMac ? ether_ntoa_r(stMac, macBuf2) : NULL, bssId ? ether_ntoa_r(bssId, bssIdBuf) : NULL, essid, iwtan_ip4toa(stIp4, stIp4Buf), iwtan_ip6toa(stIp6, stIp6Buf));
       
-    if (pktDlt == DLT_EN10MB)
-      printf ("++++++++ Data obtained by the ethernet-emulated packet:\nsender (AP or station) mac: %s\nreceiver (station or AP) mac: %s\nsender ip4: %s\nsender ip6: %s\ndestination ip4: %s\ndestination ip6: %s\n", srcMac ? ether_ntoa_r(srcMac, macBuf1) : NULL, destMac ? ether_ntoa_r(destMac, macBuf2) : NULL, iwtan_ip4toa(srcIp4, srcIp4Buf), iwtan_ip6toa(srcIp6, srcIp6Buf), iwtan_ip4toa(destIp4, destIp4Buf), iwtan_ip6toa(destIp6, destIp6Buf));
-
     free(macBuf1);
     free(macBuf2);
     free(bssIdBuf);
@@ -217,11 +206,6 @@ int main (int argc, char** argv){
     free(essid);
     free(stIp4);
     free(stIp6);
-    free(srcIp4);
-    free(srcIp6);
-    free(destIp4);
-    free(destIp6);
-  
   }
   
   pcap_close(handle);

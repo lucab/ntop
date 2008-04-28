@@ -116,7 +116,6 @@ int _iwtan_validate_radiotap(const u_char* body, bpf_u_int32 len);
 int _iwtan_process_802_11(const u_char* body, bpf_u_int32 len, mac_address** ap_mac, mac_address** st_mac, mac_address** bssId, char** essid, ip4_address* stationIP4, ip6_address* stationIP6);
 int _iwtan_process_802_11_mng(const u_char* body, bpf_u_int32 len, char** essid);
 int _iwtan_process_802_llc(const u_char* body, bpf_u_int32 len, ip4_address* fromIp4, ip4_address* toIp4, ip6_address* fromIp6, ip4_address* toIp6);
-int _iwtan_process_ethernet(const u_char* packetBody, bpf_u_int32 len, mac_address** sourceMac, mac_address** destMac, ip4_address* srcIp4, ip6_address* srcIp6, ip4_address* destIp4, ip6_address* destIp6);
 int _iwtan_process_ip4(const u_char* body, bpf_u_int32 len, ip4_address* fromIp4, ip4_address* toIp4);
 int _iwtan_process_ip6(const u_char* body, bpf_u_int32 len, ip6_address* fromIp6, ip6_address* toIp6);
 

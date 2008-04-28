@@ -74,53 +74,26 @@ int iwtan_refresh_data(unsigned int length, const u_char* pktBody, int packetTyp
     _iwtan_process_802_11(pktBody, length, &apMac, &stMac, &bssId, &essid, &stIp4, &stIp6);
     break;
   case DLT_EN10MB:
-    _iwtan_process_ethernet(pktBody, length, &srcMac, &destMac, &srcIp4, &srcIp6, &destIp4, &destIp6);
-    //If we are analyzing an ethernet packet, we know what is the source and the destination, but we don't know witch one is the station and witch one is the AP. So, if we find the source mac address in the list of known access points, then we know that the IP destination is a station, if we find the destination MAC address in the list of known APs then we know that the source is a station, but if we can't find the destination mac nor the source mac in the list, we can't tell where the packet comes from.
+    //We can't extract any useful information from a EN10MB frame, because from a packet we can't understand if the packet is coming from an access point or from a station.
 
-    if (_iwtan_bsearch_AP(srcMac, context)){
-	apMac = srcMac;
-	stMac = destMac;
-	stIp4 = destIp4;
-	stIp6 = destIp6;
-	free(srcIp4);
-	free(srcIp6);	
-      }
-    else if (_iwtan_bsearch_AP(destMac, context)){
-	apMac = destMac;
-	stMac = srcMac;
-	stIp4 = srcIp4;
-	stIp6 = srcIp6;
-	free(destIp4);
-	free(destIp6);	
-    }
-    else{
-      free(destMac);
-      free(srcMac);
-      free(srcIp4);
-      free(srcIp6);
-      free(destIp4);
-      free(destIp6);
-    }
-
-    break;
   default:
     retVal = 1;
   }
 
   //pick the right ap to create it or update its data. An ap may exist without any associated station.
-  if (apMac){
-    iwtan_ap** apRef = _iwtan_bsearch_AP(apMac, context);
+  if (bssId){
+    iwtan_ap** apRef = _iwtan_bsearch_AP(bssId, context);
     iwtan_ap* ap;
     if (!apRef)
-      ap = _iwtan_add_new_AP(apMac, context);
+      ap = _iwtan_add_new_AP(bssId, context);
     else
       ap = *apRef;
 
-    _iwtan_update_AP (ap, WEPped, dataRate, antenna, frequency, type, signal,  apMac, bssId, essid, NULL, time(NULL));
+    _iwtan_update_AP (ap, WEPped, dataRate, antenna, frequency, type, signal, bssId, essid, NULL, time(NULL));
 
     //if an AP and a station has been seen, create an association.
     if (stMac){
-      _iwtan_add_association(apMac, stMac, context);
+      _iwtan_add_association(bssId, stMac, context);
 
       //pick the right station and update its data.
       iwtan_station* sta = _iwtan_bsearch_station(stMac, context);
@@ -137,7 +110,7 @@ int iwtan_refresh_data(unsigned int length, const u_char* pktBody, int packetTyp
 	free(stIp6);
       }
     }
-    free(bssId); //in any case, bssId is not useful.
+    //    free(ap_mac); //in any case, ap_mac is not useful. (TODO rename ap_mac to something else, it is not necessarily the AP MAC address!)
 
   }
 
@@ -268,7 +241,7 @@ int _iwtan_process_802_llc(const u_char* body, bpf_u_int32 len, ip4_address* fro
   The addresses are allocated in the heap and should be freed when no longer needed.
   The addresses are stored in the pointers given by argument only if their value is not NULL.
 */
-int _iwtan_process_ethernet(const u_char* body, bpf_u_int32 len, mac_address** sourceMac, mac_address** destMac, ip4_address* srcIp4, ip6_address* srcIp6, ip4_address* destIp4, ip6_address* destIp6){
+/*int _iwtan_process_ethernet(const u_char* body, bpf_u_int32 len, mac_address** sourceMac, mac_address** destMac, ip4_address* srcIp4, ip6_address* srcIp6, ip4_address* destIp4, ip6_address* destIp6){
   ethernet_hdr* eth = (ethernet_hdr*) body;
   *sourceMac =  _iwtan_mac_is_broadcast((mac_address*)eth->source)? NULL : _iwtan_copy_mac_by_array(eth->source);
   *destMac =  _iwtan_mac_is_broadcast((mac_address*)eth->destination)? NULL : _iwtan_copy_mac_by_array(eth->destination);
@@ -283,7 +256,7 @@ int _iwtan_process_ethernet(const u_char* body, bpf_u_int32 len, mac_address** s
   return 0;
   
 
-}
+  }*/
 
 
 /*
@@ -382,6 +355,10 @@ int _iwtan_ip6_is_broadcast(ip6_address ip6){
 int _iwtan_mac_is_broadcast(mac_address* mac){
   if (mac->ether_addr_octet[0] == 0x01 &&
       mac->ether_addr_octet[1] == 0x00) return 1; //multicast destination
+
+  if (mac->ether_addr_octet[0] == 0x33 &&
+      mac->ether_addr_octet[1] == 0x33) return 1; //IPv6 Neighbor Discovery
+
   int i=0;
   while (i<6){
     if (mac->ether_addr_octet[i] != 0xff) return 0;
