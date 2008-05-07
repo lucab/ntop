@@ -28,7 +28,7 @@
 
 #if 0
 #define URL_DEBUG
-#define HTTP_DEBUG
+#define HTTP_DEBUG 
 #endif
 
 /* Private structure definitions */
@@ -254,11 +254,14 @@ static int readHTTPheader(char* theRequestedURL,
     } else if((errorCode == 0) && !isprint(aChar[0]) && !isspace(aChar[0])) {
       errorCode = FLAG_HTTP_INVALID_REQUEST;
 #ifdef URL_DEBUG
-      traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Rcvd non expected char '%c' [%d/0x%x]", aChar[0], aChar[0], aChar[0]);
+      traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Rcvd non expected char '%c' [%d/0x%x]", 
+		 aChar[0], aChar[0], aChar[0]);
 #endif
     } else {
 #ifdef URL_DEBUG
-      if(0) traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Rcvd char '%c' [%d/0x%x]", aChar[0], aChar[0], aChar[0]);
+      if(0) 
+	traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Rcvd char '%c' [%d/0x%x]", 
+		   aChar[0], aChar[0], aChar[0]);
 #endif
       if(aChar[0] == '\r') {
 	/* <CR> is ignored as recommended in section 19.3 of RFC 2068 */
@@ -306,9 +309,7 @@ static int readHTTPheader(char* theRequestedURL,
 #ifdef URL_DEBUG
 	    traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Unsupported HTTP version.");
 #endif
-
 	  } else {
-
             lineStr[idxChar-9] = '\0'; idxChar -= 9; tmpStr = NULL;
 
 	    if((idxChar >= 3) && (strncmp(lineStr, "GET ", 4) == 0)) {
@@ -3295,7 +3296,7 @@ static int returnHTTPPage(char* pageName,
 static int checkHTTPpassword(char *theRequestedURL,
 			     int theRequestedURLLen _UNUSED_,
 			     char* thePw, int thePwLen) {
-  char outBuffer[65], *user = NULL, users[LEN_GENERAL_WORK_BUFFER];
+  char outBuffer[65], tmpOutBuffer[65], *user = NULL, users[LEN_GENERAL_WORK_BUFFER];
   int i, rc;
   datum key, nextkey;
 
@@ -3329,6 +3330,7 @@ static int checkHTTPpassword(char *theRequestedURL,
   }
 
   outBuffer[0] = '\0';
+  tmpOutBuffer[0] = '\0';
 
   accessMutex(&myGlobals.securityItemsMutex,  "test");
 
@@ -3339,20 +3341,28 @@ static int checkHTTPpassword(char *theRequestedURL,
         strncpy(outBuffer,
                 myGlobals.securityItems[i],
                 sizeof(outBuffer)-1)[sizeof(outBuffer)-1] = '\0';
-	break;
+
+	if((outBuffer[0] == '2') && (outBuffer[1] == '\0'))
+	  strcpy(tmpOutBuffer, outBuffer), outBuffer[0] = '\0';
+	else
+	  break;
       }
     }
   }
 
   releaseMutex(&myGlobals.securityItemsMutex);
 
-  if(outBuffer[0] == '\0') {
+  if((outBuffer[0] == '\0') && (tmpOutBuffer[0] != '\0')) {
+    strcpy(outBuffer, tmpOutBuffer);
+  }
+
+  if(outBuffer[0] == '\0') {    
     return 1; /* This is a non protected URL */
   }
 
   /* Retrieve CURRENT record - it might have changed since stored above */
 #ifdef URL_DEBUG
-  traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Retrieving '%s'", outBuffer);
+    traceEvent(CONST_TRACE_INFO, "***** URL_DEBUG: Retrieving '%s' [%s]", outBuffer, &theRequestedURL[1]);
 #endif
 
   key.dptr = outBuffer;
