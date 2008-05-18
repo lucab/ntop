@@ -28,7 +28,7 @@
 
   Many thanks Philippe!
 */
-char *languages[] = { "", "perl", "php", "xml", "python", "no" };
+char *languages[] = { "", "perl", "php", "xml", "python", "json", "no" };
 
 /* *************************** */
 
@@ -58,6 +58,9 @@ static void initWriteArray(FILE *fDescr, int lang) {
   case FLAG_PYTHON_LANGUAGE:
     sendEmitterString(fDescr, "ntopDict = {\n");
     break ;
+  case FLAG_JSON_LANGUAGE:
+    sendEmitterString(fDescr, "{\n");
+    break;
   case FLAG_XML_LANGUAGE:
     sendEmitterString(fDescr, "<rpc-reply xmlns:ntop=\"http://www.ntop.org/ntop.dtd\">"
 		      "\n<ntop-traffic-information>\n");
@@ -76,6 +79,9 @@ static void endWriteArray(FILE *fDescr, int lang) {
     sendEmitterString(fDescr, ");\n");
     break ;
   case FLAG_PYTHON_LANGUAGE:
+    sendEmitterString(fDescr, "}\n");
+    break;
+  case FLAG_JSON_LANGUAGE:
     sendEmitterString(fDescr, "}\n");
     break;
   case FLAG_XML_LANGUAGE:
@@ -124,6 +130,10 @@ static void initWriteKey(FILE *fDescr, int lang, char *indent,
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s'%s': {\n",indent, keyName);
     sendEmitterString(fDescr, buf);
     break ;
+  case FLAG_JSON_LANGUAGE:
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s'%s': {\n", indent, keyName);
+    sendEmitterString(fDescr, buf);
+    break;
   case FLAG_XML_LANGUAGE:
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s<%s>\n", indent, keyName);
     sendEmitterString(fDescr, buf);
@@ -163,9 +173,18 @@ static void endWriteKey(FILE *fDescr, int lang, char *indent, char *keyName, cha
     sendEmitterString(fDescr, buf);
     break ;
   case FLAG_PYTHON_LANGUAGE:
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),"%s}%c\n",indent,last);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),"%s}%c\n",indent, last);
     sendEmitterString(fDescr, buf);
     break ;
+  case FLAG_JSON_LANGUAGE:
+    /* FIX: this is a workaround */
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),"%s%s'dummy' : 1\n%s}%c\n",
+		  "\t", indent, indent, last);
+    sendEmitterString(fDescr, buf);
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),"%s}%c\n",indent, last);
+    sendEmitterString(fDescr, buf);
+    break;
   case FLAG_NO_LANGUAGE:
     if(strcmp(indent, "") == 0) sendEmitterString(fDescr, "\n");
     break ;
@@ -194,41 +213,34 @@ static char* sanitize(char *value, char *buf, int buf_len) {
 
 /* *************************** */
 
-static void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
+static void wrtKV(FILE *fDescr, int lang, char *indent, char *name,
 		      char *value, char last, int numEntriesSent) {
-  char buf[256], buf1[256];
+  char buf[256];
 
   validateString(name);
 
   switch(lang) {
   case FLAG_PERL_LANGUAGE:
   case FLAG_PHP_LANGUAGE:
-    /* In the case of hostNumIpAddress and hostResolvedName,
-       the pointer is not null, but the string is empty.
-       In that case, don't create the key in the array.
-    */
-    if((value != NULL) && (value[0] != '\0')) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s'%s' => '%s'%c\n",
-		      indent, name, sanitize(value, buf1, sizeof(buf1)), last);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s'%s' => %s%c\n",
+		      indent, name, value, last);
 	sendEmitterString(fDescr, buf);
-      }
     break ;
   case FLAG_XML_LANGUAGE:
-    if((value != NULL) && (value[0] != '\0'))
-      {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s<%s>%s</%s>\n", 
-		      indent, name, sanitize(value, buf1, sizeof(buf1)), name);
+		       indent, name, value, name);
 	sendEmitterString(fDescr, buf);
-      }
     break ;
   case FLAG_PYTHON_LANGUAGE:
-    if((value != NULL) && (value[0] != '\0'))
-      {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s'%s': '%s'%c\n", 
-		      indent, name, sanitize(value, buf1, sizeof(buf1)), last);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s'%s': %s%c\n", 
+		      indent, name, value, last);
  	sendEmitterString(fDescr, buf);
-       }
      break ;
+  case FLAG_JSON_LANGUAGE:
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s'%s': %s,\n", 
+		  indent, name, value);
+    sendEmitterString(fDescr, buf);
+     break ;    
   case FLAG_NO_LANGUAGE:
     if(value != NULL) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s|", 
@@ -245,11 +257,23 @@ static void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
 
 /* *************************** */
 
+static void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
+              char *value, char last, int numEntriesSent) {
+  char buf[256], buf1[256];
+  if ((value != NULL) && (value[0] != '\0')) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), (lang == FLAG_XML_LANGUAGE) ? "%s" : "'%s'",
+                sanitize(value, buf1, sizeof(buf1)));
+    wrtKV(fDescr, lang, indent, name, buf, last, numEntriesSent);
+  }
+}
+
+/* *************************** */
+
 static void wrtIntItm(FILE *fDescr, int lang, char *indent, char *name,
 		      int value, char last, int numEntriesSent) {
   char buf[80];
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",value);
-  wrtStrItm(fDescr, lang, indent, name, buf, last, numEntriesSent);
+  wrtKV(fDescr, lang, indent, name, buf, last, numEntriesSent);
 }
 
 /* *************************** */
@@ -258,7 +282,7 @@ static void wrtIntStrItm(FILE *fDescr, int lang, char *indent,int name,
 			 char *value, char useless, int numEntriesSent) {
   char buf[80];
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",name);
-  wrtStrItm(fDescr, lang, indent, buf, value, ',', numEntriesSent);
+  wrtKV(fDescr, lang, indent, buf, value, ',', numEntriesSent);
 }
 
 /* *************************** */
@@ -267,7 +291,7 @@ static void wrtUintItm(FILE *fDescr, int lang, char *indent, char *name,
 		       unsigned int value, char useless, int numEntriesSent) {
   char buf[80];
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",value);
-  wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
+  wrtKV(fDescr, lang, indent, name, buf, ',', numEntriesSent);
 }
 
 /* *************************** */
@@ -276,7 +300,7 @@ static void wrtUcharItm(FILE *fDescr, int lang, char *indent, char *name,
 			u_char value, char useless, int numEntriesSent) {
   char buf[80];
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",value);
-  wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
+  wrtKV(fDescr, lang, indent, name, buf, ',', numEntriesSent);
 }
 
 /* *************************** */
@@ -285,7 +309,7 @@ static void wrtFloatItm(FILE *fDescr, int lang, char *indent, char *name,
 			float value, char last, int numEntriesSent) {
   char buf[80];
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%0.2f",value);
-  wrtStrItm(fDescr, lang, indent, name, buf, last, numEntriesSent);
+  wrtKV(fDescr, lang, indent, name, buf, last, numEntriesSent);
 }
 
 /* *************************** */
@@ -305,7 +329,7 @@ static void wrtUlongItm(FILE *fDescr, int lang, char *indent, char *name,
   char buf[80];
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu",value);
-  wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
+  wrtKV(fDescr, lang, indent, name, buf, ',', numEntriesSent);
 }
 
 /* *************************** */
@@ -315,7 +339,7 @@ static void wrtLlongItm(FILE *fDescr, int lang, char* indent, char* name,
   char buf[80];
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),  "%llu", value.value);
-  wrtStrItm(fDescr, lang, indent, name, buf, last, numEntriesSent);
+  wrtKV(fDescr, lang, indent, name, buf, last, numEntriesSent);
 }
 
 /* *************************** */
@@ -324,7 +348,7 @@ static void wrtTime_tItm(FILE *fDescr, int lang, char *indent, char *name,
 			 time_t value, char useless, int numEntriesSent) {
   char buf[80];
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%ld",value);
-  wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
+  wrtKV(fDescr, lang, indent, name, buf, ',', numEntriesSent);
 }
 
 /* *************************** */
@@ -333,7 +357,7 @@ static void wrtUshortItm(FILE *fDescr, int lang, char *indent, char *name,
 			 u_short value, char useless, int numEntriesSent) {
   char buf[80];
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",value);
-  wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
+  wrtKV(fDescr, lang, indent, name, buf, ',', numEntriesSent);
 }
 
 /* ********************************** */
@@ -1129,6 +1153,9 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
   }
 
   initWriteArray(fDescr, lang);
+  
+  if (lang == FLAG_XML_LANGUAGE)
+    sendEmitterString(fDescr, "<keys>\n");
 
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
@@ -1137,19 +1164,29 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
 
     if(!broadcastHost(el)) {
       char *hostKey;
-
-      if(el->hostNumIpAddress[0] != '\0')
-	hostKey = el->hostNumIpAddress;
+      char *hostName = "Unknown";
+      
+      if(el->hostNumIpAddress[0] != '\0') {
+        hostKey = el->hostNumIpAddress;
+        if ((el->hostResolvedName != NULL) && (el->hostResolvedName[0] != '\0'))
+          hostName = el->hostResolvedName;
+      }
+      else {
+        hostKey = el->ethAddressString;
+      }
+      if (lang == FLAG_XML_LANGUAGE)
+        wrtStrItm(fDescr, lang, "\t", "item", hostKey, '\n', numEntries);
       else
-	hostKey = el->ethAddressString;
-
-      wrtIntStrItm(fDescr, lang, "", 0, hostKey,'\n', numEntries);
+        wrtStrItm(fDescr, lang, "", hostKey, hostName, ',', numEntries);        
 
       numEntries++;
     }
 
     unlockHostsHashMutex(el);
   } /* for */
+  
+  if (lang == FLAG_XML_LANGUAGE)
+    sendEmitterString(fDescr, "</keys>\n");
 
   endWriteArray(fDescr, lang);
 }
