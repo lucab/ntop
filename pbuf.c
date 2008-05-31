@@ -689,6 +689,8 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
   static u_short lastHourId=0;
   u_short hourId;
   struct tm t, *thisTime;
+  
+  if(numPkts == 0) return;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
     traceEvent(CONST_TRACE_ERROR, "NULL host detected");
@@ -829,7 +831,7 @@ static void updateDevicePacketTTLStats(u_int ttl, int actualDeviceId) {
 /* ************************************ */
 
 void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_int length) {
-  if((sport >= MAX_IP_PORT) || (dport >= MAX_IP_PORT))
+  if((sport >= MAX_IP_PORT) || (dport >= MAX_IP_PORT) || (length == 0))
     return;
 
   accessMutex(&myGlobals.purgePortsMutex, "updateInterfacePorts");

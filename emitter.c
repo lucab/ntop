@@ -59,7 +59,7 @@ static void initWriteArray(FILE *fDescr, int lang) {
     sendEmitterString(fDescr, "ntopDict = {\n");
     break ;
   case FLAG_JSON_LANGUAGE:
-    sendEmitterString(fDescr, "{\n");
+    sendEmitterString(fDescr, "{ \"ntop\": [");
     break;
   case FLAG_XML_LANGUAGE:
     sendEmitterString(fDescr, "<rpc-reply xmlns:ntop=\"http://www.ntop.org/ntop.dtd\">"
@@ -82,7 +82,7 @@ static void endWriteArray(FILE *fDescr, int lang) {
     sendEmitterString(fDescr, "}\n");
     break;
   case FLAG_JSON_LANGUAGE:
-    sendEmitterString(fDescr, "}\n");
+    sendEmitterString(fDescr, "]}\n");
     break;
   case FLAG_XML_LANGUAGE:
     sendEmitterString(fDescr, "</ntop-traffic-information>\n</rpc-reply>\n");
@@ -131,7 +131,7 @@ static void initWriteKey(FILE *fDescr, int lang, char *indent,
     sendEmitterString(fDescr, buf);
     break ;
   case FLAG_JSON_LANGUAGE:
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s'%s': {\n", indent, keyName);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "{ \"host.key\": \"%s\",", keyName);
     sendEmitterString(fDescr, buf);
     break;
   case FLAG_XML_LANGUAGE:
@@ -177,12 +177,12 @@ static void endWriteKey(FILE *fDescr, int lang, char *indent, char *keyName, cha
     sendEmitterString(fDescr, buf);
     break ;
   case FLAG_JSON_LANGUAGE:
-    /* FIX: this is a workaround */
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),"%s%s'dummy' : 1\n%s}%c\n",
-		  "\t", indent, indent, last);
-    sendEmitterString(fDescr, buf);
+    if(last) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf)," \"dummy\": 1");
+      sendEmitterString(fDescr, buf);
+    }
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),"%s}%c\n",indent, last);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),"}%c\n", last);
     sendEmitterString(fDescr, buf);
     break;
   case FLAG_NO_LANGUAGE:
@@ -237,8 +237,8 @@ static void wrtKV(FILE *fDescr, int lang, char *indent, char *name,
  	sendEmitterString(fDescr, buf);
      break ;
   case FLAG_JSON_LANGUAGE:
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s'%s': %s,\n", 
-		  indent, name, value);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), " \"%s\": %s,", 
+		  name, value);
     sendEmitterString(fDescr, buf);
      break ;    
   case FLAG_NO_LANGUAGE:
@@ -261,7 +261,8 @@ static void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
               char *value, char last, int numEntriesSent) {
   char buf[256], buf1[256];
   if ((value != NULL) && (value[0] != '\0')) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), (lang == FLAG_XML_LANGUAGE) ? "%s" : "'%s'",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  (lang == FLAG_XML_LANGUAGE) ? "%s" : ((lang == FLAG_JSON_LANGUAGE) ? "\"%s\"" : "'%s'"),
                 sanitize(value, buf1, sizeof(buf1)));
     wrtKV(fDescr, lang, indent, name, buf, last, numEntriesSent);
   }

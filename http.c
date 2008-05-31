@@ -3191,11 +3191,16 @@ static int returnHTTPPage(char* pageName,
 	printNtopLogReport(FALSE);
 	printTrailer = 0;
       } else if(strncasecmp(pageName, CONST_DUMP_DATA_HTML, strlen(CONST_DUMP_DATA_HTML)) == 0) {
-	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
-	if((questionMark == NULL) || (questionMark[0] == '\0'))
-	  dumpNtopHashes(NULL, NULL, myGlobals.actualReportDeviceId);
+	if(questionMark && strstr(questionMark, "json"))
+	  sendHTTPHeader(FLAG_HTTP_TYPE_JSON, 0, 1);
 	else
+	  sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
+	
+	if((questionMark == NULL) || (questionMark[0] == '\0')) {
+	  dumpNtopHashes(NULL, NULL, myGlobals.actualReportDeviceId);
+	} else {
 	  dumpNtopHashes(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
+	}
 	printTrailer = 0;
       } else if(strncasecmp(pageName, CONST_DUMP_HOSTS_INDEXES_HTML,
 			    strlen(CONST_DUMP_HOSTS_INDEXES_HTML)) == 0) {

@@ -221,75 +221,77 @@ void updateUsedPorts(HostTraffic *srcHost,
 		     u_short sport,
 		     u_short dport,
 		     u_int length) {
-  u_short clientPort, serverPort;
-  PortUsage *ports;
-  int sport_idx = mapGlobalToLocalIdx(sport);
-  int dport_idx = mapGlobalToLocalIdx(dport);
+  if(length > 0) {
+    u_short clientPort, serverPort;
+    PortUsage *ports;
+    int sport_idx = mapGlobalToLocalIdx(sport);
+    int dport_idx = mapGlobalToLocalIdx(dport);
 
-  /* Now let's update the list of ports recently used by the hosts */
-  if((sport > dport) || broadcastHost(dstHost)) {
-    clientPort = sport, serverPort = dport;
+    /* Now let's update the list of ports recently used by the hosts */
+    if((sport > dport) || broadcastHost(dstHost)) {
+      clientPort = sport, serverPort = dport;
 
-    if(sport_idx == -1) addPortToList(srcHost, srcHost->otherIpPortsSent, sport);
-    if(dport_idx == -1) addPortToList(dstHost, dstHost->otherIpPortsRcvd, dport);
+      if(sport_idx == -1) addPortToList(srcHost, srcHost->otherIpPortsSent, sport);
+      if(dport_idx == -1) addPortToList(dstHost, dstHost->otherIpPortsRcvd, dport);
 
-    if(srcHost != myGlobals.otherHostEntry)
-      updatePortList(srcHost, clientPort, -1);
-    if(dstHost != myGlobals.otherHostEntry)
-      updatePortList(dstHost, -1, serverPort);
-  } else {
-    clientPort = dport, serverPort = sport;
+      if(srcHost != myGlobals.otherHostEntry)
+	updatePortList(srcHost, clientPort, -1);
+      if(dstHost != myGlobals.otherHostEntry)
+	updatePortList(dstHost, -1, serverPort);
+    } else {
+      clientPort = dport, serverPort = sport;
 
-    if(srcHost != myGlobals.otherHostEntry)
-      updatePortList(srcHost, -1, serverPort);
-    if(dstHost != myGlobals.otherHostEntry)
-      updatePortList(dstHost, clientPort, -1);
-  }
+      if(srcHost != myGlobals.otherHostEntry)
+	updatePortList(srcHost, -1, serverPort);
+      if(dstHost != myGlobals.otherHostEntry)
+	updatePortList(dstHost, clientPort, -1);
+    }
 
-  /* **************** */
+    /* **************** */
 
-  if(/* (srcHost == dstHost) || */
-     broadcastHost(srcHost) || broadcastHost(dstHost))
-    return;
+    if(/* (srcHost == dstHost) || */
+       broadcastHost(srcHost) || broadcastHost(dstHost))
+      return;
 
-  if(sport < MAX_ASSIGNED_IP_PORTS) {
-    ports = getPortsUsage(srcHost, sport, 1);
-
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Adding svr peer %u", dstHost->hostTrafficBucket);
-#endif
-
-    incrementTrafficCounter(&ports->serverTraffic, length);
-    ports->serverUses++, ports->serverUsesLastPeer = dstHost->hostSerial;
-
-    ports = getPortsUsage(dstHost, sport, 1);
+    if(sport < MAX_ASSIGNED_IP_PORTS) {
+      ports = getPortsUsage(srcHost, sport, 1);
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Adding client peer %u", dstHost->hostTrafficBucket);
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Adding svr peer %u", dstHost->hostTrafficBucket);
 #endif
 
-    incrementTrafficCounter(&ports->clientTraffic, length);
-    ports->clientUses++, ports->clientUsesLastPeer = srcHost->hostSerial;
-  }
+      incrementTrafficCounter(&ports->serverTraffic, length);
+      ports->serverUses++, ports->serverUsesLastPeer = dstHost->hostSerial;
 
-  if(dport < MAX_ASSIGNED_IP_PORTS) {
-    ports = getPortsUsage(srcHost, dport, 1);
+      ports = getPortsUsage(dstHost, sport, 1);
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Adding client peer %u", dstHost->hostTrafficBucket);
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Adding client peer %u", dstHost->hostTrafficBucket);
 #endif
 
-    incrementTrafficCounter(&ports->clientTraffic, length);
-    ports->clientUses++, ports->clientUsesLastPeer = dstHost->hostSerial;
+      incrementTrafficCounter(&ports->clientTraffic, length);
+      ports->clientUses++, ports->clientUsesLastPeer = srcHost->hostSerial;
+    }
 
-    ports = getPortsUsage(dstHost, dport, 1);
+    if(dport < MAX_ASSIGNED_IP_PORTS) {
+      ports = getPortsUsage(srcHost, dport, 1);
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Adding svr peer %u", srcHost->hostTrafficBucket);
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Adding client peer %u", dstHost->hostTrafficBucket);
 #endif
 
-    incrementTrafficCounter(&ports->serverTraffic, length);
-    ports->serverUses++, ports->serverUsesLastPeer = srcHost->hostSerial;
+      incrementTrafficCounter(&ports->clientTraffic, length);
+      ports->clientUses++, ports->clientUsesLastPeer = dstHost->hostSerial;
+
+      ports = getPortsUsage(dstHost, dport, 1);
+
+#ifdef DEBUG
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Adding svr peer %u", srcHost->hostTrafficBucket);
+#endif
+
+      incrementTrafficCounter(&ports->serverTraffic, length);
+      ports->serverUses++, ports->serverUsesLastPeer = srcHost->hostSerial;
+    }
   }
 }
 

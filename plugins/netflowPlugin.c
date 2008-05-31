@@ -1,5 +1,5 @@
 /*
- *  Copyright(C) 2002-07 Luca Deri <deri@ntop.org>
+ *  Copyright(C) 2002-08 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -398,7 +398,8 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip,
 #ifdef HAVE_SNMP
       accessMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueMutex, "netflowUtilsLoop");
       if(myGlobals.device[deviceId].netflowGlobals->ifStatsQueue_len < (MAX_INTERFACE_STATS_QUEUE_LEN-1)) {
-	myGlobals.device[deviceId].netflowGlobals->ifStatsQueue[myGlobals.device[deviceId].netflowGlobals->ifStatsQueue_len++] = ifStats;
+	myGlobals.device[deviceId].netflowGlobals->ifStatsQueue[myGlobals.device[deviceId].
+								netflowGlobals->ifStatsQueue_len++] = ifStats;
 	signalCondvar(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueCondvar);
       }
       releaseMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueMutex);
@@ -423,7 +424,6 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip,
     }
   }
 }
-
 
 /* *************************** */
 
@@ -834,10 +834,12 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 		    dstHost, &dstHost->hostIpAddress,
 		    ctr, record->sentPkts, actualDeviceId);
 
-  ctr.value = record->rcvdOctets;
-  updatePacketCount(dstHost, &dstHost->hostIpAddress,
-		    srcHost, &srcHost->hostIpAddress,
-		    ctr, record->rcvdPkts, actualDeviceId);
+  if(record->rcvdOctets > 0) {
+    ctr.value = record->rcvdOctets;
+    updatePacketCount(dstHost, &dstHost->hostIpAddress,
+		      srcHost, &srcHost->hostIpAddress,
+		      ctr, record->rcvdPkts, actualDeviceId);
+  }
 
   srcPseudoLocal = subnetPseudoLocalHost(srcHost);
   dstPseudoLocal = subnetPseudoLocalHost(dstHost);
@@ -847,26 +849,34 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
       updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);
       incrementTrafficCounter(&srcHost->bytesSentLoc, record->sentOctets);
       incrementTrafficCounter(&dstHost->bytesRcvdLoc, record->sentOctets);
-      incrementTrafficCounter(&srcHost->bytesRcvdLoc, record->rcvdOctets);
-      incrementTrafficCounter(&dstHost->bytesSentLoc, record->rcvdOctets);
+      if(record->rcvdOctets > 0) {
+	incrementTrafficCounter(&srcHost->bytesRcvdLoc, record->rcvdOctets);
+	incrementTrafficCounter(&dstHost->bytesSentLoc, record->rcvdOctets);
+      }
     } else {
       incrementTrafficCounter(&srcHost->bytesSentRem, record->sentOctets);
       incrementTrafficCounter(&dstHost->bytesRcvdLoc, record->sentOctets);
-      incrementTrafficCounter(&srcHost->bytesRcvdFromRem, record->rcvdOctets);
-      incrementTrafficCounter(&dstHost->bytesSentLoc, record->rcvdOctets);
+      if(record->rcvdOctets > 0) {
+	incrementTrafficCounter(&srcHost->bytesRcvdFromRem, record->rcvdOctets);
+	incrementTrafficCounter(&dstHost->bytesSentLoc, record->rcvdOctets);
+      }
     }
   } else {
     /* srcHost is remote */
     if(dstPseudoLocal) {
       incrementTrafficCounter(&srcHost->bytesSentLoc, record->sentOctets);
       incrementTrafficCounter(&dstHost->bytesRcvdFromRem, record->sentOctets);
-      incrementTrafficCounter(&srcHost->bytesRcvdLoc, record->rcvdOctets);
-      incrementTrafficCounter(&dstHost->bytesSentRem, record->rcvdOctets);
+      if(record->rcvdOctets > 0) {
+	incrementTrafficCounter(&srcHost->bytesRcvdLoc, record->rcvdOctets);
+	incrementTrafficCounter(&dstHost->bytesSentRem, record->rcvdOctets);
+      }
     } else {
       incrementTrafficCounter(&srcHost->bytesSentRem, record->sentOctets);
       incrementTrafficCounter(&dstHost->bytesRcvdFromRem, record->sentOctets);
-      incrementTrafficCounter(&srcHost->bytesRcvdFromRem, record->rcvdOctets);
-      incrementTrafficCounter(&dstHost->bytesSentRem, record->rcvdOctets);
+      if(record->rcvdOctets > 0) {
+	incrementTrafficCounter(&srcHost->bytesRcvdFromRem, record->rcvdOctets);
+	incrementTrafficCounter(&dstHost->bytesSentRem, record->rcvdOctets);
+      }
     }
   }
 
@@ -877,9 +887,10 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     myGlobals.device[actualDeviceId].icmpBytes.value += total_bytes;
     incrementHostTrafficCounter(srcHost, icmpSent, record->sentOctets);
     incrementHostTrafficCounter(dstHost, icmpRcvd, record->sentOctets);
-    incrementHostTrafficCounter(srcHost, icmpRcvd, record->rcvdOctets);
-    incrementHostTrafficCounter(dstHost, icmpSent, record->rcvdOctets);
-
+    if(record->rcvdOctets > 0) {
+      incrementHostTrafficCounter(srcHost, icmpRcvd, record->rcvdOctets);
+      incrementHostTrafficCounter(dstHost, icmpSent, record->rcvdOctets);
+    }
     myGlobals.device[actualDeviceId].netflowGlobals->numNetFlowsICMPRcvd += total_flows,
       myGlobals.device[actualDeviceId].netflowGlobals->totalNetFlowsICMPSize += total_bytes;
     break;
@@ -893,23 +904,29 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].
 			    numEstablishedTCPConnections, 1);
     updateInterfacePorts(actualDeviceId, sport, dport, record->sentOctets);
-    updateInterfacePorts(actualDeviceId, dport, sport, record->rcvdOctets);
     updateUsedPorts(srcHost, dstHost, sport, dport, record->sentOctets);
-    updateUsedPorts(dstHost, srcHost, dport, sport, record->rcvdOctets);
+    if(record->rcvdOctets > 0) {
+      updateInterfacePorts(actualDeviceId, dport, sport, record->rcvdOctets);
+      updateUsedPorts(dstHost, srcHost, dport, sport, record->rcvdOctets);
+    }
 
     if(srcPseudoLocal) {
       if(dstPseudoLocal) {
 	incrementTrafficCounter(&srcHost->tcpSentLoc, record->sentOctets);
 	incrementTrafficCounter(&dstHost->tcpRcvdLoc, record->sentOctets);
-	incrementTrafficCounter(&srcHost->tcpRcvdLoc, record->rcvdOctets);
-	incrementTrafficCounter(&dstHost->tcpSentLoc, record->rcvdOctets);
+	if(record->rcvdOctets > 0) {
+	  incrementTrafficCounter(&srcHost->tcpRcvdLoc, record->rcvdOctets);
+	  incrementTrafficCounter(&dstHost->tcpSentLoc, record->rcvdOctets);
+	}
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].
 				tcpGlobalTrafficStats.local, total_bytes);
       } else {
 	incrementTrafficCounter(&srcHost->tcpSentRem, record->sentOctets);
 	incrementTrafficCounter(&dstHost->tcpRcvdLoc, record->sentOctets);
-	incrementTrafficCounter(&srcHost->tcpRcvdFromRem, record->rcvdOctets);
-	incrementTrafficCounter(&dstHost->tcpSentLoc, record->rcvdOctets);
+	if(record->rcvdOctets > 0) {
+	  incrementTrafficCounter(&srcHost->tcpRcvdFromRem, record->rcvdOctets);
+	  incrementTrafficCounter(&dstHost->tcpSentLoc, record->rcvdOctets);
+	}
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].
 				tcpGlobalTrafficStats.local2remote, total_bytes);
       }
@@ -918,15 +935,19 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
       if(dstPseudoLocal) {
 	incrementTrafficCounter(&srcHost->tcpSentLoc, record->sentOctets);
 	incrementTrafficCounter(&dstHost->tcpRcvdFromRem, record->sentOctets);
-	incrementTrafficCounter(&srcHost->tcpRcvdLoc, record->rcvdOctets);
-	incrementTrafficCounter(&dstHost->tcpSentRem, record->rcvdOctets);
+	if(record->rcvdOctets > 0) {
+	  incrementTrafficCounter(&srcHost->tcpRcvdLoc, record->rcvdOctets);
+	  incrementTrafficCounter(&dstHost->tcpSentRem, record->rcvdOctets);
+	}
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].
 				tcpGlobalTrafficStats.remote2local, total_bytes);
       } else {
 	incrementTrafficCounter(&srcHost->tcpSentRem, record->sentOctets);
 	incrementTrafficCounter(&dstHost->tcpRcvdFromRem, record->sentOctets);
-	incrementTrafficCounter(&srcHost->tcpRcvdFromRem, record->rcvdOctets);
-	incrementTrafficCounter(&dstHost->tcpSentRem, record->rcvdOctets);
+	if(record->rcvdOctets > 0) {
+	  incrementTrafficCounter(&srcHost->tcpRcvdFromRem, record->rcvdOctets);
+	  incrementTrafficCounter(&dstHost->tcpSentRem, record->rcvdOctets);
+	}
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].
 				tcpGlobalTrafficStats.remote, total_bytes);
       }
@@ -951,22 +972,28 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, total_bytes);
     updateInterfacePorts(actualDeviceId, sport, dport, record->sentOctets);
     updateUsedPorts(srcHost, dstHost, sport, dport, record->sentOctets);
-    updateInterfacePorts(actualDeviceId, dport, sport, record->rcvdOctets);
-    updateUsedPorts(dstHost, srcHost, dport, sport, record->rcvdOctets);
+    if(record->rcvdOctets > 0) {
+      updateInterfacePorts(actualDeviceId, dport, sport, record->rcvdOctets);
+      updateUsedPorts(dstHost, srcHost, dport, sport, record->rcvdOctets);
+    }
 
     if(srcPseudoLocal) {
       if(dstPseudoLocal) {
 	incrementTrafficCounter(&srcHost->udpSentLoc, record->sentOctets);
 	incrementTrafficCounter(&dstHost->udpRcvdLoc, record->sentOctets);
-	incrementTrafficCounter(&srcHost->udpRcvdLoc, record->rcvdOctets);
-	incrementTrafficCounter(&dstHost->udpSentLoc, record->rcvdOctets);
+	if(record->rcvdOctets > 0) {
+	  incrementTrafficCounter(&srcHost->udpRcvdLoc, record->rcvdOctets);
+	  incrementTrafficCounter(&dstHost->udpSentLoc, record->rcvdOctets);
+	}
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].
 				udpGlobalTrafficStats.local, total_bytes);
       } else {
 	incrementTrafficCounter(&srcHost->udpSentRem, record->sentOctets);
 	incrementTrafficCounter(&dstHost->udpRcvdLoc, record->sentOctets);
-	incrementTrafficCounter(&srcHost->udpRcvdFromRem, record->rcvdOctets);
-	incrementTrafficCounter(&dstHost->udpSentLoc, record->rcvdOctets);
+	if(record->rcvdOctets > 0) {
+	  incrementTrafficCounter(&srcHost->udpRcvdFromRem, record->rcvdOctets);
+	  incrementTrafficCounter(&dstHost->udpSentLoc, record->rcvdOctets);
+	}
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].
 				udpGlobalTrafficStats.local2remote, total_bytes);
       }
@@ -975,15 +1002,19 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
       if(dstPseudoLocal) {
 	incrementTrafficCounter(&srcHost->udpSentLoc, record->sentOctets);
 	incrementTrafficCounter(&dstHost->udpRcvdFromRem, record->sentOctets);
-	incrementTrafficCounter(&srcHost->udpRcvdLoc, record->rcvdOctets);
-	incrementTrafficCounter(&dstHost->udpSentRem, record->rcvdOctets);
+	if(record->rcvdOctets > 0) {
+	  incrementTrafficCounter(&srcHost->udpRcvdLoc, record->rcvdOctets);
+	  incrementTrafficCounter(&dstHost->udpSentRem, record->rcvdOctets);
+	}
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].
 				udpGlobalTrafficStats.remote2local, total_bytes);
       } else {
 	incrementTrafficCounter(&srcHost->udpSentRem, record->sentOctets);
 	incrementTrafficCounter(&dstHost->udpRcvdFromRem, record->sentOctets);
-	incrementTrafficCounter(&srcHost->udpRcvdFromRem, record->rcvdOctets);
-	incrementTrafficCounter(&dstHost->udpSentRem, record->rcvdOctets);
+	if(record->rcvdOctets > 0) {
+	  incrementTrafficCounter(&srcHost->udpRcvdFromRem, record->rcvdOctets);
+	  incrementTrafficCounter(&dstHost->udpSentRem, record->rcvdOctets);
+	}
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].
 				udpGlobalTrafficStats.remote, total_bytes);
       }
@@ -1002,8 +1033,10 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   case IPPROTO_GRE:
     incrementHostTrafficCounter(srcHost, greSent, record->sentOctets);
     incrementHostTrafficCounter(dstHost, greRcvd, record->sentOctets);
-    incrementHostTrafficCounter(srcHost, greRcvd, record->rcvdOctets);
-    incrementHostTrafficCounter(dstHost, greSent, record->rcvdOctets);
+    if(record->rcvdOctets > 0) {
+      incrementHostTrafficCounter(srcHost, greRcvd, record->rcvdOctets);
+      incrementHostTrafficCounter(dstHost, greSent, record->rcvdOctets);
+    }
     incrementHostTrafficCounter(srcHost, grePktSent, record->sentPkts);
     incrementHostTrafficCounter(dstHost, grePktRcvd, record->sentPkts);
     incrementHostTrafficCounter(srcHost, grePktRcvd, record->rcvdPkts);
@@ -1016,8 +1049,10 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   case IPPROTO_IPSEC_AH:
     incrementHostTrafficCounter(srcHost, ipsecSent, record->sentOctets);
     incrementHostTrafficCounter(dstHost, ipsecRcvd, record->sentOctets);
-    incrementHostTrafficCounter(srcHost, ipsecRcvd, record->rcvdOctets);
-    incrementHostTrafficCounter(dstHost, ipsecSent, record->rcvdOctets);
+    if(record->rcvdOctets > 0) {
+      incrementHostTrafficCounter(srcHost, ipsecRcvd, record->rcvdOctets);
+      incrementHostTrafficCounter(dstHost, ipsecSent, record->rcvdOctets);
+    }
     incrementHostTrafficCounter(srcHost, ipsecPktSent, record->sentPkts);
     incrementHostTrafficCounter(dstHost, ipsecPktRcvd, record->sentPkts);
     incrementHostTrafficCounter(srcHost, ipsecPktRcvd, record->rcvdPkts);
@@ -1054,7 +1089,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     }
 
 #ifdef DEBUG_FLOWS
-    if(0)
+    if(1)
       traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [diff=%d]"
 		 "[recordActTime=%d][last-first=%d]",
 		 srcHost->hostNumIpAddress, sport,
@@ -1115,7 +1150,6 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 			  &when,
 			  0 /* server */, port_idx);
   }
-
 
   /* releaseMutex(&myGlobals.hostsHashMutex); */
 
