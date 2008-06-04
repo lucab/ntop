@@ -111,11 +111,6 @@
 #undef  PARM_USE_COLOR
 
 /*
- * Define to allow processing of CGI scripts.
- */
-#define PARM_USE_CGI
-
-/*
  * This causes the hash functions in vendor.c to invert the mac address #s when
  * computing the hash.  This allows a lot fewer entries in the hash table.
  */
@@ -1187,6 +1182,7 @@
 #define CONST_ACTIVE_TCP_SESSIONS_HTML      "NetNetstat.html"
 #define CONST_NETWORK_IMAGE_MAP             "network_map.png"
 #define CONST_CGI_HEADER                    "ntop-bin/"
+#define CONST_EMBEDDED_PERL_HEADER          "perl/"
 #define CONST_MAN_NTOP_HTML                 "ntop.html"
 #define CONST_NTOP_P3P                      "ntop.p3p"
 #define CONST_PROBLEMRPT_HTML               "ntopProblemReport.html"

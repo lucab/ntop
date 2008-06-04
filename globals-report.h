@@ -365,3 +365,5 @@ extern void drawVsanStatsBytesDistribution(int deviceId);
 extern void drawVsanStatsPktsDistribution(int deviceId);
 extern void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent);
 extern void drawVsanSwilsProtoDistribution(u_short vsanId);
+
+extern int handlePerlHTTPRequest(char *url);

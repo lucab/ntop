@@ -32,10 +32,12 @@ PROGRAM  = $(PKGNAME)-$(VERSION)
 
 DEFS      = @DEFS@
 INCS      = @INCS@
+PERL_INC  = @PERL_INC@
 
-INCLUDES  = -I. $(INCS) ${RRD_INC}
+INCLUDES  = -I. $(INCS) ${PERL_INC} ${RRD_INC}
 LIBS      = 
-BASE_LIBS = @LIBS@ @CORELIBS@ ${RRD_LIB}
+PERL_LIB  = @PERL_LIB@
+BASE_LIBS = @LIBS@ @CORELIBS@  ${PERL_LIB} ${RRD_LIB}
 AS        = @AS@
 AWK       = @AWK@
 CC        = @CC@
@@ -131,7 +133,7 @@ lib_LTLIBRARIES    = libntop.la libntopreport.la
 libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
                      getopt.c     getopt1.c     globals-core.c \
                      hash.c       iface.c       initialize.c  l7.c leaks.c \
-                     ntop.c       pbuf.c        database.c \
+                     ntop.c       perl.c        pbuf.c        database.c \
                      plugin.c     prefs.c       protocols.c   \
                      sessions.c   term.c        util.c        utildl.c \
                      traffic.c    vendor.c      version.c      \
@@ -143,7 +145,7 @@ libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN
 
 # Archive for http representation, or the 'viewer'
 libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
-                           fcReport.c      http.c          \
+                           fcReport.c      http.c              \
                            report.c        reportUtils.c     ssl.c   \
                            webInterface.c
 

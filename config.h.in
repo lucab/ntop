@@ -312,6 +312,9 @@
 /* pcap has pcap_next_ex */
 #undef HAVE_PCAP_NEXT_EX
 
+/* Embedded perl support */
+#undef HAVE_PERL
+
 /* pthread_atfork() exists */
 #undef HAVE_PTHREAD_ATFORK
 

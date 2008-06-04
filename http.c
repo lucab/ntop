@@ -3,7 +3,7 @@
  *
  *                          http://www.ntop.org
  *
- * Copyright (C) 1998-2007 Luca Deri <deri@ntop.org>
+ * Copyright (C) 1998-2008 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -2038,9 +2038,6 @@ static int returnHTTPPage(char* pageName,
   int showFcHostsPage = showHostMainPage;
   int showPrefPage    = showPrefBasicPref;
   int vsanId = 0;
-#if !defined(WIN32) && defined(PARM_USE_CGI)
-  int rc;
-#endif
   int i, showBytes = 1;
 
 #ifdef MAKE_WITH_I18N
@@ -2641,17 +2638,18 @@ static int returnHTTPPage(char* pageName,
     }
 #endif
 
-#if !defined(WIN32) && defined(PARM_USE_CGI)
-    if(strncasecmp(pageName, CONST_CGI_HEADER, strlen(CONST_CGI_HEADER)) == 0) {
-      sendString("HTTP/1.0 200 OK\r\n");
-      rc = execCGI(&pageName[strlen(CONST_CGI_HEADER)]);
-
-      if(rc != 0) {
-	returnHTTPpageNotFound(NULL);
-      }
-    } else
+#ifdef HAVE_PERL
+  if(strncasecmp(pageName, CONST_EMBEDDED_PERL_HEADER, strlen(CONST_EMBEDDED_PERL_HEADER)) == 0) {
+    if(domainNameParm != NULL) free(domainNameParm);
+    if(db_key != NULL) free(db_key);
+    if(db_val != NULL) free(db_val);
+    if(handlePerlHTTPRequest(&pageName[strlen(CONST_EMBEDDED_PERL_HEADER)])) {
+      return(0);
+    } else {
+      return(FLAG_HTTP_INVALID_PAGE);
+    }
+  } else
 #endif
-
       if(generateNewInternalPages(pageName) == 0) {
 	/* We did the work in the function except for this */
 	if(strcasecmp(pageName, CONST_HOME_HTML) != 0)

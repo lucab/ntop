@@ -6,7 +6,7 @@ dnl>   Solaris 8 -- libgcc_s -- need test
 
 dnl> -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 dnl>
-dnl> Copyright (c) 1998 - 2007 Luca Deri <deri@ntop.org>
+dnl> Copyright (c) 1998 - 2008 Luca Deri <deri@ntop.org>
 dnl>                           Rocco Carbone <rocco@ntop.org>
 dnl>                       and Burton M. Strauss III <burton@ntopsupport.com>
 dnl>
@@ -38,19 +38,19 @@ dnl>
 
 dnl>
 dnl> Initialization lines.
-dnl>   Note that the AC_INIT must, simply MUST be the first line.  
+dnl>   Note that the AC_INIT must, simply MUST be the first line.
 dnl>   Anything before it is ignored in autoconf 2.5x (and beyond?)
 dnl>
 dnl>   Edit the version # in the AC_INIT line to roll the version.
 dnl>   Edit NTOP_VERSION_EXTRA to put something extra (e.g. SourceForge rpm version"
 dnl>       into the stamp.
 dnl>
-AC_INIT([ntop],[3.3.5])
+AC_INIT([ntop],[3.3.6])
 
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v3.3.4-22-11-2007"
+SCRIPTVER="v3.3.6-04-06-2008"
 
 dnl>
 dnl> generate the config header
@@ -65,7 +65,7 @@ NTOP_VERSION_EXTRA=""
 
 echo
 echo "Welcome to $PACKAGE_NAME, Version $PACKAGE_VERSION $NTOP_VERSION_EXTRA"
-echo "  copyright (c) 1998-2007 Luca Deri <deri@ntop.org>"
+echo "  copyright (c) 1998-2008 Luca Deri <deri@ntop.org>"
 echo
 echo          "Configuration script version $SCRIPTVER"
 echo
@@ -167,6 +167,15 @@ AC_PROG_MAKE_SET
 
 AM_ENABLE_SHARED
 AM_PROG_LIBTOOL
+
+dnl> 
+dnl> Python check
+dnl> 
+dnl> AC_PROG_SWIG(1.3.17)
+dnl> SWIG_ENABLE_CXX
+dnl> SWIG_MULTI_MODULE_SUPPORT
+dnl> SWIG_PYTHON
+
 
 dnl> NTOPCONFIGDEBUG_SETTINGS([After ac stuff])
 
@@ -357,10 +366,10 @@ dnl>
 
 echo
 echo "Checking C compiler program and features..."
-echo 
+echo
 AM_PROG_CC_STDC
 if test ".${ac_cv_prog_cc_stdc}" = ".no"; then
-    echo 
+    echo
     echo "*******************************************************************"
     echo "*"
     echo "* WARNING: Attempting to configure for non ANSI standard C."
@@ -464,7 +473,7 @@ if test -d ./configureextra; then
 
     echo "*"
     echo "*   Testing for extra configuration options for ${DEFINEOS} ${DISTRO} ${RELEASE}"
-   
+
     if test -f ./configureextra/${DEFINEOS}; then
         echo "*"
         echo "*    Executing configureextra/${DEFINEOS}"
@@ -661,7 +670,7 @@ if (test ".${GDBM_LIB}" != "."      &&
 else
     NTOP_APPENDS([${GDBM_INCLUDE}], [${GDBM_LIB}], [gdbm])
 fi
-    
+
 AC_CHECK_HEADERS([gdbm.h])
 AC_CHECK_LIB([gdbm], [gdbm_open])
 
@@ -694,7 +703,7 @@ dnl> Pattern matching
 dnl>
 AC_CHECK_LIB(pcre, pcre_refcount)
 
-				
+
 dnl> Define the arguments we accept...
 dnl>
 dnl>   In this version of the configure file, we use AC_ARG_WITH for whole external
@@ -724,7 +733,7 @@ if test ".${ac_disable_openssl}" = ".yes"; then
     echo "    ...Disabled via ./configure command line option --without-ssl"
     if test ".${OSSL_LIB}" != "." ||
        test ".${OSSL_INCLUDE}" != "." ||
-       test ".${ac_enable_sslv3}" = ".yes" ||   
+       test ".${ac_enable_sslv3}" = ".yes" ||
        test ".${ac_enable_sslwatchdog}" = ".yes"; then
         echo
         echo "*******************************************************************"
@@ -737,7 +746,7 @@ if test ".${ac_disable_openssl}" = ".yes"; then
             echo "*                --enable-sslv3"
         fi
         if test ".${ac_enable_sslwatchdog}" = ".yes"; then
-            echo "*                --enable-sslwatchdog" 
+            echo "*                --enable-sslwatchdog"
         fi
         echo "*"
         echo "*>>> Ignoring the option(s)"
@@ -833,7 +842,7 @@ fi
 echo
 echo "Processing the rest of the ROOT/DIRECTORY entries"
 echo
-dnl> So we have even more reasonable CPPFLAGS, LDFLAGS and LIBS values for 
+dnl> So we have even more reasonable CPPFLAGS, LDFLAGS and LIBS values for
 dnl> the AC_CHECK_LIB and AC_CHECK_HEADER macros.
 
 dnl> Openssl
@@ -857,9 +866,9 @@ if test ".${ac_disable_openssl}" != ".yes"; then
         echo "*>>> Continuing without the --with-ossl-xxxxx values"
         echo "*"
         echo "*        ./configure should complete 'successfully'"
-        echo "*" 
+        echo "*"
         echo "*        ntop may find openSSL installed in a standard location."
-        echo "*" 
+        echo "*"
         echo "*        If not found, ntop will disable code dependent upon"
         echo "*        openSSL meaning no https:// support."
         echo "*"
@@ -896,11 +905,11 @@ if (test ".${ZLIB_LIB}" != "."      &&
     fi
     echo "*"
     echo "*>>> Continuing without the --with-zlib-xxxxx values"
-    echo "*" 
+    echo "*"
     echo "*        ./configure should complete 'successfully'"
-    echo "*" 
+    echo "*"
     echo "*        ntop may find zlib installed in a standard location."
-    echo "*" 
+    echo "*"
     echo "*        If not found, ntop will disable code dependent upon zlib"
     echo "*        meaning no compressed web pages or input files."
     echo "*"
@@ -944,7 +953,7 @@ AC_C_CONST
 AC_C_VOLATILE
 AC_C_INLINE
 AC_C_CHAR_UNSIGNED
-AC_C_LONG_DOUBLE  
+AC_C_LONG_DOUBLE
 
 AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(CFG_BIG_ENDIAN, 1, [ntop built for big endian machine])],
                [AC_DEFINE_UNQUOTED(CFG_LITTLE_ENDIAN, 1,  [ntop built for little endian machine])],
@@ -960,7 +969,7 @@ echo
 AC_HEADER_STDC
 AC_HEADER_DIRENT
 AC_HEADER_SYS_WAIT
-AC_HEADER_TIME 
+AC_HEADER_TIME
 
 # Standard c stuff - must have
 AC_CHECK_HEADERS([float.h stddef.h stdlib.h string.h])
@@ -1000,7 +1009,7 @@ else
   else
      if test -f "$RRD_HOME/lib/librrd_th.a"; then
        AC_MSG_RESULT(checking for rrdtool... yes)
-     else 
+     else
        AC_CHECK_LIB([rrd_th], [main])
        if test ".${ac_cv_lib_rrd_th_main}" != ".yes"; then
          AC_MSG_ERROR(Unable to find RRD at $RRD_HOME: please use --with-rrd-home=DIR);
@@ -1134,7 +1143,7 @@ AC_CHECK_HEADERS([sys/stat.h])
 AC_CHECK_HEADERS([sys/un.h])
 AC_CHECK_HEADERS([sys/wait.h])
 AC_CHECK_HEADERS([zlib.h])
-	
+
 dnl> Multithreading...
 dnl>    pthread.h is required,
 dnl>    sched.h or sys/sched.h are optional, but improves performance
@@ -1181,7 +1190,7 @@ AC_TYPE_SIZE_T
 dnl> Autoconf2: AC_CHECK_TYPE(size_t, unsigned)
 AC_HEADER_TIME
 AC_STRUCT_TM
-AC_STRUCT_TIMEZONE 
+AC_STRUCT_TIMEZONE
 
 AC_CHECK_TYPEDEF(u_int64_t, sys/types.h)
 AC_CHECK_TYPEDEF(uint64_t, sys/types.h)
@@ -1251,7 +1260,7 @@ AC_CHECK_LIB([c], [dlopen], , [AC_CHECK_LIB([dl], [dlopen])])
 
 dnl> Hokey test for GNU extension dladdr...
 dnl>   From the above, we should have either -lc or -ldl already depending upon where we found dlopen...
-dnl>   But, we need to specify __USE_GNU, JUST for this... 
+dnl>   But, we need to specify __USE_GNU, JUST for this...
 AC_MSG_CHECKING([for dladdr (GNU extension)])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>
 #define __USE_GNU
@@ -1374,7 +1383,7 @@ if test ".${ac_cv_header_errno_h}"      = ".no" ||
 else
     AC_MSG_RESULT(ok)
 fi
-  
+
 AC_MSG_CHECKING([for crypt])
 if (test ".${ac_cv_lib_c_crypt}" != ".yes" &&
     test ".${ac_cv_lib_crypt_crypt}" != ".yes"); then
@@ -1540,6 +1549,16 @@ else
     HAS_WARNING="yes"
 fi
 
+dnl> 
+dnl> Perl check
+dnl> 
+AC_CHECK_TOOL(PERL, perl)
+if test "x$ac_cv_prog_ac_ct_PERL" = "xperl"; then
+    AC_DEFINE_UNQUOTED(HAVE_PERL, 1, [Embedded perl support])
+    PERL_LIB=`perl -MExtUtils::Embed -e ldopts`
+    PERL_INC=`perl -MExtUtils::Embed -e ccopts`
+fi
+
 dnl>
 dnl> MySQL
 dnl>
@@ -1583,7 +1602,7 @@ if test ".${ac_disable_snmp}" != ".yes"; then
     SNMPLIBS="`echo ${SNMPLIBS}|sed -e s,'-R../lib',,g`"
     echo "net-snmp libs: ${SNMPLIBS}"
     LIBS="${LIBS} ${SNMPLIBS}"
-dnl remove unecessary path       
+dnl remove unecessary path
     LIBS=`echo ${LIBS}|sed -e s,'-R../lib',,g`
     INCS="${INCS} `net-snmp-config --cflags`"
   else
@@ -1683,8 +1702,8 @@ if test ".${ac_cv_header_pthread_h}" = ".yes"; then
         #include "confdefs.h"
         #include <pthread.h>],
         [pthread_atfork(NULL, NULL, NULL);],
-        AC_DEFINE_UNQUOTED(HAVE_PTHREAD_ATFORK, 
-                                1, 
+        AC_DEFINE_UNQUOTED(HAVE_PTHREAD_ATFORK,
+                                1,
                                 [pthread_atfork() exists])
         AC_MSG_RESULT(yes)
         ac_has_pthread_atfork=yes,
@@ -1719,12 +1738,12 @@ else
     AC_MSG_RESULT([not found - long command line options are enabled using ntop code])
     echo
     echo "*******************************************************************"
-    echo "*"      
+    echo "*"
     echo "* NOTE: getopt_long does not appear to be provided on this system."
     echo "*"
     echo "*>>>    No worries - activating our built-in (libiberty) version."
     echo "*>>>    ntop should work properly."
-    echo "*"      
+    echo "*"
     echo "*******************************************************************"
     echo
 fi
@@ -1747,8 +1766,8 @@ if test ".${ac_cv_header_sys_syslog_h}" = ".yes" ||
         #endif],
         [void * x = (void*) &(facilitynames[0]);],
         AC_MSG_RESULT(available)
-        AC_DEFINE_UNQUOTED(HAVE_FACILITYNAMES, 
-                           1, 
+        AC_DEFINE_UNQUOTED(HAVE_FACILITYNAMES,
+                           1,
                            [glibc syslog.h or sys/syslog.h with facilitynames[] option]),
         AC_MSG_RESULT(unavailable))
 fi
@@ -1771,8 +1790,8 @@ AC_TRY_COMPILE([
     [u_int i =
          sizeof(((struct ether_header *)0)->ether_dhost.ether_addr_octet)],
     [AC_MSG_RESULT(yes)
-     AC_DEFINE_UNQUOTED(CFG_ETHER_HEADER_HAS_EA, 
-                        1, 
+     AC_DEFINE_UNQUOTED(CFG_ETHER_HEADER_HAS_EA,
+                        1,
                         [ether_header uses ether_addr structs])],
     [AC_MSG_RESULT(no)])
 
@@ -1790,8 +1809,8 @@ if test "${ac_disable_plugins}" != ".yes"; then
         ],
         [struct in6_addr tmp;],
         [AC_MSG_RESULT(yes)
-         AC_DEFINE_UNQUOTED(HAVE_IN6_ADDR, 
-                            1, 
+         AC_DEFINE_UNQUOTED(HAVE_IN6_ADDR,
+                            1,
                             [For sFlowPlugin.c to define in6_addr for environments without it.])],
         [AC_MSG_RESULT(no)])
 fi
@@ -1860,7 +1879,7 @@ if test "x${AWK}" = "x"; then
     echo "*******************************************************************"
     echo
     HAS_WARNING="yes"
-else 
+else
     echo "Removing dups and misplaced entries from LIBS and INCS..."
     LIBS=`echo ${LIBS} | ${ac_cv_prog_AWK} '{ \
         for(i=NF; i>0; i--) { \
@@ -1892,7 +1911,7 @@ if test -d ./configureextra; then
 
     echo ""
     echo "Testing for special final configuration options for ${DEFINEOS} ${DISTRO} ${RELEASE}"
-   
+
     if test -f ./configureextra/final_${DEFINEOS}; then
         echo ""
         echo "    Executing configureextra/final_${DEFINEOS}"
@@ -1945,7 +1964,7 @@ echo "Locale                  : ${LOCALEDIR}"
 if test ".${MEMORYDEBUG}" != .; then
     echo "Memory Debug            : ${MEMORYDEBUG}"
 fi
-echo 
+echo
 echo "External packages:"
 echo
 NTOP_RPT_LOC([LBL pcap], [${PCAP_LIB}], [${PCAP_INCLUDE}])
@@ -1963,7 +1982,7 @@ echo "Install directories:"
 echo
 echo "    Default prefix: ${ac_default_prefix}"
 echo "    Install into:   ${prefix} (default or via --prefix request)"
-echo 
+echo
 
 dnl> Fix as in some platform (e.g. OSX) the datarootdir is not expanded properly
 dnl> and it contains the ${prefix} variable
@@ -2037,6 +2056,8 @@ AC_SUBST(OBJDUMP)
 AC_SUBST(OBJEXT)
 AC_SUBST(CFG_PLUGIN_DIR)
 AC_SUBST(CORELIBS)
+AC_SUBST(PERL_LIB)
+AC_SUBST(PERL_INC)
 AC_SUBST(PLUGINS)
 AC_SUBST(CFG_RUN_DIR)
 AC_SUBST(SCRIPTVER)
@@ -2130,7 +2151,7 @@ case "${target}:${CC}" in
         echo "*FreeBSD5:    expr: illegal option -- l"
         echo "*FreeBSD5:    usage: expr [-e] expression"
         echo "*FreeBSD5: "
-        echo "*FreeBSD5: To avoid this, according to the note on man expr," 
+        echo "*FreeBSD5: To avoid this, according to the note on man expr,"
         echo "*FreeBSD5: \"Compatibility with previous implementations\","
         echo "*FreeBSD5: set the flag EXPR_COMPAT before typing make."
         echo "*FreeBSD5: "

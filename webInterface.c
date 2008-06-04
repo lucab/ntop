@@ -48,91 +48,6 @@ static short alternateColor=0;
 /* Forward */
 static void handleSingleWebConnection(fd_set *fdmask);
 
-/* ************************************* */
-
-#if !defined(WIN32) && defined(PARM_USE_CGI)
-int execCGI(char* cgiName) {
-  char* userName = "nobody", line[384], buf[512];
-  struct passwd * newUser = NULL;
-  FILE *fd;
-  int num, i;
-  struct timeval wait_time;
-
-  if(!(newUser = getpwnam(userName))) {
-    traceEvent(CONST_TRACE_WARNING, "Unable to find user %s", userName);
-    return(-1);
-  } else {
-    setgid(newUser->pw_gid);
-    setuid(newUser->pw_uid);
-  }
-
-  for(num=0, i=0; cgiName[i] != '\0'; i++)
-    if(cgiName[i] == '?') {
-      cgiName[i] = '\0';
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "QUERY_STRING=%s", &cgiName[i+1]);
-      putenv(buf);
-      num = 1;
-      break;
-    }
-
-  putenv("REQUEST_METHOD=GET");
-
-  if(num == 0) {
-    safe_snprintf(__FILE__, __LINE__, line, sizeof(line), "QUERY_STRING=%s", getenv("PWD"));
-    putenv(line); /* PWD */
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "NOTE: CGI %s", line);
-#endif
-  }
-
-  putenv("WD="CFG_DATAFILE_DIR);
-
-  safe_snprintf(__FILE__, __LINE__, line, sizeof(line), "%s/cgi/%s", CFG_DATAFILE_DIR, cgiName);
-
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "Executing CGI '%s'", line);
-#endif
-
-  if((fd = popen(line, "r")) == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Unable to exec %s", cgiName);
-    return(-1);
-  } else {
-    fd_set mask;
-    int allRight = 1;
-    int fno = fileno(fd);
-
-    for(;;) {
-      FD_ZERO(&mask);
-      FD_SET((unsigned int)fno, &mask);
-
-      wait_time.tv_sec = 120; wait_time.tv_usec = 0;
-      if(select(fno+1, &mask, 0, 0, &wait_time) > 0) {
-	if(!feof(fd)) {
-	  num = fread(line, 1, 383, fd);
-	  if(num > 0)
-	    sendStringLen(line, num);
-	} else
-	  break;
-      } else {
-	allRight = 0;
-	break;
-      }
-    }
-
-    pclose(fd);
-
-#ifdef DEBUG
-    if(allRight)
-      traceEvent(CONST_TRACE_INFO, "CGI execution completed.");
-    else
-      traceEvent(CONST_TRACE_INFO, "CGI execution encountered some problems.");
-#endif
-
-    return(0);
-  }
-}
-#endif /* !defined(WIN32) && defined(PARM_USE_CGI) */
-
 /* **************************************** */
 
 #if(defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(DARWIN)
@@ -5868,14 +5783,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #else
   printFeatureConfigInfo(textPrintFlag, "PARM_THROUGHPUT_REFRESH_INTERVAL", "undefined");
 #endif
-
-  printFeatureConfigInfo(textPrintFlag, "PARM_USE_CGI",
-#ifdef PARM_USE_CGI
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
 
   printFeatureConfigInfo(textPrintFlag, "PARM_USE_COLOR",
 #ifdef PARM_USE_COLOR
