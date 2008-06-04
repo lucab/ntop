@@ -1631,7 +1631,7 @@ u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
        * E.g. : 89.10.67.213.in-addr.arpa
        *
        */
-      char *a, *b, *c, *d, dnsBuf[128], *strtokState;
+      char *a, *b, *c, *d, dnsBuf[128], *strtokState = NULL;
       unsigned long theDNSaddr;
 
       len = strlen((char*)bp);

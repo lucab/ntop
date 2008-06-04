@@ -240,7 +240,7 @@ AC_ARG_ENABLE(snmp,
               else
                   ac_disable_snmp="no"
               fi,
-              ac_disable_snmp="no")
+              ac_disable_snmp="yes")
 
 AC_ARG_ENABLE(i18n,
               [  --enable-i18n               Enable (limited) internationalization [[default=disabled]]],
