@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2007 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2008 Luca Deri <deri@ntop.org>
  *                      
  *  			    http://www.ntop.org/
  *  					
@@ -66,6 +66,8 @@ typedef int NDIS_STATUS, *PNDIS_STATUS;
 
 #define socklen_t int
 #define strcasecmp _stricmp
+#define snprintf _snprintf
+
 
 extern int getopt(int num, char *const *argv, const char *opts);
 #define getopt getopt____

@@ -4340,10 +4340,10 @@ static void handleRRDHTTPrequest(char* url) {
   } else if(action == FLAG_RRD_ACTION_GRAPH_SUMMARY) {
     graphSummary(rrdKey, rrdName, graphId, startTime, endTime, rrdPrefix, mode);
     return;
-  } else if(action == FLAG_RRD_ACTION_NF_SUMMARY) {
+  } else if((action == FLAG_RRD_ACTION_NF_IF_SUMMARY) || (action == FLAG_RRD_ACTION_NF_SUMMARY)) {
     netflowSummary(rrdKey, graphId, startTime, endTime, rrdPrefix, mode);
     return;
-  } else if((action == FLAG_RRD_ACTION_NF_IF_SUMMARY) || (action == FLAG_RRD_ACTION_IF_SUMMARY)) {
+  } else if(action == FLAG_RRD_ACTION_IF_SUMMARY) {
     interfaceSummary(rrdKey, graphId, startTime, endTime, rrdPrefix, mode);
     return;
   } else if(action == FLAG_RRD_ACTION_LIST) {
