@@ -36,8 +36,9 @@ PerlInterpreter *my_perl;  /***    The Perl interpreter    ***/
 /* http://localhost:3000/perl/test.pl */
 
 int handlePerlHTTPRequest(char *url) {
-  static int perl_argc = 2;
-  static char * perl_argv [] = { "", "./perl/test.pl" };
+  int perl_argc = 2;
+  char * perl_argv [] = { "", "./perl/test.pl" };
+  HV * ss = NULL;       /* the @sorttypes */
 
   traceEvent(CONST_TRACE_WARNING, "Calling perl...");
 
@@ -47,21 +48,18 @@ int handlePerlHTTPRequest(char *url) {
   PL_exit_flags |= PERL_EXIT_DESTRUCT_END;
   perl_parse(my_perl, NULL, perl_argc, perl_argv, (char **)NULL);
 
-  {
-    HV * ss = NULL;       /* the @sorttypes */
-    
-    ss = perl_get_hv ("main::myhost", TRUE);
-
-    hv_store(ss, "name", strlen ("name"), newSVpv ("xxx", strlen ("xxx")), 0);
-    hv_store(ss, "ip", strlen ("ip"), newSVpv ("1.2.3.4", strlen ("1.2.3.4")), 0);
-    hv_undef(ss);
-  }
-
+  ss = perl_get_hv ("main::myhost", TRUE);
+  
+  hv_store(ss, "name", strlen ("name"), newSVpv ("xxx", strlen ("xxx")), 0);
+  hv_store(ss, "ip", strlen ("ip"), newSVpv ("1.2.3.4", strlen ("1.2.3.4")), 0);
+  
 
   perl_run(my_perl);
+  hv_undef(ss);
   perl_destruct(my_perl);
   perl_free(my_perl);
   PERL_SYS_TERM();
+  return(1);
 }
 
 

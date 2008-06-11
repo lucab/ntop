@@ -2638,22 +2638,22 @@ static int returnHTTPPage(char* pageName,
     }
 #endif
 
-#ifdef HAVE_PERL
-  if(strncasecmp(pageName, CONST_EMBEDDED_PERL_HEADER, strlen(CONST_EMBEDDED_PERL_HEADER)) == 0) {
-    if(domainNameParm != NULL) free(domainNameParm);
-    if(db_key != NULL) free(db_key);
-    if(db_val != NULL) free(db_val);
-    if(handlePerlHTTPRequest(&pageName[strlen(CONST_EMBEDDED_PERL_HEADER)])) {
-      return(0);
-    } else {
-      return(FLAG_HTTP_INVALID_PAGE);
-    }
-  } else
-#endif
       if(generateNewInternalPages(pageName) == 0) {
 	/* We did the work in the function except for this */
 	if(strcasecmp(pageName, CONST_HOME_HTML) != 0)
 	  printTrailer=0;
+#ifdef HAVE_PERL
+      } else if(strncasecmp(pageName, CONST_EMBEDDED_PERL_HEADER, 
+			    strlen(CONST_EMBEDDED_PERL_HEADER)) == 0) {
+	if(domainNameParm != NULL) free(domainNameParm);
+	if(db_key != NULL) free(db_key);
+	if(db_val != NULL) free(db_val);
+	if(handlePerlHTTPRequest(&pageName[strlen(CONST_EMBEDDED_PERL_HEADER)])) {
+	  printTrailer=0;
+	} else {
+	  return(FLAG_HTTP_INVALID_PAGE);
+	}
+#endif
       } else if(strncasecmp(pageName, CONST_FC_DATA_HTML,
 			    strlen(CONST_FC_DATA_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
