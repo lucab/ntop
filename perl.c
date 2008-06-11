@@ -26,12 +26,23 @@
 #include "ntop.h"
 //#include "globals-report.h"
 
+
+
 #ifdef HAVE_PERL
 
+void perl_wrap_sendString(char *str) { _sendString(str, 1); }
+void send_http_header()              { sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1); };
+
+#include "perl/ntop_wrap.c"
+
+#if 0
 #include <EXTERN.h>               /* from the Perl distribution     */
 #include <perl.h>                 /* from the Perl distribution     */
+#endif
+
 PerlInterpreter *my_perl;  /***    The Perl interpreter    ***/
 
+/* **************************************** */
 
 /* http://localhost:3000/perl/test.pl */
 
@@ -40,7 +51,7 @@ int handlePerlHTTPRequest(char *url) {
   char * perl_argv [] = { "", "./perl/test.pl" };
   HV * ss = NULL;       /* the @sorttypes */
 
-  traceEvent(CONST_TRACE_WARNING, "Calling perl...");
+  /* traceEvent(CONST_TRACE_WARNING, "Calling perl..."); */
 
   PERL_SYS_INIT3(&argc,&argv,&env);
   my_perl = perl_alloc();
@@ -52,8 +63,10 @@ int handlePerlHTTPRequest(char *url) {
   
   hv_store(ss, "name", strlen ("name"), newSVpv ("xxx", strlen ("xxx")), 0);
   hv_store(ss, "ip", strlen ("ip"), newSVpv ("1.2.3.4", strlen ("1.2.3.4")), 0);
-  
 
+  newXS("sendString", _wrap_sendString, (char*)__FILE__);
+  newXS("send_http_header", _wrap_send_http_header, (char*)__FILE__);
+  
   perl_run(my_perl);
   hv_undef(ss);
   perl_destruct(my_perl);
