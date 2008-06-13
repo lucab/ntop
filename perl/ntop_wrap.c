@@ -1740,6 +1740,23 @@ XS(_wrap_ntop_perl_send_http_header) {
 }
 
 
+XS(_wrap_ntop_perl_send_html_footer) {
+  {
+    int argvi = 0;
+    dXSARGS;
+    
+    if ((items < 0) || (items > 0)) {
+      SWIG_croak("Usage: ntop_perl_send_html_footer();");
+    }
+    ntop_perl_send_html_footer();
+    
+    XSRETURN(argvi);
+  fail:
+    SWIG_croak_null();
+  }
+}
+
+
 XS(_wrap_ntop_perl_loadHost) {
   {
     int argvi = 0;
@@ -1996,6 +2013,7 @@ static swig_variable_info swig_variables[] = {
 static swig_command_info swig_commands[] = {
 {"ntopc::ntop_perl_sendString", _wrap_ntop_perl_sendString},
 {"ntopc::ntop_perl_send_http_header", _wrap_ntop_perl_send_http_header},
+{"ntopc::ntop_perl_send_html_footer", _wrap_ntop_perl_send_html_footer},
 {"ntopc::ntop_perl_loadHost", _wrap_ntop_perl_loadHost},
 {"ntopc::ntop_perl_getFirstHost", _wrap_ntop_perl_getFirstHost},
 {"ntopc::ntop_perl_getNextHost", _wrap_ntop_perl_getNextHost},

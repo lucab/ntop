@@ -24,6 +24,7 @@ while(($host{'ethAddress'} ne "")
 
 sendString("</table>\n");
 sendString("</center>\n");
+send_html_footer();
 
 ########
 

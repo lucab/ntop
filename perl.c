@@ -57,7 +57,13 @@ void ntop_perl_sendString(char *str) {
 void ntop_perl_send_http_header(char *title) {
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1); 
   if(title && (strlen(title) > 0)) printHTMLheader(title, NULL, 0);
-};
+}
+
+/* *********************************************************** */
+
+void ntop_perl_send_html_footer() {
+  printHTMLtrailer();
+}
 
 /* *********************************************************** */
 
@@ -147,6 +153,7 @@ int handlePerlHTTPRequest(char *url) {
   SWIG_InitializeModule(0);
   newXS("sendString", _wrap_ntop_perl_sendString, (char*)__FILE__);
   newXS("send_http_header", _wrap_ntop_perl_send_http_header, (char*)__FILE__);
+  newXS("send_html_footer", _wrap_ntop_perl_send_html_footer, (char*)__FILE__);
   newXS("loadHost", _wrap_ntop_perl_loadHost, (char*)__FILE__);
   newXS("getFirstHost", _wrap_ntop_perl_getFirstHost, (char*)__FILE__);
   newXS("getNextHost", _wrap_ntop_perl_getNextHost, (char*)__FILE__);

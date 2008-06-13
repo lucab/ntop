@@ -9,6 +9,7 @@
 // #include "ntop_perl.h"
 void ntop_perl_sendString(char *str);
 void ntop_perl_send_http_header(char *title);
+void ntop_perl_send_html_footer();
 void ntop_perl_loadHost();
 void ntop_perl_getFirstHost(int actualDeviceId);
 void ntop_perl_getNextHost(int actualDeviceId);
