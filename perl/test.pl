@@ -2,14 +2,28 @@
 # (C) 2008 - Luca Deri <deri@ntop.org>
 #
 
-send_http_header();
+send_http_header("Known hosts");
 
-my $i;
+getFirstHost(0);
+loadHost();
 
-for($i=0; $i<10; $i++) {
-    sendString("hello ".$i."\n");
+sendString("<center>\n");
+sendString("<table border>\n");
+sendString("<tr><th>MAC</th><th colspan=2>IP</th></tr>\n");
+
+while(($host{'ethAddress'} ne "") 
+      || ($host{'ipAddress'} ne ""))  {
+
+    sendString("<tr><td>".$host{'ethAddress'}
+	       ."&nbsp;</td><td>".$host{'ipAddress'}
+	       ."&nbsp;</td><td>".$host{'hostResolvedName'}
+	       ."&nbsp;</td></tr>\n");
+    getNextHost(0);
+    loadHost();
 }
 
+sendString("</table>\n");
+sendString("</center>\n");
 
 ########
 

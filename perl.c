@@ -24,15 +24,13 @@
 
 
 #include "ntop.h"
-//#include "globals-report.h"
+#include "globals-report.h"
 
 
 
 #ifdef HAVE_PERL
 
-static void perl_wrap_sendString(char *str) { _sendString(str, 1); }
-static void send_http_header()              { sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1); };
-
+#include "perl/ntop_perl.h"
 #include "perl/ntop_wrap.c"
 
 #if 0
@@ -42,33 +40,119 @@ static void send_http_header()              { sendHTTPHeader(FLAG_HTTP_TYPE_HTML
 
 PerlInterpreter *my_perl;  /***    The Perl interpreter    ***/
 
-/* **************************************** */
+static HostTraffic *perl_host = NULL;
+static HV * ss = NULL;
+
+/* *********************************************************** */
+/* *********************************************************** */
+
+void ntop_perl_sendString(char *str) { 
+  if(str && (strlen(str) > 0))
+    _sendString(str, 1); 
+}
+
+
+/* *********************************************************** */
+
+void ntop_perl_send_http_header(char *title) {
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1); 
+  if(title && (strlen(title) > 0)) printHTMLheader(title, NULL, 0);
+};
+
+/* *********************************************************** */
+
+void ntop_perl_loadHost() {
+
+  traceEvent(CONST_TRACE_INFO, "[perl] loadHost()");
+
+  if(ss) {
+    hv_undef(ss);
+    ss = NULL;
+  }
+
+  if(perl_host) {
+    ss = perl_get_hv ("main::host", TRUE);
+    
+    hv_store(ss, "ethAddress", strlen("ethAddress"), 
+	     newSVpv(perl_host->ethAddressString, strlen(perl_host->ethAddressString)), 0);
+    hv_store(ss, "ipAddress", strlen ("ipAddress"), 
+	     newSVpv(perl_host->hostNumIpAddress, strlen(perl_host->hostNumIpAddress)), 0);
+     hv_store(ss, "hostResolvedName", strlen ("hostResolvedName"), 
+	     newSVpv(perl_host->hostResolvedName, strlen(perl_host->hostResolvedName)), 0);
+ }
+}
+
+/* *********************************************************** */
+
+void ntop_perl_getFirstHost(int actualDeviceId) { 
+  perl_host = getFirstHost(actualDeviceId);
+
+  traceEvent(CONST_TRACE_INFO, "[perl] getFirstHost()=%p", perl_host);
+}
+
+/* *********************************************************** */
+
+void ntop_perl_getNextHost(int actualDeviceId) {
+  if(perl_host == NULL) {
+    ntop_perl_getFirstHost(actualDeviceId);
+  } else {
+    perl_host = getNextHost(actualDeviceId, perl_host);
+  }
+
+  traceEvent(CONST_TRACE_INFO, "[perl] getNextHost()=%p", perl_host);
+}
+
+/* *********************************************************** */
+
+HostTraffic* ntop_perl_findHostByNumIP(HostAddr hostIpAddress, 
+				       short vlanId, int actualDeviceId) {
+  return(findHostByNumIP(hostIpAddress, vlanId, actualDeviceId));
+
+}
+
+/* *********************************************************** */
+
+HostTraffic* ntop_perl_findHostBySerial(HostSerial serial, 
+					int actualDeviceId) {
+  return(findHostBySerial(serial, actualDeviceId));
+}
+
+/* *********************************************************** */
+
+HostTraffic* ntop_perl_findHostByMAC(char* macAddr, 
+				     short vlanId, int actualDeviceId) {
+  return(findHostByMAC(macAddr, vlanId, actualDeviceId));
+}
+
+/* *********************************************************** */
 
 /* http://localhost:3000/perl/test.pl */
 
 int handlePerlHTTPRequest(char *url) {
   int perl_argc = 2;
   char * perl_argv [] = { "", "./perl/test.pl" };
-  HV * ss = NULL;       /* the @sorttypes */
 
   /* traceEvent(CONST_TRACE_WARNING, "Calling perl..."); */
 
   PERL_SYS_INIT3(&argc,&argv,&env);
-  my_perl = perl_alloc();
+  if((my_perl = perl_alloc()) == NULL) {
+    traceEvent(CONST_TRACE_WARNING, "[perl] Not enough memory");
+    return(0);
+  }
+
   perl_construct(my_perl);
   PL_exit_flags |= PERL_EXIT_DESTRUCT_END;
   perl_parse(my_perl, NULL, perl_argc, perl_argv, (char **)NULL);
 
-  ss = perl_get_hv ("main::myhost", TRUE);
-  
-  hv_store(ss, "name", strlen ("name"), newSVpv ("xxx", strlen ("xxx")), 0);
-  hv_store(ss, "ip", strlen ("ip"), newSVpv ("1.2.3.4", strlen ("1.2.3.4")), 0);
-
-  newXS("sendString", _wrap_sendString, (char*)__FILE__);
-  newXS("send_http_header", _wrap_send_http_header, (char*)__FILE__);
-  
+  SWIG_InitializeModule(0);
+  newXS("sendString", _wrap_ntop_perl_sendString, (char*)__FILE__);
+  newXS("send_http_header", _wrap_ntop_perl_send_http_header, (char*)__FILE__);
+  newXS("loadHost", _wrap_ntop_perl_loadHost, (char*)__FILE__);
+  newXS("getFirstHost", _wrap_ntop_perl_getFirstHost, (char*)__FILE__);
+  newXS("getNextHost", _wrap_ntop_perl_getNextHost, (char*)__FILE__);
   perl_run(my_perl);
-  hv_undef(ss);
+
+  PL_perl_destruct_level = 0;
   perl_destruct(my_perl);
   perl_free(my_perl);
   PERL_SYS_TERM();

@@ -1,12 +1,3 @@
-// File : ntop.i
-// Command: swig -perl5 ntop.i
-
-%module ntop
-%{
-#include "ntop.h"
-%}
-
-// #include "ntop_perl.h"
 void ntop_perl_sendString(char *str);
 void ntop_perl_send_http_header(char *title);
 void ntop_perl_loadHost();
