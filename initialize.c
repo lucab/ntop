@@ -432,7 +432,7 @@ void initCounters(void) {
   char *workLanguage;
 #ifdef HAVE_DIRENT_H
   struct dirent **dirList;
-  int j, iLang, nLang, found;
+  int iLang, nLang, found;
   DIR *testDirEnt;
   char *tmpStr;
   char* realLocale;
@@ -1603,7 +1603,7 @@ void initDevices(char* devices) {
 
   if(devices != NULL) {
     /* User has specified devices in the parameter list */
-    char *workDevices = strdup(devices), *strtokState;
+    char *workDevices = strdup(devices), *strtokState = NULL;
     int warnedVirtual = 0;
 
     tmpDev = strtok_r(workDevices, ",", &strtokState);

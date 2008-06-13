@@ -1568,7 +1568,7 @@ char *dotToSlash(char *name) {
 /* Example: "flow1='host jake',flow2='dst host born2run'" */
 void handleFlowsSpecs(void) {
   FILE *fd;
-  char *flow, *buffer=NULL, *strtokState, *flows;
+  char *flow, *buffer=NULL, *strtokState = NULL, *flows;
 
   flows = myGlobals.runningPref.flowSpecs;
 
@@ -4436,7 +4436,7 @@ char *i18n_xvert_locale2common(const char *input) {
    */
   char *output, *work;
 
-  output = strdup(input);
+  output = strdup((char*)input);
 
   work = strchr(output, '.');
   if(work != NULL) {
@@ -4461,7 +4461,7 @@ char *i18n_xvert_acceptlanguage2common(const char *input) {
    */
   char *output, *work;
 
-  output = strdup(input);
+  output = strdup((char*)input);
 
   work = strchr(output, '*');
   if(work != NULL) {

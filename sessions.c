@@ -1246,7 +1246,7 @@ static void handleKazaaSession(const struct pcap_pkthdr *h,
 	if(strncmp(row, "GET /", 4) == 0) {
 	  char *theStr = "GET /.hash=";
 	  if(strncmp(row, theStr, strlen(theStr)) != 0) {
-	    char *strtokState1, *file = strtok_r(&row[4], " ", &strtokState1);
+	    char *strtokState1 = NULL, *file = strtok_r(&row[4], " ", &strtokState1);
 	    int i, begin=0;
 
 	    if(file != NULL) {
@@ -1469,7 +1469,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 	  int len = strlen(row);
 
 	  if((len > 12) && (strncmp(row, "User-Agent:", 11) == 0)) {
-	    char *token, *tokState, *browser = NULL, *os = NULL;
+	    char *token, *tokState = NULL, *browser = NULL, *os = NULL;
 
 	    row[len-1] = '\0';
 

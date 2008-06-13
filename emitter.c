@@ -279,12 +279,14 @@ static void wrtIntItm(FILE *fDescr, int lang, char *indent, char *name,
 
 /* *************************** */
 
+#if 0
 static void wrtIntStrItm(FILE *fDescr, int lang, char *indent,int name,
 			 char *value, char useless, int numEntriesSent) {
   char buf[80];
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",name);
   wrtKV(fDescr, lang, indent, buf, value, ',', numEntriesSent);
 }
+#endif
 
 /* *************************** */
 

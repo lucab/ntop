@@ -1602,7 +1602,6 @@ if test ".${ac_disable_snmp}" != ".yes"; then
     SNMPLIBS="`echo ${SNMPLIBS}|sed -e s,'-R../lib',,g`"
     echo "net-snmp libs: ${SNMPLIBS}"
     LIBS="${LIBS} ${SNMPLIBS}"
-    CFLAGS="${CFLAGS} -DNETSNMP_BROKEN_INLINE"
 dnl remove unecessary path
     LIBS=`echo ${LIBS}|sed -e s,'-R../lib',,g`
     INCS="${INCS} `net-snmp-config --cflags`"

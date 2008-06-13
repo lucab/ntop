@@ -30,8 +30,8 @@
 
 #ifdef HAVE_PERL
 
-void perl_wrap_sendString(char *str) { _sendString(str, 1); }
-void send_http_header()              { sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1); };
+static void perl_wrap_sendString(char *str) { _sendString(str, 1); }
+static void send_http_header()              { sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1); };
 
 #include "perl/ntop_wrap.c"
 

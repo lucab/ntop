@@ -765,9 +765,14 @@ void calculateUniqueInterfaceName(int deviceId) {
 
 #ifdef HAVE_SNMP
 
+#undef NETSNMP_USE_INLINE
+#define NETSNMP_BROKEN_INLINE
+
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <string.h>
+
+
 
 #ifndef min
 #define min(a,b) (a<b ? a : b)
