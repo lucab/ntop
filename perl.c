@@ -138,7 +138,7 @@ int handlePerlHTTPRequest(char *url) {
   int perl_argc = 2;
   char * perl_argv [] = { "", "./perl/test.pl" };
 
-  /* traceEvent(CONST_TRACE_WARNING, "Calling perl..."); */
+  traceEvent(CONST_TRACE_WARNING, "Calling perl... [%s]", url); 
 
   PERL_SYS_INIT3(&argc,&argv,&env);
   if((my_perl = perl_alloc()) == NULL) {

@@ -2,7 +2,7 @@
 # (C) 2008 - Luca Deri <deri@ntop.org>
 #
 
-send_http_header("Known hosts");
+send_http_header("Known ntop hosts");
 
 getFirstHost(0);
 loadHost();
@@ -13,9 +13,18 @@ sendString("<tr><th>MAC</th><th colspan=2>IP</th></tr>\n");
 
 while(($host{'ethAddress'} ne "") 
       || ($host{'ipAddress'} ne ""))  {
+    my $mac_addr;
 
-    sendString("<tr><td>".$host{'ethAddress'}
-	       ."&nbsp;</td><td>".$host{'ipAddress'}
+    if($host{'ethAddress'} ne "") {
+	my $mac = $host{'ethAddress'};
+	$mac =~ tr/:/_/;
+	$mac_addr = "<A HREF=/".$mac.".html>".$host{'ethAddress'}."</A>";
+    } else {
+	$mac_addr = "";
+    }
+
+    sendString("<tr><td>".$mac_addr
+	       ."&nbsp;</td><td><A HREF=/".$host{'ipAddress'}.".html>".$host{'ipAddress'}."</A>"
 	       ."&nbsp;</td><td>".$host{'hostResolvedName'}
 	       ."&nbsp;</td></tr>\n");
     getNextHost(0);
@@ -27,8 +36,4 @@ sendString("</center>\n");
 send_html_footer();
 
 ########
-
-sub my_send_http_header {
-sendString("HTTP/1.0 200 OK\nCache-Control: no-cache\nExpires: 0\nConnection: close\nServer: ntop/3.3.6 (i686-apple-darwin9.3.0)\nContent-Type: text/html\n\n");
-}
 

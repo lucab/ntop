@@ -829,7 +829,6 @@ typedef struct hostTraffic {
   u_short          magic;
   u_short          l2Family;    /* 0 = Ethernet, 1 = Fibre Channel (FC) */
   u_int            hostTrafficBucket; /* Index in the **hash_hostTraffic list */
-  u_int            originalHostTrafficBucket; /* REMOVE */
   u_short          refCount;         /* Reference counter */
   HostSerial       hostSerial;
   HostAddr         hostIpAddress;

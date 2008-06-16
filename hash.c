@@ -1003,7 +1003,6 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 
     el->magic = CONST_MAGIC_NUMBER;
     el->hostTrafficBucket = idx; /* Set the bucket index */
-    el->originalHostTrafficBucket = idx; /* Set the bucket index */
 
     /* traceEvent(CONST_TRACE_INFO, "new entry added at bucket %d", idx); */
 
@@ -1366,10 +1365,9 @@ static void dumpHash() {
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-    traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: (%3d) %s / %s [bkt=%d][orig bkt=%d][next=0x%X]",
+    traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: (%3d) %s / %s [bkt=%d][next=0x%X]",
 	       i++, el->ethAddressString, el->hostNumIpAddress,
-	       el->hostTrafficBucket, el->originalHostTrafficBucket,
-	       el->next);
+	       el->hostTrafficBucket, el->next);
   }
 }
 
@@ -1383,10 +1381,9 @@ static void hashSanityCheck() {
 
     while(el != NULL) {
       if(el->hostTrafficBucket != i)
-	traceEvent(CONST_TRACE_ERROR, "HASH: (%3d) %s / %s [bkt=%d][orig bkt=%d][next=0x%X]",
+	traceEvent(CONST_TRACE_ERROR, "HASH: (%3d) %s / %s [bkt=%d][next=0x%X]",
 		   i, el->ethAddressString, el->hostNumIpAddress,
-		   el->hostTrafficBucket, el->originalHostTrafficBucket,
-		   el->next);
+		   el->hostTrafficBucket, el->next);
       el = el->next;
     }
   }
@@ -1402,10 +1399,9 @@ static void hostHashSanityCheck(HostTraffic *host) {
 
     while(el != NULL) {
       if(el == host)
-	traceEvent(CONST_TRACE_ERROR, "HOST HASH: (%3d) %s / %s [bkt=%d][orig bkt=%d][next=0x%X]",
+	traceEvent(CONST_TRACE_ERROR, "HOST HASH: (%3d) %s / %s [bkt=%d][next=0x%X]",
 		   i, el->ethAddressString, el->hostNumIpAddress,
-		   el->hostTrafficBucket, el->originalHostTrafficBucket,
-		   el->next);
+		   el->hostTrafficBucket, el->next);
       el = el->next;
     }
   }
