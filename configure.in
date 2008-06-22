@@ -1564,9 +1564,7 @@ AC_TRY_RUN([
 #include <EXTERN.h>
 #include <perl.h>
 
-
-int 
-main ()
+int main ()
 {
   if (perl_alloc() != NULL)
     return 0;	/* success */
@@ -1582,6 +1580,7 @@ if test "$ac_cv_perl_dev_installed" = yes ; then
   AC_MSG_RESULT(yes)
    PERL_LIB=`perl -MExtUtils::Embed -e ldopts`
    PERL_INC=`perl -MExtUtils::Embed -e ccopts`
+   AC_DEFINE_UNQUOTED(HAVE_PERL, 1, [PERL is supported])
 else
   AC_MSG_RESULT(no)
 fi

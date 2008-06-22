@@ -51,11 +51,10 @@ void ntop_perl_sendString(char *str) {
     _sendString(str, 1); 
 }
 
-
 /* *********************************************************** */
 
 void ntop_perl_send_http_header(char *title) {
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1); 
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 0); 
   if(title && (strlen(title) > 0)) printHTMLheader(title, NULL, 0);
 }
 
@@ -67,7 +66,11 @@ void ntop_perl_send_html_footer() {
 
 /* *********************************************************** */
 
+#define PERL_STORE_STRING(a, b) hv_store(ss, a, strlen(a), newSVpv(b, strlen(b)), 0);
+#define PERL_STORE_NUM(a, b)    { safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u", b); PERL_STORE_STRING(a, buf); }
+
 void ntop_perl_loadHost() {
+  char buf[64];
 
   traceEvent(CONST_TRACE_INFO, "[perl] loadHost()");
 
@@ -79,13 +82,15 @@ void ntop_perl_loadHost() {
   if(perl_host) {
     ss = perl_get_hv ("main::host", TRUE);
     
-    hv_store(ss, "ethAddress", strlen("ethAddress"), 
-	     newSVpv(perl_host->ethAddressString, strlen(perl_host->ethAddressString)), 0);
-    hv_store(ss, "ipAddress", strlen ("ipAddress"), 
-	     newSVpv(perl_host->hostNumIpAddress, strlen(perl_host->hostNumIpAddress)), 0);
-     hv_store(ss, "hostResolvedName", strlen ("hostResolvedName"), 
-	     newSVpv(perl_host->hostResolvedName, strlen(perl_host->hostResolvedName)), 0);
- }
+    PERL_STORE_STRING("ethAddress", perl_host->ethAddressString);
+    PERL_STORE_STRING("ipAddress", perl_host->hostNumIpAddress);
+    PERL_STORE_STRING("hostResolvedName", perl_host->hostResolvedName);
+    PERL_STORE_NUM("vlanId", perl_host->vlanId);
+    PERL_STORE_NUM("hostAS", perl_host->hostAS);
+    PERL_STORE_NUM("pktSent", perl_host->pktSent.value); PERL_STORE_NUM("pktRcvd", perl_host->pktRcvd.value);
+    PERL_STORE_NUM("bytesSent", perl_host->bytesSent.value); PERL_STORE_NUM("bytesRcvd", perl_host->bytesRcvd.value);
+
+  }
 }
 
 /* *********************************************************** */
@@ -93,7 +98,8 @@ void ntop_perl_loadHost() {
 void ntop_perl_getFirstHost(int actualDeviceId) { 
   perl_host = getFirstHost(actualDeviceId);
 
-  traceEvent(CONST_TRACE_INFO, "[perl] getFirstHost()=%p", perl_host);
+  traceEvent(CONST_TRACE_INFO, "[perl] getFirstHost(%d)=%p",
+	     actualDeviceId, perl_host);
 }
 
 /* *********************************************************** */
@@ -136,11 +142,15 @@ HostTraffic* ntop_perl_findHostByMAC(char* macAddr,
 
 int handlePerlHTTPRequest(char *url) {
   int perl_argc = 2;
-  char * perl_argv [] = { "", "./perl/test.pl" };
+  char perl_path[256];
+  char * perl_argv[] = { "", NULL };
 
   traceEvent(CONST_TRACE_WARNING, "Calling perl... [%s]", url); 
 
-  PERL_SYS_INIT3(&argc,&argv,&env);
+  safe_snprintf(__FILE__, __LINE__, perl_path, sizeof(perl_path), "./perl/%s", url);
+  perl_argv[1] = perl_path;
+
+  PERL_SYS_INIT3(&argc, &argv, &env);
   if((my_perl = perl_alloc()) == NULL) {
     traceEvent(CONST_TRACE_WARNING, "[perl] Not enough memory");
     return(0);
@@ -157,6 +167,7 @@ int handlePerlHTTPRequest(char *url) {
   newXS("loadHost", _wrap_ntop_perl_loadHost, (char*)__FILE__);
   newXS("getFirstHost", _wrap_ntop_perl_getFirstHost, (char*)__FILE__);
   newXS("getNextHost", _wrap_ntop_perl_getNextHost, (char*)__FILE__);
+
   perl_run(my_perl);
 
   PL_perl_destruct_level = 0;
