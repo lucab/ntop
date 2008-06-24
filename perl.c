@@ -33,11 +33,6 @@
 #include "perl/ntop_perl.h"
 #include "perl/ntop_wrap.c"
 
-#if 0
-#include <EXTERN.h>               /* from the Perl distribution     */
-#include <perl.h>                 /* from the Perl distribution     */
-#endif
-
 PerlInterpreter *my_perl;  /***    The Perl interpreter    ***/
 
 static HostTraffic *perl_host = NULL;

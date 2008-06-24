@@ -6571,6 +6571,14 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "GDBM version", gdbm_version);
 #endif
 
+  printFeatureConfigInfo(textPrintFlag, "Embedded Perl API", 
+#ifdef HAVE_PERL
+			 "Present"
+#else
+			 "Not present"
+#endif
+			 );
+
 #if defined(WIN32)
   printFeatureConfigInfo(textPrintFlag, "WinPcap version", (char*)PacketGetVersion());
 #endif

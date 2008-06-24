@@ -2677,7 +2677,6 @@ static int returnHTTPPage(char* pageName,
     }
 #endif
 
-#ifdef HAVE_PERL
     if(strncasecmp(pageName, CONST_EMBEDDED_PERL_HEADER, 
 			    strlen(CONST_EMBEDDED_PERL_HEADER)) == 0) {
 	if(domainNameParm != NULL) free(domainNameParm);
@@ -2686,13 +2685,16 @@ static int returnHTTPPage(char* pageName,
 
 	printTrailer = 0;
 
+#ifdef HAVE_PERL
 	if(handlePerlHTTPRequest(&pageName[strlen(CONST_EMBEDDED_PERL_HEADER)])) {
 	  ;
-	} else {
+	} else
 	  return(FLAG_HTTP_INVALID_PAGE);
-	}
-    } else
+#else
+	returnHTTPpageNotFound("Perl support disabled into this ntop instance");
 #endif
+    } else
+
       if(generateNewInternalPages(pageName) == 0) {
 	/* We did the work in the function except for this */
 	if(strcasecmp(pageName, CONST_HOME_HTML) != 0)
