@@ -1751,6 +1751,7 @@
 #define FLAG_HTTP_TYPE_P3P                  10
 #define FLAG_HTTP_TYPE_SVG                  11
 #define FLAG_HTTP_TYPE_JSON                 12
+#define FLAG_HTTP_TYPE_PDF                  13
 
 #define BITFLAG_HTTP_IS_CACHEABLE           (1<<0)
 #define BITFLAG_HTTP_NO_CACHE_CONTROL       (1<<1)

@@ -2,12 +2,12 @@
 # (C) 2008 - Luca Deri <deri@ntop.org>
 #
 
-use strict;
-use warnings;
-#use PDF::ReportWriter;
+#use strict;
+#use warnings;
+use PDF::ReportWriter;
 
 
-send_http_header("Known ntop hosts");
+send_http_header(1, "Known ntop hosts");
 
 getFirstHost(0);
 loadHost();

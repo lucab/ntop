@@ -1590,6 +1590,9 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
   case FLAG_HTTP_TYPE_SVG:
     sendString("Content-Type: image/svg+xml\r\n");
     break;
+  case FLAG_HTTP_TYPE_PDF:
+    sendString("Content-Type: application/pdf\r\n");
+    break;
   case FLAG_HTTP_TYPE_NONE:
     break;
 #ifdef URL_DEBUG
@@ -1601,7 +1604,9 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
 
   if((mimeType == MIME_TYPE_CHART_FORMAT)
      || (mimeType == FLAG_HTTP_TYPE_JSON)
-     || (mimeType == FLAG_HTTP_TYPE_TEXT) /* FIX */) {
+     || (mimeType == FLAG_HTTP_TYPE_TEXT)
+     || (mimeType == FLAG_HTTP_TYPE_PDF)
+     /* FIX */) {
     compressFile = 0;
     if(myGlobals.newSock < 0 /* SSL */) acceptGzEncoding = 0;
   } else {
@@ -1833,7 +1838,8 @@ static int checkURLsecurity(char *url) {
 	   (strcasecmp(&workURL[i], "gif")  == 0) ||
 	   (strcasecmp(&workURL[i], "ico")  == 0) ||
 	   (strcasecmp(&workURL[i], "js")   == 0) || /* Javascript */
-	   (strcasecmp(&workURL[i], "json")   == 0) ||
+	   (strcasecmp(&workURL[i], "json") == 0) ||
+	   (strcasecmp(&workURL[i], "pdf")  == 0) ||
 	   (strcasecmp(&workURL[i], "pl")   == 0) || /* used for Perl CGI's */
 	   (strcasecmp(&workURL[i], "css")  == 0)))) {
     traceEvent(CONST_TRACE_NOISY,
@@ -2313,6 +2319,8 @@ static int returnHTTPPage(char* pageName,
         mimeType = FLAG_HTTP_TYPE_ICO;
       else if(strcasecmp(&pageURI[len-5], ".json") == 0)
         mimeType = FLAG_HTTP_TYPE_JSON;
+      else if(strcasecmp(&pageURI[len-4], ".pdf") == 0)
+        mimeType = FLAG_HTTP_TYPE_PDF;
       else if(strcasecmp(&pageURI[len-3], ".js") == 0)
         mimeType = FLAG_HTTP_TYPE_JS;
       else if(strcasecmp(&pageURI[len-4], ".xml") == 0)

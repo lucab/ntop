@@ -66,8 +66,8 @@ void ntop_perl_sendString(char *str) {
 
 /* *********************************************************** */
 
-void ntop_perl_send_http_header(char *title) {
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 0); 
+void ntop_perl_send_http_header(int mime_type, char *title) {
+  sendHTTPHeader(mime_type /* FLAG_HTTP_TYPE_HTML */, 0, 0); 
   if(title && (strlen(title) > 0)) printHTMLheader(title, NULL, 0);
 }
 

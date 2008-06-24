@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+    The First Simple Report
+    Author: Cosimo Streppone <cosimo@cpan.org>
+    Date: 2006-03-14
+    $Id: basic.xml,v 1.1 2006/03/14 17:14:24 cosimo Exp $
+-->
+<report>
+
+    <definition>
+        <name>A simple report</name>
+        <destination>/tmp/basic.pdf</destination>
+        <paper>A4</paper>
+        <orientation>portrait</orientation>
+        <font>Helvetica</font>
+        <default_font>Helvetica</default_font>
+        <default_font_size>10</default_font_size>
+        <x_margin>28.346</x_margin><!-- 10 mm -->
+        <y_margin>28.346</y_margin>
+    </definition>
+
+    <data>
+
+        <!-- Every rendering unit is a cell -->
+        <cell_borders>1</cell_borders>
+
+        <!-- Every page has a header and footer which are
+             both lists of individual cells -->
+        <page>
+
+            <header>
+
+                <!-- A little logo -->
+                <cell index="0">
+                    <image path="./html/ntop_logo.gif"/>
+                    <!-- How much space of page? 20% -->
+                    <percent>20</percent>
+                    <align>right</align>
+                </cell>
+
+                <!-- Main title -->
+                <cell index="1">
+                    <text>Known Hosts</text>
+                    <!-- How much space of page? 50% -->
+                    <percent>50</percent>
+                    <font_size>20</font_size>
+                    <colour>black</colour>
+                    <align>left</align>
+                    <wrap_text>1</wrap_text>
+                </cell>
+
+            </header>
+        </page>
+
+        <!-- A simple report is basically a table.
+             Define all the columns of this table -->
+        <fields>
+
+            <!-- MAC -->
+            <field>
+                <name>MAC Address</name>
+                <index>0</index>
+                <percent>20</percent>
+                <font_size>12</font_size>
+                <align>left</align>
+            </field>
+
+            <!-- IP -->
+            <field>
+                <name>IP Address</name>
+                <index>1</index>
+                <percent>20</percent>
+                <font_size>12</font_size>
+                <align>left</align>
+            </field>
+
+            <!-- Name -->
+            <field>
+                <name>Name</name>
+                <index>2</index>
+                <percent>30</percent>
+                <font_size>12</font_size>
+                <align>right</align>                
+            </field>
+            
+            <!-- Sent -->
+            <field>
+                <name>Bytes Sent</name>
+                <index>3</index>
+                <percent>15</percent>
+                <font_size>12</font_size>
+                <align>right</align>                
+            </field>
+            
+            <!-- Rcvd -->
+            <field>
+                <name>Bytes Rcvd</name>
+                <index>4</index>
+                <percent>15</percent>
+                <font_size>12</font_size>
+                <align>right</align>                
+            </field>
+            
+        </fields>
+
+    </data>
+
+</report>

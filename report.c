@@ -6953,7 +6953,7 @@ void findHost(char *key) {
 
     if(el == myGlobals.broadcastEntry) continue;
 
-    if((key == NULL) || (key == "")) do_add = 1;
+    if((key == NULL) || (key[0] == '\0')) do_add = 1;
     else if(el->hostNumIpAddress && strcasestr(el->hostNumIpAddress, key)) do_add = 1;
     else if(strcasestr(el->ethAddressString, key)) do_add = 2;
     else if(strcasestr(el->hostResolvedName, key)) do_add = 1;
