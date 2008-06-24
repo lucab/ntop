@@ -1838,6 +1838,44 @@ XS(_wrap_ntop_perl_getNextHost) {
 }
 
 
+XS(_wrap_ntop_perl_sendFile) {
+  {
+    char *arg1 = (char *) 0 ;
+    int arg2 ;
+    int res1 ;
+    char *buf1 = 0 ;
+    int alloc1 = 0 ;
+    int val2 ;
+    int ecode2 = 0 ;
+    int argvi = 0;
+    dXSARGS;
+    
+    if ((items < 2) || (items > 2)) {
+      SWIG_croak("Usage: ntop_perl_sendFile(fileName,doNotUnlink);");
+    }
+    res1 = SWIG_AsCharPtrAndSize(ST(0), &buf1, NULL, &alloc1);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "ntop_perl_sendFile" "', argument " "1"" of type '" "char *""'");
+    }
+    arg1 = (char *)(buf1);
+    ecode2 = SWIG_AsVal_int SWIG_PERL_CALL_ARGS_2(ST(1), &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "ntop_perl_sendFile" "', argument " "2"" of type '" "int""'");
+    } 
+    arg2 = (int)(val2);
+    ntop_perl_sendFile(arg1,arg2);
+    
+    if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+    
+    XSRETURN(argvi);
+  fail:
+    if (alloc1 == SWIG_NEWOBJ) free((char*)buf1);
+    
+    SWIG_croak_null();
+  }
+}
+
+
 XS(_wrap_ntop_perl_findHostByNumIP) {
   {
     HostAddr arg1 ;
@@ -2027,6 +2065,7 @@ static swig_command_info swig_commands[] = {
 {"ntopc::ntop_perl_loadHost", _wrap_ntop_perl_loadHost},
 {"ntopc::ntop_perl_getFirstHost", _wrap_ntop_perl_getFirstHost},
 {"ntopc::ntop_perl_getNextHost", _wrap_ntop_perl_getNextHost},
+{"ntopc::ntop_perl_sendFile", _wrap_ntop_perl_sendFile},
 {"ntopc::ntop_perl_findHostByNumIP", _wrap_ntop_perl_findHostByNumIP},
 {"ntopc::ntop_perl_findHostBySerial", _wrap_ntop_perl_findHostBySerial},
 {"ntopc::ntop_perl_findHostByMAC", _wrap_ntop_perl_findHostByMAC},

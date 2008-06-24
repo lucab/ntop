@@ -743,36 +743,6 @@ static int endsWith(char* label, char* pattern) {
     return(!strcmp(&label[lenLabel-lenPattern], pattern));
 }
 
-/* ************************ */
-
-static void sendGraphFile(char* fileName, int doNotUnlink) {
-  FILE *fd;
-  int len;
-  char tmpStr[256];
-  int bufSize=sizeof(tmpStr)-1, totLen = 0;
-
-  memset(&tmpStr, 0, sizeof(tmpStr));
-
-  if((fd = fopen(fileName, "rb")) != NULL) {
-
-    for(;;) {
-      len = fread(tmpStr, sizeof(char), bufSize, fd);
-      if(len > 0) {
-	sendStringLen(tmpStr, len);
-	totLen += len;
-      }
-      if(len <= 0) break;
-    }
-
-    fclose(fd);
-  } else
-    traceEvent(CONST_TRACE_WARNING, "Unable to open file %s - graphic not sent", fileName);
-
-  if (doNotUnlink == 0) {
-    unlink(fileName);
-  }
-}
-
 /* ******************************* */
 
 static char* sanitizeRrdPath(char *in_path) {
@@ -979,7 +949,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 
     if(rc == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_PNG, 0, 1);
-      sendGraphFile(fname, 0);
+      sendFile(fname, 0);
       unlink(fname);
     } else {
       traceEventRRDebugARGV(0);
@@ -1310,7 +1280,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
 
   if(rc == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_PNG, 0, 1);
-    sendGraphFile(fname, 0);
+    sendFile(fname, 0);
     unlink(fname);
   } else {
     traceEventRRDebugARGV(3);
@@ -1649,7 +1619,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
 
   if(rc == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_PNG, 0, 1);
-    sendGraphFile(fname, 0);
+    sendFile(fname, 0);
     unlink(fname);
   } else {
     traceEventRRDebugARGV(3);
@@ -2448,7 +2418,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
   if(rc == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_PNG, 0, 1);
-    sendGraphFile(fname, 0);
+    sendFile(fname, 0);
     unlink(fname);
   } else {
     traceEventRRDebugARGV(3);

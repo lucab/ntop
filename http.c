@@ -929,6 +929,36 @@ static void processSSI(const char *ssiRequest) {
 
 /* ************************* */
 
+void sendFile(char* fileName, int doNotUnlink) {
+  FILE *fd;
+  int len;
+  char tmpStr[256];
+  int bufSize=sizeof(tmpStr)-1, totLen = 0;
+
+  memset(&tmpStr, 0, sizeof(tmpStr));
+
+  if((fd = fopen(fileName, "rb")) != NULL) {
+
+    for(;;) {
+      len = fread(tmpStr, sizeof(char), bufSize, fd);
+      if(len > 0) {
+	sendStringLen(tmpStr, len);
+	totLen += len;
+      }
+      if(len <= 0) break;
+    }
+
+    fclose(fd);
+  } else
+    traceEvent(CONST_TRACE_WARNING, "Unable to open file %s - graphic not sent", fileName);
+
+  if (doNotUnlink == 0) {
+    unlink(fileName);
+  }
+}
+
+/* ************************* */
+
 void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
   int bytesSent, rc, retries = 0;
   char *ssiStart, *ssiEnd, temp;

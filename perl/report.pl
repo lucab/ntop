@@ -25,19 +25,9 @@ $rw->render_report('./perl/report/basic.xml', \@data);
 
 # Produces `./basic.pdf', check xml to understand how
 
+# 13 = PDF
 send_http_header(13, "");
 $rw->save();
 
-if(0) {
-my $filename = "/tmp/basic.pdf";
-my $buff;
-open(FILE, $filename) or die "can't open $filename: $!"; 
-binmode(FILE); 
-while (read(FILE, $buff, 8 * 2**10)) { 
-    sendString($buff); 
-} 
-close(FILE);
-}
-
-#unlink($filename);
+sendFile("/tmp/basic.pdf", 0);
 

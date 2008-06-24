@@ -160,7 +160,8 @@ extern char* encodeString(char* in, char* out, u_int out_len);
 extern void printHTMLtrailer(void);
 extern void returnHTTPpageBadCommunity(void);
 extern void returnHTTPredirect(char* destination);
-void returnHTTPpageNotFound(char* additionalText);
+extern void returnHTTPpageNotFound(char* additionalText);
+extern void sendFile(char* fileName, int doNotUnlink);
 
 #define sendStringLen(a, b) _sendStringLen(a, b, 1)
 #define sendStringLenWOssi(a, b) _sendStringLen(a, b, 0)
