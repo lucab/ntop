@@ -97,7 +97,8 @@ NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.p
            html/statsicons/flags html/statsicons/os \
            html/statsicons/flags/*.gif html/statsicons/os/*.gif \
            html/PlotKit html/PlotKit/*.js \
-           html/MochiKit html/MochiKit/*.js
+           html/MochiKit html/MochiKit/*.js \
+	   perl perl/*.pl perl/report perl/report/*.xml
 
 WEBFILES       = `cat www/FILES`
 PLUGINSFILES   = `cat plugins/FILES`
