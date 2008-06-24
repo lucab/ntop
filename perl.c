@@ -43,7 +43,20 @@ PerlInterpreter *my_perl;  /***    The Perl interpreter    ***/
 static HostTraffic *perl_host = NULL;
 static HV * ss = NULL;
 
-/* *********************************************************** */
+/*
+  perl -MExtUtils::Embed -e xsinit -- -o perlxsi.c
+*/
+EXTERN_C void xs_init (pTHX);
+EXTERN_C void boot_DynaLoader (pTHX_ CV* cv);
+
+EXTERN_C void xs_init(pTHX) {
+  char *file = __FILE__;
+  dXSUB_SYS;
+  
+  /* DynaLoader is a special case */
+  newXS("DynaLoader::boot_DynaLoader", boot_DynaLoader, file);
+}
+
 /* *********************************************************** */
 
 void ntop_perl_sendString(char *str) { 
@@ -158,7 +171,7 @@ int handlePerlHTTPRequest(char *url) {
 
   perl_construct(my_perl);
   PL_exit_flags |= PERL_EXIT_DESTRUCT_END;
-  perl_parse(my_perl, NULL, perl_argc, perl_argv, (char **)NULL);
+  perl_parse(my_perl, xs_init, perl_argc, perl_argv, (char **)NULL);
 
   SWIG_InitializeModule(0);
   newXS("sendString", _wrap_ntop_perl_sendString, (char*)__FILE__);
