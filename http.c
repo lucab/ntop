@@ -1038,7 +1038,7 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
 #endif
 
 	compressFileFd = gzopen(compressedFilePath, "wb");
-	traceEvent(CONST_TRACE_INFO, "gzopen(%s)=%p", compressedFilePath, compressFileFd);
+	if(0) traceEvent(CONST_TRACE_INFO, "gzopen(%s)=%p", compressedFilePath, compressFileFd);
       }
 
       if(gzwrite(compressFileFd, theString, len) == 0) {

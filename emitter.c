@@ -72,7 +72,9 @@ static void initWriteArray(FILE *fDescr, int lang) {
 
 /* *************************** */
 
-static void endWriteArray(FILE *fDescr, int lang) {
+static void endWriteArray(FILE *fDescr, int lang, unsigned int numEntries) {
+  char buf[256];
+
   switch(lang) {
   case FLAG_PERL_LANGUAGE:
   case FLAG_PHP_LANGUAGE:
@@ -82,7 +84,8 @@ static void endWriteArray(FILE *fDescr, int lang) {
     sendEmitterString(fDescr, "}\n");
     break;
   case FLAG_JSON_LANGUAGE:
-    sendEmitterString(fDescr, "]})\n");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "], \"totalRecords\":%d\n})\n", numEntries);
+    sendEmitterString(fDescr, buf);
     break;
   case FLAG_XML_LANGUAGE:
     sendEmitterString(fDescr, "</ntop-traffic-information>\n</rpc-reply>\n");
@@ -435,7 +438,7 @@ void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId) {
     }
   }
 
-  if(numEntries > 0) endWriteArray(fDescr, lang);
+  if(numEntries > 0) endWriteArray(fDescr, lang, numEntries);
 }
 
 /* ********************************** */
@@ -515,9 +518,7 @@ void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
 	}
       }
 
-
-
-  if(numEntries > 0) endWriteArray(fDescr, lang);
+  if(numEntries > 0) endWriteArray(fDescr, lang, numEntries);
 }
 
 /* ********************************** */
@@ -1117,7 +1118,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 
   if(numEntries > 0) endWriteKey(fDescr, lang,"", (lang == FLAG_XML_LANGUAGE) ? "host-information" : hostKey, ' ');
 
-  endWriteArray(fDescr, lang);
+  endWriteArray(fDescr, lang, numEntries);
 }
 
 /* ********************************** */
@@ -1191,7 +1192,7 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
   if (lang == FLAG_XML_LANGUAGE)
     sendEmitterString(fDescr, "</keys>\n");
 
-  endWriteArray(fDescr, lang);
+  endWriteArray(fDescr, lang, numEntries);
 }
 
 /* ********************************** */
@@ -1571,5 +1572,5 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
   }
 
   if(numEntries > 0) endWriteKey(fDescr, lang, "", (lang == FLAG_XML_LANGUAGE) ? "device-information" : keyName, ' ');
-  endWriteArray(fDescr, lang);
+  endWriteArray(fDescr, lang, numEntries);
 }

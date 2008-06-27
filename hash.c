@@ -914,23 +914,23 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   if((hostFound == 1) && (vlanId != NO_VLAN) && (el->vlanId != NO_VLAN)
      && (vlanId != el->vlanId) && (!isMultivlaned(el))) {
     FD_SET(FLAG_HOST_TYPE_MULTIVLANED, &el->flags);
+
     if(myGlobals.multipleVLANedHostCount == 0) {
       traceEvent(CONST_TRACE_ERROR, "mVLAN: Host (identical IP/MAC) found on multiple VLANs [%d][%d]", vlanId, el->vlanId);
       traceEvent(CONST_TRACE_INFO,  "mVLAN: ntop continues but will consolidate and thus probably overcount this traffic");
       traceEvent(CONST_TRACE_NOISY, "mVLAN: Up to %d examples will be printed", MAX_MULTIPLE_VLAN_WARNINGS);
     }
-    if(++myGlobals.multipleVLANedHostCount < MAX_MULTIPLE_VLAN_WARNINGS)
-      traceEvent(CONST_TRACE_NOISY, "mVLAN: Device %d Host %s (%02x:%02x:%02x:%02x:%02x:%02x) VLANs %d and %d",
-                 actualDeviceId,
-                 addrtostr(hostIpAddress),
-                 ether_addr[0],
-                 ether_addr[1],
-                 ether_addr[2],
-                 ether_addr[3],
-                 ether_addr[4],
-                 ether_addr[5],
-                 min(vlanId, el->vlanId),
+
+    if(++myGlobals.multipleVLANedHostCount < MAX_MULTIPLE_VLAN_WARNINGS) {
+      if(ether_addr)
+	traceEvent(CONST_TRACE_NOISY, "mVLAN: Device %d Host %s (%02x:%02x:%02x:%02x:%02x:%02x) VLANs %d and %d",
+		   actualDeviceId,
+		   addrtostr(hostIpAddress),
+		   ether_addr[0], ether_addr[1], ether_addr[2],
+		   ether_addr[3], ether_addr[4], ether_addr[5],
+		   min(vlanId, el->vlanId),
                  max(vlanId, el->vlanId));
+    }
   }
 
   if(numRuns > myGlobals.device[actualDeviceId].hashListMaxLookups)
