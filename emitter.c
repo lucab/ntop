@@ -59,7 +59,7 @@ static void initWriteArray(FILE *fDescr, int lang) {
     sendEmitterString(fDescr, "ntopDict = {\n");
     break ;
   case FLAG_JSON_LANGUAGE:
-    sendEmitterString(fDescr, "{ \"ntop\": [");
+    sendEmitterString(fDescr, "({ \"ntop\": [");
     break;
   case FLAG_XML_LANGUAGE:
     sendEmitterString(fDescr, "<rpc-reply xmlns:ntop=\"http://www.ntop.org/ntop.dtd\">"
@@ -82,7 +82,7 @@ static void endWriteArray(FILE *fDescr, int lang) {
     sendEmitterString(fDescr, "}\n");
     break;
   case FLAG_JSON_LANGUAGE:
-    sendEmitterString(fDescr, "]}\n");
+    sendEmitterString(fDescr, "]})\n");
     break;
   case FLAG_XML_LANGUAGE:
     sendEmitterString(fDescr, "</ntop-traffic-information>\n</rpc-reply>\n");
@@ -131,7 +131,7 @@ static void initWriteKey(FILE *fDescr, int lang, char *indent,
     sendEmitterString(fDescr, buf);
     break ;
   case FLAG_JSON_LANGUAGE:
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "{ \"host.key\": \"%s\",", keyName);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "{ \"host_key\": \"%s\",", keyName);
     sendEmitterString(fDescr, buf);
     break;
   case FLAG_XML_LANGUAGE:
