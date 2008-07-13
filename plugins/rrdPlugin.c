@@ -29,7 +29,7 @@
 #define _GETOPT_H
 #endif
 
-#define NTOP_WATERMARK "GENERATED USING NTOP - HTTP://WWW.NTOP.ORG"
+#define NTOP_WATERMARK "NTOP / LUCA DERI"
 
 #define REMOTE_SERVER_PORT 2005
 static u_char useDaemon = 0, debug_rrd_graph = 0;
