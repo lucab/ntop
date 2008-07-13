@@ -29,6 +29,8 @@
 #define _GETOPT_H
 #endif
 
+#define NTOP_WATERMARK "GENERATED USING NTOP - HTTP://WWW.NTOP.ORG"
+
 #define REMOTE_SERVER_PORT 2005
 static u_char useDaemon = 0, debug_rrd_graph = 0;
 static int sd = -1;
@@ -857,6 +859,8 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     argv[argc++] = "PNG";
     argv[argc++] = "--vertical-label";
     argv[argc++] = label;
+    argv[argc++] = "--watermark";
+    argv[argc++] = NTOP_WATERMARK;
 
     if((rrdTitle != NULL) && (rrdTitle[0] != '\0')) {
       argv[argc++] = "--title";
@@ -1188,6 +1192,8 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
   argv[argc++] = "--end";
   argv[argc++] = endTime;
   argv[argc++] = "--slope-mode";
+  argv[argc++] = "--watermark";
+  argv[argc++] = NTOP_WATERMARK;
 
 #ifdef CONST_RRD_DEFAULT_FONT_NAME
   argv[argc++] = "--font";
@@ -1523,6 +1529,8 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
   argv[argc++] = "--vertical-label";
   argv[argc++] = label;
   argv[argc++] = "--title";
+  argv[argc++] = "--watermark";
+  argv[argc++] = NTOP_WATERMARK;
   argv[argc++] = title;
   argv[argc++] = "--start";
   argv[argc++] = startTime;
@@ -2249,6 +2257,8 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   argv[argc++] = "PNG";
   argv[argc++] = "--vertical-label";
   argv[argc++] = label;
+  argv[argc++] = "--watermark";
+  argv[argc++] = NTOP_WATERMARK;
   argv[argc++] = "--start";
   argv[argc++] = startTime;
   argv[argc++] = "--end";

@@ -2,7 +2,7 @@
 
 body
 {
-	font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
+	font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;
 	/* font-family: Helvetica, Arial, sans-serif; */
 	font-size: 12px;
 	background: #fff url("/white_bg.gif") repeat-x;
@@ -10,7 +10,7 @@ body
 
 th
 {
-font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
+font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;
 font-size: 12px;
 font-weight: bold;
 white-space: nowrap;
@@ -23,20 +23,20 @@ table {
 
 span.leftmenuitem
 {
-font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
+font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;
 font-size: 12px;
 font-weight: bold;
 }
 
 canvas
 {
-font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
+font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;
 font-size: 9px;
 }
 
 td
 {
-font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
+font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;
 font-size: 12px;
 }
 
@@ -45,15 +45,15 @@ white-space: normal;
 }
 
 address
-{font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
+{font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;
 font-size: 8pt}
 
 h5
-{font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
+{font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;
 font-size: 8pt}
 
 form
-{font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
+{font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;
 font-size: 12px}
 
 h1
@@ -70,37 +70,37 @@ font-weight: bold}
 
 A:link
 {color: blue;
-font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
+font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;
 font-size: 12px;
 text-decoration: none}
 
 A:visited
 {color: blue;
-font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
+font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;
 font-size: 12px;
 text-decoration: none}
 
 A:hover
 {color: red;
-font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";
+font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;
 font-size: 12px;
 text-decoration: underline}
 
 A:link.nav
 {color: #000000;
-font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";}
+font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;}
 
 A:visited.nav
 {color: #000000;
-font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";}
+font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;}
 
 A:hover.nav
 {color: red;
-font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";}
+font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;}
 
 .nav
 {color: #000000;
-font-family: "Lucida Grande", "Tahoma", "Verdana", "Sans", "sans-serif";}
+font-family: "Lucida Grande","Lucida Sans Unicode",Arial,Verdana,sans-serif;}
 
 A.age0min { color:#FF0000 }
 A.age5min { color:#FF00FF }
@@ -158,6 +158,73 @@ div.niceTitle p
 	margin: 0;
 	text-align: left;
 	-moz-opacity: 1;
+}
+
+#header {
+	background: url(/bg_header.png) no-repeat left top;
+	padding-bottom: 18px;
+}
+
+#data {
+      background: url(/header.png) no-repeat right top;
+      padding-bottom: 18px;
+      text-align: right;
+      padding-top: 28px;
+      padding-right: 27px;
+}
+
+#footer
+{
+  position: relative;
+  font: normal 0.8em/1.5 sans-serif;
+  text-align: left;
+  background: #FFFFFF url(/line-bottom.png) 0 0 repeat-x;
+  height: 80px;
+  color: #666666;
+}
+
+#bottom
+{
+  margin-left: 0px;
+  padding-right: 0px;
+}
+
+#footer ul
+{
+  list-style: none;
+}
+
+#footer li
+{
+
+  border-left: 1px solid #AAAAAA;
+  padding: 0 0.75ex;
+  margin-left: -1px;
+}
+
+#footer li.first
+{
+  border-left: none;
+}
+
+#footer a
+{
+  color: #223344;
+}
+
+#footer a:hover
+{
+  color: #112233;
+}
+
+#footer p
+{
+  margin: 0 1.5ex;
+}
+
+#footer .copy
+{
+  padding-top: 3ex;
 }
 
 /* The main calendar widget.  DIV containing a table. */
