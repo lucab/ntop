@@ -4421,69 +4421,6 @@ char *ip2CountryCode(HostAddr ip) {
   return(cc);
 }
 
-/* ******************************************************** */
-
-#ifdef MAKE_WITH_I18N
-char *i18n_xvert_locale2common(const char *input) {
-  /*
-   *  locales are                  ll[_XX][.char][@modifier]
-   *
-   *  Fix it up to our common format(ll_XX), stripped of char and modifier.
-   *
-   *    NB: We picked this common format because it's usable in a directory
-   *       (html_ll_XX) where the Accept-Language version(ll-XX) wouldn't always be.
-   *
-   */
-  char *output, *work;
-
-  output = strdup((char*)input);
-
-  work = strchr(output, '.');
-  if(work != NULL) {
-    work[0] = '\0';
-  }
-  work = strchr(output, '@');
-  if(work != NULL) {
-    work[0] = '\0';
-  }
-  return output;
-}
-
-char *i18n_xvert_acceptlanguage2common(const char *input) {
-  /*
-   *  Accept-Language: headers are ll[-XX] or ll-*
-   *
-   *  Fix it up to our common format(ll_XX), with the - swapped for a _
-   *
-   *    NB: We picked this common format because it's usable in a directory
-   *       (html_ll_XX) where the Accept-Language version(ll-XX) wouldn't always be.
-   *
-   */
-  char *output, *work;
-
-  output = strdup((char*)input);
-
-  work = strchr(output, '*');
-  if(work != NULL) {
-    /* Backup to erase the - of the -* combo */
-    work--;
-    work[0] = '\0';
-  }
-  work = strchr(output, '-');
-  if(work != NULL) {
-    work[0] = '_';
-  }
-  work = strchr(output, '_');
-  if(work != NULL) {
-    while(work[0] != '\0') {
-      work[0] = toupper(work[0]);
-      work++;
-    }
-  }
-  return output;
-}
-#endif /* MAKE_WITH_I18N */
-
 /* *************************************** */
 
 void setHostFingerprint(HostTraffic *srcHost) {

@@ -4,10 +4,23 @@
 
 #use strict;
 #use warnings;
-use PDF::ReportWriter;
-
 
 send_http_header(1, "Known ntop hosts");
+
+# --------------------------------------------- 
+
+#loadHosts();
+
+#while ( my ($key, $value) = each(%hosts) ) {
+#    print "$key => $value\n";
+#}
+
+#foreach $key (sort(keys %hosts)) {
+#    print "[key=", $key,"][value=", $hosts{$key}"\n";
+#}
+
+#exit
+# ---------------------------------------------
 
 getFirstHost(0);
 loadHost();
@@ -15,6 +28,7 @@ loadHost();
 sendString("<center>\n");
 sendString("<table border>\n");
 sendString("<tr><th>MAC</th><th colspan=2>IP</th><th>Packets</th><th>Bytes</th></tr>\n");
+
 
 while(($host{'ethAddress'} ne "") 
       || ($host{'ipAddress'} ne ""))  {

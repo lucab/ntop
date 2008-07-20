@@ -1184,14 +1184,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "I18N_DEBUG",
-#ifdef I18N_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "IDLE_PURGE_DEBUG",
 #ifdef IDLE_PURGE_DEBUG
                          "yes"
@@ -2783,14 +2775,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "MAKE_STATIC_PLUGIN",
 #ifdef MAKE_STATIC_PLUGIN
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_I18N",
-#ifdef MAKE_WITH_I18N
                          "yes"
 #else
                          "no"
@@ -5849,12 +5833,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
    *
    */
 
-#ifdef AZURE_BG
-  printFeatureConfigInfo(textPrintFlag, "AZURE_BG", AZURE_BG);
-#else
-  printFeatureConfigInfo(textPrintFlag, "AZURE_BG", "undefined");
-#endif
-
 #ifdef BASE_PROTOS_IDX
   printFeatureConfigNum(textPrintFlag, "BASE_PROTOS_IDX", BASE_PROTOS_IDX);
 #else
@@ -5897,17 +5875,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "DISPLAY_FC_WWN", "undefined");
 #endif
 
-#ifdef GOLD_BG
-  printFeatureConfigInfo(textPrintFlag, "GOLD_BG", GOLD_BG);
-#else
-  printFeatureConfigInfo(textPrintFlag, "GOLD_BG", "undefined");
-#endif
-
-#ifdef SALMON_BG
-  printFeatureConfigInfo(textPrintFlag, "SALMON_BG", SALMON_BG);
-#else
-  printFeatureConfigInfo(textPrintFlag, "SALMON_BG", "undefined");
-#endif
 
 #ifdef SORT_DATA_HOST_TRAFFIC
   printFeatureConfigNum(textPrintFlag, "SORT_DATA_HOST_TRAFFIC", SORT_DATA_HOST_TRAFFIC);
@@ -6027,12 +5994,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "TH_BG", TH_BG);
 #else
   printFeatureConfigInfo(textPrintFlag, "TH_BG", "undefined");
-#endif
-
-#ifdef TOMATO_BG
-  printFeatureConfigInfo(textPrintFlag, "TOMATO_BG", TOMATO_BG);
-#else
-  printFeatureConfigInfo(textPrintFlag, "TOMATO_BG", "undefined");
 #endif
 
 #ifdef TRAFFIC_STATS
@@ -7503,46 +7464,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 #endif
 
   printInfoSectionTitle(textPrintFlag, "Internationalization (i18n)");
-
-  printFeatureConfigInfo(textPrintFlag, "i18n enabled",
-#ifdef MAKE_WITH_I18N
-                         "Yes"
-#else
-                         "No"
-#endif
-			 );
-
-#ifdef MAKE_WITH_I18N
-
-  if(textPrintFlag == TRUE) {
-    printFeatureConfigInfo(textPrintFlag, "Locale directory (version.c)", locale_dir);
-  }
-
-  if(textPrintFlag == TRUE) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		"globals-defines.h: #define MAX_LANGUAGES_REQUESTED %d",
-		MAX_LANGUAGES_REQUESTED);
-    printFeatureConfigInfo(textPrintFlag, "Languages - per request (Accept-Language:)", buf);
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		"globals-defines.h: #define MAX_LANGUAGES_SUPPORTED %d",
-		MAX_LANGUAGES_SUPPORTED);
-    printFeatureConfigInfo(textPrintFlag, "Languages supported - maximum", buf);
-  }
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.maxSupportedLanguages + 1);
-  printFeatureConfigInfo(textPrintFlag, "Languages supported - actual ", buf);
-
-  printFeatureConfigInfo(textPrintFlag, "Default language", myGlobals.defaultLanguage);
-
-  for(i=0; i< myGlobals.maxSupportedLanguages; i++) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Additional language %d", i+1);
-    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "'%s', time format '%s'",
-		myGlobals.supportedLanguages[i],
-		myGlobals.strftimeFormat[i]);
-    printFeatureConfigInfo(textPrintFlag, buf, buf2);
-  }
-
-#endif /* I18N */
 
 #ifdef HAVE_LOCALE_H
   if(textPrintFlag == TRUE) {

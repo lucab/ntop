@@ -255,15 +255,6 @@
 #endif
 
 /*
- * Do we have the stuff we need for i18n?
- */
-#ifdef MAKE_WITH_I18N
- #if !defined(HAVE_LOCALE_H) || !defined(HAVE_LANGINFO_H)
-  #undef MAKE_WITH_I18N
- #endif
-#endif
-
-/*
  * This flag indicates that fork() is implemented with copy-on-write.
  * This means that the set of tables reported on in fork()ed processes
  * will be complete and unchanged as of the instant of the fork.
@@ -389,10 +380,6 @@
 /* INITWEB_DEBUG logs the initialization of the web server
  */
 /* #define INITWEB_DEBUG */
-
-/* I18N_DEBUG logs the activities in and around internationalization (i18n).
- */
-/* #define I18N_DEBUG */
 
 /* LATENCY_DEBUG logs the acquisition of latency figures.
  */

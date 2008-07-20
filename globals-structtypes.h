@@ -2442,14 +2442,6 @@ typedef struct ntopGlobals {
     numVendorLookupFoundMulticast,
     numVendorLookupFoundLAA;
 
-  /* i18n */
-#ifdef MAKE_WITH_I18N
-  char *defaultLanguage;
-  int  maxSupportedLanguages;
-  char *supportedLanguages[MAX_LANGUAGES_SUPPORTED];
-  char *strftimeFormat[MAX_LANGUAGES_SUPPORTED];
-#endif
-
   /* Country flags */
   IPNode *countryFlagHead;
   int  ipCountryMem, ipCountryCount;

@@ -363,11 +363,6 @@ static int readHTTPheader(char* theRequestedURL,
 	  if(strstr(&lineStr[17], "gzip"))
 	    acceptGzEncoding = 1;
 #endif
-#ifdef MAKE_WITH_I18N
-	} else if((idxChar >= 17)
-		  && (strncasecmp(lineStr, "Accept-Language: ", 17) == 0)) {
-	  strncpy(theLanguage, &lineStr[17], theLanguageLen-1)[theLanguageLen-1] = '\0';
-#endif
 	} else if((idxChar >= 16)
 		  && (strncasecmp(lineStr, "Content-Length: ", 16) == 0)) {
 	  contentLen = atoi(&lineStr[16]);
@@ -2077,10 +2072,6 @@ static int returnHTTPPage(char* pageName,
   int vsanId = 0;
   int i, showBytes = 1;
 
-#ifdef MAKE_WITH_I18N
-  int lang;
-#endif
-
   *usedFork = 0;
 
 #ifdef URL_DEBUG
@@ -2232,40 +2223,11 @@ static int returnHTTPPage(char* pageName,
     }
 
   } else {
-#ifdef MAKE_WITH_I18N
-    for(lang=0; (!found) && lang < numLang + 2; lang++) {
-#endif
       for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
-#ifdef MAKE_WITH_I18N
-	if(lang == numLang) {
-	  if(myGlobals.defaultLanguage == NULL) {
-	    continue;
-	  }
-	  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
-			"%s/html_%s/%s",
-			myGlobals.dataFileDirs[idx],
-			myGlobals.defaultLanguage,
-			pageURI);
-	} else if(lang == numLang+1) {
-#endif
 	  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 			"%s/html/%s",
 			myGlobals.dataFileDirs[idx],
 			pageURI);
-#ifdef MAKE_WITH_I18N
-	} else {
-	  if(requestedLanguage[lang] == NULL) {
-	    continue;
-	  }
-
-	  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
-			"%s/html_%s/%s",
-			myGlobals.dataFileDirs[idx],
-			requestedLanguage[lang],
-			pageURI);
-	}
-#endif
-
 #ifdef WIN32
 	i=0;
 	while(tmpStr[i] != '\0') {
@@ -2274,8 +2236,8 @@ static int returnHTTPPage(char* pageName,
 	}
 #endif
 
-#if defined(HTTP_DEBUG) || defined(I18N_DEBUG) || defined(URL_DEBUG)
-	traceEvent(CONST_TRACE_INFO, "HTTP/I18N/URL_DEBUG: Testing for page %s at %s",
+#if defined(HTTP_DEBUG) || defined(URL_DEBUG)
+	traceEvent(CONST_TRACE_INFO, "HTTP/URL_DEBUG: Testing for page %s at %s",
 		   pageURI, tmpStr);
 #endif
 
@@ -2319,10 +2281,6 @@ static int returnHTTPPage(char* pageName,
 	    traceEvent(CONST_TRACE_INFO, "File %s not found on disk [%s][%d]", 
 		       tmpStr, myGlobals.dataFileDirs[idx], idx);
 	}
-
-#ifdef MAKE_WITH_I18N
-      }
-#endif
     }
   }
 
@@ -3686,9 +3644,6 @@ void handleHTTPrequest(HostAddr from) {
   memset(referer, 0, sizeof(referer));
   memset(ifModificedSince, 0, sizeof(ifModificedSince));
 
-#ifdef MAKE_WITH_I18N
-  memset(requestedLanguage, 0, sizeof(requestedLanguage));
-#endif
   memset(&workLanguage, 0, sizeof(workLanguage));
 
   httpBytesSent = 0;
@@ -3710,14 +3665,10 @@ void handleHTTPrequest(HostAddr from) {
 			   sizeof(ifModificedSince),
 			   &isPostMethod);
 
-#if defined(HTTP_DEBUG) || defined(I18N_DEBUG) || defined(URL_DEBUG)
-  traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: Requested URL = '%s', length = %d", requestedURL, postLen);
-  traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: User-Agent = '%s'", agent);
-  traceEvent(CONST_TRACE_INFO, "HTTP/I18N_URL_DEBUG: Referer = '%s'", referer);
-
-#ifdef MAKE_WITH_I18N
-  traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Accept-Language = '%s'", workLanguage);
-#endif
+#if defined(HTTP_DEBUG) || defined(URL_DEBUG)
+  traceEvent(CONST_TRACE_INFO, "HTTP: Requested URL = '%s', length = %d", requestedURL, postLen);
+  traceEvent(CONST_TRACE_INFO, "HTTP: User-Agent = '%s'", agent);
+  traceEvent(CONST_TRACE_INFO, "HTTP: Referer = '%s'", referer);
 #endif
 
   if(postLen >= -1) {
@@ -3805,42 +3756,12 @@ void handleHTTPrequest(HostAddr from) {
 
   myGlobals.actTime = time(NULL); /* Don't forget this */
 
-  /*
-   *  Process Accept-Language  - load requestedLanguage[] from workLanguage
-   */
-#ifdef MAKE_WITH_I18N
-  if(workLanguage != NULL) {
-    char *tmpI18Nstr, *strtokState = NULL, *workSemi;
-    tmpI18Nstr = strtok_r(workLanguage, ",", &strtokState);
-    while(tmpI18Nstr != NULL) {
-      /* Skip leading blanks */
-      while (tmpI18Nstr[0] == ' ') tmpI18Nstr++;
-      /* Stop at the ; */
-      workSemi = strchr(tmpI18Nstr, ';');
-      if(workSemi != NULL) {
-	workSemi[0] = '\0';
-      }
-      requestedLanguage[numLang++] = i18n_xvert_acceptlanguage2common(tmpI18Nstr);
-      if(numLang > MAX_LANGUAGES_REQUESTED) {
-	tmpI18Nstr = NULL;
-      } else {
-	tmpI18Nstr = strtok_r(NULL, ",", &strtokState);
-      }
-    }
-  }
-#endif
-
   skipLeading = 0;
   while (requestedURL[skipLeading] == '/') {
     skipLeading++;
   }
 
   if(requestedURL[0] == '\0') {
-#ifdef MAKE_WITH_I18N
-    for (i=numLang; i>=0; i--) {
-      free(requestedLanguage[i]);
-    }
-#endif
     returnHTTPpageNotFound(NULL);
   }
 
@@ -3852,14 +3773,6 @@ void handleHTTPrequest(HostAddr from) {
   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() accessMutex(purgeMutex)...locked");
 #endif
 
-#if defined(MAKE_WITH_I18N) && defined(I18N_DEBUG)
-  for (i=0; i<numLang; i++) {
-    traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Requested Language [%d] = '%s'",
-	       i,
-	       requestedLanguage[i]);
-  }
-#endif
-
   rc = returnHTTPPage(&requestedURL[1], postLen,
 		      &from, &httpRequestedAt, &usedFork,
                       agent,
@@ -3867,12 +3780,6 @@ void handleHTTPrequest(HostAddr from) {
                       requestedLanguage,
                       numLang, ifModificedSince,
 		      isPostMethod);
-
-#ifdef MAKE_WITH_I18N
-  for (i=numLang-1; i>=0; i--) {
-    free(requestedLanguage[i]);
-  }
-#endif
 
 #ifdef IDLE_PURGE_DEBUG
   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() releaseMutex(purgeMutex)...calling");

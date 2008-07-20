@@ -242,11 +242,6 @@ AC_ARG_ENABLE(snmp,
               fi,
               ac_disable_snmp="yes")
 
-AC_ARG_ENABLE(i18n,
-              [  --enable-i18n               Enable (limited) internationalization [[default=disabled]]],
-              ac_enable_i18n="$enableval",
-              ac_enable_i18n="no")
-
 AC_ARG_ENABLE(jumbo-frames,
               [  --enable-jumbo-frames       Enable Jumbo (9K) Ethernet frames [[default=disabled]]],
               ac_enable_jumbo_frames="$enableval",
@@ -314,11 +309,6 @@ AC_ARG_WITH(  ossl-include,
               [  --with-ossl-include=DIR      or ssl.h located in DIR],
               OSSL_INCLUDE="$withval",
               OSSL_INCLUDE=)
-
-AC_ARG_WITH(  localedir,
-              [  --with-localedir=DIR        LOCALE files located in DIR (i18n)],
-              LOCALEDIR="$withval",
-              LOCALEDIR=)
 
 AC_ARG_WITH(  memorydebug,
               [  --with-memorydebug=VALUE    Set numeric code for memory debug option],
@@ -420,7 +410,6 @@ case "${target}:${CC}" in
         echo "* This appears to be ${DEFINEOS}"
         echo "*"
         echo "* 1) Compilation requires various gnu tools from SunFreeware.com or other sources."
-        echo "* 2) --enable-i18n is disabled"
       ;;
 
     *-*-darwin*:* )
@@ -800,35 +789,6 @@ else
     echo "    ...(Default) Requested. Disable via ./configure command line option --disable-plugins."
 fi
 
-echo
-echo "Internationalization (i18n)?"
-if test ".$ac_enable_i18n" = ".yes"; then
-    echo "    ...Requested via ./configure command line option --enable-i18n."
-    case "${target}" in
-
-        *-*-solaris* )
-          echo
-          echo "*******************************************************************"
-          echo "*"
-          echo "* WARNING: Unable to make i18n code under Solaris"
-          echo "*          due to library differences."
-          echo "*"
-          echo "*"
-          echo "*>>> Continuing without i18n."
-          echo "*"
-          echo "*******************************************************************"
-          echo
-          HAS_WARNING="yes"
-          ;;
-
-        * )
-          AC_DEFINE_UNQUOTED(MAKE_WITH_I18N, 1, [Define for internationalization])
-          ;;
-
-    esac
-else
-    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-i18n"
-fi
 
 echo
 echo "Jumbo (9k) Ethernet Frames?"
@@ -1124,9 +1084,6 @@ fi
 dnl> Security related
 dnl> Note: on some systems, e.g. FreeBSD, crypt() is defined in unistd.
 AC_CHECK_HEADERS([crypt.h pwd.h security/pam_appl.h shadow.h])
-
-dnl> i18n
-AC_CHECK_HEADERS([locale.h langinfo.h])
 
 ## Other
 AC_CHECK_HEADERS([dirent.h])
@@ -2124,7 +2081,7 @@ echo ${CC} ${CFLAGS} ${DEFS} | sed -e 's/.*/char * compiler_cflags   = "&";/' >>
 echo ${INCS} | sed -e 's/.*/char * include_path    = "&";/' >> version.c
 echo ${LDFLAGS} ${LIBS} | sed -e 's/.*/char * system_libs    = "&";/' >> version.c
 echo ${prefix} | sed -e 's/.*/char * install_path   = "&";/' >> version.c
-echo "/*i18n*/" >>version.c
+
 echo ${LOCALEDIR} | sed -e 's/.*/char * locale_dir   = "&";/' >> version.c
 echo ${DISTRO} | sed -e 's/.*/char * distro   = "&";/' >> version.c
 echo ${RELEASE} | sed -e 's/.*/char * release   = "&";/' >> version.c

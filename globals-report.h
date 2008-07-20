@@ -33,13 +33,7 @@
 #define TD_BG     ""
 #define TR_ON     "onMouseOver=\"this.bgColor = '#EDF3FE'\" onMouseOut =\"this.bgColor = '#FFFFFF'\""
 #define TABLE_DEFAULTS " CELLSPACING=0 CELLPADDING=2"
-#define DARK_BG   "BGCOLOR=\"#F3F3F3\"" /* If you change it change it into the
-                                         * stylesheet too */
-#define TOMATO_BG "BGCOLOR=\"#FF6347\""
-#define GOLD_BG   "BGCOLOR=\"#FFD700\""
-#define SALMON_BG "BGCOLOR=\"FA8072\""
-#define WHEAT_BG  "BGCOLOR=\"F5DEB3\""
-#define AZURE_BG  "BGCOLOR=\"F0FFFF\""
+#define DARK_BG   "BGCOLOR=\"#F3F3F3\"" /* If you change it change it into the stylesheet too */
 #endif
 
 

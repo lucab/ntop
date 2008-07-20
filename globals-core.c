@@ -44,9 +44,6 @@ char *version, *osName, *author, *buildDate, *configureDate,
   *compiler_cflags,
   *include_path,
   *system_libs,
-#ifdef MAKE_WITH_I18N
-  *locale_dir,
-#endif
   *install_path,
   *force_runtime;
 #endif

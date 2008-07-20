@@ -63,9 +63,6 @@ extern char *version, *osName, *author, *buildDate, *configureDate,
   *include_path,
   *system_libs,
   *install_path,
-#ifdef MAKE_WITH_I18N
-  *locale_dir,
-#endif
   *distro,
   *release,
   *force_runtime;
@@ -741,11 +738,6 @@ extern unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr,
 				 int sport, int dport);
 extern u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr,
 				int sport, int dport);
-#ifdef MAKE_WITH_I18N
-char *i18n_xvert_locale2common(const char *input);
-char *i18n_xvert_acceptlanguage2common(const char *input);
-#endif /* MAKE_WITH_I18N */
-
 extern int setSpecifiedUser(void);
 extern u_short ip2AS(HostAddr ip);
 extern u_int16_t getHostAS(HostTraffic *el);
