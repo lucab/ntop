@@ -26,8 +26,6 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-
-
 #ifdef HAVE_PERL
 
 #include "perl/ntop_perl.h"
@@ -164,7 +162,7 @@ int handlePerlHTTPRequest(char *url) {
   safe_snprintf(__FILE__, __LINE__, perl_path, sizeof(perl_path), "./perl/%s", url);
   perl_argv[1] = perl_path;
 
-  PERL_SYS_INIT3(&argc, &argv, &env);
+  PERL_SYS_INIT(&perl_argc, &perl_argv);
   if((my_perl = perl_alloc()) == NULL) {
     traceEvent(CONST_TRACE_WARNING, "[perl] Not enough memory");
     return(0);
