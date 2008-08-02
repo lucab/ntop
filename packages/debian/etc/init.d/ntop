@@ -1,8 +1,7 @@
 #! /bin/sh
-
 #
 # (C) 2003-07 - Luca Deri <deri@ntop.org>
-# (C) 2007    - Massimo Torquati <torquati@ntop.org>
+# (C) 2007-08 - Massimo Torquati <torquati@ntop.org>
 #
 
 . /usr/local/sbin/stop_app.sh
@@ -143,9 +142,39 @@ case "$1" in
 	start_ntop;
 	echo " Done."
 	;;
+  launch)
+	if [ -z "$2" ]; then
+	    echo "Usage: /etc/init.d/ntop launch <options>"
+	    exit 1    
+	fi
+	echo -n "Launching ntop "
+	start-stop-daemon --start --quiet --background --exec $NTOP_PATH -- $2 > /dev/null
+	sleep 3
+	echo " Done."
+	;;
 
-  *)
-	echo "Usage: /etc/init.d/ntop {start|stop|restart|default}"
+    kill)
+	if [ -z "$2" ]; then
+	    echo "Usage: /etc/init.d/ntop kill pid"
+	    exit 1    
+	fi
+	pid=$2
+	echo -n "Stopping ntop with pid=$pid "
+	rc=`ps xa | awk '{print $1}' | grep $pid | wc -l`
+	if [ $rc -gt 0 ]; then
+	    kill -9 $pid > /dev/null
+	    wait_for_deaddaemon $pid
+	    echo " Done."
+	    exit 0
+	else
+	    echo 
+	    echo "No process with pid=$pid found!!"
+	    exit 2
+	fi
+	;;
+
+	*)
+	echo "Usage: /etc/init.d/ntop {start|stop|restart|default|launch|kill}"
 	exit 1
 esac
 
