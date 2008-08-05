@@ -719,6 +719,7 @@
  */
 #define NETFLOW_DEVICE_NAME                 "NetFlow-device"
 #define SFLOW_DEVICE_NAME                   "sFlow-device"
+#define CPACKET_DEVICE_NAME                 "cPacket-device"
 
 /*
  * This defines the maximum number of entries in the ntop pwFile
@@ -2174,6 +2175,11 @@
  */
 #define DEFAULT_SFLOW_PORT_STR    "6343"
 #define DEFAULT_SFLOW_PORT        atoi(DEFAULT_SFLOW_COLLECTOR_PORT_STR)
+
+/*
+ * Default port to use for cPacket.
+ */
+#define DEFAULT_CPACKET_PORT_STR   "20167"
 
 /*
  *  Sampling rate - sflow samples every n-th packet

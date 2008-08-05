@@ -46,6 +46,7 @@ noinst_PROGRAMS = \
                   icmpPlugin.so \
                   lastSeenPlugin.so \
                   netflowPlugin.so \
+                  cpacketPlugin.so \
                   pdaPlugin.so \
                   remotePlugin.so \
                   rrdPlugin.so \
@@ -55,6 +56,7 @@ lib_LTLIBRARIES = \
                   libicmpPlugin.la \
                   liblastSeenPlugin.la \
                   libnetflowPlugin.la \
+                  libcpacketPlugin.la \
                   libpdaPlugin.la \
                   libremotePlugin.la \
                   librrdPlugin.la \
@@ -71,6 +73,10 @@ liblastSeenPlugin_la_CFLAGS = $(AM_CFLAGS)
 libnetflowPlugin_la_SOURCES = netflowPlugin.c
 libnetflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 libnetflowPlugin_la_CFLAGS = $(AM_CFLAGS)
+
+libcpacketPlugin_la_SOURCES = cpacketPlugin.c
+libcpacketPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+libcpacketPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 libpdaPlugin_la_SOURCES = pdaPlugin.c
 libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
@@ -128,6 +134,18 @@ lastSeenPlugin.so$(EXEEXT): .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
 
 netflowPlugin.so$(EXEEXT): .libs/libnetflowPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libnetflowPlugin.so netflowPlugin.so
+
+###############
+
+.libs/libcpacketPlugin.so@SO_VERSION_PATCH@:
+	@if test -f libcpacketPlugin_la-cpacketPlugin.o; then \
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libcpacketPlugin.so@SO_VERSION_PATCH@ libcpacketPlugin_la-cpacketPlugin.o; \
+	else \
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libcpacketPlugin.so@SO_VERSION_PATCH@ cpacketPlugin.o; \
+	fi
+
+cpacketPlugin.so$(EXEEXT): .libs/libcpacketPlugin.so@SO_VERSION_PATCH@
+	@$(LN_S) .libs/libcpacketPlugin.so cpacketPlugin.so
 
 ###############
 

@@ -1362,6 +1362,24 @@ typedef struct netFlowGlobals {
 
 /* *********************************** */
 
+typedef struct cpacket_globals {
+  u_char cpacketDebug;
+
+  /* Flow reception */
+  int cpacketInSocket, cpacketDeviceId;
+  u_short cpacketInPort;
+  u_long numPktsRcvd;
+
+  /* Stats */
+  ProbeInfo deviceList[MAX_NUM_PROBES];
+  u_int32_t statsProcessed;
+
+  pthread_t cpacketThread;
+  int threadActive;
+} cPacketGlobals;
+
+/* *********************************** */
+
 #define MAX_NUM_SFLOW_INTERFACES      4096
 
 typedef struct ifCounters {
@@ -1610,7 +1628,8 @@ typedef struct ntopInterface {
   struct hostTraffic** fcTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */
 
   NetFlowGlobals *netflowGlobals;  /* NetFlow */
-  SflowGlobals *sflowGlobals;      /* sFlow */
+  SflowGlobals   *sflowGlobals;    /* sFlow */
+  cPacketGlobals *cpacketGlobals;  /* cPacket */
 
   /* ********************* */
   

@@ -151,9 +151,6 @@
 /* we have the isinf function */
 #undef HAVE_ISINF
 
-/* Define to 1 if you have the <langinfo.h> header file. */
-#undef HAVE_LANGINFO_H
-
 /* Define to 1 if you have the `c' library (-lc). */
 #undef HAVE_LIBC
 
@@ -210,9 +207,6 @@
 
 /* Define to 1 if you have the <linux/if_pppox.h> header file. */
 #undef HAVE_LINUX_IF_PPPOX_H
-
-/* Define to 1 if you have the <locale.h> header file. */
-#undef HAVE_LOCALE_H
 
 /* Define to 1 if you have the `localtime_r' function. */
 #undef HAVE_LOCALTIME_R
@@ -545,9 +539,6 @@
 /* Define to 1 if `lstat' dereferences a symlink specified with a trailing
    slash. */
 #undef LSTAT_FOLLOWS_SLASHED_SYMLINK
-
-/* Define for internationalization */
-#undef MAKE_WITH_I18N
 
 /* Define for Jumbo (9k) Ethernet Frames */
 #undef MAKE_WITH_JUMBO_FRAMES
