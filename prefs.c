@@ -158,7 +158,6 @@ static struct option const long_options[] = {
 
   { "skip-version-check",               required_argument, NULL, 150 },
   { "known-subnets",                    required_argument, NULL, 151 },
-
   {NULL, 0, NULL, 0}
 };
 
@@ -259,6 +258,56 @@ void loadPrefs(int argc, char* argv[]) {
 
 /* ***************************************************** */
 
+static void readPcapFileList(char * filenames) {
+  const int block = 32;
+  char *line;
+  int i=0,j=0, idx;
+  struct fileList *fl, *prev;
+  
+  line = strtok(filenames, ",");
+
+  while(line != NULL) {
+    if((line[0] != '#') && (line[0] != '\n')) {      
+      while(strlen(line) && (line[strlen(line)-1] == '\n')) line[strlen(line)-1] = '\0';
+      fl = (struct fileList*)malloc(sizeof(struct fileList));
+
+      if(!fl) {
+	traceEvent(CONST_TRACE_ERROR, "Not enough memory parsing --pcap-file-list argument");
+	return;
+      }
+
+      idx = 0; while((line[idx] == ' ') && (line[idx] != '\0') && (line[idx] != ',')) idx++;
+      fl->fileName = strdup(&line[idx]);
+      traceEvent(CONST_TRACE_ERROR, "'%s'",  fl->fileName);
+
+      if(!fl->fileName) {
+	free(fl);
+	traceEvent(CONST_TRACE_ERROR, "Not enough memory parsing --pcap-file-list argument");
+	return;
+      }
+
+      fl->next = NULL;      
+      
+      if(myGlobals.pcap_file_list != NULL) {
+	prev = myGlobals.pcap_file_list;
+	while(prev != NULL) {
+	  if(prev->next)
+	    prev = prev->next;
+	  else
+	    break;
+	}
+	
+	prev->next = fl;
+      } else
+	myGlobals.pcap_file_list = fl;
+    }
+
+    line = strtok(NULL, ",");
+  }
+}
+
+/* ***************************************************** */
+
 /*
  * Parse the command line options
  */
@@ -318,7 +367,7 @@ int parseOptions(int argc, char* argv[]) {
       break;
 
     case 'f':
-      myGlobals.runningPref.rFileName = strdup(optarg);
+      readPcapFileList(optarg);
       break;
 
     case 'g':
@@ -702,6 +751,11 @@ int parseOptions(int argc, char* argv[]) {
       break;
 
     case 151:
+      stringSanityCheck(optarg, "--pcap-file-list");
+      readPcapFileList(optarg);
+      break;
+
+    case 152:
       stringSanityCheck(optarg, "--known-subnets");
       myGlobals.runningPref.knownSubnets = strdup(optarg);
       break;
@@ -1042,13 +1096,6 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
 
     if((pref->devices == NULL) || (strstr(pref->devices, value) == NULL))
       processStrPref(NTOP_PREF_DEVICES, value, &pref->devices, savePref);
-  } else if(strcmp(key, NTOP_PREF_CAPFILE) == 0) {
-    if(((value != NULL) &&
-	 (((pref->rFileName != NULL) && (strcmp(pref->rFileName, value)))))
-	|| ((value != NULL) && ((pref->rFileName == NULL)))) {
-      startCap = TRUE;
-    }
-    processStrPref(NTOP_PREF_CAPFILE, value, &pref->rFileName, savePref);
   } else if(strcmp(key, NTOP_PREF_FILTER) == 0) {
     processStrPref(NTOP_PREF_FILTER, value, &pref->currentFilterExpression, savePref);
   } else if(strcmp(key, NTOP_PREF_SAMPLING) == 0) {
@@ -1324,7 +1371,6 @@ void initUserPrefs(UserPref *pref) {
   pref->enablePacketDecoding   = DEFAULT_NTOP_PACKET_DECODING;
   pref->stickyHosts = DEFAULT_NTOP_STICKY_HOSTS;
   pref->daemonMode = DEFAULT_NTOP_DAEMON_MODE;
-  pref->rFileName = DEFAULT_NTOP_TRAFFICDUMP_FILENAME;
   pref->trackOnlyLocalHosts    = DEFAULT_NTOP_TRACK_ONLY_LOCAL;
   pref->devices = DEFAULT_NTOP_DEVICES;
   pref->enableOtherPacketDump = DEFAULT_NTOP_OTHER_PKT_DUMP;

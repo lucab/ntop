@@ -311,7 +311,7 @@ void printTrafficSummary (int revertOrder) {
     sendString(buf);
   }
 
-  if(myGlobals.runningPref.rFileName == NULL) {
+  if(myGlobals.pcap_file_list == NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
 		  ctime(&myGlobals.initialSniffTime),
@@ -697,7 +697,7 @@ void printTrafficStatistics(int revertOrder) {
     sendString(buf);
   }
 
-  if(myGlobals.runningPref.rFileName == NULL) {
+  if(myGlobals.pcap_file_list == NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
 		  ctime(&myGlobals.initialSniffTime),
@@ -4970,7 +4970,7 @@ void printThptStatsMatrix(int sortedColumn) {
       if(myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].trafficValue == 0)
 	break;
 
-      if(myGlobals.runningPref.rFileName != NULL) {
+      if(myGlobals.pcap_file_list != NULL) {
 	tmpTime = myGlobals.lastPktTime.tv_sec-(i*60);
       }
       else {
@@ -4978,7 +4978,7 @@ void printThptStatsMatrix(int sortedColumn) {
       }
       strftime(label, sizeof(label), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
 
-      if(myGlobals.runningPref.rFileName != NULL) {
+      if(myGlobals.pcap_file_list != NULL) {
 	tmpTime = myGlobals.lastPktTime.tv_sec -((i+1)*60);
       }
       else {
@@ -5109,7 +5109,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	if(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].trafficValue == 0)
 	  break;
 
-        if(myGlobals.runningPref.rFileName != NULL) {
+        if(myGlobals.pcap_file_list != NULL) {
 	  tmpTime = myGlobals.lastPktTime.tv_sec-(i*60*60);
         }
         else {
@@ -5117,7 +5117,7 @@ void printThptStatsMatrix(int sortedColumn) {
         }
 	strftime(label, sizeof(label), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
 
-        if(myGlobals.runningPref.rFileName != NULL) {
+        if(myGlobals.pcap_file_list != NULL) {
 	  tmpTime = myGlobals.lastPktTime.tv_sec-((i+1)*60*60);
         }
         else {

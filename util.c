@@ -5418,7 +5418,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
 
   /* Not the 1st time?  Send uptime too */
   if((myGlobals.checkVersionStatusAgain > 0) &&
-     (myGlobals.runningPref.rFileName == NULL)) {
+     (myGlobals.pcap_file_list == NULL)) {
     char small_buf[LEN_SMALL_WORK_BUFFER];
 
     memset(&small_buf, 0, sizeof(small_buf));

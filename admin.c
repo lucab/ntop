@@ -1563,11 +1563,6 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
     }
 
   default:
-    CONFIG_STR_ENTRY(DARK_BG, "Capture File Path (-f)", NTOP_PREF_CAPFILE, 50,
-		     pref->rFileName,
-		     "Capture file to read from (takes precedence over "
-		     "interface specification)");
-
     CONFIG_STR_ENTRY(DARK_BG, "Capture Filter Expression (-B)",
 		     NTOP_PREF_FILTER,
 		     50, pref->currentFilterExpression,

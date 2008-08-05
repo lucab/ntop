@@ -2497,7 +2497,7 @@ void queuePacket(u_char *_deviceId,
 		   h->len, MAX_PACKET_LEN);
       }
 
-      ((struct pcap_pkthdr*)h)->caplen = MAX_PACKET_LEN-1;
+      ((struct pcap_pkthdr*)h)->caplen = len = MAX_PACKET_LEN-1;
     }
 
     memcpy(p1, p, len);
@@ -2897,7 +2897,7 @@ void processPacket(u_char *_deviceId,
   h_save = h, p_save = p;
 
 #ifdef DEBUG
-  if(myGlobals.runningPref.rFileName != NULL) {
+  if(myGlobals.pcap_file_list != NULL) {
     traceEvent(CONST_TRACE_INFO, ".");
     fflush(stdout);
   }
@@ -2943,7 +2943,7 @@ void processPacket(u_char *_deviceId,
 
   hlen = (myGlobals.device[deviceId].datalink == DLT_NULL) ? CONST_NULL_HDRLEN : sizeof(struct ether_header);
 
-  if(!myGlobals.initialSniffTime && (myGlobals.runningPref.rFileName != NULL)) {
+  if(!myGlobals.initialSniffTime && (myGlobals.pcap_file_list != NULL)) {
     myGlobals.initialSniffTime = h->ts.tv_sec;
     myGlobals.device[deviceId].lastThptUpdate = myGlobals.device[deviceId].lastMinThptUpdate =
       myGlobals.device[deviceId].lastHourThptUpdate = myGlobals.device[deviceId].lastFiveMinsThptUpdate = myGlobals.initialSniffTime;
@@ -3954,7 +3954,7 @@ void processPacket(u_char *_deviceId,
   }
 #endif
 
-  if (myGlobals.runningPref.rFileName != NULL) {
+  if (myGlobals.pcap_file_list != NULL) {
     if (myGlobals.actTime > (lastUpdateThptTime + PARM_THROUGHPUT_REFRESH_INTERVAL)) {
       updateThpt (1);
       lastUpdateThptTime = myGlobals.actTime;

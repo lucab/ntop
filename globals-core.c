@@ -603,7 +603,7 @@ void initNtop(char *devices) {
   /* Handle known subnetworks (if any) */
   handleKnownAddresses(myGlobals.runningPref.knownSubnets);
 
-  if((myGlobals.runningPref.rFileName != NULL) &&
+  if((myGlobals.pcap_file_list != NULL) &&
      ((myGlobals.runningPref.localAddresses == NULL) &&
       !myGlobals.runningPref.printFcOnly)) {
     setRunState(FLAG_NTOPSTATE_SHUTDOWN);

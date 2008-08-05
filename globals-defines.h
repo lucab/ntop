@@ -2803,7 +2803,6 @@ struct ip6_hdr
 
 /* NTOP preference names */
 #define NTOP_PREF_DEVICES                "ntop.devices"
-#define NTOP_PREF_CAPFILE                "ntop.rFileName"
 #define NTOP_PREF_FILTER                 "ntop.currentFilterExpression"
 #define NTOP_PREF_SAMPLING               "ntop.sampleRate"
 #define NTOP_PREF_WEBPORT                "ntop.webPort"

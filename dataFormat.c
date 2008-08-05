@@ -231,20 +231,18 @@ char* formatTimeStamp(unsigned int ndays,
   if((ndays == 0)
      && (nhours == 0)
      && (nminutes == 0)) {
-      if (myGlobals.runningPref.rFileName != NULL) {
+      if (myGlobals.pcap_file_list != NULL) {
           theTime = myGlobals.lastPktTime.tv_sec;
       }
       else {
           return("now");
       }
-  }
-  else {
-      if (myGlobals.runningPref.rFileName != NULL) {
-          theTime = myGlobals.lastPktTime.tv_sec-(ndays*86400)-(nhours*3600)-(nminutes*60);
-      }
-      else {
-          theTime = myGlobals.actTime-(ndays*86400)-(nhours*3600)-(nminutes*60);
-      }
+  } else {
+    if (myGlobals.pcap_file_list != NULL) {
+      theTime = myGlobals.lastPktTime.tv_sec-(ndays*86400)-(nhours*3600)-(nminutes*60);
+    } else {
+      theTime = myGlobals.actTime-(ndays*86400)-(nhours*3600)-(nminutes*60);
+    }
   }
 
   strncpy(outStr, ctime(&theTime), outStrLen);

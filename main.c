@@ -155,6 +155,10 @@ void usage(FILE * fp) {
   fprintf(fp, "    [--known-subnets]                                     %sList of known subnets (separated by ,)\n", newLine);
   fprintf(fp, "                                                          %sIf the argument starts with @ it is assumed it is a file path\n", newLine);
   fprintf(fp, "                                                          %sE.g. 192.168.0.0/14=home,172.16.0.0/16=private\n", newLine);
+  fprintf(fp, "    [--pcap-file-list] <filename>                         %sSpecify a filename containing a list\n"
+	  "                                                              %sof pcap files to read.\n"
+	  "                                                              %sIf you use this flag the -i option will be\n"
+	  "                                                              %signored.\n", newLine, newLine, newLine, newLine);
 
  fprintf(fp, "\n"
 	 "NOTE\n"
@@ -195,7 +199,7 @@ static void verifyOptions (void) {
      * Verify we're running as root, unless we are reading data from a file
      */
 
-    if(myGlobals.runningPref.rFileName != NULL) {
+    if(myGlobals.pcap_file_list != NULL) {
       return;
     }
 
@@ -582,7 +586,7 @@ int main(int argc, char *argv[]) {
 
   /* ******************************* */
 
-  if(myGlobals.runningPref.rFileName != NULL)
+  if(myGlobals.pcap_file_list != NULL)
     strncpy(ifStr, CONST_PCAP_NW_INTERFACE_FILE, sizeof(ifStr));
   else {
     ifStr[0] = '\0';
@@ -678,9 +682,9 @@ int main(int argc, char *argv[]) {
 
   /*
 #else
-  if(myGlobals.runningPref.rFileName != NULL) {
-	while(1) 
-		sleep(30);
+  if(myGlobals.pcap_file_list != NULL) {
+  while(1) 
+  sleep(30);
   }
 #endif
 */

@@ -379,7 +379,7 @@ void resetDevice(int devIdx, short fullReset) {
   myGlobals.device[devIdx].last30daysThptIdx = 0;
   myGlobals.device[devIdx].hostsno = 0;
 
-  if(myGlobals.runningPref.rFileName == NULL) {
+  if(myGlobals.pcap_file_list == NULL) {
     myGlobals.device[devIdx].lastThptUpdate = myGlobals.device[devIdx].lastMinThptUpdate =
       myGlobals.device[devIdx].lastHourThptUpdate = myGlobals.device[devIdx].lastFiveMinsThptUpdate = time(NULL);
   }
@@ -491,7 +491,7 @@ void initCounters(void) {
   myGlobals.numVendorLookupFoundMulticast = 0;
   myGlobals.numVendorLookupFoundLAA = 0;
 
-  if (myGlobals.runningPref.rFileName == NULL) {
+  if (myGlobals.pcap_file_list == NULL) {
       myGlobals.initialSniffTime = myGlobals.lastRefreshTime = time(NULL);
   }
   else {
@@ -1017,7 +1017,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
     }
 #endif
 
-    if (myGlobals.runningPref.printIpOnly) {
+    if(myGlobals.runningPref.printIpOnly) {
       myGlobals.device[deviceId].pcapPtr =
 	pcap_open_live(myGlobals.device[deviceId].name,
 		       myGlobals.runningPref.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN,
@@ -1065,7 +1065,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
       }
 
     if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-        if(myGlobals.runningPref.rFileName == NULL)
+        if(myGlobals.pcap_file_list == NULL)
 	  safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
 			myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 			CONST_PATH_SEP,
@@ -1074,7 +1074,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 			myGlobals.device[deviceId].name);
 	else
 	  safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.pcap",
-			myGlobals.runningPref.rFileName,
+			myGlobals.pcap_file_list,
 			CONST_PATH_SEP);
 
 	myGlobals.device[deviceId].pcapErrDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
@@ -1331,18 +1331,18 @@ void initDevices(char* devices) {
 
   traceEvent(CONST_TRACE_NOISY, "Initializing network devices [%s]", devices ? devices : "");
 
-  if(myGlobals.runningPref.rFileName != NULL) {
+  if(myGlobals.pcap_file_list != NULL) {
     createDummyInterface("none");
     myGlobals.device[0].dummyDevice = 0;
-    myGlobals.device[0].pcapPtr  = pcap_open_offline(myGlobals.runningPref.rFileName, ebuf);
+    myGlobals.device[0].pcapPtr  = pcap_open_offline(myGlobals.pcap_file_list->fileName, ebuf);
 
     if(myGlobals.device[0].pcapPtr == NULL) {
       traceEvent(CONST_TRACE_ERROR, "pcap_open_offline(%s): '%s'",
-		 myGlobals.runningPref.rFileName, ebuf);
+		 myGlobals.pcap_file_list->fileName, ebuf);
       exit(-1);
     } else {
       if(myGlobals.device[0].humanFriendlyName != NULL) free(myGlobals.device[0].humanFriendlyName);
-      myGlobals.device[0].humanFriendlyName = strdup(myGlobals.runningPref.rFileName);
+      myGlobals.device[0].humanFriendlyName = strdup(myGlobals.pcap_file_list->fileName);
       calculateUniqueInterfaceName(0);
     }
 
@@ -1350,7 +1350,7 @@ void initDevices(char* devices) {
     initDeviceDatalink(0);
 
     if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-      if(myGlobals.runningPref.rFileName == NULL)
+      if(myGlobals.pcap_file_list == NULL)
 	safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.%s.pcap",
 		      myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 		      CONST_PATH_SEP,

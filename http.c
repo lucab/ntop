@@ -1165,8 +1165,14 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   sendString("<script type=\"text/javascript\" src=\"/PlotKit/Canvas.js\"></script>\n");
   sendString("<script type=\"text/javascript\" src=\"/PlotKit/SweetCanvas.js\"></script>\n");
 
+  sendString("<link rel=\"stylesheet\" type=\"text/css\" href=\"/yui/fonts/fonts-min.css\" />\n");
+  sendString("<link rel=\"stylesheet\" type=\"text/css\" href=\"/yui/tabview/assets/skins/sam/tabview.css\" />\n");
+  sendString("<script type=\"text/javascript\" src=\"/yui/yahoo-dom-event/yahoo-dom-event.js\"></script>\n");
+  sendString("<script type=\"text/javascript\" src=\"/yui/element/element-beta-min.js\"></script>\n");
+  sendString("<script type=\"text/javascript\" src=\"/yui/tabview/tabview-min.js\"></script>\n");
+  
   sendString("<SCRIPT SRC=\"/functions.js\" TYPE=\"text/javascript\" LANGUAGE=\"javascript\"></SCRIPT>\n");
-   sendString("<script type=\"text/javascript\" language=\"javascript\" src=\"/domLib.js\"></script>\n");
+  sendString("<script type=\"text/javascript\" language=\"javascript\" src=\"/domLib.js\"></script>\n");
   sendString("<script type=\"text/javascript\" language=\"javascript\" src=\"/domTT.js\"></script>\n");
   sendString("<script type=\"text/javascript\" language=\"javascript\">var domTT_styleClass = 'niceTitle';</script>\n");
 
@@ -1179,7 +1185,7 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   /* ******************************************************* */
 
   if((headerFlags & BITFLAG_HTML_NO_BODY) == 0) {
-    sendString("<body link=\"blue\" vlink=\"blue\">\n\n");
+    sendString("<body link=\"blue\" vlink=\"blue\" class=\"yui-skin-sam\">\n\n");
     ssiMenu_Body();
 
     if((theTitle != NULL) && ((headerFlags & BITFLAG_HTML_NO_HEADING) == 0))
@@ -1232,13 +1238,13 @@ void printHTMLtrailer(void) {
 		ctime(&myGlobals.actTime));
   sendString(buf);
 
-  if(myGlobals.runningPref.rFileName == NULL) {
+  if(myGlobals.pcap_file_list == NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "[ntop uptime: %s]\n",
 		  formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
 		  "[from file %s]\n",
-		  myGlobals.runningPref.rFileName);
+		  myGlobals.pcap_file_list->fileName);
   }
   sendString(buf);
 
@@ -1281,7 +1287,7 @@ void printHTMLtrailer(void) {
     sendString("<br>\n");
   }
 
-  if(myGlobals.runningPref.rFileName != NULL) {
+  if(myGlobals.pcap_file_list != NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "Listening on [%s]\n",
 		  CONST_PCAP_NW_INTERFACE_FILE);
   } else {

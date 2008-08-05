@@ -5346,12 +5346,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "NTOP_PREF_ACCESS_LOG", "undefined");
 #endif
 
-#ifdef NTOP_PREF_CAPFILE
-  printFeatureConfigInfo(textPrintFlag, "NTOP_PREF_CAPFILE", NTOP_PREF_CAPFILE);
-#else
-  printFeatureConfigInfo(textPrintFlag, "NTOP_PREF_CAPFILE", "undefined");
-#endif
-
 #ifdef NTOP_PREF_DAEMON
   printFeatureConfigInfo(textPrintFlag, "NTOP_PREF_DAEMON", NTOP_PREF_DAEMON);
 #else
@@ -6234,10 +6228,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 	      pref->maxNumLines == CONST_NUM_TABLE_ROWS_PER_PAGE ? CONST_REPORT_ITS_DEFAULT : "",
 	      pref->maxNumLines);
   printFeatureConfigInfo(textPrintFlag, "-e | --max-table-rows", buf);
-
-  printParameterConfigInfo(textPrintFlag, "-f | --traffic-dump-file",
-                           pref->rFileName,
-                           DEFAULT_NTOP_TRAFFICDUMP_FILENAME);
 
   printParameterConfigInfo(textPrintFlag, "-g | --track-local-hosts",
                            pref->trackOnlyLocalHosts == 1 ? "Track local hosts only" : "Track all hosts",

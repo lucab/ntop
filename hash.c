@@ -555,11 +555,10 @@ int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now) {
   time_t withSessionPurgeTime = now-PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES;
   
   if(el->to_be_deleted
-     || (
-	 (el->refCount == 0)
-	 && ((!myGlobals.runningPref.rFileName) 
-	     &&  (((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
-		  || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime))))
+     || ((myGlobals.pcap_file_list == NULL)
+	 && (el->refCount == 0)
+	 && ((((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
+	      || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime))))
 	 && (!broadcastHost(el)) && (el != myGlobals.otherHostEntry)
 	 && (myGlobals.device[actDevice].virtualDevice /* e.g. sFlow/NetFlow */
 	     || (!myGlobals.runningPref.stickyHosts)

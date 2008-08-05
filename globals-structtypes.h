@@ -2049,7 +2049,6 @@ typedef struct _userPref {
   bool stickyHosts;             /* -c | --sticky-hosts */
   bool daemonMode;              /* -d | --daemon */
   int  maxNumLines;             /* -e | --max-table-rows */
-  char *rFileName;              /* -f | --traffic-dump-file */
   bool trackOnlyLocalHosts;     /* -g | --track-local-hosts */
   char *devices;                /* -i | --interface */
   bool enableOtherPacketDump;   /* -j | --create-other-packets */
@@ -2123,7 +2122,6 @@ typedef struct _userPref {
   char *knownSubnets;           /* --known-subnets '151' */
 } UserPref;
 
-
 typedef struct ntopGlobals {
   /* How is ntop run? */
 
@@ -2157,7 +2155,7 @@ typedef struct ntopGlobals {
 #endif
   char *dbPath;                 /* 'P' */
   char *spoolPath;              /* 'Q' */
-
+  struct fileList *pcap_file_list; /* --pcap-file-list */
   /* Other flags (these could set via command line options one day) */
   bool enableFragmentHandling;
 

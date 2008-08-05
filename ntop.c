@@ -82,7 +82,7 @@ void* pcapDispatch(void *_i) {
 	     pthread_self(), myGlobals.device[i].humanFriendlyName, getpid());
 
   /* Reset stats before to start (needed by modern libpcap versions) */
-  if(myGlobals.runningPref.rFileName == NULL) {
+  if(myGlobals.pcap_file_list == NULL) {
     pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats);
     myGlobals.device[i].initialPcapDroppedPkts.value = pcapStats.ps_drop;
   }
@@ -103,10 +103,38 @@ void* pcapDispatch(void *_i) {
 		   pcap_geterr(myGlobals.device[i].pcapPtr));
       break;
     } else if(rc == 0) {
-      if(myGlobals.runningPref.rFileName != NULL) {
+      if(myGlobals.pcap_file_list != NULL) {
 	traceEvent(CONST_TRACE_INFO, "pcap_loop (%s) returned %d [No more packets to read]",
 		   myGlobals.device[i].humanFriendlyName, rc);
-	break; /* No more packets to read */
+      reopen_pcap:	
+	if(myGlobals.pcap_file_list->next != NULL) {
+	  struct fileList *fl = myGlobals.pcap_file_list;
+	  
+	  myGlobals.pcap_file_list = myGlobals.pcap_file_list->next;
+	  free(fl->fileName); free(fl);
+
+	  if(myGlobals.pcap_file_list != NULL) {
+	    char ebuf[CONST_SIZE_PCAP_ERR_BUF];
+
+	    if(myGlobals.device[i].pcapPtr) pcap_close(myGlobals.device[i].pcapPtr);
+	    myGlobals.device[i].pcapPtr  = pcap_open_offline(myGlobals.pcap_file_list->fileName, ebuf);
+	    
+	    if(myGlobals.device[i].pcapPtr == NULL) {
+	      traceEvent(CONST_TRACE_ERROR, "pcap_open_offline(%s): '%s'",
+			 myGlobals.pcap_file_list->fileName, ebuf);
+	      goto reopen_pcap;
+	    } else {
+	      if(myGlobals.device[i].humanFriendlyName != NULL) free(myGlobals.device[i].humanFriendlyName);
+	      myGlobals.device[i].humanFriendlyName = strdup(myGlobals.pcap_file_list->fileName);
+	      calculateUniqueInterfaceName(0);
+	      traceEvent(CONST_TRACE_INFO, "pcap_loop (%s) : reading packets from file %s",
+			 myGlobals.device[i].humanFriendlyName, myGlobals.pcap_file_list->fileName);
+	      myGlobals.device[i].datalink = pcap_datalink(myGlobals.device[i].pcapPtr);
+	    }
+	  } else
+	    break; /* No more packets to read */
+	} else	
+	  break; /* No more packets to read */
       }
     }
   }
@@ -648,13 +676,13 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
     ntopSleepWhileSameState(60 /* do not change */);
     if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
 
-    if(myGlobals.runningPref.rFileName == NULL)
+    if(myGlobals.pcap_file_list == NULL)
       myGlobals.actTime = time(NULL);
 
     for(i=0; i<myGlobals.numDevices; i++)
       if(!myGlobals.device[i].virtualDevice) {
         if((!myGlobals.runningPref.stickyHosts)
-	   && (!myGlobals.runningPref.rFileName))
+	   && (!myGlobals.pcap_file_list))
 	  purged += purgeIdleHosts(i);
 #if !defined(__FreeBSD__)
 	purgeIpPorts(i);
@@ -699,7 +727,7 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
     ntopSleepWhileSameState(CONST_FINGERPRINT_LOOP_INTERVAL);
     if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
 
-    if(myGlobals.runningPref.rFileName == NULL)
+    if(myGlobals.pcap_file_list == NULL)
       myGlobals.actTime = time(NULL);
     countCycle++;
 #ifdef FINGERPRINT_DEBUG
