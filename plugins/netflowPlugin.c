@@ -2389,7 +2389,6 @@ static void printNetFlowDeviceConfiguration(void) {
 /* ****************************** */
 
 static void printNetFlowStatistics(void) {
-
   char buf[1024];
   int i, printedStatistics=0;
 

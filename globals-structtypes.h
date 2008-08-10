@@ -1362,6 +1362,12 @@ typedef struct netFlowGlobals {
 
 /* *********************************** */
 
+typedef struct cpacket_counter {
+  char *name;
+  u_long bytes, packets;
+  struct cpacket_counter *next;
+} cPacketCounter;
+
 typedef struct cpacket_globals {
   u_char cpacketDebug;
 
@@ -1373,6 +1379,9 @@ typedef struct cpacket_globals {
   /* Stats */
   ProbeInfo deviceList[MAX_NUM_PROBES];
   u_int32_t statsProcessed;
+  
+  /* Counters */
+  cPacketCounter *counter_list_head, *last_head;
 
   pthread_t cpacketThread;
   int threadActive;

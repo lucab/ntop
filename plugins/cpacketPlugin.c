@@ -52,10 +52,11 @@ static void handlecPacketPacket(u_char *_deviceId,
 				const u_char *p);
 #endif
 static void handlecPacketHTTPrequest(char* url);
-static void printcPacketStatisticsRcvd(int deviceId);
 static void printcPacketConfiguration(int deviceId);
 static int createcPacketDevice(int cpacketDeviceId);
 static int mapcPacketDeviceToNtopDevice(int deviceId);
+static void printcPacketStatistics();
+static void printcPacketCounterStats(int deviceId, int page_header, int print_table);
 
 /* ****************************** */
 
@@ -157,9 +158,78 @@ static int setcPacketInSocket(int deviceId) {
 
 /* ********************************************************* */
 
+static void updateCtapCounter(int deviceId, char *name,
+			      u_long bytes, u_long packets) {
+  cPacketCounter *prev, *entry;
+
+  // traceEvent(CONST_TRACE_INFO, "[%s][%lu|%lu]", name, bytes, pkts);
+  if(myGlobals.device[deviceId].cpacketGlobals->last_head != NULL)
+    prev = myGlobals.device[deviceId].cpacketGlobals->last_head;
+  else
+    prev = myGlobals.device[deviceId].cpacketGlobals->last_head
+      = myGlobals.device[deviceId].cpacketGlobals->counter_list_head;
+
+  while(myGlobals.device[deviceId].cpacketGlobals->last_head != NULL) {
+    if(!strcmp(name, myGlobals.device[deviceId].cpacketGlobals->last_head->name)) {
+      /* Update */
+
+      /* traceEvent(CONST_TRACE_INFO, "Updated [%s][%lu|%lu]", name, bytes, packets); */
+
+      if(myGlobals.device[deviceId].cpacketGlobals->last_head->next)
+	myGlobals.device[deviceId].cpacketGlobals->last_head =
+	  myGlobals.device[deviceId].cpacketGlobals->last_head->next;
+      else
+	myGlobals.device[deviceId].cpacketGlobals->last_head =
+	  myGlobals.device[deviceId].cpacketGlobals->counter_list_head;
+      return;
+    } else {
+      prev = myGlobals.device[deviceId].cpacketGlobals->last_head;
+      myGlobals.device[deviceId].cpacketGlobals->last_head =
+	myGlobals.device[deviceId].cpacketGlobals->last_head->next;
+    }
+  }
+
+  /* If we're here the counter has not been updated yet */
+  entry = (cPacketCounter*)malloc(sizeof(cPacketCounter));
+  if(entry) {
+    entry->name = strdup(name), entry->bytes = bytes, entry->packets = packets, entry->next = NULL;
+
+    if(myGlobals.device[deviceId].cpacketGlobals->counter_list_head == NULL)
+      myGlobals.device[deviceId].cpacketGlobals->counter_list_head = entry;
+    else
+      prev->next = entry;
+
+    myGlobals.device[deviceId].cpacketGlobals->last_head = NULL;
+    /* traceEvent(CONST_TRACE_INFO, "Added [%s][%lu|%lu]", name, bytes, packets); */
+  }
+}
+
+/* ********************************************************* */
+
 static void dissectPacket(u_int32_t cpacket_device_ip,
-			char *buffer, int bufferLen, int deviceId) {
-  printf("\n\n%s\n", buffer);
+			  char *buffer, int bufferLen, int deviceId) {
+  char *tokbuf, *row;
+
+  // printf("\n\n%s\n", buffer);
+
+  row = strtok_r(buffer, "\n", &tokbuf); if(!row) return;
+  row = strtok_r(NULL, "\n", &tokbuf);   if(!row) return;
+  row = strtok_r(NULL, "\n", &tokbuf);
+
+  while(row != NULL) {
+    if(row[0] == '\"') {
+      char *name, *value, *elem_buf;
+      u_long bytes, pkts;
+
+      name = strtok_r(row, " ", &elem_buf);  if(!name) break;
+      name++; name++; name[strlen(name)-1] = '\0';
+      value = strtok_r(NULL, " ", &elem_buf); if(!value) break;
+      sscanf(value, "(%lu,%lu)", &bytes, &pkts);
+      updateCtapCounter(deviceId, name, bytes, pkts);
+    }
+
+    row = strtok_r(NULL, "\n", &tokbuf);
+  }
 }
 
 /* ****************************** */
@@ -511,20 +581,11 @@ static void printcPacketDeviceConfiguration(void) {
 
 /* ****************************** */
 
-static void printcPacketStatisticsRcvd(int deviceId) {
+static void printcPacketStatistics() {
+  int i, printedStatistics = 0;
+  char buf[1024], formatBuf[64];
 
-}
-
-/* ****************************** */
-
-static void printcPacketStatistics(void) {
-
-  char buf[1024];
-  int i, printedStatistics=0;
-
-  memset(&buf, 0, sizeof(buf));
-
-  printHTMLheader("cPacket Statistics", NULL, 0);
+  printHTMLheader("cTap Statistics", NULL, 0);
 
   for(i = 0; i<myGlobals.numDevices; i++) {
     if((myGlobals.device[i].cpacketGlobals != NULL) &&
@@ -533,11 +594,19 @@ static void printcPacketStatistics(void) {
         sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
         printedStatistics = 1;
       }
+    
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                    "<tr><th colspan=\"2\">Device %d - %s</th></tr>\n",
-                    i, myGlobals.device[i].humanFriendlyName);
+                    "<tr><th colspan=\"3\" "TH_BG" align=center>Device: %s</tr>\n",
+                    myGlobals.device[i].humanFriendlyName);
       sendString(buf);
-      printcPacketStatisticsRcvd(i);
+
+      sendString("<tr><th "TH_BG" "DARK_BG" colspan=3>Statistics</th></tr>\n");
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                    "<tr><th "TH_BG" align=left colspan=2>Packets Received</th><td "TD_BG" align=right>%s</td></tr>\n",
+		    formatPkts(myGlobals.device[i].cpacketGlobals->numPktsRcvd, 
+			       formatBuf, sizeof(formatBuf)));
+      sendString(buf);
+      printcPacketCounterStats(i, 0, 0);
     }
   }
   if(printedStatistics == 1) {
@@ -545,10 +614,50 @@ static void printcPacketStatistics(void) {
   } else {
     printNoDataYet();
   }
+}
 
-  printPluginTrailer(NULL,
-                     "cTap is a trademark of <a href=\"http://www.cpacket.com/\" "
-                     "title=\"cPacket home page\">cPacket Inc</a>");
+/* ****************************** */
+
+static void printcPacketCounterStats(int deviceId, int page_header, int print_table) {
+  char buf[1024], *title = "cTap Counters";
+  int i, printedStatistics=0;
+
+  if((deviceId < 0) || (deviceId >myGlobals.numDevices)) return;
+  
+  if(page_header)
+    printHTMLheader(title, NULL, 0);
+
+  if(print_table) printSectionTitle(title);
+
+  if(myGlobals.device[deviceId].cpacketGlobals->numPktsRcvd > 0) {
+    cPacketCounter *elem;
+
+    memset(&buf, 0, sizeof(buf));
+
+    if(print_table) sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
+    sendString("<tr><th "TH_BG" "DARK_BG">Counter</th>"
+	       "<th "TH_BG" "DARK_BG">Bytes</th>"
+	       "<th "TH_BG" "DARK_BG">Packets</th>\n");
+
+    elem = myGlobals.device[deviceId].cpacketGlobals->counter_list_head;
+    
+    while(elem != NULL) {
+      char formatBuf[64], formatBuf1[64];
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<tr "TR_ON" ><th  "TH_BG" align=left>%s</th>"
+		    "<td "TD_BG" align=right>%s</td><td "TD_BG" align=right>%s</td>\n",
+                    elem->name, 
+		    formatBytes(elem->bytes, 1, formatBuf, sizeof(formatBuf)), 
+		    formatPkts(elem->packets, formatBuf1, sizeof(formatBuf1)));
+      sendString(buf);
+      elem = elem->next;
+    }
+
+    if(print_table) sendString("</table>\n</center>\n");
+  } else {
+    printNoDataYet();
+  }
 }
 
 /* ****************************** */
@@ -762,12 +871,6 @@ static void handlecPacketHTTPrequest(char* _url) {
   if((_url != NULL) && pluginActive) {
     char *strtokState;
 
-    if(strncasecmp(_url, CONST_CPACKET_STATISTICS_HTML, strlen(CONST_CPACKET_STATISTICS_HTML)) == 0) {
-      printcPacketStatistics();
-      printHTMLtrailer();
-      return;
-    }
-
     url = strtok_r(_url, "&", &strtokState);
 
     while(url != NULL) {
@@ -830,6 +933,12 @@ static void handlecPacketHTTPrequest(char* _url) {
 
 	url = strtok_r(NULL, "&", &strtokState);
       }
+    }
+    
+    if(strncasecmp(_url, CONST_CPACKET_STATISTICS_HTML, strlen(CONST_CPACKET_STATISTICS_HTML)) == 0) {
+      printcPacketStatistics();
+      printHTMLtrailer();
+      return;
     }
 
 #ifdef DEBUG_FLOWS
@@ -946,37 +1055,10 @@ static void handlecPacketHTTPrequest(char* _url) {
       printHTMLheader("cPacket Configuration", NULL, 0);
       printcPacketConfiguration(deviceId);
 
-      sendString("<br><hr><p>\n");
+      sendString("<p>\n");
 
       if(myGlobals.device[deviceId].cpacketGlobals->numPktsRcvd > 0) {
-	/* ****************************
-	 * Print statistics           *
-	 ****************************** */
-	printSectionTitle("Packet Statistics");
-
-	sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
-
-	if(myGlobals.device[deviceId].cpacketGlobals->numPktsRcvd > 0)
-	  printcPacketStatisticsRcvd(deviceId);
-
-	sendString("</table>\n</center>\n");
-
-	sendString("<p><table border=\"0\"><tr><td width=\"25%\" valign=\"top\" align=\"right\">"
-		   "<b>NOTES</b>:</td>\n"
-		   "<td><ul>"
-		   "<li>The virtual NIC, '" CPACKET_DEVICE_NAME "' is activated only when incoming "
-		   "flow capture is enabled.</li>\n"
-		   "<li>Once the virtual NIC is activated, it will remain available for the "
-		   "duration of the ntop run, even if you disable incoming flows.</li>\n"
-		   "<li>cPacket packets are associated with this separate, virtual device and are "
-		   "not mixed with captured packets.</li>\n"
-		   "<li>Activating incoming flows will override the command line -M | "
-		   "--no-interface-merge parameter for the duration of the ntop run.</li>\n"
-		   "<li>cPacket activation may (rarely) require ntop restart.</li>\n"
-		   "<li>You can switch the reporting device using Admin | Switch NIC, or this "
-		   "<a href=\"/" CONST_SWITCH_NIC_HTML "\" title=\"Switch NIC\">link</a>.</li>\n"
-		   "</ul></td>\n"
-		   "<td width=\"25%\">&nbsp;</td>\n</tr>\n</table>\n");
+	printcPacketCounterStats(deviceId, 0, 1);
       }
     }
   }
@@ -1018,7 +1100,7 @@ static void termcPacketDevice(int deviceId) {
 
     if(myGlobals.device[deviceId].cpacketGlobals->cpacketInSocket > 0) {
       closeNwSocket(&myGlobals.device[deviceId].cpacketGlobals->cpacketInSocket);
-    }   
+    }
 
     free(myGlobals.device[deviceId].cpacketGlobals);
     myGlobals.device[deviceId].activeDevice = 0;

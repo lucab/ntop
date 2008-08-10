@@ -2630,6 +2630,13 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
       safe_snprintf(__FILE__, __LINE__, stepStr, sizeof(stepStr), "%u", rrdDumpInterval);
       argv[argc++] = stepStr;
 
+      if(0) {
+	int j;
+	
+	for(j=0; j<argc; j++)
+	  traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
+      }
+
       if(isCounter) {
 	/*
 	  The use of DERIVE should avoid spikes on graphs when
@@ -5625,6 +5632,22 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    updateCounter(rrdIfPath, "ifOutErrors", ifName->ifOutErrors, 0);
 
 	    ifName = ifName->next;
+	  }
+	}
+
+	if(myGlobals.device[devIdx].cpacketGlobals) {
+	  cPacketCounter *elem = myGlobals.device[devIdx].cpacketGlobals->counter_list_head;
+
+	  while(elem != NULL) {
+	    char rrdIfPath[512];
+
+	    safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
+			  "%s/interfaces/%s/cTap/%s/", myGlobals.rrdPath,
+			  myGlobals.device[devIdx].uniqueIfName, elem->name);
+	    mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
+	    updateCounter(rrdIfPath, "bytes", elem->bytes, 0);
+	    updateCounter(rrdIfPath, "pkts", elem->packets, 0);
+	    elem = elem->next;
 	  }
 	}
       }
