@@ -201,7 +201,8 @@ int handlePerlHTTPRequest(char *url) {
 
   traceEvent(CONST_TRACE_WARNING, "Calling perl... [%s]", url);
 
-  safe_snprintf(__FILE__, __LINE__, perl_path, sizeof(perl_path), "./perl/%s", url);
+  safe_snprintf(__FILE__, __LINE__, perl_path, sizeof(perl_path), 
+	  "%s/perl/%s", myGlobals.spoolPath, url);
   perl_argv[1] = perl_path;
 
   PERL_SYS_INIT(&perl_argc, &perl_argv);

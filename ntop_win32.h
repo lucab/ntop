@@ -94,6 +94,7 @@ extern ULONG GetHostIPAddr();
 #define HAVE_DIRENT_H
 #define HAVE_PCAP_FREEALLDEVS
 #define HAVE_MYSQL_H
+#define HAVE_PERL
 
 #if !defined(__GNUC__)
 #define INET6
