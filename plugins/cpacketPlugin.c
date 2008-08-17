@@ -161,8 +161,10 @@ static int setcPacketInSocket(int deviceId) {
 static void updateCtapCounter(int deviceId, char *name,
 			      u_long bytes, u_long packets) {
   cPacketCounter *prev, *entry;
+  u_short debug = 0;
 
-  // traceEvent(CONST_TRACE_INFO, "[%s][%lu|%lu]", name, bytes, pkts);
+  if(debug) traceEvent(CONST_TRACE_ALWAYSDISPLAY, "[%s][%lu|%lu]", name, bytes, packets);
+
   if(myGlobals.device[deviceId].cpacketGlobals->last_head != NULL)
     prev = myGlobals.device[deviceId].cpacketGlobals->last_head;
   else
@@ -172,8 +174,10 @@ static void updateCtapCounter(int deviceId, char *name,
   while(myGlobals.device[deviceId].cpacketGlobals->last_head != NULL) {
     if(!strcmp(name, myGlobals.device[deviceId].cpacketGlobals->last_head->name)) {
       /* Update */
+      entry = myGlobals.device[deviceId].cpacketGlobals->last_head;
+      entry->bytes = bytes, entry->packets = packets;
 
-      /* traceEvent(CONST_TRACE_INFO, "Updated [%s][%lu|%lu]", name, bytes, packets); */
+      if(debug) traceEvent(CONST_TRACE_INFO, "Updated [%s][%lu|%lu]", name, bytes, packets);
 
       if(myGlobals.device[deviceId].cpacketGlobals->last_head->next)
 	myGlobals.device[deviceId].cpacketGlobals->last_head =
@@ -200,7 +204,7 @@ static void updateCtapCounter(int deviceId, char *name,
       prev->next = entry;
 
     myGlobals.device[deviceId].cpacketGlobals->last_head = NULL;
-    /* traceEvent(CONST_TRACE_INFO, "Added [%s][%lu|%lu]", name, bytes, packets); */
+    if(debug) traceEvent(CONST_TRACE_INFO, "Added [%s][%lu|%lu]", name, bytes, packets);
   }
 }
 
@@ -596,13 +600,14 @@ static void printcPacketStatistics() {
       }
     
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                    "<tr><th colspan=\"3\" "TH_BG" align=center>Device: %s</tr>\n",
+                    "<tr><th colspan=5 "TH_BG" align=center>Device: %s</tr>\n",
                     myGlobals.device[i].humanFriendlyName);
       sendString(buf);
 
-      sendString("<tr><th "TH_BG" "DARK_BG" colspan=3>Statistics</th></tr>\n");
+      sendString("<tr><th "TH_BG" "DARK_BG" colspan=5>Statistics</th></tr>\n");
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                    "<tr><th "TH_BG" align=left colspan=2>Packets Received</th><td "TD_BG" align=right>%s</td></tr>\n",
+                    "<tr><th "TH_BG" align=left colspan=3>Stats Packets Received</th>"
+		    "<td "TD_BG" align=right colspan=2>%s</td></tr>\n",
 		    formatPkts(myGlobals.device[i].cpacketGlobals->numPktsRcvd, 
 			       formatBuf, sizeof(formatBuf)));
       sendString(buf);
@@ -636,8 +641,8 @@ static void printcPacketCounterStats(int deviceId, int page_header, int print_ta
 
     if(print_table) sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
     sendString("<tr><th "TH_BG" "DARK_BG">Counter</th>"
-	       "<th "TH_BG" "DARK_BG">Bytes</th>"
-	       "<th "TH_BG" "DARK_BG">Packets</th>\n");
+	       "<th "TH_BG" "DARK_BG" colspan=2>Bytes</th>"
+	       "<th "TH_BG" "DARK_BG" colspan=2>Packets</th>\n");
 
     elem = myGlobals.device[deviceId].cpacketGlobals->counter_list_head;
     
@@ -646,11 +651,40 @@ static void printcPacketCounterStats(int deviceId, int page_header, int print_ta
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<tr "TR_ON" ><th  "TH_BG" align=left>%s</th>"
-		    "<td "TD_BG" align=right>%s</td><td "TD_BG" align=right>%s</td>\n",
-                    elem->name, 
-		    formatBytes(elem->bytes, 1, formatBuf, sizeof(formatBuf)), 
+		    "<td "TD_BG" align=right>%s</td>",
+                    elem->name, formatBytes(elem->bytes, 1, formatBuf, sizeof(formatBuf)));
+      sendString(buf);
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TD "TD_BG" ALIGN=CENTER>"
+		    "<A HREF=\"/plugins/rrdPlugin?action=arbreq&arbfile=bytes"
+		    "&arbiface=%s/cTap/%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
+		    "<IMG valign=top class=tooltip SRC=/graph.gif border=0></A>"
+		    "</TD>\n",
+		    myGlobals.device[deviceId].uniqueIfName, 
+		    elem->name,
+		    (unsigned int)(myGlobals.actTime-3600),
+		    (unsigned int)myGlobals.actTime, elem->name);
+      sendString(buf);
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<td "TD_BG" align=right>%s</td>\n",
 		    formatPkts(elem->packets, formatBuf1, sizeof(formatBuf1)));
       sendString(buf);
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TD "TD_BG" ALIGN=CENTER>"
+		    "<A HREF=\"/plugins/rrdPlugin?action=arbreq&arbfile=pkts"
+		    "&arbiface=%s/cTap/%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
+		    "<IMG valign=top class=tooltip SRC=/graph.gif border=0></A>"
+		    "</TD></TR>\n",
+		    myGlobals.device[deviceId].uniqueIfName, 
+		    elem->name,
+		    (unsigned int)(myGlobals.actTime-3600),
+		    (unsigned int)myGlobals.actTime, elem->name);
+      sendString(buf);
+
+
       elem = elem->next;
     }
 

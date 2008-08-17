@@ -349,7 +349,7 @@ void printTrafficSummary (int revertOrder) {
 		    "<TD "TD_BG" ALIGN=RIGHT>"
 		    "%u <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=knownHostsNum"
 		    "&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
-		    "<IMG valign=top class=tooltip SRC=graph.gif border=0></A>"
+		    "<IMG valign=top class=tooltip SRC=/graph.gif border=0></A>"
 		    "</TD></TR>\n",
 		    i, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600),
 		    (unsigned int)myGlobals.actTime, "Active+End+Nodes");
@@ -733,7 +733,7 @@ void printTrafficStatistics(int revertOrder) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>"
 		    "%u <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=knownHostsNum&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
-		    "<IMG valign=top class=tooltip SRC=graph.gif border=0></A>"
+		    "<IMG valign=top class=tooltip SRC=/graph.gif border=0></A>"
 		    "</TD></TR>\n",
 		    i, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600),
 		    (unsigned int)myGlobals.actTime, "Active+End+Nodes");
