@@ -54,6 +54,20 @@ if($debug) {
 $theHost = "212.171.49.54";
 }
 
+#-----------------------------------------------------------
+# 17.08.2008 Ramon Schenkel <ramonschenkel@onlinehome.de>
+# Removes the domain to separate the IP-adress
+
+# split by @ char and store in array
+@arr = split (/@/, $theHost);
+# print each element of array
+foreach $item (@arr)
+{
+# drop the domain name
+$theHost=$item;
+}
+#-----------------------------------------------------------
+
 $URL = "http://netgeo.caida.org/perl/netgeo.cgi?target=".$theHost."&method=getLatLong&nonblocking=true";
 
 $content = get($URL);
