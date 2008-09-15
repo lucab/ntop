@@ -886,8 +886,9 @@ void initDeviceSemaphores(int deviceId) {
   createMutex(&myGlobals.device[deviceId].asMutex);
   createMutex(&myGlobals.device[deviceId].packetProcessMutex);
   createMutex(&myGlobals.device[deviceId].packetQueueMutex);
-  memset(myGlobals.device[deviceId].packetQueue, 0,
-	 sizeof(PacketInformation) * (CONST_PACKET_QUEUE_LENGTH+1));
+  if(myGlobals.device[deviceId].packetQueue) 
+    memset(myGlobals.device[deviceId].packetQueue, 0,
+	   sizeof(PacketInformation) * (CONST_PACKET_QUEUE_LENGTH+1));
   myGlobals.device[deviceId].packetQueueLen           = 0;
   myGlobals.device[deviceId].maxPacketQueueLen        = 0;
   myGlobals.device[deviceId].packetQueueHead          = 0;
