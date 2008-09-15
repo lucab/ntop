@@ -3493,7 +3493,8 @@ void fillDomainName(HostTraffic *el) {
    */
   if(i > 0)
     el->dnsTLDValue = strdup(&el->hostResolvedName[i+1]);
-  else if (myGlobals.shortDomainName != NULL) {
+  else if((myGlobals.shortDomainName != NULL) 
+	  && (myGlobals.shortDomainName[0] != '\0')) {
     /* Walk back to the last . */
     i = strlen(myGlobals.shortDomainName)-1;
     while(i > 0)
