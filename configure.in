@@ -685,11 +685,6 @@ if test ".${ac_cv_header_gdbm_h}" != ".yes" ||
     AC_MSG_ERROR(Unable to continue... aborting ./configure)
 fi
 
-dnl> Caseless comparison
-dnl>
-AC_CHECK_LIB(strcasestr, c)
-
-
 dnl> Pattern matching
 dnl>
 AC_CHECK_LIB(pcre, pcre_refcount)
@@ -1272,7 +1267,7 @@ AC_CHECK_FUNCS([sched_yield])
 AC_CHECK_FUNCS([select socket])
 AC_CHECK_FUNCS([snprintf])
 AC_CHECK_FUNCS([sqrtf])
-AC_CHECK_FUNCS([strcasecmp strncasecmp])
+AC_CHECK_FUNCS([strcasecmp strncasecmp strcasestr])
 AC_CHECK_FUNCS([strchr strrchr])
 AC_CHECK_FUNCS([strcspn])
 AC_CHECK_FUNCS([strdup])
