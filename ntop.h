@@ -454,7 +454,7 @@ ntop.h
 #include <shadow.h>
 #endif
 
-#ifdef HAVE_LIBPCRE
+#ifdef HAVE_PCRE_H
 #include <pcre.h>
 #endif
 

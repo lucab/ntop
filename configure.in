@@ -685,7 +685,9 @@ if test ".${ac_cv_header_gdbm_h}" != ".yes" ||
     AC_MSG_ERROR(Unable to continue... aborting ./configure)
 fi
 
-
+dnl> Caseless comparison
+dnl>
+AC_CHECK_LIB(strcasestr, c)
 
 
 dnl> Pattern matching
@@ -932,7 +934,7 @@ AC_HEADER_SYS_WAIT
 AC_HEADER_TIME
 
 # Standard c stuff - must have
-AC_CHECK_HEADERS([float.h stddef.h stdlib.h string.h])
+AC_CHECK_HEADERS([float.h stddef.h stdlib.h string.h pcre.h])
 AC_CHECK_HEADERS([errno.h fcntl.h limits.h math.h signal.h stdarg.h unistd.h])
 AC_CHECK_HEADERS([stdio.h strings.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/socket.h sys/time.h sys/types.h])

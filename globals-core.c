@@ -545,7 +545,7 @@ void initNtop(char *devices) {
   if(myGlobals.numIpProtosToMonitor == 0)
     addDefaultProtocols();
 
-#ifdef HAVE_LIBPCRE
+#if defined(HAVE_LIBPCRE) && defined(HAVE_PCRE_H)
   if(myGlobals.runningPref.enableL7)
     initl7();
   else

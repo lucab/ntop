@@ -600,6 +600,9 @@ extern int getLocalHostAddress(struct in_addr *hostIpAddress, u_int8_t *netmask_
 extern NtopIfaceAddr * getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
 extern void fillDomainName(HostTraffic *el);
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *), char* userParm);
+#ifndef HAVE_STRCASESTR
+extern char* strcasestr (char *haystack, char *needle);
+#endif
 
 #if defined(WIN32) && defined(__GNUC__)
 #define killThread(a) _killThread(a)

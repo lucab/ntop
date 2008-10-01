@@ -23,7 +23,7 @@
 
 #include "ntop.h"
 
-#ifdef HAVE_LIBPCRE
+#if defined(HAVE_LIBPCRE) && defined(HAVE_PCRE_H)
 
 /* *********************************** */
 

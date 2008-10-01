@@ -306,6 +306,9 @@
 /* pcap has pcap_next_ex */
 #undef HAVE_PCAP_NEXT_EX
 
+/* Define to 1 if you have the <pcre.h> header file. */
+#undef HAVE_PCRE_H
+
 /* PERL is supported */
 #undef HAVE_PERL
 

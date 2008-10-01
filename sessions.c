@@ -2224,7 +2224,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   else
     len = packetDataLength;
 
-#ifdef HAVE_LIBPCRE
+#if defined(HAVE_LIBPCRE) && defined(HAVE_PCRE_H)
   if(myGlobals.runningPref.enableL7)
     l7SessionProtoDetection(theSession, packetDataLength, packetData);
 #endif
