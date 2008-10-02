@@ -742,13 +742,13 @@ static void ssiMenu_Body() {
     sendStringWOssi(
 		    "      <table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
 		    "       <tr>"
-		    "        <td><img src=\"/");
+		    "        <td><A HREF=http://www.ntop.org><img src=\"/");
     if(myGlobals.runningPref.logo != NULL) {
       sendStringWOssi(myGlobals.runningPref.logo);
     } else {
-      sendStringWOssi(CONST_NTOP_LOGO_GIF);
+      sendStringWOssi(CONST_NTOP_LOGO);
     }
-    sendStringWOssi("\" class=tooltip alt=\"ntop logo\"></td>\n"
+    sendStringWOssi("\" class=tooltip alt=\"ntop logo\" border=0></A></td>\n"
 		    "        <td valign=\"top\" align=\"right\" class=\"instance\">Instance:&nbsp;");
     sendStringWOssi(myGlobals.runningPref.instance);
     sendStringWOssi(
@@ -757,7 +757,7 @@ static void ssiMenu_Body() {
 		    "      </table>");
   } else {
     sendStringWOssi(
-		    "      <img src=\"/" CONST_NTOP_LOGO_GIF "\">");
+		    "      <A HREF=http://www.ntop.org><img src=\"/" CONST_NTOP_LOGO "\" border=0></A>");
   }
   sendStringWOssi(
 		  "     </td>\n"

@@ -3842,10 +3842,10 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_NTOP_HELP_HTML", "undefined");
 #endif
 
-#ifdef CONST_NTOP_LOGO_GIF
-  printFeatureConfigInfo(textPrintFlag, "CONST_NTOP_LOGO_GIF", CONST_NTOP_LOGO_GIF);
+#ifdef CONST_NTOP_LOGO
+  printFeatureConfigInfo(textPrintFlag, "CONST_NTOP_LOGO", CONST_NTOP_LOGO);
 #else
-  printFeatureConfigInfo(textPrintFlag, "CONST_NTOP_LOGO_GIF", "undefined");
+  printFeatureConfigInfo(textPrintFlag, "CONST_NTOP_LOGO", "undefined");
 #endif
 
 #ifdef CONST_NTOP_P3P

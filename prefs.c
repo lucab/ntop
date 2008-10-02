@@ -699,7 +699,7 @@ int parseOptions(int argc, char* argv[]) {
       memset(&fileName, 0, sizeof(fileName));
       for(found=0, idx=0; (found != 1) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
         safe_snprintf(__FILE__, __LINE__, fileName, sizeof(fileName),
-                      "%s_" CONST_NTOP_LOGO_GIF,
+                      "%s_" CONST_NTOP_LOGO,
                       myGlobals.runningPref.instance);
         safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
                       "%s/html/%s",
