@@ -3035,6 +3035,10 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Interface&nbsp;Name: %s<br>",
 		      ifStats->interface_name);
 	sendString(buf);
+      } else {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Interface&nbsp;Id: %d<br>",
+		      ifStats->interface_id);
+	sendString(buf);
       }
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Pkts:&nbsp;%s&nbsp;in/%s&nbsp;out<br>",

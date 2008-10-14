@@ -471,7 +471,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   if(cluster == NULL) {
     if(hasNetFlow
        && ((filterString == NULL) || strcasestr(filterString, "flow"))) {
-      for(i=0; i<=2; i++) {
+      for(i=1; i<=3; i++) {
 	sendString("<TR><TD align=left>");
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
@@ -530,7 +530,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
       if(strcmp(rsrcName, CONST_RRD_EXTENSION))
 	continue;
 
- #if 0
+#if 0
       if(sumCounter(rrdPath, dp->d_name, "FAILURES", startTime, endTime, &total, &average) >= 0)
 	numFailures += total;
 #endif
@@ -580,7 +580,6 @@ static void listResource(char *rrdPath, char *rrdTitle,
 	      closedir(directoryPointer1);
 	    }
 	  }
-
 
 	  if(do_show) {
 	    sendString("<TR><TD align=left>\n");
@@ -1020,9 +1019,10 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
   path[0] = '\0';
 
   switch(graphId) {
-  case 0: rrds = (struct nameLabel*)rrd_summary_new_flows; label = "Flows"; title = "Newly Created Flows: Statistics"; break;
-  case 1: rrds = (struct nameLabel*)rrd_summary_new_nf_flows; label = "Flows"; title = "Newly Created Flows: Protocol Breakdown"; break;
-  case 2: rrds = (struct nameLabel*)rrd_summary_new_nf_flows_size; label = "Bytes"; title = "Newly Created Flows: Average Size"; break;
+  case 0: rrds = (struct nameLabel*)rrd_summary_traffic; label = "Bytes"; title = "Traffic Statistics"; break;
+  case 1: rrds = (struct nameLabel*)rrd_summary_new_flows; label = "Flows"; title = "Newly Created Flows: Statistics"; break;
+  case 2: rrds = (struct nameLabel*)rrd_summary_new_nf_flows; label = "Flows"; title = "Newly Created Flows: Protocol Breakdown"; break;
+  case 3: rrds = (struct nameLabel*)rrd_summary_new_nf_flows_size; label = "Bytes"; title = "Newly Created Flows: Average Size"; break;
   }
 
   /* Check if the output directory has been deleted in the meantime */
@@ -1105,22 +1105,26 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
     the_time = atol(startTime); the_tm = localtime(&the_time);
     strftime(strbuf, sizeof(strbuf), "%Y-%m-%d %H:%M", the_tm); sendString(strbuf);
 
-    sendString("\">\n<INPUT type=\"image\" src=\"/calendar.gif\" alt=\"Start date selector\" border=\"0\" align=\"absmiddle\" onclick=\"return showCalendar('date1');\">\n");
+    sendString("\">\n<INPUT type=\"image\" src=\"/calendar.gif\" alt=\"Start date selector\" border=\"0\" align=\"absmiddle\" "
+	       "onclick=\"return showCalendar('date1');\">\n");
     sendString("&nbsp;<strong>To:</strong>\n<INPUT type=\"text\" name=\"date2\" id=\"date2\" size=\"16\" value=\"");
 
     the_time = atol(endTime); the_tm = localtime(&the_time);
     strftime(strbuf, sizeof(strbuf), "%Y-%m-%d %H:%M", the_tm); sendString(strbuf);
 
-    sendString("\">\n<INPUT type=\"image\" src=\"/calendar.gif\" alt=\"End date selector\" border=\"0\" align=\"absmiddle\" onclick=\"return showCalendar('date2');\">\n"
+    sendString("\">\n<INPUT type=\"image\" src=\"/calendar.gif\" alt=\"End date selector\" border=\"0\" align=\"absmiddle\" "
+	       "onclick=\"return showCalendar('date2');\">\n"
 	       "<INPUT type=\"submit\" value=\"Update Graph\">\n</FORM>\n</TD></TR></TBODY></TABLE>\n</p>\n");
 
     /* *************************************** */
 
     sendString("<SCRIPT type=\"text/javascript\" src=\"/zoom.js\"></SCRIPT>\n"
 	       "<DIV id=\"zoomBox\" style=\"position: absolute; visibility: visible; background-image: initial; background-repeat: initial; "
-	       "background-attachment: initial; background-position-x: initial; background-position-y: initial; background-color: orange; opacity: 0.5;\"></DIV>\n");
+	       "background-attachment: initial; background-position-x: initial; background-position-y: initial; background-color: orange; "
+	       "opacity: 0.5;\"></DIV>\n");
 
-    sendString("<DIV id=\"zoomSensitiveZone\" style=\"position:absolute; overflow:none; background-repeat: initial; background-attachment: initial;  "
+    sendString("<DIV id=\"zoomSensitiveZone\" style=\"position:absolute; overflow:none; background-repeat: initial; "
+	       "background-attachment: initial;  "
 	       "background-position-x: initial; background-position-y: initial; visibility:visible; cursor:crosshair; background:blue; "
 	       "filter:alpha(opacity=0); -moz-opacity:0; -khtml-opacity:0; opacity:0;\" oncontextmenu=\"return false\"></DIV>\n");
 
@@ -1205,65 +1209,66 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
 #endif
 #endif
 
-    argv[argc++] = "--title";
-    argv[argc++] = title;
+  argv[argc++] = "--title";
+  argv[argc++] = title;
 
-	str = "interfaces/";
-	i = strlen(str);
-	if(!strncmp(rrdPath, str, i))
-		pathIdx = i;
-	else
-		pathIdx = 0;
+  str = "interfaces/";
+  i = strlen(str);
+  if(!strncmp(rrdPath, str, i))
+    pathIdx = i;
+  else
+    pathIdx = 0;
+    
+  for(i=0, entryId=0; rrds[i].name != NULL; i++) {
+    char metric_name[32];
 
-	for(i=0, entryId=0; rrds[i].name != NULL; i++) {
-		char metric_name[32];
-
-		if(!strcmp(rrds[i].name, "throughput")) {
+    if(!strcmp(rrds[i].name, "throughput")) {
 #ifdef WIN32
-			safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/interfaces/%s/%s.rrd",
-				myGlobals.rrdVolatilePath, driveSerial, &rrdPath[pathIdx], rrds[i].name);
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%u/interfaces/%s/%s.rrd",
+		    myGlobals.rrdVolatilePath, driveSerial, &rrdPath[pathIdx], rrds[i].name);
 #else
-			safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/%s.rrd",
-				myGlobals.rrdVolatilePath, rrdPath, rrds[i].name);
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/%s.rrd",
+		    myGlobals.rrdVolatilePath, rrdPath, rrds[i].name);
 #endif
-		} else
-			safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/%s.rrd",
-			myGlobals.rrdPath, &rrdPath[pathIdx], rrds[i].name);
+    } else
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/%s.rrd",
+		    myGlobals.rrdPath, &rrdPath[pathIdx], rrds[i].name);
 
-		revertSlashIfWIN32(path, 0);
+    revertSlashIfWIN32(path, 0);
 
-		if(stat(path, &statbuf) == 0) {
-			// traceEvent(CONST_TRACE_WARNING,  "-- 3 --> (%s)", path);
-			revertDoubleColumnIfWIN32(path);
-			safe_snprintf(__FILE__, __LINE__, buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path);
-		argv[argc++] = buf[entryId];
+    if(debug_rrd_graph) traceEvent(CONST_TRACE_WARNING,  "-- 3 --> (%s)", path);
 
-		safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-			entryId, rrd_colors[entryId], spacer(rrds[i].label, tmpStr, sizeof(tmpStr), metric_name, sizeof(metric_name)));
-		argv[argc++] = buf1[entryId];
+    if(stat(path, &statbuf) == 0) {
+      revertDoubleColumnIfWIN32(path);
+      safe_snprintf(__FILE__, __LINE__, buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path);
+      argv[argc++] = buf[entryId];
 
-		safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %3.1lf%s\\t");
-		argv[argc++] = buf2[entryId];
+      safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
+		    entryId, rrd_colors[entryId], spacer(rrds[i].label, tmpStr, sizeof(tmpStr), metric_name, sizeof(metric_name)));
+      argv[argc++] = buf1[entryId];
 
-		safe_snprintf(__FILE__, __LINE__, buf3[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Last\\: %3.1lf%s\\n");
-		argv[argc++] = buf3[entryId];
+      safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %3.1lf%s\\t");
+      argv[argc++] = buf2[entryId];
 
-		entryId++;
+      safe_snprintf(__FILE__, __LINE__, buf3[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Last\\: %3.1lf%s\\n");
+      argv[argc++] = buf3[entryId];
 
-	if(entryId >= MAX_NUM_ENTRIES) break;
+      entryId++;
 
-	if(entryId >= CONST_NUM_BAR_COLORS) {
-		if(colorWarn == 0) {
-			traceEvent(CONST_TRACE_WARNING, "RRD: Number of defined bar colors less than max entries. Some graph(s) truncated");
-			colorWarn = 1;
-		}
+      if(entryId >= MAX_NUM_ENTRIES) break;
 
-		break;
-
-				} else {
-			// traceEvent(CONST_TRACE_WARNING, "RRD: Unable to find file %s", path);
-		}
+      if(entryId >= CONST_NUM_BAR_COLORS) {
+	if(colorWarn == 0) {
+	  traceEvent(CONST_TRACE_WARNING, "RRD: Number of defined bar colors less than max entries. Some graph(s) truncated");
+	  colorWarn = 1;
 	}
+
+	break;
+
+      } else {
+	// traceEvent(CONST_TRACE_WARNING, "RRD: Unable to find file %s", path);
+      }
+    }
   }
 
   accessMutex(&rrdMutex, "rrd_graph");
@@ -1292,7 +1297,8 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
     traceEventRRDebugARGV(3);
 
     if(++graphErrCount < 50) {
-      traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error() ? rrd_get_error() : "");
+      traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s",
+		 rc, rrd_get_error() ? rrd_get_error() : "");
       traceEvent(CONST_TRACE_INFO, "RRD: Failing file in netflowSummary() is %s", path);
     }
 
@@ -4234,7 +4240,10 @@ static void handleRRDHTTPrequest(char* url) {
 	dumpShortInterval = _dumpShortInterval;
 
 	for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
-	  if((myGlobals.device[devIdx].virtualDevice && (!myGlobals.device[devIdx].sflowGlobals))
+	  if((myGlobals.device[devIdx].virtualDevice 
+	      && (!myGlobals.device[devIdx].sflowGlobals)
+	      && (!myGlobals.device[devIdx].netflowGlobals)
+	      )
 	     || (!myGlobals.device[devIdx].activeDevice))
 	    continue;
 
@@ -5026,7 +5035,9 @@ static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
     rrdTime =  time(NULL);
 
     for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
-      if((myGlobals.device[devIdx].virtualDevice && (!myGlobals.device[devIdx].sflowGlobals))
+      if((myGlobals.device[devIdx].virtualDevice 
+	  && (!myGlobals.device[devIdx].sflowGlobals)
+	  && (!myGlobals.device[devIdx].netflowGlobals))
 	 || (!myGlobals.device[devIdx].activeDevice))
 	continue;
 
@@ -5370,7 +5381,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     if(dumpInterfaces) {
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
 
-	if((myGlobals.device[devIdx].virtualDevice && (!myGlobals.device[devIdx].sflowGlobals))
+	if((myGlobals.device[devIdx].virtualDevice 
+	    && (!myGlobals.device[devIdx].sflowGlobals)
+	    && (!myGlobals.device[devIdx].netflowGlobals))
 	   || (!myGlobals.device[devIdx].activeDevice))
 	  continue;
 
@@ -5390,7 +5403,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	updateCounter(rrdPath, "ipLocalToLocalBytes",  myGlobals.device[devIdx].tcpGlobalTrafficStats.local.value +
 		      myGlobals.device[devIdx].udpGlobalTrafficStats.local.value +
 		      myGlobals.device[devIdx].icmpGlobalTrafficStats.local.value, 0);
-	updateCounter(rrdPath, "ipLocalToRemoteBytes",    myGlobals.device[devIdx].tcpGlobalTrafficStats.local2remote.value +
+	updateCounter(rrdPath, "ipLocalToRemoteBytes", myGlobals.device[devIdx].tcpGlobalTrafficStats.local2remote.value +
 		      myGlobals.device[devIdx].udpGlobalTrafficStats.local2remote.value +
 		      myGlobals.device[devIdx].icmpGlobalTrafficStats.local2remote.value, 0);
 	updateCounter(rrdPath, "ipRemoteToLocalBytes", myGlobals.device[devIdx].tcpGlobalTrafficStats.remote2local.value +

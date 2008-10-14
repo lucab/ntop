@@ -253,6 +253,12 @@ struct nameLabel {
   char *name, *label;
 };
 
+static const struct nameLabel rrd_summary_traffic[] = { 
+  { "ifInOctets", "Ingress Traffic" },
+  { "ifOutOctets", "Egress Traffic" },
+  { NULL, NULL }
+};
+
 static const struct nameLabel rrd_summary_new_flows[] = { 
   { "NF_numFlows", "Total Flows" },
   { "NF_numDiscardedFlows", "Discarded Flows" },
