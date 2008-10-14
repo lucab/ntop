@@ -1698,6 +1698,7 @@ u_int createDummyInterface(char *ifName) {
   u_int mallocLen;
 #endif
   u_int deviceId = myGlobals.numDevices;
+  int i;
 
   traceEvent(CONST_TRACE_INFO, "Creating dummy interface, '%s'", ifName);
 
@@ -1721,7 +1722,7 @@ u_int createDummyInterface(char *ifName) {
   myGlobals.device[deviceId].virtualDevice = 0;
   myGlobals.device[deviceId].activeDevice  = 0;
   myGlobals.device[deviceId].samplingRate =  myGlobals.runningPref.samplingRate;
-  calculateUniqueInterfaceName(deviceId);
+  calculateUniqueInterfaceName(deviceId); 
 
   if(myGlobals.otherHostEntry != NULL) {
     myGlobals.device[deviceId].hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;
@@ -1752,6 +1753,15 @@ u_int createDummyInterface(char *ifName) {
     int len = sizeof(IPSession*)*MAX_TOT_NUM_SESSIONS;
     myGlobals.device[deviceId].tcpSession = (IPSession**)malloc(len);
     memset(myGlobals.device[deviceId].tcpSession, 0, len);
+  }
+
+  /* Allocate memory for dhcp stats */
+
+  for(i=0; i<myGlobals.numKnownSubnets; i++) {
+    myGlobals.device[deviceId].networkHost[i].protocolInfo = calloc(1, sizeof(ProtocolInfo));
+    myGlobals.device[deviceId].networkHost[i].protocolInfo->dnsStats = calloc(1, sizeof(ServiceStats));
+    myGlobals.device[deviceId].networkHost[i].protocolInfo->httpStats = calloc(1, sizeof(ServiceStats));
+    myGlobals.device[deviceId].networkHost[i].protocolInfo->dhcpStats = calloc(1, sizeof(DHCPStats));
   }
 
   return(deviceId);

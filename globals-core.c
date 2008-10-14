@@ -210,7 +210,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
     exit(-1);
   }
 
-
   /* Databases */
   myGlobals.dnsCacheFile = NULL;
   myGlobals.pwFile = NULL;
