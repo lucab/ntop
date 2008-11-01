@@ -482,12 +482,9 @@ void handleBootp(HostTraffic *srcHost,
 	    }
 
 	    if(realClientHost != NULL) {
-	      if(realClientHost->protocolInfo == NULL) realClientHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
-
-	      if(realClientHost->protocolInfo->dhcpStats == NULL) {
-		realClientHost->protocolInfo->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
-		memset(realClientHost->protocolInfo->dhcpStats, 0, sizeof(DHCPStats));
-	      }
+	      /* Fix below courtesy of Massimo Torquati <torquati@ntop.org> */
+	      allocHostTrafficCounterMemory(realClientHost, protocolInfo, sizeof(ProtocolInfo));
+	      allocHostTrafficCounterMemory(realClientHost, protocolInfo->dhcpStats, sizeof(DHCPStats));
 
 	      while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
 		u_char optionId = bootProto.bp_vend[idx++];
