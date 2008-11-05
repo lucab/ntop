@@ -678,74 +678,62 @@ char* calculateCellColor(Counter actualValue,
 /* ************************ */
 
 char* getHostCountryIconURL(HostTraffic *el) {
-  char path[256], *img, *source;
+  char path[256], *img = NULL;
   static char flagBuf[384];
   struct stat buf;
   int rc;
 
   fillDomainName(el);
 
-  if((el->ip2ccValue != NULL) && (strcasecmp(el->ip2ccValue, "loc") == 0)) {
+  if(el->geo_ip == NULL) {
+#if 0
+    safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf),
+		  "<img class=tooltip alt=\"Local Host\" title=\"Local Host\" "
+		  "align=\"middle\" src=\"/statsicons/flags/local.gif\" border=\"0\">");
+#endif
+    return("");
+  }
+
+  if(el->geo_ip->country_code[0] == '\0') {
     safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf),
 		  "<img class=tooltip alt=\"Local Host\" title=\"Local Host\" "
 		  "align=\"middle\" src=\"/statsicons/flags/local.gif\" border=\"0\">");
   } else {
-    /* Try all the possible combos of name and path */
-    rc = -1; /* Start bad */
+    char c_buf[16] = { '\0'};
+    int i;
 
-    if(el->ip2ccValue != NULL) {
-      if(rc != 0) {
-	safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "./html/statsicons/flags/%s.gif",
-		      el->ip2ccValue);
-	rc = stat(path, &buf);
-      }
-      if(rc != 0) {
-	safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
-		      CFG_DATAFILE_DIR, el->ip2ccValue);
-	rc = stat(path, &buf);
-      }
-      if(rc == 0) {
-	img = el->ip2ccValue;
-	source = "(from p2c file)";
-      }
-    }
+    safe_snprintf(__FILE__, __LINE__, c_buf, sizeof(c_buf)-1, "%s", el->geo_ip->country_code);
 
+    for(i=0; c_buf[i] != '\0'; i++) c_buf[i] = tolower(c_buf[i]);
+
+    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "./html/statsicons/flags/%s.gif",
+		  c_buf);
+    rc = stat(path, &buf);
+    
     if(rc != 0) {
-      if(el->dnsTLDValue != NULL) {
-	safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "./html/statsicons/flags/%s.gif",
-		      el->dnsTLDValue);
-	rc = stat(path, &buf);
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
+		    CFG_DATAFILE_DIR, el->geo_ip->country_code);
+      rc = stat(path, &buf);
+    } 
 
-	if(rc != 0) {
-	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
-			CFG_DATAFILE_DIR, el->dnsTLDValue);
-	  rc = stat(path, &buf);
-	}
-	if(rc == 0) {
-	  img = el->dnsTLDValue;
-	  if(strlen(img) == 2)
-	    source = "(Guessing from ccTLD)";
-	  else
-	    source = "(Guessing from gTLD)";
-	}
-      }
-    }
-
-    if(rc != 0) {
-      /* Nothing worked... */
-      safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf),
-		    "&nbsp;<!-- No flag for %s or %s -->",
-		    el->ip2ccValue != NULL  ? el->ip2ccValue  : "null",
-		    el->dnsTLDValue != NULL ? el->dnsTLDValue : "null");
-    } else {
-      safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf),
-		    "<img class=tooltip alt=\"Flag for %s code %s %s\" title=\"Flag for %s code %s %s\" align=\"middle\" "
-		    "src=\"/statsicons/flags/%s.gif\" border=\"0\">",
-		    strlen(img) == 2 ? "ISO 3166" : "gTLD", img, source,
-		    strlen(img) == 2 ? "ISO 3166" : "gTLD", img, source,
-		    img);
+    if(rc == 0) {
+      img = c_buf;
     }
   }
+
+  if(img == NULL) {
+    /* Nothing worked... */
+    safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf),
+		  "&nbsp;<!-- No flag for %s (%s) -->",
+		  el->geo_ip->country_name, el->geo_ip->country_code);
+  } else {
+    safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf),
+		  "<img class=tooltip alt=\"Flag for %s (%s)\" title=\"Flag for %s (%s)\" align=\"middle\" "
+		  "src=\"/statsicons/flags/%s.gif\" border=\"0\">",
+		  el->geo_ip->country_name, el->geo_ip->country_code,
+		  el->geo_ip->country_name, el->geo_ip->country_code,
+		  img);
+  }  
 
   return(flagBuf);
 }

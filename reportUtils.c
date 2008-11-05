@@ -1085,6 +1085,24 @@ static int cmpOSFctn(const void *_a, const void *_b) {
 
 /* ******************************* */
 
+int cmpFctnLocationName(const void *_a, const void *_b) {
+  HostTraffic **a = (HostTraffic **)_a;
+  HostTraffic **b = (HostTraffic **)_b;
+  char *c_a = "", *c_b = "";
+
+  if((a != NULL) && (*a != NULL)
+     && (*a)->geo_ip && ((*a)->geo_ip->country_code != NULL))
+    c_a = (*a)->geo_ip->country_code;
+
+  if((b != NULL) && (*b != NULL) 
+     && (*b)->geo_ip && ((*b)->geo_ip->country_code != NULL))
+    c_b = (*b)->geo_ip->country_code;
+  
+  return(strcmp(c_a, c_b));
+}
+
+/* ******************************* */
+
 int cmpFctn(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
@@ -3924,11 +3942,25 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		    "Host&nbsp;Location", 
 		    "Local (inside specified/local subnet or known network list)");
     } else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		  "%s</TD></TR>\n", getRowColor(),
-		  "Host&nbsp;Location",
-		  "Remote (outside specified/local subnet)");
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		    "%s</TD></TR>\n", getRowColor(),
+		    "Host&nbsp;Location",
+		    "Remote (outside specified/local subnet)");
     }
+    sendString(buf);
+  }
+
+
+  if(el->geo_ip) {
+    char buf3[512] = { '\0' };
+
+    if(myGlobals.runningPref.mapperURL) buildMapLink(el, buf3, sizeof(buf3));
+    
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "%s, %s %s</TD></TR>\n", getRowColor(), "Physical Location", 
+		  el->geo_ip->city, el->geo_ip->country_name, buf3);
     sendString(buf);
   }
 
@@ -3972,14 +4004,16 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	      );
   sendString(buf);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		"<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s Pkts</TD></TR>\n",
 	      getRowColor(), "Broadcast&nbsp;Pkts&nbsp;Sent",
 	      formatPkts(el->pktBroadcastSent.value, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   if(el->routedTraffic != NULL) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR  "TR_ON"%s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		  "<TR  "TR_ON"%s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%s/%s Pkts</TD></TR>\n",
 		getRowColor(), "Routed Traffic",
 		formatBytes(el->routedTraffic->routedBytes.value, 1, formatBuf, sizeof(formatBuf)),
@@ -3988,7 +4022,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if((el->pktMulticastSent.value > 0) || (el->pktMulticastRcvd.value > 0)) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>",
 		getRowColor(), "Multicast&nbsp;Traffic");
     sendString(buf);
 
@@ -4128,14 +4163,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  "[ <A class=external HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=%s\">Whois</A> ]\n",
 		  getRowColor(), "Further Host Information", el->hostNumIpAddress);
     sendString(buf);
-    
-    if(myGlobals.runningPref.mapperURL) {      
-      sendString(" [");
-      buildMapLink(el, buf, sizeof(buf));
-      sendString(buf);
-      sendString(" ]");
-    }
-    
+        
     sendString("</TD></TR>\n");
   }
 
@@ -5334,14 +5362,27 @@ void printPluginTrailer(char *left, char *middle) {
 void buildMapLink(HostTraffic *el, char *buf, int buf_len) {
   if(privateIPAddress(el))
     buf[0] = '\0';
-  else
+  else {
+#if 0
     safe_snprintf(__FILE__, __LINE__, buf, buf_len,
-		" <A class=external href=\"#\" title=\"Physical Host Location\"onclick=\"window.open(\'%s?host=%s@%s\', "
+		" <A class=external href=\"#\" title=\"Physical Host Location\" "
+		  "onclick=\"window.open(\'%s?host=%s@%s\', "
 		  "\'Host Map\', \'height=210, width=320,toolbar=nodirectories=no,status=no,"
 		  "menubar=no,scrollbars=no,resizable=no\'); return false;\">"
 		  "<IMG SRC=/marker.png border=0></A>\n",
 		  myGlobals.runningPref.mapperURL,
 		  el->hostResolvedName, el->hostNumIpAddress);
+#else
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len,
+		  " <A class=external href=\"#\" title=\"Physical Host Location\" "
+		  "onclick=\"window.open(\'%s?host=%s&ip=%s\', "
+		  "\'Host Map\', \'height=530, width=750,toolbar=nodirectories=no,status=no,"
+		  "menubar=no,scrollbars=no,resizable=no\'); return false;\">"
+		  "<IMG SRC=/marker.png border=0></A>\n",
+		  myGlobals.runningPref.mapperURL,
+		  el->hostResolvedName, el->hostNumIpAddress);
+#endif
+  }
 }
 
 /* ************************************ */

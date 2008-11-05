@@ -25,8 +25,6 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-static void initIPCountryTable(void); /* Forward */
-
 /*
  * calculate the domain name for this host
  */
@@ -205,66 +203,6 @@ void initIPServices(void) {
   addPortHashEntry(myGlobals.udpSvc, 650, "bwnfs");
   addPortHashEntry(myGlobals.udpSvc, 2049,"nfsd");
   addPortHashEntry(myGlobals.udpSvc, 1110,"nfsd-status");
-}
-
-/* ******************************* */
-
-static void initIPCountryTable(void) {
-  u_char compressedFormat;
-  char buf[LEN_GENERAL_WORK_BUFFER];
-  FILE* fd;
-
-  myGlobals.ipCountryCount = 0;
-  if((myGlobals.countryFlagHead = malloc(sizeof(IPNode))) == NULL) {
-    traceEvent(CONST_TRACE_FATALERROR, "IP2CC: Unable to allocate table memory. Quitting...");
-    exit(4); /* Just in case */
-  }
-  myGlobals.ipCountryMem += sizeof(IPNode);
-
-  strcpy(myGlobals.countryFlagHead->node.cc, "***");
-
-  myGlobals.countryFlagHead->b[0]=NULL;
-  myGlobals.countryFlagHead->b[1]=NULL;
-
-  if (!myGlobals.runningPref.printFcOnly) {
-    fd=checkForInputFile("IP2CC",
-			 "IP address <-> Country Code mapping",
-			 CONST_P2C_FILE,
-			 NULL,
-			 &compressedFormat);
-      if(fd != NULL) {
-          char *strtokState, *cc, *ip, *prefix;
-          int numRead=0;
-
-          while(readInputFile(fd,
-                              "IP2CC",
-                              FALSE,
-                              compressedFormat,
-			      10000,
-                              buf, sizeof(buf),
-                              &numRead) == 0) {
-              if((cc=strtok_r(buf, ":", &strtokState))       == NULL) continue;
-              if((ip=strtok_r(NULL, "/", &strtokState))      == NULL) continue;
-              if((prefix=strtok_r(NULL, "\n", &strtokState)) == NULL) continue;
-
-              strtolower(cc);
-
-              if(addNodeInternal(xaton(ip), atoi(prefix), cc, 0) == NULL) {
-                traceEvent(CONST_TRACE_FATALERROR,
-                           "IP2CC: Insufficient memory to load table");
-                /* This isn't fatal of an itself, but we'll fail every malloc() from here on ... */
-                exit(5); /* Just in case */
-              }
-          }
-
-          myGlobals.ipCountryCount += numRead;
-      } else {
-          traceEvent(CONST_TRACE_WARNING,
-                     "IP2CC: Unable to read IP address <-> Country code mapping file (non-existant or no data)");
-          traceEvent(CONST_TRACE_INFO,
-                     "IP2CC: ntop will perform correctly but without this minor feature");
-      }
-  }
 }
 
 /* ******************************* */
@@ -577,7 +515,12 @@ void initCounters(void) {
           traceEvent(CONST_TRACE_NOISY, "ASN: ntop continues ok, but without ASN information.");
   }
 
-  initIPCountryTable();
+
+  /* Initialize GeoIP database */
+  if((myGlobals.geo_ip_db = GeoIP_open(GEO_IP_FILE, GEOIP_CHECK_CACHE)) == NULL) {
+    traceEvent(CONST_TRACE_ERROR, "GeoIP: unable to load file %s", GEO_IP_FILE);
+  } else
+    traceEvent(CONST_TRACE_INFO, "GeoIP: loaded config file %s", GEO_IP_FILE);
 }
 
 

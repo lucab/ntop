@@ -475,8 +475,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   if(host->description != NULL) free(host->description);
   if(host->hwModel != NULL) free(host->hwModel);
   if(host->community != NULL) free(host->community);
-  if(host->ip2ccValue != NULL) free(host->ip2ccValue);
-  host->ip2ccValue = NULL;
+  if(host->geo_ip) GeoIPRecord_delete(host->geo_ip);
 
   /* ********** */
   /*

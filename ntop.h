@@ -395,6 +395,9 @@ ntop.h
 #include <sched.h>
 #endif
 
+#include <GeoIP.h>
+#include <GeoIPCity.h>
+
 /*
  * Switched pthread with semaphore.
  * Courtesy of

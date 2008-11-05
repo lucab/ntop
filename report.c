@@ -2752,7 +2752,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
 		      "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
-		      "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
+		      "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Location%s</A></TH>\n"
 		      "<TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
 		      "<TH "TH_BG">%s3\">MAC&nbsp;Address%s</A></TH>\n"
 		      "<TH "TH_BG">%s11\">Community%s</A></TH>\n"
@@ -2778,9 +2778,10 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 		      theAnchor[10], arrow[10]
 		      );
       } else {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		      "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
 		      "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
-		      "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
+		      "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Location%s</A></TH>\n"
 		      "</TH><TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
 		      "<TH "TH_BG">%s11\">Community%s</A></TH>"
 		      "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"

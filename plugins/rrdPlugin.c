@@ -5247,7 +5247,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  /* if we didn't get a domain name, bail out */
 	  if ((el->dnsDomainValue == NULL)
 	      || (el->dnsDomainValue[0] == '\0')
-	      || (el->ip2ccValue == NULL)
 	      || (el->hostResolvedName[0] == '\0')
 	      || broadcastHost(el)
 	      ) {
@@ -5272,7 +5271,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    memset(statsEntry, 0, sizeof(DomainStats));
 	    statsEntry->domainHost = el;
 	    stats[keyValue] = statsEntry;
-	    traceEventRRDebug(2, "[%d] %s/%s", numEntries, el->dnsDomainValue, el->ip2ccValue);
+	    traceEventRRDebug(2, "[%d] %s", numEntries, el->dnsDomainValue);
 	  }
 
 	  /* count this host's stats in the domain stats */

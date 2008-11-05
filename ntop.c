@@ -1134,6 +1134,11 @@ RETSIGTYPE cleanup(int signo) {
 
   termGdbm();
   termDB();
+  
+  if(myGlobals.geo_ip_db != NULL) {
+    GeoIP_delete(myGlobals.geo_ip_db);
+    myGlobals.geo_ip_db = NULL;
+  }
 
   tryLockMutex(&myGlobals.gdbmMutex, "cleanup");
   deleteMutex(&myGlobals.gdbmMutex);

@@ -3351,7 +3351,8 @@ void processPacket(u_char *_deviceId,
 
 		  switch(element.cdp_type) {
 		  case 0x0001: /* Device Id */
-		    if((srcHost->hostResolvedName[0] == '\0') || (strcmp(srcHost->hostResolvedName, srcHost->hostNumIpAddress))) {
+		    if((srcHost->hostResolvedName[0] == '\0') 
+		       || (strcmp(srcHost->hostResolvedName, srcHost->hostNumIpAddress))) {
 		      u_short tmpStrLen = min(element.cdp_len-4, MAX_LEN_SYM_HOST_NAME-1);
 		      strncpy(srcHost->hostResolvedName, (char*)&cdp[cdp_idx], tmpStrLen);
 		      srcHost->hostResolvedName[tmpStrLen] = '\0';
@@ -3596,7 +3597,8 @@ void processPacket(u_char *_deviceId,
 		    if(strlen(nodeName) >= (MAX_LEN_SYM_HOST_NAME-1))
 		      nodeName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
 
-		    if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
+		    if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, 
+												    sizeof(NonIPTraffic));
 		    if(srcHost->nonIPTraffic == NULL) return;
 
 		    srcHost->nonIPTraffic->atNodeName = strdup(nodeName);

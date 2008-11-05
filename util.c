@@ -2482,8 +2482,6 @@ void resetHostsVariables(HostTraffic* el) {
   el->dnsDomainValue = NULL;
   if (el->dnsTLDValue != NULL)         free(el->dnsTLDValue);
   el->dnsTLDValue = NULL;
-  if (el->ip2ccValue != NULL)          free(el->ip2ccValue);
-  el->ip2ccValue = NULL;
   el->hostResolvedName[0] = '\0';
   el->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_NONE;
   if (el->fingerprint != NULL)         free(el->fingerprint);
@@ -2493,6 +2491,8 @@ void resetHostsVariables(HostTraffic* el) {
   if (el->routedTraffic != NULL)       free(el->routedTraffic);
   el->routedTraffic = NULL;
   if (el->portsUsage != NULL)          freePortsUsage(el);
+  if (el->geo_ip)                      GeoIPRecord_delete(el->geo_ip);
+
   if (el->protoIPTrafficInfos != NULL) {
     int i;
 
@@ -3461,8 +3461,6 @@ void fillDomainName(HostTraffic *el) {
   el->dnsDomainValue = NULL;
   if(el->dnsTLDValue != NULL) free(el->dnsTLDValue);
   el->dnsTLDValue = NULL;
-  if(el->ip2ccValue != NULL) free(el->ip2ccValue);
-  el->ip2ccValue = NULL;
 
   if((el->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NAME) ||
      (el->hostResolvedName    == NULL) ||
@@ -3470,15 +3468,6 @@ void fillDomainName(HostTraffic *el) {
     /* Do NOT set FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED - we still might learn the DNS Name later */
     releaseAddrResMutex();
     return;
-  }
-
-  ip2cc = ip2CountryCode(el->hostIpAddress);
-
-  if((ip2cc == NULL) || (strcmp(ip2cc, "***") == 0)) {
-    /* We are unable to associate a domain with this IP address. */
-    el->ip2ccValue = NULL;
-  } else {
-    el->ip2ccValue = strdup(ip2cc);
   }
 
   /* Walk back to the last . */
@@ -5928,10 +5917,22 @@ void urlFixupToRFC1945Inplace(char* url) {
 
 }
 
+/* ************************************ */
+
+static void updateGeoIP(HostTraffic *el) {
+  if((el->geo_ip == NULL) 
+     && (myGlobals.geo_ip_db != NULL)
+     && (el->hostNumIpAddress[0] != '\0')) {
+    el->geo_ip = GeoIP_record_by_addr(myGlobals.geo_ip_db, el->hostNumIpAddress);
+  }
+}
+
 /* ********************************************* */
 
 void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char* file, int line) {
   int i;
+
+  updateGeoIP(el);
 
   if(updateValue[0] == '\0') return;
 
@@ -6281,69 +6282,6 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
 
   return(rc);
 }
-
-/* ********************************************* */
-/* ********************************************* */
-/*       Location code compare function          */
-/* ********************************************* */
-
-int cmpFctnLocationName(const void *_a, const void *_b) {
-  /* This function takes two HostTraffic entries and performs a
-     standardized compare of the location, either the ip2ccValue field
-     or the fallback dnsTLDValue fields, handling unvalued
-     situations to provide a stable comparison.
-
-     We translate 'loc' (rfc1918 addresses) to sort next to last
-     and unvalued items to sort last.
-
-     Equal valued names are sorted based first on full domain name, then
-     on hostResolvedName as the tie breakers.
-  */
-
-  HostTraffic **a = (HostTraffic **)_a;
-  HostTraffic **b = (HostTraffic **)_b;
-  int rc;
-  char *nameA, *nameB;
-
-  rc=0;
-
-  if((*a)->ip2ccValue == NULL) {
-    nameA = "\xFF\xFF";
-  } else if(strcasecmp((*a)->ip2ccValue, "loc") == 0) {
-    nameA = "\xFF\xFE";
-  } else {
-    nameA = (*a)->ip2ccValue;
-  }
-  if((*b)->ip2ccValue == NULL) {
-    nameB = "\xFF\xFF";
-  } else if(strcasecmp((*b)->ip2ccValue, "loc") == 0) {
-    nameB = "\xFF\xFE";
-  } else {
-    nameB = (*b)->ip2ccValue;
-  }
-
-  rc = strcasecmp(nameA, nameB);
-  if(rc == 0) {
-    if((*a)->dnsTLDValue == NULL) {
-      nameA = "\xFF\xFF";
-    } else {
-      nameA = (*a)->dnsTLDValue;
-    }
-    if((*b)->dnsTLDValue == NULL) {
-      nameB = "\xFF\xFF";
-    } else {
-      nameB = (*b)->ip2ccValue;
-    }
-    rc = strcasecmp(nameA != NULL ? nameA : "", nameB != NULL ? nameB : "");
-  }
-
-  if(rc == 0) {
-    rc = cmpFctnResolvedName(a, b);
-  }
-
-  return(rc);
-}
-
 /* ************************************ */
 
 static char x2c(char *what) {

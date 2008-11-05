@@ -842,11 +842,12 @@ typedef struct hostTraffic {
   char             hostNumIpAddress[20] /* xxx.xxx.xxx.xxx */, *dnsDomainValue, *dnsTLDValue;
   u_int8_t         network_mask;    /* IPv6 notation e.g. /24 */
   int8_t           known_subnet_id; /* UNKNOWN_SUBNET_ID if the host does not belong to a known subnet */
-  char             *hwModel, *description, *community, *ip2ccValue, *fingerprint;
+  char             *hwModel, *description, *community, *fingerprint;
   char             hostResolvedName[MAX_LEN_SYM_HOST_NAME];
   short            hostResolvedNameType;
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
   struct timeval   minLatency, maxLatency;
+  GeoIPRecord      *geo_ip;
 
   TrafficCounter   greSent, greRcvd, greEfficiencySent, greEfficiencyRcvd,
     grePktSent, grePktRcvd, lastGrePktSent, lastGrePktRcvd;
@@ -2499,8 +2500,7 @@ typedef struct ntopGlobals {
       queueBufferCount,
       processBufferInit,
       processBufferCount;
-  float qmaxDelay,
-        pmaxDelay;
+  float qmaxDelay, pmaxDelay;
 #endif
 
 #ifdef PARM_ENABLE_EXPERIMENTAL
@@ -2510,5 +2510,9 @@ typedef struct ntopGlobals {
   u_int8_t  calculateEfficiency;
   /* If the traffic is divided in cells (e.g. ATM, cell payload is 47 bytes) this is the cell lenght */
   u_int16_t cellLength; 
+
+  /* GeoIP */
+  GeoIP *geo_ip_db;
+
 } NtopGlobals;
 

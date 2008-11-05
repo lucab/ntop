@@ -946,11 +946,6 @@
 #define CONST_ASLIST_FILE                   "AS-list.txt"
 
 /*
- * IP to CountryCode file
- */
-#define CONST_P2C_FILE                      "p2c.opt.table"
-
-/*
  * libgd file name
  */
 #define CONST_LIBGD_SO                      "libgd.so"
@@ -2104,7 +2099,11 @@
  */
 #define DEFAULT_TRACE_LEVEL                 3
 
+#if 0
 #define DEFAULT_NTOP_MAPPER_URL             "http://www.ntop.org/cgi-bin/mapper.pl" /* -U -*/
+#else
+#define DEFAULT_NTOP_MAPPER_URL             "http://geotool.servehttp.com/" /* -U -*/
+#endif
 
 #ifdef MAKE_WITH_SCHED_YIELD
 #define DEFAULT_NTOP_SCHED_YIELD            TRUE
@@ -2805,6 +2804,7 @@ struct ip6_hdr
 #define IP_TCP_PORT_JETDIRECT      9100
 #define IP_TCP_PORT_SKYPE          54045
 
+#define GEO_IP_FILE                "./GeoLiteCity.dat"
 #define NULL_VALUE                 "(null)"
 
 /* NTOP preference names */

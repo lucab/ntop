@@ -509,7 +509,27 @@ CFLAGS="${CFLAGS} -I/usr/local/include -I/opt/local/include"
 CPPFLAGS="${CPPFLAGS} -I/usr/local/include -I/opt/local/include"
 LDFLAGS="${LDFLAGS} -L/usr/local/lib -L/opt/local/lib"
 
+dnl> GeoIP
+if test -f "GeoIP.tar.gz"; then
+   echo "GeoIP already present on this machine"
+else
+   wget http://www.maxmind.com/download/geoip/api/c/GeoIP.tar.gz
+   tar xvfz GeoIP.tar.gz
+   ln -s Geo* GeoIP
+   cd GeoIP; ./configure; make; cd ..
+fi
 
+if test -f "GeoLiteCity.dat"; then
+   echo "GeoLiteCity.dat already present"
+else
+   wget http://www.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+   gunzip GeoLiteCity.dat.gz
+fi
+
+
+GEO_IP="`pwd`/GeoIP/libGeoIP/"
+CFLAGS="$CFLAGS -I$GEO_IP"
+LDFLAGS="$LDFLAGS -L$GEO_IP/.libs/ -lGeoIP"
 
 echo
 echo "Test the compiler and setup CFLAGS..."

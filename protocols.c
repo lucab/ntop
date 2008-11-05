@@ -169,8 +169,6 @@ void handleBootp(HostTraffic *srcHost,
 		realDstHost->dnsDomainValue = NULL;
                 if (realDstHost->dnsTLDValue != NULL) free(realDstHost->dnsTLDValue);
 		realDstHost->dnsTLDValue = NULL;
-		if (realDstHost->ip2ccValue != NULL) free(realDstHost->ip2ccValue);
-		realDstHost->ip2ccValue = NULL;
 		if(isBroadcastAddress(&realDstHost->hostIpAddress, NULL, NULL))
 		  FD_SET(FLAG_BROADCAST_HOST, &realDstHost->flags);
 		else
@@ -333,41 +331,59 @@ void handleBootp(HostTraffic *srcHost,
 #endif
 		  switch((int)bootProto.bp_vend[idx]) {
 		  case FLAG_DHCP_DISCOVER_MSG:
-		    incrementHostTrafficCounter(realDstHost, protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_DISCOVER_MSG], 1);
-		    incrementHostTrafficCounter(srcHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_DISCOVER_MSG], 1);
+		    incrementHostTrafficCounter(realDstHost, 
+						protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_DISCOVER_MSG], 1);
+		    incrementHostTrafficCounter(srcHost,
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_DISCOVER_MSG], 1);
 		    break;
 		  case FLAG_DHCP_OFFER_MSG:
-		    incrementHostTrafficCounter(realDstHost, protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_OFFER_MSG], 1);
-		    incrementHostTrafficCounter(srcHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_OFFER_MSG], 1);
+		    incrementHostTrafficCounter(realDstHost,
+						protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_OFFER_MSG], 1);
+		    incrementHostTrafficCounter(srcHost, 
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_OFFER_MSG], 1);
 		    break;
 		  case FLAG_DHCP_REQUEST_MSG:
-		    incrementHostTrafficCounter(realDstHost, protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_REQUEST_MSG], 1);
-		    incrementHostTrafficCounter(srcHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_REQUEST_MSG], 1);
+		    incrementHostTrafficCounter(realDstHost, 
+						protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_REQUEST_MSG], 1);
+		    incrementHostTrafficCounter(srcHost, 
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_REQUEST_MSG], 1);
 		    break;
 		  case FLAG_DHCP_DECLINE_MSG:
-		    incrementHostTrafficCounter(realDstHost, protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_DECLINE_MSG], 1);
-		    incrementHostTrafficCounter(srcHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_DECLINE_MSG], 1);
+		    incrementHostTrafficCounter(realDstHost,
+						protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_DECLINE_MSG], 1);
+		    incrementHostTrafficCounter(srcHost, 
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_DECLINE_MSG], 1);
 		    break;
 		  case FLAG_DHCP_ACK_MSG:
-		    incrementHostTrafficCounter(realDstHost, protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_ACK_MSG], 1);
-		    incrementHostTrafficCounter(srcHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_ACK_MSG], 1);
+		    incrementHostTrafficCounter(realDstHost, 
+						protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_ACK_MSG], 1);
+		    incrementHostTrafficCounter(srcHost, 
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_ACK_MSG], 1);
 		    break;
 		  case FLAG_DHCP_NACK_MSG:
-		    incrementHostTrafficCounter(realDstHost, protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_NACK_MSG], 1);
-		    incrementHostTrafficCounter(srcHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_NACK_MSG], 1);
+		    incrementHostTrafficCounter(realDstHost,
+						protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_NACK_MSG], 1);
+		    incrementHostTrafficCounter(srcHost, 
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_NACK_MSG], 1);
 		    break;
 		  case FLAG_DHCP_RELEASE_MSG:
-		    incrementHostTrafficCounter(realDstHost, protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_RELEASE_MSG], 1);
-		    incrementHostTrafficCounter(srcHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_RELEASE_MSG], 1);
+		    incrementHostTrafficCounter(realDstHost,
+						protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_RELEASE_MSG], 1);
+		    incrementHostTrafficCounter(srcHost,
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_RELEASE_MSG], 1);
 		    break;
 		  case FLAG_DHCP_INFORM_MSG:
-		    incrementHostTrafficCounter(realDstHost, protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_INFORM_MSG], 1);
-		    incrementHostTrafficCounter(srcHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_INFORM_MSG], 1);
+		    incrementHostTrafficCounter(realDstHost,
+						protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_INFORM_MSG], 1);
+		    incrementHostTrafficCounter(srcHost, 
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_INFORM_MSG], 1);
 		    break;
 		  case FLAG_DHCP_UNKNOWN_MSG:
 		  default:
-		    incrementHostTrafficCounter(realDstHost, protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_UNKNOWN_MSG], 1);
-		    incrementHostTrafficCounter(srcHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_UNKNOWN_MSG], 1);
+		    incrementHostTrafficCounter(realDstHost, 
+						protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_UNKNOWN_MSG], 1);
+		    incrementHostTrafficCounter(srcHost, 
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_UNKNOWN_MSG], 1);
 		    break;
 		  }
 		  idx += len;
@@ -516,32 +532,41 @@ void handleBootp(HostTraffic *srcHost,
 #endif
 		  switch((int)bootProto.bp_vend[idx]) {
 		  case FLAG_DHCP_DISCOVER_MSG:
-		    incrementHostTrafficCounter(realClientHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_DISCOVER_MSG], 1);
+		    incrementHostTrafficCounter(realClientHost,
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_DISCOVER_MSG], 1);
 		    break;
 		  case FLAG_DHCP_OFFER_MSG:
-		    incrementHostTrafficCounter(realClientHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_OFFER_MSG], 1);
+		    incrementHostTrafficCounter(realClientHost, 
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_OFFER_MSG], 1);
 		    break;
 		  case FLAG_DHCP_REQUEST_MSG:
-		    incrementHostTrafficCounter(realClientHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_REQUEST_MSG], 1);
+		    incrementHostTrafficCounter(realClientHost, 
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_REQUEST_MSG], 1);
 		    break;
 		  case FLAG_DHCP_DECLINE_MSG:
-		    incrementHostTrafficCounter(realClientHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_DECLINE_MSG], 1);
+		    incrementHostTrafficCounter(realClientHost, 
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_DECLINE_MSG], 1);
 		    break;
 		  case FLAG_DHCP_ACK_MSG:
-		    incrementHostTrafficCounter(realClientHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_ACK_MSG], 1);
+		    incrementHostTrafficCounter(realClientHost, 
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_ACK_MSG], 1);
 		    break;
 		  case FLAG_DHCP_NACK_MSG:
-		    incrementHostTrafficCounter(realClientHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_NACK_MSG], 1);
+		    incrementHostTrafficCounter(realClientHost, 
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_NACK_MSG], 1);
 		    break;
 		  case FLAG_DHCP_RELEASE_MSG:
-		    incrementHostTrafficCounter(realClientHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_RELEASE_MSG], 1);
+		    incrementHostTrafficCounter(realClientHost, 
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_RELEASE_MSG], 1);
 		    break;
 		  case FLAG_DHCP_INFORM_MSG:
-		    incrementHostTrafficCounter(realClientHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_INFORM_MSG], 1);
+		    incrementHostTrafficCounter(realClientHost,
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_INFORM_MSG], 1);
 		    break;
 		  case FLAG_DHCP_UNKNOWN_MSG:
 		  default:
-		    incrementHostTrafficCounter(realClientHost, protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_UNKNOWN_MSG], 1);
+		    incrementHostTrafficCounter(realClientHost, 
+						protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_UNKNOWN_MSG], 1);
 		    break;
 		  }
 		  idx += len;
