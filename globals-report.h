@@ -362,3 +362,6 @@ extern void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent);
 extern void drawVsanSwilsProtoDistribution(u_short vsanId);
 
 extern int handlePerlHTTPRequest(char *url);
+
+/* map.c */
+extern void create_host_map(void);

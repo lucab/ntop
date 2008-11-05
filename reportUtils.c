@@ -3958,7 +3958,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s, %s %s&nbsp;%s&nbsp;</TD></TR>\n", getRowColor(), "Physical Location", 
-		  el->geo_ip->city, el->geo_ip->country_name, countryIcon, buf3);
+		  el->geo_ip->city ? el->geo_ip->city : "Unknown city", el->geo_ip->country_name, countryIcon, buf3);
     sendString(buf);
   }
 

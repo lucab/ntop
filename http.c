@@ -546,7 +546,8 @@ static void ssiMenu_Head() {
 		  "	[null,'Summary',null,null,null,\n"
 		  "		[null,'Traffic','/" CONST_TRAFFIC_STATS_HTML "',null,null],\n"
 		  "		[null,'Hosts','/" CONST_HOSTS_INFO_HTML "',null,null],\n"
-		  "		[null,'Network Load','/" CONST_SORT_DATA_THPT_STATS_HTML "',null,null],\n");
+		  "		[null,'Network Load','/" CONST_SORT_DATA_THPT_STATS_HTML "',null,null],\n"
+		  "		[null,'Hosts World Map','/" CONST_HOST_MAP "',null,null],\n");
   if(myGlobals.haveVLANs == TRUE)
     sendStringWOssi(
 		    "		[null,'VLAN Info','/" CONST_VLAN_LIST_HTML "',null,null],\n");
@@ -2178,8 +2179,11 @@ static int returnHTTPPage(char* pageName,
     storePrefsValue("globals.displayPolicy", tmp);
   }
 
-  if(pageName[0] == '\0')
-    strncpy(pageName, CONST_TRAFFIC_STATS_HTML, sizeof(CONST_TRAFFIC_STATS_HTML));
+  if(pageName[0] == '\0') {
+    /* Default ntop entry page */
+    /* strncpy(pageName, CONST_TRAFFIC_STATS_HTML, sizeof(CONST_TRAFFIC_STATS_HTML)); */
+    strncpy(pageName, CONST_HOST_MAP, sizeof(CONST_HOST_MAP));
+  }
 
   /* Generic w3c p3p request? force it to ours... */
   if(strncmp(pageName, CONST_W3C_P3P_XML, strlen(CONST_W3C_P3P_XML)) == 0)
@@ -3245,6 +3249,11 @@ static int returnHTTPPage(char* pageName,
       } else if(strncasecmp(pageName, CONST_PURGE_HOST, strlen(CONST_PURGE_HOST)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	purgeHost(db_key);
+      } else if(strncasecmp(pageName, CONST_HOST_MAP, strlen(CONST_HOST_MAP)) == 0) {
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+	printHTMLheader("Hosts World Map", NULL, 0);
+	create_host_map();
+	printTrailer = 1;
       } else if(strlen(pageName) > 5) {
 	char hostName[32];
 

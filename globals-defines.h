@@ -1180,6 +1180,7 @@
 #define CONST_PRIVACYFORCE_HTML             "privacyFlagForce.html"
 #define CONST_PRIVACYNOTICE_HTML            "privacyNotice.html"
 #define CONST_PURGE_HOST                    "purgeHost.html"
+#define CONST_HOST_MAP                      "hostMap.html"
 #define CONST_RESET_STATS_HTML              "resetStats.html"
 #define CONST_SCSI_BYTES_HTML               "ScsiBytes.html"
 #define CONST_BAR_LUNSTATS_DIST             "ScsiBytesLunDistribution"
