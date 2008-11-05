@@ -398,10 +398,12 @@ HostAddr *addrcpy(HostAddr *dst, HostAddr *src) {
   dst->hostFamily = src->hostFamily;
   switch (src->hostFamily) {
   case AF_INET:
-    return memcpy(&dst->Ip4Address,&src->Ip4Address,sizeof(struct in_addr));
+    memcpy(&dst->Ip4Address,&src->Ip4Address,sizeof(struct in_addr));
+    return(dst);
 #ifdef INET6
   case AF_INET6:
-    return memcpy(&dst->Ip6Address,&src->Ip6Address,sizeof(struct in6_addr));
+    memcpy(&dst->Ip6Address,&src->Ip6Address,sizeof(struct in6_addr));
+    return(dst);
 #endif
 
   default:
@@ -4718,7 +4720,8 @@ int cmpSerial(HostSerial *a, HostSerial *b) {
 /* ********************************** */
 
 int copySerial(HostSerial *a, HostSerial *b) {
-  return(!memcpy(a, b, sizeof(HostSerial)));
+  memcpy(a, b, sizeof(HostSerial));
+  return(!a);
 }
 
 /* ********************************** */

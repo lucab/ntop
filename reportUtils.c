@@ -3511,11 +3511,9 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   sendString("<CENTER>\n<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=80%%>\n");
 
   if(el->hostNumIpAddress[0] != '\0') {
-    char *countryIcon, *hostType, tmpBuf[64];
+    char *hostType, tmpBuf[64];
 
     accessAddrResMutex("printAllSessions-2");
-
-    countryIcon = getHostCountryIconURL(el);
 
     if(broadcastHost(el)) hostType = "broadcast";
     else if(multicastHost(el)) hostType = "multicast";
@@ -3537,11 +3535,10 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       multivlaned = "";
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;%s&nbsp;[%s%s%s%s]",
-		getRowColor(),
-		"IP&nbsp;Address",
-		el->hostNumIpAddress,
-		countryIcon, hostType, dynIp, multihomed, multivlaned);
+		  "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;[%s%s%s%s]",
+		  getRowColor(),
+		  "IP&nbsp;Address", el->hostNumIpAddress,
+		  hostType, dynIp, multihomed, multivlaned);
     sendString(buf);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
@@ -3953,14 +3950,15 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
 
   if(el->geo_ip) {
-    char buf3[512] = { '\0' };
-
-    if(myGlobals.runningPref.mapperURL) buildMapLink(el, buf3, sizeof(buf3));
+    char *countryIcon, buf3[512] = { '\0' };
     
+    if(myGlobals.runningPref.mapperURL) buildMapLink(el, buf3, sizeof(buf3));
+    countryIcon = getHostCountryIconURL(el);
+
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		  "%s, %s %s</TD></TR>\n", getRowColor(), "Physical Location", 
-		  el->geo_ip->city, el->geo_ip->country_name, buf3);
+		  "%s, %s %s&nbsp;%s&nbsp;</TD></TR>\n", getRowColor(), "Physical Location", 
+		  el->geo_ip->city, el->geo_ip->country_name, countryIcon, buf3);
     sendString(buf);
   }
 

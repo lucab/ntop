@@ -509,14 +509,21 @@ CFLAGS="${CFLAGS} -I/usr/local/include -I/opt/local/include"
 CPPFLAGS="${CPPFLAGS} -I/usr/local/include -I/opt/local/include"
 LDFLAGS="${LDFLAGS} -L/usr/local/lib -L/opt/local/lib"
 
-dnl> GeoIP
+PWD=`pwd`
+
+dnl> GeoIP (http://www.maxmind.com/)
 if test -f "GeoIP.tar.gz"; then
    echo "GeoIP already present on this machine"
 else
    wget http://www.maxmind.com/download/geoip/api/c/GeoIP.tar.gz
    tar xvfz GeoIP.tar.gz
-   ln -s Geo* GeoIP
-   cd GeoIP; ./configure; make; cd ..
+   GEO_DIR=`find $PWD -depth 1 -name "GeoIP-*"`
+   cd $GEO_DIR; ./configure; make; cd ..
+   # OSX Fix
+   GEO_DYLIB="$GEO_DIR/libGeoIP/.libs/libGeoIP.dylib"
+   if test -f $GEO_DYLIB; then
+      ln -s $GEO_DYLIB .
+   fi
 fi
 
 if test -f "GeoLiteCity.dat"; then
@@ -526,10 +533,10 @@ else
    gunzip GeoLiteCity.dat.gz
 fi
 
-
-GEO_IP="`pwd`/GeoIP/libGeoIP/"
+GEO_DIR=`find $PWD -depth 1 -name "GeoIP-*"`
+GEO_IP="$GEO_DIR/libGeoIP/"
 CFLAGS="$CFLAGS -I$GEO_IP"
-LDFLAGS="$LDFLAGS -L$GEO_IP/.libs/ -lGeoIP"
+LDFLAGS="$LDFLAGS -L$GEO_IP.libs/ -lGeoIP"
 
 echo
 echo "Test the compiler and setup CFLAGS..."

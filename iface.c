@@ -39,13 +39,15 @@
 /* ************************************************* */
 
 static struct in6_addr *in6_cpy(struct in6_addr *dst, struct in6_addr *src) {
-  return memcpy(dst, src, sizeof(struct in6_addr));
+  memcpy(dst, src, sizeof(struct in6_addr));
+  return(dst);
 }
 
 /* ************************************************* */
 
 static struct in_addr *in4_cpy(struct in_addr *dst, struct in_addr *src) {
-  return memcpy(dst, src, sizeof(struct in_addr));
+  memcpy(dst, src, sizeof(struct in_addr));
+  return(dst);
 }
 
 /* ************************************************* */

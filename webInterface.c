@@ -6140,6 +6140,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   snprintf(buf, sizeof(buf), "%1.4f", rrd_version());
   printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.rrdtool.org/>RRD</A> Version", buf);
 
+  if(myGlobals.geo_ip_db != NULL)
+    printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.maxmind.com/>GeoIP</A> Version", 
+			   GeoIP_database_info(myGlobals.geo_ip_db));
+
 #ifndef WIN32
   if(getDynamicLoadPaths(mainbuf, sizeof(mainbuf), lib, sizeof(lib), env, sizeof(env)) == 0) {
     printFeatureConfigInfo(textPrintFlag, "Running from", mainbuf);
