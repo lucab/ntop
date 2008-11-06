@@ -517,7 +517,7 @@ if test -f "GeoIP.tar.gz"; then
 else
    wget http://www.maxmind.com/download/geoip/api/c/GeoIP.tar.gz
    tar xvfz GeoIP.tar.gz
-   GEO_DIR=`find $PWD -depth 1 -name "GeoIP-*"`
+   GEO_DIR=`find $PWD -type d -name "GeoIP-*"`
    cd $GEO_DIR; ./configure; make; cd ..
    # OSX Fix
    GEO_DYLIB="$GEO_DIR/libGeoIP/.libs/libGeoIP.dylib"
@@ -533,7 +533,7 @@ else
    gunzip GeoLiteCity.dat.gz
 fi
 
-GEO_DIR=`find $PWD -depth 1 -name "GeoIP-*"`
+GEO_DIR=`find $PWD -type d -name "GeoIP-*"`
 GEO_IP="$GEO_DIR/libGeoIP/"
 CFLAGS="$CFLAGS -I$GEO_IP"
 LDFLAGS="$LDFLAGS -L$GEO_IP.libs/ -lGeoIP"
