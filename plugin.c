@@ -22,7 +22,7 @@
 
 #ifdef MAKE_STATIC_PLUGIN
 extern PluginInfo* icmpPluginEntryFctn(void);
-extern PluginInfo* sflowPluginEntryFctn(void)
+extern PluginInfo* sflowPluginEntryFctn(void);
 extern PluginInfo* rrdPluginEntryFctn(void);
 extern PluginInfo* cpacketPluginEntryFctn(void);
 extern PluginInfo* netflowPluginEntryFctn(void);

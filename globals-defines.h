@@ -1052,6 +1052,11 @@
 /* #define MAX_NETFLOW_PACKET_BUFFER           16  */
 
 /*
+	http://code.google.com/apis/maps/
+*/
+#define GOOGLE_DEFAULT_MAP_KEY "ABQIAAAAfFZuochHQVROgoyQEe3_SBS6yewdwLQqdZ11GEdkGrSPz1gWRxTmFdYiXZrTS3LFawwiK5Pufj5j1Q"
+
+/*
  * FibreChannel/SCSI constants
  */
 

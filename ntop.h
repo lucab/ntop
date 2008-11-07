@@ -395,9 +395,6 @@ ntop.h
 #include <sched.h>
 #endif
 
-#include <GeoIP.h>
-#include <GeoIPCity.h>
-
 /*
  * Switched pthread with semaphore.
  * Courtesy of
@@ -406,6 +403,9 @@ ntop.h
 # include <pthread.h>
 
 #endif /* WIN32 */
+
+#include "GeoIP.h"
+#include "GeoIPCity.h"
 
 /*
  * Packet Capture Library by Lawrence Berkeley National Laboratory

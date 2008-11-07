@@ -517,10 +517,22 @@ void initCounters(void) {
 
 
   /* Initialize GeoIP database */
-  if((myGlobals.geo_ip_db = GeoIP_open(GEO_IP_FILE, GEOIP_CHECK_CACHE)) == NULL) {
-    traceEvent(CONST_TRACE_ERROR, "GeoIP: unable to load file %s", GEO_IP_FILE);
-  } else
-    traceEvent(CONST_TRACE_INFO, "GeoIP: loaded config file %s", GEO_IP_FILE);
+
+    for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
+	  char path[256];
+
+		safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
+			  "%s%c%s",
+			  myGlobals.configFileDirs[i], CONST_PATH_SEP, GEO_IP_FILE);
+	   revertSlashIfWIN32(path, 0);
+	   if((myGlobals.geo_ip_db = GeoIP_open(path, GEOIP_CHECK_CACHE)) != NULL) {
+		traceEvent(CONST_TRACE_INFO, "GeoIP: loaded config file %s", path);
+		break;
+	   }
+	}
+
+	if(myGlobals.geo_ip_db == NULL)
+		traceEvent(CONST_TRACE_ERROR, "GeoIP: unable to load file %s", GEO_IP_FILE);
 }
 
 

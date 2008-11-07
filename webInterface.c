@@ -691,7 +691,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
 		  "<img class=tooltip alt=\"Local Host\" title=\"Local Host\" "
 		  "align=\"middle\" src=\"/statsicons/flags/local.gif\" border=\"0\">");
 #endif
-    return("");
+    return("&nbsp;");
   }
 
   if(el->geo_ip->country_code[0] == '\0') {
@@ -708,11 +708,13 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "./html/statsicons/flags/%s.gif",
 		  c_buf);
+	revertSlashIfWIN32(path, 0);
     rc = stat(path, &buf);
     
     if(rc != 0) {
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
 		    CFG_DATAFILE_DIR, el->geo_ip->country_code);
+	  revertSlashIfWIN32(path, 0);
       rc = stat(path, &buf);
     } 
 
@@ -8941,10 +8943,11 @@ void edit_prefs(char *db_key, char *db_val) {
       if(fetchPrefsValue(key.dptr, val, sizeof(val)) == 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<FORM ACTION="CONST_EDIT_PREFS">"
-		      "<TR><TH ALIGN=LEFT "DARK_BG"><INPUT TYPE=HIDDEN NAME=key VALUE=\"%s\">%s</TH>"
-		      "<TD><INPUT TYPE=TEXT NAME=val VALUE=\"%s\" size=30></TD>"
-		      "<TD ALIGN=CENTER><INPUT TYPE=SUBMIT VALUE=Set></TD></TR></FORM>\n",
-		      key.dptr, key.dptr, val);
+		      "<TR><TH ALIGN=LEFT "DARK_BG"><INPUT TYPE=HIDDEN NAME=key VALUE=\"%s\">"
+			  "<A NAME=\"%s\">%s</A></TH>"
+		      "<TD><INPUT TYPE=TEXT NAME=val VALUE=\"%s\" size=60></TD>"
+		      "<TD ALIGN=CENTER><INPUT TYPE=SUBMIT VALUE=Set></TD></TR></FORM></A>\n",
+		      key.dptr, key.dptr, key.dptr, val);
 	sendString(buf);
       }
     }

@@ -24,7 +24,10 @@
 
 #include "ntop.h"
 #include <stdarg.h>
+
+#ifndef WIN32
 #include <syslog.h>
+#endif
 
 /* #define ADDRESS_DEBUG */
 /* #define FINGERPRINT_DEBUG */

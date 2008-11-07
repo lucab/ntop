@@ -2181,8 +2181,8 @@ static int returnHTTPPage(char* pageName,
 
   if(pageName[0] == '\0') {
     /* Default ntop entry page */
-    /* strncpy(pageName, CONST_TRAFFIC_STATS_HTML, sizeof(CONST_TRAFFIC_STATS_HTML)); */
-    strncpy(pageName, CONST_HOST_MAP, sizeof(CONST_HOST_MAP));
+    strncpy(pageName, CONST_TRAFFIC_STATS_HTML, sizeof(CONST_TRAFFIC_STATS_HTML));
+    /* strncpy(pageName, CONST_HOST_MAP, sizeof(CONST_HOST_MAP)); */
   }
 
   /* Generic w3c p3p request? force it to ours... */

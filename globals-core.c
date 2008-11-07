@@ -641,6 +641,8 @@ void initNtop(char *devices) {
   addNewIpProtocolToHandle("OSPF", 89, 0 /* no proto */);
   addNewIpProtocolToHandle("IPsec", 50, 51);
 
+  init_maps();
+
   if(fetchPrefsValue("globals.displayPolicy", value, sizeof(value)) == -1) {
     myGlobals.hostsDisplayPolicy = showAllHosts /* 0 */;
     storePrefsValue("globals.displayPolicy", "0");
