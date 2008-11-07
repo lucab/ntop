@@ -597,7 +597,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, 
 		  ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
 		  "<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>\n"
-		  "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>"
+		  "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Location%s</A></TH>"
 		  "<TH "TH_BG" COLSPAN=2>%s0\">Data%s</A></TH>\n",
 		  theAnchor[0], arrow[0], theAnchor[1], arrow[1],
 		  theAnchor[2], arrow[2]);
@@ -611,7 +611,8 @@ void printHeader(int reportType, int revertOrder, u_int column,
       }
 
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s1\">TCP%s</A></TH>"
-		  "<TH "TH_BG">%s2\">UDP%s</A></TH><TH "TH_BG">%s3\">ICMP%s</A></TH>""<TH "TH_BG">%s4\">ICMPv6%s</A></TH>"
+		  "<TH "TH_BG">%s2\">UDP%s</A></TH><TH "TH_BG">%s3\">ICMP%s</A></TH>"
+		  "<TH "TH_BG">%s4\">ICMPv6%s</A></TH>"
 		  "<TH "TH_BG">%s5\">DLC%s</A></TH><TH "TH_BG">%s6\">IPX%s</A>"
 		  "</TH><TH "TH_BG">%s7\">IPsec%s</A></TH>"
 		  "<TH "TH_BG">%s8\">(R)ARP%s</A></TH><TH "TH_BG">%s9\">AppleTalk%s</A></TH>",
@@ -664,7 +665,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
     sendString("<CENTER>\n");
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
 		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>\n"
-		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>"
+		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Location%s</A></TH>"
 		"<TH "TH_BG" COLSPAN=2>%s0\">Data%s</A></TH>\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1],
 		theAnchor[2], arrow[2]);
@@ -707,7 +708,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
     sendString("<CENTER>\n");
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "DARK_BG">"
 		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>"
-		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n",
+		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Location%s</A></TH>\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]);
     sendString(buf);
     j = hourId;
@@ -727,10 +728,11 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_SENT_THPT:
   case SORT_DATA_THPT:
     sendString("<CENTER>\n");
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG" ROWSPAN=\"2\">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>"
-		"<TH "TH_BG" ROWSPAN=\"2\">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n\n",
-		theAnchor[0], arrow[0], theAnchor[1], arrow[1]);
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON
+		  "<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
+		  "<TH "TH_BG" ROWSPAN=\"2\">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>"
+		  "<TH "TH_BG" ROWSPAN=\"2\">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Location%s</A></TH>\n\n",
+		  theAnchor[0], arrow[0], theAnchor[1], arrow[1]);
     sendString(buf);
 
     updateThpt(0);
@@ -762,10 +764,11 @@ void printHeader(int reportType, int revertOrder, u_int column,
     break;
   case TRAFFIC_STATS:
     sendString("<CENTER>\n");
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>"
-		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n\n",
-		theAnchor[0], arrow[0], theAnchor[1], arrow[1]);
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, 
+		  ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
+		  "<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>"
+		  "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Location%s</A></TH>\n\n",
+		  theAnchor[0], arrow[0], theAnchor[1], arrow[1]);
     sendString(buf);
     break;
   }
@@ -3678,8 +3681,10 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Unknown Msg",
-		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_UNKNOWN_MSG].value, formatBuf, sizeof(formatBuf)),
-		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_UNKNOWN_MSG].value, formatBuf1, sizeof(formatBuf1)));
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_UNKNOWN_MSG].value, 
+			     formatBuf, sizeof(formatBuf)),
+		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_UNKNOWN_MSG].value,
+			     formatBuf1, sizeof(formatBuf1)));
       sendString(buf);
 
       sendString("</TABLE>"TABLE_OFF"</TD></TR>\n");
@@ -3708,10 +3713,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	      formatSeconds(myGlobals.actTime-el->lastSeen, formatBuf2, sizeof(formatBuf2)));
   sendString(buf);
 
+
   if(el->hostAS != 0) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"<A class=external HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%d\">%d</A></TD></TR>\n",
-		getRowColor(), "Autonomous System", el->hostAS, el->hostAS);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "<A class=external HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%d\">%d</A>"
+		  "&nbsp;[%s]</TD></TR>\n",
+		  getRowColor(), "Autonomous System", 
+		  el->hostAS, el->hostAS, (el->hostASDescr != NULL) ? el->hostASDescr : "No AS info");
     sendString(buf);
   }
 
@@ -3721,16 +3730,18 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
     host2networkName(el, subnet_buf, sizeof(subnet_buf));
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "<A HREF=\""CONST_DOMAIN_STATS_HTML"?dom=%d&netmode=1\">%s</A></TD></TR>\n", getRowColor(),
 		  "Subnet", el->known_subnet_id, subnet_buf);
     sendString(buf);
   }
 
   if(el->dnsDomainValue && (el->dnsDomainValue[0] != '\0')) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"%s</TD></TR>\n", getRowColor(),
-		"Domain", el->dnsDomainValue);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "%s</TD></TR>\n", getRowColor(),
+		  "Domain", el->dnsDomainValue);
     sendString(buf);
   }
 

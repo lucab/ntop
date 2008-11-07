@@ -2194,7 +2194,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
     sendString("<CENTER>\n");
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG">%s0>Host%s</A></TH>\n"
-		  "<TH "TH_BG">%s1>Domain%s</A></TH>"
+		  "<TH "TH_BG">%s1>Location%s</A></TH>"
 		  "<TH "TH_BG">%s2>Pkts Sent%s</A></TH>"
 		  "<TH "TH_BG">%s3>Data Sent%s</A></TH>"
 		  "<TH "TH_BG">%s4>Pkts Rcvd%s</A></TH>"
@@ -5854,16 +5854,31 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
     /* Split below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
     sendString("<CENTER>\n" TABLE_ON "<TABLE BORDER=1 "TABLE_DEFAULTS">");
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "<TR "TR_ON" "DARK_BG">"
-		  "<TH "TH_BG" rowspan=\"3\">%s0>Name%s</A></TH>"
-		  "<TH "TH_BG" rowspan=\"3\">%s1>%s%s</A></TH>"
-		  "<TH "TH_BG" colspan=\"8\">TCP/IP</A></TH>"
-		  "<TH "TH_BG" colspan=\"4\">ICMP</A></TH>"
-		  "<TH "TH_BG">&nbsp;</TH></TR>\n",
-		  theAnchor[0], arrow[0],
-		  theAnchor[1], "Domains",
-		  arrow[1]);
+    
+    if(network_mode == AS_VIEW)
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<TR "TR_ON" "DARK_BG">"
+		    "<TH "TH_BG" rowspan=\"3\">%s0>Id%s</A></TH>"
+		    "<TH "TH_BG" rowspan=\"3\">Description</TH>"
+		    "<TH "TH_BG" rowspan=\"3\">%s1>%s%s</A></TH>"
+		    "<TH "TH_BG" colspan=\"8\">TCP/IP</A></TH>"
+		    "<TH "TH_BG" colspan=\"4\">ICMP</A></TH>"
+		    "<TH "TH_BG">&nbsp;</TH></TR>\n",
+		    theAnchor[0], arrow[0],
+		    theAnchor[1], "Location",
+		    arrow[1]);
+    else
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<TR "TR_ON" "DARK_BG">"
+		    "<TH "TH_BG" rowspan=\"3\">%s0>Name%s</A></TH>"
+		    "<TH "TH_BG" rowspan=\"3\">%s1>%s%s</A></TH>"
+		    "<TH "TH_BG" colspan=\"8\">TCP/IP</A></TH>"
+		    "<TH "TH_BG" colspan=\"4\">ICMP</A></TH>"
+		    "<TH "TH_BG">&nbsp;</TH></TR>\n",
+		    theAnchor[0], arrow[0],
+		    theAnchor[1], "Location",
+		    arrow[1]);
+
     sendString(buf);
 
     sendString( "<TR "TR_ON" "DARK_BG">"
@@ -5946,13 +5961,17 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "as.name.%d",
 			statsEntry->domainHost->hostAS);
 
-	  if(fetchPrefsValue(buf, sym_as_name, sizeof(sym_as_name)) == -1)
-	    snprintf(sym_as_name, sizeof(sym_as_name), "%d", statsEntry->domainHost->hostAS);
+	  if(fetchPrefsValue(buf, sym_as_name, sizeof(sym_as_name)) != -1)
+	    ;	    
+	  else if(statsEntry->domainHost->hostASDescr != NULL)
+	    snprintf(sym_as_name, sizeof(sym_as_name), "%s", statsEntry->domainHost->hostASDescr);
+	  else
+	    snprintf(sym_as_name, sizeof(sym_as_name), "No Info");
 
 	  safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
-			"<A HREF=/%s?dom=%d&netmode=%d>%s</A>",
+			"<A HREF=/%s?dom=%d&netmode=%d>%d</A></TH><TD "TD_BG" ALIGN=RIGHT>%s",
 			CONST_DOMAIN_STATS_HTML, statsEntry->domainHost->hostAS, network_mode,
-			sym_as_name);
+			statsEntry->domainHost->hostAS, sym_as_name);
 	} else
 	  safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s>%s</A>",
 			clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML,
@@ -5996,10 +6015,10 @@ void printDomainStats(char* domain_network_name, int network_mode,
       }
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-		    "<TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=CENTER>%s</TD>"
+		    "<TH "TH_BG" ALIGN=LEFT "DARK_BG">%s%s<TD "TD_BG" ALIGN=CENTER>%s</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>",
-		    getRowColor(), htmlAnchor,
+		    getRowColor(), htmlAnchor, (network_mode == AS_VIEW) ? "</TD>" : "</TH>",
 		    ((clusterMode && (!domain_network_name)) || (!statsEntry->domainHost)) ?
 		    "&nbsp;" : getHostCountryIconURL(statsEntry->domainHost),
 		    formatBytes(statsEntry->bytesSent.value, 1, formatBuf, sizeof(formatBuf)),
@@ -6066,7 +6085,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
 	sendString("</TD>\n");
       } else {
-	traceEvent(CONST_TRACE_WARNING, "--> hostRRdGraphLink(%d)", network_mode);
+	/* traceEvent(CONST_TRACE_WARNING, "--> hostRRdGraphLink(%d)", network_mode); */
 	sendString("<TD "TD_BG" ALIGN=CENTER>&nbsp;</TD>\n");
       }
 

@@ -76,7 +76,6 @@ ETTER_PASSIVE_DOWNLOAD_PARMS = "rev=HEAD"
 
 
 NTOPDATA = ntop-cert.pem \
-           p2c.opt.table.gz \
            $(ETTER_PASSIVE) \
            oui.txt.gz \
            specialMAC.txt.gz
@@ -285,24 +284,6 @@ install: install-recursive
 	  fi; \
 	done
 
-	@if ! test -f $(DESTDIR)/$(CFG_CONFIGFILE_DIR)/AS-list.txt.gz; then \
-	  echo ""; \
-	  echo ""; \
-	  echo "------------------------------------------------------------"; \
-	  echo ""; \
-	  echo "NOTE: ntop can show traffic by AS (Autonomous System) Number"; \
-	  echo ""; \
-	  echo "      Because this feature consumes a number of MB of memory,"; \
-	  echo "      the datafile is not installed by default."; \
-	  echo ""; \
-	  echo "      Which, if there is no file - from this or a previous"; \
-	  echo "      install - effectively disables the ASN feature."; \
-	  echo ""; \
-	  echo "      To install the AS data, type:"; \
-	  echo ""; \
-	  echo "# make install-data-as"; \
-	fi
-
 	@if test ".$(CLEANLIST)" != "."; then \
 	  echo ""; \
 	  echo ""; \
@@ -351,16 +332,6 @@ install: install-recursive
 	  rm -f $(DESTDIR)/$(datadir)/ntop/warnuser; \
 	fi
 
-
-install-data-as:
-	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(CFG_CONFIGFILE_DIR);
-	@for file in AS-list.txt.gz; do \
-          if test -d $$file; then \
-             $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(CFG_CONFIGFILE_DIR)/$$file; \
-           else \
-             cp -p $$file $(DESTDIR)/$(CFG_CONFIGFILE_DIR)/$$file; \
-          fi; \
-        done
 
 install-data-local: ntop.txt ntop.html faq.html
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
@@ -465,10 +436,6 @@ dnetter:
 	@echo ""
 	@echo "New file is:"
 	@ls -l $(ETTER_PASSIVE)
-
-# download the data for and make the p2c.opt.table
-p2ctable:
-	@utils/p2c
 
 # ntop census
 census-fail:

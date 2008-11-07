@@ -533,6 +533,14 @@ else
    gunzip GeoLiteCity.dat.gz
 fi
 
+if test -f "GeoIPASNum.dat"; then
+   echo "GeoIPASNum.dat already present"
+else
+   wget http://www.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz
+   gunzip GeoIPASNum.dat.gz
+fi
+
+
 GEO_DIR=`find $PWD -type d -name "GeoIP-*"`
 GEO_IP="$GEO_DIR/libGeoIP/"
 CFLAGS="$CFLAGS -I$GEO_IP"

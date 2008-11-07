@@ -6146,6 +6146,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.maxmind.com/>GeoIP</A> Version", 
 			   GeoIP_database_info(myGlobals.geo_ip_db));
 
+  if(myGlobals.geo_ip_asn_db != NULL)
+    printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.maxmind.com/>GeoIP</A> AS Version", 
+			   GeoIP_database_info(myGlobals.geo_ip_asn_db));
+
 #ifndef WIN32
   if(getDynamicLoadPaths(mainbuf, sizeof(mainbuf), lib, sizeof(lib), env, sizeof(env)) == 0) {
     printFeatureConfigInfo(textPrintFlag, "Running from", mainbuf);
@@ -6564,9 +6568,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   printFeatureConfigInfo(textPrintFlag, "Domain name (short)", myGlobals.shortDomainName);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.ipCountryCount);
-  printFeatureConfigInfo(textPrintFlag, "IP to country flag table (entries)", buf);
-
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.hashCollisionsLookup);
   printFeatureConfigInfo(textPrintFlag, "Total Hash Collisions (Vendor/Special) (lookup)", buf);
 
@@ -6793,17 +6794,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadSize);
     printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Size (bytes)", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d (%.1f MB)", myGlobals.ipCountryMem, (float)myGlobals.ipCountryMem/(1024.0*1024.0));
-    printFeatureConfigInfo(textPrintFlag, "IP to country flag table (bytes)", buf);
-
-    if(myGlobals.ipCountryCount > 0) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.1f", (float)myGlobals.ipCountryMem/myGlobals.ipCountryCount);
-      printFeatureConfigInfo(textPrintFlag, "Bytes per entry", buf);
-    }
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d (%.1f MB)", myGlobals.asMem, (float)myGlobals.asMem/(1024.0*1024.0));
-    printFeatureConfigInfo(textPrintFlag, "IP to AS (Autonomous System) number table (bytes)", buf);
   }
 
   printInfoSectionTitle(textPrintFlag, "Host Memory Cache");

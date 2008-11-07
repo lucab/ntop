@@ -2810,7 +2810,10 @@ struct ip6_hdr
 #define IP_TCP_PORT_JETDIRECT      9100
 #define IP_TCP_PORT_SKYPE          54045
 
-#define GEO_IP_FILE                "./GeoLiteCity.dat"
+/* GeoIP - http://www.maxmind.com */
+#define GEO_IP_FILE                "GeoLiteCity.dat"
+#define GEO_IP_ASN_FILE            "GeoIPASNum.dat"
+
 #define NULL_VALUE                 "(null)"
 
 /* NTOP preference names */

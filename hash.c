@@ -472,6 +472,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   host->dnsDomainValue = NULL;
   if(host->dnsTLDValue != NULL) free(host->dnsTLDValue);
   host->dnsTLDValue = NULL;
+  if(host->hostASDescr != NULL) free(host->hostASDescr);
   if(host->description != NULL) free(host->description);
   if(host->hwModel != NULL) free(host->hwModel);
   if(host->community != NULL) free(host->community);

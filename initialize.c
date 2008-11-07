@@ -466,73 +466,40 @@ void initCounters(void) {
   myGlobals.sessionsCacheReused = 0;
 #endif
 
-  /*
-   * Process ASN file
-   */
-  numRead=0;
-  myGlobals.haveASN = FALSE;
-  if (!myGlobals.runningPref.printFcOnly) {
-      fd=checkForInputFile("ASN",
-                           "Autonomous System Number table",
-                           CONST_ASLIST_FILE,
-                           NULL,
-                           &compressedFormat);
-      if(fd != NULL) {
-          char *strtokState, *as, *ip, *prefix;
-
-          memset(&buf, 0, sizeof(buf));
-
-          myGlobals.asHead = malloc(sizeof(IPNode));
-          memset(myGlobals.asHead, 0, sizeof(IPNode));
-          myGlobals.asHead->node.as = 0;
-          myGlobals.asMem += sizeof(IPNode);
-
-          while(readInputFile(fd,
-                              "ASN",
-                              FALSE,
-                              compressedFormat,
-                              25000,
-                              buf, sizeof(buf),
-                              &numRead) == 0) {
-
-              if((as = strtok_r(buf, ":", &strtokState)) == NULL)  continue;
-              if((ip = strtok_r(NULL, "/", &strtokState)) == NULL)  continue;
-              if((prefix = strtok_r(NULL, "\n", &strtokState)) == NULL)  continue;
-
-              if(addNodeInternal(xaton(ip), atoi(prefix), NULL, atoi(as)) == NULL) {
-                traceEvent(CONST_TRACE_FATALERROR,
-                           "ASN: Insufficient memory to load table");
-                /* This isn't fatal of an itself, but we'll fail every malloc() from here on ... */
-                exit(6); /* Just in case */
-              }
-
-              myGlobals.asCount++;
-          }
-          traceEvent(CONST_TRACE_INFO, "ASN: ....Used %d KB of memory (%d per entry)",
-                     ((myGlobals.asMem+512)/1024), (int)sizeof(IPNode));
-          myGlobals.haveASN = TRUE;
-      } else
-          traceEvent(CONST_TRACE_NOISY, "ASN: ntop continues ok, but without ASN information.");
+  /* Initialize GeoIP databases */
+  for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
+    char path[256];
+    
+    safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
+		  "%s%c%s",
+		  myGlobals.configFileDirs[i], CONST_PATH_SEP, GEO_IP_FILE);
+    revertSlashIfWIN32(path, 0);
+    if((myGlobals.geo_ip_db = GeoIP_open(path, GEOIP_CHECK_CACHE)) != NULL) {
+      traceEvent(CONST_TRACE_INFO, "GeoIP: loaded config file %s", path);
+      break;
+    }
   }
+  
+  if(myGlobals.geo_ip_db == NULL)
+    traceEvent(CONST_TRACE_ERROR, "GeoIP: unable to load file %s", GEO_IP_FILE);
+  
+  /* *************************** */
 
-
-  /* Initialize GeoIP database */
-
-    for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
-	  char path[256];
-
-		safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
-			  "%s%c%s",
-			  myGlobals.configFileDirs[i], CONST_PATH_SEP, GEO_IP_FILE);
-	   revertSlashIfWIN32(path, 0);
-	   if((myGlobals.geo_ip_db = GeoIP_open(path, GEOIP_CHECK_CACHE)) != NULL) {
-		traceEvent(CONST_TRACE_INFO, "GeoIP: loaded config file %s", path);
-		break;
-	   }
-	}
-
-	if(myGlobals.geo_ip_db == NULL)
-		traceEvent(CONST_TRACE_ERROR, "GeoIP: unable to load file %s", GEO_IP_FILE);
+  for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
+    char path[256];
+    
+    safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
+		  "%s%c%s",
+		  myGlobals.configFileDirs[i], CONST_PATH_SEP, GEO_IP_ASN_FILE);
+    revertSlashIfWIN32(path, 0);
+    if((myGlobals.geo_ip_asn_db = GeoIP_open(path, GEOIP_CHECK_CACHE)) != NULL) {
+      traceEvent(CONST_TRACE_INFO, "GeoIP: loaded ASN config file %s", path);
+      break;
+    }
+  }
+  
+  if(myGlobals.geo_ip_asn_db == NULL)
+    traceEvent(CONST_TRACE_ERROR, "GeoIP: unable to load ASN file %s", GEO_IP_ASN_FILE);  
 }
 
 

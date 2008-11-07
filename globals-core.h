@@ -727,7 +727,6 @@ extern u_int numActiveNxPorts(u_int deviceId);
 extern u_int numActiveVsans(u_int deviceId);
 extern u_int32_t xaton(char *s);
 extern void* addNodeInternal(u_int32_t ip, int prefix, char *country, int as);
-extern char *ip2CountryCode(HostAddr ip);
 extern short addrcmp(HostAddr *addr1, HostAddr *addr2);
 extern HostAddr     * addrcpy(HostAddr *dst, HostAddr *src);
 extern int            addrinit(HostAddr *addr);
@@ -742,7 +741,6 @@ extern unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr,
 extern u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr,
 				int sport, int dport);
 extern int setSpecifiedUser(void);
-extern u_short ip2AS(HostAddr ip);
 extern u_int16_t getHostAS(HostTraffic *el);
 extern int emptySerial(HostSerial *a);
 extern int cmpSerial(HostSerial *a, HostSerial *b);

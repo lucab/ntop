@@ -835,6 +835,7 @@ typedef struct hostTraffic {
   u_int16_t        vlanId;          /* VLAN Id (-1 if not set) */
   u_int16_t        ifId;            /* Interface Id [e.g. for NetFlow] (-1 if not set) */
   u_int16_t        hostAS;          /* AS to which the host belongs to */
+  char             *hostASDescr;    /* Description of the host AS */
   time_t           firstSeen, lastSeen; /* time when this host has sent/rcvd some data  */
   u_char           ethAddress[LEN_ETHERNET_ADDRESS];
   u_char           lastEthAddress[LEN_ETHERNET_ADDRESS]; /* used for remote addresses */
@@ -2000,15 +2001,6 @@ struct option
 };
 #endif /* HAVE_GETOPT_H */
 
-/* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
-typedef struct IPNode {
-  struct IPNode *b[2];
-  union {
-    char cc[4]; /* Country */
-    u_short as; /* AS */
-  } node;
-} IPNode;
-
 /* *************************************************************** */
 
 typedef enum {
@@ -2469,14 +2461,6 @@ typedef struct ntopGlobals {
     numVendorLookupFoundMulticast,
     numVendorLookupFoundLAA;
 
-  /* Country flags */
-  IPNode *countryFlagHead;
-  int  ipCountryMem, ipCountryCount;
-
-  /* AS */
-  IPNode *asHead;
-  int    asMem, asCount;
-
   /* Memory usage */
   int piMem, ippmtmMem;
 
@@ -2512,7 +2496,7 @@ typedef struct ntopGlobals {
   u_int16_t cellLength; 
 
   /* GeoIP */
-  GeoIP *geo_ip_db;
+  GeoIP *geo_ip_db, *geo_ip_asn_db;
 
 } NtopGlobals;
 

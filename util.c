@@ -210,13 +210,13 @@ void str2serial(HostSerial *theSerial, char *buf, int buf_len) {
 
     for(i=0, j=0; j<sizeof(HostSerial); j++) {
 	  u_int c;
-	  
+
       tmpStr[0] = buf[i++];
       tmpStr[1] = buf[i++];
       tmpStr[2] = '\0';
       sscanf(tmpStr, "%02X", &c);
 	  ptr[j] = c & 0xFF;
-	  
+
 	  /*
 	   ptr[j] = ((u_int8_t)buf[i]) * 16 + ((u_int8_t)buf[i+1]);
 	   i += 2;
@@ -773,11 +773,11 @@ u_int8_t num_network_bits(u_int32_t addr) {
   u_int8_t i, j, bits = 0, fields[4];
 
   memcpy(fields, &addr, 4);
-  
+
   for(i = 8; i <= 8; i--)
     for(j=0; j<4; j++)
-      if ((fields[j] & (1 << i)) != 0) bits++;	
-  
+      if ((fields[j] & (1 << i)) != 0) bits++;
+
     return(bits);
 }
 
@@ -938,7 +938,7 @@ unsigned short isPrivateAddress(HostAddr *addr,
 
 int dotted2bits(char *mask) {
   int fields[4], fields_num;
-  
+
   fields_num = sscanf(mask, "%d.%d.%d.%d",
 		      &fields[0], &fields[1], &fields[2], &fields[3]);
 
@@ -948,9 +948,9 @@ int dotted2bits(char *mask) {
 #endif
     return(atoi(mask));
   } else
-    return(num_network_bits(((fields[0] & 0xff) << 24) 
+    return(num_network_bits(((fields[0] & 0xff) << 24)
 			    + ((fields[1] & 0xff) << 16)
-			    + ((fields[2] & 0xff) << 8) 
+			    + ((fields[2] & 0xff) << 8)
 			    + (fields[3] & 0xff)));
 }
 
@@ -985,14 +985,14 @@ void handleAddressLists(char* addresses, NetworkStats theNetworks[MAX_NUM_NETWOR
     int bits, a, b, c, d;
     char *mask = strchr(address, '/');
     char *equal = strchr(address, '=');
-    
+
     if(equal != NULL) {
       char key[64];
       equal[0] = '\0';
       safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "subnet.name.%s", address);
       storePrefsValue(key, &equal[1]);
     }
-      
+
     if(mask == NULL) {
       bits = 32;
     } else {
@@ -1149,15 +1149,15 @@ void handleAddressLists(char* addresses, NetworkStats theNetworks[MAX_NUM_NETWOR
 
 void handleLocalAddresses(char* addresses) {
   char localAddresses[2048];
-  
+
   localAddresses[0] = '\0';
 
   if(addresses != NULL) {
     char *addresses_copy = strdup(addresses);
-    
+
     handleAddressLists(addresses_copy, myGlobals.localNetworks, &myGlobals.numLocalNetworks,
 		       localAddresses, sizeof(localAddresses), CONST_HANDLEADDRESSLISTS_MAIN);
-    
+
     free(addresses_copy);
   }
 
@@ -1179,14 +1179,14 @@ static char* read_file(char* path, char* buf, u_int buf_len) {
   } else {
     char line[256];
     int idx = 0;
-    
+
     while(!feof(fd) && (fgets(line, sizeof(line), fd) != NULL)) {
       if((line[0] == '#') || (line[0] == '\n')) continue;
       while(strlen(line) && (line[strlen(line)-1] == '\n')) {
 	line[strlen(line)-1] = '\0';
       }
-      
-      safe_snprintf(__FILE__, __LINE__, &buf[idx], buf_len-idx-2, "%s%s", (idx > 0) ? "," : "", line);     
+
+      safe_snprintf(__FILE__, __LINE__, &buf[idx], buf_len-idx-2, "%s%s", (idx > 0) ? "," : "", line);
       idx = strlen(buf);
     }
 
@@ -1213,11 +1213,11 @@ void handleKnownAddresses(char* addresses) {
 	addresses_copy = strdup(buf);
     } else
       addresses_copy = strdup(addresses);
-    
+
     if(addresses_copy) {
       handleAddressLists(addresses_copy, myGlobals.subnetStats, &myGlobals.numKnownSubnets,
 			 knownSubnets, sizeof(knownSubnets), CONST_HANDLEADDRESSLISTS_MAIN);
-      
+
       free(addresses_copy);
     }
   }
@@ -2072,7 +2072,7 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   if(!mutexId->isLocked) {
     traceEvent(CONST_TRACE_WARNING, "releaseMutex() called with an UN-LOCKED mutex [t%lu m%p @%s:%d] last unlock [t%lu m%u @%s:%d]",
 	       pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine,
-               mutexId->unlock.thread, (int)mutexId->unlock.pid, 
+               mutexId->unlock.thread, (int)mutexId->unlock.pid,
 	       mutexId->unlock.file, mutexId->unlock.line);
 
   }
@@ -3179,7 +3179,7 @@ void pathSanityCheck(char* string, char* parm) {
 	revertSlashIfWIN32(string, 0);
 #endif
 
-  
+
   for(i=k, j=1; i<strlen(string)-k; i++) {
     int idx = string[i];
 
@@ -3488,7 +3488,7 @@ void fillDomainName(HostTraffic *el) {
    */
   if(i > 0)
     el->dnsTLDValue = strdup(&el->hostResolvedName[i+1]);
-  else if((myGlobals.shortDomainName != NULL) 
+  else if((myGlobals.shortDomainName != NULL)
 	  && (myGlobals.shortDomainName[0] != '\0')) {
     /* Walk back to the last . */
     i = strlen(myGlobals.shortDomainName)-1;
@@ -3587,7 +3587,7 @@ void setNBnodeNameType(HostTraffic *theHost, char nodeType,
 	  int i;
 
 	  for(i=0; i<strlen(nbName); i++) {
-	    if(isupper(nbName[i])) 
+	    if(isupper(nbName[i]))
 	      nbName[i] = tolower(nbName[i]);
 	  }
 
@@ -4149,8 +4149,8 @@ unsigned long _ntopSleepMSWhileSameState(char *file, int line, unsigned long ulD
         memset(&remAmount, 0, sizeof(remAmount));
 
         traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line,
-		   "nanosleep({%d, %d}, )", 
-		   (int)sleepAmount.tv_sec, 
+		   "nanosleep({%d, %d}, )",
+		   (int)sleepAmount.tv_sec,
 		   (int)sleepAmount.tv_nsec);
 
         if((nanosleep(&sleepAmount, &remAmount) != 0) && (errno == EINTR)) {
@@ -4304,7 +4304,7 @@ u_int numActiveSenders(u_int deviceId) {
 
   for(el=getFirstHost(deviceId);
       el != NULL; el = getNextHost(deviceId, el)) {
-    if(broadcastHost(el) 
+    if(broadcastHost(el)
        || ((myGlobals.actTime-el->lastSeen) > PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES))
       continue;
     else if (isFcHost (el) && (el->fcCounters->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
@@ -4351,71 +4351,6 @@ u_int32_t xaton(char *s) {
   return((a&0xFF)<<24)|((b&0xFF)<<16)|((c&0xFF)<<8)|(d&0xFF);
 }
 
-/* ******************************************************************* */
-
-void* addNodeInternal(u_int32_t ip, int prefix, char *country, int as) {
-  IPNode *p1 = NULL, *p2 = NULL;
-  int i, b;
-
-  if(country)
-    p1 = myGlobals.countryFlagHead;
-  else
-    p1 = myGlobals.asHead;
-
-  for(i=0; i<prefix; i++) {
-    b=(ip>>(31-i)) & 0x1;
-    if(!p1->b[b]) {
-      if(!(p2=malloc(sizeof(IPNode))))
-        return(NULL);
-
-      memset(p2, 0, sizeof(IPNode));
-
-      if(country != NULL)
-	myGlobals.ipCountryMem += sizeof(IPNode);
-      else
-	myGlobals.asMem += sizeof(IPNode);
-      p1->b[b]=p2;
-    }
-    else
-      p2=p1->b[b];
-
-    p1=p2;
-  }
-
-  if(country != NULL) {
-    if(p2->node.cc[0] == 0)
-      strncpy(p2->node.cc, country, sizeof(p2->node.cc));
-  } else {
-    if(p2->node.as == 0)
-      p2->node.as = as;
-  }
-
-  return(p2);
-
-}
-
-/* ******************************************************************* */
-
-char *ip2CountryCode(HostAddr ip) {
-  IPNode *p = myGlobals.countryFlagHead;
-  int i, b;
-  char *cc = "";
-  u_int32_t addr;
-
-  if (ip.hostFamily == AF_INET6)
-    return NULL;
-  addr  = ip.Ip4Address.s_addr;
-  i = 0;
-  while(p != NULL) {
-    if(p->node.cc[0] != 0)
-      cc = p->node.cc;
-    b = (addr >>(31-i)) & 0x1;
-    p = p->b[b];
-    i++;
-  }
-
-  return(cc);
-}
 
 /* *************************************** */
 
@@ -4640,7 +4575,7 @@ int setSpecifiedUser(void) {
     setRunState(FLAG_NTOPSTATE_INITNONROOT);
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Now running as requested user '%s' (%d:%d)",
-             myGlobals.effectiveUserName ? myGlobals.effectiveUserName : "<unknown>", 
+             myGlobals.effectiveUserName ? myGlobals.effectiveUserName : "<unknown>",
 	     myGlobals.userId, myGlobals.groupId);
 
   if((myGlobals.userId != 0) || (myGlobals.groupId != 0)) {
@@ -4673,38 +4608,9 @@ int setSpecifiedUser(void) {
 #endif
 }
 
-/* ******************************************************************* */
-
-u_short ip2AS(HostAddr ip) {
-  IPNode *p;
-  int i, b;
-  u_short as=0;
-  u_int32_t addr;
-
-  if (ip.hostFamily == AF_INET6)
-    return 0;
-
-  addr = ip.Ip4Address.s_addr;
-
-  p = myGlobals.asHead;
-
-  i=0;
-  while(p!=NULL) {
-    if(p->node.as !=0 )
-      as = p->node.as;
-    b=(addr>>(31-i)) & 0x1;
-    p=p->b[b];
-    i++;
-  }
-
-  return(as);
-}
-
 /* ************************************ */
 
 u_int16_t getHostAS(HostTraffic *el) {
-  if (!el->hostAS)
-    el->hostAS = ip2AS(el->hostIpAddress);
   return (el->hostAS);
 }
 
@@ -5926,10 +5832,28 @@ void urlFixupToRFC1945Inplace(char* url) {
 /* ************************************ */
 
 static void updateGeoIP(HostTraffic *el) {
-  if((el->geo_ip == NULL) 
-     && (myGlobals.geo_ip_db != NULL)
-     && (el->hostNumIpAddress[0] != '\0')) {
-    el->geo_ip = GeoIP_record_by_addr(myGlobals.geo_ip_db, el->hostNumIpAddress);
+  if(el->hostNumIpAddress[0] != '\0') {
+    if((el->geo_ip == NULL) && (myGlobals.geo_ip_db != NULL)) {
+      el->geo_ip = GeoIP_record_by_addr(myGlobals.geo_ip_db, el->hostNumIpAddress);
+
+      if((el->hostAS == 0) && (myGlobals.geo_ip_asn_db != NULL)) {
+	char *rsp;
+
+	if(el->hostIpAddress.hostFamily == AF_INET)
+	  rsp = GeoIP_name_by_ipnum(myGlobals.geo_ip_asn_db, el->hostIpAddress.Ip4Address.s_addr);
+	else
+	  rsp = GeoIP_name_by_ipnum_v6(myGlobals.geo_ip_asn_db, el->hostIpAddress.Ip6Address);
+
+	if(rsp != NULL) {
+	  /* Example: AS20959 This AS Number will be used by the Datacom Network. */
+	  char *name;
+
+	  name = strchr(rsp, ' ');
+	  el->hostAS = atoi(&rsp[2]);
+	  if(name) el->hostASDescr = strdup(&name[1]);
+	}
+      }
+    }
   }
 }
 
