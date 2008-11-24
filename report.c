@@ -3121,6 +3121,35 @@ static void printHostNwDelay(HostTraffic *el, int actualDeviceId,
 
 /* ************************************ */
 
+static void printHostFingerprint(HostTraffic *el) {
+  int idx;
+  char fingerprint[4096] = { '\0' };
+  for(idx=1; idx<MAX_ASSIGNED_IP_PORTS /* 1024 */; idx++) {
+    PortUsage *ports = getPortsUsage(el, idx, 0);
+    int value;
+    
+    value = 0;
+
+    if(ports != NULL) {
+      if((ports->clientUses > 0)  && (ports->serverUses > 0))
+	value = 3;
+      else if(ports->serverUses > 0)
+	value = 2;
+      else if(ports->clientUses > 0)
+	value = 1;
+    }
+
+    if(value > 0)
+      snprintf(&fingerprint[strlen(fingerprint)], 
+	       sizeof(fingerprint)-strlen(fingerprint), 
+	       "%d", value);    
+  }
+  
+  traceEvent (CONST_TRACE_WARNING, "[%s][%s]\n", el->hostNumIpAddress, fingerprint);
+}
+
+/* ************************************ */
+
 void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 			  int revertOrder, int pageNum, char *url,
 			  int hostInfoPage) {
@@ -3199,6 +3228,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     printHostContactedPeers(el, actualDeviceId);
     printHostHTTPVirtualHosts(el, actualDeviceId);
     printHostUsedServices(el, actualDeviceId);
+    printHostFingerprint(el); /* ----- **** ----- */
   } else if(foundFcHost) {
     printHTMLheader("", NULL, 0);
     printFcHostHeader(el, url, revertOrder, sortedColumn, hostInfoPage);
@@ -3814,7 +3844,6 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     sendString("</CENTER>\n");
 
     printFooterHostLink();
-
   } else
     printNoDataYet();
 

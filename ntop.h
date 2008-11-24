@@ -404,8 +404,18 @@ ntop.h
 
 #endif /* WIN32 */
 
+/* Undef below is a workaround for a silly memcpy definition */
+#ifdef BSD
+#undef BSD
+#define BSD_TEMP
+#endif
+
 #include "GeoIP.h"
 #include "GeoIPCity.h"
+
+#ifdef BSD_TEMP
+#define BSD
+#endif
 
 /*
  * Packet Capture Library by Lawrence Berkeley National Laboratory

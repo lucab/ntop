@@ -33,8 +33,8 @@
 
 PerlInterpreter *my_perl;  /***    The Perl interpreter    ***/
 
-static HostTraffic *perl_host = NULL;
-static HV * ss = NULL;
+static HostTraffic *ntop_host = NULL;
+static HV * perl_host = NULL;
 static HV * ss_hosts = NULL;
 
 /*
@@ -79,21 +79,19 @@ void ntop_perl_send_html_footer() {
 
 /* *********************************************************** */
 
-#define PERL_STORE_STRING(s, a, b) hv_store(s, a, strlen(a), newSVpv(b, strlen(b)), 0);
-#define PERL_STORE_NUM(s, a, b)    { safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u", b); PERL_STORE_STRING(s, a, buf); }
+#define PERL_STORE_STRING(x, a, b) hv_store(x, a, strlen(a), newSVpv(b, strlen(b)), 0);
+#define PERL_STORE_NUM(x, a, b)    { char buf[64]; safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u", b); PERL_STORE_STRING(x, a, buf); }
 
 static void ntop_perl_loadHost_values(HV * my_ss, HostTraffic *host) {
-  char buf[64];
-
-  PERL_STORE_STRING(ss, "ethAddress", host->ethAddressString);
-  PERL_STORE_STRING(ss, "ipAddress", host->hostNumIpAddress);
-  PERL_STORE_STRING(ss, "hostResolvedName", host->hostResolvedName);
-  PERL_STORE_NUM(ss, "vlanId", host->vlanId);
-  PERL_STORE_NUM(ss, "hostAS", host->hostAS);
-  PERL_STORE_NUM(ss, "pktSent", host->pktSent.value);
-  PERL_STORE_NUM(ss, "pktRcvd", host->pktRcvd.value);
-  PERL_STORE_NUM(ss, "bytesSent", host->bytesSent.value);
-  PERL_STORE_NUM(ss, "bytesRcvd", host->bytesRcvd.value);
+  PERL_STORE_STRING(my_ss, "ethAddress", host->ethAddressString);
+  PERL_STORE_STRING(my_ss, "ipAddress", host->hostNumIpAddress);
+  PERL_STORE_STRING(my_ss, "hostResolvedName", host->hostResolvedName);
+  PERL_STORE_NUM(my_ss, "vlanId", host->vlanId);
+  PERL_STORE_NUM(my_ss, "hostAS", host->hostAS);
+  PERL_STORE_NUM(my_ss, "pktSent", host->pktSent.value);
+  PERL_STORE_NUM(my_ss, "pktRcvd", host->pktRcvd.value);
+  PERL_STORE_NUM(my_ss, "bytesSent", host->bytesSent.value);
+  PERL_STORE_NUM(my_ss, "bytesRcvd", host->bytesRcvd.value);
 }
 
 /* *********************************************************** */
@@ -103,14 +101,14 @@ void ntop_perl_loadHost() {
 
   traceEvent(CONST_TRACE_INFO, "[perl] loadHost()");
 
-  if(ss) {
-    hv_undef(ss);
-    ss = NULL;
+  if(perl_host) {
+    hv_undef(perl_host);
+    perl_host = NULL;
   }
 
   if(perl_host) {
-    ss = perl_get_hv ("main::host", TRUE);
-    ntop_perl_loadHost_values(ss, perl_host);
+    perl_host = perl_get_hv ("main::host", TRUE);
+    ntop_perl_loadHost_values(perl_host, ntop_host);
   }
 }
 
@@ -130,18 +128,29 @@ void ntop_perl_loadHosts() {
 
   host = getFirstHost(actualDeviceId);
 
+  /*
+   * create a new variable, the %hosts hash
+   */
   ss_hosts = perl_get_hv ("main::hosts", TRUE);
 
   while(host != NULL) {
-    HV *elem;
+    static HV *elem;
     char *key = (host->ethAddressString[0] != '\0') ? host->ethAddressString : host->hostNumIpAddress;
-    
-    
-    elem = newHV();
-    ntop_perl_loadHost_values(elem, host);
-    hv_store_ent( ss_hosts, newSVpv(key, strlen(key)), elem, 0 );
-    traceEvent(CONST_TRACE_INFO, "[perl] Added %s", key);
 
+    key = "luca";
+    snprintf(buf, sizeof(buf), "main::%s", key);
+    traceEvent(CONST_TRACE_INFO, "[perl] Adding perl hash '%s'", buf);
+    elem = perl_get_hv(buf, TRUE);
+
+    /*
+     * populate the %hosts hash
+     * key   = $key
+     * value = the reference to the newly created hash
+     */
+    hv_store(ss_hosts, key, strlen(key), newRV_inc ((SV *) elem), 0); 
+    ntop_perl_loadHost_values(elem, host);
+    traceEvent(CONST_TRACE_INFO, "[perl] Added %s", key);
+    break;
     host = getNextHost(actualDeviceId, host);
   }
 }
@@ -150,22 +159,22 @@ void ntop_perl_loadHosts() {
 
 
 void ntop_perl_getFirstHost(int actualDeviceId) {
-  perl_host = getFirstHost(actualDeviceId);
+  ntop_host = getFirstHost(actualDeviceId);
 
   traceEvent(CONST_TRACE_INFO, "[perl] getFirstHost(%d)=%p",
-	     actualDeviceId, perl_host);
+	     actualDeviceId, ntop_host);
 }
 
 /* *********************************************************** */
 
 void ntop_perl_getNextHost(int actualDeviceId) {
-  if(perl_host == NULL) {
+  if(ntop_host == NULL) {
     ntop_perl_getFirstHost(actualDeviceId);
   } else {
-    perl_host = getNextHost(actualDeviceId, perl_host);
+    ntop_host = getNextHost(actualDeviceId, ntop_host);
   }
 
-  traceEvent(CONST_TRACE_INFO, "[perl] getNextHost()=%p", perl_host);
+  traceEvent(CONST_TRACE_INFO, "[perl] getNextHost()=%p", ntop_host);
 }
 
 /* *********************************************************** */
