@@ -44,6 +44,7 @@ void init_maps() {
 
 void create_host_map() {
   HostTraffic *el;
+  int num_hosts = 0;
 
   sendString((char*)map_head);
   sendString(googleMapsKey);
@@ -56,7 +57,8 @@ void create_host_map() {
       int showSymIp;
 
       if((el->hostResolvedName[0] != '\0')
-	 && strcmp(el->hostResolvedName, el->hostNumIpAddress))
+	 && strcmp(el->hostResolvedName, el->hostNumIpAddress)
+	 && (!subnetPseudoLocalHost(el)))
 	showSymIp = 1;
       else
 	showSymIp = 0;
@@ -70,6 +72,8 @@ void create_host_map() {
 		    el->geo_ip->city ? el->geo_ip->city : "", 
 		    el->geo_ip->country_name ? el->geo_ip->country_name : "");
       sendString(buf);
+      num_hosts++;
+      if(num_hosts > 1024) break; /* Too many hosts */
     }
   }
 
