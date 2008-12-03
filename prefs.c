@@ -307,6 +307,10 @@ static void readPcapFileList(char * filenames) {
 }
 
 /* ***************************************************** */
+/*	NOTE
+	In the function below do NOT free myGlobals.runningPref.*
+	as this value is used in myGlobals.savedPref.*
+*/
 
 /*
  * Parse the command line options
@@ -382,7 +386,6 @@ int parseOptions(int argc, char* argv[]) {
 #ifndef WIN32
       stringSanityCheck(optarg, "-i | --interface");
 #endif
-      if(myGlobals.runningPref.devices != NULL) free(myGlobals.runningPref.devices);
       myGlobals.runningPref.devices = strdup(optarg);
       break;
 
@@ -439,7 +442,6 @@ int parseOptions(int argc, char* argv[]) {
 #ifndef WIN32
     case 'u':
       stringSanityCheck(optarg, "-u | --user");
-      if(myGlobals.effectiveUserName != NULL) free(myGlobals.effectiveUserName);
       myGlobals.effectiveUserName = strdup(optarg);
       if(strOnlyDigits(optarg))
 	myGlobals.userId = atoi(optarg);
@@ -527,22 +529,17 @@ int parseOptions(int argc, char* argv[]) {
 
     case 'N':
       pathSanityCheck(optarg, "-N | --wwn-map");
-      if(myGlobals.runningPref.fcNSCacheFile != NULL)
-	   free(myGlobals.runningPref.fcNSCacheFile);
       myGlobals.runningPref.fcNSCacheFile = strdup (optarg);
       break;
 
     case 'O': /* pcap log path - Ola Lundqvist <opal@debian.org> */
       pathSanityCheck(optarg, "-O | --output-packet-path");
-      if(myGlobals.runningPref.pcapLogBasePath != NULL)
-	free(myGlobals.runningPref.pcapLogBasePath);
-      myGlobals.runningPref.pcapLogBasePath = strdup(optarg);
+       myGlobals.runningPref.pcapLogBasePath = strdup(optarg);
       break;
 
     case 'P':
       pathSanityCheck(optarg, "-P | --db-file-path");
-      if(myGlobals.dbPath != NULL)
-	free(myGlobals.dbPath);
+      if(myGlobals.dbPath != NULL) free(myGlobals.dbPath);
 
       if(optarg[strlen(optarg)-1] == '/') optarg[strlen(optarg)-1] = '\0';
       mkdir_p("dbPath", optarg, 0777);
@@ -551,8 +548,7 @@ int parseOptions(int argc, char* argv[]) {
 
     case 'Q': /* Spool Path (ntop's spool directory) */
       pathSanityCheck(optarg, "-Q | --spool-file-path" );
-      if(myGlobals.spoolPath != NULL)
-	free(myGlobals.spoolPath);
+      if(myGlobals.spoolPath != NULL) free(myGlobals.spoolPath);
       if(optarg[strlen(optarg)-1] == '/') optarg[strlen(optarg)-1] = '\0';
       mkdir_p("spoolPath", optarg, 0777);
       myGlobals.spoolPath = strdup(optarg);
@@ -671,15 +667,11 @@ int parseOptions(int argc, char* argv[]) {
 
     case 137:
       stringSanityCheck(optarg, "--p3pcp");
-      if(myGlobals.runningPref.P3Pcp != NULL)
-	free(myGlobals.runningPref.P3Pcp);
       myGlobals.runningPref.P3Pcp = strdup(optarg);
       break;
 
     case 138:
       uriSanityCheck(optarg, "--p3puri", FALSE);
-      if(myGlobals.runningPref.P3Puri != NULL)
-	free(myGlobals.runningPref.P3Puri);
       myGlobals.runningPref.P3Puri = strdup(optarg);
       break;
 
@@ -691,8 +683,6 @@ int parseOptions(int argc, char* argv[]) {
       FILE *fd;
 
       stringSanityCheck(optarg, "--instance");
-      if(myGlobals.runningPref.instance != NULL)
-        free(myGlobals.runningPref.instance);
       myGlobals.runningPref.instance = strdup(optarg);
 
       memset(&tmpStr, 0, sizeof(tmpStr));

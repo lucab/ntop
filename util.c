@@ -5841,8 +5841,13 @@ static void updateGeoIP(HostTraffic *el) {
 
 	if(el->hostIpAddress.hostFamily == AF_INET)
 	  rsp = GeoIP_name_by_ipnum(myGlobals.geo_ip_asn_db, el->hostIpAddress.Ip4Address.s_addr);
-	else
+	else {
+#ifdef INET6
+#ifndef WIN32
 	  rsp = GeoIP_name_by_ipnum_v6(myGlobals.geo_ip_asn_db, el->hostIpAddress.Ip6Address);
+#endif
+#endif
+	}
 
 	if(rsp != NULL) {
 	  /* Example: AS20959 This AS Number will be used by the Datacom Network. */

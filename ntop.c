@@ -512,6 +512,11 @@ void handleProtocols(void) {
 	bufferWork[1] = '\0';
       }
 
+    bufferWork = strchr(bufferCurrent, '\r');
+      if(bufferWork != NULL) {
+	bufferWork[0] = ',';
+	bufferWork[1] = '\0';
+      }
       /* Move pointer to end-of-string for read of next line */
       bufferCurrent = strchr(bufferCurrent, '\0');
     }

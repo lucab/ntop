@@ -1163,15 +1163,14 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
       strncat(workDevices,
               myGlobals.device[i].name,
-              (sizeof(workDevices) - strlen(workDevices) - hasSpace));
+              (mallocLen - strlen(workDevices) - hasSpace));
     }
   }
 
   if(myGlobals.runningPref.devices != NULL)
     free(myGlobals.runningPref.devices);
 
-  myGlobals.runningPref.devices = strdup(workDevices);
-  free(workDevices);
+  myGlobals.runningPref.devices = workDevices;
 
   /* ********************************************** */
 
