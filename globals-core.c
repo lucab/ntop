@@ -340,6 +340,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   createMutex(&myGlobals.queueAddressMutex);
 
   createMutex(&myGlobals.gdbmMutex);        /* data to synchronize thread access to db files */
+  createMutex(&myGlobals.portsMutex);       /* Avoid race conditions while handling ports */
 
   for(i=0; i<NUM_SESSION_MUTEXES; i++)
     createMutex(&myGlobals.tcpSessionsMutex[i]); /* data to synchronize TCP sessions access */

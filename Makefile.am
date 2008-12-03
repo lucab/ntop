@@ -73,12 +73,12 @@ ETTER_PASSIVE = $(ETTER_PASSIVE_FILE).gz
 ETTER_PASSIVE_DOWNLOAD_FROM = "http://ettercap.cvs.sourceforge.net/ettercap/ettercap_ng/share"
 ETTER_PASSIVE_DOWNLOAD_PARMS = "rev=HEAD"
 
-
-
 NTOPDATA = ntop-cert.pem \
            $(ETTER_PASSIVE) \
            oui.txt.gz \
-           specialMAC.txt.gz
+           specialMAC.txt.gz \
+	   GeoIPASNum.dat \
+	   GeoLiteCity.dat
 
 NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png \
            html/*.css html/*.dtd \
@@ -269,6 +269,8 @@ libclean:
         done
 
 install: install-recursive
+
+	cd @GEO_DIR@; make install
 
 	@mkdir -p $(DESTDIR)/$(CFG_DBFILE_DIR)
 

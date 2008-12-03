@@ -2255,7 +2255,7 @@ typedef struct ntopGlobals {
   /*
    * Control mutexes
    */
-  PthreadMutex gdbmMutex;
+  PthreadMutex gdbmMutex, portsMutex;
   PthreadMutex tcpSessionsMutex[NUM_SESSION_MUTEXES];
   PthreadMutex fcSessionsMutex; /* One mutex should be enough */
   PthreadMutex purgePortsMutex;

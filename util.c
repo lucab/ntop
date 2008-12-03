@@ -6338,15 +6338,26 @@ static PortUsage* allocatePortUsage(void) {
  *    into chain, thus keeping the list sorted.
  */
 PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary) {
-  PortUsage *ports = el->portsUsage, *prev = NULL, *newPort;
+  PortUsage *ports, *prev = NULL, *newPort;
+
+  accessMutex(&myGlobals.portsMutex, "getPortsUsage");
+
+  ports = el->portsUsage;
 
   while((ports != NULL) && (ports->port < portIdx)) {
     prev = ports;
     ports = ports->next;
   }
 
-  if(ports && (ports->port == portIdx)) return(ports); /* Found */
-  if(!createIfNecessary) return(NULL);
+  if(ports && (ports->port == portIdx)) {
+    releaseMutex(&myGlobals.portsMutex);
+    return(ports); /* Found */
+  }
+  
+  if(!createIfNecessary) {
+    releaseMutex(&myGlobals.portsMutex);
+    return(NULL);
+  }
 
   newPort = allocatePortUsage();
   newPort->port = portIdx;
@@ -6364,6 +6375,7 @@ PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary) 
     prev->next = newPort;
   }
 
+  releaseMutex(&myGlobals.portsMutex);
   return(newPort);
 }
 
