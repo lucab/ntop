@@ -448,7 +448,8 @@ void createPortHash(void) {
 /* **************************************** */
 
 void handleProtocols(void) {
-  char *proto, *buffer=NULL, *strtokState, *bufferCurrent, *bufferWork;
+  char *proto, *buffer=NULL, *strtokState,
+	   *bufferCurrent, *bufferWork, tmpStr[512];
   FILE *fd;
 
   /* myGlobals.protoSpecs is either
@@ -463,25 +464,29 @@ void handleProtocols(void) {
      || (!myGlobals.runningPref.protoSpecs[0]))
     return;
 
-  fd = fopen(myGlobals.runningPref.protoSpecs, "rb");
+   safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
+                  "%s", myGlobals.runningPref.protoSpecs);
+
+  revertSlashIfWIN32(tmpStr, 0);
+  fd = fopen(tmpStr, "rb");
 
   if(fd == NULL) {
-    traceEvent(CONST_TRACE_INFO, "PROTO_INIT: Processing protocol list: '%s'", myGlobals.runningPref.protoSpecs);
-    proto = strtok_r(myGlobals.runningPref.protoSpecs, ",", &strtokState);
+    traceEvent(CONST_TRACE_INFO, "PROTO_INIT: Processing protocol list: '%s'", tmpStr);
+    proto = strtok_r(tmpStr, ",", &strtokState);
   } else {
     struct stat buf;
 
-    if(stat(myGlobals.runningPref.protoSpecs, &buf) != 0) {
+    if(stat(tmpStr, &buf) != 0) {
       fclose(fd);
       traceEvent(CONST_TRACE_ERROR, "PROTO_INIT: Unable to get information about file '%s'",
-		 myGlobals.runningPref.protoSpecs);
+		 tmpStr);
       return;
     }
 
     bufferCurrent = buffer = (char*)malloc(buf.st_size+8) /* just to be safe */;
 
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PROTO_INIT: Processing protocol file: '%s', size: %ld",
-	       myGlobals.runningPref.protoSpecs, (long)(buf.st_size+8));
+	       tmpStr, (long)(buf.st_size+8));
 
     for (;;) {
       bufferCurrent = fgets(bufferCurrent, buf.st_size, fd);

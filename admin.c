@@ -1130,12 +1130,21 @@ void addDefaultAdminUser(void) {
    tmpPrefs.devices = NULL;
 
    while(token != NULL) {
-     char *key, *value;
+     char *key, *value, value_buf[2048];
 
      key = strtok_r(token, "=", &strtokState);
      if(key != NULL) value = strtok_r(NULL, "=", &strtokState); else value = NULL;
 
-     /* traceEvent(CONST_TRACE_INFO, "RRD: key(%s)=%s", key, value); */
+	 if(value != NULL) {
+	  safe_snprintf (__FILE__, __LINE__, value_buf, sizeof(value_buf),
+					 "%s", value);
+  	  unescape_url(value_buf);
+      value = value_buf;
+	 }
+
+#if 0
+     traceEvent(CONST_TRACE_WARNING, "RRD: key(%s)=%s", key, value);
+#endif
 
      if(key) {
        action = processNtopPref(key, value, savePref, &tmpPrefs);
@@ -1460,7 +1469,7 @@ char * rindex(const char *p, int ch) {
 
 void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		      int postLen) {
-  char buf[1024], hostStr[MAXHOSTNAMELEN+16];
+  char buf[4096], token_buf[512], hostStr[MAXHOSTNAMELEN+16];
   bool startCap = FALSE;
   int len;
   UserPref defaults, *pref = &myGlobals.savedPref;
@@ -1487,13 +1496,17 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
        */
 
       if((buf != NULL) && (buf [0] != '\0')) {
-	unescape_url(buf);
 
 	/* traceEvent (CONST_TRACE_INFO, "BUF='%s'\n", buf); */
 
 	/* locate the last parameter which tells us which button got pressed */
 	if ((token = rindex (buf, '&')) != NULL) {
 	  token++;
+      safe_snprintf(__FILE__, __LINE__, token_buf, sizeof(token_buf),
+					"%s", token);
+  	  unescape_url(token_buf);
+	  token = token_buf;
+
 	  if (strncmp (token, NTOP_SAVE_PREFS,
 		       strlen (NTOP_SAVE_PREFS)) == 0) {
 	    savePref = TRUE;

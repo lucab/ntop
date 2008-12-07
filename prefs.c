@@ -992,10 +992,10 @@ void processStrPref(char *key, char *value, char **globalVar, bool savePref)
     if (*globalVar != NULL) {
       free (*globalVar);
       *globalVar = NULL;
-      if (savePref) {
-	delPrefsValue (key);
-      }
     }
+	
+	 *globalVar = strdup(value);
+     if (savePref) delPrefsValue (key);
   }
   else {
     if (savePref) {
