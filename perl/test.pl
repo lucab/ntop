@@ -18,25 +18,24 @@ loadHosts();
 #my @sorted_by_hostname      = sort { ${$a}{'ipAddress'}  cmp ${$b}{'ipAddress'} }  values %hosts;
 #my @traffic = sort keys %hosts;
 
+if(0) {
 print "################################################\n";
 
 foreach $key (sort(keys %hosts)) {
     print "[key=", $key,"][ipAddress=",${$key}{'ipAddress'},"][macAddress=",${$key}{'macAddress'},"][pktSent/pktRcvd=",${$key}{'pktSent'},"/",${$key}{'pktRcvd'},"]\n";
 }
 
-my $h = "luca";
+print "################################################\n";
 
-print $a,"<-\n";
-print $a{'bytesRcvd'},"<-\n";
-
-{
-    my %t = ${$h};
-    foreach $key (sort(keys %t)) {
-	print $key,"=",$t{$key},"\n";
-    }
+getFirstHost(0);
+loadHost();
+while(($host{'ethAddress'} ne "") || ($host{'ipAddress'} ne ""))  {
+    print "+ [ipAddress=",$host{'ipAddress'},"][macAddress=",$host{'macAddress'},"][pktSent/pktRcvd=",$host{'pktSent'},"/",$host{'pktRcvd'},"]\n";
+    getNextHost(0);
+    loadHost();
+}
 }
 
-     
 #for my $k1 ( sort keys %hosts ) {
 #    print "k1: $k1\n";
 #    for my $k2 ( keys %{$k1} ) {
@@ -48,7 +47,7 @@ print $a{'bytesRcvd'},"<-\n";
 #    print $key,"\n";
 #}
 
-exit
+#exit
 # ---------------------------------------------
 
 getFirstHost(0);
@@ -59,8 +58,7 @@ sendString("<table border>\n");
 sendString("<tr><th>MAC</th><th colspan=2>IP</th><th>Packets</th><th>Bytes</th></tr>\n");
 
 
-while(($host{'ethAddress'} ne "")
-      || ($host{'ipAddress'} ne ""))  {
+while(($host{'ethAddress'} ne "") || ($host{'ipAddress'} ne ""))  {
     my $mac_addr;
 
     if($host{'ethAddress'} ne "") {

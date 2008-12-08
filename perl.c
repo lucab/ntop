@@ -83,6 +83,8 @@ void ntop_perl_send_html_footer() {
 #define PERL_STORE_NUM(x, a, b)    { char buf[64]; safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u", b); PERL_STORE_STRING(x, a, buf); }
 
 static void ntop_perl_loadHost_values(HV * my_ss, HostTraffic *host) {
+  traceEvent(CONST_TRACE_INFO, "[perl] loadHost_values()");
+
   PERL_STORE_STRING(my_ss, "ethAddress", host->ethAddressString);
   PERL_STORE_STRING(my_ss, "ipAddress", host->hostNumIpAddress);
   PERL_STORE_STRING(my_ss, "hostResolvedName", host->hostResolvedName);
@@ -99,14 +101,14 @@ static void ntop_perl_loadHost_values(HV * my_ss, HostTraffic *host) {
 void ntop_perl_loadHost() {
   char buf[64];
 
-  traceEvent(CONST_TRACE_INFO, "[perl] loadHost()");
+  traceEvent(CONST_TRACE_INFO, "[perl] loadHost(%p)", ntop_host);
 
   if(perl_host) {
     hv_undef(perl_host);
     perl_host = NULL;
   }
 
-  if(perl_host) {
+  if(ntop_host) {
     perl_host = perl_get_hv ("main::host", TRUE);
     ntop_perl_loadHost_values(perl_host, ntop_host);
   }
@@ -119,7 +121,7 @@ void ntop_perl_loadHosts() {
   char buf[64];
   u_int actualDeviceId = 0;
 
-  traceEvent(CONST_TRACE_INFO, "[perl] loadHost()");
+  traceEvent(CONST_TRACE_INFO, "[perl] loadHosts()");
 
   if(ss_hosts) {
     hv_undef(ss_hosts);
@@ -137,7 +139,6 @@ void ntop_perl_loadHosts() {
     static HV *elem;
     char *key = (host->ethAddressString[0] != '\0') ? host->ethAddressString : host->hostNumIpAddress;
 
-    key = "luca";
     snprintf(buf, sizeof(buf), "main::%s", key);
     traceEvent(CONST_TRACE_INFO, "[perl] Adding perl hash '%s'", buf);
     elem = perl_get_hv(buf, TRUE);
@@ -150,7 +151,6 @@ void ntop_perl_loadHosts() {
     hv_store(ss_hosts, key, strlen(key), newRV_inc ((SV *) elem), 0); 
     ntop_perl_loadHost_values(elem, host);
     traceEvent(CONST_TRACE_INFO, "[perl] Added %s", key);
-    break;
     host = getNextHost(actualDeviceId, host);
   }
 }
@@ -204,14 +204,33 @@ HostTraffic* ntop_perl_findHostByMAC(char* macAddr,
 /* http://localhost:3000/perl/test.pl */
 
 int handlePerlHTTPRequest(char *url) {
-  int perl_argc = 2;
+  int perl_argc = 2, idx, found = 0;
   char perl_path[256];
   char * perl_argv[] = { "", NULL };
+  struct stat statbuf;
 
   traceEvent(CONST_TRACE_WARNING, "Calling perl... [%s]", url);
 
+  for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
   safe_snprintf(__FILE__, __LINE__, perl_path, sizeof(perl_path), 
-	  "%s/perl/%s", myGlobals.spoolPath, url);
+	  "%s/perl/%s", myGlobals.dataFileDirs[idx], url);
+    revertSlashIfWIN32(perl_path, 0);
+
+    if(!stat(perl_path, &statbuf)) {
+      /* Found */
+      /* traceEvent(CONST_TRACE_INFO, "[perl] [%d] Found %s", idx, perl_path); */
+      found = 1;
+      break;
+    } else {
+      /* traceEvent(CONST_TRACE_INFO, "[perl] [%d] Not found %s", idx, perl_path); */
+    }
+  }
+
+  if(!found) {
+    returnHTTPpageNotFound(NULL);
+    return(1);
+  }
+
   perl_argv[1] = perl_path;
 
   PERL_SYS_INIT(&perl_argc, &perl_argv);
