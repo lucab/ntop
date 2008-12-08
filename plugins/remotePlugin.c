@@ -76,7 +76,7 @@ static void* remoteMainLoop(void* notUsed _UNUSED_) {
   while(myGlobals.ntopRunState < FLAG_NTOPSTATE_SHUTDOWN) {
     fd_set remoteMask;
     int rc, all_right = 1;
-    char buf[1500], rsp[1500];
+    char buf[1500] = { '\0' }, rsp[1500] = { '\0' };
 
     FD_ZERO(&remoteMask);
     FD_SET(sock, &remoteMask);

@@ -3805,7 +3805,7 @@ char* getPortByNumber(ServiceEntry **theSvc, int port) {
 /* ******************************* */
 
 char* getPortByNum(int port, int type) {
-  char* rsp;
+  char* rsp = NULL;
 
   if(type == IPPROTO_TCP) {
     rsp = getPortByNumber(myGlobals.tcpSvc, port);
@@ -3819,7 +3819,7 @@ char* getPortByNum(int port, int type) {
 /* ******************************* */
 
 char* getAllPortByNum(int port, char *outBuf, int outBufLen) {
-  char* rsp;
+  char* rsp = NULL;
 
   rsp = getPortByNumber(myGlobals.tcpSvc, port); /* Try TCP first... */
   if(rsp == NULL)
@@ -3836,7 +3836,7 @@ char* getAllPortByNum(int port, char *outBuf, int outBufLen) {
 /* ******************************* */
 
 int getAllPortByName(char* portName) {
-  int rsp;
+  int rsp = 0;
 
   rsp = getPortByName(myGlobals.tcpSvc, portName); /* Try TCP first... */
   if(rsp == -1)
@@ -5837,7 +5837,7 @@ static void updateGeoIP(HostTraffic *el) {
       el->geo_ip = GeoIP_record_by_addr(myGlobals.geo_ip_db, el->hostNumIpAddress);
 
       if((el->hostAS == 0) && (myGlobals.geo_ip_asn_db != NULL)) {
-	char *rsp;
+	char *rsp = NULL;
 
 	if(el->hostIpAddress.hostFamily == AF_INET)
 	  rsp = GeoIP_name_by_ipnum(myGlobals.geo_ip_asn_db, el->hostIpAddress.Ip4Address.s_addr);

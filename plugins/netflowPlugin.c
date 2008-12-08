@@ -28,7 +28,7 @@ static void* netflowMainLoop(void* _deviceId);
 static void* netflowUtilsLoop(void* _deviceId);
 #endif
 
-/* #define DEBUG_FLOWS */
+#define DEBUG_FLOWS
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -134,7 +134,7 @@ static PluginInfo netflowPluginInfo[] = {
     handleNetflowHTTPrequest,
     NULL, /* no host creation/deletion handle */
 #ifdef DEBUG_FLOWS
-    "udp and (port 2055 or port 1024)",
+    "udp and (port 2055 or port 1024 or port 20000)",
 #else
     NULL, /* no capture */
 #endif
@@ -3975,7 +3975,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
   int sampledPacketSize;
   int deviceId, rc;
 
-  if(myGlobals.runningPref.rFileName != NULL) {
+  if(myGlobals.pcap_file_list != NULL) {
     /* ntop is reading packets from a file */
     struct ether_header ehdr;
     u_int caplen = h->caplen;
