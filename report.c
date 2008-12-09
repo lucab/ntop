@@ -3497,8 +3497,8 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     
     sendString("<P>\n<CENTER>\n");
     sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">");
-    if(el->clientDelay)  sendString("<TH "TH_BG" NOWRAP>Client Mode</TH>");
-    if(el ->serverDelay) sendString("<TH "TH_BG" NOWRAP>Server Mode</TH></TR>\n");
+    if(el->clientDelay)  sendString("<TH "TH_BG" NOWRAP colspan=2>Client Mode</TH>");
+    if(el ->serverDelay) sendString("<TH "TH_BG" NOWRAP colspan=2>Server Mode</TH></TR>\n");
     sendString("<TR>");
 
     if(el->clientDelay) {

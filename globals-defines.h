@@ -1611,7 +1611,7 @@
 #define CONST_IMG_FIBRECHANNEL_SWITCH  "<img class=tooltip src=\"/switch.gif\" border=\"0\" alt=\"FibreChannel Switch\" title=\"FibreChannel Switch\">"
 #define CONST_IMG_DHCP_CLIENT          "<img class=tooltip src=\"/bulb.gif\" border=\"0\" alt=\"DHCP Client\" title=\"DHCP Client\">"
 #define CONST_IMG_DHCP_SERVER          "<img class=tooltip src=\"/antenna.gif\" border=\"0\" alt=\"DHCP Server\" title=\"DHCP Server\">"
-#define CONST_IMG_MULTIHOMED           "<img class=tooltip src=\"/multihomed.gif\" border=\"0\" alt=\"Multihomed\" title=\"Multihomed\">"
+#define CONST_IMG_MULTIHOMED           "<img class=tooltip src=\"/multihomed.png\" border=\"0\" alt=\"Multihomed\" title=\"Multihomed\">"
 #define CONST_IMG_MULTIVLANED          "<img class=tooltip src=\"/multivlaned.gif\"\" border=\"0\" alt=\"Multivlaned\" title=\"Multivlaned\">"
 #define CONST_IMG_BRIDGE               "<img class=tooltip src=\"/bridge.gif\" border=\"0\" alt=\"Bridge\" title=\"Bridge\">"
 #define CONST_IMG_ROUTER               "<img class=tooltip src=\"/router.gif\" border=\"0\" alt=\"Router\" title=\"Router\">"

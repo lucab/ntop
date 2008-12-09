@@ -556,8 +556,6 @@ void handleProtocols(void) {
 		   "PROTO_INIT: Unknown protocol '%s'. It has been ignored",
 		   proto);
       else {
-	char tmpStr[255];
-
 	protoName[0] = '\0';
 	memset(tmpStr, 0, sizeof(tmpStr));
 	strncpy(tmpStr, &protoName[1], sizeof(tmpStr));

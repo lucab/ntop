@@ -21,6 +21,7 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+#define MAX_NUM_MAP_HOSTS 512
 
 const char *map_head = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n  <head>\n    <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"/>\n    <script src=\"http://maps.google.com/maps?file=api&amp;v=2&amp;key=";
 const char *map_head2 = "\"\n      type=\"text/javascript\"></script>\n    <script type=\"text/javascript\">\n\n    //<![CDATA[\n\n    function load() {\n      if (GBrowserIsCompatible()) {\n\n       function createMarker(point,html) {\n        var marker = new GMarker(point);\n        GEvent.addListener(marker, \"click\", function() {\n          marker.openInfoWindowHtml(html);\n        });\n        return marker;\n      }\n\n        var map = new GMap2(document.getElementById(\"map\"));\n\n        map.addControl(new GLargeMapControl()); map.addControl(new GMapTypeControl());\n        map.addControl(new GMapTypeControl(true));\n        map.setCenter(new GLatLng(43.72, 10.40), 2);\n";
@@ -73,13 +74,17 @@ void create_host_map() {
 		    el->geo_ip->country_name ? el->geo_ip->country_name : "");
       sendString(buf);
       num_hosts++;
-      if(num_hosts > 1024) break; /* Too many hosts */
+      if(num_hosts > MAX_NUM_MAP_HOSTS) break; /* Too many hosts */
     }
   }
 
   sendString((char*)map_tail);
 
-  sendString("<p><center><b><font color=red>NOTE:</font></b> make sure you get your key <a href=http://code.google.com/apis/maps/>here</A>"
-	  " for using Google Maps from ntop and register it as \'google_maps.key\' key <A href=/"CONST_EDIT_PREFS"#google_maps.key>here</A></center></p>\n"); 
+  if(num_hosts > MAX_NUM_MAP_HOSTS)
+    sendString("<p><center><b><font color=red>WARNING:</font></b>You have more hosts to display than the number typically supported by Google maps. Some hosts have not been rendered.</center></p>");
+
+  sendString("<p><center><b><font color=red>NOTE:</font></b>");
+  sendString("make sure you get your key <a href=http://code.google.com/apis/maps/>here</A>"
+	  " for using Google Maps from ntop and register it as \'google_maps.key\' key <A href=/"CONST_EDIT_PREFS"#google_maps.key>here</A>.</center></p>\n"); 
 }
 

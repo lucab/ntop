@@ -3300,6 +3300,8 @@ void processPacket(u_char *_deviceId,
 	  srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
 	  dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
 
+	  if((srcHost == NULL) || (dstHost == NULL)) return;
+
 	  allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
 	  allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
 	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
