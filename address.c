@@ -58,9 +58,9 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 
 	if(strlen(symbolic) >= (MAX_LEN_SYM_HOST_NAME-1))
 	  symbolic[MAX_LEN_SYM_HOST_NAME-2] = '\0';
-
-	for(i=0; i<strlen(symbolic); i++)
-	  if(isupper(symbolic[i])) symbolic[i] = tolower(symbolic[i]);
+	
+	/* Really needed ? */
+	for(i=0; i<strlen(symbolic); i++) symbolic[i] = tolower(symbolic[i]);
 
 	/* traceEvent(CONST_TRACE_INFO, "--> %s", symbolic); */
 
@@ -114,7 +114,7 @@ static int validDNSName(char *name) {
 /* ************************************ */
 
 static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
-  char symAddr[MAX_LEN_SYM_HOST_NAME];
+  char symAddr[MAX_LEN_SYM_HOST_NAME+1] = { '\0' };
   short symAddrType=FLAG_HOST_SYM_ADDR_TYPE_NONE;
   StoredAddress storedAddress;
   int i, addToCacheFlag=0, updateRecord=0;
@@ -165,15 +165,16 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 #endif
 
     /* Sanity check */
-    if(strlen(retrievedAddress->symAddress) > MAX_LEN_SYM_HOST_NAME) {
+    if(strlen(retrievedAddress->symAddress) >= (MAX_LEN_SYM_HOST_NAME-1)) {
       strncpy(symAddr, retrievedAddress->symAddress, MAX_LEN_SYM_HOST_NAME-4);
       symAddr[MAX_LEN_SYM_HOST_NAME-1] = '\0';
       symAddr[MAX_LEN_SYM_HOST_NAME-2] = '.';
       symAddr[MAX_LEN_SYM_HOST_NAME-3] = '.';
       symAddr[MAX_LEN_SYM_HOST_NAME-4] = '.';
     } else
-      strncpy(symAddr, retrievedAddress->symAddress, MAX_LEN_SYM_HOST_NAME-1);
-
+      safe_snprintf(__FILE__, __LINE__, symAddr, sizeof(symAddr), "%s",
+		    retrievedAddress->symAddress);
+    
     symAddrType = retrievedAddress->symAddressType;
 
     myGlobals.numResolvedFromCache++;
@@ -453,7 +454,8 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
         symAddr[MAX_LEN_SYM_HOST_NAME-3] = '.';
         symAddr[MAX_LEN_SYM_HOST_NAME-4] = '.';
       } else
-        strncpy(symAddr, resolvedAddress, MAX_LEN_SYM_HOST_NAME-1);
+	safe_snprintf(__FILE__, __LINE__, symAddr,
+		      sizeof(symAddr), "%s", resolvedAddress);
 
       for(i=0; symAddr[i] != '\0'; i++)
         symAddr[i] = (char)tolower(symAddr[i]);

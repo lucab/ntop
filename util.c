@@ -5892,14 +5892,17 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
 #endif
 
     if (updateType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN) {
-      safe_snprintf(__FILE__, __LINE__, el->hostResolvedName, sizeof(el->hostResolvedName),
+      safe_snprintf(__FILE__, __LINE__, el->hostResolvedName,
+		    sizeof(el->hostResolvedName),
 		    fcwwn_to_str ((u_int8_t*)updateValue));
       el->hostResolvedName[LEN_WWN_ADDRESS_DISPLAY] = '\0';
+    } else {
+      safe_snprintf(__FILE__, __LINE__, el->hostResolvedName, 
+		    sizeof(el->hostResolvedName), "%s", updateValue);
     }
-    else {
-      strncpy(el->hostResolvedName, updateValue, MAX_LEN_SYM_HOST_NAME-1);
-    }
+
     // el->hostResolvedName[MAX_LEN_SYM_HOST_NAME-1] = '\0';
+    /* Really needed ? */
     for(i=0; el->hostResolvedName[i] != '\0'; i++)
       el->hostResolvedName[i] = tolower(el->hostResolvedName[i]);
 
