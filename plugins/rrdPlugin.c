@@ -1740,6 +1740,8 @@ static char* spacer(char* str, char *tmpStr, int tmpStrLen,
 
   if(debug) traceEvent(CONST_TRACE_WARNING,  "-- 4 --> (%s)", tmpStr);
 
+  // traceEvent(CONST_TRACE_WARNING,  "'%s' [len=%d]", tmpStr, strlen(tmpStr));
+
   if(token_name)
     safe_snprintf(__FILE__, __LINE__, metric_name, metric_name_len, "%s", token_name);
   else
@@ -1937,7 +1939,8 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
 
 static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 			 char *startTime, char* endTime, char *rrdPrefix, char *mode) {
-  char path[512], *argv[6*MAX_NUM_ENTRIES], tmpStr[32], fname[384], *label, rrdPath_copy[512];
+  char path[512], *argv[32 /* base prefs */+6*MAX_NUM_ENTRIES /* rrd entries */];
+  char tmpStr[32], fname[384], *label, rrdPath_copy[512];
   char *buf0[MAX_NUM_ENTRIES], *buf1[MAX_NUM_ENTRIES], *buf2[MAX_NUM_ENTRIES],
     *buf3[MAX_NUM_ENTRIES], *buf4[MAX_NUM_ENTRIES], *buf5[MAX_NUM_ENTRIES];
   char metric_name[32], title_buf[64], ip_buf[64];
@@ -1952,7 +1955,6 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   u_char titleAlreadySent = 0;
 
   // if((!active) || (!initialized)) return;
-
   i = strlen(rrdPath); if((i > 1) && (rrdPath[i-1] == '/')) rrdPath[i-1] = '\0';
 
   path[0] = '\0', label = "";
@@ -2005,7 +2007,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	dp->d_name[len] = '\0';
 	safe_snprintf(__FILE__, __LINE__, ipRRDs[i], MAX_BUF_LEN, "%s", dp->d_name);
 	myRRDs[i] = ipRRDs[i];
-	i++; if(i >= MAX_NUM_ENTRIES) break;
+	i++; if(i >= (MAX_NUM_ENTRIES-1)) break;
       }
 
       myRRDs[i] = NULL;
@@ -2352,7 +2354,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	  argv[argc++] = buf2[entryId];
 
 	  safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
-			"%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
+			"%s:ctr%d%s:%s\t", entryId == 0 ? "AREA" : "STACK",
 			entryId,
 			((graphId == 99) && is_efficiency) ? "#B0E1B0" : rrd_colors[entryId],
 			(graphId == 99) ? "Sent" : str);
