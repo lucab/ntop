@@ -1591,9 +1591,23 @@ dnl remove unecessary path
     LIBS=`echo ${LIBS}|sed -e s,'-R../lib',,g`
     INCS="${INCS} `net-snmp-config --cflags`"
   else
-    AC_MSG_RESULT(NET-SNMP is not present: SNMP support is disabled)
+    AC_MSG_RESULT(NETSNMP is not present: SNMP support is disabled)
   fi
 fi
+
+dnl>
+dnl> Lua - http://www.lua.org
+dnl>
+AC_CHECK_TOOL(LUA, lua-config)
+  if test "x$ac_cv_prog_ac_ct_LUA" = "xlua-config"; then
+    AC_DEFINE_UNQUOTED(HAVE_LUA, 1, [LUA is supported])
+    LUALIBS="`lua-config --libs`"
+    LIBS="${LIBS} ${LUALIBS}"
+    INCS="${INCS} `lua-config --include`"
+    AC_MSG_RESULT(Compiling ntop with Lua support)
+  else
+    AC_MSG_RESULT(Lua (http://www.lua.org) is not present: LUA support is disabled)
+  fi
 
 
 dnl>
@@ -2069,6 +2083,7 @@ AC_SUBST(DYN_FLAGS)
 AC_SUBST(EXEEXT)
 AC_SUBST(INCS)
 AC_SUBST(SNMP_LIBS)
+AC_SUBST(LUA_LIBS)
 AC_SUBST(LIBTOOL_DEPS)
 AC_SUBST(MAKE_SHARED_LIBRARY_PARM)
 AC_SUBST(NTOP_VERSION_EXTRA)

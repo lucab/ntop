@@ -544,7 +544,7 @@ int main(int argc, char *argv[]) {
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s", version);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Configured on %s, built on %s.", configureDate, buildDate);
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2007 by %s", author);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2008 by %s", author);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Get the freshest ntop from http://www.ntop.org/");
  
 #ifndef WIN32
@@ -582,7 +582,7 @@ int main(int argc, char *argv[]) {
 #endif
 
   if(!myGlobals.webInterfaceDisabled)
-      initWeb();
+    initWeb();
 
   /* ******************************* */
 
@@ -651,7 +651,6 @@ int main(int argc, char *argv[]) {
    */
   startSniffer();
 
-// #ifndef WIN32
   while(myGlobals.ntopRunState == FLAG_NTOPSTATE_RUN) {
     ntopSleepWhileSameState(PARM_SLEEP_LIMIT);
 
@@ -662,7 +661,8 @@ int main(int argc, char *argv[]) {
       checkVersion(NULL);
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: Main thread shutting down", pthread_self());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: Main thread shutting down",
+	     pthread_self());
   endTime = time(NULL) + PARM_SLEEP_LIMIT + 2;
 
   while((myGlobals.ntopRunState != FLAG_NTOPSTATE_TERM) &&
@@ -679,15 +679,6 @@ int main(int argc, char *argv[]) {
   traceEvent(CONST_TRACE_INFO, "===================================");
   traceEvent(CONST_TRACE_INFO, "        ntop is shutdown...        ");
   traceEvent(CONST_TRACE_INFO, "===================================");
-
-  /*
-#else
-  if(myGlobals.pcap_file_list != NULL) {
-  while(1) 
-  sleep(30);
-  }
-#endif
-*/
 
   return(0);
 }

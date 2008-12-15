@@ -54,8 +54,8 @@ static u_short voipSessionsLen;
 
 static char *versionSite[]   = {
   CONST_VERSIONCHECK_SITE,
-  CONST_VERSIONCHECK_BACKUP_SITE,
-  NULL };
+  NULL 
+};
 
 /* ************************************ */
 
@@ -5592,10 +5592,12 @@ void* checkVersion(void* notUsed _UNUSED_) {
 
   for(idx = 0; versionSite[idx] != NULL; idx++) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-	       "CHKVER: Checking current ntop version at %s/%s", versionSite[idx], CONST_VERSIONCHECK_DOCUMENT);
-
+	       "CHKVER: Checking current ntop version at %s/%s", 
+	       versionSite[idx], CONST_VERSIONCHECK_DOCUMENT);
+    
 #ifdef CHKVER_DEBUG
-    traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: '%s' '%s'", versionSite[idx], CONST_VERSIONCHECK_DOCUMENT);
+    traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: '%s' '%s'", 
+	       versionSite[idx], CONST_VERSIONCHECK_DOCUMENT);
 #endif
 
     memset(buf, 0, sizeof(buf));

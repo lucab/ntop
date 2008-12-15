@@ -219,6 +219,9 @@
    than `double'. */
 #undef HAVE_LONG_DOUBLE_WIDER
 
+/* LUA is supported */
+#undef HAVE_LUA
+
 /* Define to 1 if you have the <math.h> header file. */
 #undef HAVE_MATH_H
 

@@ -1872,7 +1872,8 @@ static int checkURLsecurity(char *url) {
 	   (strcasecmp(&workURL[i], "js")   == 0) || /* Javascript */
 	   (strcasecmp(&workURL[i], "json") == 0) ||
 	   (strcasecmp(&workURL[i], "pdf")  == 0) ||
-	   (strcasecmp(&workURL[i], "pl")   == 0) || /* used for Perl CGI's */
+	   (strcasecmp(&workURL[i], "pl")   == 0) ||  /* used for Perl binding */
+	   (strcasecmp(&workURL[i], "lua")   == 0) || /* used for Lua binding */
 	   (strcasecmp(&workURL[i], "css")  == 0)))) {
     traceEvent(CONST_TRACE_NOISY,
 	       "URL security(5): Found bad file extension (.%s) in URL...\n",
@@ -2162,7 +2163,8 @@ static int returnHTTPPage(char* pageName,
        || (myGlobals.hostsDisplayPolicy > showOnlyRemoteHosts))
       myGlobals.hostsDisplayPolicy = showAllHosts;
 
-    safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "%d", myGlobals.hostsDisplayPolicy);
+    safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "%d", 
+		  myGlobals.hostsDisplayPolicy);
     storePrefsValue("globals.displayPolicy", tmp);
   }
 
@@ -2175,7 +2177,8 @@ static int returnHTTPPage(char* pageName,
        || (myGlobals.localityDisplayPolicy > showOnlyReceived))
       myGlobals.localityDisplayPolicy = showSentReceived;
 
-    safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "%d", myGlobals.localityDisplayPolicy);
+    safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "%d", 
+		  myGlobals.localityDisplayPolicy);
     storePrefsValue("globals.displayPolicy", tmp);
   }
 
@@ -2660,6 +2663,22 @@ static int returnHTTPPage(char* pageName,
 	  return(FLAG_HTTP_INVALID_PAGE);
 #else
 	returnHTTPpageNotFound("Perl support disabled into this ntop instance");
+#endif
+    } else if(strncasecmp(pageName, CONST_EMBEDDED_LUA_HEADER, 
+			  strlen(CONST_EMBEDDED_LUA_HEADER)) == 0) {
+      if(domainNameParm != NULL) free(domainNameParm);
+      if(db_key != NULL) free(db_key);
+      if(db_val != NULL) free(db_val);
+      
+      printTrailer = 0;
+      
+#ifdef HAVE_LUA
+      if(handleLuaHTTPRequest(&pageName[strlen(CONST_EMBEDDED_LUA_HEADER)])) {
+	;
+      } else
+	return(FLAG_HTTP_INVALID_PAGE);
+#else
+      returnHTTPpageNotFound("Lua support disabled into this ntop instance");
 #endif
     } else
 
@@ -3566,7 +3585,8 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
   sendString("Content-Encoding: gzip\r\n");
   fseek(fd, 0, SEEK_END);
-  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Content-Length: %d\r\n\r\n", (len = ftell(fd)));
+  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), 
+		"Content-Length: %d\r\n\r\n", (len = ftell(fd)));
   fseek(fd, 0, SEEK_SET);
   sendString(tmpStr);
 
@@ -3645,7 +3665,8 @@ void handleHTTPrequest(HostAddr from) {
       } else {
 	myGlobals.weDontWantToTalkWithYou[i].count++;
 	myGlobals.numHandledBadrequests[myGlobals.newSock > 0]++;
-	traceEvent(CONST_TRACE_ERROR, "Rejected request from address %s (it previously sent ntop a bad request)",
+	traceEvent(CONST_TRACE_ERROR, "Rejected request from address %s "
+		   "(it previously sent ntop a bad request)",
 		   _addrtostr(&from, requestedURL, sizeof(requestedURL)));
 	return;
       }

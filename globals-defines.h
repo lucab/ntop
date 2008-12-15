@@ -970,7 +970,6 @@
  * This is the URL to request the latest version information
  */
 #define CONST_VERSIONCHECK_SITE             "version.ntop.org"
-#define CONST_VERSIONCHECK_BACKUP_SITE      "www.burtonstrauss.com"
 #define CONST_VERSIONCHECK_DOCUMENT         "version.xml"
 #define CONST_VERSIONCHECK_URL              CONST_VERSIONCHECK_SITE "/" CONST_VERSIONCHECK_DOCUMENT
 
@@ -1171,6 +1170,7 @@
 #define CONST_NETWORK_IMAGE_MAP             "network_map.png"
 #define CONST_CGI_HEADER                    "ntop-bin/"
 #define CONST_EMBEDDED_PERL_HEADER          "perl/"
+#define CONST_EMBEDDED_LUA_HEADER           "lua/"
 #define CONST_MAN_NTOP_HTML                 "ntop.html"
 #define CONST_NTOP_P3P                      "ntop.p3p"
 #define CONST_PROBLEMRPT_HTML               "ntopProblemReport.html"
@@ -1643,8 +1643,8 @@
 #define CONST_IMG_FC_VEN_JNI           "<img class=tooltip src=\"/jni.gif\" border=\"0\" alt=\"JNI Corporation\" title=\"JNI Corporation\">"
 #define CONST_IMG_FC_VEN_SEAGATE       "<img class=tooltip src=\"/seagate.gif\" border=\"0\" alt=\"Seagate Technology\" title=\"Seagate Technology\">"
 
-#define CONST_IMG_ARROW_UP             "<img class=tooltip src=\"/arrow_up.gif\" border=\"0\" alt=\"Ascending order, click to reverse\" title=\"Ascending order, click to reverse\">"
-#define CONST_IMG_ARROW_DOWN           "<img class=tooltip src=\"/arrow_down.gif\" border=\"0\" alt=\"Descending order, click to reverse\" title=\"Descending order, click to reverse\">"
+#define CONST_IMG_ARROW_UP             "<img class=tooltip src=\"/arrow_up.png\" border=\"0\" alt=\"Ascending order, click to reverse\" title=\"Ascending order, click to reverse\">"
+#define CONST_IMG_ARROW_DOWN           "<img class=tooltip src=\"/arrow_down.png\" border=\"0\" alt=\"Descending order, click to reverse\" title=\"Descending order, click to reverse\">"
 
 #define CONST_IMG_OS_WINDOWS           "<img class=tooltip alt=\"OS: Windows\" title=\"OS: Windows\" align=\"middle\" src=\"/statsicons/os/windows.gif\">"
 #define CONST_IMG_OS_IRIX              "<img class=tooltip alt=\"OS: Irix\" title=\"OS: Irix\" align=\"middle\" src=\"/statsicons/os/irix.gif\">"

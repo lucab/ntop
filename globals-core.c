@@ -174,7 +174,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Interface merge enabled by default");
 
   myGlobals.checkVersionStatus = FLAG_CHECKVERSION_NOTCHECKED;
-  myGlobals.checkVersionStatusAgain = 0;
+  myGlobals.checkVersionStatusAgain = 1;
 
 #if !defined(WIN32) && defined(HAVE_LIBWRAP)
   allow_severity = DEFAULT_TCPWRAP_ALLOW;

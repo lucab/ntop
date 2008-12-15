@@ -172,8 +172,8 @@ void addPageIndicator(char *url, u_int pageNum,
 
   if(pageNum >= 1) {
     safe_snprintf(__FILE__, __LINE__, prevBuf, sizeof(prevBuf),
-		  "<A HREF=\"%s%cpage=0&netmode=%d&col=%s\"><IMG SRC=/fback.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Back to first page\"></A> "
-		  "<A HREF=\"%s%cpage=%d&netmode=%dcol=%s\"><IMG SRC=/back.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Prior page\"></A>",
+		  "<A HREF=\"%s%cpage=0&netmode=%d&col=%s\"><IMG SRC=/fback.png BORDER=0 "TABLE_DEFAULTS" ALIGN=vbottom ALT=\"Back to first page\"></A> "
+		  "<A HREF=\"%s%cpage=%d&netmode=%dcol=%s\"><IMG SRC=/back.png BORDER=0 "TABLE_DEFAULTS" ALIGN=vbottom ALT=\"Prior page\"></A>",
 		  url, separator, netmode, shortBuf,
 		  url, separator, pageNum-1, netmode, shortBuf);
   } else
@@ -181,8 +181,8 @@ void addPageIndicator(char *url, u_int pageNum,
 
   if(actPage < numPages) {
     safe_snprintf(__FILE__, __LINE__, nextBuf, sizeof(nextBuf),
-		  "<A HREF=\"%s%cpage=%d&netmode=%d&col=%s\"><IMG SRC=/forward.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Next Page\"></A> "
-		  "<A HREF=\"%s%cpage=%d&netmode=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 "TABLE_DEFAULTS" ALIGN=vmiddle ALT=\"Forward to last page\"></A>",
+		  "<A HREF=\"%s%cpage=%d&netmode=%d&col=%s\"><IMG SRC=/forward.png BORDER=0 "TABLE_DEFAULTS" ALIGN=vbottom ALT=\"Next Page\"></A> "
+		  "<A HREF=\"%s%cpage=%d&netmode=%d&col=%s\"><IMG SRC=/fforward.png BORDER=0 "TABLE_DEFAULTS" ALIGN=vbottom ALT=\"Forward to last page\"></A>",
 		  url, separator, pageNum+1, netmode, shortBuf,
 		  url, separator, numPages-1, netmode, shortBuf);
   }  else
