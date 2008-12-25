@@ -3145,7 +3145,7 @@ static void printHostFingerprint(HostTraffic *el) {
 	       "%d", value);    
   }
   
-  traceEvent (CONST_TRACE_WARNING, "[%s][%s]\n", el->hostNumIpAddress, fingerprint);
+  /* traceEvent (CONST_TRACE_WARNING, "[%s][%s]\n", el->hostNumIpAddress, fingerprint); */
 }
 
 /* ************************************ */
@@ -6163,7 +6163,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
 /* ************************* */
 
-  void printNoDataYet(void) {
+void printNoDataYet(void) {
   printFlagedWarning("<I>No Data To Display (yet)</I>");
 }
 

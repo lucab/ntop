@@ -6528,6 +6528,11 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 #endif
 			 );
 
+#ifdef HAVE_LUA
+  printFeatureConfigInfo(textPrintFlag, "Embedded <A HREF=http://www.lua.org>Lua</A> API Version", 
+			 LUA_RELEASE);			 
+#endif
+
 #if defined(WIN32)
   printFeatureConfigInfo(textPrintFlag, "WinPcap version", (char*)PacketGetVersion());
 #endif

@@ -1874,6 +1874,7 @@ static int checkURLsecurity(char *url) {
 	   (strcasecmp(&workURL[i], "pdf")  == 0) ||
 	   (strcasecmp(&workURL[i], "pl")   == 0) ||  /* used for Perl binding */
 	   (strcasecmp(&workURL[i], "lua")   == 0) || /* used for Lua binding */
+	   (strcasecmp(&workURL[i], "bytecode")   == 0) || /* used for Lua bytecode binding */
 	   (strcasecmp(&workURL[i], "css")  == 0)))) {
     traceEvent(CONST_TRACE_NOISY,
 	       "URL security(5): Found bad file extension (.%s) in URL...\n",
