@@ -895,10 +895,8 @@ typedef struct hostTraffic {
   TrafficCounter   tcpSentLoc, tcpSentRem, udpSentLoc, udpSentRem, icmpSent,icmp6Sent;
   TrafficCounter   tcpRcvdLoc, tcpRcvdFromRem, udpRcvdLoc, udpRcvdFromRem, icmpRcvd, icmp6Rcvd;
 
-  TrafficCounter   tcpFragmentsSent,  tcpFragmentsRcvd,
-    udpFragmentsSent, udpFragmentsRcvd,
-    icmpFragmentsSent, icmpFragmentsRcvd,
-    icmp6FragmentsSent, icmp6FragmentsRcvd;
+  TrafficCounter   tcpFragmentsSent,  tcpFragmentsRcvd, udpFragmentsSent, udpFragmentsRcvd,
+    icmpFragmentsSent, icmpFragmentsRcvd, icmp6FragmentsSent, icmp6FragmentsRcvd;
 
   /* Protocol decoders */
   ProtocolInfo     *protocolInfo;

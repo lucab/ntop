@@ -2740,7 +2740,7 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBy
 		    tmpName1);
       sendString(buf);
 
-      printBar(buf, sizeof(buf), el->actBandwidthUsageS, el->actBandwidthUsageR, maxBandwidthUsage, 3);
+      printBar(buf, sizeof(buf), el->actBandwidthUsageS, el->actBandwidthUsageR, maxBandwidthUsage, 2);
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>", tmpName2);
       sendString(buf);

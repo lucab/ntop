@@ -2455,6 +2455,8 @@ void makeDot() {
 
 /* ******************************* */
 
+#define NUM_TABLE_COLUMNS 13
+
 void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes,
 		    int vlanId, int ifId, int knownSubnetId) {
   u_int idx, numEntries=0, maxHosts;
@@ -2462,7 +2464,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
   HostTraffic *el;
   HostTraffic** tmpTable;
-  char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[12], *theAnchor[12], osBuf[160];
+  char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[NUM_TABLE_COLUMNS],
+    *theAnchor[NUM_TABLE_COLUMNS], osBuf[160];
   char htmlAnchor[64], htmlAnchor1[64];
   char formatBuf[32], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
   u_char *vlanList, foundVlan = 0, vlanStr[16], ifStr[16], foundIf = 0, *ifList;
@@ -2571,7 +2574,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1),
 		  "<A HREF=\"/%s?col=", CONST_HOSTS_INFO_HTML);
 
-    for(i=1; i< (sizeof(arrow)/sizeof(char*)); i++) {
+    for(i=1; i<NUM_TABLE_COLUMNS; i++) {
       if(abs(myGlobals.columnSort) == i)
 	arrow[i] = arrowGif, theAnchor[i] = htmlAnchor;
       else
@@ -2763,6 +2766,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 		      "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
 		      "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
 		      "<TH "TH_BG">%s10\">AS%s</A></TH>\n"
+		      "<TH "TH_BG">%s12\">Fingerprint%s</A></TH>\n"
 		      "</TR>\n",
 		      theAnchor[1], arrow[1],
 		      theAnchor[0], arrow[0],
@@ -2775,7 +2779,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 		      theAnchor[7], arrow[7],
 		      theAnchor[8], arrow[8],
 		      theAnchor[9], arrow[9],
-		      theAnchor[10], arrow[10]
+		      theAnchor[10], arrow[10],
+		      theAnchor[12], arrow[12]
 		      );
       } else {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
@@ -2790,6 +2795,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 		      "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
 		      "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
 		      "<TH "TH_BG">%s10\">AS%s</A></TH>\n"
+		      "<TH "TH_BG">%s11\">Fingerprint%s</A></TH>\n"
 		      "</TR>\n",
 		      theAnchor[1], arrow[1],
 		      theAnchor[0], arrow[0],
@@ -2800,7 +2806,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 		      theAnchor[7], arrow[7],
 		      theAnchor[8], arrow[8],
 		      theAnchor[9], arrow[9],
-		      theAnchor[10], arrow[10]
+		      theAnchor[10], arrow[10],
+		      theAnchor[12], arrow[12]
 		      );
       }
       sendString(buf);
@@ -2985,7 +2992,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	  }
 
 	  sendString("&nbsp;</TD>");
-	  printBar(buf, sizeof(buf), el->actBandwidthUsageS, el->actBandwidthUsageR, maxBandwidthUsage, 3);
+	  printBar(buf, sizeof(buf), el->actBandwidthUsageS, el->actBandwidthUsageR, maxBandwidthUsage, 2);
 
 	  if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>", tmpName2);
@@ -3039,6 +3046,21 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 			  "</TD>",
 			  el->hostAS, el->hostAS);
 	    sendString(buf);
+	  }
+
+	  {
+	    u_int flags = 0;
+
+	    sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
+
+	    for(i=0; i<MAX_FLAG_HOST_TYPE; i++) {
+	      if(FD_ISSET(i, &(el->flags)))
+		sendString("<IMG SRC=/bit_on.png BORDER=0>\n");
+	      else
+		sendString("<IMG SRC=/bit_off.png BORDER=0>\n");
+	    }
+	    
+	    sendString("</TD>");
 	  }
 
 	  sendString("</TR>\n");
@@ -3145,7 +3167,8 @@ static void printHostFingerprint(HostTraffic *el) {
 	       "%d", value);    
   }
   
-  /* traceEvent (CONST_TRACE_WARNING, "[%s][%s]\n", el->hostNumIpAddress, fingerprint); */
+  traceEvent (CONST_TRACE_WARNING, "[%s][%s][len=%d]",
+	      el->hostNumIpAddress, fingerprint, sizeof(el->flags));
 }
 
 /* ************************************ */
@@ -6355,7 +6378,8 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
 
     qsort(tmpTable, numEntries, sizeof(HostTraffic*), sortHostFctn);
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
 		  "<TR "TR_ON" "DARK_BG">"
 		  "<TH "TH_BG">%s</A></TH>\n"
 		  "<TH "TH_BG">Hosts</TH>\n"

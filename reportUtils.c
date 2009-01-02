@@ -977,6 +977,9 @@ int sortHostFctn(const void *_a, const void *_b) {
    return(strcasecmp((*a)->community ? (*a)->community : "",
 		      (*b)->community ? (*b)->community : ""));
     break;
+  case 12:
+    return(memcmp(&(*a)->flags, &(*b)->flags, sizeof(fd_set)));
+    break;
 
   case CONST_VLAN_COLUMN_SORT:
     n_a = (*a)->vlanId, n_b = (*b)->vlanId;

@@ -1795,6 +1795,8 @@
 #define FLAG_HOST_TYPE_SVC_VOIP_CLIENT      29
 #define FLAG_HOST_TYPE_SVC_VOIP_GATEWAY     30
 
+#define MAX_FLAG_HOST_TYPE                  FLAG_HOST_TYPE_SVC_VOIP_GATEWAY
+
 /* Flags for possible error codes */
 #define FLAG_HOST_WRONG_NETMASK             65
 #define FLAG_HOST_DUPLICATED_MAC            66
