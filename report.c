@@ -2382,7 +2382,9 @@ void makeDot() {
 
     if(out != NULL) {
       fprintf(out, "digraph ntop {\n");
-      fprintf(out, "node [shape = polygon, sides=4, fontsize=9, style=filled, fontname=\"Helvetica\"];\n");
+      fprintf(out, "node [shape = polygon, sides=4, fontsize=9, style=filled" 
+	      /* ", fontname=\"Helvetica\" */ 
+	      "];\n");
 
       snprintf(path, sizeof(path), "%s/ntop-sort.dot", myGlobals.spoolPath);
       if((in = fopen(path, "r")) != NULL) {
