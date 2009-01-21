@@ -1617,7 +1617,7 @@ else
    cd $LUA_VERSION; make posix; cd ..
    fi
 LUA_LIB_DIR=$PWD/$LUA_VERSION"/src"
-LIBS="${LIBS} -L${LUA_LIB_DIR} -llua"
+LIBS="-L${LUA_LIB_DIR} -llua ${LIBS} "
 INCS="${INCS} -I${LUA_LIB_DIR}"
 AC_DEFINE_UNQUOTED(HAVE_LUA, 1, [LUA is supported])
 
@@ -1947,7 +1947,7 @@ fi
 GEO_DIR=`find $PWD -type d -name "GeoIP-*"`
 GEO_IP="$GEO_DIR/libGeoIP/"
 CFLAGS="$CFLAGS -I$GEO_IP"
-LDFLAGS="$LDFLAGS -L$GEO_IP.libs/ -lGeoIP"
+LDFLAGS="-L$GEO_IP.libs/ -lGeoIP $LDFLAGS"
 
 dnl> NTOPCONFIGDEBUG_SETTINGS([precet])
 

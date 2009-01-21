@@ -334,6 +334,11 @@ install: install-recursive
 	  rm -f $(DESTDIR)/$(datadir)/ntop/warnuser; \
 	fi
 
+	echo "Shall you be using SELinux please run:"
+	echo "make install-selinux-policy"
+
+install-selinux-policy:
+	chcon -t textrel_shlib_t $(DESTDIR)$(libdir)/*ntop*.so
 
 install-data-local: ntop.txt ntop.html faq.html
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
