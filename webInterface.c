@@ -234,10 +234,10 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   if(el == NULL)
     return("&nbsp;");
-  
+
   safe_snprintf(__FILE__, __LINE__, symIp, sizeof(symIp), "hostname.%s",
 		(el->hostNumIpAddress[0] != '\0') ? el->hostNumIpAddress : el->ethAddressString);
-  
+
   if(fetchPrefsValue(symIp, custom_host_name, sizeof(custom_host_name)) == -1) {
     custom_host_name[0] = '\0';
   }
@@ -311,11 +311,11 @@ char* makeHostLink(HostTraffic *el, short mode,
       else
         return("&lt;other&gt;<!-- cmpSerial() match -->");
     }
-    
+
     /* User other names if we have them, but follow (High->Low) the numerical
      * sequence of FLAG_HOST_SYM_ADDR_TYPE_xxx so it still sorts right
      */
-  if((el->hostNumIpAddress[0] != '\0') 
+  if((el->hostNumIpAddress[0] != '\0')
      && (!((el->ethAddressString[0] == '\0') && subnetPseudoLocalHost(el)))) {
     /* We have the IP, so the DNS is probably still getting the entry name */
       strncpy(symIp, el->hostNumIpAddress, sizeof(symIp));
@@ -365,15 +365,15 @@ char* makeHostLink(HostTraffic *el, short mode,
     /* Got it? Use it! */
     strncpy(symIp, el->hostResolvedName, sizeof(symIp));
 
-    if((el->ethAddressString[0] != '\0') 
+    if((el->ethAddressString[0] != '\0')
        && subnetPseudoLocalHost(el)
        && hasWrongNetmask(el)
        ) {
       strncpy(linkName, el->ethAddressString, sizeof(linkName));
-      usedEthAddress = 1;      
+      usedEthAddress = 1;
     } else
       strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
-    
+
     if(el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NETBIOS) {
         strncat(noteBuf, " [NetBIOS]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
     }
@@ -589,7 +589,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		  dhcpBootpStr, multihomedStr, multivlanedStr,
 		  usedEthAddress ? CONST_IMG_NIC_CARD : "",
 		  gwStr, voipHostStr, brStr, dnsStr,
-		  printStr, smtpStr, httpStr, ntpStr, 
+		  printStr, smtpStr, httpStr, ntpStr,
 		  healthStr, userStr, p2pStr, mapStr, flag);
   } else if(mode == FLAG_HOSTLINK_TEXT_LITE_FORMAT) {
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "/%s%s.html", linkName, vlanStr);
@@ -598,14 +598,14 @@ char* makeHostLink(HostTraffic *el, short mode,
                 "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
 		  tooltip, linkName, vlanStr,
 		  makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)),
-		  titleBuf[0] != '\0' ? "title=\"" : "", 
+		  titleBuf[0] != '\0' ? "title=\"" : "",
 		  titleBuf, titleBuf[0] != '\0' ? "\"" : "",
 		  (custom_host_name[0] != '\0') ? custom_host_name : symIp,
 		  noteBuf,
 		  dhcpBootpStr, multihomedStr, multivlanedStr,
 		  usedEthAddress ? CONST_IMG_NIC_CARD : "",
 		  gwStr, voipHostStr, brStr, dnsStr,
-		  printStr, smtpStr, httpStr, ntpStr, healthStr, 
+		  printStr, smtpStr, httpStr, ntpStr, healthStr,
 		  userStr, p2pStr, mapStr, flag);
   }
 
@@ -710,13 +710,13 @@ char* getHostCountryIconURL(HostTraffic *el) {
 		  c_buf);
 	revertSlashIfWIN32(path, 0);
     rc = stat(path, &buf);
-    
+
     if(rc != 0) {
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
 		    CFG_DATAFILE_DIR, el->geo_ip->country_code);
 	  revertSlashIfWIN32(path, 0);
       rc = stat(path, &buf);
-    } 
+    }
 
     if(rc == 0) {
       img = c_buf;
@@ -735,7 +735,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
 		  el->geo_ip->country_name, el->geo_ip->country_code,
 		  el->geo_ip->country_name, el->geo_ip->country_code,
 		  img);
-  }  
+  }
 
   return(flagBuf);
 }
@@ -823,7 +823,7 @@ void switchNwInterface(int _interface) {
     u_short do_enable;
     sendString("Available Network Interfaces:</B><P>\n<FORM ACTION=" CONST_SWITCH_NIC_HTML ">\n");
 
-    if(((!myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice) 
+    if(((!myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice)
 	|| (myGlobals.device[myGlobals.actualReportDeviceId].sflowGlobals)
 	|| (myGlobals.device[myGlobals.actualReportDeviceId].netflowGlobals))
        &&  myGlobals.device[myGlobals.actualReportDeviceId].activeDevice) {
@@ -838,7 +838,7 @@ void switchNwInterface(int _interface) {
 	  selected = "CHECKED", do_enable = 0;
 	else
 	  selected = "";
-	
+
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s&nbsp;[id=%d]<br>\n",
 		      i+1, selected, myGlobals.device[i].humanFriendlyName, i);
@@ -929,7 +929,7 @@ static void printFeatureConfigInfoHeader(int textPrintFlag, char *feature) {
   sendString(texthtml("", "<tr><th "DARK_BG" "TH_BG" ALIGN=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
   sendString(feature);
   sendString(texthtml(".....", "</th>\n<td class=\"wrap\" "TD_BG" ALIGN=\"right\" colspan=\"2\" width=\"" xstr(CONST_INFOHTML_COL23_WIDTH) "\">"));
-}  
+}
 
 static void printFeatureConfigInfoFooter(int textPrintFlag) {
   sendString(texthtml("\n", "</td></tr>\n"));
@@ -6080,7 +6080,7 @@ void printMutexStatusReport(int textPrintFlag) {
     printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
 
   printMutexStatus(textPrintFlag, &myGlobals.hostsHashLockMutex, "hostsHashLockMutex");
-  
+
   for(i=0; i<NUM_SESSION_MUTEXES; i++) {
     char buf[32];
 
@@ -6123,8 +6123,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "ntop Version", version);
   printFeatureConfigInfo(textPrintFlag, "Configured on", configureDate);
   printFeatureConfigInfo(textPrintFlag, "Built on", buildDate);
-  
-  safe_snprintf(__FILE__, __LINE__, formatBuf, sizeof(formatBuf), "%s [%d bit]", 
+
+  safe_snprintf(__FILE__, __LINE__, formatBuf, sizeof(formatBuf), "%s [%d bit]",
 	  osName, (sizeof(int) == 4) ? 32 : 64);
   printFeatureConfigInfo(textPrintFlag, "OS", formatBuf);
 
@@ -6143,11 +6143,11 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.rrdtool.org/>RRD</A> Version", buf);
 
   if(myGlobals.geo_ip_db != NULL)
-    printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.maxmind.com/>GeoIP</A> Version", 
+    printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.maxmind.com/>GeoIP</A> Version",
 			   GeoIP_database_info(myGlobals.geo_ip_db));
 
   if(myGlobals.geo_ip_asn_db != NULL)
-    printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.maxmind.com/>GeoIP</A> AS Version", 
+    printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.maxmind.com/>GeoIP</A> AS Version",
 			   GeoIP_database_info(myGlobals.geo_ip_asn_db));
 
 #ifndef WIN32
@@ -6520,7 +6520,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "GDBM version", gdbm_version);
 #endif
 
-  printFeatureConfigInfo(textPrintFlag, "Embedded Perl API", 
+  printFeatureConfigInfo(textPrintFlag, "Embedded Perl API",
 #ifdef HAVE_PERL
 			 "Present"
 #else
@@ -6529,8 +6529,13 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 			 );
 
 #ifdef HAVE_LUA
-  printFeatureConfigInfo(textPrintFlag, "Embedded <A HREF=http://www.lua.org>Lua</A> API Version", 
-			 LUA_RELEASE);			 
+  printFeatureConfigInfo(textPrintFlag, "Embedded <A HREF=http://www.lua.org>Lua</A> API Version",
+#ifdef  LUA_RELEASE
+			 LUA_RELEASE
+#else
+			 "Unknown"
+#endif
+);
 #endif
 
 #if defined(WIN32)
@@ -6595,19 +6600,19 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   if(myGlobals.numLocalNetworks > 0) {
     printFeatureConfigInfoHeader(textPrintFlag, "Local Networks");
-    
+
     for(i=0; i<myGlobals.numLocalNetworks; i++) {
       struct in_addr addr;
       char addr_buf[32];
-      
+
       addr.s_addr = myGlobals.localNetworks[i].address[CONST_NETWORK_ENTRY];
-      
+
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "%s/%d<br>", _intoa(addr, addr_buf, sizeof(addr_buf)),
 		    myGlobals.localNetworks[i].address[CONST_NETMASK_V6_ENTRY]);
       sendString(buf);
     }
-    
+
     printFeatureConfigInfoFooter(textPrintFlag);
   }
 
@@ -6618,32 +6623,32 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   for(i=0; i<myGlobals.numDevices; i++) {
     char addr_buf[32], adapter_buf[128];
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%d", 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%d",
 		  _intoa(myGlobals.device[i].network, addr_buf, sizeof(addr_buf)),
 		  num_network_bits(myGlobals.device[i].netmask.s_addr));
 
     safe_snprintf(__FILE__, __LINE__, adapter_buf, sizeof(adapter_buf),
 		  "%s Local Network", myGlobals.device[i].name);
     printFeatureConfigInfo(textPrintFlag, adapter_buf, buf);
-  }    
+  }
 
   /* ******************** */
 
   if(myGlobals.numKnownSubnets > 0) {
     printFeatureConfigInfoHeader(textPrintFlag, "Known Networks");
-    
+
     for(i=0; i<myGlobals.numKnownSubnets; i++) {
       struct in_addr addr;
       char addr_buf[32];
-      
+
       addr.s_addr = myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY];
-      
+
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "%s/%d<br>", _intoa(addr, addr_buf, sizeof(addr_buf)),
 		    myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY]);
       sendString(buf);
     }
-    
+
     printFeatureConfigInfoFooter(textPrintFlag);
   }
 
@@ -6889,7 +6894,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   float qminDelay=99999.0, qmaxDelay=0.0,
         /*stddev:*/ qM, qT, qQ, qR, qSD, qXBAR,
         pminDelay=99999.0, pmaxDelay=0.0,
-    /*stddev:*/ pM=0, pT=0, pQ=0, pR=0, pSD=0, pXBAR;    
+    /*stddev:*/ pM=0, pT=0, pQ=0, pR=0, pSD=0, pXBAR;
 
   if(myGlobals.queueBufferCount >= MAX_PROCESS_BUFFER) {
 
@@ -6940,12 +6945,12 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 				   "Standard Deviation",
 				   TRUE, qSD, TRUE, pSD,
 				   TRUE);
-    
+
     printFeatureConfigInfo3ColFlt6(textPrintFlag,
 				   "Maximum ever",
 				   TRUE, myGlobals.qmaxDelay, TRUE, myGlobals.pmaxDelay,
                                   TRUE);
-    
+
     sendString(texthtml("", "<tr><th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
     sendString("Throughput (pps) min/avg/max");
 
@@ -7508,13 +7513,13 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   /* **************************** */
 
   printMutexStatusReport(textPrintFlag);
-  
+
   if(textPrintFlag != TRUE) {
     sendString("<p>[ Click <a  class=tooltip href=\"" CONST_TEXT_INFO_NTOP_HTML "\" title=\"Text version of this page\">"
 	       "here</a> for a more extensive, text version of this page, suitable for "
 	       "inclusion into a bug report ]</p>\n");
   }
-  
+
   sendString(texthtml("</pre>", "</CENTER>\n"));
 }
 
@@ -8114,7 +8119,7 @@ void initWeb(void) {
   traceEvent(CONST_TRACE_INFO, "INITWEB: Initializing TCP/IP socket connections for web server");
 
   if(myGlobals.runningPref.webPort > 0) {
-    initSocket(FALSE, myGlobals.runningPref.ipv4or6, &myGlobals.runningPref.webPort, 
+    initSocket(FALSE, myGlobals.runningPref.ipv4or6, &myGlobals.runningPref.webPort,
 	       &myGlobals.sock, myGlobals.runningPref.webAddr);
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
     if(myGlobals.runningPref.webAddr)
@@ -8905,17 +8910,17 @@ void edit_prefs(char *db_key, char *db_val) {
 
     unescape_url(db_key);
     unescape_url(db_val);
-    
+
     if(db_val[0] == '\0')
       delPrefsValue(db_key);
     else
       storePrefsValue(db_key, db_val);
-        
+
     if(strncmp(db_key, DEVICE_NAME, strlen(DEVICE_NAME)) == 0) {
       int i;
-      
+
       sanitize_rrd_string(db_val);
-      
+
       for(i=0; i<myGlobals.numDevices; i++) {
 	if((myGlobals.device[i].activeDevice) && (!strcmp(&db_key[len], myGlobals.device[i].name))) {
 	  if(myGlobals.device[i].humanFriendlyName) free(myGlobals.device[i].humanFriendlyName);
@@ -8926,9 +8931,9 @@ void edit_prefs(char *db_key, char *db_val) {
 	    myGlobals.device[i].humanFriendlyName = strdup(db_val);
 	}
       }
-    }          
+    }
   }
-  
+
   key = gdbm_firstkey(myGlobals.prefsFile);
   while (key.dptr) {
     char val[512];
@@ -8946,13 +8951,13 @@ void edit_prefs(char *db_key, char *db_val) {
 	sendString(buf);
       }
     }
-    
+
     nextkey = gdbm_nextkey (myGlobals.prefsFile, key);
     free (key.dptr);
     key = nextkey;
   }
 
-  if(((db_key == NULL) && (num_added > 0)) 
+  if(((db_key == NULL) && (num_added > 0))
      || ((db_key != NULL) && (num_added == 0))) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<FORM ACTION="CONST_EDIT_PREFS">"
 		  "<TR><TH ALIGN=LEFT "DARK_BG"><INPUT TYPE=TEXT NAME=key VALUE=\"%s\" size=30></TH>"

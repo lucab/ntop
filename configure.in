@@ -1598,31 +1598,21 @@ fi
 dnl>
 dnl> Lua - http://www.lua.org
 dnl>
-AC_CHECK_TOOL(LUA, lua-config)
-if test "x$ac_cv_prog_ac_ct_LUA" = "xlua-config"; then
-    AC_DEFINE_UNQUOTED(HAVE_LUA, 1, [LUA is supported])
-    LUALIBS="`lua-config --libs`"
-    LIBS="${LIBS} ${LUALIBS}"
-    INCS="${INCS} `lua-config --include`"
-    AC_MSG_RESULT(Compiling ntop with Lua support)
+LUA_VERSION=lua-5.1.4
+if test -f "$LUA_VERSION.tar.gz"; then
+   echo "Lua already present on this machine"
 else
-    AC_MSG_RESULT(Lua (http://www.lua.org) package isn't present: downloading it)
-
-    LUA_VERSION=lua-5.1.4
-    if test -f "$LUA_VERSION.tar.gz"; then
-       echo "Lua already present on this machine"
-       else
    wget http://www.lua.org/ftp/$LUA_VERSION.tar.gz
    tar xvfz $LUA_VERSION.tar.gz
+   cat $LUA_VERSION/src/Makefile | sed -e s,'MYCFLAGS=-DLUA_USE_POSIX',' MYCFLAGS="-fPIC -DLUA_USE_POSIX"',g > /tmp/lua.temp
+   cat /tmp/lua.temp >  $LUA_VERSION/src/Makefile
+   #rm -f /tmp/lua.temp
    cd $LUA_VERSION; make posix; cd ..
-   fi
+fi
 LUA_LIB_DIR=$PWD/$LUA_VERSION"/src"
 LIBS="-L${LUA_LIB_DIR} -llua ${LIBS} "
 INCS="${INCS} -I${LUA_LIB_DIR}"
 AC_DEFINE_UNQUOTED(HAVE_LUA, 1, [LUA is supported])
-
-fi
-
 
 dnl>
 dnl> SCTP - RFC 3286
