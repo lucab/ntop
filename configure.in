@@ -6,7 +6,7 @@ dnl>   Solaris 8 -- libgcc_s -- need test
 
 dnl> -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 dnl>
-dnl> Copyright (c) 1998 - 2008 Luca Deri <deri@ntop.org>
+dnl> Copyright (c) 1998 - 2009 Luca Deri <deri@ntop.org>
 dnl>                           Rocco Carbone <rocco@ntop.org>
 dnl>                       and Burton M. Strauss III <burton@ntopsupport.com>
 dnl>
@@ -1603,12 +1603,14 @@ if test -f "$LUA_VERSION.tar.gz"; then
    echo "Lua already present on this machine"
 else
    wget http://www.lua.org/ftp/$LUA_VERSION.tar.gz
-   tar xvfz $LUA_VERSION.tar.gz
-   cat $LUA_VERSION/src/Makefile | sed -e s,'MYCFLAGS=-DLUA_USE_POSIX',' MYCFLAGS="-fPIC -DLUA_USE_POSIX"',g > /tmp/lua.temp
-   cat /tmp/lua.temp >  $LUA_VERSION/src/Makefile
-   #rm -f /tmp/lua.temp
-   cd $LUA_VERSION; make posix; cd ..
 fi
+
+tar xvfz $LUA_VERSION.tar.gz
+cat $LUA_VERSION/src/Makefile | sed -e s,'MYCFLAGS=-DLUA_USE_POSIX',' MYCFLAGS="-fPIC -DLUA_USE_POSIX"',g > /tmp/lua.temp
+cat /tmp/lua.temp >  $LUA_VERSION/src/Makefile
+#rm -f /tmp/lua.temp
+cd $LUA_VERSION; make posix; cd ..
+
 LUA_LIB_DIR=$PWD/$LUA_VERSION"/src"
 LIBS="-L${LUA_LIB_DIR} -llua ${LIBS} "
 INCS="${INCS} -I${LUA_LIB_DIR}"
@@ -1909,14 +1911,14 @@ if test -f "GeoIP.tar.gz"; then
    echo "GeoIP already present on this machine"
 else
    wget http://www.maxmind.com/download/geoip/api/c/GeoIP.tar.gz
-   tar xvfz GeoIP.tar.gz
-   GEO_DIR=`find $PWD -type d -name "GeoIP-*"`
-   cd $GEO_DIR; ./configure; make; cd ..
-   # OSX Fix
-   GEO_DYLIB="$GEO_DIR/libGeoIP/.libs/libGeoIP.dylib"
-   if test -f $GEO_DYLIB; then
-      ln -s $GEO_DYLIB .
-   fi
+fi
+tar xvfz GeoIP.tar.gz
+GEO_DIR=`find $PWD -type d -name "GeoIP-*"`
+cd $GEO_DIR; ./configure; make; cd ..
+# OSX Fix
+GEO_DYLIB="$GEO_DIR/libGeoIP/.libs/libGeoIP.dylib"
+if test -f $GEO_DYLIB; then
+   ln -s $GEO_DYLIB .
 fi
 
 if test -f "GeoLiteCity.dat"; then

@@ -533,6 +533,47 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
 /* ********************************* */
 
+static void loadGeoIP() {
+  int i;
+
+  /* Initialize GeoIP databases */
+  for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
+    char path[256];
+    
+    safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
+		  "%s%c%s",
+		  myGlobals.configFileDirs[i], CONST_PATH_SEP, GEO_IP_FILE);
+    revertSlashIfWIN32(path, 0);
+    if((myGlobals.geo_ip_db = GeoIP_open(path, GEOIP_CHECK_CACHE)) != NULL) {
+      traceEvent(CONST_TRACE_INFO, "GeoIP: loaded config file %s", path);
+      break;
+    }
+  }
+  
+  if(myGlobals.geo_ip_db == NULL)
+    traceEvent(CONST_TRACE_ERROR, "GeoIP: unable to load file %s", GEO_IP_FILE);
+  
+  /* *************************** */
+
+  for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
+    char path[256];
+    
+    safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
+		  "%s%c%s",
+		  myGlobals.configFileDirs[i], CONST_PATH_SEP, GEO_IP_ASN_FILE);
+    revertSlashIfWIN32(path, 0);
+    if((myGlobals.geo_ip_asn_db = GeoIP_open(path, GEOIP_CHECK_CACHE)) != NULL) {
+      traceEvent(CONST_TRACE_INFO, "GeoIP: loaded ASN config file %s", path);
+      break;
+    }
+  }
+  
+  if(myGlobals.geo_ip_asn_db == NULL)
+    traceEvent(CONST_TRACE_ERROR, "GeoIP: unable to load ASN file %s", GEO_IP_ASN_FILE);  
+}
+
+/* ********************************* */
+
 void initNtop(char *devices) {
   char value[32];
 
@@ -589,7 +630,6 @@ void initNtop(char *devices) {
 	}
       }
     }
-
 
     if(!found) {
       traceEvent(CONST_TRACE_WARNING, "ntop will not become a daemon as it has not been");
@@ -667,7 +707,6 @@ void initNtop(char *devices) {
        || (myGlobals.localityDisplayPolicy > showOnlyReceived))
       myGlobals.localityDisplayPolicy = showSentReceived;
   }
-
 
   if(myGlobals.runningPref.skipVersionCheck != TRUE) {
     pthread_t myThreadId;
