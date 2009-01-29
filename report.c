@@ -3148,6 +3148,9 @@ static void printHostNwDelay(HostTraffic *el, int actualDeviceId,
 static void printHostFingerprint(HostTraffic *el) {
   int idx;
   char fingerprint[4096] = { '\0' };
+
+  return;
+
   for(idx=1; idx<MAX_ASSIGNED_IP_PORTS /* 1024 */; idx++) {
     PortUsage *ports = getPortsUsage(el, idx, 0);
     int value;
