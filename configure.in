@@ -266,7 +266,10 @@ AC_ARG_WITH(  rrd-home,
               [  --with-rrd-home=DIR        Usually /usr/local/rrdtool-1.2.x],
               RRD_HOME="$withval",
               RRD_HOME=/usr/local/rrdtool-1.2.19)
-
+AC_ARG_WITH(  pfring-root,
+              [  --with-pfring-root=DIR      PF_RING main DIR],
+              PFRING_ROOT="$withval",
+              PFRING_ROOT=)
 AC_ARG_WITH(  pcap-root,
               [  --with-pcap-root=DIR        LBNL pcap located in DIR],
               PCAP_ROOT="$withval",
@@ -558,6 +561,37 @@ LDFLAGS="${LDFLAGS}"
 
 dnl> NTOPCONFIGDEBUG_SETTINGS([After presets])
 
+if test ".${PFRING_ROOT}" != .; then
+  AC_MSG_CHECKING([for libpfring.a inside $PFRING_ROOT])
+  if test -d $PFRING_ROOT &&
+     test -r $PFRING_ROOT/userland/lib/libpfring.a ; then
+      echo ""
+      PFRING_ROOT=`cd ${PFRING_ROOT} && pwd`      
+      AC_MSG_RESULT([found in $PFRING_ROOT/userland/lib/])
+      PCAPRING_DIR=`find $PFRING_ROOT/userland -type d -name "libpcap*ring"`
+      AC_MSG_CHECKING([for libpcap patched with PF_RING in $PFRING_ROOT/userland])
+      if test -r $PCAPRING_DIR/libpcap.a &&
+         test -r $PCAPRING_DIR/pcap.h; then
+       PCAPRING_DIR=`cd ${PCAPRING_DIR} && pwd`
+       CORELIBS="${CORELIBS} $PCAPRING_DIR/libpcap.a $PFRING_ROOT/userland/lib/libpfring.a"
+       INCS="${INCS} -I$PCAPRING_DIR"
+       echo ""
+       AC_MSG_RESULT([found in $PCAPRING_DIR])
+      else
+       PCAPRING_DIR=""
+       AC_MSG_RESULT([not found in ${PFRING_ROOT}])
+       AC_MSG_RESULT([             *** WARNING ***             ])
+       AC_MSG_RESULT([ It looks that you don't have pcap library patched with PF_RING compiled.])
+       AC_MSG_RESULT([ Please check inside the ${PFRING_ROOT}/userland directory.])
+       AC_MSG_RESULT([ When finished please re-run this program.])
+       AC_MSG_RESULT([ ])
+      fi
+  else
+    AC_MSG_RESULT([not found in ${PFRING_ROOT}/userland/lib/])
+  fi
+fi
+
+
 echo
 echo "Critical library/include tests..."
 echo
@@ -571,6 +605,20 @@ dnl>
 dnl>
 dnl> user defined directory passed as option at configuration time
 dnl>
+
+if test ".${PCAPRING_DIR}" != .; then
+   if test ".${PCAP_ROOT}" != .; then
+     echo
+     echo "*******************************************************************"
+     echo "*"
+     echo "* WARNING: libpcap checking in ${PCAP_ROOT} skipped"
+     echo "*          we have taken libpcap from ${PCAPRING_DIR}"
+     echo "*"
+     echo "*"
+     echo "*******************************************************************"
+     echo
+   fi
+else
 if test ".${PCAP_ROOT}" != .; then
   if test -d $PCAP_ROOT &&
      test -r $PCAP_ROOT/libpcap.a &&
@@ -630,6 +678,7 @@ else
        AC_MSG_RESULT([ You can download the latest source tarball at http://www.tcpdump.org/])
        AC_MSG_ERROR([ The LBL Packet Capture Library, libpcap, was not found! ])
        		     ])
+fi
 fi
 AC_CHECK_LIB([pcap], [pcap_next_ex], AC_DEFINE_UNQUOTED(HAVE_PCAP_NEXT_EX, 1, [pcap has pcap_next_ex]))
 
@@ -1914,7 +1963,7 @@ else
 fi
 tar xvfz GeoIP.tar.gz
 GEO_DIR=`find $PWD -type d -name "GeoIP-*"`
-cd $GEO_DIR; ./configure; make; cd ..
+cd $GEO_DIR; ./configure --prefix=${prefix}; make; cd ..
 # OSX Fix
 GEO_DYLIB="$GEO_DIR/libGeoIP/.libs/libGeoIP.dylib"
 if test -f $GEO_DYLIB; then
