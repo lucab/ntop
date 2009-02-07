@@ -2268,6 +2268,12 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   argv[argc++] = "--end";
   argv[argc++] = endTime;
   argv[argc++] = "--slope-mode";
+  argv[argc++] = "--width";
+  argv[argc++] = "500";
+  argv[argc++] = "--alt-autoscale-max";
+  argv[argc++] = "--lower-limit";
+  argv[argc++] = "0";
+
 
   if((graphId == 98) || (graphId == 99)) {
     argv[argc++] = "--title";
@@ -2363,14 +2369,15 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	    ip_buf[strlen(ip_buf)-strlen(metric_name)] = '\0';
 
 	  if(!titleAlreadySent) {
-		  titleAlreadySent = 1;
+	    titleAlreadySent = 1;
+
 	    if(graphId == 99) {
 	      argv[argc++] = "--title";
 	      // traceEvent(CONST_TRACE_INFO, "RRD: --> (%s)", filename);
 	      argv[argc++] = formatTitle(filename, title_buf, sizeof(title_buf));
 	    } else if(graphId == 4) {
 	      argv[argc++] = "--title";
-	      argv[argc++] = "Historical View";
+	      argv[argc++] = "Protocols: Historical View";
 	    }
 	  }
 	}
