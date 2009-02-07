@@ -94,6 +94,9 @@ void termGdbm() {
   if(myGlobals.addressQueueFile) { gdbm_close(myGlobals.addressQueueFile); myGlobals.addressQueueFile = NULL; }
   if(myGlobals.pwFile)           { gdbm_close(myGlobals.pwFile); myGlobals.pwFile = NULL;                     }
   if(myGlobals.prefsFile)        { gdbm_close(myGlobals.prefsFile); myGlobals.prefsFile = NULL;               }
-  if(myGlobals.macPrefixFile)    { gdbm_close(myGlobals.macPrefixFile); myGlobals.macPrefixFile = NULL;       }
-  if(myGlobals.fingerprintFile)  { gdbm_close(myGlobals.fingerprintFile); myGlobals.fingerprintFile = NULL;   }
+
+  if(!myGlobals.runningPref.liveMode) {
+    if(myGlobals.macPrefixFile)    { gdbm_close(myGlobals.macPrefixFile); myGlobals.macPrefixFile = NULL;       }
+    if(myGlobals.fingerprintFile)  { gdbm_close(myGlobals.fingerprintFile); myGlobals.fingerprintFile = NULL;   }
+  }
 }

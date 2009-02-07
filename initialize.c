@@ -716,12 +716,14 @@ void initThreads(void) {
   }
   */
 
-  /*
-   * Create the thread (3) - SFP - Scan Fingerprints
-   */
-  createThread(&myGlobals.scanFingerprintsThreadId, scanFingerprintLoop, NULL);
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SFP: Started thread for fingerprinting",
-             (long)myGlobals.scanFingerprintsThreadId);
+  if(!myGlobals.runningPref.liveMode) {
+    /*
+     * Create the thread (3) - SFP - Scan Fingerprints
+     */
+    createThread(&myGlobals.scanFingerprintsThreadId, scanFingerprintLoop, NULL);
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SFP: Started thread for fingerprinting",
+	       (long)myGlobals.scanFingerprintsThreadId);
+  }
 
   /*
    * Create the thread (4) - SIH - Scan Idle Hosts - optional
@@ -1050,32 +1052,35 @@ void addDevice(char* deviceName, char* deviceDescr) {
 		 myGlobals.device[deviceId].numHosts);
     }
 
-    memlen = sizeof(TrafficEntry*)*myGlobals.device[deviceId].numHosts*myGlobals.device[deviceId].numHosts;
-    myGlobals.device[deviceId].ipTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[deviceId].numHosts
-									*myGlobals.device[deviceId].numHosts,
-									sizeof(TrafficEntry*));
-    if(myGlobals.device[deviceId].ipTrafficMatrix == NULL) {
-      traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for ipTraffixMatrix failed", memlen);
-      exit(12); /* Just in case */
-    }
+    if(myGlobals.runningPref.liveMode) {
+      myGlobals.device[deviceId].ipTrafficMatrix = NULL;
+    } else {
+      memlen = sizeof(TrafficEntry*)*myGlobals.device[deviceId].numHosts*myGlobals.device[deviceId].numHosts;
+      myGlobals.device[deviceId].ipTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[deviceId].numHosts
+									  *myGlobals.device[deviceId].numHosts,
+									  sizeof(TrafficEntry*));
+      if(myGlobals.device[deviceId].ipTrafficMatrix == NULL) {
+	traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for ipTraffixMatrix failed", memlen);
+	exit(12); /* Just in case */
+      }
 
-    traceEvent(CONST_TRACE_NOISY, "MEMORY: ipTrafficMatrix base (no TrafficEntry) for interface '%s' is %5.2fMB",
-	       myGlobals.device[deviceId].name,
-	       ((float)(memlen)/(float)(1024.0*1024.0))+0.05);
-    myGlobals.ipTrafficMatrixMemoryUsage += memlen;
+      traceEvent(CONST_TRACE_NOISY, "MEMORY: ipTrafficMatrix base (no TrafficEntry) for interface '%s' is %5.2fMB",
+		 myGlobals.device[deviceId].name,
+		 ((float)(memlen)/(float)(1024.0*1024.0))+0.05);
+      myGlobals.ipTrafficMatrixMemoryUsage += memlen;
 
-    memlen = sizeof(struct hostTraffic*)*myGlobals.device[deviceId].numHosts;
-    myGlobals.device[deviceId].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
-										   myGlobals.device[deviceId].numHosts);
+      memlen = sizeof(struct hostTraffic*)*myGlobals.device[deviceId].numHosts;
+      myGlobals.device[deviceId].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
+										     myGlobals.device[deviceId].numHosts);
 
-    if(myGlobals.device[deviceId].ipTrafficMatrixHosts == NULL) {
-      traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for ipTraffixMatrixHosts failed", memlen);
-      exit(13); /* Just in case */
-    }
+      if(myGlobals.device[deviceId].ipTrafficMatrixHosts == NULL) {
+	traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for ipTraffixMatrixHosts failed", memlen);
+	exit(13); /* Just in case */
+      }
 
-    /* Allocate FC Traffic Matrices */
+      /* Allocate FC Traffic Matrices */
 #ifdef NOT_YET
-    if (!myGlobals.runningPref.printIpOnly) {
+      if (!myGlobals.runningPref.printIpOnly) {
         memlen = sizeof(TrafficEntry*)*myGlobals.device[deviceId].numHosts*myGlobals.device[deviceId].numHosts;
         myGlobals.device[deviceId].fcTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[deviceId].numHosts
                                                                             *myGlobals.device[deviceId].numHosts,
@@ -1089,8 +1094,9 @@ void addDevice(char* deviceName, char* deviceDescr) {
         memlen = sizeof(struct hostTraffic*)*myGlobals.device[deviceId].numHosts;
         myGlobals.device[deviceId].fcTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
                                                                                        myGlobals.device[deviceId].numHosts);
-    }
+      }
 #endif
+    }
   }
 
   /* ********************************************* */
@@ -1109,27 +1115,19 @@ void addDevice(char* deviceName, char* deviceDescr) {
     if(myGlobals.device[i].name != NULL)
       mallocLen += strlen(myGlobals.device[i].name) + 2;
   }
-  workDevices = malloc(mallocLen);
+
+  workDevices = calloc(mallocLen+1, 1);
   if(workDevices == NULL)
     return;
   else
-    memset(workDevices, 0, mallocLen);
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].name != NULL) {
-      int hasSpace;
-
-      if(i>0)
-        strncat(workDevices, ", ", (sizeof(workDevices) - strlen(workDevices) - 1));
-
-      if(myGlobals.device[i].name[strlen(myGlobals.device[i].name)-1] == ' ')
-	hasSpace = 1;
-      else
-	hasSpace = 0;
-
-      strncat(workDevices,
-              myGlobals.device[i].name,
-              (mallocLen - strlen(workDevices) - hasSpace));
+      int len = strlen(workDevices);
+      safe_snprintf(__FILE__, __LINE__, 
+		    &workDevices[len], sizeof(workDevices)-len, 
+		    "%s%s", (i > 0) ? ", " : "",
+		    myGlobals.device[i].name);
     }
   }
 

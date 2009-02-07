@@ -102,9 +102,12 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
 
   initSingleGdbm(&myGlobals.addressQueueFile, "addressQueue.db", spoolDirectory, TRUE,  NULL);
   initSingleGdbm(&myGlobals.dnsCacheFile,     "dnsCache.db",     spoolDirectory, -1,    NULL);
-  initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, FALSE,  &statbuf);
-  initSingleGdbm(&myGlobals.fingerprintFile,  "fingerprint.db",  spoolDirectory, FALSE,  &statbuf);
-  createVendorTable(&statbuf);
+
+  if(!myGlobals.runningPref.liveMode) {
+    initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, FALSE,  &statbuf);
+    initSingleGdbm(&myGlobals.fingerprintFile,  "fingerprint.db",  spoolDirectory, FALSE,  &statbuf);
+    createVendorTable(&statbuf);
+  }
 }
 
 /* ******************************* */
@@ -527,7 +530,10 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.fcMatrixHashCollisions = 0;
   myGlobals.fcMatrixHashUnresCollisions = 0;
 
-  myGlobals.calculateEfficiency = 1;
+  /* 
+     Efficiency is the ability to fill-up ATM cells so that they
+     can be efficiently used by applications
+  */
   myGlobals.cellLength = 47; /* FIX - this is valid only for ATM */
 }
 

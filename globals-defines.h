@@ -2854,6 +2854,8 @@ struct ip6_hdr
 #define NTOP_PREF_SAVE_REC_INTO_DB       "ntop.saveRecordsIntoDb"
 #define NTOP_PREF_SAVE_SESSIONS_INTO_DB  "ntop.saveSessionsIntoDb"
 #define NTOP_PREF_MAXSESSIONS            "ntop.maxNumSessions"
+#define NTOP_PREF_LIVE_MODE              "ntop.liveMode"
+#define NTOP_PREF_NET_EFFICIENCY         "ntop.netEfficiency"
 #define NTOP_PREF_MERGEIF                "ntop.mergeInterfaces"
 #define NTOP_PREF_ENABLE_L7PROTO         "ntop.enableL7Proto"
 #define NTOP_PREF_NO_ISESS_PURGE         "ntop.disableInstantSessionPurge"

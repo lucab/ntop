@@ -907,9 +907,9 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 
     if(show_trend) argv[argc++] = "CDEF:smoothed=ctr,1800,TREND";
 
-    argv[argc++] = "GPRINT:ctr:MIN:Min\\: %3.1lf%s";
-    argv[argc++] = "GPRINT:ctr:MAX:Max\\: %3.1lf%s";
-    argv[argc++] = "GPRINT:ctr:AVERAGE:Avg\\: %3.1lf%s";
+    argv[argc++] = "GPRINT:ctr:MIN:Min\\: %3.1lf%s\\t";
+    argv[argc++] = "GPRINT:ctr:MAX:Max\\: %3.1lf%s\\t";
+    argv[argc++] = "GPRINT:ctr:AVERAGE:Avg\\: %3.1lf%s\\t";
     argv[argc++] = "GPRINT:ctr:LAST:Last\\: %3.1lf%s\\n";
     safe_snprintf(__FILE__, __LINE__, bufa1, sizeof(bufa1), "DEF:pred=%s:counter:HWPREDICT", path);
     argv[argc++] = bufa1;
@@ -1019,7 +1019,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
   path[0] = '\0';
 
   switch(graphId) {
-  case 0: rrds = (struct nameLabel*)rrd_summary_traffic; label = "Bytes"; title = "Traffic Statistics"; break;
+  case 0: rrds = (struct nameLabel*)rrd_summary_traffic; label = "Bytes"; title = "Interface Statistics"; break;
   case 1: rrds = (struct nameLabel*)rrd_summary_new_flows; label = "Flows"; title = "Newly Created Flows: Statistics"; break;
   case 2: rrds = (struct nameLabel*)rrd_summary_new_nf_flows; label = "Flows"; title = "Newly Created Flows: Protocol Breakdown"; break;
   case 3: rrds = (struct nameLabel*)rrd_summary_new_nf_flows_size; label = "Bytes"; title = "Newly Created Flows: Average Size"; break;
@@ -1134,11 +1134,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
     */
     safe_snprintf(__FILE__, __LINE__, strbuf, sizeof(strbuf),
                   "<img id=zoomGraphImage src=\"/" CONST_PLUGINS_HEADER "%s?action=netflowIfSummary"
-		  "&graphId=%d"
-		  "&key=%s"
-		  "&name=%s"
-		  "&start=%s"
-		  "&end=%s"
+		  "&graphId=%d&key=%s&name=%s&start=%s&end=%s"
 		  "\" alt=\"graph image\" border=0></center>\n",
                   rrdPluginInfo->pluginURLname,
 		  graphId,
@@ -1576,8 +1572,8 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
 
     revertSlashIfWIN32(path, 0);
     if(stat(path, &statbuf) == 0) {
-    revertDoubleColumnIfWIN32(path);
-    sanitizeRrdPath(path);
+      revertDoubleColumnIfWIN32(path);
+      sanitizeRrdPath(path);
       safe_snprintf(__FILE__, __LINE__, buf[entryId], MAX_BUF_LEN, "DEF:bctr%d=%s:counter:AVERAGE", entryId, path);
       argv[argc++] = buf[entryId];
 
@@ -1588,9 +1584,9 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
 		    entryId, rrd_colors[entryId], spacer(&rrds[i][2], tmpStr, sizeof(tmpStr), metric_name, sizeof(metric_name)));
       argv[argc++] = buf1[entryId];
 
-      safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Last\\: %8.2lf %s");
+      safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Last\\: %8.2lf %s\\t");
       argv[argc++] = buf2[entryId];
-      safe_snprintf(__FILE__, __LINE__, buf3[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %8.2lf %s");
+      safe_snprintf(__FILE__, __LINE__, buf3[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %8.2lf %s\\t");
       argv[argc++] = buf3[entryId];
       safe_snprintf(__FILE__, __LINE__, buf4[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":MAX:Max\\: %8.2lf %s\\n");
       argv[argc++] = buf4[entryId];
@@ -2334,7 +2330,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 		       metric_name, sizeof(metric_name));
 
 	  safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
-			"%s:ctr%d%s:%s", "AREA",
+			"%s:ctr%d%s:%s\t", "AREA",
 			entryId,
 			((graphId == 99) && is_efficiency) ? "#EBEB00" : rrd_colors[1],
 			(graphId == 99) ? "Rcvd" : str);
@@ -4716,7 +4712,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
     updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent, 0);
     updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd, 0);
 
-    if(myGlobals.calculateEfficiency) {
+    if(myGlobals.runningPref.calculateEfficiency) {
       Counter c, diff;
 
       if(el->greSent.value > 0) {
@@ -4759,7 +4755,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
     }
 
     if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
-      if(myGlobals.calculateEfficiency) {
+      if(myGlobals.runningPref.calculateEfficiency) {
 	if(el->pktSent.value > 0) {
 	  Counter c, diff = el->pktSent.value - el->lastEfficiencyPktSent.value;
 
@@ -4885,7 +4881,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->rcvdLoc.value+
 			    el->protoIPTrafficInfos[j]->rcvdFromRem.value, 0);
 
-	      if(myGlobals.calculateEfficiency) {
+	      if(myGlobals.runningPref.calculateEfficiency) {
 		if(el->protoIPTrafficInfos[j]->pktSent.value > 0) {
 		  Counter c, diff;
 

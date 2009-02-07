@@ -308,7 +308,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
       }
     }
 
-    if(myGlobals.calculateEfficiency) {
+    if(myGlobals.runningPref.calculateEfficiency) {
       if((efficiencySent == 0) || (efficiencyRcvd == 0)) pkt_efficiency = computeEfficiency(length);
       if(efficiencySent == 0) efficiencySent = pkt_efficiency;
       if(efficiencyRcvd == 0) efficiencyRcvd = pkt_efficiency;
@@ -323,7 +323,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
     incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->pktSent, numPkts);
     incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->pktRcvd, numPkts);
 
-    if(myGlobals.calculateEfficiency) {      
+    if(myGlobals.runningPref.calculateEfficiency) {      
       incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->efficiencySent, efficiencySent);
       incrementHostTrafficCounter(srcHost, efficiencySent, efficiencySent);
       incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->efficiencyRcvd, efficiencyRcvd);
@@ -339,7 +339,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 void updateGreEfficiency(HostTraffic *srcHost, HostTraffic *dstHost,
 			 u_int numPkts, u_int numBytes,
 			 int actualDeviceId) {
-  if(myGlobals.calculateEfficiency && (numPkts > 0)) {
+  if(myGlobals.runningPref.calculateEfficiency && (numPkts > 0)) {
     u_int pkt_efficiency = computeEfficiency(numBytes/numPkts)*numPkts;
 
     incrementHostTrafficCounter(srcHost, greEfficiencySent, pkt_efficiency);
@@ -356,7 +356,7 @@ void updateGreEfficiency(HostTraffic *srcHost, HostTraffic *dstHost,
 void updateIpsecEfficiency(HostTraffic *srcHost, HostTraffic *dstHost,
 			   u_int numPkts, u_int numBytes,
 			   int actualDeviceId) {
-  if(myGlobals.calculateEfficiency && (numPkts > 0)) {
+  if(myGlobals.runningPref.calculateEfficiency && (numPkts > 0)) {
     u_int pkt_efficiency = computeEfficiency(numBytes/numPkts)*numPkts;
 
     incrementHostTrafficCounter(srcHost, ipsecEfficiencySent, pkt_efficiency);
@@ -1313,7 +1313,8 @@ static void processIpPkt(const u_char *bp,
   ctr.value = h->len;
   updatePacketCount(srcHost, &srcAddr, dstHost, &dstAddr, ctr, 1, actualDeviceId);
 
-  if((!myGlobals.runningPref.dontTrustMACaddr) && (!myGlobals.device[actualDeviceId].dummyDevice)) {
+  if((!myGlobals.runningPref.dontTrustMACaddr) 
+     && (!myGlobals.device[actualDeviceId].dummyDevice)) {
     checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
     ctr.value = length;
     updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);

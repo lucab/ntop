@@ -133,7 +133,7 @@ void usage(FILE * fp) {
   fprintf(fp, "    [-V             | --version]                          %sOutput version information and exit\n", newLine);
   fprintf(fp, "    [-X <max num TCP sessions> ]                          %sMax num. TCP sessions ntop can handle (default %u)\n", 
 	  newLine, myGlobals.runningPref.maxNumSessions);
-
+  fprintf(fp, "    [--live]                                              %sEnable ntop live mode\n", newLine);
 /*  Please keep long-only options alphabetically ordered */
 
   fprintf(fp, "    [--disable-instantsessionpurge]                       %sDisable instant FIN session purge\n", newLine);
@@ -159,6 +159,7 @@ void usage(FILE * fp) {
 	  "                                                              %sof pcap files to read.\n"
 	  "                                                              %sIf you use this flag the -i option will be\n"
 	  "                                                              %signored.\n", newLine, newLine, newLine, newLine);
+  fprintf(fp, "    [--enable-efficiency]                                 %sCompute network traffic efficiency on ATM cells-lit\n", newLine);
 
  fprintf(fp, "\n"
 	 "NOTE\n"

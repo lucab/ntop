@@ -2063,82 +2063,84 @@ typedef enum {
  */
 
 typedef struct _userPref {
-  char *accessLogFile;          /* -a |--access-log-file */
-  bool enablePacketDecoding;    /* -b | --disable-decoders */
-  bool stickyHosts;             /* -c | --sticky-hosts */
-  bool daemonMode;              /* -d | --daemon */
-  int  maxNumLines;             /* -e | --max-table-rows */
-  bool trackOnlyLocalHosts;     /* -g | --track-local-hosts */
-  char *devices;                /* -i | --interface */
-  bool enableOtherPacketDump;   /* -j | --create-other-packets */
-  char *pcapLog;                /* -l | --pcap-log */
-  char *localAddresses;         /* -m | --local-subnets */
-  bool numericFlag;             /* -n | --numeric-ip-addresses */
-  bool dontTrustMACaddr;        /* -o | --no-mac */
-  char *protoSpecs;             /* -p | --protocols */
-  bool enableSuspiciousPacketDump; /* -q | --create-suspicious-packets */
-  int  refreshRate;             /* -r | --refresh-time */
-  bool disablePromiscuousMode;  /* -s | --no-promiscuous */
-  int  traceLevel;              /* -t | --trace-level */
-  char *mapperURL;              /* -U | --disable-mapper */
-  u_int     maxNumHashEntries;  /* -x */
-  u_int     maxNumSessions;     /* -X */
-
-  /* SQL Database */
+  char *accessLogFile;           /* -a |--access-log-file */
+  bool enablePacketDecoding;     /* -b | --disable-decoders */
+  bool stickyHosts;              /* -c | --sticky-hosts */
+  bool daemonMode;               /* -d | --daemon */
+  int  maxNumLines;              /* -e | --max-table-rows */
+  bool trackOnlyLocalHosts;      /* -g | --track-local-hosts */
+  char *devices;                 /* -i | --interface */
+  bool enableOtherPacketDump;    /* -j | --create-other-packets */
+  char *pcapLog;                 /* -l | --pcap-log */
+  char *localAddresses;          /* -m | --local-subnets */
+  bool numericFlag;              /* -n | --numeric-ip-addresses */
+  bool dontTrustMACaddr;         /* -o | --no-mac */
+  char *protoSpecs;              /* -p | --protocols */
+  bool enableSuspiciousPacketDump;  /* -q | --create-suspicious-packets */
+  int  refreshRate;              /* -r | --refresh-time */
+  bool disablePromiscuousMode;   /* -s | --no-promiscuous */
+  int  traceLevel;               /* -t | --trace-level */
+  char *mapperURL;               /* -U | --disable-mapper */
+  u_int     maxNumHashEntries;   /* -x */
+  u_int     maxNumSessions;      /* -X */
+  u_int8_t  liveMode;            /* --live */
+  u_int8_t  calculateEfficiency; /* --enable-efficiency */
+  
+   /* SQL Database */
   char    sqlDbConfig[64];
   u_int   sqlRecDaysLifetime;
   bool    saveRecordsIntoDb, saveSessionsIntoDb;
 
-  u_int16_t defaultVsan;        /* -v | --default-vsan */
-  char      *webAddr;           /* -w | --http-serveraddress[:port] */
+  u_int16_t defaultVsan;         /* -v | --default-vsan */
+  char      *webAddr;            /* -w | --http-serveraddress[:port] */
   int       webPort;
-  int       ipv4or6;            /* -6 -4 */
-  bool      enableSessionHandling; /* -z | --disable-sessions */
+  int       ipv4or6;             /* -6 -4 */
+  bool      enableSessionHandling;  /* -z | --disable-sessions */
 
-  char *currentFilterExpression;/* -B | --filter-expression */
-  u_short samplingRate;         /* -C | --sampling-rate */
-  char domainName[MAXHOSTNAMELEN]; /* -D | --domain */
-  char *flowSpecs;              /* -F | --flow-spec */
+  char *currentFilterExpression; /* -B | --filter-expression */
+  u_short samplingRate;          /* -C | --sampling-rate */
+  char domainName[MAXHOSTNAMELEN];  /* -D | --domain */
+  char *flowSpecs;               /* -F | --flow-spec */
 
-  bool debugMode;               /* -K | --enable-debug */
+  bool debugMode;                /* -K | --enable-debug */
 #ifndef WIN32
-  int  useSyslog;               /* -L | --use-syslog*/
+  int  useSyslog;                /* -L | --use-syslog*/
 #endif
 
-  bool mergeInterfaces;         /* -M | --no-interface-merge */
-  bool enableL7;                /* Enable/disable l7 protocol pattern matching */
-  char *pcapLogBasePath;        /* -O | --pcap-file-path */ /* Added by Ola Lundqvist <opal@debian.org>. */
-  char *fcNSCacheFile;          /* -N | --wwn-map */
+  bool mergeInterfaces;          /* -M | --no-interface-merge */
+  bool enableL7;                 /* Enable/disable l7 protocol pattern matching */
+  char *pcapLogBasePath;         /* -O | --pcap-file-path */  /* Added by Ola Lundqvist <opal@debian.org>. */
+  char *fcNSCacheFile;           /* -N | --wwn-map */
 
 #ifdef HAVE_OPENSSL
-  char *sslAddr;                /* -W | --https-serveraddress[:port] */
+  char *sslAddr;                 /* -W | --https-serveraddress[:port] */
   int  sslPort;
 #endif
 
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  bool useSSLwatchdog;          /* --ssl-watchdog '133' */
+  bool useSSLwatchdog;           /* --ssl-watchdog '133' */
 #endif
 
 #ifdef MAKE_WITH_SCHED_YIELD
-  bool disableSchedYield;       /* --disable-schedyield '134' */
+  bool disableSchedYield;        /* --disable-schedyield '134' */
 #endif
 
-  bool w3c;                     /* --w3c '136' */
+  bool w3c;                      /* --w3c '136' */
 
-  char *P3Pcp;                  /* --p3p-cp '137' */
-  char *P3Puri;                 /* --p3p-uri '138' */
+  char *P3Pcp;                   /* --p3p-cp '137' */
+  char *P3Puri;                  /* --p3p-uri '138' */
 
-  char *instance;               /* --instance '140' */
+  char *instance;                /* --instance '140' */
   char *logo;
-  bool disableStopcap;          /* --disable-stopcap '142' */
+  bool disableStopcap;           /* --disable-stopcap '142' */
 
-  bool disableInstantSessionPurge; /* --disable-instantsessionpurge '144' */
-  bool printFcOnly;             /* --fc-only '147' */
-  bool printIpOnly;             /* --no-fc '148' */
-  bool noInvalidLunDisplay;     /* --no-invalid-lun '149' */
-  bool disableMutexExtraInfo;   /* --disable-mutexextrainfo '145' */
-  bool skipVersionCheck;        /* --skip-version-check '150' */
-  char *knownSubnets;           /* --known-subnets '151' */
+  bool disableInstantSessionPurge;  /* --disable-instantsessionpurge '144' */
+  bool printFcOnly;              /* --fc-only '147' */
+  bool printIpOnly;              /* --no-fc '148' */
+  bool noInvalidLunDisplay;      /* --no-invalid-lun '149' */
+  bool disableMutexExtraInfo;    /* --disable-mutexextrainfo '145' */
+  bool skipVersionCheck;         /* --skip-version-check '150' */
+  char *knownSubnets;            /* --known-subnets '151' */
 } UserPref;
 
 typedef struct ntopGlobals {
@@ -2489,7 +2491,6 @@ typedef struct ntopGlobals {
   u_short experimentalFlagSet;  /* Is the 'experimental' flag set? */
 #endif
 
-  u_int8_t  calculateEfficiency;
   /* If the traffic is divided in cells (e.g. ATM, cell payload is 47 bytes) this is the cell lenght */
   u_int16_t cellLength; 
 

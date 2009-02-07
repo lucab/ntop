@@ -28,7 +28,7 @@ static void* netflowMainLoop(void* _deviceId);
 static void* netflowUtilsLoop(void* _deviceId);
 #endif
 
-#define DEBUG_FLOWS
+/* #define DEBUG_FLOWS */
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -3015,9 +3015,9 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 	sendString(buf);
       } else {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<TR " TR_ON ">\n<TD " TD_BG " ALIGN=\"CENTER\" valign=top>"
+		      "<TR " TR_ON ">\n<TD " TD_BG " ALIGN=\"CENTER\">"
 		      "<IMG SRC=\"/plugins/rrdPlugin?action=netflowIfSummary&key=%s/NetFlow/%d&graphId=0\">"
-		      "<A HREF=\"/plugins/rrdPlugin?action=netflowIfSummary&key=%s/NetFlow/%d&graphId=0&mode=zoom\">&nbsp;"
+		      "<A HREF=\"/plugins/rrdPlugin?action=netflowIfSummary&key=%s/NetFlow/%d&graphId=0&mode=zoom\">"
 		      "<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A>"
 		      "</td>\n<td width=\"20%\">\n",
 		      myGlobals.device[deviceId].uniqueIfName, ifStats->interface_id,

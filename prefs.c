@@ -157,7 +157,11 @@ static struct option const long_options[] = {
   { "no-invalid-lun",                   no_argument,       0, 149    },
 
   { "skip-version-check",               required_argument, NULL, 150 },
-  { "known-subnets",                    required_argument, NULL, 151 },
+  { "pcap-file-list",                   required_argument, NULL, 151 },
+  { "known-subnets",                    required_argument, NULL, 152 },
+  { "live",                             no_argument,       NULL, 153 },
+  { "enable-efficiency",                no_argument,       NULL, 154 },
+
   {NULL, 0, NULL, 0}
 };
 
@@ -750,6 +754,14 @@ int parseOptions(int argc, char* argv[]) {
       myGlobals.runningPref.knownSubnets = strdup(optarg);
       break;
 
+    case 153:
+      myGlobals.runningPref.liveMode = 1;
+      break;
+
+    case 154:
+      myGlobals.runningPref.calculateEfficiency = 1;
+      break;
+
     default:
       printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);
 #ifdef DEBUG
@@ -759,6 +771,12 @@ int parseOptions(int argc, char* argv[]) {
       usage(stdout);
       exit(-1);
     }
+  }
+
+  if(myGlobals.runningPref.liveMode) {
+    myGlobals.runningPref.trackOnlyLocalHosts   = 1;
+    myGlobals.runningPref.dontTrustMACaddr      = 1;
+    myGlobals.runningPref.enableSessionHandling = 1;
   }
 
   /* *********************** */
@@ -829,6 +847,8 @@ int parseOptions(int argc, char* argv[]) {
     }
   }
 #endif
+
+  
 
   return(userSpecified);
 }

@@ -254,8 +254,8 @@ struct nameLabel {
 };
 
 static const struct nameLabel rrd_summary_traffic[] = { 
-  { "ifInOctets", "Ingress Traffic" },
-  { "ifOutOctets", "Egress Traffic" },
+  { "ifInOctets", "Ingress" },
+  { "ifOutOctets", "Egress" },
   { NULL, NULL }
 };
 
