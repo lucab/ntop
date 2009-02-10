@@ -31,10 +31,8 @@
 
 #define NTOP_WATERMARK "NTOP / LUCA DERI"
 
-#define REMOTE_SERVER_PORT 2005
-static u_char useDaemon = 0, debug_rrd_graph = 0;
-static int sd = -1;
-static struct sockaddr_in cliAddr, remoteServAddr;
+static u_char debug_rrd_graph = 0;
+static char *rrdd_sock_path = NULL;
 #ifdef WIN32
 static char* rrdVolatilePath;
 #endif
@@ -122,7 +120,7 @@ static PluginInfo rrdPluginInfo[] = {
     "This plugin is used to setup, activate and deactivate ntop's rrd support.<br>"
     "This plugin also produces the graphs of rrd data, available via a<br>"
     "link from the various 'Info about host xxxxx' reports.",
-    "2.8", /* version */
+    "2.9", /* version */
     "<a HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "rrdPlugin", /* http://<host>:<port>/plugins/rrdPlugin */
     1, /* Active by default */
@@ -2494,61 +2492,6 @@ static time_t checkLast(char *rrd) {
 
 /* ******************************* */
 
-static void initUdp() {
-  struct hostent *h;
-
-  if(!useDaemon) return;
-
-  /* bind any port */
-  cliAddr.sin_family = AF_INET;
-  cliAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  cliAddr.sin_port = htons(0);
-
-  /* get server IP address (no check if input is IP address or DNS name */
-  h = gethostbyname("127.0.0.1");
-  if(h == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "RRD: unknown RRD server host\n");
-  }
-
-  remoteServAddr.sin_family = h->h_addrtype;
-  memcpy((char *) &remoteServAddr.sin_addr.s_addr,
-	 h->h_addr_list[0], h->h_length);
-  remoteServAddr.sin_port = htons(REMOTE_SERVER_PORT);
-
-
-  /* socket creation */
-  sd = socket(AF_INET, SOCK_DGRAM, 0);
-  if(sd < 0) {
-    traceEvent(CONST_TRACE_WARNING, "RRD: cannot create RRD socket");
-    useDaemon = 0;
-  }
-}
-
-/* ******************************* */
-
-static void updateUdpParams() {
-  char buf[512];
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "CFG %d\t%d\t%d\t%d\t%d\t%d",
-		dumpInterval, dumpShortInterval, dumpHours, dumpDays, dumpMonths, dumpDelay);
-
-  sendto(sd, buf, strlen(buf), 0,
-	 (struct sockaddr *)&remoteServAddr,
-	 sizeof(remoteServAddr));
-}
-
-/* ******************************* */
-
-static void termUdp() {
-  if(!useDaemon) return;
-  if(sd < 0) return;
-
-  close(sd);
-  sd = -1;
-}
-
-/* ******************************* */
-
 static void deleteRRD(char *basePath, char *key) {
   char path[512];
   int i;
@@ -2570,21 +2513,7 @@ static void deleteRRD(char *basePath, char *key) {
 /* ******************************* */
 
 static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, char short_step) {
-  // if((!active) || (!initialized)) return;
-
-  if(useDaemon) {
-    char buf[128];
-    int rc;
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "CMD %s\t%s\t%lu\t%d\t%d",
-		  hostPath, key, value, isCounter, short_step);
-
-    rc = sendto(sd, buf, strlen(buf), 0,
-		(struct sockaddr *)&remoteServAddr,
-		sizeof(remoteServAddr));
-  } else {
-    char path[512], *argv[32], cmd[64];
+  char path[512], *argv[32], cmd[64];
     struct stat statbuf;
     int argc = 0, rc, createdCounter = 0, i;
 #ifdef MAX_RRD_PROCESS_BUFFER
@@ -2758,6 +2687,13 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	 && (checkLast(path) < myGlobals.initialSniffTime)) {
 	argc = 0;
 	argv[argc++] = "rrd_update";
+
+	if(rrdd_sock_path[0] != '\0') {
+	  /* --daemon unix:/tmp/rrdd.sock  */
+	  argv[argc++] = "--daemon";
+	  argv[argc++] = rrdd_sock_path;
+	}
+
 	argv[argc++] = path;
 
 	safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:NaN",
@@ -2770,7 +2706,8 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 
 	fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
 	rrd_clear_error();
-	addRrdDelay();
+	/* Do not add any delay when using the rrdcached */
+	if(rrdd_sock_path[0] == '\0') addRrdDelay();
 	rrd_update(argc, argv);
 	numRRDUpdates++;
 	numTotalRRDUpdates++;
@@ -2905,7 +2842,6 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
     if(elapsed > rrdpmaxDelay)
       rrdpmaxDelay = elapsed;
 #endif
-  }
 }
 
 /* ******************************* */
@@ -2961,7 +2897,6 @@ static void commonRRDinit(void) {
   get_serial(&driveSerial);
 #endif
 
-  initUdp();
   shownCreate = 0;
 
 #ifdef MAX_RRD_CYCLE_BUFFER
@@ -3034,6 +2969,11 @@ static void commonRRDinit(void) {
     dumpDelay = DEFAULT_RRD_DUMP_DELAY;
   } else
     dumpDelay = atoi(value);
+
+  if(fetchPrefsValue("rrd.rrdcSockPath", value, sizeof(value)) == -1) {
+    rrdd_sock_path = NULL;
+  } else
+    rrdd_sock_path = strdup(value);
 
   if(fetchPrefsValue("rrd.dataDumpDomains", value, sizeof(value)) == -1) {
     storePrefsValue("rrd.dataDumpDomains", "0");
@@ -3225,9 +3165,9 @@ static void commonRRDinit(void) {
 #endif /* RRD_DEBUG */
 
   if (MAX_NUM_ENTRIES > CONST_NUM_BAR_COLORS)
-    traceEvent(CONST_TRACE_WARNING, "RRD: Too few colors defined in rrd_colors - graphs could be truncated");
+    traceEvent(CONST_TRACE_WARNING, 
+	       "RRD: Too few colors defined in rrd_colors - graphs could be truncated");
 
-  updateUdpParams();
   initialized = 1;
 }
 
@@ -4133,6 +4073,10 @@ static void handleRRDHTTPrequest(char* url) {
 	  safe_snprintf(__FILE__, __LINE__, mode, sizeof(mode), "%s", value);
 	} else if(strcmp(key, "graphId") == 0) {
 	  graphId = atoi(value);
+	} else if(strcmp(key, "rrdcSockPath") == 0) {
+	  if(rrdd_sock_path) free(rrdd_sock_path);
+	  rrdd_sock_path = strdup(value);
+	  storePrefsValue("rrd.rrdcSockPath", rrdd_sock_path);
 	} else if(strcmp(key, "delay") == 0) {
 	  _delay = atoi(value);
 	  if(_delay < 0) _delay = 0;
@@ -4287,6 +4231,8 @@ static void handleRRDHTTPrequest(char* url) {
       storePrefsValue("rrd.dataDumpDays", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpMonths);
       storePrefsValue("rrd.dataDumpMonths", buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", rrdd_sock_path);
+      storePrefsValue("rrd.rrdcSockPath", buf);      
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDomains);
       storePrefsValue("rrd.dataDumpDomains", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpFlows);
@@ -4414,15 +4360,30 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("<tr><td align=\"center\" COLSPAN=2><B>WARNING:</B>&nbsp;"
 	     "Changes to the above values will ONLY affect NEW rrds</td></tr>");
 
+  sendString("<tr><th align=\"left\" "DARK_BG">RRDcached Path</th><td>"
+	     "<INPUT NAME=rrdcSockPath SIZE=64 VALUE=");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", rrdd_sock_path ? rrdd_sock_path : "");
+  sendString(buf);
+
+  sendString("><br>Example: unix:/tmp/rrdd.sock.<br>It specifies how to connect ntop to the rrdcached daemon. Format:"
+	     "<ul> <li>unix:&lt;/path/to/unix.sock&gt;<li>/&lt;path/to/unix.sock&gt;"
+	     "<li>&lt;hostname-or-ip&gt;<li>[&lt;hostname-or-ip&gt;]:&lt;port&gt;"
+	     "<li>&lt;hostname-or-ipv4&gt;:&lt;port&gt;</ul>\n"
+	     "The rrdcached needs to be already active prior to start ntop. Its usage "
+	     "greatly enhances the update process and overloads ntop from RRD file update. "
+	     "Please note that the use of rrdcached might introduce some little delay (see -w "
+	     "parameter of rrdcached).</td></tr>\n");
+
   sendString("<tr><th align=\"left\" "DARK_BG">RRD Update Delay</th><td>"
 	     "<INPUT NAME=delay SIZE=5 VALUE=");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpDelay);
   sendString(buf);
 
   sendString("> msec<br>Specifies how many ms to wait between two consecutive RRD updates. "
-	     "Increase this value to distribute RRD load on I/O over the time. "
+	     "Increase this value to distribute RRD load on I/O over the time.<br>"
 	     "Note that a combination of large delays and many RRDs to update can "
-	     "slow down the RRD plugin performance</td></tr>\n");
+	     "slow down the RRD plugin performance.<br>"
+	     " This parameter is ignored when rrdcached is used.</td></tr>\n");
 
   sendString("<tr><th align=\"left\" "DARK_BG">Data to Dump</th><td>");
 
@@ -5733,7 +5694,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     }
   }
 
-  termUdp();
   rrdThread = 0;
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: RRD: Data collection thread terminated [p%d]",
 	     pthread_self(), getpid());
@@ -5836,6 +5796,8 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
   */
   /* deleteMutex(&rrdMutex); */
 
+  if(rrdd_sock_path != NULL) free(rrdd_sock_path);
+
   traceEvent(CONST_TRACE_INFO, "RRD: Thanks for using the rrdPlugin");
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Done");
   fflush(stdout);
@@ -5854,7 +5816,7 @@ PluginInfo* rrdPluginEntryFctn(void)
 #endif
 {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-	     "RRD: Welcome to %s. (C) 2002-07 by Luca Deri.",
+	     "RRD: Welcome to %s. (C) 2002-09 by Luca Deri.",
 	     rrdPluginInfo->pluginName);
 
   return(rrdPluginInfo);
