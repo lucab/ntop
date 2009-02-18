@@ -2157,6 +2157,7 @@ AC_SUBST(RRD_INC)
 AC_SUBST(GEO_DIR)
 
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_MACRO_DIR([m4])
 
 if test ".${ac_disable_plugins}" != ".yes"; then
     AC_CONFIG_FILES([plugins/Makefile])
