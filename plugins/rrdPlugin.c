@@ -2688,7 +2688,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	argc = 0;
 	argv[argc++] = "rrd_update";
 
-	if(rrdd_sock_path[0] != '\0') {
+	if(rrdd_sock_path && (rrdd_sock_path[0] != '\0')) {
 	  /* --daemon unix:/tmp/rrdd.sock  */
 	  argv[argc++] = "--daemon";
 	  argv[argc++] = rrdd_sock_path;
