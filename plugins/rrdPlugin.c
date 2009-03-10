@@ -2707,7 +2707,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
 	rrd_clear_error();
 	/* Do not add any delay when using the rrdcached */
-	if(rrdd_sock_path[0] == '\0') addRrdDelay();
+	if((rrdd_sock_path == NULL) || (rrdd_sock_path[0] == '\0')) addRrdDelay();
 	rrd_update(argc, argv);
 	numRRDUpdates++;
 	numTotalRRDUpdates++;
