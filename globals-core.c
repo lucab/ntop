@@ -689,6 +689,7 @@ void initNtop(char *devices) {
   addNewIpProtocolToHandle("IPsec", 50, 51);
 
   init_maps();
+  loadGeoIP();
 
   if(fetchPrefsValue("globals.displayPolicy", value, sizeof(value)) == -1) {
     myGlobals.hostsDisplayPolicy = showAllHosts /* 0 */;
