@@ -1758,7 +1758,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		     "Limit number of IP sessions entries created in order"
 		     " to limit memory used by ntop");
 
-    CONFIG_RADIO_ENTRY(DARK_BG, "Don't Merge Interfaces (-M)",
+    CONFIG_RADIO_ENTRY(DARK_BG, "Merge Interfaces (-M)",
 		       NTOP_PREF_MERGEIF, pref->mergeInterfaces,
 		       "Yes = merge data from all interfaces (if possible), No = do not merge data from all interfaces");
 
