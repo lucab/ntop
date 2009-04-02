@@ -1170,7 +1170,7 @@ void handleLocalAddresses(char* addresses) {
 
 /* ********************************* */
 
-static char* read_file(char* path, char* buf, u_int buf_len) {
+char* read_file(char* path, char* buf, u_int buf_len) {
   FILE *fd = fopen(&path[1], "r");
 
   if(fd == NULL) {

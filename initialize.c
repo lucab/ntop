@@ -1491,24 +1491,8 @@ void parseTrafficFilter(void) {
     int i;
     struct bpf_program fcode;
 
-    for(i=0; i<myGlobals.numDevices; i++) {
-      if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
-	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.runningPref.currentFilterExpression, 1,
-			 myGlobals.device[i].netmask.s_addr) < 0)
-	   || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
-	  traceEvent(CONST_TRACE_FATALERROR,
-		     "Wrong filter '%s' (%s) on interface %s",
-		     myGlobals.runningPref.currentFilterExpression,
-		     pcap_geterr(myGlobals.device[i].pcapPtr),
-		     myGlobals.device[i].name[0] == '0' ? "<pcap file>" : myGlobals.device[i].name);
-	  exit(15); /* Just in case */
-	}
-
-        traceEvent(CONST_TRACE_NOISY, "Setting filter to \"%s\" on device %s.",
-		     myGlobals.runningPref.currentFilterExpression, myGlobals.device[i].name);
-        pcap_freecode(&fcode);
-      }
-    }
+    for(i=0; i<myGlobals.numDevices; i++)
+      setPcapFilter(myGlobals.runningPref.currentFilterExpression, i);
   } else
     myGlobals.runningPref.currentFilterExpression = strdup("");	/* so that it isn't NULL! */
 }

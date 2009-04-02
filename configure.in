@@ -734,6 +734,8 @@ if test ".${ac_cv_header_gdbm_h}" != ".yes" ||
     AC_MSG_ERROR(Unable to continue... aborting ./configure)
 fi
 
+AC_CHECK_LIB(sqlite3, sqlite3_open, AC_DEFINE_UNQUOTED(HAVE_SQLITE, 1, [ntop has sqlite3]))
+
 dnl> Pattern matching
 dnl>
 AC_CHECK_LIB(pcre, pcre_refcount)

@@ -496,7 +496,8 @@ int parseOptions(int argc, char* argv[]) {
 
     case 'B':
       stringSanityCheck(optarg, "-B | --filter-expression");
-      myGlobals.runningPref.currentFilterExpression = strdup(optarg);
+      if(myGlobals.runningPref.currentFilterExpression == NULL)
+	myGlobals.runningPref.currentFilterExpression = strdup(optarg);
       break;
 
     case 'C': /* Sampling rate */

@@ -610,6 +610,7 @@ void initNtop(char *devices) {
   /* ********************************** */
 
   initGdbm(myGlobals.dbPath, myGlobals.spoolPath, 0);
+  loadGeoIP();
 
   if(myGlobals.runningPref.daemonMode) {
     /*

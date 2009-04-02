@@ -108,7 +108,9 @@ void usage(FILE * fp) {
   fprintf(fp, "    [-A]                                                  %sAsk admin user password and exit\n", newLine);
   fprintf(fp, "    [               | --set-admin-password=<pass>]        %sSet password for the admin user to <pass>\n", newLine);
   fprintf(fp, "    [               | --w3c]                              %sAdd extra headers to make better html\n", newLine);
-  fprintf(fp, "    [-B <filter>]   | --filter-expression                 %sPacket filter expression, like tcpdump\n", newLine);
+  fprintf(fp, "    [-B <filter>]   | --filter-expression                 %sPacket filter expression, like tcpdump (for all interfaces)\n", newLine);
+  fprintf(fp, "                                                          %sYou can also set per-interface filter: \n", newLine);
+  fprintf(fp, "                                                          %seth0=tcp,eth1=udp ....\n", newLine);
   fprintf(fp, "    [-C <rate>]     | --sampling-rate                     %sPacket capture sampling rate [default: 1 (no sampling)]\n", newLine);
   fprintf(fp, "    [-D <name>      | --domain <name>]                    %sInternet domain name\n", newLine);
 
@@ -205,8 +207,8 @@ static void verifyOptions (void) {
     }
 
 #ifndef WIN32    
-    if ((myGlobals.runningPref.disablePromiscuousMode != 1) &&
-        getuid() /* We're not root */
+    if ((myGlobals.runningPref.disablePromiscuousMode != 1) 
+	&& getuid() /* We're not root */
 	&& myGlobals.runningPref.devices
 	&& strcmp(myGlobals.runningPref.devices, "none")) {
         char *theRootPw, *correct, *encrypted;

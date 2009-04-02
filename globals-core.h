@@ -176,6 +176,7 @@ extern void changeFilter(void);
 extern void setAdminPassword(char* pass);
 extern void addDefaultAdminUser(void);
 extern void printNtopConfigHeader(char *url, UserPrefDisplayPage configScr);
+extern void setPcapFilter(char* filters, int device_id);
 
 /* dataFormat.c */
 extern char* formatKBytes(float numKBytes, char *outStr, int outStrLen);
@@ -805,7 +806,7 @@ extern void freePortsUsage(HostTraffic *el);
 extern PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary);
 extern char* vlan2name(u_int16_t vlanId, char *buf, int buf_len);
 extern void mkdir_p(char *tag, char *path, int permission);
-
+extern char* read_file(char* path, char* buf, u_int buf_len);
 /* Formatting for %.2f ... */
 #define xvertDOT00MB(v)(((float)(v)/(float)(1024.0*1024.0))+0.005)
 #define xvertDOT00KB(v) (((float)(v)/(float)(1024.0))+0.005)

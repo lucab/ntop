@@ -697,6 +697,99 @@ void doAddURL(int len) {
   }
 }
 
+/* ********************************* */
+
+void setPcapFilter(char* filters, int device_id) {
+  char knownFilters[2048];
+
+  knownFilters[0] = '\0';
+
+  if(filters != NULL) {
+    char *filters_copy;
+    char buf[2048];
+
+    if(filters[0] == '@') {
+      /* This is a file */
+      filters_copy = read_file(filters, buf, sizeof(buf));
+      if(filters_copy)
+	filters_copy = strdup(buf);
+    } else
+      filters_copy = strdup(filters);
+
+    if(filters_copy) {
+      char find_token[32], *the_filter;
+
+      /* 
+	 Format is
+	 eth0="filter for eth0",eth1="filter for eth1"....
+	 or
+	 "filter for all interfaces"
+      */
+
+      if(strstr(filters_copy, "=") == NULL) {
+	/* This is a filter for all interfaces */
+	the_filter = filters_copy;
+
+      } else {
+	safe_snprintf(__FILE__, __LINE__,
+		      find_token, sizeof(find_token), 
+		      "%s=", myGlobals.device[device_id].name);
+		
+	the_filter = strstr(filters_copy, find_token);
+	if(the_filter != NULL) {
+	  /* We have an interface specific filter */
+	  char *quote;
+	  
+	  the_filter += strlen(find_token);	  
+
+	  quote = strchr(the_filter, ',');
+	  if(quote != NULL) quote[0] = '\0';	  
+	} else {
+	  traceEvent(CONST_TRACE_INFO, 
+		     "No filter specified for interface %s", 
+		     myGlobals.device[device_id].name);
+	  return;
+	}
+      }
+
+      if(the_filter != NULL) {
+	struct bpf_program fcode;
+
+	traceEvent(CONST_TRACE_INFO, 
+		   "Using filter '%s' for interface %s", 
+		   the_filter, myGlobals.device[device_id].name);
+
+	if(myGlobals.device[device_id].pcapPtr
+	   && (!myGlobals.device[device_id].virtualDevice)) {
+	  if((pcap_compile(myGlobals.device[device_id].pcapPtr, &fcode,
+			   the_filter, 1,
+			   myGlobals.device[device_id].netmask.s_addr) < 0)
+	     || (pcap_setfilter(myGlobals.device[device_id].pcapPtr, &fcode) < 0)) {
+	    traceEvent(CONST_TRACE_ERROR,
+		       "Wrong filter '%s' (%s) on interface %s",
+		       the_filter,
+		       pcap_geterr(myGlobals.device[device_id].pcapPtr),
+		       myGlobals.device[device_id].name);
+	  } else {
+	    pcap_freecode(&fcode);
+
+	    if(*the_filter!='\0') {
+	      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Set filter \"%s\" on interface %s",
+			 the_filter, myGlobals.device[device_id].name);
+	    } else {
+	      traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
+			 "Set no kernel (libpcap) filtering on interface %s",
+			 myGlobals.device[device_id].name);
+	    }
+	  }
+	}       
+      }
+      
+      free(filters_copy);
+    }
+  }
+}
+
 /* *******************************/
 
 /* Courtesy of Michael Weidel <michael.weidel@gmx.de> */
@@ -724,6 +817,7 @@ int doChangeFilter(int len) {
       key = NULL;
     }
   }
+
   if(key == NULL) {
     decodeWebFormURL(myGlobals.runningPref.currentFilterExpression);
     for(i=0; i<strlen(myGlobals.runningPref.currentFilterExpression); i++) {
@@ -734,39 +828,17 @@ int doChangeFilter(int len) {
        break;
       }
     }
-  } else err = "ERROR: The HTTP Post Data was invalid.";
+  } else 
+    err = "ERROR: The HTTP Post Data was invalid.";
+
   if(badChar)
     err = "ERROR: the specified filter expression contains invalid characters.";
 
-  if(err==NULL) {
+  if(err == NULL) {
     traceEvent(CONST_TRACE_INFO, "Changing the kernel (libpcap) filter...");
 
-    for(i=0; i<myGlobals.numDevices; i++) {
-      if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice) && (err==NULL)) {
-	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.runningPref.currentFilterExpression, 1,
-			myGlobals.device[i].netmask.s_addr) < 0)
-	   || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
-	  traceEvent(CONST_TRACE_ERROR,
-		     "Wrong filter '%s' (%s) on interface %s - using old filter",
-		     myGlobals.runningPref.currentFilterExpression,
-		     pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
-
-	  err="The syntax of the defined filter is wrong.";
-
-	} else {
-
-         pcap_freecode(&fcode);
-
-	 if(*myGlobals.runningPref.currentFilterExpression!='\0'){
-	   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Set filter \"%s\" on interface %s",
-		      myGlobals.runningPref.currentFilterExpression, myGlobals.device[i].name);
-	 } else {
-	   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Set no kernel (libpcap) filtering on interface %s",
-		      myGlobals.device[i].name);
-	 }
-	}
-      }
-    }
+    for(i=0; i<myGlobals.numDevices; i++)
+      setPcapFilter(myGlobals.runningPref.currentFilterExpression, i);
   }
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -797,25 +869,10 @@ int doChangeFilter(int len) {
   if(myGlobals.runningPref.currentFilterExpression != NULL)
     free(myGlobals.runningPref.currentFilterExpression);
 
+  /* restore old filter expression */
   myGlobals.runningPref.currentFilterExpression = currentFilterExpressionSav;
-  for(i=0; i<myGlobals.numDevices; i++) {      /* restore old filter expression */
-    if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice) && (err==NULL)) {
-      if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode,
-                       myGlobals.runningPref.currentFilterExpression, 1,
-                       myGlobals.device[i].netmask.s_addr) < 0)) {
-        if((pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
-          traceEvent(CONST_TRACE_ERROR,
-                     "Wrong filter '%s' (%s) on interface %s - using old filter",
-                     myGlobals.runningPref.currentFilterExpression,
-                     pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
-
-        }
-
-        pcap_freecode(&fcode);
-      }
-    }
-
-  }
+  for(i=0; i<myGlobals.numDevices; i++)
+    setPcapFilter(myGlobals.runningPref.currentFilterExpression, i); 
 
   printFlagedWarning(err);
   printHTMLtrailer();
@@ -1141,10 +1198,6 @@ void addDefaultAdminUser(void) {
   	  unescape_url(value_buf);
       value = value_buf;
 	 }
-
-#if 0
-     traceEvent(CONST_TRACE_WARNING, "RRD: key(%s)=%s", key, value);
-#endif
 
      if(key) {
        action = processNtopPref(key, value, savePref, &tmpPrefs);
