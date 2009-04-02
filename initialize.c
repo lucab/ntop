@@ -1125,7 +1125,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
     if(myGlobals.device[i].name != NULL) {
       int len = strlen(workDevices);
       safe_snprintf(__FILE__, __LINE__, 
-		    &workDevices[len], sizeof(workDevices)-len, 
+		    &workDevices[len], mallocLen-len, 
 		    "%s%s", (i > 0) ? ", " : "",
 		    myGlobals.device[i].name);
     }
