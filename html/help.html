@@ -83,7 +83,7 @@ tcp/ip networking,
 so that it should not be used by the tcp or udp protocols.
 It's not normal and has been used in hostile attempts to map networks (as many devices
 do not block it, even if the device blocks everything else), so check it out!</p>
-<p class="fontcounter">Flag/Counter:&nbsp;HOST_IP_ZERO_PORT_TRAFFIC</p>
+<p class="flagcounter">Flag/Counter:&nbsp;HOST_IP_ZERO_PORT_TRAFFIC</p>
 
 <br />
 <hr />
@@ -105,8 +105,13 @@ host portion of the address to 0x1 (i.e. the gateway for 192.168.1.1/24 is 192.1
 If problems do occur, selecting the wrong gateway for non-local packets usually leads to
 apparent failure of the entire non-local network (support call: "The network is down").
 It can also cause high packet loss, collisions, ttl expiration and other network problems.</p>
-<p>Note: <b>ntop</b> defines the broadcast address as either zero (0.0.0.0) or an address which
-has a host part of 0.  Perfectly normal.  However, <b>ntop</b> determines the network and host 
+<p>Note: <b>ntop</b> defines the broadcast address as 
+<ul>
+<li>broadcast's address of the interface(s) where ntop is activecast address as either zero (0.0.0.0) or an address w
+<li> zero (0.0.0.0) 
+<li>an address which has a host part of 0
+</ul>
+  Perfectly normal.  However, <b>ntop</b> determines the network and host 
 portions for the monitored packet's address based on the actual configuration of <b>ntop</b>'s 
 own NIC.  So if <b>ntop</b>'s NIC has a different configuration it will tag traffic as having 
 the wrong mask.</p>
