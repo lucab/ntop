@@ -1341,6 +1341,7 @@ void printHTMLtrailer(void) {
 void initAccessLog(void) {
 
   if(myGlobals.runningPref.accessLogFile) {
+    umask(0137);
     myGlobals.accessLogFd = fopen(myGlobals.runningPref.accessLogFile, "a");
     if(myGlobals.accessLogFd == NULL) {
       traceEvent(CONST_TRACE_ERROR, "Unable to create file %s. Access log is disabled.",
