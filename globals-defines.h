@@ -1712,13 +1712,6 @@
 
 
 /*
- * Define for address resolution missing on Win32
- */
-#ifndef NETDB_SUCCESS
-#define NETDB_SUCCESS                       0
-#endif
-
-/*
  * Flags related to html and http types
  */
 

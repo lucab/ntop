@@ -3173,7 +3173,8 @@ static void printHostFingerprint(HostTraffic *el) {
   }
   
   traceEvent (CONST_TRACE_WARNING, "[%s][%s][len=%d]",
-	      el->hostNumIpAddress, fingerprint, sizeof(el->flags));
+	      el->hostNumIpAddress, fingerprint,
+	      (int)sizeof(el->flags));
 }
 
 /* ************************************ */

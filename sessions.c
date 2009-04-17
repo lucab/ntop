@@ -898,12 +898,6 @@ static void handleSIPSession(const struct pcap_pkthdr *h,
       memcpy(rcStr, packetData, packetDataLength);
       rcStr[packetDataLength-1] = '\0';
 
-      if(0) {
-	traceEvent(CONST_TRACE_WARNING, "-------------------------");
-	traceEvent(CONST_TRACE_WARNING, rcStr);
-	traceEvent(CONST_TRACE_WARNING, "-------------------------");
-      }
-
       row = strtok_r((char*)rcStr, "\r\n", &strtokState);
       while(row != NULL) {
 	if((from == NULL)

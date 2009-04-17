@@ -1499,21 +1499,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "HAVE_GETHOSTBYADDR",
-#ifdef HAVE_GETHOSTBYADDR
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_GETHOSTBYADDR_R",
-#ifdef HAVE_GETHOSTBYADDR_R
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
 
   printFeatureConfigInfo(textPrintFlag, "HAVE_GETHOSTBYNAME",
 #ifdef HAVE_GETHOSTBYNAME
@@ -1525,14 +1510,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "HAVE_GETHOSTNAME",
 #ifdef HAVE_GETHOSTNAME
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_GETIPNODEBYADDR",
-#ifdef HAVE_GETIPNODEBYADDR
                          "yes"
 #else
                          "no"
@@ -1965,14 +1942,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "HAVE_NET_BPF_H",
 #ifdef HAVE_NET_BPF_H
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_NETDB_H",
-#ifdef HAVE_NETDB_H
                          "yes"
 #else
                          "no"
@@ -5306,12 +5275,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "NAME_MAX", "undefined");
 #endif
 
-#ifdef NETDB_SUCCESS
-  printFeatureConfigNum(textPrintFlag, "NETDB_SUCCESS", NETDB_SUCCESS);
-#else
-  printFeatureConfigInfo(textPrintFlag, "NETDB_SUCCESS", "undefined");
-#endif
-
 #ifdef NETFLOW_DEVICE_NAME
   printFeatureConfigInfo(textPrintFlag, "NETFLOW_DEVICE_NAME", NETFLOW_DEVICE_NAME);
 #else
@@ -6490,9 +6453,11 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   if(pref->webPort != 0) {
     if(pref->webAddr != 0) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "http://%s:%d", pref->webAddr, pref->webPort);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "http://%s:%d",
+		    pref->webAddr, pref->webPort);
     } else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "http://any:%d", pref->webPort);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "http://any:%d", 
+		    pref->webPort);
     }
     printFeatureConfigInfo(textPrintFlag, "Web server URL", buf);
   } else {
@@ -6502,9 +6467,11 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 #ifdef HAVE_OPENSSL
   if(pref->sslPort != 0) {
     if(pref->sslAddr != 0) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "https://%s:%d", pref->sslAddr, pref->sslPort);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "https://%s:%d", 
+		    pref->sslAddr, pref->sslPort);
     } else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "https://any:%d", pref->sslPort);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "https://any:%d",
+		    pref->sslPort);
     }
     printFeatureConfigInfo(textPrintFlag, "SSL Web server URL", buf);
   } else {
@@ -6520,6 +6487,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "GDBM version", gdbm_version);
 #endif
 
+  printFeatureConfigInfo(textPrintFlag, 
+			 "<A HREF=http://www.monkey.org/~provos/libevent/>LibEvent</A> version", 
+			 event_get_version());
+
   printFeatureConfigInfo(textPrintFlag, "Embedded Perl API",
 #ifdef HAVE_PERL
 			 "Present"
@@ -6529,7 +6500,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 			 );
 
 #ifdef HAVE_LUA
-  printFeatureConfigInfo(textPrintFlag, "Embedded <A HREF=http://www.lua.org>Lua</A> API Version",
+  printFeatureConfigInfo(textPrintFlag, 
+			 "Embedded <A HREF=http://www.lua.org>Lua</A> API Version",
 #ifdef  LUA_RELEASE
 			 LUA_RELEASE
 #else
@@ -6554,47 +6526,60 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   /* *************************** */
 
-  printFeatureConfigInfo(textPrintFlag, "Protocol Decoders",    pref->enablePacketDecoding == 1 ? "Enabled" : "Disabled");
-  printFeatureConfigInfo(textPrintFlag, "Fragment Handling", myGlobals.enableFragmentHandling == 1 ? "Enabled" : "Disabled");
-  printFeatureConfigInfo(textPrintFlag, "Tracking only local hosts", pref->trackOnlyLocalHosts == 1 ? "Yes" : "No");
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numIpProtosToMonitor);
+  printFeatureConfigInfo(textPrintFlag, "Protocol Decoders",   
+			 pref->enablePacketDecoding == 1 ? "Enabled" : "Disabled");
+  printFeatureConfigInfo(textPrintFlag, "Fragment Handling",
+			 myGlobals.enableFragmentHandling == 1 ? "Enabled" : "Disabled");
+  printFeatureConfigInfo(textPrintFlag, "Tracking only local hosts",
+			 pref->trackOnlyLocalHosts == 1 ? "Yes" : "No");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",
+		myGlobals.numIpProtosToMonitor);
   printFeatureConfigInfo(textPrintFlag, "# IP Protocols Being Monitored", buf);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numActServices);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", 
+		myGlobals.numActServices);
   printFeatureConfigInfo(textPrintFlag, "# Protocol slots", buf);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.ipPortMapper.numElements);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",
+		myGlobals.ipPortMapper.numElements);
   printFeatureConfigInfo(textPrintFlag, "# IP Ports Being Monitored", buf);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.ipPortMapper.numSlots);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", 
+		myGlobals.ipPortMapper.numSlots);
   printFeatureConfigInfo(textPrintFlag, "# IP Ports slots", buf);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.webServerRequestQueueLength);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",
+		(int)myGlobals.webServerRequestQueueLength);
   printFeatureConfigInfo(textPrintFlag, "WebServer Request Queue", buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numDevices);
   printFeatureConfigInfo(textPrintFlag, "Devices (Network Interfaces)", buf);
 
-  printFeatureConfigInfo(textPrintFlag, "Domain name (short)", myGlobals.shortDomainName);
+  printFeatureConfigInfo(textPrintFlag, "Domain name (short)", 
+			 myGlobals.shortDomainName);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.hashCollisionsLookup);
-  printFeatureConfigInfo(textPrintFlag, "Total Hash Collisions (Vendor/Special) (lookup)", buf);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", 
+		myGlobals.hashCollisionsLookup);
+  printFeatureConfigInfo(textPrintFlag,
+			 "Total Hash Collisions (Vendor/Special) (lookup)", buf);
 
-  printFeatureConfigInfo(textPrintFlag, "Database (MySQL) Support Enabled", is_db_enabled() ? "Yes" : "No");
+  printFeatureConfigInfo(textPrintFlag, "Database (MySQL) Support Enabled", 
+			 is_db_enabled() ? "Yes" : "No");
 
   if(is_db_enabled()) {
-    printFeatureConfigInfo(textPrintFlag, "Database Configuration", myGlobals.runningPref.sqlDbConfig);
+    printFeatureConfigInfo(textPrintFlag, "Database Configuration",
+			   myGlobals.runningPref.sqlDbConfig);
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s [%u failures]",
-		  formatPkts(num_db_insert, formatBuf, sizeof(formatBuf)) , num_db_insert_failed);
+		  formatPkts(num_db_insert, formatBuf, sizeof(formatBuf)), 
+		  num_db_insert_failed);
     printFeatureConfigInfo(textPrintFlag, "Database Record Insert", buf);
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[Save Data into DB: %s] [Save Sessions into DB: %s]",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "[Save Data into DB: %s] [Save Sessions into DB: %s]",
  		  myGlobals.runningPref.saveRecordsIntoDb ? "Yes" : "No",
 		  myGlobals.runningPref.saveSessionsIntoDb ? "Yes" : "No");
     printFeatureConfigInfo(textPrintFlag, "Database Record Save Policy", buf);
   }
-
 
   /* *************************** */
 

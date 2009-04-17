@@ -109,10 +109,31 @@ static void setDomainName(void) {
  */
 void initIPServices(void) {
   FILE* fd;
-  int idx, numSlots, len;
+  int idx, numSlots, len, rc;
+  int major, minor;
 
   traceEvent(CONST_TRACE_NOISY, "Initializing IP services");
 
+  event_init();
+
+  sscanf(event_get_version(), "%d.%d", &major, &minor);
+
+  if(minor < 4) {
+    traceEvent(CONST_TRACE_ERROR, 
+	       "You are using libevent %d whereas ntop needs at least v1.4",
+	       event_get_version());
+    traceEvent(CONST_TRACE_ERROR, 
+	       "Due to a libevent bug with IPv6 address resolution");
+traceEvent(CONST_TRACE_ERROR, 
+	   "See http://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg408382.html");
+     traceEvent(CONST_TRACE_ERROR, 
+		"Please rebuild ntop against a newer libevent version");
+   exit(0);
+  }
+
+  if((rc = evdns_init()) != DNS_ERR_NONE) {
+    traceEvent(CONST_TRACE_ERROR, "evdns_init() returned %d", rc);
+  }
 
   /* Let's count the entries first */
   numSlots = 0;
@@ -731,21 +752,6 @@ void initThreads(void) {
   createThread(&myGlobals.scanIdleThreadId, scanIdleLoop, NULL);
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SIH: Started thread for idle hosts detection",
              (long)myGlobals.scanIdleThreadId);
-
-  if(myGlobals.runningPref.numericFlag == 0) {
-    createMutex(&myGlobals.addressResolutionMutex);
-
-    myGlobals. numDequeueAddressThreads = MAX_NUM_DEQUEUE_ADDRESS_THREADS;
-
-    /*
-     * Create the thread (6) - DNSAR - DNS Address Resolution - optional
-     */
-    for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
-      createThread(&myGlobals.dequeueAddressThreadId[i], dequeueAddress, (char*)((long)i));
-      traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Started thread for DNS address resolution",
-		 (long)myGlobals.dequeueAddressThreadId[i], i+1);
-    }
-  }
 
 #ifdef MAKE_WITH_SSLWATCHDOG
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME

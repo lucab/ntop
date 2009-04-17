@@ -315,11 +315,6 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
       efficiencySent *= numPkts, efficiencyRcvd *= numPkts;
     }
 
-    if(0)
-      traceEvent(CONST_TRACE_INFO, "Efficiency [sent=%d|rcvd=%d|efficiency=%d][cell=%d][len=%u]",
-		 efficiencySent, efficiencyRcvd, pkt_efficiency,
-		 (int)myGlobals.cellLength, (unsigned int)length);
-
     incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->pktSent, numPkts);
     incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->pktRcvd, numPkts);
 

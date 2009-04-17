@@ -103,9 +103,6 @@
 /* Define to 1 if you have the `gethostname' function. */
 #undef HAVE_GETHOSTNAME
 
-/* Define to 1 if you have the `getipnodebyaddr' function. */
-#undef HAVE_GETIPNODEBYADDR
-
 /* Define to 1 if you have the <getopt.h> header file. */
 #undef HAVE_GETOPT_H
 
@@ -168,6 +165,9 @@
 
 /* Define to 1 if you have the `dl' library (-ldl). */
 #undef HAVE_LIBDL
+
+/* Define to 1 if you have the `event' library (-levent). */
+#undef HAVE_LIBEVENT
 
 /* Define to 1 if you have the `gdbm' library (-lgdbm). */
 #undef HAVE_LIBGDBM
@@ -242,9 +242,6 @@
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
-
-/* Define to 1 if you have the <netdb.h> header file. */
-#undef HAVE_NETDB_H
 
 /* Define to 1 if you have the <netinet/icmp6.h> header file. */
 #undef HAVE_NETINET_ICMP6_H
@@ -554,6 +551,10 @@
 /* Define to 1 if `lstat' dereferences a symlink specified with a trailing
    slash. */
 #undef LSTAT_FOLLOWS_SLASHED_SYMLINK
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
 
 /* Define for Jumbo (9k) Ethernet Frames */
 #undef MAKE_WITH_JUMBO_FRAMES

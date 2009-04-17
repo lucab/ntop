@@ -54,10 +54,6 @@ static void stopcap(void) {
   traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up");
   traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory");
   setRunState(FLAG_NTOPSTATE_STOPCAP);
-
-  for(i=0; i<myGlobals.numDevices; i++) signalCondvar(&myGlobals.device[i].queueCondvar);
-
-  signalCondvar(&myGlobals.queueAddressCondvar);
 }
 
 #undef malloc /* just to be safe */

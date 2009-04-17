@@ -892,9 +892,6 @@ extern int insert_flow_record(u_int16_t probeId,
 			      u_int32_t first, u_int32_t last,
 			      u_int16_t srcPort, u_int16_t dstPort, u_int8_t tcpFlags,
 			      u_int8_t proto, u_int8_t tos, u_int16_t vlanId);
-#ifdef HAVE_NETDB_H
-extern int h_errno; /* netdb.h */
-#endif
 
 /* Pseudo-functions.
  *   We use these as if they were real functions, but they expand to

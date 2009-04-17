@@ -113,390 +113,81 @@ static int validDNSName(char *name) {
 
 /* ************************************ */
 
-static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
-  char symAddr[MAX_LEN_SYM_HOST_NAME+1] = { '\0' };
-  short symAddrType=FLAG_HOST_SYM_ADDR_TYPE_NONE;
-  StoredAddress storedAddress;
-  int i, addToCacheFlag=0, updateRecord=0;
-  struct hostent *hp = NULL;
-  char* resolvedAddress;
-  char keyBuf[LEN_ADDRESS_BUFFER];
-  char dataBuf[sizeof(StoredAddress)+4];
-  datum key_data;
-  datum data_data;
-  static int reportedFreaky = FALSE;
+void dns_response_callback(int result, char type, int count, int ttl, void *addresses, void *arg) {
+  HostAddr *addr = (HostAddr*)arg;
+		    
+  //traceEvent(CONST_TRACE_WARNING, "dns_response_callback(): result=%d", result);
 
-  if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) return;
+  if((addr == NULL) || (result != DNS_ERR_NONE))
+    goto out;
 
-  myGlobals.numResolveAddressCalls++;
+  // traceEvent(CONST_TRACE_INFO, "type: %d, count: %d, ttl: %d: ", type, count, ttl);
 
-#ifdef DNS_DEBUG
-  traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Entering resolveAddress()");
-#endif
-
-  memset(&keyBuf, 0, sizeof(keyBuf));
-  memset(&dataBuf, 0, sizeof(dataBuf));
-  memset(&storedAddress, 0, sizeof(storedAddress));
-
-  key_data.dptr = _addrtonum(hostAddr, keyBuf, sizeof(keyBuf));
-  key_data.dsize = strlen(keyBuf)+1;
-
-  if(myGlobals.dnsCacheFile == NULL) {
-#ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving resolveAddress(), dnsCacheFile NULL");
-#endif
-    myGlobals.numResolveNoCacheDB++;
-    return; /* ntop is quitting... */
-  }
-
-  data_data = gdbm_fetch(myGlobals.dnsCacheFile, key_data);
-
-  myGlobals.numResolveCacheDBLookups++;
-  /* First check whether the address we search for is cached... */
-  if((data_data.dptr != NULL) &&
-     (data_data.dsize == (sizeof(StoredAddress))) &&
-     (myGlobals.actTime - ((StoredAddress*)data_data.dptr)->recordCreationTime < CONST_DNSCACHE_LIFETIME)) {
-    StoredAddress *retrievedAddress;
-
-    retrievedAddress = (StoredAddress*)data_data.dptr;
-#ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Fetched '%s' from cache for [%s]",
-	       retrievedAddress->symAddress, keyBuf);
-#endif
-
-    /* Sanity check */
-    if(strlen(retrievedAddress->symAddress) >= (MAX_LEN_SYM_HOST_NAME-1)) {
-      strncpy(symAddr, retrievedAddress->symAddress, MAX_LEN_SYM_HOST_NAME-4);
-      symAddr[MAX_LEN_SYM_HOST_NAME-1] = '\0';
-      symAddr[MAX_LEN_SYM_HOST_NAME-2] = '.';
-      symAddr[MAX_LEN_SYM_HOST_NAME-3] = '.';
-      symAddr[MAX_LEN_SYM_HOST_NAME-4] = '.';
-    } else
-      safe_snprintf(__FILE__, __LINE__, symAddr, sizeof(symAddr), "%s",
-		    retrievedAddress->symAddress);
-    
-    symAddrType = retrievedAddress->symAddressType;
-
-    myGlobals.numResolvedFromCache++;
-    updateHostNameInfo(*hostAddr, retrievedAddress->symAddress, retrievedAddress->symAddressType);
-
-    free(data_data.dptr);
-#ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving resolveAddress() - resolved from cache");
-#endif
-    return;
-  } else {
-    if(data_data.dptr != NULL) {
-#ifdef GDBM_DEBUG
-      if (data_data.dsize == (sizeof(StoredAddress)))
-        traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Dropped data for %s [wrong data size]", keyBuf);
+  switch (type) {
+  case DNS_IPv6_AAAA: {
+#ifdef INET6
+    struct in6_addr *in6_addrs = addresses;
+    char buf[INET6_ADDRSTRLEN+1];
+    int i;
+    /* a resolution that's not valid does not help */
+    if (ttl < 0)
+      goto out;
+    for (i = 0; i < count; ++i) {
+      const char *b = inet_ntop(AF_INET6, &in6_addrs[i], buf,sizeof(buf));
+      if (b)
+	 traceEvent(CONST_TRACE_INFO, "%s ", b);
       else
-        traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Ignored old record for %s", keyBuf);
-#endif
-      free(data_data.dptr);
-#ifdef GDBM_DEBUG
-    } else {
-      traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: Unable to retrieve %s", keyBuf);
-#endif
+	 traceEvent(CONST_TRACE_INFO, "%s ", strerror(errno));
     }
-
+#endif
+    // FIX - ADD IPv6 storage
+    break;
   }
-
-  if((!keepAddressNumeric) && (myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)) {
-    char theAddr[17];
-    int family, size;
-
-#ifdef HAVE_GETIPNODEBYADDR
-    int error_num;
-#endif
-
-#ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Resolving %s...", addrtostr(hostAddr));
-#endif
-    addrget(hostAddr,theAddr,&family,&size);
-#ifdef HAVE_NETDB_H
-    h_errno = NETDB_SUCCESS;
-#endif
-
-#ifdef PARM_USE_HOST
-    {
-      FILE* fd;
-      char buffer[64];
-      int i, len;
-
-      if (hostAddr->hostFamily == AF_INET)
-	cwd = "/usr/bin/host";
-      else (hostAddr->hostFamily == AF_INET6)
-	cwd = "/usr/bin/host -t aaaa";
-      safe_snprintf(__FILE__, __LINE__, buffer, sizeof(buffer),
-		  "%s %s",
-		  cwd,theAddr);
-
-      fd = popen(buffer, "r");
-
-      if(fd == NULL) {
-	dataBuf[0] = '\0';
-      } else {
-	char *rspStr;
-
-	memset(dataBuf, 0, sizeof(dataBuf));
-	rspStr = fgets(dataBuf, sizeof(dataBuf), fd);
-	pclose(fd);
-	if(rspStr == NULL)
-	  dataBuf[0] = '\0';
-      }
-
-      /*
-	# host 131.114.21.9
-	9.21.114.131.IN-ADDR.ARPA domain name pointer faeta.unipi.it
-	#
-      */
-
-      len = strlen(dataBuf);
-      if(len > 0) {
-	dataBuf[--len] = '\0';
-
-	for(i=len; i>0; i--)
-	  if(dataBuf[i] == ' ')
-	    break;
-      }
-
-      if((len > 0) && (i > 0) && (dataBuf[i] == ' ')) {
-	res = &dataBuf[i+1];
-	myGlobals.numResolvedFromHostAddresses++;
-        symAddrType=FLAG_HOST_SYM_ADDR_TYPE_NAME;
-      } else {
-	res = _addrtostr(hostAddr, dataBuf, sizeof(dataBuf));
-	myGlobals.numKeptNumericAddresses++;
-        symAddrType=FLAG_HOST_SYM_ADDR_TYPE_IP;
-      }
-
-#ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Resolved to %s from hosts file.", res);
-#endif
-    }
-#else /* PARM_USE_HOST */
-
-    myGlobals.numAttemptingResolutionWithDNS++;
-    addToCacheFlag = 0 /* Assume we'll get something, so we do want to add it later on */;
-
-#ifdef HAVE_GETIPNODEBYADDR
-    hp  = getipnodebyaddr((const void*)theAddr,
-			  size,family,
-			  &error_num);
-#ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called getipnodebyaddr(): RC=%d 0x%X [%s]",      error_num,
-	       hp, hp != NULL ? (char*)hp->h_name : "");
-#endif
-
-#else /* default */
-#if defined(HAVE_GETHOSTBYADDR_R) && !defined(LINUX)
-    /* Linux seems to ha some problems with gethostbyaddr_r */
-#ifdef SOLARIS
-    {
-   struct hostent _hp, *__hp;
-   char buffer[512];
-
-  hp = gethostbyaddr_r((const char*)theAddr, size,
-			 family,
-                         &_hp,
-                         buffer, sizeof(buffer),
-                         &h_errnop);
-#ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called gethostbyaddr_r(): RC=%d 0x%X [%s]",
-               h_errnop,
-	       hp, hp != NULL ? (char*)hp->h_name : "");
-#endif
-
-#else /* SOLARIS */
-    hp = gethostbyaddr_r((const char*)theAddr, size,
-                         family,
-                         &_hp,
-                         buffer, sizeof(buffer),
-                         &__hp,
-                         &h_errnop);
-#ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called gethostbyaddr_r(): RC=%d 0x%X [%s]",
-               h_errnop,
-	       hp, hp != NULL ? (char*)hp->h_name : "");
-#endif /* DNS_DEBUG */
-#endif  /* SOLARIS */
- }
-#else
-    hp = (struct hostent*)gethostbyaddr((char*)theAddr,size,family);
-#ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called gethostbyaddr(): RC=%d 0x%X [%s]",
-               h_errno,
-	       hp, hp != NULL ? (char*)hp->h_name : "not meaningful, hp is null");
-#endif
-//
-#endif
-#endif
-
-    if (
-#ifdef HAVE_NETDB_H
-	(h_errno == NETDB_SUCCESS) &&
-#endif
-#ifdef WIN32
-	(WSAGetLastError() == 0 /* OK */) &&
-#endif
-	(hp != NULL) &&
-        (hp->h_name != NULL) &&
-	validDNSName(hp->h_name) &&
-        (strcmp(hp->h_name, addrtostr(hostAddr)) != 0)) {
-      char *dotp = (char*)hp->h_name;
-
-      updateRecord = 1;
-
-#ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Resolved to %s.", dotp);
-#endif
-      strncpy(dataBuf, dotp, sizeof(dataBuf));
-
-      if(myGlobals.runningPref.domainName[0] != '\0') {
-	int dataLen = strlen(dataBuf)-strlen(myGlobals.runningPref.domainName);
-
-	if((dataLen > 0) && (!strcmp(&dataBuf[dataLen], myGlobals.runningPref.domainName))) {
-	  int foundDot=0;
-
-	  for(i=0; i<dataLen-1; i++)
-	    if(dataBuf[i] == '.') {
-	      foundDot = 1;
-	      break;
-	    }
-
-	  if(!foundDot)
-	    dataBuf[dataLen-1] = '\0';
-	}
-      }
-      resolvedAddress = dataBuf;
-      myGlobals.numResolvedWithDNSAddresses++;
-      symAddrType=FLAG_HOST_SYM_ADDR_TYPE_NAME;
-    } else {
-      myGlobals.numKeptNumericAddresses++;
-      symAddrType=FLAG_HOST_SYM_ADDR_TYPE_IP;
-      /* Failed, but why? */
-      switch (
-#ifdef HAVE_NETDB_H
-              h_errno
-#elif HAVE_GETIPNODEBYADDR
-              error_num
-#else
-              h_errno
-#endif
-             ) {
-      case NETDB_SUCCESS:
-	/* This is the freaky one - it returned NULL (nothing) which tells you to look
-	 * at the error code, but the error code says SUCCESS.
-	 *
-             * Treat as NOT FOUND, but use reportedFreaky to put out one message per run.
-             * Known to happen under Linux, other OSes uncertain...
-             */
-	if((reportedFreaky == FALSE) && (hp != NULL)) {
-	  reportedFreaky = TRUE;
-	  traceEvent(CONST_TRACE_NOISY, "gethost... call returned NULL/NETDB_SUCCESS - "
-		     "this is odd, but apparently normal");
-	}
-	myGlobals.numDNSErrorHostNotFound++;
-	break;
-      case HOST_NOT_FOUND:
-	myGlobals.numDNSErrorHostNotFound++;
-	  break;
-      case NO_DATA:
-	myGlobals.numDNSErrorNoData++;
-            break;
-      case NO_RECOVERY:
-	myGlobals.numDNSErrorNoRecovery++;
-	  break;
-      case TRY_AGAIN:
-	myGlobals.numDNSErrorTryAgain++;
-	addToCacheFlag = 1 /* Don't add this */;
-	break;
-        default:
-	  myGlobals.numDNSErrorOther++;
-	  addToCacheFlag = 1 /* Don't add this */;
-	  traceEvent(CONST_TRACE_ERROR, "gethost... call, returned unknown error code %d",
-#ifdef HAVE_NETDB_H
-                  h_errno
-#elif HAVE_GETIPNODEBYADDR
-                  error_num
-#else
-                  h_errno
-#endif
-            );
-      }
-      resolvedAddress = _addrtostr(hostAddr, dataBuf , sizeof(dataBuf));
-#ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Unable to resolve %s", resolvedAddress);
-#endif
-    }
-#endif /* PARM_USE_HOST */
-  } else {
-    myGlobals.numKeptNumericAddresses++;
-#ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Unable to resolve %s", resolvedAddress);
-#endif
-    resolvedAddress = _addrtostr(hostAddr, dataBuf, sizeof(dataBuf));
+  case DNS_IPv4_A: {
+    struct in_addr *in_addrs = addresses;
+    int i;
+    /* a resolution that's not valid does not help */
+    if (ttl < 0)
+      goto out;
+    for (i = 0; i < count; ++i)
+       traceEvent(CONST_TRACE_INFO, "%s ", inet_ntoa(in_addrs[i]));
+    break;
   }
+  case DNS_PTR:
+    /* may get at most one PTR */
+    if (count != 1)
+      goto out;
 
-#ifdef HAVE_GETIPNODEBYADDR
-  if(hp != NULL)
-    freehostent(hp);
-#endif
+     {
+       char *symAddr = *(char **)addresses;
+       StoredAddress storedAddreslones;
+       int len;
+       char keyBuf[LEN_ADDRESS_BUFFER];
+       datum key_data;
+       datum data_data;
+       StoredAddress storedAddress;
 
-  if (addToCacheFlag == 0) {
-    int len;
+       memset(storedAddress.symAddress, 0, sizeof(storedAddress.symAddress));
+       len = min(sizeof(storedAddress.symAddress)-1, strlen(symAddr));
+       memcpy(storedAddress.symAddress, symAddr, len);
+       storedAddress.symAddress[len] = '\0';
+       storedAddress.recordCreationTime = myGlobals.actTime;
+       storedAddress.symAddressType = FLAG_HOST_SYM_ADDR_TYPE_NAME;
 
-      if(strlen(resolvedAddress) > MAX_LEN_SYM_HOST_NAME) {
-        strncpy(symAddr, resolvedAddress, MAX_LEN_SYM_HOST_NAME-4);
-        symAddr[MAX_LEN_SYM_HOST_NAME-1] = '\0';
-        symAddr[MAX_LEN_SYM_HOST_NAME-2] = '.';
-        symAddr[MAX_LEN_SYM_HOST_NAME-3] = '.';
-        symAddr[MAX_LEN_SYM_HOST_NAME-4] = '.';
-      } else
-	safe_snprintf(__FILE__, __LINE__, symAddr,
-		      sizeof(symAddr), "%s", resolvedAddress);
-
-      for(i=0; symAddr[i] != '\0'; i++)
-        symAddr[i] = (char)tolower(symAddr[i]);
-
-      memset(storedAddress.symAddress, 0, sizeof(storedAddress.symAddress));
-      len = min(sizeof(storedAddress.symAddress)-1, strlen(symAddr));
-      memcpy(storedAddress.symAddress, symAddr, len);
-      storedAddress.symAddress[len] = '\0';
-      storedAddress.recordCreationTime = myGlobals.actTime;
-      storedAddress.symAddressType = symAddrType;
-
-      /* key_data has been set already */
+       key_data.dptr = _addrtonum(addr, keyBuf, sizeof(keyBuf));
+       key_data.dsize = strlen(keyBuf)+1;
+       
       data_data.dptr = (void*)&storedAddress;
       data_data.dsize = sizeof(storedAddress) /* Remember, StoredAddress has 1 byte padding so don't add more here */;
-
-      if(updateRecord) {
-	updateHostNameInfo(*hostAddr, symAddr, symAddrType);
-#ifdef DNS_DEBUG
-	traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Updating %s", symAddr);
-#endif
-      } else {
-#ifdef DNS_DEBUG
-	traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: NOT updating %s", symAddr);
-#endif
-      }
-
-      if(myGlobals.dnsCacheFile == NULL) {
-#ifdef DNS_DEBUG
-        traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving resolveAddress()");
-#endif
-        return; /* ntop is quitting... */
-      }
 
       if(gdbm_store(myGlobals.dnsCacheFile, key_data, data_data, GDBM_REPLACE) != 0)
         traceEvent(CONST_TRACE_ERROR, "dnsCache error adding '%s', %s", symAddr,
 #if defined(WIN32) && defined(__GNUC__)
-                       "no additional information available"
+		   "no additional information available"
 #else
-                        gdbm_strerror(gdbm_errno)
+		   gdbm_strerror(gdbm_errno)
 #endif
-                  );
+		   );
       else {
         myGlobals.dnsCacheStoredLookup++;
 
@@ -506,13 +197,20 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
                    ((StoredAddress*)data_data.dptr)->symAddress,
                    ((StoredAddress*)data_data.dptr)->symAddressType);
 #endif
-      }
 
-#ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving Resolveaddress()");
-#endif
+	updateHostNameInfo(*addr, storedAddress.symAddress, storedAddress.symAddressType);
+      } 
+    }
+    break;
+  default:
+    goto out;
   }
+
+ out:
+     if(addr) free(addr);
+  event_loopexit(NULL);
 }
+
 
 /* *************************** */
 
@@ -520,12 +218,16 @@ static void queueAddress(HostAddr elem, int forceResolution) {
   datum key_data, data_data;
   char dataBuf[sizeof(StoredAddress)+4];
   int rc;
+  HostAddr *cloned = (HostAddr*)malloc(sizeof(HostAddr));
 
-  if((!forceResolution)
-     && myGlobals.runningPref.trackOnlyLocalHosts
-     && (!_pseudoLocalAddress(&elem, NULL, NULL)))
+  if(myGlobals.runningPref.numericFlag
+     || (cloned == NULL)
+     || ((!forceResolution)
+	 && myGlobals.runningPref.trackOnlyLocalHosts
+	 && (!_pseudoLocalAddress(&elem, NULL, NULL))))
     return;
 
+  memcpy(cloned, &elem, sizeof(HostAddr));
   /*
     The address queue is far too long. This is usefult for
     avoiding problems due to DOS applications
@@ -539,6 +241,7 @@ static void queueAddress(HostAddr elem, int forceResolution) {
 		 MAX_NUM_QUEUED_ADDRESSES);
       traceEvent(CONST_TRACE_INFO, "Addresses in excess won't be resolved - ntop continues");
     }
+    free(cloned);
     return;
   }
 
@@ -549,13 +252,21 @@ static void queueAddress(HostAddr elem, int forceResolution) {
            a single store.
   */
   if (elem.hostFamily == AF_INET) {
-    key_data.dptr = (void*)&elem.Ip4Address.s_addr;
-    key_data.dsize = 4;
+    struct in_addr in;
+    char buf[32];
+
+    in.s_addr = htonl(elem.Ip4Address.s_addr);
+    if((rc = evdns_resolve_reverse(&in, 0, dns_response_callback, cloned)) == DNS_ERR_NONE) {
+      event_dispatch();
+    } else {
+      traceEvent(CONST_TRACE_ERROR, "evdns_resolve_reverse() returned %d", rc);
+    }
   }
 #ifdef INET6
   else if (elem.hostFamily == AF_INET6) {
-    key_data.dptr = (void*)&elem.Ip6Address.s6_addr;
-    key_data.dsize = 16;
+    traceEvent(CONST_TRACE_WARNING, "About to resolve v6 address");
+    evdns_resolve_reverse_ipv6(&elem.Ip6Address, 0, dns_response_callback, cloned);
+    event_dispatch();
   }
 #endif
   else {
@@ -563,49 +274,6 @@ static void queueAddress(HostAddr elem, int forceResolution) {
 			elem.hostFamily);
 	return;
   }
-
-  safe_snprintf(__FILE__, __LINE__, dataBuf, sizeof(dataBuf), "%s", addrtostr(&elem));
-  data_data.dptr = dataBuf;
-  data_data.dsize = strlen(dataBuf)+1;
-
-  rc = gdbm_store(myGlobals.addressQueueFile, key_data, data_data, GDBM_INSERT);
-
-  if (rc == 0) {
-    accessMutex(&myGlobals.queueAddressMutex, "dequeueAddress");
-    myGlobals.addressQueuedCurrent++, myGlobals.addressQueuedCount++;
-    if (myGlobals.addressQueuedCurrent > myGlobals.addressQueuedMax)
-      myGlobals.addressQueuedMax = myGlobals.addressQueuedCurrent;
-    releaseMutex(&myGlobals.queueAddressMutex);
-
-#ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Queued address '%s' [addr queue=%d/max=%d]",
-	       dataBuf, myGlobals.addressQueuedCurrent, myGlobals.addressQueuedMax);
-#endif
-  } else {
-    /* rc = 1 is duplicate key, which is fine.  Other codes are problems... */
-    if (rc != 1) {
-      traceEvent(CONST_TRACE_ERROR, "Queue of address '%s' failed (%s) [addr queue=%d/max=%d]",
-		 dataBuf, 
-#if defined(WIN32) && defined(__GNUC__)
-                 "no additional information available",
-#else
-                 gdbm_strerror(gdbm_errno),
-#endif
-                 myGlobals.addressQueuedCurrent,
-                 myGlobals.addressQueuedMax);
-      traceEvent(CONST_TRACE_INFO, "ntop processing continues, address will not be resolved");
-    } else {
-      accessMutex(&myGlobals.queueAddressMutex, "dequeueAddress");
-      myGlobals.addressQueuedDup++;
-      releaseMutex(&myGlobals.queueAddressMutex);
-#ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Duplicate queue of address '%s' ignored",
-		 dataBuf);
-#endif
-    }
-  }
-
-  signalCondvar(&myGlobals.queueAddressCondvar);
 }
 
 /* ************************************ */
@@ -615,112 +283,6 @@ void cleanupAddressQueue(void) {
 }
 
 /* ************************************ */
-
-/*
-  Remove from queue an address that was waiting to be
-  resolved
-*/
-void purgeQueuedV4HostAddress(u_int32_t addr) {
-  datum key_data;
-  struct in_addr addrv4;
-
-  addrv4.s_addr = addr;
-
-  /*
-    traceEvent(CONST_TRACE_INFO, "purgeQueuedV4HostAddress(%s)", 
-                                 _intoa(addrv4, buf, sizeof(buf))); 
-  */
-
-  key_data.dptr = (void*)&addr;
-  key_data.dsize = 4;
-  if(gdbm_delete(myGlobals.addressQueueFile, key_data)) {
-    accessMutex(&myGlobals.queueAddressMutex, "purgeQueuedV4HostAddress");
-    if(myGlobals.addressQueuedCurrent > 0) myGlobals.addressQueuedCurrent--;
-    releaseMutex(&myGlobals.queueAddressMutex);
-  }
-}
-
-/* ************************************ */
-
-void* dequeueAddress(void *_i) {
-  int dqaIndex = (int)((long)_i);
-
-  HostAddr addr;
-  datum key_data, data_data;
-
-  traceEvent(CONST_TRACE_INFO, 
-	     "THREADMGMT[t%lu]: DNSAR(%d): Address resolution thread running",
-             pthread_self(), dqaIndex+1);
-  
-  while(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) {
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Waiting for address to resolve...");
-#endif
-
-    waitCondvar(&myGlobals.queueAddressCondvar);
-
-    if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
-
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Address resolution started...");
-#endif
-
-    data_data = gdbm_firstkey(myGlobals.addressQueueFile);
-
-    while(data_data.dptr != NULL) {
-      int size = data_data.dsize;
-
-      if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN)
-        break;
-
-      if (size == sizeof(struct in_addr)) {
-	/* addrput(AF_INET, &addr, data_data.dptr); */
-	addr.hostFamily = AF_INET;
-	memcpy(&addr.Ip4Address.s_addr, data_data.dptr, size);
-      }
-#ifdef INET6
-      else if (size == sizeof(struct in6_addr)) {
-	addr.hostFamily = AF_INET6;
-	memcpy(&addr.Ip6Address.s6_addr, data_data.dptr, size);
-      }
-#endif
-
-#ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Dequeued address... [%s][key=%s] (#addr=%d)",
-		 addrtostr(&addr), key_data.dptr == NULL ? "<>" : key_data.dptr,
-		 myGlobals.addressQueuedCurrent);
-#endif
-
-      resolveAddress(&addr, 0);
-
-#ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Resolved address %s", addrtostr(&addr));
-#endif
-
-      accessMutex(&myGlobals.queueAddressMutex, "dequeueAddress");
-      if(myGlobals.addressQueuedCurrent > 0) myGlobals.addressQueuedCurrent--;
-      releaseMutex(&myGlobals.queueAddressMutex);
-
-      gdbm_delete(myGlobals.addressQueueFile, data_data);
-      key_data = data_data;
-      data_data = gdbm_nextkey(myGlobals.addressQueueFile, key_data);
-      free(key_data.dptr); /* Free the 'formed' data_data */
-    }
-  } /* endless loop */
-
-  myGlobals.dequeueAddressThreadId[dqaIndex] = 0;
-
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Address resolution thread terminated [p%d]",
-             pthread_self(), dqaIndex+1, 
-#ifndef WIN32
-			 getpid()
-#else
-			 0
-#endif
-			 );
-
-  return(NULL);
-}
 
 #ifdef INET6
 

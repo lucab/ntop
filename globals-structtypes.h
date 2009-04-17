@@ -2194,7 +2194,7 @@ typedef struct ntopGlobals {
   NtopInterface *device;   /* pointer to the network interfaces table */
 
   /* Database */
-  GDBM_FILE dnsCacheFile, pwFile, addressQueueFile, prefsFile, macPrefixFile, fingerprintFile;
+  GDBM_FILE dnsCacheFile, pwFile, prefsFile, macPrefixFile, fingerprintFile;
 
   /* the table of broadcast entries */
   HostTraffic *broadcastEntry;
@@ -2210,9 +2210,6 @@ typedef struct ntopGlobals {
 
   /* Multi-thread related */
   unsigned short numThreads;       /* # of running threads */
-
-  ConditionalVariable queueAddressCondvar;
-  PthreadMutex queueAddressMutex;
 
   pthread_t mainThreadId;
 

@@ -41,7 +41,7 @@ static void sendEmitterString(FILE *fDescr, char *theString) {
   if(fDescr == NULL)
     sendString(theString);
   else
-    fprintf(fDescr, theString);
+    fprintf(fDescr, "%s", theString);
 }
 
 /* *************************** */

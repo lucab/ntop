@@ -456,7 +456,6 @@ void printAvailableInterfaces() {
 
 #define	MAX_WIN32_NET_ALIASES 35
 
-static char NETDB[] = CONST_WIN32_PATH_NETWORKS;
 static FILE *netf = NULL;
 static char line[BUFSIZ+1];
 static struct netent net;
@@ -464,27 +463,6 @@ static char *net_aliases[MAX_WIN32_NET_ALIASES];
 static char *any(char *, char *);
 
 int _net_stayopen;
-
-/* ************************************ */
-
-void setnetent(int f)
-{
-  if(netf == NULL)
-    netf = fopen(NETDB, "r" );
-  else
-    rewind(netf);
-  _net_stayopen |= f;
-}
-
-/* ************************************ */
-
-void endnetent() {
-  if(netf) {
-    fclose(netf);
-    netf = NULL;
-  }
-  _net_stayopen = 0;
-}
 
 /* ************************************ */
 

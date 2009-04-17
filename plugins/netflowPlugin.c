@@ -1349,7 +1349,6 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	  - tos
 	  - tcp_flags
 
-
 	  In this case we add a patch for filling some of the fields
 	  in order to let ntop digest this flow.
 	*/
@@ -1362,6 +1361,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	if(ntohl(the1Record.flowRecord[i].dOctets) == 0) {
 	  /* We assume that all packets are 512 bytes long */
 	  u_int32_t tmp = ntohl(the1Record.flowRecord[i].dPkts);
+
 	  the5Record.flowRecord[i].dOctets = htonl(tmp*512);
 	} else
 	  the5Record.flowRecord[i].dOctets = the1Record.flowRecord[i].dOctets;

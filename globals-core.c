@@ -100,7 +100,6 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
     return;
   }
 
-  initSingleGdbm(&myGlobals.addressQueueFile, "addressQueue.db", spoolDirectory, TRUE,  NULL);
   initSingleGdbm(&myGlobals.dnsCacheFile,     "dnsCache.db",     spoolDirectory, -1,    NULL);
 
   if(!myGlobals.runningPref.liveMode) {
@@ -216,7 +215,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   /* Databases */
   myGlobals.dnsCacheFile = NULL;
   myGlobals.pwFile = NULL;
-  myGlobals.addressQueueFile = NULL;
 
   /* the table of broadcast entries */
   myGlobals.broadcastEntry = NULL;
@@ -228,9 +226,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.shortDomainName = NULL;
 
   myGlobals.numThreads = 0;            /* # of running threads */
-
-  for (i = 0; i < MAX_NUM_DEQUEUE_ADDRESS_THREADS; i ++)
-    myGlobals.dequeueAddressThreadId[i] = (pthread_t)-1;
 
 #ifdef HAVE_OPENSSL
   myGlobals.sslInitialized = 0;
@@ -335,12 +330,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   i = pthread_atfork(NULL, NULL, &reinitMutexes);
   /* traceEvent(CONST_TRACE_INFO, "NOTE: atfork() handler registered for mutexes, rc %d", i); */
 #endif
-
-  /*
-   * Create two variables (semaphores) used by functions in pbuf.c to queue packets
-   */
-  createCondvar(&myGlobals.queueAddressCondvar);
-  createMutex(&myGlobals.queueAddressMutex);
 
   createMutex(&myGlobals.gdbmMutex);        /* data to synchronize thread access to db files */
   createMutex(&myGlobals.portsMutex);       /* Avoid race conditions while handling ports */

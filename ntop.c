@@ -793,13 +793,6 @@ static void cleanupThreadIs(char *buf, int sizeofbuf) {
     else if(pthread_self() == myGlobals.sslwatchdogChildThreadId)
       strncpy(buf, "SSL", sizeofbuf);
 #endif
-    else
-      for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
-	if(pthread_self() == myGlobals.dequeueAddressThreadId[i]) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "DNSAR%d", i+1);
-	  break;
-	}
-      }
   }
 
   if(buf[0] == '\0') {
@@ -870,21 +863,6 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 		  myGlobals.handleWebConnectionsThreadId != 0 ? " WEB" : "");
 #endif
 
-  }
-
-  for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
-    if(myGlobals.dequeueAddressThreadId[i] != 0) {
-      if(!do_join) {
-	safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), " DNSAR%d", i+1);
-	safe_strncat(buf, sizeofbuf, buf2);
-      } else {
-	/* Wake up thread */
-	signalCondvar(&myGlobals.queueAddressCondvar);
-	traceEvent(CONST_TRACE_INFO, "Joining thread DNSAR%d", i+1);
-	if(joinThread(&myGlobals.dequeueAddressThreadId[i]) != 0)
-	  traceEvent(CONST_TRACE_INFO, "joinThread() returned %s", strerror(errno));
-      }
-    }
   }
 
   if(myGlobals.allDevs != NULL) {
@@ -1136,9 +1114,6 @@ RETSIGTYPE cleanup(int signo) {
     tryLockMutex(&myGlobals.hostsHashMutex[i], "cleanup");
     deleteMutex(&myGlobals.hostsHashMutex[i]);
   }
-
-  deleteCondvar(&myGlobals.queueAddressCondvar);
-  deleteMutex(&myGlobals.queueAddressMutex);
 
   termGdbm();
   termDB();

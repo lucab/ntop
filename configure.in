@@ -991,7 +991,6 @@ AC_CHECK_HEADERS([shadow.h])
 AC_CHECK_HEADERS([sys/utsname.h])
 
 # Network
-AC_CHECK_HEADERS([netdb.h])
 AC_CHECK_HEADERS([netinet/in.h])
 AC_CHECK_HEADERS([arpa/inet.h arpa/nameser.h])
 AC_CHECK_HEADERS([net/ethernet.h])
@@ -1000,6 +999,13 @@ AC_CHECK_LIB([z], [zlibVersion], [], [
         echo "Error! You need to have zlib."
         exit -1
         ])
+
+
+AC_CHECK_LIB([event], [event_get_version], [], [
+        echo "Error! You need to have libevent 1.4.X or better."
+        exit -1
+        ])
+
 # RRD
 if test -d "$RRD_HOME"; then
    AC_MSG_RESULT(checking for RRD home... yes)
@@ -1308,7 +1314,6 @@ AC_CHECK_FUNCS([gethostbyaddr gethostbyname gethostname])
 dnl> Note, we've already tested for gethostbyaddr_r to find it's library, above.
 dnl>      This test is to get HAVE_GETHOSTBYADDR_R set...
 AC_CHECK_FUNCS([gethostbyaddr_r])
-AC_CHECK_FUNCS([getipnodebyaddr])
 AC_CHECK_FUNCS([getpass])
 AC_CHECK_FUNCS([gettimeofday])
 AC_CHECK_FUNCS([localtime_r])

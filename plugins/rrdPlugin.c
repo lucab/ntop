@@ -54,6 +54,7 @@ static char* rrdVolatilePath;
 #define traceEventRRDebugARGV
 #endif
 
+
 /* ******************************************** */
 
 #ifdef WIN32
@@ -71,8 +72,9 @@ static unsigned short initialized = 0, active = 0, colorWarn = 0, graphErrCount 
 static unsigned short dumpDays, dumpHours, dumpMonths, dumpDelay;
 static char *hostsFilter = NULL;
 static Counter numRRDUpdates = 0, numTotalRRDUpdates = 0;
-static unsigned long numRuns = 0, numRRDerrors = 0,
-  numRRDCycles=0, lastRRDupdateDuration = 0, rrdcmaxDuration = 0;
+static unsigned long numRuns = 0, numRRDerrors = 0, lastRRDupdateNum = 0,
+  numRRDCycles=0;
+static float rrdcmaxDuration = 0, lastRRDupdateDuration = 0, maxRRDupdateDuration = 0;
 static time_t start_tm, end_tm, rrdTime;
 
 static u_short dumpDomains, dumpFlows, dumpHosts, dumpSubnets,
@@ -2516,17 +2518,12 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
   char path[512], *argv[32], cmd[64];
     struct stat statbuf;
     int argc = 0, rc, createdCounter = 0, i;
-#ifdef MAX_RRD_PROCESS_BUFFER
-    struct timeval rrdStartOfProcessing,
-      rrdEndOfProcessing;
+    struct timeval rrdStartOfProcessing, rrdEndOfProcessing;
     float elapsed;
-#endif
 
     if(value == 0) return;
 
-#ifdef MAX_RRD_PROCESS_BUFFER
     gettimeofday(&rrdStartOfProcessing, NULL);
-#endif
 
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s%s.rrd", hostPath, key);
 
@@ -2835,9 +2832,14 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 
     releaseMutex(&rrdMutex);
 
-#ifdef MAX_RRD_PROCESS_BUFFER
+
     gettimeofday(&rrdEndOfProcessing, NULL);
-    elapsed = timeval_subtract(rrdEndOfProcessing, rrdStartOfProcessing);
+    lastRRDupdateDuration = elapsed = timeval_subtract(rrdEndOfProcessing, rrdStartOfProcessing);
+    if(lastRRDupdateDuration > maxRRDupdateDuration)
+      maxRRDupdateDuration = lastRRDupdateDuration;
+      
+    
+#ifdef MAX_RRD_PROCESS_BUFFER
     rrdprocessBuffer[++rrdprocessBufferCount & (MAX_RRD_PROCESS_BUFFER - 1)] = elapsed;
     if(elapsed > rrdpmaxDelay)
       rrdpmaxDelay = elapsed;
@@ -3603,8 +3605,7 @@ static void statisticsPage(void) {
   printHTMLheader("RRD Statistics", NULL, 0);
 
   sendString("<center><table border=\"1\""TABLE_DEFAULTS">\n"
-             "<tr><th align=\"center\" "DARK_BG">Item</th>"
-	     "<th align=\"center\" "DARK_BG">Count</th></tr>\n");
+             "<tr><th align=\"center\" "DARK_BG" colspan=2>RRD Update</th></tr>\n");
 
   sendString("<tr><th align=\"left\" "DARK_BG">Cycles</th><td align=\"right\">");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)numRRDCycles);
@@ -3616,17 +3617,25 @@ static void statisticsPage(void) {
 		(numRRDCycles > 0) ? (float)numTotalRRDUpdates/(float)numRRDCycles : 0);
   sendString(buf);
 
-  sendString("<tr><th align=\"left\" "DARK_BG">Update Errors</th><td align=\"right\">");
+  sendString("<tr><th align=\"left\" "DARK_BG">Errors</th><td align=\"right\">");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)numRRDerrors);
   sendString(buf);
 
-  sendString("<tr><th align=\"left\" "DARK_BG">Update Cycle Duration</th><td align=\"right\">");
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[last: %u sec][max: %u sec]</td></tr>\n",
+  sendString("<tr><th align=\"left\" "DARK_BG">Cycle Duration</th><td align=\"right\">");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[last: %.2f sec][max: %.2f sec]</td></tr>\n",
 		lastRRDupdateDuration, rrdcmaxDuration);
   sendString(buf);
 
+  sendString("<tr><th align=\"left\" "DARK_BG">Single Update Duration</th><td align=\"right\">");
+  if(lastRRDupdateNum == 0) lastRRDupdateNum = 1;
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[last: %.0f msec][max: %.0f msec]</td></tr>\n",
+		lastRRDupdateDuration*1000, maxRRDupdateDuration*1000);
+  sendString(buf);
+
+  sendString("<tr><th align=\"center\" "DARK_BG" colspan=2>RRD Graph</th></tr>\n");
   sendString("<tr><th align=\"left\" "DARK_BG">Graphic Requests</th><td align=\"right\">");
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", (unsigned long)rrdGraphicRequests);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", 
+		(unsigned long)rrdGraphicRequests);
   sendString(buf);
   sendString("</table>\n</center>\n");
 
@@ -5132,8 +5141,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	     pthread_self(), getpid());
 
   for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
-    numRRDCycles++;
-
     do {
       end_tm += dumpInterval;
     } while (end_tm < (start_tm = time(NULL)));
@@ -5682,6 +5689,11 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
                numRRDCycles, numRRDUpdates, elapsed);
 
     lastRRDupdateDuration = elapsed;
+    lastRRDupdateNum = numRRDUpdates;
+    numRRDCycles++;
+
+    traceEvent(CONST_TRACE_WARNING, "numTotalRRDUpdates=%d, lastRRDupdateNum=%d, lastRRDupdateDuration=%.2f",
+	       numTotalRRDUpdates, lastRRDupdateNum, lastRRDupdateDuration);
 
     /*
      * If it's FLAG_NTOPSTATE_STOPCAP, and we're still running, then this

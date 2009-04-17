@@ -28,6 +28,8 @@ void termIPServices(void) {
   int i;
   ProtocolsList *proto = myGlobals.ipProtosList;
 
+  evdns_shutdown(1);
+  
   for(i=0; i<myGlobals.numActServices; i++) {
     if(myGlobals.udpSvc[i] != NULL) {
       free(myGlobals.udpSvc[i]->name);
@@ -91,7 +93,6 @@ void termIPSessions(void) {
 
 void termGdbm() {
   if(myGlobals.dnsCacheFile)     { gdbm_close(myGlobals.dnsCacheFile); myGlobals.dnsCacheFile = NULL;         }
-  if(myGlobals.addressQueueFile) { gdbm_close(myGlobals.addressQueueFile); myGlobals.addressQueueFile = NULL; }
   if(myGlobals.pwFile)           { gdbm_close(myGlobals.pwFile); myGlobals.pwFile = NULL;                     }
   if(myGlobals.prefsFile)        { gdbm_close(myGlobals.prefsFile); myGlobals.prefsFile = NULL;               }
 

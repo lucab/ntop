@@ -312,15 +312,6 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 #endif
     else
       key_data.dsize = 0;
-
-    if(key_data.dsize && (key_data.dptr != NULL)) {
-      gdbm_delete(myGlobals.addressQueueFile, key_data);
-
-#ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleting from GDBM address cache host [%s/%s]",
-		 host->hostNumIpAddress, host->hostResolvedName);
-#endif
-    }
   }
 
   handlePluginHostCreationDeletion(host, (u_short)actualDeviceId, 0 /* host deletion */);
@@ -641,7 +632,6 @@ int purgeIdleHosts(int actDevice) {
 	  /* Host selected for deletion */
 	  theFlaggedHosts[numHosts++] = el;
 	  el->magic = CONST_UNMAGIC_NUMBER;
-	  purgeQueuedV4HostAddress(el->hostIpAddress.Ip4Address.s_addr);
 	  remove_valid_ptr(el);
 	  next = el->next;
 
