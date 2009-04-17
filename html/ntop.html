@@ -1,0 +1,1591 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Fri Apr 17 16:28:59 2009 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+</style>
+<title>NTOP</title>
+
+<!-- Added by insertssi -->
+<link rel=stylesheet href="/style.css" type="text/css">
+<!--#include virtual="/menuHead.html" -->
+</head>
+<body>
+<!--#include virtual="/menuBody.html" -->
+
+<h1 align=center>NTOP</h1>
+
+<a href="#NAME">NAME</a><br>
+<a href="#SYNOPSIS">SYNOPSIS</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#COMMAND&minus;LINE OPTIONS">COMMAND&minus;LINE OPTIONS</a><br>
+<a href="#WEB VIEWS">WEB VIEWS</a><br>
+<a href="#NOTES">NOTES</a><br>
+<a href="#SEE ALSO">SEE ALSO</a><br>
+<a href="#PRIVACY NOTICE">PRIVACY NOTICE</a><br>
+<a href="#USER SUPPORT">USER SUPPORT</a><br>
+<a href="#AUTHOR">AUTHOR</a><br>
+<a href="#LICENCE">LICENCE</a><br>
+<a href="#ACKNOWLEDGMENTS">ACKNOWLEDGMENTS</a><br>
+
+<hr>
+
+
+<a name="NAME"></a>
+<h2>NAME</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">ntop &minus;
+display top network users</p>
+
+<a name="SYNOPSIS"></a>
+<h2>SYNOPSIS</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>ntop</b>
+[<b>@filename</b>] [<b>-a</b>|<b>--access-log-file</b>
+<i>&lt;path&gt;</i>] [<b>-b</b>|<b>--disable-decoders</b>]
+[<b>-c</b>|<b>--sticky-hosts</b>]
+[<b>-e</b>|<b>--max-table-rows</b>]
+[<b>-f</b>|<b>--traffic-dump-file</b> <i>file&gt;</i>]
+[<b>-g</b>|<b>--track-local-hosts</b>]
+[<b>-h</b>|<b>--help</b>]
+[<b>-j</b>|<b>--create-other-packets</b>]
+[<b>-l</b>|<b>--pcap-log</b> <i>&lt;path&gt;</i>]
+[<b>-m</b>|<b>--local-subnets</b> <i>&lt;addresses&gt;</i>]
+[<b>-n</b>|<b>--numeric-ip-addresses</b>]
+[<b>-o</b>|<b>--no-mac</b>] [<b>-p</b>|<b>--protocols</b>
+<i>&lt;list&gt;</i>]
+[<b>-q</b>|<b>--create-suspicious-packets</b>]
+[<b>-r</b>|<b>--refresh-time</b> <i>&lt;number&gt;</i>]
+[<b>-s</b>|<b>--no-promiscuous</b>]
+[<b>-t</b>|<b>--trace-level</b> <i>&lt;number&gt;</i>]
+[<b>-x</b> <i>&lt;max_num_hash_entries&gt;</i>]
+[<b>-w</b>|<b>--http-server</b> <i>&lt;port&gt;</i>]
+[<b>-z</b>|<b>--disable-sessions</b>]
+[<b>-A</b>|<b>--set-admin-password</b> <i>password</i>]
+[<b>-B</b>|<b>--filter-expression</b> <i>expression</i>]
+[<b>-C</b> <i>&lt;config</i>mode&gt;<i>]</i>
+[<b>-D</b>|<b>--domain</b> <i>&lt;name&gt;</i>]
+[<b>-F</b>|<b>--flow-spec</b> <i>&lt;specs&gt;</i>]
+[<b>-M</b>|<b>--no-interface-merge</b>]
+[<b>-N</b>|<b>--wwn-map</b> <i>&lt;path&gt;</i>]
+[<b>-O</b>|<b>----output-packet-path</b>
+<i>&lt;path&gt;</i>] [<b>-P</b>|<b>--db-file-path</b>
+<i>&lt;path&gt;</i>] [<b>-Q</b>|<b>--spool-file-path</b>
+<i>&lt;path&gt;</i>] [<b>-U</b>|<b>--mapper</b>
+<i>&lt;URL&gt;</i>] [<b>-V</b>|<b>--version]</b> [<b>-X</b>
+<i>&lt;max_num_TCP_sessions&gt;</i>]
+[<b>--disable-instantsessionpurge</b>]
+[<b>--disable-mutexextrainfo</b>]
+[<b>--disable-schedyield</b>] [<b>--disable-stopcap</b>]
+[<b>--fc-only</b>] [<b>--instance</b>] [<b>--no-fc</b>]
+[<b>--no-invalid-lun</b>] [<b>--p3p-cp</b>]
+[<b>--p3p-uri</b>] [<b>--skip-version-check</b>]
+[<b>--w3c</b>] [<b>-4</b>|<b>--ipv4]</b>
+[<b>-6</b>|<b>--ipv6]</b></p>
+
+<p style="margin-left:11%; margin-top: 1em">Unix
+options:</p>
+
+
+<p style="margin-left:11%; margin-top: 1em">[<b>-d</b>|<b>--daemon</b>]
+[<b>-i</b>|<b>--interface</b> <i>&lt;name&gt;</i>]
+[<b>-u</b>|<b>--user</b> <i>&lt;user&gt;</i>]
+[<b>-K</b>|<b>--enable-debug</b>] [<b>-L</b>]
+[<b>--pcap_setnonblock</b>] [<b>--use-syslog=</b>
+<i>&lt;facility&gt;</i>] [<b>--webserver-queue</b>
+<i>&lt;number&gt;</i>]</p>
+
+<p style="margin-left:11%; margin-top: 1em">Windows
+option:</p>
+
+
+<p style="margin-left:11%; margin-top: 1em">[<b>-i</b>|<b>--interface</b>
+<i>&lt;number|name&gt;</i>]</p>
+
+<p style="margin-left:11%; margin-top: 1em">OpenSSL
+options:</p>
+
+
+<p style="margin-left:11%; margin-top: 1em">[<b>-W</b>|<b>--https-server</b>
+<i>&lt;port&gt;</i>] [<b>--ssl-watchdog</b>]</p>
+
+<a name="DESCRIPTION"></a>
+<h2>DESCRIPTION</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>ntop</b>
+shows the current network usage. It displays a list of hosts
+that are currently using the network and reports information
+concerning the (IP and non-IP) traffic generated and
+received by each host. <b>ntop</b> may operate as a
+front-end collector (sFlow and/or netFlow plugins) or as a
+stand-alone collector/display program. A web browser is
+needed to access the information captured by the <b>ntop</b>
+program.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>ntop</b> is
+a hybrid layer 2 / layer 3 network monitor, that is by
+default it uses the layer 2 Media Access Control (MAC)
+addresses AND the layer 3 tcp/ip addresses. <b>ntop</b> is
+capable of associating the two, so that ip and non-ip
+traffic (e.g. arp, rarp) are combined for a complete picture
+of network activity.</p>
+
+<a name="COMMAND&minus;LINE OPTIONS"></a>
+<h2>COMMAND&minus;LINE OPTIONS</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>@filename</b></p>
+
+<p style="margin-left:12%;">The text of <b>filename</b> is
+copied - ignoring line breaks and comment lines (anything
+following a #) - into the command line. <b>ntop</b> behaves
+as if all of the text had simply been typed directly on the
+command line. For example, if the command line is &quot;-t 3
+@d -u ntop&quot; and file d contains just the line
+&rsquo;-d&rsquo;, then the effective command line is -t 3 -d
+-u ntop. Multiple @s are permitted. Nested @s (an @ inside
+the file) are not permitted.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Remember, most
+<b>ntop</b> options are &quot;sticky&quot;, that is they
+just set an internal flag. Invoking them multiple times
+doesn&rsquo;t change <b>ntop&rsquo;s</b> behavior. However,
+options that set a value, such as --trace-level, will use
+the LAST value given: --trace-level 2 --trace-level 3 will
+run as --trace-level 3.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Beginning with
+3.1, many command-line options may also be set via the web
+browser interface. These changes take effect on the next run
+of and on each subsequent run until changed.</p>
+
+<p style="margin-left:11%;"><b>-a |
+--access-log-file</b></p>
+
+<p style="margin-left:12%;">By default <b>ntop</b> does not
+maintain a log of HTTP requests to the internal web server.
+Use this parameter to request logging and to specify the
+location of the file where these HTTP requests are
+logged.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Each log entry
+is in Apache-like style. The only difference between Apache
+and <b>ntop</b> logs is that an additional column has been
+added which has the time (in milliseconds) that <b>ntop</b>
+needed to serve the request. Log entries look like this:</p>
+
+<p style="margin-left:12%; margin-top: 1em">192.168.1.1 - -
+[04/Sep/2003:20:38:55 -0500] - &quot;GET / HTTP/1.1&quot;
+200 1489 4 <br>
+192.168.1.1 - - [04/Sep/2003:20:38:55 -0500] - &quot;GET
+/index_top.html HTTP/1.1&quot; 200 1854 4 <br>
+192.168.1.1 - - [04/Sep/2003:20:38:55 -0500] - &quot;GET
+/index_inner.html HTTP/1.1&quot; 200 1441 7 <br>
+192.168.1.1 - - [04/Sep/2003:20:38:56 -0500] - &quot;GET
+/index_left.html HTTP/1.1&quot; 200 1356 4 <br>
+192.168.1.1 - - [04/Sep/2003:20:38:56 -0500] - &quot;GET
+/home_.html HTTP/1.1&quot; 200 154/617 9 <br>
+192.168.1.1 - - [04/Sep/2003:20:38:56 -0500] - &quot;GET
+/home.html HTTP/1.1&quot; 200 1100/3195 10 <br>
+192.168.1.1 - - [04/Sep/2003:20:38:56 -0500] - &quot;GET
+/About.html HTTP/1.1&quot; 200 2010 10</p>
+
+<p style="margin-left:12%; margin-top: 1em">This parameter
+is the complete file name of the access log. In prior
+releases it was erroneously called --access-log-path.</p>
+
+<p style="margin-left:11%;"><b>-b |
+--disable-decoders</b></p>
+
+<p style="margin-left:12%;">This parameter disables
+protocol decoders.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Protocol
+decoders examine and collect information about layer 2
+protocols such as NetBIOS or Netware SAP, as well as about
+specific tcp/ip (layer 3) protocols, such as DNS, http and
+ftp.</p>
+
+<p style="margin-left:12%; margin-top: 1em">This support is
+specifically coded for each protocol and is different from
+the capability to count raw information (packets and bytes)
+by protocol specified by the -p | --protocols parameter,
+below.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Decoding
+protocols is a significant consumer of resources. If the
+<b>ntop</b> host is underpowered or monitoring a very busy
+network, you may wish to disable protocol decoding via this
+parameter. It may also be appropriate to use this parameter
+if you believe that <b>ntop</b> has problems handling some
+protocols that occur on your network.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Even if
+decoding is disabled, ftp-data traffic is still decoded to
+look for passive ftp port commands.</p>
+
+<p style="margin-left:11%;"><b>-c | --sticky-hosts</b></p>
+
+<p style="margin-left:12%;">Use this parameter to prevent
+idle hosts from being purged from memory.</p>
+
+<p style="margin-left:12%; margin-top: 1em">By default idle
+hosts are periodically purged from memory. An idle host is
+identified when no packets from or to that host have been
+monitored for the period of time defined by the value of
+PARM_HOST_PURGE_MINIMUM_IDLE in globals-defines.h.</p>
+
+<p style="margin-left:12%; margin-top: 1em">If you use this
+option, all hosts - active and idle - are retained in memory
+for the duration of the <b>ntop</b> run.</p>
+
+<p style="margin-left:12%; margin-top: 1em">P2P users, port
+scans, popular web servers and other activity will cause
+<b>ntop</b> to record data about a large number of hosts. On
+an active network, this will consume a significant - and
+always growing - amount of memory. It is strongly
+recommended that you use a filtering expression to limit the
+hosts which are stored if you use --sticky-hosts.</p>
+
+<p style="margin-left:12%; margin-top: 1em">The idle purge
+is a statistical one - a random selection of the eligible
+hosts will be purged during each cycle. Thus it is possible
+on a busy system for an idle host to remain in the
+<b>ntop</b> tables and appear &rsquo;active&rsquo; for some
+considerable time after it is truly idle.</p>
+
+<p style="margin-left:11%;"><b>-d | --daemon</b></p>
+
+<p style="margin-left:12%;">This parameter causes ntop to
+become a daemon, i.e. a task which runs in the background
+without connection to a specific terminal. To use
+<b>ntop</b> other than as a casual monitoring tool, you
+probably will want to use this option.</p>
+
+
+<p style="margin-left:12%; margin-top: 1em"><b>WARNING:</b>
+If you are running as a daemon, the messages from
+<b>ntop</b> will be &rsquo;printed&rsquo; on to stdout and
+thus dropped. You probably don&rsquo;t want to do this. So
+remember to also use the -L or --use-syslog options to save
+the messages into the system log.</p>
+
+<p style="margin-left:11%;"><b>-e |
+--max-table-rows</b></p>
+
+<p style="margin-left:12%;">This defines the maximum number
+of lines that <b>ntop</b> will display on each generated
+ML page. If there are more lines to be displayed than this
+setting permits, only part of the data will be displayed.
+There will be page forward/back arrows placed at the bottom
+of the page for navigation between pages.</p>
+
+<p style="margin-left:11%;"><b>-f |
+--traffic-dump-file</b></p>
+
+<p style="margin-left:12%;">By default, <b>ntop</b>
+captures traffic from network interface cards (NICs) or from
+netFlow/sFlow probes. However, <b>ntop</b> can also read
+data from a file - typically a tcpdump capture or the output
+from one of the <b>ntop</b> packet capture options.</p>
+
+<p style="margin-left:12%; margin-top: 1em">if you specify
+-f, <b>ntop</b> will not capture any traffic from NICs
+during or after the file has been read. netFlow/sFlow
+capture - if enabled - would still be active.</p>
+
+<p style="margin-left:12%; margin-top: 1em">This option is
+mostly used for debug purposes.</p>
+
+<p style="margin-left:11%;"><b>-g |
+--track-local-hosts</b></p>
+
+<p style="margin-left:12%;">By default, <b>ntop</b> tracks
+all hosts that it sees from packets captured on the various
+NICs. Use this parameter to tell <b>ntop</b> to capture data
+only about local hosts. Local hosts are defined based on the
+addresses of the NICs and those networks identified as local
+via the -m | --local-subnets parameter.</p>
+
+<p style="margin-left:12%; margin-top: 1em">This parameter
+is useful on large networks or those that see many hosts,
+(e.g. a border router or gateway), where information about
+remote hosts is not desired/required to be tracked.</p>
+
+<p style="margin-left:11%;"><b>-h | --help</b></p>
+
+<p style="margin-left:12%;">Print help information for
+<b>ntop,</b> including usage and parameters.</p>
+
+<p style="margin-left:11%;"><b>-i | --interface</b></p>
+
+<p style="margin-left:12%;">Specifies the network interface
+or interfaces to be used by <b>ntop</b> for network
+monitoring.</p>
+
+<p style="margin-left:12%; margin-top: 1em">If multiple
+interfaces are used (this feature is available only if ntop
+is compiled with thread support) their names must be
+separated with a comma. For instance -i
+&quot;eth0,lo&quot;.</p>
+
+<p style="margin-left:12%; margin-top: 1em">If not
+specified, the default is the first Ethernet device, e.g.
+eth0. The specific device that is &rsquo;first&rsquo; is
+highly system dependent. Especially on systems where the
+device name reflects the driver name instead of the type of
+interface.</p>
+
+<p style="margin-left:12%; margin-top: 1em">By default,
+traffic information obtained by all the interfaces is merged
+together as if the traffic was seen by only one interface.
+Use the -M parameter to keep traffic separate by
+interface.</p>
+
+<p style="margin-left:12%; margin-top: 1em">If you do not
+want <b>ntop</b> to monitor any interfaces, use -i none.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Under Windows,
+the parameter value is either the number of the interface or
+its name, e.g. {6252C14C-44C9-49D9-BF59-B2DC18C7B811}. Run
+<b>ntop</b> -h to see a list of interface name-number
+mappings (at the end of the help information).</p>
+
+<p style="margin-left:11%;"><b>-j |
+--create-other-packets</b></p>
+
+<p style="margin-left:12%;">This parameter causes
+<b>ntop</b> to create a dump file of the &rsquo;other&rsquo;
+network traffic captured. One file is created for each
+network interface where
+&lt;path&gt;/ntop-other-pkts.&lt;device&gt;.pcap, where
+&lt;path&gt; is defined by the -O | --output-packet-path
+parameter. This file is useful for understanding these
+unclassifed packets.</p>
+
+<p style="margin-left:11%;"><b>-l | --pcap-log</b></p>
+
+<p style="margin-left:12%;">This parameter causes a dump
+file to be created of the network traffic captured by
+<b>ntop</b> in tcpdump (pcap) format. This file is useful
+for debug, and may be read back into <b>ntop</b> by the -f |
+--traffic-dump-file parameter. The dump is made after
+processing any filter expression ( never even sees filtered
+packets).</p>
+
+<p style="margin-left:12%; margin-top: 1em">The output file
+will be named
+<i>&lt;path&gt;/&lt;log&gt;.&lt;device&gt;.pcap</i>
+(Windows: <i>&lt;path&gt;/&lt;log&gt;.pcap</i> ), where
+&lt;path&gt; is defined by the -O | --output-packet-path
+parameter and &lt;log&gt; is defined by this -l | --pcap-log
+parameter.</p>
+
+<p style="margin-left:11%;"><b>-m | --local-subnets</b></p>
+
+<p style="margin-left:12%;"><b>ntop</b> determines the ip
+addresses and netmasks for each active interface. Any
+traffic on those networks is considered local. This
+parameter allows the user to define additional networks and
+subnetworks whose traffic is also considered local in
+<b>ntop</b> reports. All other hosts are considered
+remote.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Commas separate
+multiple network values. Both netmask and CIDR notation may
+be used, even mixed together, for instance
+&quot;131.114.21.0/24,10.0.0.0/255.0.0.0&quot;.</p>
+
+<p style="margin-left:12%; margin-top: 1em">The local
+subnet - as defined by the interface address(es) - is/are
+always local and do not need to be specified. If you do give
+the same value as a NIC&rsquo;s local address, a harmless
+warning message is issued.</p>
+
+<p style="margin-left:11%;"><b>-n |
+--numeric-ip-addresses</b></p>
+
+<p style="margin-left:12%;">By default, <b>ntop</b>
+resolves IP addresses using a combination of active
+(explicit) DNS queries and passive sniffing. Sniffing of DNS
+responses occurs when <b>ntop</b> receives a network packet
+containing the response to some other user&rsquo;s DNS
+query. <b>ntop</b> captures this information and enters it
+into <b>ntop&rsquo;s</b> DNS cache, in expectation of
+shortly seeing traffic addressed to that host. This way
+<b>ntop</b> significantly reduces the number of DNS queries
+it makes.</p>
+
+<p style="margin-left:12%; margin-top: 1em">This parameter
+causes <b>ntop</b> to skip DNS resolution, showing only
+numeric IP addresses instead of the symbolic names. This
+option can useful when the DNS is not present or quite
+slow.</p>
+
+<p style="margin-left:11%;"><b>-o | --no-mac</b></p>
+
+<p style="margin-left:12%;"><b>ntop</b> is a hybrid layer
+2/3 network monitor. That is, it uses both the lower level,
+physical device address - the MAC (Media Access Control)
+address - and the higher level, logical, tcp/ip address (the
+familiar www.ntop.org or 131.114.21.9 address). This allows
+<b>ntop</b> to link the logical addresses to a physical
+machine with multiple addresses (This occurs with virtual
+hosts or additional addresses assigned to the interface,
+etc.) to present consolidated reporting.</p>
+
+<p style="margin-left:12%; margin-top: 1em">This parameter
+specifies that <b>ntop</b> should not trust the MAC
+addresses but just use the IP addresses.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Normally, since
+the MAC address must be globally unique, the dual nature of
+<b>ntop</b> is a benefit and provides far better information
+about the network than is available via a pure layer 2 or
+pure layer 3 monitor.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Under certain
+circumstances - whenever <b>ntop</b> is started on an
+interface where MAC addresses cannot be really trusted - you
+may require this option.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Situations
+which may require this option include port/VLAN mirror, some
+cases with switches and spanning tree protocol, and
+(reportedly) some specific models of Ethernet switches which
+re-write MAC addresses of the packets they process.
+Normally, you discover that this option is necessary when
+you observe that hosts seem to change their addresses or
+information about different machines get lumped
+together.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Note that with
+this option, information which is dependent upon the MAC
+addresses (non tcp/ip protocols like IPX) will not be
+collected nor displayed.</p>
+
+<p style="margin-left:11%;"><b>-p | --protocols</b></p>
+
+<p style="margin-left:12%;">This parameter is used to
+specify the TCP/UDP protocols that <b>ntop</b> will monitor.
+The format is &lt;label&gt;=&lt;protocol list&gt; [,
+&lt;label&gt;=&lt;protocol list&gt;], where label is used to
+symbolically identify the &lt;protocol list&gt;. The format
+of &lt;protocol list&gt; is
+&lt;protocol&gt;[|&lt;protocol&gt;], where &lt;protocol&gt;
+is either a valid protocol specified inside the
+/etc/services file or a numeric port range (e.g. 80, or
+6000-6500).</p>
+
+<p style="margin-left:12%; margin-top: 1em">A simple
+example is
+--protocols=&quot;HTTP=http|www|https|3128,FTP=ftp|ftp-data&quot;,
+which reduces the protocols displayed on the &quot;IP&quot;
+pages to three:</p>
+
+<p style="margin-left:12%; margin-top: 1em">Host Domain
+Data HTTP FTP Other IP <br>
+ns2.attbi.com &lt;flag&gt; 954 63.9 % 0 0 954 <br>
+64.124.83.112.akamai.com &lt;flag&gt; 240 16.1 % 240 0 0
+<br>
+64.124.83.99.akamai.com &lt;flag&gt; 240 16.1 % 240 0 0 <br>
+toolbarqueries.google.com &lt;flag&gt; 60 4.0 % 60 0 0</p>
+
+<p style="margin-left:12%; margin-top: 1em">If the
+&lt;protocol list&gt; is very long you may store it in a
+file (for instance protocol.list). To do so, specify the
+file name instead of the &lt;protocol list&gt; on the
+command line. e.g. <b>ntop -p protocol.list</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">If the -p
+parameter is omitted the following default value is
+used:</p>
+
+
+<p style="margin-left:12%; margin-top: 1em">FTP=ftp|ftp-data
+<br>
+TP=http|www|https|3128 3128 is Squid, the HTTP cache <br>
+DNS=name|domain <br>
+Telnet=telnet|login <br>
+NBios-IP=netbios-ns|netbios-dgm|netbios-ssn <br>
+Mail=pop-2|pop-3|pop3|kpop|smtp|imap|imap2 <br>
+DHCP-BOOTP=67-68 <br>
+SNMP=snmp|snmp-trap <br>
+NNTP=nntp <br>
+NFS=mount|pcnfs|bwnfs|nfsd|nfsd-status <br>
+X11=6000-6010 <br>
+SSH=22</p>
+
+<p style="margin-left:12%; margin-top: 1em">Peer-to-Peer
+Protocols <br>
+---------------------- <br>
+Gnutella=6346|6347|6348 <br>
+Kazaa=1214 <br>
+WinMX=6699|7730 <br>
+DirectConnect=0 Dummy port as this is a pure P2P protocol
+<br>
+eDonkey=4661-4665</p>
+
+<p style="margin-left:12%; margin-top: 1em">Instant
+Messenger <br>
+----------------- <br>
+Messenger=1863|5000|5001|5190-5193</p>
+
+<p style="margin-left:12%; margin-top: 1em">NOTE: To
+resolve protocol names to port numbers, they must be
+specified in the system file used to list tcp/udp protocols
+and ports, which is typically /etc/services file. You will
+have to match the names in that file, exactly. Missing or
+unspecified (non-standard) ports must be specified by
+number, such as 3128 in our examples above.</p>
+
+<p style="margin-left:12%; margin-top: 1em">If you have a
+file named /etc/protocols, don&rsquo;t get confused by it,
+as that&rsquo;s the Ethernet protocol numbers, which are not
+what you&rsquo;re looking for.</p>
+
+<p style="margin-left:11%;"><b>-q |
+--create-suspicious-packets</b></p>
+
+<p style="margin-left:12%;">This parameter tells
+<b>ntop</b> to create a dump file of suspicious packets.</p>
+
+<p style="margin-left:12%; margin-top: 1em">There are many,
+many, things that cause a packet to be labeled as
+&rsquo;suspicious&rsquo;, including:</p>
+
+<p style="margin-left:12%; margin-top: 1em">Detected ICMP
+fragment <br>
+Detected Land Attack against host <br>
+Detected overlapping/tiny packet fragment <br>
+Detected traffic on a diagnostic port <br>
+Host performed ACK/FIN/NULL scan <br>
+Host rejected TCP session <br>
+TP/FTP/SMTP/SSH detected at wrong port <br>
+Malformed TCP/UDP/ICMP packet (packet too short) <br>
+Packet # %u too long <br>
+Received a ICMP protocol Unreachable from host <br>
+Sent ICMP Administratively Prohibited packet to host <br>
+Smurf packet detected for host <br>
+TCP connection with no data exchanged <br>
+TCP session reset without completing 3-way handshake <br>
+Two MAC addresses found for the same IP address <br>
+UDP data to a closed port <br>
+Unknown protocol (no HTTP/FTP/SMTP/SSH) detected (on port
+80/21/25/22) <br>
+Unusual ICMP options</p>
+
+<p style="margin-left:12%; margin-top: 1em">When this
+parameter is used, one file is created for each network
+interface where suspicious packets are found. The file is in
+tcpdump (pcap) format and is named
+&lt;path&gt;/ntop-suspicious-pkts.&lt;device&gt;.pcap, where
+&lt;path&gt; is defined by the -O | --output-packet-path
+parameter.</p>
+
+<p style="margin-left:11%;"><b>-r | --refresh-time</b></p>
+
+<p style="margin-left:12%;">Specifies the delay (in
+seconds) between automatic screen updates for those
+generated HTML pages which support them. This parameter
+allows you to leave your browser window open and have it
+always displaying nearly real-time data from
+<b>ntop.</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">The default is
+3 seconds. Please note that if the delay is very short (1
+second for instance), <b>ntop</b> might not be able to
+process all of the network traffic.</p>
+
+<p style="margin-left:11%;"><b>-s |
+--no-promiscuous</b></p>
+
+<p style="margin-left:12%;">Use this parameter to prevent
+from setting the interface(s) into promiscuous mode.</p>
+
+<p style="margin-left:12%; margin-top: 1em">An interface in
+promiscuous mode will accept ALL Ethernet frames, regardless
+of whether they directed (addressed) to the specific network
+interface (NIC) or not. This is an essential part of
+enabling <b>ntop</b> to monitor an entire network. (Without
+promiscuous mode, <b>ntop</b> will only see traffic directed
+to the specific host it is running on, plus broadcast
+traffic such as the arp and dhcp protocols.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Even if you use
+this parameter, the interface could well be in promiscuous
+mode if another application enabled it.</p>
+
+<p style="margin-left:12%; margin-top: 1em"><b>ntop</b>
+passes this setting on to libpcap, the packet capture
+library. On many systems, a non-promiscuous open of the
+network interface will fail, since the libpcap function on
+most systems require it to capture raw packets ( <b>ntop</b>
+captures raw packets so that we may view and analyze the
+layer 2 - MAC - information).</p>
+
+<p style="margin-left:12%; margin-top: 1em">Thus on most
+systems, <b>ntop</b> must probably still be started as root,
+and this option is largely ornamental. If it fails, you will
+see a ***FATALERROR*** message referring to pcap_open_live()
+and then an information message, &quot;Sorry, but on this
+system, even with -s, it appears that ntop must be started
+as root&quot;.</p>
+
+<p style="margin-left:11%;"><b>-t | --trace-level</b></p>
+
+<p style="margin-left:12%;">This parameter specifies the
+&rsquo;information&rsquo; level of messages that you wish
+<b>ntop</b> to display (on stdout or to the log). The higher
+the trace level number the more information that is
+displayed. The trace level ranges between 0 (no trace) and 5
+(full debug tracings).</p>
+
+<p style="margin-left:12%; margin-top: 1em">The default
+trace value is 3.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Trace level 0
+is not quite zero messages. Fatal errors and certain
+startup/shutdown messages are always displayed. Trace level
+1 is used to display errors only, level 2 for both errors
+and warnings, and level 3 displays error, warning and
+informational messages.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Trace level 4
+is called &rsquo;noisy&rsquo; and it is - generating many
+messages about the internal functioning of <b>ntop.</b>
+Trace level 5 and above are &rsquo;noisy&rsquo; plus extra
+logs, i.e. all possible messages, with a file:line tag
+prepended to every message.</p>
+
+<p style="margin-left:11%;"><b>-u | --user</b></p>
+
+<p style="margin-left:12%;">Specifies the user <b>ntop</b>
+should run as after it initializes.</p>
+
+<p style="margin-left:12%; margin-top: 1em"><b>ntop</b>
+must normally be started as root so that it has sufficient
+privileges to open the network interfaces in promiscuous
+mode and to receive raw frames. See the discussion of -s |
+--no-promiscuous above, if you wish to try starting
+<b>ntop</b> as a non-root user.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Shortly after
+starting up, <b>ntop</b> becomes the user you specify here,
+which normally has substantially reduced privileges, such as
+no login shell. This is the userid which owns
+<b>ntop&rsquo;s</b> database and output files.</p>
+
+<p style="margin-left:12%; margin-top: 1em">The value
+specified may be either a username or a numeric user id. The
+group id used will be the primary group of the user
+specified.</p>
+
+<p style="margin-left:12%; margin-top: 1em">If this
+parameter is not specified, ntop will try to switch first to
+&rsquo;nobody&rsquo; and then to &rsquo;anonymous&rsquo;
+before giving up.</p>
+
+<p style="margin-left:12%; margin-top: 1em">NOTE: This
+should not be root unless you really understand the security
+risks. In order to prevent this by accident, the only way to
+run <b>ntop</b> as root is to explicitly specify -u root.
+<b>Don&rsquo;t do it.</b></p>
+
+<p style="margin-left:11%;"><b>-x <br>
+-X</b></p>
+
+<p style="margin-left:12%;"><b>ntop</b> creates a new
+hash/list entry for each new host/TCP session seen. In case
+of DOS (Denial Of Service) an attacker can easily exhaust
+all the host available memory because ntop is creating
+entries for dummy hosts. In order to avoid this you can set
+an upper limit in order to limit the memory ntop can
+use.</p>
+
+<p style="margin-left:11%;"><b>-w | --http-server <br>
+-W | --https-server</b></p>
+
+<p style="margin-left:12%;"><b>ntop</b> offers an embedded
+web server to present the information that has been so
+painstakingly gathered. An external HTTP server is NOT
+required NOR supported. The <b>ntop</b> web server is
+embedded into the application. These parameters specify the
+port (and optionally the address (i.e. interface)) of the
+<b>ntop</b> web server.</p>
+
+<p style="margin-left:12%; margin-top: 1em">For example, if
+started with -w 3000 (the default port), the URL to access
+<b>ntop</b> is http://hostname:3000/. If started with a full
+specification, e.g. -w 192.168.1.1:3000, <b>ntop</b> listens
+on only that address/port combination.</p>
+
+<p style="margin-left:12%; margin-top: 1em">If -w is set to
+0 the web server will not listen for http://
+connections.</p>
+
+<p style="margin-left:12%; margin-top: 1em">-W operates
+similarly, but controls the port for the https://
+connections.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Some
+examples:</p>
+
+<p style="margin-left:12%; margin-top: 1em"><b>ntop -w 3000
+-W 0</b> (this is the default setting) HTTP requests on port
+3000 and no HTTPS.</p>
+
+<p style="margin-left:12%; margin-top: 1em"><b>ntop -w 80
+-W 443</b> Both HTTP and HTTPS have been enabled on their
+most common ports.</p>
+
+<p style="margin-left:12%; margin-top: 1em"><b>ntop -w 0 -W
+443</b> HTTP disabled, HTTPS enabled on the common port.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Certain
+sensitive, configuration pages of the <b>ntop</b> web server
+are protected by a userid/password. By default, these are
+the user/URL administration, filter, shutdown and reset
+stats are password protected <br>
+and are accessible initially only to user <b>admin</b> with
+a password set during the first run of <b>ntop.</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">Users can
+modify/add/delete users/URLs using ntop itself - see the
+Admin tab.</p>
+
+<p style="margin-left:12%; margin-top: 1em">The passwords,
+userids and URLs to protect with passwords are stored in a
+database file. Passwords are stored in an encrypted form in
+the database for further security. Best practices call for
+securing that database so that only the <b>ntop</b> user can
+read it.</p>
+
+<p style="margin-left:12%; margin-top: 1em">There is a
+discussion in docs/FAQ about further securing the
+<b>ntop</b> environment.</p>
+
+<p style="margin-left:11%;"><b>-z |
+--disable-sessions</b></p>
+
+<p style="margin-left:12%;">This parameter disables TCP
+session tracking. Use it for better performance or when you
+don&rsquo;t really need/care to track sessions.</p>
+
+<p style="margin-left:11%;"><b>-A |
+--set-admin-password</b></p>
+
+<p style="margin-left:12%;">This parameter is used to start
+<b>ntop</b> , set the admin password and quit. It is quite
+useful for installers that need to automatically set the
+password for the admin user.</p>
+
+<p style="margin-left:12%; margin-top: 1em">-A and
+--set-admin-password (without a value) will prompt the user
+for the password.</p>
+
+<p style="margin-left:12%; margin-top: 1em">You may also
+use this parameter to set a specific value using
+--set-admin-password=value. <b>The = is REQUIRED and no
+spaces are permitted!</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">If you attempt
+to run <b>ntop</b> as a daemon without setting a password, a
+FATAL ERROR message is generated and <b>ntop</b> stops.</p>
+
+<p style="margin-left:11%;"><b>-B |
+--filter-expression</b></p>
+
+<p style="margin-left:12%;">Filters allows the user to
+restrict the traffic seen by <b>ntop</b> on just about any
+imaginable item.</p>
+
+<p style="margin-left:12%; margin-top: 1em">The filter
+expression is set at run time by this parameter, but it may
+be changed during the <b>ntop</b> run on the Admin | Change
+Filter web page.</p>
+
+<p style="margin-left:12%; margin-top: 1em">The basic
+format is <b>-B filter</b> , where the quotes are
+<b>REQUIRED</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">The syntax of
+the filter expression uses the same BPF (Berkeley Packet
+Filter) expressions used by other packages such as
+tcpdump</p>
+
+<p style="margin-left:12%; margin-top: 1em">For instance,
+suppose you are interested only in the traffic
+generated/received by the host jake.unipi.it. <b>ntop</b>
+can then be started with the following filter:</p>
+
+<p style="margin-left:12%; margin-top: 1em"><b>ntop -B src
+host jake.unipi.it or dst host jake.unipi.it</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">or in
+shorthand:</p>
+
+<p style="margin-left:12%; margin-top: 1em"><b>ntop -B host
+jake.unipi.it or host jake.unipi.it</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">See the
+&rsquo;expression&rsquo; section of the <b>tcpdump</b> man
+page - usually available at
+http://www.tcpdump.org/tcpdump_man.html - for further
+information and the best quick guide to BPF filters
+currently available.</p>
+
+<p style="margin-left:12%; margin-top: 1em">WARNING: If you
+are using complex filter expressions, especially those with
+=s or meaningful spaces in them, be sure and use the long
+option format, --filter-expression=&quot;xxxx&quot; and not
+-B &quot;xxxx&quot;.</p>
+
+<p style="margin-left:11%;"><b>-C |</b></p>
+
+<p style="margin-left:12%;">This instruments ntop to be
+used in two configurations: host and network mode. In host
+mode (default) ntop works as usual: the IP addresses
+received are those of real hosts. In host mode the IP
+addresses received are those of the C-class network to which
+the address belongs. Using ntop in network mode is extremely
+useful when installed in a traffic exchange (e.g. in the
+middle of the Internet) whereas the host mode should be used
+when ntop is installed on the edge of a network (e.g. inside
+a company). The network mode significantly reduces the
+amount of work ntop has to perform and it has to be used
+whenever ntop is used to find out how the network traffic
+flows and not to pin-point specific hosts.</p>
+
+<p style="margin-left:11%;"><b>-D | --domain</b></p>
+
+<p style="margin-left:12%;">This identifies the local
+domain suffix, e.g. ntop.org. It may be necessary, if
+<b>ntop</b> is having difficulty determining it from the
+interface.</p>
+
+<p style="margin-left:11%;"><b>-F | --flow-spec</b></p>
+
+<p style="margin-left:12%;">It is used to specify network
+flows similar to more powerful applications such as
+NeTraMet. A flow is a stream of captured packets that match
+a specified rule. The format is</p>
+
+
+<p style="margin-left:12%; margin-top: 1em"><b>&lt;flow-label&gt;=&rsquo;&lt;matching
+expression&gt;&rsquo;[,&lt;flow-label&gt;=&rsquo;&lt;matching
+expression&gt;&rsquo;]</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">, where the
+label is used to symbolically identify the flow specified by
+the expression. The expression is a bpf (Berkeley Packet
+Filter) expression. If an expression is specified, then the
+information concerning flows can be accessed following the
+ML link named &rsquo;List NetFlows&rsquo;.</p>
+
+<p style="margin-left:12%; margin-top: 1em">For instance
+define two flows with the following expression
+<b>LucaHosts=&rsquo;host jake.unipi.it or host
+pisanino.unipi.it&rsquo;,GatewayRoutedPkts=&rsquo;gateway
+gateway.unipi.it&rsquo; .</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">All the traffic
+sent/received by hosts jake.unipi.it or pisanino.unipi.it is
+collected by <b>ntop</b> and added to the LucaHosts flow,
+whereas all the packet routed by the gateway
+gateway.unipi.it are added to the GatewayRoutedPkts flow. If
+the flows list is very long you may store in a file (for
+instance flows.list) and specify the file name instead of
+the actual flows list (in the above example, this would be
+&rsquo;ntop -F flows.list&rsquo;).</p>
+
+<p style="margin-left:12%; margin-top: 1em">Note that the
+double quotations around the entire flow expression are
+required.</p>
+
+<p style="margin-left:11%;"><b>-K | --enable-debug</b></p>
+
+<p style="margin-left:12%;">Use this parameter to simplify
+application debug. It does three things: 1. Does not fork()
+on the &quot;read only&quot; html pages. 2. Displays mutex
+values on the configuration (info.html) page. 3. (If
+available - glibc/gcc) Activates an automated backtrace on
+application errors.</p>
+
+<p style="margin-left:11%;"><b>-L |
+--use-syslog=facility</b></p>
+
+<p style="margin-left:12%;">Use this parameter to send log
+messages to the system log instead of stdout.</p>
+
+<p style="margin-left:12%; margin-top: 1em">-L and the
+simple form --use-syslog use the default log facility,
+defined as LOG_DAEMON in the #define symbol
+DEFAULT_SYSLOG_FACILITY in globals-defines.h.</p>
+
+<p style="margin-left:12%; margin-top: 1em">The complex
+form, --use-syslog=facility will set the log facility to
+whatever value (e.g. local3, security) you specify. <b>The =
+is REQUIRED and no spaces are allowed!</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">This setting
+applies both to <b>ntop</b> and to any child fork()ed for
+reporting. If this parameter is not specified, any fork()ed
+child will use the default value and will log it&rsquo;s
+messages to the system log (this occurs because the fork()ed
+child must give up it&rsquo;s access to the parents
+stdout).</p>
+
+<p style="margin-left:12%; margin-top: 1em">Because various
+systems do not make the permissible names available, we have
+a table at the end of globals-core.c. Look for
+myFacilityNames.</p>
+
+<p style="margin-left:11%;"><b>-M |
+--no-interface-merge</b></p>
+
+<p style="margin-left:12%;">By default, <b>ntop</b> merges
+the data collected from all of the interfaces (NICs) it is
+monitoring into a single set of counters.</p>
+
+<p style="margin-left:12%; margin-top: 1em">If you have a
+simple network, say a small LAN with a connection to the
+internet, merging data is good as it gives you a better
+picture of the whole network. For larger, more complex
+networks, this may not be desirable. You may also have other
+reasons for wishing to monitor each interface separately,
+for example DMZ vs. LAN traffic.</p>
+
+<p style="margin-left:12%; margin-top: 1em">This option
+instructs <b>ntop</b> not to merge network interfaces
+together. This means that <b>ntop</b> will collect
+statistics for each interface and report them
+separately.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Only ONE
+interface may be reported on at a time - use the <b>Admin |
+Switch NIC</b> option on the web server to select which
+interface to report upon.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Note that
+activating either the netFlow and/or sFlow plugins will
+force the setting of -M. Once enabled, you cannot go
+back.</p>
+
+<p style="margin-left:11%;"><b>-N | --wwn-map</b></p>
+
+<p style="margin-left:12%;">This options names the file
+providing the map of WWN to FCID/VSAN ids.</p>
+
+<p style="margin-left:11%;"><b>-O |
+--output-packet-path</b></p>
+
+<p style="margin-left:12%;">This parameter defines the base
+path for the ntop-suspicious-pkts.XXX.pcap and normal packet
+dump files.</p>
+
+<p style="margin-left:12%; margin-top: 1em">If this
+parameter is not specified, the default value is the
+config.h parameter CFG_DBFILE_DIR, which is set during
+./configure from the --localstatedir= parameter. If
+--localstatedir is not specified, it defaults to the
+--prefix value plus /var (e.g. /usr/local/var).</p>
+
+<p style="margin-left:12%; margin-top: 1em">Be aware that
+this may not be what you expect when running <b>ntop</b> as
+a daemon or Windows service. Setting an explicit and
+absolute path value is <b>STRONGLY</b> recommended if you
+use this facility.</p>
+
+<p style="margin-left:11%;"><b>-P | --db-file-path <br>
+-Q | --spool-file-path</b></p>
+
+<p style="margin-left:12%;">These parameters specify where
+<b>ntop</b> stores database files.</p>
+
+<p style="margin-left:12%; margin-top: 1em">There are two
+types, &rsquo;temporary&rsquo; - that is ones which need not
+be retained from <b>ntop</b> run to <b>ntop</b> run, and
+&rsquo;permanent&rsquo;, which must be retained (or
+recreated).</p>
+
+<p style="margin-left:12%; margin-top: 1em">The
+&rsquo;permanent&rsquo; databases are the preferences,
+&quot;prefsCache.db&quot; and the password file,
+&quot;ntop_pw.db&quot;. These are stored in the -P |
+--db-file-path specified location.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Certain plugins
+use the -P | --db-file-path specified location for their
+database (&quot;LsWatch.db&quot;) or (as a default value)
+for files (.../rrd/...).</p>
+
+<p style="margin-left:12%; margin-top: 1em">The
+&rsquo;temporary&rsquo; databases are the address queue,
+&quot;addressQueue.db&quot;, the cached DNS resolutions,
+&quot;dnsCache.db&quot; and the MAC prefix (vendor table),
+&quot;macPrefix.db&quot;.</p>
+
+<p style="margin-left:12%; margin-top: 1em">If only -P |
+--db-file-path is specified, it is used for both types of
+databases.</p>
+
+<p style="margin-left:12%; margin-top: 1em">The directories
+named must allow read/write and file creation by the
+<b>ntop</b> user. For security, nobody else should have even
+read access to these files.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Note that the
+default value is the config.h parameter CFG_DBFILE_DIR. This
+is set during ./configure from the --localstatedir=
+parameter. If --localstatedir is not specified, it defaults
+to the --prefix value plus /var (e.g. /usr/local/var).</p>
+
+<p style="margin-left:12%; margin-top: 1em">This may not be
+what you expect when running <b>ntop</b> as a daemon or
+Windows service.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Note that on
+versions of <b>ntop</b> prior to 2.3, these parameters
+defaulted to &quot;.&quot; (the current working directory,
+e.g. the value returned by the pwd command) and caused havoc
+as it was different when <b>ntop</b> was run from the
+command line, vs. run via cron, vs. run from an
+initialization script.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Setting an
+explicit and absolute path value is <b>STRONGLY</b>
+recommended.</p>
+
+<p style="margin-left:11%;"><b>-U | --mapper</b></p>
+
+<p style="margin-left:12%;">Specifies the URL of the
+mapper.pl utility.</p>
+
+<p style="margin-left:12%; margin-top: 1em">If provided,
+<b>ntop</b> creates a clickable hyperlink on the &rsquo;Info
+about host xxxxxx&rsquo; page to this URL by appending
+?host=xxxxx. Any type of host lookup could be performed, but
+this is intended to lookup the geographical location of the
+host.</p>
+
+<p style="margin-left:12%; margin-top: 1em">A cgi-based
+mapper interface to http://www.multimap.com is part of the
+<b>ntop</b> distribution [see www/Perl/mapper.pl]).</p>
+
+<p style="margin-left:11%;"><b>-V | --version</b></p>
+
+<p style="margin-left:12%;">Prints <b>ntop</b> version
+information and then exits.</p>
+
+<p style="margin-left:11%;"><b>-W | --https-server</b></p>
+
+<p style="margin-left:12%;">(See the joint documentation
+with the -w parameter, above)</p>
+
+
+<p style="margin-left:11%;"><b>--disable-instantsessionpurge</b></p>
+
+<p style="margin-left:12%;"><b>ntop</b> sets completed
+sessions as &rsquo;timed out&rsquo; and then purge them
+almost instantly, which is not the behavior you might expect
+from the discussions about purge timeouts. This switch makes
+ntop respect the timeouts for completed sessions. It is NOT
+the default because a busy web server may have 100s or 1000s
+of completed sessions and this would significantly increase
+the amount of memory <b>ntop</b> uses.</p>
+
+
+<p style="margin-left:11%;"><b>--disable-mutexextrainfo</b></p>
+
+<p style="margin-left:12%;"><b>ntop</b> stores extra
+information about the locks and unlocks of the protective
+mutexes it uses. Since <b>ntop</b> uses fine-grained
+locking, this information is updated frequently. On some
+OSes, the system calls used to collect this informatio
+(getpid() and gettimeofday()) are expensive. This option
+disables the extra information. It should have no processing
+impact on <b>ntop</b> <br>
+- however should <b>ntop</b> actually deadlock, we would
+lose the information that sometimes tells us why.</p>
+
+
+<p style="margin-left:11%;"><b>--disable-schedyield</b></p>
+
+<p style="margin-left:12%;"><b>ntop</b> uses sched_yield()
+calls for better interactive performance. Under some
+situations, primarily under RedHat Linux 8.0, this can
+deadlock, causing the <b>ntop</b> web server to stop
+responding, although <b>ntop</b> appears to still be
+operational according to the ps command. Use this switch to
+disable these calls, IF you are seeing deadlocks.</p>
+
+<p style="margin-left:11%;"><b>--disable-stopcap</b></p>
+
+<p style="margin-left:12%;">Return <b>ntop</b> to the old
+(v2.1) behavior on a memory error. The default of stopcap
+enabled makes the web interface available albeit with static
+content until <b>ntop</b> is shutdown.</p>
+
+<p style="margin-left:11%;"><b>--fc-only</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">Display only
+Fibre Channel statistics.</p>
+
+<p style="margin-left:11%;"><b>--instance</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">You can run
+multiple instances of <b>ntop</b> simultaneously by
+specifying different -P values (typically through separate
+ntop.conf files). If you set a value for this parameter
+(available only on the command line), you (1) display the
+&rsquo;instance&rsquo; name on every web page and (2) alter
+the log prefix from &quot;NTOP&quot; to your chosen
+value.</p>
+
+<p style="margin-left:12%; margin-top: 1em">If you want to
+make the tag more obvious, create a .instance class in
+style.css, e.g.:</p>
+
+<p style="margin-left:12%; margin-top: 1em">.instance {
+<br>
+color: #666666; <br>
+font-size: 18pt; <br>
+}</p>
+
+<p style="margin-left:12%; margin-top: 1em">Note (UNIX): To
+run completely different versions of the <b>ntop</b> binary,
+you need to compile and install into a different library
+(using ./configure --prefix) and then specify the
+LD_LIBRARY_PATH before invoking, e.g.</p>
+
+
+<p style="margin-left:12%; margin-top: 1em">LD_LIBRARY_PATH=/devel/lib/ntop/:...
+/devel/bin/ntop ...args...</p>
+
+<p style="margin-left:12%; margin-top: 1em">If present, a
+file of the form &lt;instance&gt;_ntop_logo.gif will be used
+instead of the normal ntop_logo.gif. This is tested for ONLY
+once, at the beginning of the run. The EXACT word(s) of the
+--instance flag are used, without testing if they make a
+proper file name. If - for any reason - the file is not
+found, an informational message is logged and the normal
+logo file is used. To construct your own logo, make it a
+300x40 transparent gif.</p>
+
+<p style="margin-left:12%; margin-top: 1em">NOTE: On the
+web pages, <b>ntop</b> uses the dladdr() function. The
+original Solaris routine had a bug, replicated in FreeBSD
+(and possibly other places) where it uses the ARGV[0] value
+- which might be erroneous - instead of the actual file
+name. If the &rsquo;running from&rsquo; value looks bogus
+but the &rsquo;libaries in&rsquo; value looks ok, go with
+the libarary.</p>
+
+<p style="margin-left:11%;"><b>--no-fc</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">Disable
+processing &amp; Display of Fibre Channel</p>
+
+<p style="margin-left:11%;"><b>--no-invalid-lun</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">Don&rsquo;t
+display Invalid LUN information.</p>
+
+<p style="margin-left:11%;"><b>--p3p-cp <br>
+--p3p-uri</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">P3P is a W3C
+recommendation - http://www.w3.org/TR/P3P/ - for specifying
+personal information a site collects and what it does with
+the information. These parameters allow to return P3P
+information. We do not supply samples.</p>
+
+<p style="margin-left:11%;"><b>--pcap_setnonblock</b></p>
+
+<p style="margin-left:12%;">On some platforms, the
+<b>ntop</b> web server will hang or appear to hang (it
+actually just responds incredibly slowly to the first
+request from a browser session), while the rest of
+<b>ntop</b> runs just fine. This is known to be an issue
+under FreeBSD 4.x.</p>
+
+<p style="margin-left:12%; margin-top: 1em">This option
+sets the non-blocking option (assuming it&rsquo;s available
+in the version of libpcap that is installed).</p>
+
+<p style="margin-left:12%; margin-top: 1em">While this
+works around the problem (by turing an interupt driven
+process into a poll), it also MAY signifcantly increases the
+cpu usage of <b>ntop.</b> Although it does not actually
+interfere with other work, seeing <b>ntop</b> use 80-90% or
+more of the cpu is not uncommon - don&rsquo;t say we
+didn&rsquo;t warn you.</p>
+
+<p style="margin-left:12%; margin-top: 1em"><b>THIS OPTION
+IS OFFICIALLY UNSUPPORTED</b> and used at your own risk.
+Read the docs/FAQ write-up.</p>
+
+
+<p style="margin-left:11%;"><b>--skip-version-check</b></p>
+
+<p style="margin-left:12%;">By default, <b>ntop</b>
+accesses a remote file to periodically check if the most
+current version is running. This option disables that check.
+Please review the privacy notice at the bottom of this page
+for more information. By default, the recheck period is
+slightly more than 15 days. This can be adjusted via a
+constant in globals-defines.h. If the result of the initial
+check indicates that the <b>ntop</b> version is a &rsquo;new
+development&rsquo; version (that is newer than the latest
+published development version), the recheck is disabled.
+This is because which fixes and enhancements were
+present/absent from the code.</p>
+
+<p style="margin-left:12%; margin-top: 1em">NOTE: At
+present, the recheck does not work under Windows.</p>
+
+<p style="margin-left:11%;"><b>--ssl-watchdog</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">Enable a
+watchdog for webserver hangs. These usually happen when
+connecting with older browsers. The user gets nothing back
+and other users can&rsquo;t connect. Internally, packet
+processing continues but there is no way to access the data
+through the web server or shutdown ntop cleanly. With the
+watchdog, a timeout occurs after 3 seconds, and processing
+continues with a log message. Unfortunately, the user sees
+nothing - it just looks like a failed connection. (also
+available as a ./configure option, --enable-sslwatchdog)</p>
+
+<p style="margin-left:11%;"><b>--w3c</b></p>
+
+<p style="margin-left:12%;">By default, <b>ntop</b>
+generates displayable but not great html. There are a number
+of tags we do not generate because they cause problems with
+older browsers which are still commonly used or are
+important to look good on real-world browsers. This flag
+tells <b>ntop</b> to generate &rsquo;BETTER&rsquo; (but not
+perfect) w3c compliant html 4.01 output. This in no way
+addresses all of the compatibility and markup issues. Over
+time, we would like to make <b>ntop</b> more compatible, but
+it will never be 100%. If you find any issues, please report
+them to ntop-dev.</p>
+
+<p style="margin-left:11%;"><b>-4 | --ipv4</b></p>
+
+<p style="margin-left:12%;">Use IPv4 connections.</p>
+
+<p style="margin-left:11%;"><b>-6 | --ipv6</b></p>
+
+<p style="margin-left:12%;">Use IPv6 connections</p>
+
+<a name="WEB VIEWS"></a>
+<h2>WEB VIEWS</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">While
+<b>ntop</b> is running, multiple users can access the
+traffic information using their web browsers. <b>ntop</b>
+does not generate &rsquo;fancy&rsquo; or
+&rsquo;complex&rsquo; html, although it does use frames,
+shallowly nested tables and makes some use of JavaScript and
+Cascading Style Sheets.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Beginning with
+release 3.1, the menus are cascading dropdowns via
+JSCookMenu. With release 3.2, this extends to plugins.</p>
+
+<p style="margin-left:11%; margin-top: 1em">We do not
+expect problems with any current web browser, but our
+ability to test with less common ones is very limited.
+Testing has included Firefox and Internet Explorer, with
+very limited testing on other current common browsers such
+as Opera.</p>
+
+<p style="margin-left:11%; margin-top: 1em">In
+documentation and this man page, when we refer to a page
+such as Admin | Switch NIC, we mean the Broad category
+&quot;Admin&quot; and the detailed item &quot;Switch
+NIC&quot; on that Admin menu.</p>
+
+<a name="NOTES"></a>
+<h2>NOTES</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>ntop</b>
+requires a number of external tools and libraries to
+operate. Certain other tools are optional, but add to the
+program&rsquo;s capabilities. <b><br>
+--webserver-queue</b></p>
+
+<p style="margin-left:12%;">Specifies the maximum number of
+web server requests for the tcp/ip stack to retain in
+it&rsquo;s queue awaiting delivery to the <b>ntop</b> web
+server. Requests in excess of this queue may be dropped
+(allowing for retransmission) or rejected at the tcp/ip
+stack level, depending upon the OS. Whatever happens,
+happens at the OS level, without any information being
+delivered to <b>ntop</b></p>
+
+<p style="margin-left:12%; margin-top: 1em">Required
+libraries include:</p>
+
+<p style="margin-left:12%; margin-top: 1em"><b>libpcap</b>
+from http://www.tcpdump.org/, version 0.7.2 or newer. 0.8.3
+or newer is strongly recommended.</p>
+
+<p style="margin-left:12%; margin-top: 1em">The Windows
+version makes use of <b>WinPcap</b> (libpcap for Windows)
+which may be downloaded from
+http://winpcap.polito.it/install/default.htm.</p>
+
+<p style="margin-left:12%; margin-top: 1em">WARNING: The
+2.x releases of <b>WinPcap</b> will NOT support SMP
+machines.</p>
+
+<p style="margin-left:12%; margin-top: 1em"><b>gdbm</b>
+from http://www.gnu.org/software/gdbm/gdbm.html</p>
+
+<p style="margin-left:12%; margin-top: 1em"><b>ntop</b>
+requires a POSIX threads library. As of <b>ntop</b> 3.2, the
+single-threaded version of <b>ntop</b> is no longer
+available.</p>
+
+<p style="margin-left:12%; margin-top: 1em">The <b>gd</b>
+2.x library, for the creation of png files, available at
+http://www.boutell.com/gd/.</p>
+
+<p style="margin-left:12%; margin-top: 1em">The
+<b>libpng</b> 1.2.x library, for the creation of png files,
+available at http://www.libpng.org/pub/png/libpng.html.</p>
+
+<p style="margin-left:12%; margin-top: 1em"><b>ntop</b>
+should support both gd 1.X and libpng 1.0.x libraries but
+this has not been tested. Note that there are
+incompatibilities if you compile with one version of these
+libraries and then run with the other. Please read the
+discussion in docs/FAQ before reporting ANY problems of this
+nature.</p>
+
+<p style="margin-left:12%; margin-top: 1em">(if an https://
+server is desired) <b>openSSL</b> from the OpenSSL project
+available at http://www.openssl.org.</p>
+
+<p style="margin-left:12%; margin-top: 1em">The
+<b>rrdtool</b> library is required by the rrd plugin.
+rrdtool creates &rsquo;Round-Robin databases&rsquo; which
+are used to store and graph historical data in a format that
+permits long duration retention without growing larger over
+time. The rrdtool home page is
+http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/</p>
+
+<p style="margin-left:12%; margin-top: 1em"><b>ntop</b>
+includes a limited version of rrdtool 1.0.49 in the myrrd/
+directory. Users of <b>ntop</b> 3.2 should not need to
+specifically install rrdtool.</p>
+
+<p style="margin-left:12%; margin-top: 1em">The
+<b>sflow</b> Plugin is courtesy of and supported by InMon
+Corporation, http://www.inmon.com/sflowTools.htm.</p>
+
+<p style="margin-left:12%; margin-top: 1em">There are other
+optional libraries. See the output of ./configure for a
+fuller listing.</p>
+
+<p style="margin-left:12%; margin-top: 1em">Tool locations
+are current as of August 2005 - please send email to report
+new locations or dead links.</p>
+
+<a name="SEE ALSO"></a>
+<h2>SEE ALSO</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>top</b>(1),
+<b>tcpdump</b>(8). <b>pcap</b>(3).</p>
+
+<a name="PRIVACY NOTICE"></a>
+<h2>PRIVACY NOTICE</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">By default at
+startup and at periodic intervals, the <b>ntop</b> program
+will retrieve a file containing current ntop program version
+information. Retrieving this file allows this <b>ntop</b>
+instance to confirm that it is running the most current
+version.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The retrieval
+is done using standard http:// requests, which will create
+log records on the hosting system. These log records do
+contain information which identifies a specific <b>ntop</b>
+site. Accordingly, you are being notified that this
+individually identifiable information is being transmitted
+and recorded.</p>
+
+<p style="margin-left:11%; margin-top: 1em">You may request
+- via the <b>--skip-version-check</b> run-time option - that
+this check be eliminated. If you use this option, no
+individually identifiable information is transmitted or
+recorded, because the entire retrieval and check is
+skipped.</p>
+
+<p style="margin-left:11%; margin-top: 1em">We ask you to
+allow this retrieval and check, because it benefits both you
+and the <b>ntop</b> developers. It benefits you because you
+will be automatically notified if the <b>ntop</b> program
+version is obsolete, becomes unsupported or is no longer
+current. It benefits the developers of <b>ntop</b> because
+it allows us to determine the number of active <b>ntop</b>
+instances, and the operating system/versions that users are
+running <b>ntop</b> under. This allows us to focus
+development resources on systems like those our users are
+using <b>ntop</b> on.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The
+individually identifiable information is contained in the
+web server log records which are automatically created each
+time the version file is retrieved. This is a function of
+the web server and not of <b>ntop</b> , but we do take
+advantage of it. The log record shows the IP address of the
+requestor (the <b>ntop</b> instance) and a User-Agent header
+field. We place information in the User-Agent header as
+follows:</p>
+
+
+<p style="margin-left:11%; margin-top: 1em">ntop/&lt;version&gt;
+<br>
+host/&lt;name from config.guess&gt; <br>
+distro/&lt;if one&gt; <br>
+release/&lt;of the distro, also if one&gt; <br>
+kernrlse/&lt;kernel version or release&gt; <br>
+GCC/&lt;version&gt; <br>
+config() &lt;condensed parameters from ./configure&gt; <br>
+run() &lt;condensed flags - no data - from the execution
+line&gt; <br>
+libpcap/&lt;version&gt; <br>
+gdbm/&lt;version&gt; <br>
+openssl/&lt;version&gt; <br>
+zlib/&lt;version&gt; <br>
+access/&lt;http, https, both or none&gt; <br>
+interfaces() &lt;given interface names&gt;</p>
+
+<p style="margin-left:11%; margin-top: 1em">For
+example:</p>
+
+<p style="margin-left:11%; margin-top: 1em">ntop/2.2.98
+host/i686-pc-linux-gnu distro/redhat release/9
+kernrlse/2.4.20-8smp <br>
+GCC/3.2.2 config(i18n) run(i; u; P; w; t; logextra; m;
+instantsessionpurge; <br>
+schedyield; d; usesyslog=; t) gdbm/1.8.0 openssl/0.9.7a
+zlib/1.1.4 <br>
+access/http interfaces(eth0,eth1)</p>
+
+<p style="margin-left:11%; margin-top: 1em">Distro and
+release information is determined at compile time and
+consists of information typically found in the /etc/release
+(or similar) file. See the <b>ntop</b> tool linuxrelease for
+how this is determined.</p>
+
+<p style="margin-left:11%; margin-top: 1em">gcc compiler
+version (if available) is the internal version #s for the
+gcc compiler, e.g. 3.2.3.</p>
+
+<p style="margin-left:11%; margin-top: 1em">kernrlse is the
+Linux Kernel version or the xBSD &rsquo;release&rsquo; such
+as 4.9-RELEASE and is determined from the uname data (if
+it&rsquo;s available).</p>
+
+<p style="margin-left:11%; margin-top: 1em">The ./configure
+parameters are stripped of directory paths, leading -s, etc.
+to create a short form that shows us what ./configure
+parameters people are using.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Similarly, the
+run time parameters are stripped of data and paths, just
+showing which flags are being used.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The libpcap,
+gdbm, openssl and zlib versions come from the strings
+returned by the various inquiry functions (if they&rsquo;re
+availabe).</p>
+
+<p style="margin-left:11%; margin-top: 1em">Here&rsquo;s a
+sample log record:</p>
+
+<p style="margin-left:11%; margin-top: 1em">67.xxx.xxx.xxx
+- - [28/Dec/2003:12:11:46 -0500] &quot;GET /version.xml
+TP/1.0&quot; <br>
+200 1568 www.burtonstrauss.com &quot;-&quot;
+&quot;ntop/2.2.98 host/i686-pc-linux-gnu <br>
+distro/redhat release/9 kernrlse/2.4.20-8smp GCC/3.2.2
+config(i18n) <br>
+run(i; u; P; w; t; logextra; m; instantsessionpurge;
+schedyield; d; <br>
+usesyslog=) libpcap/0.8 gdbm/1.8.0 openssl/0.9.7a zlib/1.1.4
+access/http <br>
+interfaces(eth0,eth1,eth2)&quot; &quot;-&quot;</p>
+
+<a name="USER SUPPORT"></a>
+<h2>USER SUPPORT</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Please send bug
+reports to the ntop-dev &lt;ntop-dev@ntop.org&gt; mailing
+list. The ntop &lt;ntop@ntop.org&gt; mailing list is used
+for discussing ntop usage issues. In order to post messages
+on the lists a (free) subscription is required to
+limit/avoid spam. Please do NOT contact the author directly
+unless this is a personal question.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Commercial
+support is available upon request. Please see the ntop site
+for further info.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Please send
+code patches to &lt;patch@ntop.org&gt;.</p>
+
+<a name="AUTHOR"></a>
+<h2>AUTHOR</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">ntop&rsquo;s
+author is Luca Deri (http://luca.ntop.org/) who can be
+reached at &lt;deri@ntop.org&gt;.</p>
+
+<a name="LICENCE"></a>
+<h2>LICENCE</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">ntop is
+distributed under the GNU GPL licence
+(http://www.gnu.org/).</p>
+
+<a name="ACKNOWLEDGMENTS"></a>
+<h2>ACKNOWLEDGMENTS</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The author
+acknowledges the Centro Serra of the University of Pisa,
+Italy (http://www-serra.unipi.it/) for hosting the ntop
+sites (both web and mailing lists), and Burton Strauss
+&lt;burton@ntopsupport.com&gt; for his help and user
+assistance. Many thanks to Stefano Suin
+&lt;stefano@ntop.org&gt; and Rocco Carbone
+&lt;rocco@ntop.org&gt; for contributing to the project.</p>
+<hr>
+</body>
+</html>

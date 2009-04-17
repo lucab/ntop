@@ -123,15 +123,15 @@ ntop_DEPENDENCIES  = libntopreport.la libntop.la
 ntop_LDADD         = libntopreport.la libntop.la $(BASE_LIBS)
 ntop_LDFLAGS       = $(AM_LDFLAGS)
 ntop_CFLAGS        = 
-
-noinst_HEADERS     =  getopt.h globals-core.h globals-report.h ntop.h
+EXTRA_HEADERS      = 
+noinst_HEADERS     = @GETOPT_H@ globals-core.h globals-report.h ntop.h
 
 # all the Archives
 lib_LTLIBRARIES    = libntop.la libntopreport.la
 
 # core Archive, or the 'engine'
 libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
-                     getopt.c     getopt1.c     globals-core.c \
+                     globals-core.c \
                      hash.c       iface.c       initialize.c  l7.c leaks.c \
                      ntop.c       pbuf.c        database.c \
                      plugin.c     prefs.c       protocols.c   \

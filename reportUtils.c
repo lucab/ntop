@@ -3751,7 +3751,6 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if((el->ethAddressString[0] != '\0')
      && strcmp(el->ethAddressString, "00:00:00:00:00:00")
      && strcmp(el->ethAddressString, "00:01:02:03:04:05") /* dummy address */) {
-    char *vendorName;
 
     if(isMultihomed(el)) {
       char *symMacAddr, symLink[32];
@@ -3769,21 +3768,15 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       sendString(buf);
 
     } else {
+      char * vendorName = getVendorInfo(el->ethAddress, 1);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		  "%s%s</TD></TR>\n",
-		  getRowColor(), "MAC&nbsp;Address <IMG ALT=\"Network Interface Card (NIC)\" SRC=/card.gif BORDER=0 "TABLE_DEFAULTS">",
-		  el->ethAddressString,
-		  myGlobals.separator /* it avoids empty cells not to be rendered */);
-      sendString(buf);
-    }
-
-    vendorName = getVendorInfo(el->ethAddress, 1);
-    if(vendorName[0] != '\0') {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s%s</TD></TR>\n",
-		    getRowColor(), "Nw&nbsp;Board&nbsp;Vendor",
+		    "%s %s%s%s%s</TD></TR>\n",
+		    getRowColor(), "MAC&nbsp;Address <IMG ALT=\"Network Interface Card (NIC)\" SRC=/card.gif BORDER=0 "TABLE_DEFAULTS">",
+		    el->ethAddressString,
+		    myGlobals.separator /* it avoids empty cells not to be rendered */,
+		    (vendorName[0] != '\0') ? "[" : "",
 		    vendorName,
-		    myGlobals.separator /* it avoids empty cells not to be rendered */);
+		    (vendorName[0] != '\0') ? "]" : "");
       sendString(buf);
     }
   }
@@ -3798,6 +3791,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     /* Different MAC addresses */
     char *symMacAddr, symLink[32], shortBuf[64];
     char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+    char *vendorName;
 
     symMacAddr = etheraddr_string(el->lastEthAddress, etherbuf);
     strcpy(symLink, symMacAddr);
@@ -3807,15 +3801,20 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       safe_snprintf(__FILE__, __LINE__, shortBuf, sizeof(shortBuf), "<A HREF=%s.html>%s</A>", symLink, symMacAddr);
     } else {
       strcpy(shortBuf, symMacAddr);
-    }
+    }    
+
+    vendorName = getVendorInfo(el->lastEthAddress, 1);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"%s"
-		"%s</TD></TR>\n",
-		getRowColor(),
-		"Last MAC Address/Router <IMG ALT=\"Network Interface Card (NIC)/Router\" SRC=/card.gif BORDER=0 "TABLE_DEFAULTS">",
-		shortBuf,
-		myGlobals.separator /* it avoids empty cells not to be rendered */);
+		  "%s %s%s%s%s"
+		  "</TD></TR>\n",
+		  getRowColor(),
+		  "Last MAC Address/Router <IMG ALT=\"Network Interface Card (NIC)/Router\" SRC=/card.gif BORDER=0 "TABLE_DEFAULTS">",
+		  shortBuf,
+		  myGlobals.separator /* it avoids empty cells not to be rendered */,
+		  (vendorName[0] != '\0') ? "[" : "",
+		  vendorName,
+		  (vendorName[0] != '\0') ? "]" : "");
     sendString(buf);
   }
 

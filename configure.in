@@ -1795,6 +1795,7 @@ dnl>
 AC_MSG_CHECKING([for gcc getopt_long])
 if test ".${ac_cv_lib_c_getopt_long}" = ".yes"; then
     AC_MSG_RESULT([found - long command line options are enabled])
+    AC_DEFINE_UNQUOTED(HAVE_GETOPT_LONG, 1, [getopt_long() is available])
 else
     AC_MSG_RESULT([not found - long command line options are enabled using ntop code])
     echo
@@ -1807,6 +1808,7 @@ else
     echo "*"
     echo "*******************************************************************"
     echo
+    mv utils/getopt/*[ch] .
 fi
 
 dnl>
@@ -2145,7 +2147,7 @@ AC_SUBST(DYN_FLAGS)
 AC_SUBST(EXEEXT)
 AC_SUBST(INCS)
 AC_SUBST(SNMP_LIBS)
-AC_SUBST(LUA_LIBS)
+dnl> AC_SUBST(LUA_LIBS)
 AC_SUBST(LIBTOOL_DEPS)
 AC_SUBST(MAKE_SHARED_LIBRARY_PARM)
 AC_SUBST(NTOP_VERSION_EXTRA)
@@ -2156,12 +2158,14 @@ AC_SUBST(CORELIBS)
 AC_SUBST(PERL_LIB)
 AC_SUBST(PERL_INC)
 AC_SUBST(PLUGINS)
-AC_SUBST(CFG_RUN_DIR)
+dnl> AC_SUBST(CFG_RUN_DIR)
 AC_SUBST(SCRIPTVER)
 AC_SUBST(SO_VERSION_PATCH)
 AC_SUBST(RRD_LIB)
 AC_SUBST(RRD_INC)
 AC_SUBST(GEO_DIR)
+AC_SUBST(GETOPT_H)
+AC_SUBST(GETOPT_C)
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_MACRO_DIR([m4])

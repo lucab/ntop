@@ -706,21 +706,21 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
     for(i=0; c_buf[i] != '\0'; i++) c_buf[i] = tolower(c_buf[i]);
 
-    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "./html/statsicons/flags/%s.gif",
-		  c_buf);
-	revertSlashIfWIN32(path, 0);
+    safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "./html/statsicons/flags/%s.gif", c_buf);
+    revertSlashIfWIN32(path, 0);
     rc = stat(path, &buf);
 
     if(rc != 0) {
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
-		    CFG_DATAFILE_DIR, el->geo_ip->country_code);
-	  revertSlashIfWIN32(path, 0);
+		    CFG_DATAFILE_DIR, c_buf);
+      revertSlashIfWIN32(path, 0);
       rc = stat(path, &buf);
     }
 
-    if(rc == 0) {
+    if(rc == 0)
       img = c_buf;
-    }
+    
+    /* traceEvent(CONST_TRACE_WARNING, "%s", path); */
   }
 
   if(img == NULL) {
@@ -6084,6 +6084,15 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   printInfoSectionTitle(textPrintFlag, "Basic Information");
   printFeatureConfigInfo(textPrintFlag, "ntop Version", version);
+
+#ifndef WIN32
+  {
+    struct passwd *passwd;           /* man getpwuid */
+    passwd = getpwuid (getuid());   /* Get the uid of the running processand use it to get a record from /etc/passwd */
+    printFeatureConfigInfo(textPrintFlag, "Running as user", passwd->pw_name);
+  }
+#endif
+
   printFeatureConfigInfo(textPrintFlag, "Configured on", configureDate);
   printFeatureConfigInfo(textPrintFlag, "Built on", buildDate);
 
@@ -6489,7 +6498,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   printFeatureConfigInfo(textPrintFlag, 
 			 "<A HREF=http://www.monkey.org/~provos/libevent/>LibEvent</A> version", 
-			 event_get_version());
+			 (char*)event_get_version());
 
   printFeatureConfigInfo(textPrintFlag, "Embedded Perl API",
 #ifdef HAVE_PERL
@@ -7125,89 +7134,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 					    - myGlobals.dnsSniffARPACount));
 
   printFeatureConfigNum(textPrintFlag, "Stored in cache (includes aliases)", (int)myGlobals.dnsSniffStoredInCache);
-
-  if(textPrintFlag == TRUE) {
-    printInfoSectionTitle(textPrintFlag, "IP to name - ipaddr2str():");
-
-    printFeatureConfigNum(textPrintFlag, "Total calls", (int)myGlobals.numipaddr2strCalls);
-
-    if(myGlobals.numipaddr2strCalls != myGlobals.numFetchAddressFromCacheCalls) {
-      printFeatureConfigNum(textPrintFlag,
-                            "ERROR: cache fetch attempts != ipaddr2str() calls",
-                            (int)myGlobals.numFetchAddressFromCacheCalls);
-    }
-    printFeatureConfigNum(textPrintFlag, "....OK", (int)myGlobals.numFetchAddressFromCacheCallsOK);
-    printFeatureConfigNum(textPrintFlag, "....Total not found", (int)(myGlobals.numipaddr2strCalls
-					      - myGlobals.numFetchAddressFromCacheCallsOK));
-    printFeatureConfigNum(textPrintFlag, "........Not found in cache", (int)myGlobals.numFetchAddressFromCacheCallsFAIL);
-    printFeatureConfigNum(textPrintFlag, "........Too old in cache", (int)myGlobals.numFetchAddressFromCacheCallsSTALE);
-  }
-
-  if(pref->numericFlag == 0) {
-    printInfoSectionTitle(textPrintFlag, "Queued - dequeueAddress()");
-    printFeatureConfigNum(textPrintFlag, "Total Queued", (int)myGlobals.addressQueuedCount);
-    printFeatureConfigNum(textPrintFlag, "Not queued (duplicate)", (int)myGlobals.addressQueuedDup);
-    printFeatureConfigNum(textPrintFlag, "Maximum Queued", (int)myGlobals.addressQueuedMax);
-    printFeatureConfigNum(textPrintFlag, "Current Queue", (int)myGlobals.addressQueuedCurrent);
-
-  }
-
-  if(textPrintFlag == TRUE) {
-    printInfoSectionTitle(textPrintFlag, "Resolved - resolveAddress():");
-    printFeatureConfigNum(textPrintFlag, "Addresses to resolve", (int)myGlobals.numResolveAddressCalls);
-    printFeatureConfigNum(textPrintFlag, "....less 'Error: No cache database'", (int)myGlobals.numResolveNoCacheDB);
-    printFeatureConfigNum(textPrintFlag, "....less 'Found in ntop cache'", (int)myGlobals.numResolvedFromCache);
-
-#ifdef PARM_USE_HOST
-    printFeatureConfigNum(textPrintFlag, "....less 'Resolved from /usr/bin/host'", (int)myGlobals.numResolvedFromHostAddresses);
-    printFeatureConfigNum(textPrintFlag, "Gives: # gethost (DNS lookup) calls", (int)(myGlobals.numResolveAddressCalls
-					 - myGlobals.numResolvedFromHostAddresses
-					 - myGlobals.numResolveNoCacheDB
-					 - myGlobals.numResolvedFromCache));
-#else
-    printFeatureConfigNum(textPrintFlag, "Gives: # gethost (DNS lookup) calls", (int)(myGlobals.numResolveAddressCalls
-					 - myGlobals.numResolveNoCacheDB
-					 - myGlobals.numResolvedFromCache));
-#endif
-
-
-    if((myGlobals.numResolveAddressCalls
-#ifdef PARM_USE_HOST
-	- myGlobals.numResolvedFromHostAddresses
-#endif
-	- myGlobals.numResolveNoCacheDB
-	- myGlobals.numResolvedFromCache) != myGlobals.numAttemptingResolutionWithDNS) {
-      printFeatureConfigNum(textPrintFlag,
-                            "    ERROR: actual count does not match!",
-                            (int)myGlobals.numAttemptingResolutionWithDNS);
-    }
-  }
-
-  printInfoSectionTitle(textPrintFlag, "DNS Lookup Calls");
-
-  printFeatureConfigNum(textPrintFlag, "DNS resolution attempts", (int)myGlobals.numAttemptingResolutionWithDNS);
-  printFeatureConfigNum(textPrintFlag, "....Success: Resolved", (int)myGlobals.numResolvedWithDNSAddresses);
-  printFeatureConfigNum(textPrintFlag, "....Failed", (int)(myGlobals.numDNSErrorHostNotFound
-					    + myGlobals.numDNSErrorNoData
-					    + myGlobals.numDNSErrorNoRecovery
-					    + myGlobals.numDNSErrorTryAgain
-					    + myGlobals.numDNSErrorOther));
-
-  if(textPrintFlag == TRUE) {
-    printFeatureConfigNum(textPrintFlag, "........HOST_NOT_FOUND", (int)myGlobals.numDNSErrorHostNotFound);
-    printFeatureConfigNum(textPrintFlag, "........NO_DATA", (int)myGlobals.numDNSErrorNoData);
-    printFeatureConfigNum(textPrintFlag, "........NO_RECOVERY", (int)myGlobals.numDNSErrorNoRecovery);
-    printFeatureConfigNum(textPrintFlag, "........TRY_AGAIN (don't store)", (int)myGlobals.numDNSErrorTryAgain);
-    printFeatureConfigNum(textPrintFlag, "........Other error (don't store)", (int)myGlobals.numDNSErrorOther);
-  }
-
-  printFeatureConfigNum(textPrintFlag, "DNS lookups stored in cache", (int)myGlobals.dnsCacheStoredLookup);
-  printFeatureConfigNum(textPrintFlag, "Host addresses kept numeric", (int)myGlobals.numKeptNumericAddresses);
-
-
-  printInfoSectionNote(textPrintFlag,
-                       "'DNS lookups stored in cache' includes HOST_NOT_FOUND replies.\n"
-                       "Thus it may be larger than the number of 'Success: Resolved' queries.\n");
 
   /* **** */
 

@@ -5692,8 +5692,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     lastRRDupdateNum = numRRDUpdates;
     numRRDCycles++;
 
+#if 0
     traceEvent(CONST_TRACE_WARNING, "numTotalRRDUpdates=%d, lastRRDupdateNum=%d, lastRRDupdateDuration=%.2f",
 	       numTotalRRDUpdates, lastRRDupdateNum, lastRRDupdateDuration);
+#endif
 
     /*
      * If it's FLAG_NTOPSTATE_STOPCAP, and we're still running, then this

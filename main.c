@@ -25,6 +25,12 @@
 #include "globals-report.h"
 #include "scsiUtils.h"
 
+#if defined(DARWIN) && (!defined(TIGER))
+#include <mach-o/dyld.h>
+
+extern char ** environ;
+#endif
+
 #if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 4) && defined(HAVE_BACKTRACE)
 #include <execinfo.h>
 #endif
@@ -37,7 +43,7 @@ char static_ntop;
 void welcome (FILE * fp) {
   fprintf (fp, "Welcome to %s v.%s\n[Configured on %s, built on %s]\n",
 	   myGlobals.program_name, version, configureDate, buildDate);
-  
+
   fprintf (fp, "Copyright 1998-2009 by %s.\n", author);
   fprintf (fp, "Get the freshest ntop from http://www.ntop.org/\n");
 }
@@ -48,7 +54,7 @@ void welcome (FILE * fp) {
  */
 void usage(FILE * fp) {
   char *newLine = "";
-  
+
 #ifdef WIN32
   newLine = "\n\t";
 #endif
@@ -102,7 +108,7 @@ void usage(FILE * fp) {
   fprintf(fp, "    [-s             | --no-promiscuous]                   %sDisable promiscuous mode\n", newLine);
 
 
-  fprintf(fp, "    [-x <max num hash entries> ]                          %sMax num. hash entries ntop can handle (default %u)\n", 
+  fprintf(fp, "    [-x <max num hash entries> ]                          %sMax num. hash entries ntop can handle (default %u)\n",
 	  newLine, myGlobals.runningPref.maxNumHashEntries);
   fprintf(fp, "    [-z             | --disable-sessions]                 %sDisable TCP session tracking\n", newLine);
   fprintf(fp, "    [-A]                                                  %sAsk admin user password and exit\n", newLine);
@@ -129,11 +135,11 @@ void usage(FILE * fp) {
 	  newLine);
   fprintf(fp, "    [-N             | --wwn-map]                          %sMap file providing map of WWN to FCID/VSAN\n", newLine);
   fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            %sPath for log files in pcap format\n", newLine);
-  fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     %sURL (mapper.pl) for displaying host location\n", 
+  fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     %sURL (mapper.pl) for displaying host location\n",
 	  newLine);
 
   fprintf(fp, "    [-V             | --version]                          %sOutput version information and exit\n", newLine);
-  fprintf(fp, "    [-X <max num TCP sessions> ]                          %sMax num. TCP sessions ntop can handle (default %u)\n", 
+  fprintf(fp, "    [-X <max num TCP sessions> ]                          %sMax num. TCP sessions ntop can handle (default %u)\n",
 	  newLine, myGlobals.runningPref.maxNumSessions);
   fprintf(fp, "    [--live]                                              %sEnable ntop live mode\n", newLine);
 /*  Please keep long-only options alphabetically ordered */
@@ -170,7 +176,7 @@ void usage(FILE * fp) {
 	 "    * The command line options are not permanent, i.e. they\n"
 	 "      are not persistent across ntop initializations.\n"
 	 "\n");
-  
+
 #ifdef WIN32
   printAvailableInterfaces();
 #endif
@@ -206,8 +212,8 @@ static void verifyOptions (void) {
       return;
     }
 
-#ifndef WIN32    
-    if ((myGlobals.runningPref.disablePromiscuousMode != 1) 
+#ifndef WIN32
+    if ((myGlobals.runningPref.disablePromiscuousMode != 1)
 	&& getuid() /* We're not root */
 	&& myGlobals.runningPref.devices
 	&& strcmp(myGlobals.runningPref.devices, "none")) {
@@ -223,7 +229,7 @@ static void verifyOptions (void) {
 #ifdef HAVE_SHADOW_H
             /* Use shadow passwords */
             struct spwd *spw;
-      
+
             spw = getspnam("root");
             if(spw == NULL) {
 	      traceEvent(CONST_TRACE_INFO, "Unable to read shadow passwords. Become root first and start ntop again");
@@ -315,6 +321,71 @@ static void abortfn(enum mcheck_status status) {
 }
 #endif
 
+/* ***************************************************** */
+
+#if defined(DARWIN) && (!defined(TIGER))
+      /* http://developer.apple.com/technotes/tn2005/tn2083.html#SECDAEMONVSFRAMEWORKS */
+
+ static void check_osx_daemonization(int argc, char *argv[]) {
+   int is_daemon = 0, j, i;
+
+   if(0) {
+     printf("--------------------\n");
+     for(i=0; i<argc; i++) printf("%s\n", argv[i]);
+     printf("--------------------\n");
+   }
+
+   for(i=1; i<argc; i++)
+     if(!strcmp(argv[i], "-d")) {
+       is_daemon = 1;
+       break;
+     }
+
+   if(is_daemon) {
+     char **     args;
+     char        execPath[PATH_MAX];
+     uint32_t    execPathSize;
+
+     // ... process any pre-daemonization arguments ...
+
+     // Calculate our new arguments, dropping any arguments that
+     // have already been processed (that is, before optind) and
+     // inserting the special flag that tells us that we've
+     // already daemonized.
+     //
+     // Note that we allocate and copy one extra argument so that
+     // args, like argv, is terminated by a NULL.
+     //
+     // We get the real path to our executable using
+     // _NSGetExecutablePath because argv[0] might be a relative
+     // path, and daemon chdirs to the root directory. In a real
+     // product you could probably substitute a hard-wired absolute
+     // path.
+
+     execPathSize = sizeof(execPath);
+     (void) _NSGetExecutablePath(execPath, &execPathSize);
+
+     args = calloc(argc, sizeof(char *));
+     args[0] = execPath;
+
+     for(j = 1, i=1; i<argc; i++) {
+       if(strcmp(argv[i], "-d"))
+	 args[j++] = argv[i];
+     }
+
+     // Daemonize ourself.
+     (void) daemon(0, 0);
+
+     // exec ourself.
+     (void) execve(execPath, args, environ);
+     exit(0);
+   }
+ }
+#endif
+
+/* ***************************************************** */
+
+
 /* That's the meat */
 #ifdef WIN32
 int ntop_main(int argc, char *argv[]) {
@@ -334,6 +405,10 @@ int main(int argc, char *argv[]) {
   char lib[LEN_GENERAL_WORK_BUFFER],
        env[LEN_GENERAL_WORK_BUFFER],
        buf[LEN_GENERAL_WORK_BUFFER];
+
+#if defined(DARWIN) && (!defined(TIGER))
+  check_osx_daemonization(argc, argv);
+#endif
 
 /* Don't move this below nor above */
 #if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
@@ -377,7 +452,7 @@ int main(int argc, char *argv[]) {
   safe_snprintf(__FILE__, __LINE__, cmdLineBuffer, LEN_CMDLINE_BUFFER, "%s ", argv[0]);
 
   /*
-   * Prepend FORCE_RUNTIME_PARM from configureextra 
+   * Prepend FORCE_RUNTIME_PARM from configureextra
    */
   if((force_runtime != NULL) &&
      (force_runtime[0] != '\0')) {
@@ -503,7 +578,7 @@ int main(int argc, char *argv[]) {
   free(readBuffer);
 
   /* Strip trailing spaces */
-  while((strlen(cmdLineBuffer) > 1) && 
+  while((strlen(cmdLineBuffer) > 1) &&
         (cmdLineBuffer[strlen(cmdLineBuffer)-1] == ' ')) {
       cmdLineBuffer[strlen(cmdLineBuffer)-1] = '\0';
   }
@@ -538,7 +613,7 @@ int main(int argc, char *argv[]) {
 
   /*
    * Parse command line options to the application via standard system calls
-   * Command-line options take precedence over saved preferences. 
+   * Command-line options take precedence over saved preferences.
    */
   loadPrefs(effective_argc, effective_argv);
   userSpecified = parseOptions(effective_argc, effective_argv);
@@ -549,12 +624,12 @@ int main(int argc, char *argv[]) {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Configured on %s, built on %s.", configureDate, buildDate);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2009 by %s", author);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Get the freshest ntop from http://www.ntop.org/");
- 
+
 #ifndef WIN32
   if(getDynamicLoadPaths(main_buf, sizeof(main_buf), lib, sizeof(lib), env, sizeof(env)) == 0) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: ntop is running from '%s'", main_buf);
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: (but see warning on man page for the --instance parameter)");
-    if(strcmp(main_buf, lib) != 0) 
+    if(strcmp(main_buf, lib) != 0)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: ntop libraries are in '%s'", lib);
   } else {
     traceEvent(CONST_TRACE_NOISY, "NOTE: Unable to establish where ntop is running from");
@@ -576,7 +651,7 @@ int main(int argc, char *argv[]) {
   if (!myGlobals.runningPref.printIpOnly && (myGlobals.runningPref.fcNSCacheFile != NULL)) {
       processFcNSCacheFile (myGlobals.runningPref.fcNSCacheFile);
   }
-  
+
   initNtop(myGlobals.runningPref.devices);
 
   /* create the main listener */
@@ -597,7 +672,7 @@ int main(int argc, char *argv[]) {
     for (i=0; i<myGlobals.numDevices; i++) {
       char tmpBuf[64];
 
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s%s", 
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s%s",
 		    (i>0) ? "," : "",
 		    (myGlobals.device[i].humanFriendlyName != NULL) ?
 		    myGlobals.device[i].humanFriendlyName :
@@ -621,7 +696,7 @@ int main(int argc, char *argv[]) {
   }
 
   /* ******************************* */
-  
+
 #ifndef WIN32
   saveNtopPid();
 #endif
@@ -642,10 +717,10 @@ int main(int argc, char *argv[]) {
   traceEvent(CONST_TRACE_NOISY, "MEMORY: ipTraffixMatrix structure (no TrafficEntry loaded) is %.2fMB",
 	     xvertDOT00MB(myGlobals.ipTrafficMatrixMemoryUsage));
 
-#ifdef NOT_YET  
+#ifdef NOT_YET
   traceEvent(CONST_TRACE_NOISY, "MEMORY: fcTrafficMatrix structure (no TrafficEntry loaded) is %.2fMB",
 	     xvertDOT00MB(myGlobals.fcTrafficMatrixMemoryUsage));
-#endif  
+#endif
 
   /*
    * OK, ntop is up... if we have't failed during init, start running with the actual packet capture...
@@ -658,7 +733,7 @@ int main(int argc, char *argv[]) {
     ntopSleepWhileSameState(PARM_SLEEP_LIMIT);
 
     /* Periodic recheck of the version status */
-    if((myGlobals.checkVersionStatusAgain > 0) && 
+    if((myGlobals.checkVersionStatusAgain > 0) &&
        (time(NULL) > myGlobals.checkVersionStatusAgain) &&
        (myGlobals.ntopRunState == FLAG_NTOPSTATE_RUN))
       checkVersion(NULL);
@@ -676,7 +751,7 @@ int main(int argc, char *argv[]) {
 
   memset(&buf, 0, sizeof(buf));
   runningThreads(buf, sizeof(buf), 0);
-  if(buf[0] != '\0') 
+  if(buf[0] != '\0')
     traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: Still running threads%s", pthread_self(), buf);
 
   traceEvent(CONST_TRACE_INFO, "===================================");

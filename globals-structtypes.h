@@ -2294,46 +2294,6 @@ typedef struct ntopGlobals {
     dnsSniffARPACount,
     dnsSniffStoredInCache;
 
-  u_long addressQueuedCount;
-  u_int addressQueuedDup, addressQueuedCurrent, addressQueuedMax;
-
-  /*
-   *  We count calls to ipaddr2str()
-   *       {numipaddr2strCalls}
-   *    These are/are not resolved from cache.
-   *       {numFetchAddressFromCacheCalls}
-   *       {numFetchAddressFromCacheCallsOK}
-   *       {numFetchAddressFromCacheCallsFAIL}
-   *       {numFetchAddressFromCacheCallsSTALE}
-   *    Unfetched end up in resolveAddress() directly or via the queue if we have ASYNC
-   *       {numResolveAddressCalls}
-   *    In resolveAddress(), we have
-   *       {numResolveNoCacheDB} - i.e. ntop is shutting down
-   *    Otherwise we look it up (again) in the database
-   *       {numResolveCacheDBLookups}
-   *       {numResolvedFromCache} - these were basically sniffed while in queue!
-   *
-   *    Gives calls to the dns resolver:
-   *       {numResolvedFromHostAddresses} - /etc/hosts file (if we use it)
-   */
-  u_long numipaddr2strCalls,
-    numFetchAddressFromCacheCalls,
-    numFetchAddressFromCacheCallsOK,
-    numFetchAddressFromCacheCallsFAIL,
-    numFetchAddressFromCacheCallsSTALE,
-    numResolveAddressCalls,
-    numResolveNoCacheDB,
-    numResolveCacheDBLookups,
-    numResolvedFromCache,
-    dnsCacheStoredLookup,
-    numAttemptingResolutionWithDNS,
-    numResolvedWithDNSAddresses,
-    numDNSErrorHostNotFound,
-    numDNSErrorNoData,
-    numDNSErrorNoRecovery,
-    numDNSErrorTryAgain,
-    numDNSErrorOther,
-    numKeptNumericAddresses;
 #ifdef PARM_USE_HOST
   u_long  numResolvedFromHostAddresses;
 #endif

@@ -112,7 +112,6 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
 /* ******************************* */
 
 static void allocateOtherHosts() {
-
   if(myGlobals.otherHostEntry != NULL) {
     traceEvent(CONST_TRACE_WARNING, "Attempting to call twice allocateOtherHosts()");
     return;
@@ -237,35 +236,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.dnsSniffFailedCount = 0;
   myGlobals.dnsSniffARPACount = 0;
   myGlobals.dnsSniffStoredInCache = 0;
-
-  myGlobals.addressQueuedCount = 0;
-  myGlobals.addressQueuedDup = 0;
-  myGlobals.addressQueuedCurrent = 0;
-  myGlobals.addressQueuedMax = 0;
-
-  /* Address Resolution counters */
-  myGlobals.numipaddr2strCalls = 0;
-  myGlobals.numResolveAddressCalls = 0;
-  myGlobals.numResolveNoCacheDB = 0;
-  myGlobals.numResolveCacheDBLookups = 0;
-  myGlobals.numResolvedFromCache = 0;
-#ifdef PARM_USE_HOST
-  myGlobals.numResolvedFromHostAddresses = 0;
-#endif
-  myGlobals.numAttemptingResolutionWithDNS = 0;
-  myGlobals.numResolvedWithDNSAddresses = 0;
-  myGlobals.numDNSErrorHostNotFound = 0;
-  myGlobals.numDNSErrorNoData = 0;
-  myGlobals.numDNSErrorNoRecovery = 0;
-  myGlobals.numDNSErrorTryAgain = 0;
-  myGlobals.numDNSErrorOther = 0;
-  myGlobals.numKeptNumericAddresses = 0;
-  myGlobals.dnsCacheStoredLookup = 0;
-
-  myGlobals.numFetchAddressFromCacheCalls = 0;
-  myGlobals.numFetchAddressFromCacheCallsOK = 0;
-  myGlobals.numFetchAddressFromCacheCallsFAIL = 0;
-  myGlobals.numFetchAddressFromCacheCallsSTALE = 0;
 
   /* Misc */
   myGlobals.separator = "&nbsp;";
@@ -530,6 +500,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
 static void loadGeoIP() {
   int i;
+  struct stat statbuf;
 
   /* Initialize GeoIP databases */
   for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
@@ -537,11 +508,15 @@ static void loadGeoIP() {
     
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
 		  "%s%c%s",
-		  myGlobals.configFileDirs[i], CONST_PATH_SEP, GEO_IP_FILE);
+		  myGlobals.configFileDirs[i], 
+		  CONST_PATH_SEP, GEO_IP_FILE);
     revertSlashIfWIN32(path, 0);
-    if((myGlobals.geo_ip_db = GeoIP_open(path, GEOIP_CHECK_CACHE)) != NULL) {
-      traceEvent(CONST_TRACE_INFO, "GeoIP: loaded config file %s", path);
-      break;
+
+    if(stat(path, &statbuf) == 0) {
+      if((myGlobals.geo_ip_db = GeoIP_open(path, GEOIP_CHECK_CACHE)) != NULL) {
+	traceEvent(CONST_TRACE_INFO, "GeoIP: loaded config file %s", path);
+	break;
+      }
     }
   }
   
@@ -555,11 +530,15 @@ static void loadGeoIP() {
     
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
 		  "%s%c%s",
-		  myGlobals.configFileDirs[i], CONST_PATH_SEP, GEO_IP_ASN_FILE);
+		  myGlobals.configFileDirs[i], 
+		  CONST_PATH_SEP, GEO_IP_ASN_FILE);
     revertSlashIfWIN32(path, 0);
-    if((myGlobals.geo_ip_asn_db = GeoIP_open(path, GEOIP_CHECK_CACHE)) != NULL) {
-      traceEvent(CONST_TRACE_INFO, "GeoIP: loaded ASN config file %s", path);
-      break;
+
+    if(stat(path, &statbuf) == 0) {
+      if((myGlobals.geo_ip_asn_db = GeoIP_open(path, GEOIP_CHECK_CACHE)) != NULL) {
+	traceEvent(CONST_TRACE_INFO, "GeoIP: loaded ASN config file %s", path);
+	break;
+      }
     }
   }
   
@@ -599,7 +578,6 @@ void initNtop(char *devices) {
   /* ********************************** */
 
   initGdbm(myGlobals.dbPath, myGlobals.spoolPath, 0);
-  loadGeoIP();
 
   if(myGlobals.runningPref.daemonMode) {
     /*

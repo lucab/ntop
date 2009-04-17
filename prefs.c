@@ -73,6 +73,7 @@ static struct option const long_options[] = {
 #ifndef WIN32
   { "daemon",                           no_argument,       NULL, 'd' },
 #endif
+
   { "max-table-rows",                   required_argument, NULL, 'e' },
   { "traffic-dump-file",                required_argument, NULL, 'f' },
   { "track-local-hosts",                no_argument,       NULL, 'g' },
@@ -83,7 +84,6 @@ static struct option const long_options[] = {
   { "local-subnets",                    required_argument, NULL, 'm' },
   { "numeric-ip-addresses",             no_argument,       NULL, 'n' },
   { "no-mac",                           no_argument,       NULL, 'o' },
-
 
   { "protocols",                        required_argument, NULL, 'p' },
   { "create-suspicious-packets",        no_argument,       NULL, 'q' },
@@ -153,8 +153,8 @@ static struct option const long_options[] = {
   { "disable-mutexextrainfo",           no_argument,       NULL, 145 },
 
   { "fc-only",                          no_argument,       NULL, 147 },
-  { "no-fc",                            no_argument,       0, 148    },
-  { "no-invalid-lun",                   no_argument,       0, 149    },
+  { "no-fc",                            no_argument,       0,    148 },
+  { "no-invalid-lun",                   no_argument,       0,    149 },
 
   { "skip-version-check",               required_argument, NULL, 150 },
   { "pcap-file-list",                   required_argument, NULL, 151 },

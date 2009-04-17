@@ -110,6 +110,8 @@ typedef struct {
 
 #include "ntop.h"
 
+// #define VENDOR_DEBUG
+
 static char* macInputFiles[] = {
   "specialMAC.txt",
   "oui.txt",
@@ -279,9 +281,7 @@ static char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
 #endif
 
   if(special == TRUE) {
-
       /* Search the database for the specified MAC address - full 48 bit */
-
       key_data.dptr = tmpBuf;
       key_data.dsize = strlen(tmpBuf)+1;
 
@@ -366,6 +366,7 @@ char* getVendorInfo(u_char* ethAddress, short encodeString) {
     return("");
 
   ret = getMACInfo(1, ethAddress, encodeString);
+
   myGlobals.numVendorLookupCalls++;
 
   if((ret != NULL) && (ret[0] != '\0'))
@@ -492,6 +493,11 @@ void createVendorTable(struct stat *dbStat) {
 	    (strstr(tmpLine, "(special") == NULL) ) {
 	  continue;
 	}
+
+#ifdef VENDOR_DEBUG
+	traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Parsing '%s'", tmpLine);
+#endif
+
 	tmpMAC = strtok_r(tmpLine, " \t", &strtokState);
 	if(tmpMAC == NULL) continue;
 	tmpTag1 = strtok_r(NULL, " \t", &strtokState);
@@ -502,6 +508,7 @@ void createVendorTable(struct stat *dbStat) {
 	  tmpVendor = strtok_r(NULL, "\n", &strtokState);
 	  if(tmpVendor == NULL) continue;
 	  /* Skip leading blanks and tabs*/
+
 	  while ( (tmpVendor[0] == ' ') || (tmpVendor[0] == '\t') ) tmpVendor++;
 	  memset(&macInfoEntry, 0, sizeof(macInfoEntry));
 	  if(strcmp(tmpTag1, "(special") == 0) {
@@ -512,7 +519,8 @@ void createVendorTable(struct stat *dbStat) {
 
 	  if(strlen(tmpVendor) >= (MAX_LEN_VENDOR_NAME-1))
 	    tmpVendor[MAX_LEN_VENDOR_NAME-1] = '\0';
-	  strcmp(macInfoEntry.vendorName, tmpVendor);
+
+	  strcpy(macInfoEntry.vendorName, tmpVendor);
 	  data_data.dptr = (void*)(&macInfoEntry);
 	  data_data.dsize = sizeof(macInfoEntry);
 	  memset(tmpMACkey, 0, sizeof(tmpMACkey));
@@ -539,6 +547,11 @@ void createVendorTable(struct stat *dbStat) {
 	  } else {
 	    numLoaded++;
 	    myGlobals.numVendorLookupAdded++;
+
+#ifdef VENDOR_DEBUG
+	    traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Adding '%s':'%s'", key_data.dptr, macInfoEntry.vendorName);
+#endif
+
 	    if(macInfoEntry.isSpecial == 's')
 	      myGlobals.numVendorLookupAddedSpecial++;
 #ifdef VENDOR_DEBUG

@@ -171,9 +171,7 @@ RETSIGTYPE handleDiedChild(int sig _UNUSED_) {
 
 /* **************************************** */
 
-
 void daemonizeUnderUnix(void) {
-
 #ifndef WIN32
   int childpid;
 
@@ -249,7 +247,6 @@ void detachFromTerminalUnderUnix(int doChdir) {
 #endif
 
 #endif /* WIN32 */
-
 }
 
 /* **************************************** */
@@ -897,8 +894,9 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 	  /* signalCondvar(&myGlobals.device[i].queueCondvar); */
 	  pcap_close(myGlobals.device[i].pcapPtr);
 
-	  traceEvent(CONST_TRACE_INFO, "Joining thread  NPS(%s)",
-		     myGlobals.device[i].humanFriendlyName);
+	  traceEvent(CONST_TRACE_INFO, "Joining thread NPS(%s) [t%lu]",
+		     myGlobals.device[i].humanFriendlyName,
+		     (long)myGlobals.device[i].pcapDispatchThreadId);
 	  if(joinThread(&myGlobals.device[i].pcapDispatchThreadId) != 0)
 	    traceEvent(CONST_TRACE_INFO, "joinThread() returned: %s", strerror(errno));
 	}

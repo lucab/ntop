@@ -113,9 +113,11 @@ static int validDNSName(char *name) {
 
 /* ************************************ */
 
-void dns_response_callback(int result, char type, int count, int ttl, void *addresses, void *arg) {
+static void dns_response_callback(int result, char type, int count, int ttl, void *addresses, void *arg) {
   HostAddr *addr = (HostAddr*)arg;
-		    
+  char *symAddr = NULL;
+  char buf[255];
+
   //traceEvent(CONST_TRACE_WARNING, "dns_response_callback(): result=%d", result);
 
   if((addr == NULL) || (result != DNS_ERR_NONE))
@@ -127,17 +129,19 @@ void dns_response_callback(int result, char type, int count, int ttl, void *addr
   case DNS_IPv6_AAAA: {
 #ifdef INET6
     struct in6_addr *in6_addrs = addresses;
-    char buf[INET6_ADDRSTRLEN+1];
     int i;
+
     /* a resolution that's not valid does not help */
     if (ttl < 0)
       goto out;
     for (i = 0; i < count; ++i) {
       const char *b = inet_ntop(AF_INET6, &in6_addrs[i], buf,sizeof(buf));
-      if (b)
-	 traceEvent(CONST_TRACE_INFO, "%s ", b);
-      else
-	 traceEvent(CONST_TRACE_INFO, "%s ", strerror(errno));
+
+      if(b) {
+	/* traceEvent(CONST_TRACE_INFO, "%s ", b); */
+	symAddr = b;
+      } else
+	traceEvent(CONST_TRACE_INFO, "%s ", strerror(errno));
     }
 #endif
     // FIX - ADD IPv6 storage
@@ -146,11 +150,15 @@ void dns_response_callback(int result, char type, int count, int ttl, void *addr
   case DNS_IPv4_A: {
     struct in_addr *in_addrs = addresses;
     int i;
+
     /* a resolution that's not valid does not help */
     if (ttl < 0)
       goto out;
-    for (i = 0; i < count; ++i)
-       traceEvent(CONST_TRACE_INFO, "%s ", inet_ntoa(in_addrs[i]));
+
+    for (i = 0; i < count; ++i) {
+      symAddr = inet_ntoa(in_addrs[i]);
+      /* traceEvent(CONST_TRACE_INFO, "%s ", rsp); */
+    }
     break;
   }
   case DNS_PTR:
@@ -158,59 +166,56 @@ void dns_response_callback(int result, char type, int count, int ttl, void *addr
     if (count != 1)
       goto out;
 
-     {
-       char *symAddr = *(char **)addresses;
-       StoredAddress storedAddreslones;
-       int len;
-       char keyBuf[LEN_ADDRESS_BUFFER];
-       datum key_data;
-       datum data_data;
-       StoredAddress storedAddress;
-
-       memset(storedAddress.symAddress, 0, sizeof(storedAddress.symAddress));
-       len = min(sizeof(storedAddress.symAddress)-1, strlen(symAddr));
-       memcpy(storedAddress.symAddress, symAddr, len);
-       storedAddress.symAddress[len] = '\0';
-       storedAddress.recordCreationTime = myGlobals.actTime;
-       storedAddress.symAddressType = FLAG_HOST_SYM_ADDR_TYPE_NAME;
-
-       key_data.dptr = _addrtonum(addr, keyBuf, sizeof(keyBuf));
-       key_data.dsize = strlen(keyBuf)+1;
-       
-      data_data.dptr = (void*)&storedAddress;
-      data_data.dsize = sizeof(storedAddress) /* Remember, StoredAddress has 1 byte padding so don't add more here */;
-
-      if(gdbm_store(myGlobals.dnsCacheFile, key_data, data_data, GDBM_REPLACE) != 0)
-        traceEvent(CONST_TRACE_ERROR, "dnsCache error adding '%s', %s", symAddr,
-#if defined(WIN32) && defined(__GNUC__)
-		   "no additional information available"
-#else
-		   gdbm_strerror(gdbm_errno)
-#endif
-		   );
-      else {
-        myGlobals.dnsCacheStoredLookup++;
-
-#ifdef DNS_DEBUG
-        traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Added data: '%s'='%s'(%d)",
-                   key_data.dptr,
-                   ((StoredAddress*)data_data.dptr)->symAddress,
-                   ((StoredAddress*)data_data.dptr)->symAddressType);
-#endif
-
-	updateHostNameInfo(*addr, storedAddress.symAddress, storedAddress.symAddressType);
-      } 
-    }
+    symAddr = *(char **)addresses;
     break;
   default:
     goto out;
   }
 
+  if(symAddr) {
+    StoredAddress storedAddreslones;
+    int len;
+    char keyBuf[LEN_ADDRESS_BUFFER];
+    datum key_data;
+    datum data_data;
+    StoredAddress storedAddress;
+
+    memset(storedAddress.symAddress, 0, sizeof(storedAddress.symAddress));
+    len = min(sizeof(storedAddress.symAddress)-1, strlen(symAddr));
+    memcpy(storedAddress.symAddress, symAddr, len);
+    storedAddress.symAddress[len] = '\0';
+    storedAddress.recordCreationTime = myGlobals.actTime;
+    storedAddress.symAddressType = FLAG_HOST_SYM_ADDR_TYPE_NAME;
+
+    key_data.dptr = _addrtonum(addr, keyBuf, sizeof(keyBuf));
+    key_data.dsize = strlen(keyBuf)+1;
+       
+    data_data.dptr = (void*)&storedAddress;
+    data_data.dsize = sizeof(storedAddress) /* Remember, StoredAddress has 1 byte padding so don't add more here */;
+
+    if(gdbm_store(myGlobals.dnsCacheFile, key_data, data_data, GDBM_REPLACE) != 0)
+      traceEvent(CONST_TRACE_ERROR, "dnsCache error adding '%s', %s", symAddr,
+#if defined(WIN32) && defined(__GNUC__)
+		 "no additional information available"
+#else
+		 gdbm_strerror(gdbm_errno)
+#endif
+		 );
+      
+#ifdef DNS_DEBUG
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Added data: '%s'='%s'(%d)",
+	       key_data.dptr,
+	       ((StoredAddress*)data_data.dptr)->symAddress,
+	       ((StoredAddress*)data_data.dptr)->symAddressType);
+#endif
+
+    updateHostNameInfo(*addr, storedAddress.symAddress, storedAddress.symAddressType);
+  }
+
  out:
-     if(addr) free(addr);
+  if(addr) free(addr);
   event_loopexit(NULL);
 }
-
 
 /* *************************** */
 
@@ -228,29 +233,7 @@ static void queueAddress(HostAddr elem, int forceResolution) {
     return;
 
   memcpy(cloned, &elem, sizeof(HostAddr));
-  /*
-    The address queue is far too long. This is usefult for
-    avoiding problems due to DOS applications
-  */
-  if(myGlobals.addressQueuedCurrent > (MAX_NUM_QUEUED_ADDRESSES*myGlobals.numDevices)) {
-    static char shownMsg = 0;
 
-    if(!shownMsg) {
-      shownMsg = 1;
-      traceEvent(CONST_TRACE_WARNING, "Address resolution queue is full [%u slots]",
-		 MAX_NUM_QUEUED_ADDRESSES);
-      traceEvent(CONST_TRACE_INFO, "Addresses in excess won't be resolved - ntop continues");
-    }
-    free(cloned);
-    return;
-  }
-
-  /* Fix - Burton Strauss (BStrauss@acm.org) 2002-04-04
-           Make sure dataBuf has a value and
-           Prevent increment of queue length on failure (i.e. add of existing value)
-           Incidentally, speed this up by eliminating the fetch/store sequence in favor of
-           a single store.
-  */
   if (elem.hostFamily == AF_INET) {
     struct in_addr in;
     char buf[32];
@@ -264,7 +247,6 @@ static void queueAddress(HostAddr elem, int forceResolution) {
   }
 #ifdef INET6
   else if (elem.hostFamily == AF_INET6) {
-    traceEvent(CONST_TRACE_WARNING, "About to resolve v6 address");
     evdns_resolve_reverse_ipv6(&elem.Ip6Address, 0, dns_response_callback, cloned);
     event_dispatch();
   }
@@ -412,9 +394,7 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
 
   memset(&keyBuf, 0, sizeof(keyBuf));
 
-  myGlobals.numFetchAddressFromCacheCalls++;
-
-  if(addrfull(&hostIpAddress) || addrnull(&hostIpAddress)) {
+    if(addrfull(&hostIpAddress) || addrnull(&hostIpAddress)) {
     strcpy(buffer, "0.0.0.0");
     *type = FLAG_HOST_SYM_ADDR_TYPE_IP;
     return(0);
@@ -441,17 +421,14 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
 #endif
 
     if (myGlobals.actTime - retrievedAddress->recordCreationTime < CONST_DNSCACHE_LIFETIME) {
-        myGlobals.numFetchAddressFromCacheCallsOK++;
-        safe_snprintf(__FILE__, __LINE__, buffer, MAX_LEN_SYM_HOST_NAME, "%s", retrievedAddress->symAddress);
+      safe_snprintf(__FILE__, __LINE__, buffer, MAX_LEN_SYM_HOST_NAME, "%s", retrievedAddress->symAddress);
     } else {
-        myGlobals.numFetchAddressFromCacheCallsSTALE++;
         buffer[0] = '\0';
     }
 
     free(data_data.dptr);
   } else {
-    myGlobals.numFetchAddressFromCacheCallsFAIL++;
-#ifdef GDBM_DEBUG
+    #ifdef GDBM_DEBUG
     if(data_data.dptr != NULL)
       traceEvent(CONST_TRACE_WARNING, "GDBM_DEBUG: Dropped data for %s [wrong data size]", keyBuf);
     else
@@ -482,8 +459,6 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
 void ipaddr2str(HostAddr hostIpAddress, int updateHost) {
   char buf[MAX_LEN_SYM_HOST_NAME+1] = { '\0' };
   int type;
-
-  myGlobals.numipaddr2strCalls++;
 
   if(fetchAddressFromCache(hostIpAddress, buf, &type)  && (buf[0] != '\0')) {
     if(updateHost) updateHostNameInfo(hostIpAddress, buf, type);

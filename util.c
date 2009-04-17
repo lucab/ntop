@@ -29,6 +29,11 @@
 #include <syslog.h>
 #endif
 
+#ifndef HAVE_GETOPT_LONG
+#include "getopt.c"
+#include "getopt1.c"
+#endif
+
 /* #define ADDRESS_DEBUG */
 /* #define FINGERPRINT_DEBUG */
 
@@ -5758,7 +5763,8 @@ FILE* checkForInputFile(char* logTag, char* descr,
       else
         strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC,
   	         localtime_r(&(dbStat->st_mtime), &t));
-      traceEvent(CONST_TRACE_NOISY, "%s: Database created/last modified %s", logTag, bufTime);
+      traceEvent(CONST_TRACE_NOISY, "%s: Database %s created/last modified %s", 
+		 logTag, fileName, bufTime);
     }
 
     /* Check time stamps... */
