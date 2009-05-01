@@ -234,6 +234,8 @@ static void queueAddress(HostAddr elem, int forceResolution) {
 
   memcpy(cloned, &elem, sizeof(HostAddr));
 
+  accessAddrResMutex("queueAddress");
+
   if (elem.hostFamily == AF_INET) {
     struct in_addr in;
     char buf[32];
@@ -254,8 +256,9 @@ static void queueAddress(HostAddr elem, int forceResolution) {
   else {
 	traceEvent(CONST_TRACE_WARNING, "Invalid address family (%d) found!",
 			elem.hostFamily);
-	return;
   }
+
+  releaseAddrResMutex();
 }
 
 /* ************************************ */
