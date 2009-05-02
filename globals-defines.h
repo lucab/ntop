@@ -1955,7 +1955,8 @@
 #define FLAG_XML_LANGUAGE                   3
 #define FLAG_PYTHON_LANGUAGE                4
 #define FLAG_JSON_LANGUAGE                  5
-#define FLAG_NO_LANGUAGE                    6
+#define FLAG_GOOGLE_LANGUAGE                6
+#define FLAG_NO_LANGUAGE                    7
 #define MAX_FLAG_LANGUGE                    FLAG_NO_LANGUAGE
 
 #define FLAG_NO_PEER                        UINT_MAX

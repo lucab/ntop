@@ -238,24 +238,22 @@ static void queueAddress(HostAddr elem, int forceResolution) {
 
   if (elem.hostFamily == AF_INET) {
     struct in_addr in;
-    char buf[32];
 
     in.s_addr = htonl(elem.Ip4Address.s_addr);
-    if((rc = evdns_resolve_reverse(&in, 0, dns_response_callback, cloned)) == DNS_ERR_NONE) {
-      event_dispatch();
-    } else {
+    if((rc = evdns_resolve_reverse(&in, 0, dns_response_callback, cloned)) != DNS_ERR_NONE) {
       traceEvent(CONST_TRACE_ERROR, "evdns_resolve_reverse() returned %d", rc);
     }
   }
 #ifdef INET6
   else if (elem.hostFamily == AF_INET6) {
-    evdns_resolve_reverse_ipv6(&elem.Ip6Address, 0, dns_response_callback, cloned);
-    event_dispatch();
+    if((rc = evdns_resolve_reverse_ipv6(&elem.Ip6Address, 0, dns_response_callback, cloned)) != DNS_ERR_NONE) {
+      traceEvent(CONST_TRACE_ERROR, "evdns_resolve_reverse_ipv6() returned %d", rc);
+    }
   }
 #endif
   else {
-	traceEvent(CONST_TRACE_WARNING, "Invalid address family (%d) found!",
-			elem.hostFamily);
+    traceEvent(CONST_TRACE_WARNING, "Invalid address family (%d) found!",
+	       elem.hostFamily);
   }
 
   releaseAddrResMutex();

@@ -730,7 +730,10 @@ int main(int argc, char *argv[]) {
   startSniffer();
 
   while(myGlobals.ntopRunState == FLAG_NTOPSTATE_RUN) {
-    ntopSleepWhileSameState(PARM_SLEEP_LIMIT);
+    // traceEvent(CONST_TRACE_ERROR, "About to call event_loop()");
+    rc = event_loop(EVLOOP_NONBLOCK);
+    // traceEvent(CONST_TRACE_ERROR, "event_loop() returned %d", rc);
+    ntopSleepWhileSameState(5);
 
     /* Periodic recheck of the version status */
     if((myGlobals.checkVersionStatusAgain > 0) &&

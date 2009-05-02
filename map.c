@@ -83,7 +83,7 @@ void create_host_map() {
   if(num_hosts > MAX_NUM_MAP_HOSTS)
     sendString("<p><center><b><font color=red>WARNING:</font></b>You have more hosts to display than the number typically supported by Google maps. Some hosts have not been rendered.</center></p>");
 
-  sendString("<p><center><b><font color=red>NOTE:</font></b>");
+  sendString("<p><center><b><font color=red>NOTE:</font></b> ");
   sendString("make sure you get your key <a href=http://code.google.com/apis/maps/>here</A>"
 	  " for using Google Maps from ntop and register it as \'google_maps.key\' key <A href=/"CONST_EDIT_PREFS"#google_maps.key>here</A>.</center></p>\n"); 
 }

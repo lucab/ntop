@@ -172,8 +172,8 @@ void addPageIndicator(char *url, u_int pageNum,
 
   if(pageNum >= 1) {
     safe_snprintf(__FILE__, __LINE__, prevBuf, sizeof(prevBuf),
-		  "<A HREF=\"%s%cpage=0&netmode=%d&col=%s\"><IMG SRC=/fback.png BORDER=0 "TABLE_DEFAULTS" ALIGN=vbottom ALT=\"Back to first page\"></A> "
-		  "<A HREF=\"%s%cpage=%d&netmode=%dcol=%s\"><IMG SRC=/back.png BORDER=0 "TABLE_DEFAULTS" ALIGN=vbottom ALT=\"Prior page\"></A>",
+		  "<td><A HREF=\"%s%cpage=0&netmode=%d&col=%s\"><IMG SRC=/fback.png BORDER=0 "TABLE_DEFAULTS" ALIGN=vbottom ALT=\"Back to first page\"></A> "
+		  "<A HREF=\"%s%cpage=%d&netmode=%dcol=%s\"><IMG SRC=/back.png BORDER=0 "TABLE_DEFAULTS" ALIGN=vbottom ALT=\"Prior page\"></A></td>",
 		  url, separator, netmode, shortBuf,
 		  url, separator, pageNum-1, netmode, shortBuf);
   } else
@@ -181,20 +181,22 @@ void addPageIndicator(char *url, u_int pageNum,
 
   if(actPage < numPages) {
     safe_snprintf(__FILE__, __LINE__, nextBuf, sizeof(nextBuf),
-		  "<A HREF=\"%s%cpage=%d&netmode=%d&col=%s\"><IMG SRC=/forward.png BORDER=0 "TABLE_DEFAULTS" ALIGN=vbottom ALT=\"Next Page\"></A> "
-		  "<A HREF=\"%s%cpage=%d&netmode=%d&col=%s\"><IMG SRC=/fforward.png BORDER=0 "TABLE_DEFAULTS" ALIGN=vbottom ALT=\"Forward to last page\"></A>",
+		  "<td><A HREF=\"%s%cpage=%d&netmode=%d&col=%s\"><IMG SRC=/forward.png BORDER=0 "TABLE_DEFAULTS" ALIGN=vbottom ALT=\"Next Page\"></A> "
+		  "<A HREF=\"%s%cpage=%d&netmode=%d&col=%s\"><IMG SRC=/fforward.png BORDER=0 "TABLE_DEFAULTS" ALIGN=vbottom ALT=\"Forward to last page\"></A></td>",
 		  url, separator, pageNum+1, netmode, shortBuf,
 		  url, separator, numPages-1, netmode, shortBuf);
   }  else
     nextBuf[0] = '\0';
 
   sendString("<P><FONT FACE=Helvetica><B>");
+  sendString("<table border=0><tr>\n");
   sendString(prevBuf);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), " [ %d / %d ] ", actPage, numPages);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td valign=top> [ %d / %d ] </td>", actPage, numPages);
   sendString(buf);
 
   sendString(nextBuf);
+  sendString("</tr></table>\n");
   sendString("</B></FONT>\n");
 }
 
@@ -5912,8 +5914,9 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
     /* Split below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
     sendString("<CENTER>\n" TABLE_ON "<TABLE BORDER=1 "TABLE_DEFAULTS">");
-    
-    if(network_mode == AS_VIEW)
+
+    if((network_mode == AS_VIEW) 
+       && ((domain_network_name == NULL) || (domain_network_name[0] == '\0')))
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TR "TR_ON" "DARK_BG">"
 		    "<TH "TH_BG" rowspan=\"3\">%s0>Id%s</A></TH>"
