@@ -2292,15 +2292,26 @@
  *  these ETHERTYPE_ constants aren't defined in <net/ethernet.h>
  */
 #ifndef ETHERTYPE_IPv6
- #define ETHERTYPE_IPv6       0x86DD
+#define ETHERTYPE_IPv6       0x86DD
 #endif
 
 #ifndef ETHERTYPE_802_1Q
- #define ETHERTYPE_802_1Q     0x8100
+#define ETHERTYPE_802_1Q     0x8100
 #endif
 
+#ifndef ETHERTYPE_MPLS
+#define ETHERTYPE_MPLS          0x8847  /* MPLS protocol */
+#endif
+
+#ifndef ETHERTYPE_MPLS_MULTI
+#define ETHERTYPE_MPLS_MULTI    0x8848  /* MPLS multicast packet */
+#endif
+
+#define MAX_NUM_MPLS_LABELS     10
+#define MPLS_LABEL_LEN           3
+
 #ifndef ETHERMTU
- #define ETHERMTU             1500
+#define ETHERMTU             1500
 #endif
 
 /* Additional ethertypes for FC */

@@ -3044,6 +3044,7 @@ void processPacket(u_char *_deviceId,
       ether_src = ether_dst = NULL;
       processIpPkt(p+headerDisplacement, h, length, NULL, NULL, actualDeviceId, vlanId);
       break;
+
 #if 0 /* Handled by DLT_ANY */
       /* PPPoE patch courtesy of Stefano Picerno <stefanopp@libero.it> */
 #ifdef LINUX
@@ -3119,6 +3120,22 @@ void processPacket(u_char *_deviceId,
           myGlobals.device[deviceId].rcvdPktStats.tooLong.value = 0l;
 #endif
         }
+      } else if(eth_type == ETHERTYPE_MPLS) /* MPLS */ {
+	char bos; /* bottom_of_stack */
+	u_char mplsLabels[MAX_NUM_MPLS_LABELS][MPLS_LABEL_LEN];
+	int numMplsLabels = 0;
+
+	memset(mplsLabels, 0, sizeof(mplsLabels));
+	bos = 0;
+	while(bos == 0) {
+	  memcpy(&mplsLabels[numMplsLabels], p+hlen, MPLS_LABEL_LEN);
+
+	  bos = (mplsLabels[numMplsLabels][2] & 0x1), hlen += 4, numMplsLabels++;
+	  if((hlen > caplen) || (numMplsLabels >= MAX_NUM_MPLS_LABELS))
+	    return; /* bad packet */
+	}
+
+	eth_type = ETHERTYPE_IP;
       } else if((ether_dst[0] == 0x01)    && (ether_dst[1] == 0x00)
 		&& (ether_dst[2] == 0x0C) && (ether_dst[3] == 0x00)
 		&& (ether_dst[4] == 0x00) && (ether_dst[5] == 0x00)) {

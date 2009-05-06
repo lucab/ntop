@@ -507,7 +507,7 @@ if test ".${LOCALEDIR}" = "."; then
     LOCALEDIR="/usr/lib/locale"
 fi
 
-dnl> Add /usr/local/
+dnl> Add /usr/local/ /opt/local
 CFLAGS="${CFLAGS} -I/usr/local/include -I/opt/local/include"
 CPPFLAGS="${CPPFLAGS} -I/usr/local/include -I/opt/local/include"
 LDFLAGS="${LDFLAGS} -L/usr/local/lib -L/opt/local/lib"
@@ -733,8 +733,6 @@ if test ".${ac_cv_header_gdbm_h}" != ".yes" ||
     echo
     AC_MSG_ERROR(Unable to continue... aborting ./configure)
 fi
-
-AC_CHECK_LIB(sqlite3, sqlite3_open, AC_DEFINE_UNQUOTED(HAVE_SQLITE, 1, [ntop has sqlite3]))
 
 dnl> Pattern matching
 dnl>
