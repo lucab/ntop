@@ -29,15 +29,16 @@
 #ifdef HAVE_LUA
 
 static HostTraffic *ntop_host = NULL;
+static char query_string[2048];
 
 /* *********************************************************** */
 
-static int ntop_lua_check(lua_State* vm, char* func, 
+static int ntop_lua_check(lua_State* vm, char* func,
 			  int pos, int expected_type) {
   if(lua_type(vm, pos) != expected_type) {
-    traceEvent(CONST_TRACE_ERROR, 
-	       "%s : expected %s, got %s", func, 
-	       lua_typename(vm, expected_type), 
+    traceEvent(CONST_TRACE_ERROR,
+	       "%s : expected %s, got %s", func,
+	       lua_typename(vm, expected_type),
 	       lua_typename(vm, lua_type(vm,pos)));
     return(-1);
   }
@@ -67,7 +68,7 @@ static int ntop_lua_sendString(lua_State* vm) {
 static int ntop_lua_send_http_header(lua_State* vm) {
   int mime_type;
   char *title;
-  
+
   if(ntop_lua_check(vm, "ntop_lua_send_http_header", 1, LUA_TNUMBER)) return(0);
   mime_type = (int)lua_tonumber(vm, 1);
 
@@ -140,11 +141,18 @@ static int ntop_lua_getNextHost(lua_State* vm) {
 
 /* *********************************************************** */
 
+static int ntop_lua_getQueryString(lua_State* vm) {
+  lua_pushfstring(vm, "%s", query_string);
+  return(1);
+}
+
+/* *********************************************************** */
+
 static int ntop_lua_host_ethAddress(lua_State* vm) {
   if(lua_type(vm, 1) !=  LUA_TNONE) /* A value has been passed */ {
     /* SET */
     char *str;
-    
+
     if(ntop_lua_check(vm, "ntop_lua_host_ethAddress", 1, LUA_TSTRING)) return(0);
     str = (char*)(char*)lua_tostring(vm,1);
 #ifdef DEBUG
@@ -163,7 +171,7 @@ static int ntop_lua_host_ipAddress(lua_State* vm) {
   if(lua_type(vm, 1) !=  LUA_TNONE) /* A value has been passed */ {
     /* SET */
     char *str;
-    
+
     if(ntop_lua_check(vm, "ntop_lua_host_ipAddress", 1, LUA_TSTRING)) return(0);
     str = (char*)(char*)lua_tostring(vm,1);
 #ifdef DEBUG
@@ -228,8 +236,9 @@ static luaL_reg ntop_reg[] = {
   { "sendFile",         ntop_lua_sendFile },
   { "getFirstHost",     ntop_lua_getFirstHost },
   { "getNextHost",      ntop_lua_getNextHost },
+  { "getQueryString",   ntop_lua_getQueryString },
   {NULL,                NULL}
-};  
+};
 
 /* ntop host object methods */
 static luaL_reg ntop_host_reg[] = {
@@ -243,34 +252,20 @@ static luaL_reg ntop_host_reg[] = {
   { "bytesSent", ntop_lua_host_bytesSent },
   { "bytesRcvd", ntop_lua_host_bytesRcvd },
   {NULL,       NULL}
-};  
+};
 
 static void register_host_class( lua_State *L, char *class_name, luaL_reg *class_methods)
 {
   luaL_newmetatable( L, class_name );
   lua_pushstring( L, "__index" );
-  lua_pushvalue( L, -2 );         // pushes the metatable                                                                                                                  
-  lua_settable( L, -3 );          // metatable.__index = metatable                                                                                                         
+  lua_pushvalue( L, -2 );         // pushes the metatable
+  lua_settable( L, -3 );          // metatable.__index = metatable
   luaL_register( L, class_name, class_methods );
 }
 
 static int ntop_register(lua_State *L) {
   luaL_register(L, "ntop", ntop_reg);
-  //luaL_register(L, "host", ntop_host_reg);
-  register_host_class(L, "host", ntop_host_reg); 
-
-#if 0
-  lua_register(L, "sendString", ntop_lua_sendString);
-  lua_register(L, "send_http_header", ntop_lua_send_http_header);
-  lua_register(L, "send_html_footer", ntop_lua_send_html_footer);
-
-  lua_register(L, "sendFile", ntop_lua_sendFile);
-  lua_register(L, "loadHost", ntop_lua_loadHost);
-  lua_register(L, "loadHosts", ntop_lua_loadHosts);
-  lua_register(L, "getFirstHost", ntop_lua_getFirstHost);
-  lua_register(L, "getNextHost", ntop_lua_getNextHost);
-#endif
-
+  register_host_class(L, "host", ntop_host_reg);
   return 0;
 }
 
@@ -284,11 +279,15 @@ int handleLuaHTTPRequest(char *url) {
   char * lua_argv[] = { "", NULL };
   struct stat statbuf;
   lua_State* L;
+  char *question_mark = strchr(url, '?');
 
   traceEvent(CONST_TRACE_INFO, "Calling lua... [%s]", url);
 
+  if(question_mark) question_mark[0] = '\0';
+  safe_snprintf(__FILE__, __LINE__, query_string, sizeof(query_string)-1, "%s", question_mark ? &question_mark[1] : "");
+
   for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
-  safe_snprintf(__FILE__, __LINE__, lua_path, sizeof(lua_path), 
+  safe_snprintf(__FILE__, __LINE__, lua_path, sizeof(lua_path),
 	  "%s/lua/%s", myGlobals.dataFileDirs[idx], url);
     revertSlashIfWIN32(lua_path, 0);
 
@@ -316,7 +315,7 @@ int handleLuaHTTPRequest(char *url) {
   ntop_register(L);
 
   if(luaL_dofile(L, lua_path) == 1) {
-    traceEvent(CONST_TRACE_ERROR, "[lua] Error while executing file %s: %s", 
+    traceEvent(CONST_TRACE_ERROR, "[lua] Error while executing file %s: %s",
 	       lua_path, lua_tostring(L, -1));
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     printHTMLheader("Lua Runtime Error", NULL, BITFLAG_HTML_NO_REFRESH);
@@ -324,7 +323,7 @@ int handleLuaHTTPRequest(char *url) {
   }
 
   lua_close(L);
-  
+
   return(1);
 }
 

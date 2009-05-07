@@ -116,48 +116,6 @@ void ntop_perl_loadHost() {
 
 /* *********************************************************** */
 
-void ntop_perl_loadHosts() {
-  HostTraffic *host;
-  char buf[64];
-  u_int actualDeviceId = 0;
-
-  traceEvent(CONST_TRACE_INFO, "[perl] loadHosts()");
-
-  if(ss_hosts) {
-    hv_undef(ss_hosts);
-    ss_hosts = NULL;
-  }
-
-  host = getFirstHost(actualDeviceId);
-
-  /*
-   * create a new variable, the %hosts hash
-   */
-  ss_hosts = perl_get_hv ("main::hosts", TRUE);
-
-  while(host != NULL) {
-    static HV *elem;
-    char *key = (host->ethAddressString[0] != '\0') ? host->ethAddressString : host->hostNumIpAddress;
-
-    snprintf(buf, sizeof(buf), "main::%s", key);
-    /* traceEvent(CONST_TRACE_INFO, "[perl] Adding perl hash '%s'", buf); */
-    elem = perl_get_hv(buf, TRUE);
-
-    /*
-     * populate the %hosts hash
-     * key   = $key
-     * value = the reference to the newly created hash
-     */
-    hv_store(ss_hosts, key, strlen(key), newRV_inc ((SV *) elem), 0); 
-    ntop_perl_loadHost_values(elem, host);
-    /* traceEvent(CONST_TRACE_INFO, "[perl] Added %s", key); */
-    host = getNextHost(actualDeviceId, host);
-  }
-}
-
-/* *********************************************************** */
-
-
 void ntop_perl_getFirstHost(int actualDeviceId) {
   ntop_host = getFirstHost(actualDeviceId);
 
@@ -260,7 +218,6 @@ int handlePerlHTTPRequest(char *url) {
   newXS("send_http_header", _wrap_ntop_perl_send_http_header, (char*)__FILE__);
   newXS("send_html_footer", _wrap_ntop_perl_send_html_footer, (char*)__FILE__);
   newXS("loadHost", _wrap_ntop_perl_loadHost, (char*)__FILE__);
-  newXS("loadHosts", _wrap_ntop_perl_loadHosts, (char*)__FILE__);
   newXS("getFirstHost", _wrap_ntop_perl_getFirstHost, (char*)__FILE__);
   newXS("getNextHost", _wrap_ntop_perl_getNextHost, (char*)__FILE__);
 

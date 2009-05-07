@@ -1,6 +1,6 @@
 
 
-ntop.send_http_header(1, 'Known ntop hosts')
+ntop.send_http_header(1, 'Known ntop hosts(' .. ntop.getQueryString() .. ')')
 ntop.sendString("Hello world, from ".. _VERSION .. "<p>")
 ntop.getFirstHost(0);
 

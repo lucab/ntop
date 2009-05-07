@@ -9,22 +9,6 @@ send_http_header(1, "Known ntop hosts ".$ENV{'QUERY_STRING_UNESCAPED'});
 
 # ---------------------------------------------
 
-loadHosts();
-
-#while ( my ($key, $value) = each(%hosts) ) {
-#    print "$key => $value\n";
-#}
-
-#my @sorted_by_hostname      = sort { ${$a}{'ipAddress'}  cmp ${$b}{'ipAddress'} }  values %hosts;
-#my @traffic = sort keys %hosts;
-
-if(0) {
-print "################################################\n";
-
-foreach $key (sort(keys %hosts)) {
-    print "[key=", $key,"][ipAddress=",${$key}{'ipAddress'},"][macAddress=",${$key}{'macAddress'},"][pktSent/pktRcvd=",${$key}{'pktSent'},"/",${$key}{'pktRcvd'},"]\n";
-}
-
 print "################################################\n";
 
 getFirstHost(0);
@@ -33,7 +17,6 @@ while(($host{'ethAddress'} ne "") || ($host{'ipAddress'} ne ""))  {
     print "+ [ipAddress=",$host{'ipAddress'},"][macAddress=",$host{'macAddress'},"][pktSent/pktRcvd=",$host{'pktSent'},"/",$host{'pktRcvd'},"]\n";
     getNextHost(0);
     loadHost();
-}
 }
 
 #for my $k1 ( sort keys %hosts ) {
