@@ -83,7 +83,7 @@ void ntop_perl_send_html_footer() {
 #define PERL_STORE_NUM(x, a, b)    { char buf[64]; safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u", b); PERL_STORE_STRING(x, a, buf); }
 
 static void ntop_perl_loadHost_values(HV * my_ss, HostTraffic *host) {
-  traceEvent(CONST_TRACE_INFO, "[perl] loadHost_values()");
+  /* traceEvent(CONST_TRACE_INFO, "[perl] loadHost_values()"); */
 
   PERL_STORE_STRING(my_ss, "ethAddress", host->ethAddressString);
   PERL_STORE_STRING(my_ss, "ipAddress", host->hostNumIpAddress);
@@ -101,7 +101,7 @@ static void ntop_perl_loadHost_values(HV * my_ss, HostTraffic *host) {
 void ntop_perl_loadHost() {
   char buf[64];
 
-  traceEvent(CONST_TRACE_INFO, "[perl] loadHost(%p)", ntop_host);
+  /* traceEvent(CONST_TRACE_INFO, "[perl] loadHost(%p)", ntop_host); */
 
   if(perl_host) {
     hv_undef(perl_host);
@@ -140,7 +140,7 @@ void ntop_perl_loadHosts() {
     char *key = (host->ethAddressString[0] != '\0') ? host->ethAddressString : host->hostNumIpAddress;
 
     snprintf(buf, sizeof(buf), "main::%s", key);
-    traceEvent(CONST_TRACE_INFO, "[perl] Adding perl hash '%s'", buf);
+    /* traceEvent(CONST_TRACE_INFO, "[perl] Adding perl hash '%s'", buf); */
     elem = perl_get_hv(buf, TRUE);
 
     /*
@@ -150,7 +150,7 @@ void ntop_perl_loadHosts() {
      */
     hv_store(ss_hosts, key, strlen(key), newRV_inc ((SV *) elem), 0); 
     ntop_perl_loadHost_values(elem, host);
-    traceEvent(CONST_TRACE_INFO, "[perl] Added %s", key);
+    /* traceEvent(CONST_TRACE_INFO, "[perl] Added %s", key); */
     host = getNextHost(actualDeviceId, host);
   }
 }
@@ -161,8 +161,10 @@ void ntop_perl_loadHosts() {
 void ntop_perl_getFirstHost(int actualDeviceId) {
   ntop_host = getFirstHost(actualDeviceId);
 
+  /*
   traceEvent(CONST_TRACE_INFO, "[perl] getFirstHost(%d)=%p",
 	     actualDeviceId, ntop_host);
+  */
 }
 
 /* *********************************************************** */
@@ -174,7 +176,7 @@ void ntop_perl_getNextHost(int actualDeviceId) {
     ntop_host = getNextHost(actualDeviceId, ntop_host);
   }
 
-  traceEvent(CONST_TRACE_INFO, "[perl] getNextHost()=%p", ntop_host);
+  /* traceEvent(CONST_TRACE_INFO, "[perl] getNextHost()=%p", ntop_host); */
 }
 
 /* *********************************************************** */
@@ -208,8 +210,11 @@ int handlePerlHTTPRequest(char *url) {
   char perl_path[256];
   char * perl_argv[] = { "", NULL };
   struct stat statbuf;
+  char *question_mark = strchr(url, '?');
 
   traceEvent(CONST_TRACE_WARNING, "Calling perl... [%s]", url);
+
+  if(question_mark) question_mark[0] = '\0';
 
   for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
   safe_snprintf(__FILE__, __LINE__, perl_path, sizeof(perl_path), 
@@ -244,6 +249,12 @@ int handlePerlHTTPRequest(char *url) {
   perl_parse(my_perl, xs_init, perl_argc, perl_argv, (char **)NULL);
 
   SWIG_InitializeModule(0);
+
+  if(question_mark) {
+
+    PERL_STORE_STRING(perl_get_hv("main::ENV", TRUE), "QUERY_STRING_UNESCAPED", &question_mark[1]);
+  } 
+
   newXS("sendString", _wrap_ntop_perl_sendString, (char*)__FILE__);
   newXS("sendFile", _wrap_ntop_perl_sendFile, (char*)__FILE__);
   newXS("send_http_header", _wrap_ntop_perl_send_http_header, (char*)__FILE__);

@@ -5,7 +5,7 @@
 #use strict;
 #use warnings;
 
-send_http_header(1, "Known ntop hosts");
+send_http_header(1, "Known ntop hosts ".$ENV{'QUERY_STRING_UNESCAPED'});
 
 # ---------------------------------------------
 
