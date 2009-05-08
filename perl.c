@@ -31,8 +31,6 @@
 #include "perl/ntop_perl.h"
 #include "perl/ntop_wrap.c"
 
-PerlInterpreter *my_perl;  /***    The Perl interpreter    ***/
-
 static HostTraffic *ntop_host = NULL;
 static HV * perl_host = NULL;
 static HV * ss_hosts = NULL;
@@ -169,6 +167,7 @@ int handlePerlHTTPRequest(char *url) {
   char * perl_argv[] = { "", NULL };
   struct stat statbuf;
   char *question_mark = strchr(url, '?');
+  PerlInterpreter *my_perl;  /***    The Perl interpreter    ***/
 
   traceEvent(CONST_TRACE_WARNING, "Calling perl... [%s]", url);
 
@@ -209,7 +208,6 @@ int handlePerlHTTPRequest(char *url) {
   SWIG_InitializeModule(0);
 
   if(question_mark) {
-
     PERL_STORE_STRING(perl_get_hv("main::ENV", TRUE), "QUERY_STRING_UNESCAPED", &question_mark[1]);
   } 
 
@@ -223,10 +221,13 @@ int handlePerlHTTPRequest(char *url) {
 
   perl_run(my_perl);
 
-  PL_perl_destruct_level = 0;
+  /* Unset variables */
+  perl_host = NULL;
+
+  // PL_perl_destruct_level = 1;
   perl_destruct(my_perl);
   perl_free(my_perl);
-  PERL_SYS_TERM();
+  //PERL_SYS_TERM();
   return(1);
 }
 
