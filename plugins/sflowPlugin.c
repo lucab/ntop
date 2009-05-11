@@ -1425,7 +1425,7 @@ static void handleSflowSample(SFSample *sample, int deviceId) {
 
   /* Save flows on disk (debug) */
 #ifdef DEBUG_FLOWS
-  if(0) {
+  if(1) {
 #define TCPDUMP_MAGIC 0xa1b2c3d4  /* from libpcap-0.5: savefile.c */
 #define DLT_EN10MB	1	  /* from libpcap-0.5: net/bpf.h */
 #define PCAP_VERSION_MAJOR 2      /* from libpcap-0.5: pcap.h */
@@ -2929,10 +2929,15 @@ static void readSFlowDatagram(SFSample *sample, int deviceId)
 	}
       }
      
-      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "endSample   ----------------------\n");
-
-      if(sample->sampleType == SFLFLOW_SAMPLE)
+      if(SFLOW_DEBUG(deviceId))
+	traceEvent(CONST_TRACE_INFO, "endSample [%d]  ----------------------\n", sample->sampleType);
+      
+      traceEvent(CONST_TRACE_INFO, "endSample [%d]  ----------------------\n", sample->sampleType);
+      
+      if((sample->sampleType == SFLFLOW_SAMPLE)
+	 || (sample->sampleType == SFLFLOW_SAMPLE_EXPANDED)) {
 	handleSflowSample(sample, deviceId);      
+      }
     }
   }
 }
@@ -4586,7 +4591,7 @@ static void handlesFlowPacket(u_char *_deviceId,
   int sampledPacketSize;
   int deviceId, rc;
 
-  if(myGlobals.runningPref.rFileName != NULL) {
+  if(myGlobals.pcap_file_list->fileName != NULL) {
     /* ntop is reading packets from a file */
     struct ether_header ehdr;
     u_int32_t caplen = h->caplen;
@@ -4643,8 +4648,8 @@ static void handlesFlowPacket(u_char *_deviceId,
 
 #ifdef DEBUG_FLOWS
 	    if(0)
-	      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "Rcvd from from %s [sflowGlobals=%x]", intoa(ip.ip_src),
-						   myGlobals.device[deviceId].sflowGlobals);
+	      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "Rcvd from from %s", 
+						   intoa(ip.ip_src));
 #endif
 
 	    myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd++;
