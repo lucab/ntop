@@ -40,9 +40,9 @@ void printBandwidthFooter(void) {
 	     "new communities.</li>\n"
 	     "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> "
 	     "for more information about host and domain sorting.</li>\n"
-	     "<li>Bandwidth values are the percentage of the total bytes that "
-	     "<b>ntop</b> has seen on the interface.  Hover the mouse to see the actual "
-	     "value (rounded to the nearest full percentage point).  <i>The total of the "
+	     "<li>Inbound and outbound values are the percentage of the total bytes that "
+	     "<b>ntop</b> has seen on the interface. Hover the mouse to see the actual "
+	     "value (rounded to the nearest full percentage point). <i>The total of the "
 	     "values will NOT be 100% as local traffic will be counted TWICE (once as "
 	     "sent and again as received).</i></li>\n"
 	     "<li>The SENT bandwidth is shown as "
@@ -2764,7 +2764,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 		      "<TH "TH_BG">%s3\">MAC&nbsp;Address%s</A></TH>\n"
 		      "<TH "TH_BG">%s11\">Community%s</A></TH>\n"
 		      "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
-		      "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
+		      "<TH "TH_BG" colspan=2>%s4\">Inbound vs Outbound%s</A></TH>\n"
 		      "<TH "TH_BG">%s5\">Nw&nbsp;Board&nbsp;Vendor%s</A></TH>\n"
 		      "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
 		      "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
@@ -2794,7 +2794,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 		      "</TH><TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
 		      "<TH "TH_BG">%s11\">Community%s</A></TH>"
 		      "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
-		      "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
+		      "<TH "TH_BG" colspan=2>%s4\">Inbound vs Outbound%s</A></TH>\n"
 		      "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
 		      "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
 		      "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
@@ -2996,7 +2996,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	  }
 
 	  sendString("&nbsp;</TD>");
-	  printBar(buf, sizeof(buf), el->actBandwidthUsageS, el->actBandwidthUsageR, maxBandwidthUsage, 2);
+	  printBar(buf, sizeof(buf), el->actBandwidthUsageS, el->actBandwidthUsageR, maxBandwidthUsage, 1);
 
 	  if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>", tmpName2);
@@ -4220,11 +4220,11 @@ void printBar(char *buf, int bufLen,
 
     switch(percentageS) {
     case 0:
-      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TD "TD_BG" %s>&nbsp;</TD>\n", getActualRowColor());
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TD colspan=2 "TD_BG" %s>&nbsp;</TD>\n", getActualRowColor());
       break;
     default:
       safe_snprintf(__FILE__, __LINE__, buf, bufLen,
-		    "<TD "TD_BG" ALIGN=LEFT>"
+		    "<TD colspan=2 "TD_BG" ALIGN=LEFT>"
 		    "<IMG ALIGN=ABSMIDDLE SRC=\"/gauge.jpg\" ALT=\"%d%%\" WIDTH=%d HEIGHT=12>"
 		    "&nbsp;</TD>\n",
 		    percentageS, ratio*percentageS);
@@ -4239,12 +4239,14 @@ void printBar(char *buf, int bufLen,
 
     switch(percentageS+percentageR) {
     case 0:
-      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TD "TD_BG" %s>&nbsp;</TD>\n", getActualRowColor());
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, 
+		    "<TD colspan=2 "TD_BG" %s>&nbsp;</TD>\n", getActualRowColor());
       break;
     default:
       safe_snprintf(__FILE__, __LINE__, buf, bufLen,
-		    "<TD "TD_BG" ALIGN=LEFT>"
-		    "<IMG ALIGN=ABSMIDDLE SRC=\"/gaugeS.jpg\" ALT=\"Sent %d%%\" WIDTH=%d HEIGHT=12>"
+		    "<TD "TD_BG" ALIGN=RIGHT>"
+		    "&nbsp;<IMG ALIGN=ABSMIDDLE SRC=\"/gaugeS.jpg\" ALT=\"Sent %d%%\" WIDTH=%d HEIGHT=12>"
+		    "</TD><TD "TD_BG" ALIGN=LEFT>"
 		    "<IMG ALIGN=ABSMIDDLE SRC=\"/gaugeR.jpg\" ALT=\"Received %d%%\" WIDTH=%d HEIGHT=12>"
 		    "&nbsp;</TD>\n",
 		    percentageS, ratio*percentageS, percentageR, ratio*percentageR);
