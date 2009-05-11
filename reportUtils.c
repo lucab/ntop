@@ -1125,8 +1125,7 @@ int cmpFctn(const void *_a, const void *_b) {
   } else if((a == NULL) && (b == NULL)) {
     traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (3)");
     return(0);
-  }
-  if((*a == NULL) && (*b != NULL)) {
+  } else if((*a == NULL) && (*b != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (4)");
     return(1);
   } else if((*a != NULL) && (*b == NULL)) {
@@ -1506,6 +1505,9 @@ int cmpFctn(const void *_a, const void *_b) {
     default:
       if((myGlobals.columnSort >= BASE_PROTOS_IDX)
 	 && (myGlobals.columnSort < (BASE_PROTOS_IDX+myGlobals.numIpProtosList))) {
+	if(((*a)->ipProtosList == NULL) && ((*b)->ipProtosList != NULL)) return(1);
+	else if(((*a)->ipProtosList != NULL) && ((*b)->ipProtosList == NULL)) return(-1);
+
 	a_ = (*a)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX]->sent.value
 	  +(*a)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX]->rcvd.value;
 	b_ = (*b)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX]->sent.value
@@ -1516,6 +1518,9 @@ int cmpFctn(const void *_a, const void *_b) {
     break;
   case SORT_DATA_IP:
     columnProtoId = myGlobals.columnSort - 1;
+    if(((*a)->protoIPTrafficInfos == NULL) && ((*b)->protoIPTrafficInfos != NULL)) return(1);
+    else if(((*a)->protoIPTrafficInfos != NULL) && ((*b)->protoIPTrafficInfos == NULL)) return(-1);
+
     if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
       if(columnProtoId <= 0) {
         a_ = b_ = 0;

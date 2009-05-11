@@ -958,9 +958,7 @@ void sendFile(char* fileName, int doNotUnlink) {
 void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
   int bytesSent, rc, retries = 0;
   char *ssiStart, *ssiEnd, temp;
-#ifdef WIN32
   static unsigned int fileSerial = 0;
-#endif
 
   if(myGlobals.newSock == FLAG_DUMMY_SOCKET)
     return;
@@ -1030,7 +1028,7 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
 		      "gzip-%d.ntop", fileSerial++);
 #else
 	safe_snprintf(__FILE__, __LINE__, compressedFilePath, sizeof(compressedFilePath), 
-		      "/tmp/ntop-gzip-%d", getpid());
+		      "/tmp/ntop-gzip-%d", fileSerial++);
 #endif
 
 	compressFileFd = gzopen(compressedFilePath, "wb");

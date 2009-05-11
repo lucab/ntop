@@ -118,7 +118,7 @@ static ExtraPage rrdExtraPages[] = {
 static PluginInfo rrdPluginInfo[] = {
   {
     VERSION, /* current ntop version */
-    "Round-Robin Databases",
+    "Round-Robin Database",
     "This plugin is used to setup, activate and deactivate ntop's rrd support.<br>"
     "This plugin also produces the graphs of rrd data, available via a<br>"
     "link from the various 'Info about host xxxxx' reports.",
@@ -4283,7 +4283,6 @@ static void handleRRDHTTPrequest(char* url) {
       shownCreate=0;
     }
   }
-
 
   /* traceEvent(CONST_TRACE_INFO, "RRD: action=%d", action); */
 

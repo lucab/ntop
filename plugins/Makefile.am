@@ -47,8 +47,6 @@ noinst_PROGRAMS = \
                   lastSeenPlugin.so \
                   netflowPlugin.so \
                   cpacketPlugin.so \
-                  pdaPlugin.so \
-                  remotePlugin.so \
                   rrdPlugin.so \
                   sflowPlugin.so
 
@@ -57,8 +55,6 @@ lib_LTLIBRARIES = \
                   liblastSeenPlugin.la \
                   libnetflowPlugin.la \
                   libcpacketPlugin.la \
-                  libpdaPlugin.la \
-                  libremotePlugin.la \
                   librrdPlugin.la \
                   libsflowPlugin.la
 
@@ -77,14 +73,6 @@ libnetflowPlugin_la_CFLAGS = $(AM_CFLAGS)
 libcpacketPlugin_la_SOURCES = cpacketPlugin.c
 libcpacketPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 libcpacketPlugin_la_CFLAGS = $(AM_CFLAGS)
-
-libpdaPlugin_la_SOURCES = pdaPlugin.c
-libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-libpdaPlugin_la_CFLAGS = $(AM_CFLAGS)
-
-libremotePlugin_la_SOURCES = remotePlugin.c
-libremotePlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-libremotePlugin_la_CFLAGS = $(AM_CFLAGS)
 
 librrdPlugin_la_SOURCES = rrdPlugin.c
 librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
@@ -146,30 +134,6 @@ netflowPlugin.so$(EXEEXT): .libs/libnetflowPlugin.so@SO_VERSION_PATCH@
 
 cpacketPlugin.so$(EXEEXT): .libs/libcpacketPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libcpacketPlugin.so cpacketPlugin.so
-
-###############
-
-.libs/libpdaPlugin.so@SO_VERSION_PATCH@:
-	@if test -f libpdaPlugin_la-pdaPlugin.o; then \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ libpdaPlugin_la-pdaPlugin.o; \
-	else \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ pdaPlugin.o; \
-	fi
-
-pdaPlugin.so$(EXEEXT): .libs/libpdaPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/libpdaPlugin.so pdaPlugin.so
-
-###############
-
-.libs/libremotePlugin.so@SO_VERSION_PATCH@:
-	@if test -f libremotePlugin_la-remotePlugin.o; then \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libremotePlugin.so@SO_VERSION_PATCH@ libremotePlugin_la-remotePlugin.o; \
-	else \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libremotePlugin.so@SO_VERSION_PATCH@ remotePlugin.o; \
-	fi
-
-remotePlugin.so$(EXEEXT): .libs/libremotePlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/libremotePlugin.so remotePlugin.so
 
 ###############
 

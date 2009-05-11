@@ -1597,6 +1597,8 @@ void printHostsTraffic(int reportTypeReq,
 	  continue;
 	}
 
+	if(el->ipProtosList == NULL) continue;
+
 	addHost = 1;
 
 	switch(myGlobals.hostsDisplayPolicy) {
@@ -1613,7 +1615,7 @@ void printHostsTraffic(int reportTypeReq,
 
 	if(addHost) {
 	  tmpTable[numEntries++] = el;
-	  if(numEntries >= maxHosts)
+	  if(numEntries >= (maxHosts-1))
 	    break;
 	}
       }
