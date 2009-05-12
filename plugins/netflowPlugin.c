@@ -28,7 +28,7 @@ static void* netflowMainLoop(void* _deviceId);
 static void* netflowUtilsLoop(void* _deviceId);
 #endif
 
-#define DEBUG_FLOWS
+//#define DEBUG_FLOWS
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -722,8 +722,8 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   if((srcHost == NULL) ||(dstHost == NULL)) {
 #ifdef DEBUG_FLOWS
     if(debug)
-      traceEvent(CONST_TRACE_INFO, "DEBUG: srcHost=%x, dstHost=%x\n",
-		 srcHost, dstHost);
+      traceEvent(CONST_TRACE_INFO, "DEBUG: srcHost=%p, dstHost=%p\n",
+		 (void*)srcHost, (void*)dstHost);
 #endif
     return(0);
   }
@@ -753,7 +753,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [last=%u][first=%u][last-first=%d]",
 	       srcHost->hostNumIpAddress, sport,
 	       dstHost->hostNumIpAddress, dport, record->last, record->first,
-	       (*lastSeen - *firstSeen));
+	       (int)(*lastSeen - *firstSeen));
 #endif
 
   /* Commented out ... already done in updatePacketCount()                         */
@@ -1094,7 +1094,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 		 "[recordActTime=%d][last-first=%d]",
 		 srcHost->hostNumIpAddress, sport,
 		 dstHost->hostNumIpAddress, dport,
-		 timeDiff, recordActTime, (*lastSeen - *firstSeen));
+		 timeDiff, recordActTime, (int)(*lastSeen - *firstSeen));
 #endif
     
     if(
@@ -3993,7 +3993,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
    ++numPkt;
 
     if(debug)
-      traceEvent(CONST_TRACE_INFO, "Rcvd packet to dissect [caplen=%d][len=%d][num_pkt=%d]",
+      traceEvent(CONST_TRACE_INFO, "Rcvd packet to dissect [caplen=%d][len=%d][num_pkt=%lu]",
 		 caplen, length, numPkt);
  }
 #endif
@@ -4031,8 +4031,9 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 
 #ifdef DEBUG_FLOWS
 	    if(debug)
-	      traceEvent(CONST_TRACE_INFO, "Rcvd from from %s [netflowGlobals=%x]", intoa(ip.ip_src),
-			 myGlobals.device[deviceId].netflowGlobals);
+	      traceEvent(CONST_TRACE_INFO, "Rcvd from from %s [netflowGlobals=%x]", 
+			 intoa(ip.ip_src),
+			 (void*)myGlobals.device[deviceId].netflowGlobals);
 #endif
 
 	    myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd++;

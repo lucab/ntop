@@ -1225,8 +1225,17 @@ int cmpFctn(const void *_a, const void *_b) {
     default:
       if((myGlobals.columnSort >= BASE_PROTOS_IDX)
 	 && (myGlobals.columnSort < (BASE_PROTOS_IDX+myGlobals.numIpProtosList))) {
-	a_ = (*a)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX]->rcvd.value,
-	  b_ = (*b)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX]->rcvd.value;
+	int idx = myGlobals.columnSort-BASE_PROTOS_IDX;
+
+	if((*a)->ipProtosList && (*a)->ipProtosList[idx])
+	  a_ = (*a)->ipProtosList[idx]->rcvd.value;
+	else
+	  a_ = 0;
+
+	if((*b)->ipProtosList && (*b)->ipProtosList[idx])
+	  b_ = (*b)->ipProtosList[idx]->rcvd.value;
+	else
+	  b_ = 0;
       }
       break;
     }
@@ -1364,8 +1373,17 @@ int cmpFctn(const void *_a, const void *_b) {
     default:
       if((myGlobals.columnSort >= BASE_PROTOS_IDX)
 	 && (myGlobals.columnSort < (BASE_PROTOS_IDX+myGlobals.numIpProtosList))) {
-	a_ = (*a)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX]->sent.value,
-	  b_ = (*b)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX]->sent.value;
+	int idx = myGlobals.columnSort-BASE_PROTOS_IDX;
+
+	if((*a)->ipProtosList && (*a)->ipProtosList[idx])
+	  a_ = (*a)->ipProtosList[idx]->sent.value;
+	else 
+	  a_ = 0;
+	
+	if((*b)->ipProtosList && (*b)->ipProtosList[idx])
+	  b_ = (*b)->ipProtosList[idx]->sent.value;
+	else
+	  b_ = 0;
       }
       break;
     }
@@ -1505,13 +1523,20 @@ int cmpFctn(const void *_a, const void *_b) {
     default:
       if((myGlobals.columnSort >= BASE_PROTOS_IDX)
 	 && (myGlobals.columnSort < (BASE_PROTOS_IDX+myGlobals.numIpProtosList))) {
+	int idx = myGlobals.columnSort-BASE_PROTOS_IDX;
+
 	if(((*a)->ipProtosList == NULL) && ((*b)->ipProtosList != NULL)) return(1);
 	else if(((*a)->ipProtosList != NULL) && ((*b)->ipProtosList == NULL)) return(-1);
 
-	a_ = (*a)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX]->sent.value
-	  +(*a)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX]->rcvd.value;
-	b_ = (*b)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX]->sent.value
-	  +(*b)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX]->rcvd.value;
+	if((*a)->ipProtosList && (*a)->ipProtosList[idx])
+	  a_ = (*a)->ipProtosList[idx]->sent.value +(*a)->ipProtosList[idx]->rcvd.value;
+	else
+	  a_ = 0;
+	
+	if((*b)->ipProtosList && (*b)->ipProtosList[idx])
+	  b_ = (*b)->ipProtosList[idx]->sent.value +(*b)->ipProtosList[idx]->rcvd.value;
+	else
+	  b_ = 0;
       }
       break;
     }
