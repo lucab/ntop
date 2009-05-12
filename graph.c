@@ -450,10 +450,13 @@ void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
   for(i=0; i<24; i++) {
     TrafficCounter traf;
 
-    if(dataSent)
-      traf.value = theHost->trafficDistribution->last24HoursBytesSent[i].value;
-    else
+    if(theHost->trafficDistribution) {
+      if(dataSent)
+	traf.value = theHost->trafficDistribution->last24HoursBytesSent[i].value;
+      else
       traf.value = theHost->trafficDistribution->last24HoursBytesRcvd[i].value;
+    } else
+      traf.value = 0;
 
     if(traf.value > 0) {
       p[num] = traf.value;
