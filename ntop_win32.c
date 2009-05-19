@@ -537,6 +537,8 @@ u_int32_t inet_network(const char *cp) {
 
 /* ************************************ */
 
+#if 0
+
 struct netent* getnetent() {
   char *p;
   register char *cp, **q;
@@ -602,6 +604,7 @@ struct netent *getnetbyname(const char *name) {
     endnetent();
   return (p);
 }
+#endif
 
 /* ************************************ */
 

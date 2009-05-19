@@ -30,8 +30,8 @@
 #endif
 
 #ifndef HAVE_GETOPT_LONG
-#include "getopt.c"
-#include "getopt1.c"
+#include "./utils/getopt/getopt.c"
+#include "./utils/getopt/getopt1.c"
 #endif
 
 /* #define ADDRESS_DEBUG */

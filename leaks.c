@@ -48,8 +48,6 @@
 #ifdef MAKE_WITH_SAFER_ROUTINES
 
 static void stopcap(void) {
-  int i;
-
   traceEvent(CONST_TRACE_WARNING, "ntop packet capture STOPPED");
   traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up");
   traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory");
