@@ -1502,7 +1502,7 @@ void printHostsTraffic(int reportTypeReq,
   vlanList = calloc(1, MAX_VLAN); if(vlanList == NULL) return;
   vlanId = abs(vlanId);
 
-  /* traceEvent(CONST_TRACE_INFO, "VLAN: %d", vlanId); */
+  /* traceEvent(CONST_TRACE_INFO, "---> VLAN: %d", vlanId); */
 
   reportType = combineReportTypeLocality(reportTypeReq, showLocalityMode);
 
@@ -1584,7 +1584,7 @@ void printHostsTraffic(int reportTypeReq,
     if(!isFcHost (el) && (broadcastHost(el) == 0)) {
       u_char addHost;
 
-      if((vlanId > 0) && (el->vlanId != vlanId)) continue;
+      if((vlanId > 0) && (vlanId < MAX_VLAN) && (el->vlanId != vlanId)) continue;
       if(el->community && (!isAllowedCommunity(el->community))) continue;
 
       if(((showLocalityMode == showOnlySent) && (el->bytesSent.value > 0))
