@@ -28,7 +28,7 @@ static void* netflowMainLoop(void* _deviceId);
 static void* netflowUtilsLoop(void* _deviceId);
 #endif
 
-//#define DEBUG_FLOWS
+/* #define DEBUG_FLOWS */
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -134,7 +134,7 @@ static PluginInfo netflowPluginInfo[] = {
     handleNetflowHTTPrequest,
     NULL, /* no host creation/deletion handle */
 #ifdef DEBUG_FLOWS
-    "udp and (port 2055 or port 1024 or port 20000)",
+    "udp and (port 2055 or port 1024 or port 9501)",
 #else
     NULL, /* no capture */
 #endif
@@ -517,7 +517,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 #endif
 
 #ifdef DEBUG_FLOWS
-  traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: handleGenericFlow() called");
+  if(debug) traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: handleGenericFlow() called");
 #endif
 
   myGlobals.device[deviceId].netflowGlobals->numNetFlowsRcvd++;
@@ -749,7 +749,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   if(dstHost->lastSeen < *lastSeen)   dstHost->lastSeen = *lastSeen;
 
 #ifdef DEBUG_FLOWS
-  if(1)
+  if(debug || 1)
     traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [last=%u][first=%u][last-first=%d]",
 	       srcHost->hostNumIpAddress, sport,
 	       dstHost->hostNumIpAddress, dport, record->last, record->first,
@@ -1268,9 +1268,12 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 #endif
 
 #ifdef DEBUG_FLOWS
-  if(0)
-    traceEvent(CONST_TRACE_INFO, "NETFLOW: dissectFlow(len=%d, device=%d)",
-	       bufferLen, deviceId);
+  if(debug) {
+    static int num = 0;
+
+    traceEvent(CONST_TRACE_INFO, "NETFLOW: dissectFlow(len=%d, device=%d) [flow packet=%d]",
+	       bufferLen, deviceId, ++num);
+  }
 #endif
 
   dumpFlow(buffer, bufferLen, deviceId);
