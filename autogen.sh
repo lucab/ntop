@@ -422,6 +422,11 @@ $AUTOCONF
 echo "        .... done"
 echo ""
 
+chmod gou+x ./config.guess
+
+# Needed on some distro as CentOS                                                                                                                                                                                
+\mkdir m4
+
 
 #
 # 8.
