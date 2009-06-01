@@ -179,9 +179,10 @@ if [ $? -ne 0 ]; then
 fi
 if [ "${debug}" = "y" ]; then echo "DEBUG: parm file temp is ${parmfile}"; fi
  
-cmd=`echo -i tbd \
-               @${conf} \
-               $extra $@`
+cmd=`echo \
+    @${conf} \
+    -i tbd \
+    $extra $@`
 
 echo ${cmd} | awk ' \
 BEGIN { eff=""; \
@@ -510,7 +511,7 @@ gdb () {
     export LD_LIBRARY_PATH="${ldlibpath}"
   fi
 
-  echo "set args -i ${if} @${conf} $@ --instance DEBUG -K" > /tmp/gdbcmd
+  echo "set args @${conf} -i ${if} $@ --instance DEBUG -K" > /tmp/gdbcmd
   echo "show args" >>/tmp/gdbcmd
 
   /usr/bin/gdb ${prog} -x /tmp/gdbcmd
@@ -526,8 +527,9 @@ start () {
   show_extra
   config_interfaces
 
-  cmd=`echo $prog -i $if \
+  cmd=`echo $prog \
                @${conf} \
+               -i $if \
                $extra $@`
 
   if [ ".${instance}" != "." ]; then
