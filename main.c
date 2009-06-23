@@ -163,11 +163,11 @@ void usage(FILE * fp) {
   fprintf(fp, "    [--known-subnets]                                     %sList of known subnets (separated by ,)\n", newLine);
   fprintf(fp, "                                                          %sIf the argument starts with @ it is assumed it is a file path\n", newLine);
   fprintf(fp, "                                                          %sE.g. 192.168.0.0/14=home,172.16.0.0/16=private\n", newLine);
-  fprintf(fp, "    [--pcap-file-list] <filename>                         %sSpecify a filename containing a list\n"
-	  "                                                              %sof pcap files to read.\n"
-	  "                                                              %sIf you use this flag the -i option will be\n"
-	  "                                                              %signored.\n", newLine, newLine, newLine, newLine);
-  fprintf(fp, "    [--enable-efficiency]                                 %sCompute network traffic efficiency on ATM cells-lit\n", newLine);
+  fprintf(fp, "    [--pcap-file-list] <filename>                         %sSpecify a filename containing a list\n", newLine);
+  fprintf(fp, "                                                          %sof pcap files to read.\n", newLine);
+  fprintf(fp, "                                                          %sIf you use this flag the -i option will be\n", newLine);
+  fprintf(fp, "                                                          %signored.\n", newLine);
+  fprintf(fp, "    [--enable-efficiency]                                 %sCompute network traffic efficiency on ATM cells\n", newLine);
 
  fprintf(fp, "\n"
 	 "NOTE\n"
