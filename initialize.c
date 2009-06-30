@@ -107,33 +107,17 @@ static void setDomainName(void) {
  * Initialize memory/data for the protocols being monitored
  * looking at local or system wide "services" files
  */
-void initIPServices(void) {
+void initIPServices(void) 
+{
   FILE* fd;
   int idx, numSlots, len, rc;
   int major, minor;
 
   traceEvent(CONST_TRACE_NOISY, "Initializing IP services");
 
-  event_init();
-
-  sscanf(event_get_version(), "%d.%d", &major, &minor);
-
-  if(minor < 4) {
-    traceEvent(CONST_TRACE_ERROR, 
-	       "You are using libevent %d whereas ntop needs at least v1.4",
-	       event_get_version());
-    traceEvent(CONST_TRACE_ERROR, 
-	       "Due to a libevent bug with IPv6 address resolution");
-traceEvent(CONST_TRACE_ERROR, 
-	   "See http://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg408382.html");
-     traceEvent(CONST_TRACE_ERROR, 
-		"Please rebuild ntop against a newer libevent version");
-   exit(0);
-  }
-
-  if((rc = evdns_init()) != DNS_ERR_NONE) {
-    traceEvent(CONST_TRACE_ERROR, "evdns_init() returned %d", rc);
-  }
+  /* Initialize the Libevent which is currently used for Asynchronous DNS resolution */
+  myGlobals.base = event_init();
+  myGlobals.dnsbase = evdns_base_new (myGlobals.base, 1);
 
   /* Let's count the entries first */
   numSlots = 0;
@@ -225,6 +209,7 @@ traceEvent(CONST_TRACE_ERROR,
   addPortHashEntry(myGlobals.udpSvc, 2049,"nfsd");
   addPortHashEntry(myGlobals.udpSvc, 1110,"nfsd-status");
 }
+
 
 /* ******************************* */
 

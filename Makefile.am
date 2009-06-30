@@ -37,14 +37,14 @@ PERL_INC  = @PERL_INC@
 INCLUDES  = -I. $(INCS) ${PERL_INC} ${RRD_INC}
 LIBS      = 
 PERL_LIB  = @PERL_LIB@
-BASE_LIBS = @LIBS@ @CORELIBS@  ${PERL_LIB} ${RRD_LIB}
+BASE_LIBS = @CORELIBS@ ${PERL_LIB} ${RRD_LIB} @LIBS@
 AS        = @AS@
 AWK       = @AWK@
 CC        = @CC@
 CCLD      = @CCLD@
 
-#AM_CFLAGS =
-#AM_LDFLAGS= 
+# AM_CFLAGS  =
+# AM_LDFLAGS =
 ACLOCAL_AMFLAGS=-l m4
 
 DISTCLEANFILES = trivialcompilemessage *.db #* *~ *.log
@@ -54,17 +54,16 @@ INSTALLCLEANFILES = addressQueue.db dnsCache.db
 #
 # Fake out the missing tests for the auto* tools
 #
-ACLOCAL = /bin/sh ./missing --run echo
-AUTOCONF = /bin/sh ./missing --run echo
-AUTOMAKE = /bin/sh ./missing --run echo
-AUTOHEADER = /bin/sh ./missing --run echo
+ACLOCAL = /bin/sh ./missing --run true
+AUTOCONF = /bin/sh ./missing --run true
+AUTOMAKE = /bin/sh ./missing --run true
+AUTOHEADER = /bin/sh ./missing --run true
 
 # A list of all the files in the current directory which can be regenerated
 MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
                        config.h.in config.sub configure install-sh \
                        ltmain.sh missing mkinstalldirs \
                        stamp-h.in
-
 
 SUBDIRS = . @PLUGINS@
 
@@ -123,6 +122,14 @@ ntop_DEPENDENCIES  = libntopreport.la libntop.la
 ntop_LDADD         = libntopreport.la libntop.la $(BASE_LIBS)
 ntop_LDFLAGS       = $(AM_LDFLAGS)
 ntop_CFLAGS        = 
+
+ntops_SOURCES       = main.c admin.c
+ntops_DEPENDENCIES  = libntopreport.la libntop.la
+ntops_LDADD         = libntopreport.la libntop.la $(BASE_LIBS)
+ntops_LDFLAGS       = $(AM_LDFLAGS) -static
+ntops_CFLAGS        = 
+
+
 EXTRA_HEADERS      = 
 noinst_HEADERS     = @GETOPT_H@ globals-core.h globals-report.h ntop.h
 
@@ -139,7 +146,7 @@ libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
                      traffic.c    vendor.c      version.c      \
                      ntop_darwin.c
 
-libntop_la_DEPENDENCIES =  config.h
+libntop_la_DEPENDENCIES = config.h
 libntop_la_LIBADD       = $(BASE_LIBS)
 libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 
@@ -157,7 +164,6 @@ libntopreport_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynami
 man_MANS = ntop.8
 
 .PHONY: snapshot
-
 
 acinclude.m4: acinclude.m4.ntop libtool.m4.in
 	@cat acinclude.m4.ntop libtool.m4.in >acinclude.m4

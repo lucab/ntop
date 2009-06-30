@@ -50,7 +50,7 @@ AC_INIT([ntop],[3.3.11-dev])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v3.3.11-06-02-2009"
+SCRIPTVER="v3.3.11-2009-06-29"
 
 dnl>
 dnl> generate the config header
@@ -62,6 +62,9 @@ HAS_ERROR=
 HAS_WARNING=
 
 NTOP_VERSION_EXTRA=""
+
+# Container for public software available on the Internet
+PUBDIR=pub
 
 echo
 echo "Welcome to $PACKAGE_NAME, Version $PACKAGE_VERSION $NTOP_VERSION_EXTRA"
@@ -164,18 +167,8 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 
-
 AM_ENABLE_SHARED
 AM_PROG_LIBTOOL
-
-dnl> 
-dnl> Python check
-dnl> 
-dnl> AC_PROG_SWIG(1.3.17)
-dnl> SWIG_ENABLE_CXX
-dnl> SWIG_MULTI_MODULE_SUPPORT
-dnl> SWIG_PYTHON
-
 
 dnl> NTOPCONFIGDEBUG_SETTINGS([After ac stuff])
 
@@ -508,9 +501,9 @@ if test ".${LOCALEDIR}" = "."; then
 fi
 
 dnl> Add /usr/local/ /opt/local
-CFLAGS="${CFLAGS} -I/usr/local/include -I/opt/local/include"
-CPPFLAGS="${CPPFLAGS} -I/usr/local/include -I/opt/local/include"
-LDFLAGS="${LDFLAGS} -L/usr/local/lib -L/opt/local/lib"
+dnl> CFLAGS="${CFLAGS} -I/usr/local/include -I/opt/local/include"
+dnl> CPPFLAGS="${CPPFLAGS} -I/usr/local/include -I/opt/local/include"
+dnl> LDFLAGS="${LDFLAGS} -L/usr/local/lib -L/opt/local/lib"
 
 PWD=`pwd`
 
@@ -566,7 +559,7 @@ if test ".${PFRING_ROOT}" != .; then
   if test -d $PFRING_ROOT &&
      test -r $PFRING_ROOT/userland/lib/libpfring.a ; then
       echo ""
-      PFRING_ROOT=`cd ${PFRING_ROOT} && pwd`      
+      PFRING_ROOT=`cd ${PFRING_ROOT} && pwd`
       AC_MSG_RESULT([found in $PFRING_ROOT/userland/lib/])
       PCAPRING_DIR=`find $PFRING_ROOT/userland -type d -name "libpcap*ring"`
       AC_MSG_CHECKING([for libpcap patched with PF_RING in $PFRING_ROOT/userland])
@@ -591,6 +584,189 @@ if test ".${PFRING_ROOT}" != .; then
   fi
 fi
 
+
+echo
+echo "-------------------------------------------------------------------"
+echo
+echo "   *** Checking for Required public avaialable software ***"
+echo
+
+dnl>
+dnl> libevent - an event notification library - http://www.monkey.org/~provos/libevent-2.0.1-alpha.tar.gz
+dnl>
+
+LIBEVENT=libevent-2.0.1-alpha
+LIBEVENTURL=http://www.monkey.org/~provos
+
+# download/untar/configure/compile
+AC_MSG_CHECKING([for libevent - an event notification library])
+if test ! -f "$LIBEVENT/.libs/libevent.a"; then
+  AC_MSG_RESULT(no)
+
+  echo -n "Creating a local copy of [$LIBEVENT] ... "
+
+# Download the tarball (if not here)
+  if test ! -f "$PUBDIR/$LIBEVENT.tar.gz"; then
+    echo -n "Download... "
+    (cd $PUBDIR && wget $LIBEVENTURL/$LIBEVENT.tar.gz)
+  fi
+
+# Untar (if not here)
+  if test -f "$PUBDIR/$LIBEVENT.tar.gz"; then
+    if test ! -d "$LIBEVENT"; then
+      echo -n "Extract... "
+      tar xfz $PUBDIR/$LIBEVENT.tar.gz
+    fi
+# Configure
+    if test ! -f "$LIBEVENT/config.status"; then
+      echo -n "Configure... "
+      (cd $LIBEVENT && ./configure --prefix=${prefix} > /dev/null)
+    fi
+# Compile
+    if test ! -f "$LIBEVENT/.libs/libevent.a"; then
+      echo -n "Compile... "
+      (cd $LIBEVENT && make 1> /dev/null 2>& 1)
+    fi
+    echo "Done!"
+  else
+    AC_MSG_ERROR([Download of $LIBEVENT failed.  Cannot continue]) && exit 0
+  fi
+else
+  AC_MSG_RESULT(yes)
+fi
+
+INCS="$INCS -I$LIBEVENT -I$LIBEVENT/include"
+CORELIBS="$CORELIBS $LIBEVENT/.libs/libevent.a"
+
+if [ ! -h libevent -a -d ${LIBEVENT} ]; then
+  echo "Linking libevent ..."; \
+  ln -s ${LIBEVENT} libevent; \
+fi
+
+dnl>
+dnl> GeoIP - Geolocation Techonology - http://www.maxmind.com
+dnl>
+
+GEOIP=GeoIP-1.4.6
+GEOIPURL=http://www.maxmind.com/download/geoip/api/c
+
+# download/untar/configure/compile
+AC_MSG_CHECKING([for GeoIP - Geolocation Techonology])
+if test ! -f "$GEOIP/libGeoIP/.libs/libGeoIP.a"; then
+  AC_MSG_RESULT(no)
+
+  echo -n "Creating a local copy of [$GEOIP] ... "
+
+# Download the tarball (if not here)
+  if test ! -f "$PUBDIR/$GEOIP.tar.gz"; then
+    echo -n "Download... "
+    (cd $PUBDIR && wget $GEOIPURL/$GEOIP.tar.gz)
+  fi
+
+# Untar (if not here)
+  if test -f "$PUBDIR/$GEOIP.tar.gz"; then
+    if test ! -d "$GEOIP"; then
+      echo -n "Extract... "
+      tar xfz $PUBDIR/$GEOIP.tar.gz
+    fi
+# Configure
+    if test ! -f "$GEOIP/config.status"; then
+      echo -n "Configure... "
+      (cd $GEOIP && ./configure --prefix=${prefix} > /dev/null)
+    fi
+# Compile
+    if test ! -f "$GEOIP/libGeoIP/.libs/libGeoIP.a"; then
+      echo -n "Compile... "
+      (cd $GEOIP && make 1> /dev/null 2>& 1)
+      # OSX Fix
+      GEO_DYLIB="$GEOIP/libGeoIP/.libs/libGeoIP.dylib"
+      if test -f $GEO_DYLIB; then
+       ln -s $GEO_DYLIB .
+      fi
+    fi
+    echo "Done!"
+  else
+    AC_MSG_ERROR([Download of $GEOIP failed.  Cannot continue]) && exit 0
+  fi
+else
+  AC_MSG_RESULT(yes)
+fi
+
+INCS="$INCS -I$GEOIP/libGeoIP"
+CORELIBS="$CORELIBS $GEOIP/libGeoIP/.libs/libGeoIP.a"
+
+# Download additional GeoIP files
+if test ! -f GeoLiteCity.dat; then
+  echo
+  echo "Downloading missing file GeoLiteCity.dat"
+  wget http://www.maxmind.com/download/geoip/database/GeoLiteCity.dat
+  gunzip GeoLiteCity.dat.gz
+fi
+
+if test ! -f GeoIPASNum.dat; then
+  echo
+  echo "Downloading missing file GeoIPASNum.dat"
+  wget http://www.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat
+  gunzip GeoIPASNum.dat
+fi
+
+if [ ! -h GeoIP -a -d ${GEOIP} ]; then
+  echo "Linking GeoIP ..."; \
+  ln -s ${GEOIP} GeoIP; \
+fi
+
+dnl>
+dnl> lua - Lua is a powerful, fast, lightweight, embeddable scripting language - http://www.lua.org
+dnl>
+
+LUA=lua-5.1.4
+LUAURL=http://www.lua.org/ftp
+
+# download/untar/pacth/compile
+AC_MSG_CHECKING([for lua - a powerful, fast, lightweight, embeddable scripting language])
+if test ! -f "$LUA/src/liblua.a"; then
+  AC_MSG_RESULT(no)
+
+  echo -n "Creating a local copy of [$LUA] ... "
+
+# Download the tarball (if not here)
+  if test ! -f "$PUBDIR/$LUA.tar.gz"; then
+    echo -n "Download... "
+    (cd $PUBDIR && wget $LUAURL/$LUA.tar.gz)
+  fi
+
+# Untar (if not here)
+  if test -f "$PUBDIR/$LUA.tar.gz"; then
+    if test ! -d "$LUA"; then
+      echo -n "Extract... "
+      tar xfz $PUBDIR/$LUA.tar.gz
+    fi
+# Patch
+    echo -n "Patch... "
+    cat $LUA/src/Makefile | sed -e s,'MYCFLAGS=-DLUA_USE_POSIX',' MYCFLAGS="-fPIC -DLUA_USE_POSIX"',g > lua.Makefile
+    cat lua.Makefile > $LUA/src/Makefile
+    rm -f lua.Makefile
+# Compile
+    if test ! -f "$LUA/src/liblua.a"; then
+      echo -n "Compile... "
+      (cd $LUA && make posix 1> /dev/null 2>& 1)
+    fi
+    echo "Done!"
+  else
+    AC_MSG_ERROR([Download of $LUA failed.  Cannot continue]) && exit 0
+  fi
+else
+  AC_MSG_RESULT(yes)
+fi
+
+INCS="$INCS -I$LUA/src"
+CORELIBS="$CORELIBS $LUA/src/liblua.a"
+AC_DEFINE_UNQUOTED(HAVE_LUA, 1, [LUA is supported])
+
+if [ ! -h lua -a -d ${LUA} ]; then
+  echo "Linking lua ..."; \
+  ln -s ${LUA} lua; \
+fi
 
 echo
 echo "Critical library/include tests..."
@@ -995,12 +1171,6 @@ AC_CHECK_HEADERS([net/ethernet.h])
 
 AC_CHECK_LIB([z], [zlibVersion], [], [
         echo "Error! You need to have zlib."
-        exit -1
-        ])
-
-
-AC_CHECK_LIB([event], [event_get_version], [], [
-        echo "Error! You need to have libevent 1.4.X or better."
         exit -1
         ])
 
@@ -1557,9 +1727,9 @@ else
     HAS_WARNING="yes"
 fi
 
-dnl> 
+dnl>
 dnl> Perl check
-dnl> 
+dnl>
 AC_CHECK_TOOL(PERL, perl)
 if test "x$ac_cv_prog_ac_ct_PERL" = "xperl"; then
 
@@ -1648,27 +1818,6 @@ dnl remove unecessary path
     AC_MSG_RESULT(NETSNMP is not present: SNMP support is disabled)
   fi
 fi
-
-dnl>
-dnl> Lua - http://www.lua.org
-dnl>
-LUA_VERSION=lua-5.1.4
-if test -f "$LUA_VERSION.tar.gz"; then
-   echo "Lua already present on this machine"
-else
-   wget http://www.lua.org/ftp/$LUA_VERSION.tar.gz
-fi
-
-tar xvfz $LUA_VERSION.tar.gz
-cat $LUA_VERSION/src/Makefile | sed -e s,'MYCFLAGS=-DLUA_USE_POSIX',' MYCFLAGS="-fPIC -DLUA_USE_POSIX"',g > /tmp/lua.temp
-cat /tmp/lua.temp >  $LUA_VERSION/src/Makefile
-#rm -f /tmp/lua.temp
-cd $LUA_VERSION; make posix; cd ..
-
-LUA_LIB_DIR=$PWD/$LUA_VERSION"/src"
-LIBS="-L${LUA_LIB_DIR} -llua ${LIBS} "
-INCS="${INCS} -I${LUA_LIB_DIR}"
-AC_DEFINE_UNQUOTED(HAVE_LUA, 1, [LUA is supported])
 
 dnl>
 dnl> SCTP - RFC 3286
@@ -1962,41 +2111,6 @@ else
     }'`
 fi
 
-dnl> GeoIP (http://www.maxmind.com/)
-if test -f "GeoIP.tar.gz"; then
-   echo "GeoIP already present on this machine"
-else
-   wget http://www.maxmind.com/download/geoip/api/c/GeoIP.tar.gz
-fi
-tar xvfz GeoIP.tar.gz
-GEO_DIR=`find $PWD -type d -name "GeoIP-*"`
-cd $GEO_DIR; ./configure --prefix=${prefix}; make; cd ..
-# OSX Fix
-GEO_DYLIB="$GEO_DIR/libGeoIP/.libs/libGeoIP.dylib"
-if test -f $GEO_DYLIB; then
-   ln -s $GEO_DYLIB .
-fi
-
-if test -f "GeoLiteCity.dat"; then
-   echo "GeoLiteCity.dat already present"
-else
-   wget http://www.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
-   gunzip GeoLiteCity.dat.gz
-fi
-
-if test -f "GeoIPASNum.dat"; then
-   echo "GeoIPASNum.dat already present"
-else
-   wget http://www.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz
-   gunzip GeoIPASNum.dat.gz
-fi
-
-
-GEO_DIR=`find $PWD -type d -name "GeoIP-*"`
-GEO_IP="$GEO_DIR/libGeoIP/"
-CFLAGS="$CFLAGS -I$GEO_IP"
-LDFLAGS="-L$GEO_IP.libs/ -lGeoIP $LDFLAGS"
-
 dnl> NTOPCONFIGDEBUG_SETTINGS([precet])
 
 if test -d ./configureextra; then
@@ -2218,8 +2332,31 @@ case "${host}" in
         ;;
 esac
 
-dnl> Downloading missing files
-make dnetter dnsapt
+
+dnl> Downloading any missing auxiliary files
+
+if test ! -f oui.txt.gz; then
+  echo
+  echo "Downloading missing file oui.txt"
+  wget http://standards.ieee.org/regauth/oui/oui.txt
+  gzip oui.txt
+fi
+
+if test ! -f etter.finger.os.gz; then
+  echo
+  echo "Downloading missing file etter.finger.os"
+  wget -O etter.finger.os "http://ettercap.cvs.sourceforge.net/ettercap/ettercap_ng/share/etter.finger.os?rev=HEAD"
+  gzip etter.finger.os
+fi
+
+if test ! -f novell-sap-numbers.txt; then
+  echo
+  echo "Downloading missing file novell-sap-numbers.txt"
+  wget http://www.iana.org/assignments/novell-sap-numbers/novell-sap-numbers.txt
+  gzip novell-sap-numbers.txt
+fi
+
+
 
 echo
 echo "==================================================================="
