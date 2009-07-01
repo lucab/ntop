@@ -115,10 +115,10 @@ static int validDNSName(char *name) {
 
 static void dns_response_callback(int result, char type, int count, int ttl, void *addresses, void *arg) {
   HostAddr *addr = (HostAddr*)arg;
-  const char *symAddr = NULL;
+  char *symAddr = NULL;
   char buf[255];
 
-  // traceEvent(CONST_TRACE_WARNING, "dns_response_callback(): result=%d", result);
+  //traceEvent(CONST_TRACE_WARNING, "dns_response_callback(): result=%d", result);
 
   if((addr == NULL) || (result != DNS_ERR_NONE))
     goto out;
@@ -217,11 +217,9 @@ static void dns_response_callback(int result, char type, int count, int ttl, voi
   event_loopexit(NULL);
 }
 
-
 /* *************************** */
 
-static void queueAddress(HostAddr elem, int forceResolution)
-{
+static void queueAddress(HostAddr elem, int forceResolution) {
   datum key_data, data_data;
   char dataBuf[sizeof(StoredAddress)+4];
   int rc;
@@ -241,16 +239,16 @@ static void queueAddress(HostAddr elem, int forceResolution)
   if (elem.hostFamily == AF_INET) {
     struct in_addr in;
 
-    /* Convert the address in IP dot notation */
     in.s_addr = htonl(elem.Ip4Address.s_addr);
-
-    if(! evdns_base_resolve_reverse(myGlobals.dnsbase, &in, 0, dns_response_callback, cloned))
-      traceEvent(CONST_TRACE_ERROR, "evdns_base_resolve_reverse() failed");
+    if((rc = evdns_resolve_reverse(&in, 0, dns_response_callback, cloned)) != DNS_ERR_NONE) {
+      traceEvent(CONST_TRACE_ERROR, "evdns_resolve_reverse() returned %d", rc);
+    }
   }
 #ifdef INET6
   else if (elem.hostFamily == AF_INET6) {
-    if(! evdns_base_resolve_reverse_ipv6(myGlobals.dnsbase, &elem.Ip6Address, 0, dns_response_callback, cloned))
-      traceEvent(CONST_TRACE_ERROR, "evdns_base_resolve_reverse_ipv6() failed");
+    if((rc = evdns_resolve_reverse_ipv6(&elem.Ip6Address, 0, dns_response_callback, cloned)) != DNS_ERR_NONE) {
+      traceEvent(CONST_TRACE_ERROR, "evdns_resolve_reverse_ipv6() returned %d", rc);
+    }
   }
 #endif
   else {

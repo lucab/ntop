@@ -37,7 +37,7 @@ SUFFIXES    = .so
 # 
 plugindir = $(libdir)/ntop/plugins
 
-INCLUDES = -I.. @INCS@ ${RRD_INC} -I../libevent -I../GeoIP/libGeoIP -I../lua/src
+INCLUDES = -I.. @INCS@ ${RRD_INC}
 
 #
 # The meat for ntop

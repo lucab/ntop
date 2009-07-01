@@ -413,9 +413,8 @@ ntop.h
 #include "GeoIP.h"
 #include "GeoIPCity.h"
 
-/* Libevent header file(s) */
-#include "event.h"
-#include "evdns.h"
+#include <event.h>
+#include <evdns.h>
 
 #ifdef BSD_TEMP
 #define BSD
