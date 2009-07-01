@@ -1164,12 +1164,6 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   sendString("<script type=\"text/javascript\" src=\"/PlotKit/Canvas.js\"></script>\n");
   sendString("<script type=\"text/javascript\" src=\"/PlotKit/SweetCanvas.js\"></script>\n");
 
-  sendString("<link rel=\"stylesheet\" type=\"text/css\" href=\"/yui/fonts/fonts-min.css\" />\n");
-  sendString("<link rel=\"stylesheet\" type=\"text/css\" href=\"/yui/tabview/assets/skins/sam/tabview.css\" />\n");
-  sendString("<script type=\"text/javascript\" src=\"/yui/yahoo-dom-event/yahoo-dom-event.js\"></script>\n");
-  sendString("<script type=\"text/javascript\" src=\"/yui/element/element-beta-min.js\"></script>\n");
-  sendString("<script type=\"text/javascript\" src=\"/yui/tabview/tabview-min.js\"></script>\n");
-  
   sendString("<SCRIPT SRC=\"/functions.js\" TYPE=\"text/javascript\" LANGUAGE=\"javascript\"></SCRIPT>\n");
   sendString("<script type=\"text/javascript\" language=\"javascript\" src=\"/domLib.js\"></script>\n");
   sendString("<script type=\"text/javascript\" language=\"javascript\" src=\"/domTT.js\"></script>\n");
