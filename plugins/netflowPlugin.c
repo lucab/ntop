@@ -148,6 +148,7 @@ static float netflowflowBuffer[MAX_NETFLOW_FLOW_BUFFER];
 static int netflowflowBufferCount;
 static float netflowfmaxTime;
 #endif
+
 #ifdef MAX_NETFLOW_PACKET_BUFFER
 static float netflowpacketBuffer[MAX_NETFLOW_PACKET_BUFFER];
 static int netflowpacketBufferCount;

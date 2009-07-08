@@ -374,3 +374,6 @@ static int rrdcycleBufferInit,
            rrdcycleBufferCount;
 static float rrdcmaxLength;
 #endif
+
+#define RRD_DEFAULT_SPACER_LEN    20
+#define RRD_SHORT_SPACER_LEN      11

@@ -90,7 +90,8 @@ static void statisticsPage(void);
 static void printRRDPluginTrailer(void);
 static void handleRRDHTTPrequest(char* url);
 static char* spacer(char* str, char *tmpStr, int tmpStrLen,
-		    char *metric_name, int metric_name_len);
+		    char *metric_name, int metric_name_len,
+		    int max_spacer_len);
 static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdCounter,
 			char *startTime, char* endTime, char* rrdPrefix);
 static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startTime, char* endTime, char* rrdPrefix, char *mode);
@@ -902,12 +903,12 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     argv[argc++] = buf;
     safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "AREA:ctr#00a000:%s",
 		  spacer(capitalizeInitial(rrdCounter), tmpStr, sizeof(tmpStr),
-			 metric_name, sizeof(metric_name)));
+			 metric_name, sizeof(metric_name), RRD_DEFAULT_SPACER_LEN));
     argv[argc++] = buf1;
 
     if(show_trend) argv[argc++] = "CDEF:smoothed=ctr,1800,TREND";
 
-    argv[argc++] = "GPRINT:ctr:MIN:Min\\: %3.1lf%s\\t";
+    // argv[argc++] = "GPRINT:ctr:MIN:Min\\: %3.1lf%s\\t";
     argv[argc++] = "GPRINT:ctr:MAX:Max\\: %3.1lf%s\\t";
     argv[argc++] = "GPRINT:ctr:AVERAGE:Avg\\: %3.1lf%s\\t";
     argv[argc++] = "GPRINT:ctr:LAST:Last\\: %3.1lf%s\\n";
@@ -1240,7 +1241,8 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
       argv[argc++] = buf[entryId];
 
       safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-		    entryId, rrd_colors[entryId], spacer(rrds[i].label, tmpStr, sizeof(tmpStr), metric_name, sizeof(metric_name)));
+		    entryId, rrd_colors[entryId], 
+		    spacer(rrds[i].label, tmpStr, sizeof(tmpStr), metric_name, sizeof(metric_name), RRD_DEFAULT_SPACER_LEN));
       argv[argc++] = buf1[entryId];
 
       safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %3.1lf%s\\t");
@@ -1581,7 +1583,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
       argv[argc++] = buf0[entryId];
 
       safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-		    entryId, rrd_colors[entryId], spacer(&rrds[i][2], tmpStr, sizeof(tmpStr), metric_name, sizeof(metric_name)));
+		    entryId, rrd_colors[entryId], spacer(&rrds[i][2], tmpStr, sizeof(tmpStr), metric_name, sizeof(metric_name), RRD_DEFAULT_SPACER_LEN));
       argv[argc++] = buf1[entryId];
 
       safe_snprintf(__FILE__, __LINE__, buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Last\\: %8.2lf %s\\t");
@@ -1658,8 +1660,9 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
 /* ******************************* */
 
 static char* spacer(char* str, char *tmpStr, int tmpStrLen,
-		    char *metric_name, int metric_name_len) {
-  int len = strlen(str), i, max_spacer_len=20;
+		    char *metric_name, int metric_name_len,
+		    int max_spacer_len) {
+  int len = strlen(str), i;
   char *token, *token_name, buf[32], debug = 0, *found, *key;
 
   if((strlen(str) > 3) && (!strncmp(str, "IP_", 3))) str += 3;
@@ -2333,7 +2336,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	  argv[argc++] = buf2[entryId];
 
 	  str = spacer(filename, tmpStr, sizeof(tmpStr),
-		       metric_name, sizeof(metric_name));
+		       metric_name, sizeof(metric_name), RRD_DEFAULT_SPACER_LEN);
 
 	  safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
 			"%s:ctr%d%s:%s\t", "AREA",
@@ -2345,7 +2348,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	  do_upside = 1;
 	} else {
 	  str = spacer(filename, tmpStr, sizeof(tmpStr),
-		       metric_name, sizeof(metric_name));
+		       metric_name, sizeof(metric_name), RRD_DEFAULT_SPACER_LEN);
 
 	  safe_snprintf(__FILE__, __LINE__, buf0[entryId], 2*MAX_BUF_LEN,
 			"DEF:my_ctr%d=%s:counter:AVERAGE", entryId, sanitizeRrdPath(path));
