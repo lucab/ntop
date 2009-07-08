@@ -138,16 +138,17 @@ static void queueAddress(HostAddr elem, int forceResolution) {
   accessAddrResMutex("queueAddress");
   
   if(myGlobals.addressQueuedCurrent > 16384) {
+    free(cloned);
     myGlobals.addressUnresolvedDrops++;
   } else {
-  cloned->next = hostAddrList_head;
-  hostAddrList_head = cloned;
-  signalCondvar(&myGlobals.queueAddressCondvar);  
-  myGlobals.addressQueuedCurrent++;
-  if(myGlobals.addressQueuedCurrent > myGlobals.addressQueuedMax)
-    myGlobals.addressQueuedMax = myGlobals.addressQueuedCurrent;
+    cloned->next = hostAddrList_head;
+    hostAddrList_head = cloned;
+    signalCondvar(&myGlobals.queueAddressCondvar);  
+    myGlobals.addressQueuedCurrent++;
+    if(myGlobals.addressQueuedCurrent > myGlobals.addressQueuedMax)
+      myGlobals.addressQueuedMax = myGlobals.addressQueuedCurrent;
   }
-
+  
   releaseAddrResMutex();
 }
 
