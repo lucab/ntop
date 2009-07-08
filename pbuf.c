@@ -836,7 +836,10 @@ void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_in
 
   if(myGlobals.device[actualDeviceId].ipPorts[sport] == NULL) {
     myGlobals.device[actualDeviceId].ipPorts[sport] = (PortCounter*)malloc(sizeof(PortCounter));
-    if(myGlobals.device[actualDeviceId].ipPorts[sport] == NULL) return;
+    if(myGlobals.device[actualDeviceId].ipPorts[sport] == NULL) {
+      releaseMutex(&myGlobals.purgePortsMutex);
+      return;
+    }
     myGlobals.device[actualDeviceId].ipPorts[sport]->port = sport;
     myGlobals.device[actualDeviceId].ipPorts[sport]->sent = 0;
     myGlobals.device[actualDeviceId].ipPorts[sport]->rcvd = 0;
@@ -844,7 +847,10 @@ void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_in
 
   if(myGlobals.device[actualDeviceId].ipPorts[dport] == NULL) {
     myGlobals.device[actualDeviceId].ipPorts[dport] = (PortCounter*)malloc(sizeof(PortCounter));
-    if(myGlobals.device[actualDeviceId].ipPorts[dport] == NULL) return;
+    if(myGlobals.device[actualDeviceId].ipPorts[dport] == NULL) {
+      releaseMutex(&myGlobals.purgePortsMutex);
+      return;
+    }
     myGlobals.device[actualDeviceId].ipPorts[dport]->port = dport;
     myGlobals.device[actualDeviceId].ipPorts[dport]->sent = 0;
     myGlobals.device[actualDeviceId].ipPorts[dport]->rcvd = 0;

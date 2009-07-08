@@ -623,12 +623,6 @@
 #define CONST_PCTG_HIGH_COLOR               "BGCOLOR=#FF3118"
 
 /*
- * How long should we use an entry in the dnsCache database.
- *  Default (in seconds) is 24 hours
- */
-#define CONST_DNSCACHE_LIFETIME             24*3600
-
-/*
  * The number of entries in the logView ring buffer - how many log messages
  * we can display in the GUI.
  */
@@ -917,12 +911,6 @@
  * based on an unknown value.
  */
 #define CONST_UNKNOWN_MTU                   65355
-
-/*
- * Maximum age of the dnsCache.db file before it will be recreated upon ntop
- * restart.
- */
-#define CONST_DNSCACHE_PERMITTED_AGE        15*60
 
 /*
  * Interval to run the (background) fingerprint lookup scan

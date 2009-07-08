@@ -40,6 +40,13 @@ static void updateHostNameInfo(HostAddr addr, char* symbolic, int type);
 /* #define DNS_DEBUG */
 /* #define MDNS_DEBUG  */
 
+typedef struct hostAddrList {
+  HostAddr addr;
+  struct hostAddrList *next;
+} HostAddrList;
+
+static HostAddrList *hostAddrList_head = NULL;
+
 /* **************************************** */
 
 static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDeviceId, int type) {
@@ -113,117 +120,11 @@ static int validDNSName(char *name) {
 
 /* ************************************ */
 
-static void dns_response_callback(int result, char type, int count, int ttl, void *addresses, void *arg) {
-  HostAddr *addr = (HostAddr*)arg;
-  char *symAddr = NULL;
-  char buf[255];
-
-  //traceEvent(CONST_TRACE_WARNING, "dns_response_callback(): result=%d", result);
-
-  if((addr == NULL) || (result != DNS_ERR_NONE))
-    goto out;
-
-  // traceEvent(CONST_TRACE_INFO, "type: %d, count: %d, ttl: %d: ", type, count, ttl);
-
-  switch (type) {
-  case DNS_IPv6_AAAA: {
-#ifdef INET6
-    struct in6_addr *in6_addrs = addresses;
-    int i;
-
-    /* a resolution that's not valid does not help */
-    if (ttl < 0)
-      goto out;
-    for (i = 0; i < count; ++i) {
-      const char *b = inet_ntop(AF_INET6, &in6_addrs[i], buf,sizeof(buf));
-
-      if(b) {
-	/* traceEvent(CONST_TRACE_INFO, "%s ", b); */
-	symAddr = b;
-      } else
-	traceEvent(CONST_TRACE_INFO, "%s ", strerror(errno));
-    }
-#endif
-    // FIX - ADD IPv6 storage
-    break;
-  }
-  case DNS_IPv4_A: {
-    struct in_addr *in_addrs = addresses;
-    int i;
-
-    /* a resolution that's not valid does not help */
-    if (ttl < 0)
-      goto out;
-
-    for (i = 0; i < count; ++i) {
-      symAddr = inet_ntoa(in_addrs[i]);
-      /* traceEvent(CONST_TRACE_INFO, "%s ", rsp); */
-    }
-    break;
-  }
-  case DNS_PTR:
-    /* may get at most one PTR */
-    if (count != 1)
-      goto out;
-
-    symAddr = *(char **)addresses;
-    break;
-  default:
-    goto out;
-  }
-
-  if(symAddr) {
-    StoredAddress storedAddreslones;
-    int len;
-    char keyBuf[LEN_ADDRESS_BUFFER];
-    datum key_data;
-    datum data_data;
-    StoredAddress storedAddress;
-
-    memset(storedAddress.symAddress, 0, sizeof(storedAddress.symAddress));
-    len = min(sizeof(storedAddress.symAddress)-1, strlen(symAddr));
-    memcpy(storedAddress.symAddress, symAddr, len);
-    storedAddress.symAddress[len] = '\0';
-    storedAddress.recordCreationTime = myGlobals.actTime;
-    storedAddress.symAddressType = FLAG_HOST_SYM_ADDR_TYPE_NAME;
-
-    key_data.dptr = _addrtonum(addr, keyBuf, sizeof(keyBuf));
-    key_data.dsize = strlen(keyBuf)+1;
-       
-    data_data.dptr = (void*)&storedAddress;
-    data_data.dsize = sizeof(storedAddress) /* Remember, StoredAddress has 1 byte padding so don't add more here */;
-
-    if(gdbm_store(myGlobals.dnsCacheFile, key_data, data_data, GDBM_REPLACE) != 0)
-      traceEvent(CONST_TRACE_ERROR, "dnsCache error adding '%s', %s", symAddr,
-#if defined(WIN32) && defined(__GNUC__)
-		 "no additional information available"
-#else
-		 gdbm_strerror(gdbm_errno)
-#endif
-		 );
-      
-#ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Added data: '%s'='%s'(%d)",
-	       key_data.dptr,
-	       ((StoredAddress*)data_data.dptr)->symAddress,
-	       ((StoredAddress*)data_data.dptr)->symAddressType);
-#endif
-
-    updateHostNameInfo(*addr, storedAddress.symAddress, storedAddress.symAddressType);
-  }
-
- out:
-  if(addr) free(addr);
-  event_loopexit(NULL);
-}
-
-/* *************************** */
-
 static void queueAddress(HostAddr elem, int forceResolution) {
   datum key_data, data_data;
   char dataBuf[sizeof(StoredAddress)+4];
   int rc;
-  HostAddr *cloned = (HostAddr*)malloc(sizeof(HostAddr));
+  HostAddrList *cloned = (HostAddrList*)malloc(sizeof(HostAddrList));
 
   if(myGlobals.runningPref.numericFlag
      || (cloned == NULL)
@@ -232,31 +133,131 @@ static void queueAddress(HostAddr elem, int forceResolution) {
 	 && (!_pseudoLocalAddress(&elem, NULL, NULL))))
     return;
 
-  memcpy(cloned, &elem, sizeof(HostAddr));
+  memcpy(&cloned->addr, &elem, sizeof(HostAddr));
 
   accessAddrResMutex("queueAddress");
-
-  if (elem.hostFamily == AF_INET) {
-    struct in_addr in;
-
-    in.s_addr = htonl(elem.Ip4Address.s_addr);
-    if((rc = evdns_resolve_reverse(&in, 0, dns_response_callback, cloned)) != DNS_ERR_NONE) {
-      traceEvent(CONST_TRACE_ERROR, "evdns_resolve_reverse() returned %d", rc);
-    }
-  }
-#ifdef INET6
-  else if (elem.hostFamily == AF_INET6) {
-    if((rc = evdns_resolve_reverse_ipv6(&elem.Ip6Address, 0, dns_response_callback, cloned)) != DNS_ERR_NONE) {
-      traceEvent(CONST_TRACE_ERROR, "evdns_resolve_reverse_ipv6() returned %d", rc);
-    }
-  }
-#endif
-  else {
-    traceEvent(CONST_TRACE_WARNING, "Invalid address family (%d) found!",
-	       elem.hostFamily);
+  
+  if(myGlobals.addressQueuedCurrent > 16384) {
+    myGlobals.addressUnresolvedDrops++;
+  } else {
+  cloned->next = hostAddrList_head;
+  hostAddrList_head = cloned;
+  signalCondvar(&myGlobals.queueAddressCondvar);  
+  myGlobals.addressQueuedCurrent++;
+  if(myGlobals.addressQueuedCurrent > myGlobals.addressQueuedMax)
+    myGlobals.addressQueuedMax = myGlobals.addressQueuedCurrent;
   }
 
   releaseAddrResMutex();
+}
+
+/* ************************************ */
+
+void* dequeueAddress(void *_i) {
+  int dqaIndex = (int)((long)_i);
+  HostAddr addr;
+  char keyBuf[LEN_ADDRESS_BUFFER];
+
+  traceEvent(CONST_TRACE_INFO, 
+	     "THREADMGMT[t%lu]: DNSAR(%d): Address resolution thread running",
+             pthread_self(), dqaIndex+1);
+  
+  while(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) {
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Waiting for address to resolve...");
+#endif
+
+    while(hostAddrList_head == NULL) {
+      if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
+      waitCondvar(&myGlobals.queueAddressCondvar);
+    }
+
+    if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
+
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Address resolution started...");
+#endif
+
+    while(hostAddrList_head != NULL) {
+      HostAddrList *elem;
+
+      if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
+
+      accessAddrResMutex("dequeueAddress");
+      if(hostAddrList_head != NULL) {
+	elem = hostAddrList_head;
+	hostAddrList_head = hostAddrList_head->next;
+	if(myGlobals.addressQueuedCurrent > 0) myGlobals.addressQueuedCurrent--;
+      }
+      releaseAddrResMutex();
+
+      if(elem) {
+	struct hostent *he = NULL;
+	int family, size;
+	char theAddr[17];
+#if defined(HAVE_GETHOSTBYADDR_R)
+	struct hostent _hp, *__hp;
+	char buffer[512];	
+#endif
+
+	addrget(&elem->addr, theAddr, &family, &size);
+
+	/* traceEvent(CONST_TRACE_INFO, "About to resolve %s", addrtostr(&elem->addr)); */
+
+#if defined(HAVE_GETHOSTBYADDR_R)
+	if(gethostbyaddr_r((const char*)theAddr, size,
+			   family, &_hp,
+			   buffer, sizeof(buffer),
+			   &__hp, &h_errno) == 0)
+	  he = &_hp;
+	else
+	  he = NULL;
+#else
+	he = gethostbyaddr(theAddr, size, family);
+#endif
+
+	if((he != NULL) && (he->h_name != NULL)) {
+	  char *symAddr = he->h_name;
+	  StoredAddress storedAddreslones;
+	  int len;
+	  StoredAddress storedAddress;
+
+	  memset(storedAddress.symAddress, 0, sizeof(storedAddress.symAddress));
+	  len = min(sizeof(storedAddress.symAddress)-1, strlen(symAddr));
+	  memcpy(storedAddress.symAddress, symAddr, len);
+	  storedAddress.symAddress[len] = '\0';
+	  storedAddress.recordCreationTime = myGlobals.actTime;
+	  storedAddress.symAddressType = FLAG_HOST_SYM_ADDR_TYPE_NAME;
+
+#ifdef DNS_DEBUG
+	  traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Added data: '%s'='%s'(%d)",
+		     key_data.dptr,
+		     ((StoredAddress*)data_data.dptr)->symAddress,
+		     ((StoredAddress*)data_data.dptr)->symAddressType);
+#endif
+
+	  updateHostNameInfo(elem->addr, storedAddress.symAddress, storedAddress.symAddressType);  	  
+	} else {
+	  /* traceEvent(CONST_TRACE_ERROR, "Address resolution failure [%d][%s]", h_errno, hstrerror(h_errno)); */
+	}
+
+	free(elem);
+      }
+    } /* while */
+  } /* endless loop */
+  
+  myGlobals.dequeueAddressThreadId[dqaIndex] = 0;
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Address resolution thread terminated [p%d]",
+             pthread_self(), dqaIndex+1, 
+#ifndef WIN32
+			 getpid()
+#else
+			 0
+#endif
+			 );
+
+  return(NULL);
 }
 
 /* ************************************ */
@@ -363,7 +364,6 @@ char * _addrtostr(HostAddr *addr, char* buf, u_short bufLen) {
 /* ************************************ */
 
 char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen) {
-
   if((addr == NULL) || (buf == NULL))
     return NULL;
 
@@ -386,86 +386,10 @@ char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen) {
 
 /* ******************************* */
 
-int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
-  char keyBuf[LEN_ADDRESS_BUFFER];
-  datum key_data;
-  datum data_data;
-
-  if(buffer == NULL) return(0);
-
-  memset(&keyBuf, 0, sizeof(keyBuf));
-
-    if(addrfull(&hostIpAddress) || addrnull(&hostIpAddress)) {
-    strcpy(buffer, "0.0.0.0");
-    *type = FLAG_HOST_SYM_ADDR_TYPE_IP;
-    return(0);
-  }
-
-  key_data.dptr = _addrtonum(&hostIpAddress,keyBuf, sizeof(keyBuf));
-  key_data.dsize = strlen(key_data.dptr)+1;
-
-  if(myGlobals.dnsCacheFile == NULL) return(0); /* ntop is quitting... */
-
-  data_data = gdbm_fetch(myGlobals.dnsCacheFile, key_data);
-
-  if((data_data.dptr != NULL) && (data_data.dsize == (sizeof(StoredAddress))) ) {
-    StoredAddress *retrievedAddress;
-
-    retrievedAddress = (StoredAddress*)data_data.dptr;
-    *type = retrievedAddress->symAddressType;
-
-#ifdef GDBM_DEBUG
-    traceEvent(CONST_TRACE_INFO, "GDBM_DEBUG: gdbm_fetch(..., {%s, %d}) = %s, age %d",
-               key_data.dptr, key_data.dsize,
-               retrievedAddress->symAddress,
-               myGlobals.actTime - retrievedAddress->recordCreationTime);
-#endif
-
-    if (myGlobals.actTime - retrievedAddress->recordCreationTime < CONST_DNSCACHE_LIFETIME) {
-      safe_snprintf(__FILE__, __LINE__, buffer, MAX_LEN_SYM_HOST_NAME, "%s", retrievedAddress->symAddress);
-    } else {
-        buffer[0] = '\0';
-    }
-
-    free(data_data.dptr);
-  } else {
-    #ifdef GDBM_DEBUG
-    if(data_data.dptr != NULL)
-      traceEvent(CONST_TRACE_WARNING, "GDBM_DEBUG: Dropped data for %s [wrong data size]", keyBuf);
-    else
-      traceEvent(CONST_TRACE_WARNING, "GDBM_DEBUG: Unable to retrieve %s", keyBuf);
-#endif
-
-    buffer[0] = '\0';
-    *type = FLAG_HOST_SYM_ADDR_TYPE_IP;
-    /* It might be that the size of the retrieved data is wrong */
-    if(data_data.dptr != NULL) free(data_data.dptr);
-  }
-
-#ifdef DEBUG
-  {
-    char buf[LEN_ADDRESS_BUFFER];
-    traceEvent(CONST_TRACE_INFO, "fetchAddressFromCache(%s) returned '%s'",
-               _addrtostr(&hostIpAddress, buf, sizeof(buf)), buffer);
-  }
-#endif
-
-  return(1);
-}
-
-/* ******************************* */
-
 /* This function automatically updates the instance name */
 
 void ipaddr2str(HostAddr hostIpAddress, int updateHost) {
-  char buf[MAX_LEN_SYM_HOST_NAME+1] = { '\0' };
-  int type;
-
-  if(fetchAddressFromCache(hostIpAddress, buf, &type)  && (buf[0] != '\0')) {
-    if(updateHost) updateHostNameInfo(hostIpAddress, buf, type);
-  } else {
-    queueAddress(hostIpAddress, !updateHost);
-  }
+  queueAddress(hostIpAddress, !updateHost);
 }
 
 /* ************************************ */

@@ -6496,10 +6496,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "GDBM version", gdbm_version);
 #endif
 
-  printFeatureConfigInfo(textPrintFlag, 
-			 "<A HREF=http://www.monkey.org/~provos/libevent/>LibEvent</A> version", 
-			 (char*)event_get_version());
-
   printFeatureConfigInfo(textPrintFlag, "Embedded Perl API",
 #ifdef HAVE_PERL
 			 "Present"
@@ -6560,6 +6556,13 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",
 		(int)myGlobals.webServerRequestQueueLength);
   printFeatureConfigInfo(textPrintFlag, "WebServer Request Queue", buf);
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[current: %d][max: %d][drops: %d]",
+		(int)myGlobals.addressQueuedCurrent, 
+		(int)myGlobals.addressQueuedMax,
+		(int)myGlobals.addressUnresolvedDrops);
+  printFeatureConfigInfo(textPrintFlag, "DNS Resolution Request Queue", buf);
+
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numDevices);
   printFeatureConfigInfo(textPrintFlag, "Devices (Network Interfaces)", buf);

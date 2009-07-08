@@ -604,8 +604,6 @@ u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
 
   memset(tmpBuf, 0, sizeof(tmpBuf)); /* quiet Valgrind */
 
-  if(myGlobals.dnsCacheFile == NULL) return(-1); /* ntop is quitting... */
-
   if((!myGlobals.runningPref.enablePacketDecoding)
      ||(packetData == NULL) /* packet too short ? */)
     return(transactionId);
@@ -670,6 +668,9 @@ u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
       data_data.dptr = (void*)&addrStore;
       data_data.dsize = sizeof(addrStore);
 
+      // FIX
+      //updateHostNameInfo(elem->addr, storedAddress.symAddress, storedAddress.symAddressType);  	  
+
 #ifdef DNS_SNIFF_DEBUG
       traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: Sniffed DNS response: %s(%d) = %s(t=%d)",
                  key_data.dptr, key_data.dsize,
@@ -677,8 +678,6 @@ u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
                  ((StoredAddress *)data_data.dptr)->recordCreationTime);
 #endif
 
-      if(myGlobals.dnsCacheFile == NULL) return(-1); /* ntop is quitting... */
-      gdbm_store(myGlobals.dnsCacheFile, key_data, data_data, GDBM_REPLACE);
       myGlobals.dnsSniffStoredInCache++;
     }
   }

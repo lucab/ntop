@@ -998,12 +998,6 @@ AC_CHECK_LIB([z], [zlibVersion], [], [
         exit -1
         ])
 
-
-AC_CHECK_LIB([event], [event_get_version], [], [
-        echo "Error! You need to have libevent 1.4.X or better."
-        exit -1
-        ])
-
 # RRD
 if test -d "$RRD_HOME"; then
    AC_MSG_RESULT(checking for RRD home... yes)

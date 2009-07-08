@@ -100,8 +100,6 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
     return;
   }
 
-  initSingleGdbm(&myGlobals.dnsCacheFile,     "dnsCache.db",     spoolDirectory, -1,    NULL);
-
   if(!myGlobals.runningPref.liveMode) {
     initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, FALSE,  &statbuf);
     initSingleGdbm(&myGlobals.fingerprintFile,  "fingerprint.db",  spoolDirectory, FALSE,  &statbuf);
@@ -212,7 +210,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   }
 
   /* Databases */
-  myGlobals.dnsCacheFile = NULL;
   myGlobals.pwFile = NULL;
 
   /* the table of broadcast entries */
@@ -225,7 +222,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.shortDomainName = NULL;
 
   myGlobals.numThreads = 0;            /* # of running threads */
-
+  
 #ifdef HAVE_OPENSSL
   myGlobals.sslInitialized = 0;
   myGlobals.runningPref.sslPort = 0; /* Disabled by default: enabled via -W */

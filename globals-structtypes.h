@@ -2194,7 +2194,7 @@ typedef struct ntopGlobals {
   NtopInterface *device;   /* pointer to the network interfaces table */
 
   /* Database */
-  GDBM_FILE dnsCacheFile, pwFile, prefsFile, macPrefixFile, fingerprintFile;
+  GDBM_FILE pwFile, prefsFile, macPrefixFile, fingerprintFile;
 
   /* the table of broadcast entries */
   HostTraffic *broadcastEntry;
@@ -2248,6 +2248,7 @@ typedef struct ntopGlobals {
   PthreadMutex addressResolutionMutex;
   u_int numDequeueAddressThreads;
   pthread_t dequeueAddressThreadId[MAX_NUM_DEQUEUE_ADDRESS_THREADS];
+  ConditionalVariable queueAddressCondvar;
 
   /*
    * Control mutexes
@@ -2293,6 +2294,8 @@ typedef struct ntopGlobals {
     dnsSniffFailedCount,
     dnsSniffARPACount,
     dnsSniffStoredInCache;
+
+  u_int addressQueuedCurrent, addressQueuedMax, addressUnresolvedDrops;
 
 #ifdef PARM_USE_HOST
   u_long  numResolvedFromHostAddresses;

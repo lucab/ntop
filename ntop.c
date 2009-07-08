@@ -859,7 +859,21 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 		  myGlobals.scanIdleThreadId != 0 ? " SIH" : "",
 		  myGlobals.handleWebConnectionsThreadId != 0 ? " WEB" : "");
 #endif
+  }
 
+  for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
+    if(myGlobals.dequeueAddressThreadId[i] != 0) {
+      if(!do_join) {
+        safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), " DNSAR%d", i+1);
+        safe_strncat(buf, sizeofbuf, buf2);
+      } else {
+        /* Wake up thread */
+        signalCondvar(&myGlobals.queueAddressCondvar);
+        traceEvent(CONST_TRACE_INFO, "Joining thread DNSAR%d", i+1);
+        if(joinThread(&myGlobals.dequeueAddressThreadId[i]) != 0)
+          traceEvent(CONST_TRACE_INFO, "joinThread() returned %s", strerror(errno));
+      }
+    }
   }
 
   if(myGlobals.allDevs != NULL) {

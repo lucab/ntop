@@ -2927,35 +2927,6 @@ char *strtok_r(char *s, const char *delim, char **save_ptr) {
 
 /* ********************************** */
 
-/* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
-
-int getSniffedDNSName(char *hostNumIpAddress,
-		      char *name, int maxNameLen) {
-  int found = 0;
-
-  name[0] = 0;
-
-  if((hostNumIpAddress[0] != '\0') && myGlobals.dnsCacheFile) {
-    datum key;
-    datum data;
-
-    key.dptr = hostNumIpAddress;
-    key.dsize = strlen(key.dptr)+1;
-
-    data = gdbm_fetch(myGlobals.dnsCacheFile, key);
-
-    if(data.dptr != NULL) {
-      xstrncpy(name, data.dptr, maxNameLen);
-      free(data.dptr);
-      found = 1;
-    }
-  }
-
-  return(found);
-}
-
-/* ******************************** */
-
 char *strtolower(char *s) {
   while (*s) {
     *s=tolower(*s);

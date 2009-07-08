@@ -3048,23 +3048,8 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     strncpy(el->hostNumIpAddress,
 	    _addrtostr(&el->hostIpAddress, buf, sizeof(buf)),
 	    sizeof(el->hostNumIpAddress));
-    if(myGlobals.runningPref.numericFlag == 0) {
-      fetchAddressFromCache(el->hostIpAddress, el->hostResolvedName, &type);
 
-      el->hostResolvedNameType = type;
-      if((strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0) || (el->hostResolvedName[0] == '\0')) {
-        if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) {
-          int i;
-
-          for(i=0; i<strlen(sniffedName); i++) {
-	    if(isupper(sniffedName[i])) 
-	      sniffedName[i] = tolower(sniffedName[i]);
-	  }
-
-          setResolvedName(el, sniffedName, FLAG_HOST_SYM_ADDR_TYPE_IP);
-        }
-      }
-    }
+    // FIX -- Update address
   } else if (theSerial.serialType == SERIAL_FC) {
     memcpy ((u_int8_t *)&el->fcCounters->hostFcAddress,
             (u_int8_t *)&theSerial.value.fcSerial.fcAddress,
@@ -3510,27 +3495,23 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   buf1[0]=0;
-  if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) {
-    if(el->hostResolvedName[0] == '\0' || strcmp(sniffedName, el->hostResolvedName))
-      safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), " (%s)", sniffedName);
-  }
 
   if((el->hostResolvedName[0] != '\0') && (strcmp(el->hostResolvedName, el->hostNumIpAddress))) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
-		  "TITLE=\"Link to web server on host, if available\" class=external>%s %s</A>\n",
+		  "TITLE=\"Link to web server on host, if available\" class=external>%s</A>\n",
 		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName,
-		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName, buf1);
+		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName);
 
     safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s", el->hostResolvedName);
   } else if(el->hostNumIpAddress[0] != '\0') {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
 		  " <A HREF=\"http://%s%s%s/\" TARGET=\"_blank\" "
-		  "TITLE=\"Link to web server on host, if available\" class=tooltip>%s %s</A>\n",
+		  "TITLE=\"Link to web server on host, if available\" class=tooltip>%s</A>\n",
 		  el->hostIpAddress.hostFamily == AF_INET6 ? "[" : "",
 		  el->hostNumIpAddress,
 		  el->hostIpAddress.hostFamily == AF_INET6 ? "]" : "",
-		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostNumIpAddress, buf1);
+		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostNumIpAddress);
 
     safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s", 
 		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostNumIpAddress);

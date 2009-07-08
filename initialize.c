@@ -114,27 +114,6 @@ void initIPServices(void) {
 
   traceEvent(CONST_TRACE_NOISY, "Initializing IP services");
 
-  event_init();
-
-  sscanf(event_get_version(), "%d.%d", &major, &minor);
-
-  if(minor < 4) {
-    traceEvent(CONST_TRACE_ERROR, 
-	       "You are using libevent %d whereas ntop needs at least v1.4",
-	       event_get_version());
-    traceEvent(CONST_TRACE_ERROR, 
-	       "Due to a libevent bug with IPv6 address resolution");
-traceEvent(CONST_TRACE_ERROR, 
-	   "See http://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg408382.html");
-     traceEvent(CONST_TRACE_ERROR, 
-		"Please rebuild ntop against a newer libevent version");
-   exit(0);
-  }
-
-  if((rc = evdns_init()) != DNS_ERR_NONE) {
-    traceEvent(CONST_TRACE_ERROR, "evdns_init() returned %d", rc);
-  }
-
   /* Let's count the entries first */
   numSlots = 0;
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
@@ -577,7 +556,7 @@ void initSingleGdbm(GDBM_FILE *database,
 		    char *dbName, char *directory,
 		    int doUnlink, struct stat *statbuf) {
   char tmpBuf[200], theDate[48];
-  time_t        st_time, now;
+  time_t st_time, now;
   struct tm t;
   int d;
 
@@ -630,7 +609,7 @@ void initSingleGdbm(GDBM_FILE *database,
 		   theDate,
 		   d = difftime(now, st_time));
 
-	if(d > CONST_DNSCACHE_PERMITTED_AGE) {
+	if(d > (15 * 60)) {
 	  traceEvent(CONST_TRACE_INFO, "...older, will recreate it");
 	  doUnlink = TRUE;
 	} else {
@@ -711,10 +690,6 @@ void reinitMutexes (void) {
 
   createMutex(&myGlobals.securityItemsMutex);
   createMutex(&myGlobals.hostsHashLockMutex);
-
-  if(myGlobals.runningPref.numericFlag == 0) {
-    createMutex(&myGlobals.addressResolutionMutex);
-  }
 }
 #endif /* HAVE_PTHREAD_ATFORK */
 
@@ -752,6 +727,25 @@ void initThreads(void) {
   createThread(&myGlobals.scanIdleThreadId, scanIdleLoop, NULL);
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SIH: Started thread for idle hosts detection",
              (long)myGlobals.scanIdleThreadId);
+
+  if(myGlobals.runningPref.numericFlag == 0) {
+   createMutex(&myGlobals.addressResolutionMutex);
+ 
+#if defined(HAVE_GETHOSTBYADDR_R)
+   myGlobals.numDequeueAddressThreads = MAX_NUM_DEQUEUE_ADDRESS_THREADS;
+#else
+   myGlobals.numDequeueAddressThreads = 1;
+#endif
+
+    /*
+     * Create the thread (5) - DNSAR - DNS Address Resolution - optional
+     */
+    for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
+      createThread(&myGlobals.dequeueAddressThreadId[i], dequeueAddress, (char*)((long)i));
+      traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Started thread for DNS address resolution",
+                 (long)myGlobals.dequeueAddressThreadId[i], i+1);
+    }
+  }
 
 #ifdef MAKE_WITH_SSLWATCHDOG
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME

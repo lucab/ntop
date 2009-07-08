@@ -2847,9 +2847,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	    tmpName3 = myGlobals.separator;
 	  }
 
-	  if(!addrnull(&el->hostIpAddress)
-	     && (getSniffedDNSName(el->hostNumIpAddress,
-				   sniffedName, sizeof(sniffedName)))) {
+	  if(!addrnull(&el->hostIpAddress)) {
 #ifdef DEBUG
 	    traceEvent(CONST_TRACE_INFO, "%s <=> %s [%s/%s]",
 		       el->hostNumIpAddress, sniffedName,
