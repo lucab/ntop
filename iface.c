@@ -380,10 +380,10 @@ struct iface_handler *iface_new(void) {
       in6_cpy(&it->af.inet6.addr, &addr);
       it->af.inet6.prefixlen = plen;
       it->next = NULL;
-      if (ii == NULL){
+      if(ii == NULL) {
 	hdlr->if_list = itf;
 	hdlr->addr_list = it;
-      }else {
+      } else {
 	ii->next = itf;
       }
       ii = itf;
@@ -395,7 +395,6 @@ struct iface_handler *iface_new(void) {
  failed:
   iface_destroy(hdlr);
   return NULL;
-
 }
 #else
 

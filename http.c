@@ -2228,7 +2228,6 @@ static int returnHTTPPage(char* pageName,
       if(db_val != NULL) free(db_val);
       return(0);
     }
-
   } else {
       for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
 	  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
@@ -2271,6 +2270,7 @@ static int returnHTTPPage(char* pageName,
 		safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Date: %s\r\n", theDate);
 		sendString(tmpStr);
 		sendString("Connection: close\r\n");
+		free(pageURI);
 		return(0);
 	      }
 	    }
