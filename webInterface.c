@@ -6557,12 +6557,17 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 		(int)myGlobals.webServerRequestQueueLength);
   printFeatureConfigInfo(textPrintFlag, "WebServer Request Queue", buf);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[current: %d][max: %d][drops: %d]",
-		(int)myGlobals.addressQueuedCurrent, 
-		(int)myGlobals.addressQueuedMax,
-		(int)myGlobals.addressUnresolvedDrops);
-  printFeatureConfigInfo(textPrintFlag, "DNS Resolution Request Queue", buf);
-
+  if(!myGlobals.runningPref.numericFlag) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[current: %d][max: %d][drops: %d]",
+		  (int)myGlobals.addressQueuedCurrent, 
+		  (int)myGlobals.addressQueuedMax,
+		  (int)myGlobals.addressUnresolvedDrops);
+    printFeatureConfigInfo(textPrintFlag, "DNS Resolution Request Queue", buf);
+    
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[resolved: %u][failed: %u]",
+		  myGlobals.resolvedAddresses, myGlobals.failedResolvedAddresses);
+    printFeatureConfigInfo(textPrintFlag, "DNS Resolved Addresses", buf);
+  }
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numDevices);
   printFeatureConfigInfo(textPrintFlag, "Devices (Network Interfaces)", buf);

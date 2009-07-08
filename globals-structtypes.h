@@ -2295,7 +2295,7 @@ typedef struct ntopGlobals {
     dnsSniffARPACount,
     dnsSniffStoredInCache;
 
-  u_int addressQueuedCurrent, addressQueuedMax, addressUnresolvedDrops;
+  u_int addressQueuedCurrent, addressQueuedMax, addressUnresolvedDrops, resolvedAddresses, failedResolvedAddresses;
 
 #ifdef PARM_USE_HOST
   u_long  numResolvedFromHostAddresses;

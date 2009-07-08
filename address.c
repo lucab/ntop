@@ -219,8 +219,10 @@ void* dequeueAddress(void *_i) {
 
 	if((he != NULL) && (he->h_name != NULL)) {
 	  updateHostNameInfo(elem->addr, he->h_name, FLAG_HOST_SYM_ADDR_TYPE_NAME);
+	  accessAddrResMutex("dequeueAddress"); myGlobals.resolvedAddresses++; releaseAddrResMutex();
 	} else {
 	  /* traceEvent(CONST_TRACE_ERROR, "Address resolution failure [%d][%s]", h_errno, hstrerror(h_errno)); */
+	  accessAddrResMutex("dequeueAddress"); myGlobals.failedResolvedAddresses++; releaseAddrResMutex();
 	}
 
 	free(elem);
