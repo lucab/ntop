@@ -218,26 +218,7 @@ void* dequeueAddress(void *_i) {
 #endif
 
 	if((he != NULL) && (he->h_name != NULL)) {
-	  char *symAddr = he->h_name;
-	  StoredAddress storedAddreslones;
-	  int len;
-	  StoredAddress storedAddress;
-
-	  memset(storedAddress.symAddress, 0, sizeof(storedAddress.symAddress));
-	  len = min(sizeof(storedAddress.symAddress)-1, strlen(symAddr));
-	  memcpy(storedAddress.symAddress, symAddr, len);
-	  storedAddress.symAddress[len] = '\0';
-	  storedAddress.recordCreationTime = myGlobals.actTime;
-	  storedAddress.symAddressType = FLAG_HOST_SYM_ADDR_TYPE_NAME;
-
-#ifdef DNS_DEBUG
-	  traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Added data: '%s'='%s'(%d)",
-		     key_data.dptr,
-		     ((StoredAddress*)data_data.dptr)->symAddress,
-		     ((StoredAddress*)data_data.dptr)->symAddressType);
-#endif
-
-	  updateHostNameInfo(elem->addr, storedAddress.symAddress, storedAddress.symAddressType);  	  
+	  updateHostNameInfo(elem->addr, he->h_name, FLAG_HOST_SYM_ADDR_TYPE_NAME);
 	} else {
 	  /* traceEvent(CONST_TRACE_ERROR, "Address resolution failure [%d][%s]", h_errno, hstrerror(h_errno)); */
 	}
