@@ -4691,6 +4691,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
     updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent, 0);
     updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd, 0);
 
+#ifdef ENABLE_EFFICIENCY
     if(myGlobals.runningPref.calculateEfficiency) {
       Counter c, diff;
 
@@ -4732,8 +4733,10 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	}
       }	
     }
+#endif
 
     if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
+#ifdef ENABLE_EFFICIENCY
       if(myGlobals.runningPref.calculateEfficiency) {
 	if(el->pktSent.value > 0) {
 	  Counter c, diff = el->pktSent.value - el->lastEfficiencyPktSent.value;
@@ -4757,6 +4760,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	  }
 	}
       }
+#endif
 
       updateTrafficCounter(rrdPath, "pktDuplicatedAckSent", &el->pktDuplicatedAckSent, 0);
       updateTrafficCounter(rrdPath, "pktDuplicatedAckRcvd", &el->pktDuplicatedAckRcvd, 0);
@@ -4860,6 +4864,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->rcvdLoc.value+
 			    el->protoIPTrafficInfos[j]->rcvdFromRem.value, 0);
 
+#ifdef ENABLE_EFFICIENCY
 	      if(myGlobals.runningPref.calculateEfficiency) {
 		if(el->protoIPTrafficInfos[j]->pktSent.value > 0) {
 		  Counter c, diff;
@@ -4893,6 +4898,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 		  }
 		}
 	      }
+#endif
 	    }
 	  }
 	}

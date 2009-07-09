@@ -160,7 +160,9 @@ static struct option const long_options[] = {
   { "pcap-file-list",                   required_argument, NULL, 151 },
   { "known-subnets",                    required_argument, NULL, 152 },
   { "live",                             no_argument,       NULL, 153 },
+#ifdef ENABLE_EFFICIENCY
   { "enable-efficiency",                no_argument,       NULL, 154 },
+#endif
 
   {NULL, 0, NULL, 0}
 };
@@ -759,9 +761,11 @@ int parseOptions(int argc, char* argv[]) {
       myGlobals.runningPref.liveMode = 1;
       break;
 
+#ifdef ENABLE_EFFICIENCY
     case 154:
       myGlobals.runningPref.calculateEfficiency = 1;
       break;
+#endif
 
     default:
       printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);

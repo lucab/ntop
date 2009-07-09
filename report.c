@@ -1931,16 +1931,18 @@ void printHostsTraffic(int reportTypeReq,
 			  rcvdPercent, myGlobals.separator);
 	    sendString(buf);
 
-	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	      if(el->protoIPTrafficInfos[i])
-		totalIPTraffic += el->protoIPTrafficInfos[i]->rcvdLoc.value+
-		  el->protoIPTrafficInfos[i]->rcvdFromRem.value;
-	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			    el->protoIPTrafficInfos[i] ?
-			    formatBytes(el->protoIPTrafficInfos[i]->rcvdLoc.value+
-					el->protoIPTrafficInfos[i]->rcvdFromRem.value, 1,
-					formatBuf, sizeof(formatBuf)) : "0");
-	      sendString(buf);
+	    if(el->protoIPTrafficInfos) {
+	      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+		if(el->protoIPTrafficInfos[i])
+		  totalIPTraffic += el->protoIPTrafficInfos[i]->rcvdLoc.value+
+		    el->protoIPTrafficInfos[i]->rcvdFromRem.value;
+		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			      el->protoIPTrafficInfos[i] ?
+			      formatBytes(el->protoIPTrafficInfos[i]->rcvdLoc.value+
+					  el->protoIPTrafficInfos[i]->rcvdFromRem.value, 1,
+					  formatBuf, sizeof(formatBuf)) : "0");
+		sendString(buf);
+	      }
 	    }
 
 	    /* Rounding may cause troubles */
@@ -1964,17 +1966,19 @@ void printHostsTraffic(int reportTypeReq,
 			  sentPercent, myGlobals.separator);
 	    sendString(buf);
 
-	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	      if(el->protoIPTrafficInfos[i])
-		totalIPTraffic += el->protoIPTrafficInfos[i]->sentLoc.value+
-		  el->protoIPTrafficInfos[i]->sentRem.value;
-
-	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			    el->protoIPTrafficInfos[i] ?
-			    formatBytes(el->protoIPTrafficInfos[i]->sentLoc.value+
-					el->protoIPTrafficInfos[i]->sentRem.value, 1,
-					formatBuf, sizeof(formatBuf)) : "0");
-	      sendString(buf);
+	    if(el->protoIPTrafficInfos) {
+	      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+		if(el->protoIPTrafficInfos[i])
+		  totalIPTraffic += el->protoIPTrafficInfos[i]->sentLoc.value+
+		    el->protoIPTrafficInfos[i]->sentRem.value;
+		
+		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			      el->protoIPTrafficInfos[i] ?
+			      formatBytes(el->protoIPTrafficInfos[i]->sentLoc.value+
+					  el->protoIPTrafficInfos[i]->sentRem.value, 1,
+					  formatBuf, sizeof(formatBuf)) : "0");
+		sendString(buf);
+	      }
 	    }
 
 	    /* Rounding may cause troubles */
@@ -1998,20 +2002,22 @@ void printHostsTraffic(int reportTypeReq,
 			  totPercent, myGlobals.separator);
 	    sendString(buf);
 
-	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	      if(el->protoIPTrafficInfos[i])
-		totalIPTraffic += el->protoIPTrafficInfos[i]->sentLoc.value+
-		  el->protoIPTrafficInfos[i]->rcvdLoc.value+
-		  el->protoIPTrafficInfos[i]->sentRem.value+
-		  el->protoIPTrafficInfos[i]->rcvdFromRem.value;
-	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			    el->protoIPTrafficInfos[i] ?
-			    formatBytes(el->protoIPTrafficInfos[i]->sentLoc.value+
-					el->protoIPTrafficInfos[i]->rcvdLoc.value+
-					el->protoIPTrafficInfos[i]->sentRem.value+
-					el->protoIPTrafficInfos[i]->rcvdFromRem.value, 1,
-					formatBuf, sizeof(formatBuf)) : "0");
-	      sendString(buf);
+	    if(el->protoIPTrafficInfos) {
+	      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+		if(el->protoIPTrafficInfos[i])
+		  totalIPTraffic += el->protoIPTrafficInfos[i]->sentLoc.value+
+		    el->protoIPTrafficInfos[i]->rcvdLoc.value+
+		    el->protoIPTrafficInfos[i]->sentRem.value+
+		    el->protoIPTrafficInfos[i]->rcvdFromRem.value;
+		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			      el->protoIPTrafficInfos[i] ?
+			      formatBytes(el->protoIPTrafficInfos[i]->sentLoc.value+
+					  el->protoIPTrafficInfos[i]->rcvdLoc.value+
+					  el->protoIPTrafficInfos[i]->sentRem.value+
+					  el->protoIPTrafficInfos[i]->rcvdFromRem.value, 1,
+					  formatBuf, sizeof(formatBuf)) : "0");
+		sendString(buf);
+	      }
 	    }
 
 	    /* Rounding may cause troubles */

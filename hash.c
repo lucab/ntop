@@ -1136,7 +1136,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       if(myGlobals.runningPref.numericFlag == 0)
 	ipaddr2str(el->hostIpAddress, 1);
 
-      getHostAS(el);
+      /* getHostAS(el); */
     } else {
       /* This is a new entry and hostIpAddress was NOT set.  Fill in MAC address, if we have it */
       if(symEthName[0] != '\0') {

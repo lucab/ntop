@@ -850,18 +850,21 @@ typedef struct hostTraffic {
   struct timeval   minLatency, maxLatency;
   GeoIPRecord      *geo_ip;
 
-  TrafficCounter   greSent, greRcvd, greEfficiencySent, greEfficiencyRcvd,
-    grePktSent, grePktRcvd, lastGrePktSent, lastGrePktRcvd;
-  TrafficCounter   ipsecSent, ipsecRcvd, ipsecEfficiencySent, ipsecEfficiencyRcvd,
-    ipsecPktSent, ipsecPktRcvd, lastIpsecPktSent, lastIpsecPktRcvd;
+#ifdef ENABLE_EFFICIENCY
+  TrafficCounter greEfficiencySent, greEfficiencyRcvd, ipsecEfficiencySent, ipsecEfficiencyRcvd,
+    efficiencySent, efficiencyRcvd, lastEfficiencyPktSent, lastEfficiencyPktRcvd;
+#endif
+
+  TrafficCounter   greSent, greRcvd, grePktSent, grePktRcvd, lastGrePktSent, lastGrePktRcvd;
+  TrafficCounter   ipsecSent, ipsecRcvd, ipsecPktSent, ipsecPktRcvd, lastIpsecPktSent, lastIpsecPktRcvd;
 
   NonIPTraffic     *nonIPTraffic;
   NonIpProtoTrafficInfo *nonIpProtoTrafficInfos; /* Info about further non IP protos */
 
   fd_set           flags;
   TrafficCounter   pktSent, pktRcvd, pktSentSession, pktRcvdSession,
-    pktDuplicatedAckSent, pktDuplicatedAckRcvd, efficiencySent, efficiencyRcvd;
-  TrafficCounter   lastThptPktSent, lastThptPktRcvd, lastEfficiencyPktSent, lastEfficiencyPktRcvd;
+    pktDuplicatedAckSent, pktDuplicatedAckRcvd;
+  TrafficCounter   lastThptPktSent, lastThptPktRcvd;
   TrafficCounter   pktBroadcastSent, bytesBroadcastSent;
   TrafficCounter   pktMulticastSent, bytesMulticastSent,
     pktMulticastRcvd, bytesMulticastRcvd;
@@ -2084,7 +2087,10 @@ typedef struct _userPref {
   u_int     maxNumHashEntries;   /* -x */
   u_int     maxNumSessions;      /* -X */
   u_int8_t  liveMode;            /* --live */
+
+#ifdef ENABLE_EFFICIENCY
   u_int8_t  calculateEfficiency; /* --enable-efficiency */
+#endif
   
    /* SQL Database */
   char    sqlDbConfig[64];

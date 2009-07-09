@@ -1043,7 +1043,9 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     incrementHostTrafficCounter(srcHost, grePktRcvd, record->rcvdPkts);
     incrementHostTrafficCounter(dstHost, grePktSent, record->rcvdPkts);
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].greBytes, total_bytes);
+#ifdef ENABLE_EFFICIENCY
     updateGreEfficiency(srcHost, dstHost, record->sentPkts, record->sentOctets, actualDeviceId);
+#endif
     break;
 
   case IPPROTO_IPSEC_ESP:
@@ -1059,7 +1061,9 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     incrementHostTrafficCounter(srcHost, ipsecPktRcvd, record->rcvdPkts);
     incrementHostTrafficCounter(dstHost, ipsecPktSent, record->rcvdPkts);
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipsecBytes, total_bytes);
+#ifdef ENABLE_EFFICIENCY
     updateIpsecEfficiency(srcHost, dstHost, record->sentPkts, record->sentOctets, actualDeviceId);
+#endif
     break;
 
   default:
