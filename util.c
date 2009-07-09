@@ -5835,6 +5835,7 @@ static void updateGeoIP(HostTraffic *el) {
 	  name = strchr(rsp, ' ');
 	  el->hostAS = atoi(&rsp[2]);
 	  if(name) el->hostASDescr = strdup(&name[1]);
+	  free(rsp);
 	}
       }
     }
