@@ -84,6 +84,8 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 static void updateHostNameInfo(HostAddr addr, char* symbolic, int type) {
   int i;
 
+  traceEvent(CONST_TRACE_ERROR, "%s = %s ", addrtostr(&addr), symbolic);
+
   for(i=0; i<myGlobals.numDevices; i++) {
     if(!myGlobals.device[i].virtualDevice)
       updateDeviceHostNameInfo(addr, symbolic, i, type);

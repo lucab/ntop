@@ -734,6 +734,16 @@ if test ".${ac_cv_header_gdbm_h}" != ".yes" ||
     AC_MSG_ERROR(Unable to continue... aborting ./configure)
 fi
 
+dnl> FastBit
+AC_CHECK_HEADERS([capi.h])
+ if test "x$ac_cv_header_capi_h" = "xyes"; then
+  AC_CHECK_LIB([fastbit], [fastbit_init])
+  if test "x$ac_cv_lib_fastbit_fastbit_init" = "xyes"; then
+    AC_DEFINE_UNQUOTED(HAVE_FASTBIT, 1, [use fastbit])
+ fi
+fi
+
+
 dnl> Pattern matching
 dnl>
 AC_CHECK_LIB(pcre, pcre_refcount)
