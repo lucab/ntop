@@ -199,12 +199,6 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
       case FLAG_P2P_KAZAA:
 	idx = myGlobals.KazaaIdx;
 	break;
-      case FLAG_P2P_WINMX:
-	idx = myGlobals.WinMXIdx;
-	break;
-      case FLAG_P2P_DIRECTCONNECT:
-	idx = myGlobals.DirectConnectIdx;
-	break;
       case FLAG_P2P_BITTORRENT:
 	idx = myGlobals.BitTorrentIdx;
 	break;

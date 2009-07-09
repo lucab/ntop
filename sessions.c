@@ -1097,72 +1097,6 @@ static void handleMsnMsgrSession (const struct pcap_pkthdr *h,
 
 /* *********************************** */
 
-static void handleWinMxSession (const struct pcap_pkthdr *h,
-                                HostTraffic *srcHost, u_short sport,
-                                HostTraffic *dstHost, u_short dport,
-                                u_int packetDataLength, u_char* packetData,
-                                IPSession *theSession, int actualDeviceId) {
-  u_char *rcStr;
-
-  if (((theSession->bytesProtoSent.value == 3    /* GET */)  &&
-       (theSession->bytesProtoRcvd.value <= 1 /* 1 */))
-      || ((theSession->bytesProtoSent.value == 4 /* SEND */) &&
-	  (theSession->bytesProtoRcvd.value <= 1 /* 1 */))) {
-    char *user, *strtokState, *strtokState1, *row, *file;
-    int i, begin=0;
-
-    theSession->isP2P = FLAG_P2P_WINMX;
-
-    if ((rcStr = (u_char*)malloc(packetDataLength+1)) == NULL) {
-      traceEvent (CONST_TRACE_WARNING, "handleWinMxSession: Unable to "
-		  "allocate memory, WINMX Session handling incomplete\n");
-      return;
-    }
-    memcpy(rcStr, packetData, packetDataLength);
-    rcStr[packetDataLength] = '\0';
-
-    row = strtok_r((char*)rcStr, "\"", &strtokState);
-
-    if(row != NULL) {
-      user = strtok_r(row, "_", &strtokState1);
-      file = strtok_r(NULL, "\"", &strtokState);
-
-      if((user != NULL) && (file != NULL)) {
-	for(i=0; file[i] != '\0'; i++) {
-	  if(file[i] == '\\') begin = i;
-	}
-
-	begin++;
-	file = &file[begin];
-	if(strlen(file) > 64) file[strlen(file)-64] = '\0';
-
-#ifdef P2P_DEBUG
-	traceEvent(CONST_TRACE_INFO, "WinMX: %s->%s [%s][%s]",
-		   srcHost->hostNumIpAddress,
-		   dstHost->hostNumIpAddress,
-		   user, file);
-#endif
-
-	if(theSession->bytesProtoSent.value == 3) {
-	  /* GET */
-	  updateFileList(file,  BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
-	  updateFileList(file,  BITFLAG_P2P_UPLOAD_MODE,   dstHost);
-	  updateHostUsers(user, BITFLAG_P2P_USER, srcHost);
-	} else {
-	  /* SEND */
-	  updateFileList(file,  BITFLAG_P2P_UPLOAD_MODE,   srcHost);
-	  updateFileList(file,  BITFLAG_P2P_DOWNLOAD_MODE, dstHost);
-	  updateHostUsers(user, BITFLAG_P2P_USER, dstHost);
-	}
-      }
-    }
-
-    free(rcStr);
-  }
-}
-
-/* *********************************** */
-
 static void handleGnutellaSession(const struct pcap_pkthdr *h,
 				  HostTraffic *srcHost, u_short sport,
                                    HostTraffic *dstHost, u_short dport,
@@ -2243,10 +2177,6 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
       handleGnutellaSession(h, srcHost, sport, dstHost, dport,
 			     packetDataLength, packetData, theSession,
 			     actualDeviceId);
-    } else if((dport == IP_TCP_PORT_WINMX) && (packetDataLength > 0)) {
-      handleWinMxSession(h, srcHost, sport, dstHost, dport,
-			  packetDataLength, packetData, theSession,
-			  actualDeviceId);
     } else if (((sport == IP_TCP_PORT_MSMSGR) ||
 		(dport == IP_TCP_PORT_MSMSGR))
 	       && (packetDataLength > 0)) {
@@ -2297,33 +2227,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	memcpy(rcStr, packetData, len);
 	rcStr[len-1] = '\0';
 
-	/* See dcplusplus.sourceforge.net */
-	if(portRange(sport, dport, 411, 412)
-	   || (!strncmp((char*)rcStr, "$Connect", 8))
-	   || (!strncmp((char*)rcStr, "$Direction", 10))
-	   || (!strncmp((char*)rcStr, "$Hello", 6))
-	   || (!strncmp((char*)rcStr, "$Key", 4))
-	   || (!strncmp((char*)rcStr, "$Lock", 5))
-	   || (!strncmp((char*)rcStr, "$MyInfo", 7))
-	   || (!strncmp((char*)rcStr, "$Pin", 4))
-	   || (!strncmp((char*)rcStr, "$Quit", 5))
-	   || (!strncmp((char*)rcStr, "$Send", 5))
-	   || (!strncmp((char*)rcStr, "$SR", 3))
-	   || (!strncmp((char*)rcStr, "$Search", 7))) {
-	  theSession->isP2P = FLAG_P2P_DIRECTCONNECT;
-	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
-	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
-	} else if(!strncmp((char*)rcStr, "$MyNick", 7)) {
-	  theSession->isP2P = FLAG_P2P_DIRECTCONNECT;
-	  updateHostUsers(strtok((char*)&rcStr[8], "|"), BITFLAG_P2P_USER, srcHost);
-	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
-	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
-	} else if(!strncmp((char*)rcStr, "$Get", 4)) {
-	  char *file = strtok((char*)&rcStr[5], "$");
-	  theSession->isP2P = FLAG_P2P_DIRECTCONNECT;
-	  updateFileList(file, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
-	  updateFileList(file, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
-	} else if(portRange(sport, dport, 4661, 4665)
+	if(portRange(sport, dport, 4661, 4665)
 		  || (rcStr[0] == 0xE3) || (rcStr[0] == 0xC5)) {
 	  /* Skype uses the eDonkey protocol so we must male sure that
 	     we don't mix them */

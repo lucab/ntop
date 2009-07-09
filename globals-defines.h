@@ -1806,14 +1806,11 @@
  */
 #define FLAG_P2P_GNUTELLA                   1
 #define FLAG_P2P_KAZAA                      2
-#define FLAG_P2P_WINMX                      3
-#define FLAG_P2P_DIRECTCONNECT              4
 /* new */
-#define FLAG_P2P_EDONKEY                    5
-#define FLAG_P2P_FASTTRACK                  6
-#define FLAG_P2P_BITTORRENT                 7
-#define FLAG_P2P_OTHER_PROTOCOL             8
-#define FLAG_VOIP                           9
+#define FLAG_P2P_EDONKEY                    3
+#define FLAG_P2P_BITTORRENT                 4
+#define FLAG_P2P_OTHER_PROTOCOL             5
+#define FLAG_VOIP                           6
 
 #define UNKNOWN_P2P_FILE                    "&lt;unknown&nbsp;file&gt;"
 
