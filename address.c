@@ -84,8 +84,10 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 static void updateHostNameInfo(HostAddr addr, char* symbolic, int type) {
   int i;
 
-  if(addr.hostFamily == AF_INET && addr.addr._hostIp4Address.s_addr == 0)
+#if 0  
+  if(!strcmp(symbolic, "jake"))
     traceEvent(CONST_TRACE_ERROR, "%s = %s ", addrtostr(&addr), symbolic);
+#endif
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(!myGlobals.device[i].virtualDevice)
@@ -187,6 +189,12 @@ void* dequeueAddress(void *_i) {
 
       if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
 
+      /*
+	Make sure that elem is not set if there's not address 
+	to resolve
+      */
+      elem = NULL;
+
       accessAddrResMutex("dequeueAddress");
       if(hostAddrList_head != NULL) {
 	elem = hostAddrList_head;
@@ -198,12 +206,13 @@ void* dequeueAddress(void *_i) {
       if(elem) {
 	struct hostent *he = NULL;
 	int family, size;
-	char theAddr[17];
+	char theAddr[32];
 #if defined(HAVE_GETHOSTBYADDR_R)
 	struct hostent _hp, *__hp;
 	char buffer[512];	
 #endif
 
+	memset(theAddr, 0, sizeof(theAddr));
 	addrget(&elem->addr, theAddr, &family, &size);
 
 	/* traceEvent(CONST_TRACE_INFO, "About to resolve %s", addrtostr(&elem->addr)); */
@@ -212,9 +221,12 @@ void* dequeueAddress(void *_i) {
 	if(gethostbyaddr_r((const char*)theAddr, size,
 			   family, &_hp,
 			   buffer, sizeof(buffer),
-			   &__hp, &h_errno) == 0)
-	  he = &_hp;
-	else
+			   &__hp, &h_errno) == 0) {
+	  if(h_errno == 0)
+	    he = &_hp;
+	  else
+	    he = NULL;
+	} else
 	  he = NULL;
 #else
 	he = gethostbyaddr(theAddr, size, family);

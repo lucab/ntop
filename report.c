@@ -2696,16 +2696,18 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	  alias[0] = '\0';
 	  fetchPrefsValue(key, alias, sizeof(alias));
 
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			"<option value=\"/%s?unit=%d&subnet=%d\"%s>%s/%d %s%s%s</option>\n",
-			CONST_HOSTS_INFO_HTML, showBytes, i,
-			selected ? " selected" : "", net,
-			myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY],
-			(alias[0] != '\0') ? "[" : "",
-			alias,
-			(alias[0] != '\0') ? "]" : "");
-
-	  sendString(buf);
+	  if(alias[0] != '\0') {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			  "<option value=\"/%s?unit=%d&subnet=%d\"%s>%s/%d %s%s%s</option>\n",
+			  CONST_HOSTS_INFO_HTML, showBytes, i,
+			  selected ? " selected" : "", net,
+			  myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY],
+			  (alias[0] != '\0') ? "[" : "",
+			  alias,
+			  (alias[0] != '\0') ? "]" : "");
+	    
+	    sendString(buf);
+	  }
 	}
 
       if(knownSubnetId == UNKNOWN_SUBNET_ID) selected = 1; else selected = 0;
