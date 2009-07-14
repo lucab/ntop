@@ -53,9 +53,8 @@ void handleBootp(HostTraffic *srcHost,
   BootProtocol bootProto;
   u_int len;
   int rc;
-  char savechar; /* Courtesy of
-		    Axel Thimm <Axel.Thimm+ntop@physik.fu-berlin.de>
-		 */
+  /* Courtesy of Axel Thimm <Axel.Thimm+ntop@physik.fu-berlin.de> */
+  char savechar;
 
   if((!myGlobals.runningPref.enablePacketDecoding)
      || (packetData == NULL) /* packet too short ? */
@@ -162,8 +161,8 @@ void handleBootp(HostTraffic *srcHost,
 			_intoa(realDstHost->hostIp4Address, buf, sizeof(buf)),
 			sizeof(realDstHost->hostNumIpAddress));
 		if(myGlobals.runningPref.numericFlag == 0) {
-			realDstHost->hostIpAddress.hostFamily = AF_INET;
-			ipaddr2str(realDstHost->hostIpAddress, 1);
+		  realDstHost->hostIpAddress.hostFamily = AF_INET;
+		  ipaddr2str(realDstHost, realDstHost->hostIpAddress, realDstHost->vlanId, actualDeviceId);
 		}
                 if (realDstHost->dnsDomainValue != NULL) free(realDstHost->dnsDomainValue);
 		realDstHost->dnsDomainValue = NULL;

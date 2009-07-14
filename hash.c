@@ -937,7 +937,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       setResolvedName(el, el->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
 
       if(myGlobals.runningPref.numericFlag == 0)
-        ipaddr2str(el->hostIpAddress, 1);
+        ipaddr2str(el, el->hostIpAddress, el->vlanId, actualDeviceId);
 
       if(isBroadcastAddress(&el->hostIpAddress, NULL, NULL))
         FD_SET(FLAG_BROADCAST_HOST, &el->flags);
@@ -1134,7 +1134,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 
       /* Trick to fill up the address cache */
       if(myGlobals.runningPref.numericFlag == 0)
-	ipaddr2str(el->hostIpAddress, 1);
+	ipaddr2str(el, el->hostIpAddress, el->vlanId, actualDeviceId);
 
       /* getHostAS(el); */
     } else {

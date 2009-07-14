@@ -3888,7 +3888,7 @@ void processPacket(u_char *_deviceId,
 		setResolvedName(srcHost, srcHost->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
 
 		if(myGlobals.runningPref.numericFlag == 0)
-		  ipaddr2str(srcHost->hostIpAddress, 1);
+		  ipaddr2str(srcHost, srcHost->hostIpAddress, srcHost->vlanId, actualDeviceId);
 
 		if(srcHost != srcHost1) {
 		  /* The netmask is probably wrong of this network interface has some aliases

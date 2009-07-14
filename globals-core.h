@@ -146,7 +146,8 @@ extern char * _addrtostr(HostAddr *addr, char* buf, u_short bufLen);
 extern char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen);
 extern char * addrtostr(HostAddr *addr);
 extern int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type);
-extern void ipaddr2str(HostAddr hostIpAddress, int updateHost);
+extern void ipaddr2str(HostTraffic *el, HostAddr hostIpAddress, 
+		       short vlanId, u_int actualDeviceId);
 extern char* etheraddr_string(const u_char *ep, char *buf);
 extern char* llcsap_string(u_char sap);
 extern void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc,

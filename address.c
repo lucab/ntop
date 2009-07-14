@@ -84,7 +84,7 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 static void updateHostNameInfo(HostAddr addr, char* symbolic, int type) {
   int i;
 
-#if 0  
+#if 0
   if(!strcmp(symbolic, "jake"))
     traceEvent(CONST_TRACE_ERROR, "%s = %s ", addrtostr(&addr), symbolic);
 #endif
@@ -125,7 +125,7 @@ static int validDNSName(char *name) {
 
 /* ************************************ */
 
-static void queueAddress(HostAddr elem, int forceResolution) {
+static void queueAddress(HostAddr elem) {
   datum key_data, data_data;
   char dataBuf[sizeof(StoredAddress)+4];
   int rc;
@@ -133,8 +133,7 @@ static void queueAddress(HostAddr elem, int forceResolution) {
 
   if(myGlobals.runningPref.numericFlag
      || (cloned == NULL)
-     || ((!forceResolution)
-	 && myGlobals.runningPref.trackOnlyLocalHosts
+     || (myGlobals.runningPref.trackOnlyLocalHosts
 	 && (!_pseudoLocalAddress(&elem, NULL, NULL))))
     return;
 
@@ -146,6 +145,18 @@ static void queueAddress(HostAddr elem, int forceResolution) {
     free(cloned);
     myGlobals.addressUnresolvedDrops++;
   } else {
+    /* First check if the address we want to resolve is already in queue */
+    HostAddrList *head = hostAddrList_head;
+    
+    while(head != NULL) {
+      if(memcmp(&head->addr, &elem, sizeof(elem)) == 0) {
+	free(cloned);
+	releaseAddrResMutex();
+	return;
+      }
+      head = head->next;
+    }
+
     cloned->next = hostAddrList_head;
     hostAddrList_head = cloned;
     signalCondvar(&myGlobals.queueAddressCondvar);  
@@ -386,13 +397,26 @@ char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen) {
 /* ******************************* */
 
 /* This function automatically updates the instance name */
+void ipaddr2str(HostTraffic *el, HostAddr hostIpAddress, 
+		short vlanId, u_int actualDeviceId) {
+  HostTraffic *h;
 
-void ipaddr2str(HostAddr hostIpAddress, int updateHost) {
-  if((hostIpAddress.hostFamily == AF_INET)
-     && (hostIpAddress.addr._hostIp4Address.s_addr == 0))
+  if(((hostIpAddress.hostFamily == AF_INET) && (hostIpAddress.addr._hostIp4Address.s_addr == 0))
+     || (el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NAME))
     return;
 
-  queueAddress(hostIpAddress, !updateHost);
+  h = findHostByNumIP(hostIpAddress, vlanId, actualDeviceId);
+
+  if((el != NULL) 
+     && (el != h)
+     && (h->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NAME)
+     && (strcmp(h->hostNumIpAddress, h->hostResolvedName) == 0)) {
+#if 0
+    traceEvent(CONST_TRACE_ERROR, "Recycling %s = %s ", addrtostr(&hostIpAddress), el->hostResolvedName);
+#endif
+    strcpy(el->hostResolvedName, h->hostResolvedName), el->hostResolvedNameType = h->hostResolvedNameType;
+  } else
+    queueAddress(hostIpAddress);
 }
 
 /* ************************************ */
