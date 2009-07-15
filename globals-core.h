@@ -132,7 +132,7 @@ extern void initNtopGlobals(int argc, char * argv[], int argc_started, char * ar
 extern void initNtop(char *devices);
 #if defined(MEMORY_DEBUG)
 extern void resetLeaks();
-#endif;
+#endif
 
 /* address.c */
 extern int printable(int ch);
