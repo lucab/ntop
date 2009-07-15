@@ -470,6 +470,7 @@ extern int isInitialFtpData(char* packetData);
 extern char* findHostCommunity(u_int32_t host_ip, char *buf, u_short buf_len);
 extern void setHostCommunity(HostTraffic *el);
 extern void updateDeviceThpt(int deviceToUpdate, int quickUpdate);
+extern void checkCommunities();
 
 /* prefs.c */
 extern void loadPrefs(int argc, char* argv[]);

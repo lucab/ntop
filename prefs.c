@@ -243,7 +243,7 @@ void loadPrefs(int argc, char* argv[]) {
     /* Handle key w/o trailing \0 so valgrind is happy */
     zeroPadMallocString(key.dsize, key.dptr);
 
-    if (fetchPrefsValue(key.dptr, buf, sizeof(buf)) == 0) {
+    if(fetchPrefsValue(key.dptr, buf, sizeof(buf)) == 0) {
       processNtopPref(key.dptr, buf, FALSE, &myGlobals.runningPref);
     }
 
@@ -618,18 +618,18 @@ int parseOptions(int argc, char* argv[]) {
        *     -L sets myGlobals.useSyslog to the default facility (DEFAULT_SYSLOG_FACILITY in ntop.h)
        *     --use-syslog requires a facility parameter (see /usr/include/sys/syslog.h)
        */
-      if (optarg) {
+      if(optarg) {
 	int i;
 
 	stringSanityCheck(optarg, "--use-syslog");
 
 	for (i=0; myFacilityNames[i].c_name != NULL; i++) {
-	  if (strcmp(optarg, myFacilityNames[i].c_name) == 0) {
+	  if(strcmp(optarg, myFacilityNames[i].c_name) == 0) {
 	    break;
 	  }
 	}
 
-	if (myFacilityNames[i].c_name == NULL) {
+	if(myFacilityNames[i].c_name == NULL) {
 	  printf("WARNING: --use-syslog=unknown log facility('%s'), using default value\n",
 		 optarg);
 	  myGlobals.runningPref.useSyslog = DEFAULT_SYSLOG_FACILITY;
@@ -658,7 +658,7 @@ int parseOptions(int argc, char* argv[]) {
 
     case 135:
       /* Dennis Schoen (dennis@cns.dnsalias.org) allow --set-admin-password=<password> */
-      if (optarg) {
+      if(optarg) {
         stringSanityCheck(optarg, "--set-admin-password");
 	adminPw = strdup(optarg);
       } else {
@@ -950,6 +950,7 @@ static void storeGdbmValue(GDBM_FILE gdbmfile, char *key, char *value) {
 
 void storePrefsValue(char *key, char *value) {
   storeGdbmValue(myGlobals.prefsFile, key, value);
+  checkCommunities(); /* Check if communities are defined */
 }
 
 /* ******************************** */
@@ -995,6 +996,7 @@ static void delGdbmValue(GDBM_FILE gdbmfile, char *key) {
 
 void delPrefsValue(char *key) {
   delGdbmValue(myGlobals.prefsFile, key);
+  checkCommunities(); /* Check if communities are defined */
 }
 
 /* ******************************** */
@@ -1007,23 +1009,23 @@ void delPwValue(char *key) {
 
 void processStrPref(char *key, char *value, char **globalVar, bool savePref)
 {
-  if (key == NULL) return;
+  if(key == NULL) return;
 
-  if (strcmp(value, "") == 0) {
+  if(strcmp(value, "") == 0) {
     /* If a value is specified as NULL but the current value is not, delete
      * the pref. This is assumed to be the way the user will change such a
      * pref.
      */
-    if (*globalVar != NULL) {
+    if(*globalVar != NULL) {
       free (*globalVar);
       *globalVar = NULL;
     }
 	
 	 *globalVar = strdup(value);
-     if (savePref) delPrefsValue (key);
+     if(savePref) delPrefsValue (key);
   }
   else {
-    if (savePref) {
+    if(savePref) {
 
       if((strcmp(key, NTOP_PREF_DEVICES) == 0)
 	 && (*globalVar && (*globalVar[0] != '\0'))) {
@@ -1040,7 +1042,7 @@ void processStrPref(char *key, char *value, char **globalVar, bool savePref)
 	storePrefsValue (key, value);
     }
 
-    if (*globalVar)
+    if(*globalVar)
       free (*globalVar);
 
     if((value == NULL) || (value[0] == '\0'))
@@ -1073,9 +1075,9 @@ void processBoolPref(char *key, bool value, bool *globalVar, bool savePref)
 {
   char buf[512];
 
-  if (key == NULL) return;
+  if(key == NULL) return;
 
-  if (savePref) {
+  if(savePref) {
     safe_snprintf (__FILE__, __LINE__, buf, sizeof(buf),
 		   "%d", value);
     storePrefsValue (key, buf);

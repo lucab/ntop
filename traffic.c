@@ -20,6 +20,8 @@
 
 #include "ntop.h"
 
+static u_int8_t are_communities_defined = 0;
+
 void updateFcTrafficMatrix(HostTraffic *srcHost, HostTraffic *dstHost,
                            TrafficCounter length, int actualDeviceId);
 
@@ -730,39 +732,66 @@ int isInitialFtpData(char* packetData) {
 
 /* ********************************** */
 
-char* findHostCommunity(u_int32_t host_ip, char *buf, u_short buf_len) {
+void checkCommunities() {
   datum key, nextkey;
   int len = strlen(COMMUNITY_PREFIX);
 
-
   key = gdbm_firstkey(myGlobals.prefsFile);
+
   while (key.dptr) {
-    char val[256], localAddresses[2048], *communityName;
-    NetworkStats localNetworks[MAX_NUM_NETWORKS]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
-    u_short numLocalNetworks = 0, i;
-    
+    char val[256];
+
     if((fetchPrefsValue(key.dptr, val, sizeof(val)) == 0)
        && (!strncmp(key.dptr, COMMUNITY_PREFIX, len))) {
-      localAddresses[0] = '\0';
-      communityName = (char*)&key.dptr[len];
-
-      handleAddressLists(val, localNetworks, &numLocalNetworks,
-			 localAddresses, sizeof(localAddresses),
-			 CONST_HANDLEADDRESSLISTS_COMMUNITY);
-
-      // traceEvent(CONST_TRACE_WARNING, "--> Community %s has %d entries", communityName, numLocalNetworks);
-      for(i=0; i<numLocalNetworks; i++) {
-	if((host_ip & localNetworks[i].address[1]) == localNetworks[i].address[0]) {
-	  //traceEvent(CONST_TRACE_WARNING, "--> Found community %s [%d]", communityName, numLocalNetworks);
-	  snprintf(buf, buf_len, "%s", communityName);
-	  return(buf);
-	}
-      }
+      free(key.dptr);
+      are_communities_defined = 1;
+      return;
     }
 
     nextkey = gdbm_nextkey(myGlobals.prefsFile, key);
     free (key.dptr);
     key = nextkey;
+  }
+  
+  are_communities_defined = 0;
+}
+
+/* ********************************** */
+
+char* findHostCommunity(u_int32_t host_ip, char *buf, u_short buf_len) {
+  if(are_communities_defined) {
+    datum key, nextkey;
+    int len = strlen(COMMUNITY_PREFIX);
+
+    key = gdbm_firstkey(myGlobals.prefsFile);
+    while (key.dptr) {
+      char val[256], localAddresses[2048], *communityName;
+      NetworkStats localNetworks[MAX_NUM_NETWORKS]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
+      u_short numLocalNetworks = 0, i;
+    
+      if((fetchPrefsValue(key.dptr, val, sizeof(val)) == 0)
+	 && (!strncmp(key.dptr, COMMUNITY_PREFIX, len))) {
+	localAddresses[0] = '\0';
+	communityName = (char*)&key.dptr[len];
+
+	handleAddressLists(val, localNetworks, &numLocalNetworks,
+			   localAddresses, sizeof(localAddresses),
+			   CONST_HANDLEADDRESSLISTS_COMMUNITY);
+
+	// traceEvent(CONST_TRACE_WARNING, "--> Community %s has %d entries", communityName, numLocalNetworks);
+	for(i=0; i<numLocalNetworks; i++) {
+	  if((host_ip & localNetworks[i].address[1]) == localNetworks[i].address[0]) {
+	    //traceEvent(CONST_TRACE_WARNING, "--> Found community %s [%d]", communityName, numLocalNetworks);
+	    snprintf(buf, buf_len, "%s", communityName);
+	    return(buf);
+	  }
+	}
+      }
+
+      nextkey = gdbm_nextkey(myGlobals.prefsFile, key);
+      free (key.dptr);
+      key = nextkey;
+    }
   }
 
   return(NULL);

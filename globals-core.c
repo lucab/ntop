@@ -105,6 +105,8 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
     initSingleGdbm(&myGlobals.fingerprintFile,  "fingerprint.db",  spoolDirectory, FALSE,  &statbuf);
     createVendorTable(&statbuf);
   }
+
+  checkCommunities(); /* Check if communities are defined */
 }
 
 /* ******************************* */
