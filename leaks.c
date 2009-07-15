@@ -47,6 +47,8 @@
 
 #ifdef MAKE_WITH_SAFER_ROUTINES
 
+/* ***************************************************** */
+
 static void stopcap(void) {
   traceEvent(CONST_TRACE_WARNING, "ntop packet capture STOPPED");
   traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up");
@@ -57,6 +59,8 @@ static void stopcap(void) {
 #undef malloc /* just to be safe */
 
 /* #define COUNT_MALLOCS 1 */
+
+/* ***************************************************** */
 
 void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   void *thePtr;
@@ -315,7 +319,6 @@ static void traceEventLeak(int eventTraceLevel, /* Ignored */
   va_end (va_ap);
 
   inTraceEventTrapped=0;
-
 }
 
 /* *************************************** */

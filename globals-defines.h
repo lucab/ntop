@@ -421,7 +421,7 @@
  *     #endif
  *
  */
-/* #define MEMORY_DEBUG */
+/* #define MEMORY_DEBUG 1 */
 
 /*
  *  WARNING: Unless you also define MEMORY_DEBUG_UNLIMITED, there

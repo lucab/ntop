@@ -645,7 +645,7 @@ void initNtop(char *devices) {
   traceEvent(CONST_TRACE_NOISY, "Plugins started... continuing with initialization");
 #endif
 
-#if defined(MEMORY_DEBUG)
+#if defined(MEMORY_DEBUG) && defined(MAKE_WITH_SAFER_ROUTINES)
   resetLeaks();
 #endif
 

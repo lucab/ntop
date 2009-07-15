@@ -27,8 +27,11 @@
 
 #if defined(DARWIN) && (!defined(TIGER))
 #include <mach-o/dyld.h>
-
 extern char ** environ;
+#endif
+
+#if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
+#include <mcheck.h>
 #endif
 
 #if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 4) && defined(HAVE_BACKTRACE)
@@ -384,7 +387,6 @@ static void abortfn(enum mcheck_status status) {
 #endif
 
 /* ***************************************************** */
-
 
 /* That's the meat */
 #ifdef WIN32

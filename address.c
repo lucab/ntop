@@ -46,6 +46,8 @@ typedef struct hostAddrList {
 } HostAddrList;
 
 static HostAddrList *hostAddrList_head = NULL;
+static HostAddr lastResolvedAddr[MAX_NUM_DEQUEUE_ADDRESS_THREADS] = { 0 };
+static u_short lastResolvedAddrIdx = 0;
 
 /* **************************************** */
 
@@ -68,8 +70,8 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 	
 	/* Really needed ? */
 	for(i=0; i<strlen(symbolic); i++) symbolic[i] = tolower(symbolic[i]);
-
-	/* traceEvent(CONST_TRACE_INFO, "--> %s", symbolic); */
+	
+	/* traceEvent(CONST_TRACE_INFO, "[%s] --> %s", el->hostResolvedName, symbolic); */
 
 	setResolvedName(el, symbolic, type);
       }
@@ -84,9 +86,8 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 static void updateHostNameInfo(HostAddr addr, char* symbolic, int type) {
   int i;
 
-#if 0
-  if(!strcmp(symbolic, "jake"))
-    traceEvent(CONST_TRACE_ERROR, "%s = %s ", addrtostr(&addr), symbolic);
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "updateDeviceHostNameInfo(%s <--> %s)", symbolic, addrtostr(&addr));
 #endif
 
   for(i=0; i<myGlobals.numDevices; i++) {
@@ -128,7 +129,7 @@ static int validDNSName(char *name) {
 static void queueAddress(HostAddr elem) {
   datum key_data, data_data;
   char dataBuf[sizeof(StoredAddress)+4];
-  int rc;
+  int rc, i;
   HostAddrList *cloned = (HostAddrList*)malloc(sizeof(HostAddrList));
 
   if(myGlobals.runningPref.numericFlag
@@ -140,7 +141,18 @@ static void queueAddress(HostAddr elem) {
   memcpy(&cloned->addr, &elem, sizeof(HostAddr));
 
   accessAddrResMutex("queueAddress");
-  
+
+  for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
+    if(memcmp(&lastResolvedAddr[i], &elem, sizeof(HostAddr)) == 0) {
+#ifdef DEBUG
+      traceEvent(CONST_TRACE_ERROR, "queueAddress(%s): already been resolved", addrtostr(&elem));
+#endif
+      free(cloned);
+      releaseAddrResMutex();
+      return;
+    }
+  }
+
   if(myGlobals.addressQueuedCurrent > 16384) {
     free(cloned);
     myGlobals.addressUnresolvedDrops++;
@@ -154,8 +166,13 @@ static void queueAddress(HostAddr elem) {
 	releaseAddrResMutex();
 	return;
       }
+
       head = head->next;
     }
+
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_ERROR, "queueAddress(%s)", addrtostr(&elem));
+#endif
 
     cloned->next = hostAddrList_head;
     hostAddrList_head = cloned;
@@ -212,6 +229,8 @@ void* dequeueAddress(void *_i) {
 	hostAddrList_head = hostAddrList_head->next;
 	if(myGlobals.addressQueuedCurrent > 0) myGlobals.addressQueuedCurrent--;
       }
+      memcpy(&lastResolvedAddr[lastResolvedAddrIdx], &elem->addr, sizeof(HostAddr));
+      lastResolvedAddrIdx = (lastResolvedAddrIdx + 1) % myGlobals.numDequeueAddressThreads;
       releaseAddrResMutex();
 
       if(elem) {
@@ -407,11 +426,13 @@ void ipaddr2str(HostTraffic *el, HostAddr hostIpAddress,
 
   h = findHostByNumIP(hostIpAddress, vlanId, actualDeviceId);
 
-  if((el != NULL) 
-     && (el != h)
+  if((el != NULL) && (h != NULL)
+     /* && (el != h) */
      && (h->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NAME)
-     && (strcmp(h->hostNumIpAddress, h->hostResolvedName) == 0)) {
-#if 0
+     && (h->hostNumIpAddress[0] != '\0')
+     && strcmp(h->hostNumIpAddress, h->hostResolvedName)
+     && strcmp(h->hostResolvedName, "0.0.0.0")) {
+#ifdef DEBUG
     traceEvent(CONST_TRACE_ERROR, "Recycling %s = %s ", addrtostr(&hostIpAddress), el->hostResolvedName);
 #endif
     strcpy(el->hostResolvedName, h->hostResolvedName), el->hostResolvedNameType = h->hostResolvedNameType;

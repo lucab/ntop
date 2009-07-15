@@ -3868,6 +3868,8 @@ void processPacket(u_char *_deviceId,
 		allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
 		incrementHostTrafficCounter(srcHost, nonIPTraffic->arpReplyPktsSent, 1);
 	      }
+
+#if 0
 	      /* DO NOT ADD A break ABOVE ! */
 	    case ARPOP_REQUEST: /* ARP request */
 	      if(srcHost != NULL) {
@@ -3915,6 +3917,7 @@ void processPacket(u_char *_deviceId,
 		  incrementHostTrafficCounter(srcHost, nonIPTraffic->arpReqPktsSent, 1);
 		}
 	      }
+#endif
 	    }
 	  }
 	  /* DO NOT ADD A break ABOVE ! */
