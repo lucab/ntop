@@ -428,6 +428,9 @@ chmod gou+x ./config.guess
 \mkdir m4
 
 
+# Link 3rd party files
+\cp 3rd_party/* .
+
 #
 # 8.
 # run './configure' for real fun!

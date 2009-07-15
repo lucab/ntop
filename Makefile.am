@@ -367,8 +367,8 @@ install-data-local: ntop.txt ntop.html faq.html dnetter
 
 
 # build the IPX SAP table
-sapt: saptable.h
-	@cat Internet/novell-sap-numbers | cut -c1-3 | sed -f sapt.sed > saptable.h
+#sapt: saptable.h
+#	@cat Internet/novell-sap-numbers | cut -c1-3 | sed -f sapt.sed > saptable.h
 
 
 # download the vendor information table
@@ -399,8 +399,8 @@ dnvt:
 	@ls -l oui.txt.gz
 
 # download the Novell SAP Protocol information table
-dnsapt:
-	@(cd Internet; wget -c http://www.iana.org/assignments/novell-sap-numbers)
+#dnsapt:
+#	@(cd Internet; wget -c http://www.iana.org/assignments/novell-sap-numbers)
 
 # download the passive ethernet fingerprint database
 dnetter:
