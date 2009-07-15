@@ -130,6 +130,9 @@ extern int getDynamicLoadPaths(char *main, int mainLen, char *lib, int libLen, c
 extern void extend8021Qmtu(void);
 extern void initNtopGlobals(int argc, char * argv[], int argc_started, char * argv_started[]);
 extern void initNtop(char *devices);
+#if defined(MEMORY_DEBUG)
+extern void resetLeaks();
+#endif;
 
 /* address.c */
 extern int printable(int ch);
