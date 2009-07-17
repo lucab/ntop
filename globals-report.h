@@ -361,9 +361,6 @@ extern void drawVsanStatsPktsDistribution(int deviceId);
 extern void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent);
 extern void drawVsanSwilsProtoDistribution(u_short vsanId);
 
-/* perl.c */
-extern int handlePerlHTTPRequest(char *url);
-
 /* lua.c */
 extern int handleLuaHTTPRequest(char *url);
 

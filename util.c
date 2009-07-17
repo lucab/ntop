@@ -37,17 +37,6 @@
 /* #define ADDRESS_DEBUG */
 /* #define FINGERPRINT_DEBUG */
 
-#ifdef DARWIN
-extern void* perl_alloc();
-extern void* perl_parse();
-extern void* perl_get_hv();
-extern void* perl_get_av();
-extern void* perl_run();
-extern void* perl_construct();
-extern void* perl_destruct();
-extern void* perl_free();
-#endif
-
 /* FTP */
 static SessionInfo *passiveSessions = NULL;
 static u_short passiveSessionsLen;

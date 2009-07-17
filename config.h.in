@@ -321,9 +321,6 @@
 /* Define to 1 if you have the <pcre.h> header file. */
 #undef HAVE_PCRE_H
 
-/* PERL is supported */
-#undef HAVE_PERL
-
 /* pthread_atfork() exists */
 #undef HAVE_PTHREAD_ATFORK
 

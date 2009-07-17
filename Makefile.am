@@ -32,12 +32,10 @@ PROGRAM  = $(PKGNAME)-$(VERSION)
 
 DEFS      = @DEFS@
 INCS      = @INCS@
-PERL_INC  = @PERL_INC@
 
-INCLUDES  = -I. $(INCS) ${PERL_INC} ${RRD_INC}
+INCLUDES  = -I. $(INCS) ${RRD_INC}
 LIBS      = 
-PERL_LIB  = @PERL_LIB@
-BASE_LIBS = @LIBS@ @CORELIBS@  ${PERL_LIB} ${RRD_LIB}
+BASE_LIBS = @LIBS@ @CORELIBS@  ${RRD_LIB}
 AS        = @AS@
 AWK       = @AWK@
 CC        = @CC@
@@ -96,8 +94,7 @@ NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.p
            html/statsicons/flags html/statsicons/os \
            html/statsicons/flags/*.gif html/statsicons/os/*.gif \
            html/PlotKit html/PlotKit/*.js \
-           html/MochiKit html/MochiKit/*.js \
-	   perl perl/*.pl perl/report perl/report/*.xml
+           html/MochiKit html/MochiKit/*.js
 
 WEBFILES       = `cat www/FILES`
 PLUGINSFILES   = `cat plugins/FILES`
@@ -145,7 +142,7 @@ libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN
 
 # Archive for http representation, or the 'viewer'
 libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
-                           fcReport.c      http.c            perl.c  \
+                           fcReport.c      http.c            \
                            report.c        reportUtils.c     ssl.c   \
                            webInterface.c  map.c	     lua.c
 
