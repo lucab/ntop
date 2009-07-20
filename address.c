@@ -156,6 +156,8 @@ static void queueAddress(HostAddr elem) {
   if(myGlobals.addressQueuedCurrent > 16384) {
     free(cloned);
     myGlobals.addressUnresolvedDrops++;
+    releaseAddrResMutex();
+    return;
   } else {
     /* First check if the address we want to resolve is already in queue */
     HostAddrList *head = hostAddrList_head;
@@ -248,6 +250,12 @@ void* dequeueAddress(void *_i) {
 	/* traceEvent(CONST_TRACE_INFO, "About to resolve %s", addrtostr(&elem->addr)); */
 
 #if defined(HAVE_GETHOSTBYADDR_R)
+#ifdef SOLARIS
+	he = gethostbyaddr_r((const char*)theAddr, size,
+			     family, &_hp,
+			     buffer, sizeof(buffer),
+			     &h_errno);
+#else
 	if(gethostbyaddr_r((const char*)theAddr, size,
 			   family, &_hp,
 			   buffer, sizeof(buffer),
@@ -256,6 +264,7 @@ void* dequeueAddress(void *_i) {
 	    he = &_hp;
 	  else
 	    he = NULL;
+#endif
 	} else
 	  he = NULL;
 #else

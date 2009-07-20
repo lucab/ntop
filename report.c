@@ -2833,8 +2833,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	  el = tmpTable[idx];
 
 	if(el != NULL) {
-	  char *tmpName1, *tmpName2, *tmpName3, sniffedName[MAXDNAME];
-	  int displaySniffedName=0;
+	  char *tmpName1, *tmpName2, *tmpName3;
 
 	  tmpName1 = el->hostNumIpAddress;
 
@@ -2853,30 +2852,6 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	  } else {
 	    tmpName2 = myGlobals.separator;
 	    tmpName3 = myGlobals.separator;
-	  }
-
-	  if(!addrnull(&el->hostIpAddress)) {
-#ifdef DEBUG
-	    traceEvent(CONST_TRACE_INFO, "%s <=> %s [%s/%s]",
-		       el->hostNumIpAddress, sniffedName,
-		       el->hostResolvedName, el->hostNumIpAddress);
-#endif
-
-	    if((el->hostResolvedName[0] == '\0') || strcmp(sniffedName, el->hostResolvedName)) {
-	      if((el->hostResolvedName[0] == '\0')
-		 || (strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0)) {
-		if(strlen(sniffedName) >= (MAX_LEN_SYM_HOST_NAME-1))
-		  sniffedName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
-
-		for(i=0; i<strlen(sniffedName); i++) {
-		  if(isupper(sniffedName[i]))
-		    sniffedName[i] = tolower(sniffedName[i]);
-		}
-
-		setResolvedName(el, sniffedName, FLAG_HOST_SYM_ADDR_TYPE_NAME);
-	      } else
-		displaySniffedName=1;
-	    }
 	  }
 
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>", getRowColor());
@@ -2902,7 +2877,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
 	  sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
 
-	  if(el->nonIPTraffic && displaySniffedName) {
+	  if(el->nonIPTraffic) {
 	    short numAddresses = 0;
 
 	    if(el->nonIPTraffic->nbHostName && el->nonIPTraffic->nbDomainName) {
@@ -2936,13 +2911,6 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	    if(el->nonIPTraffic->nbDescr) {
 	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), ":&nbsp;%s", el->nonIPTraffic->nbDescr);
 	      sendString(buf);
-	    }
-
-	    if(displaySniffedName) {
-	      if(numAddresses > 0) sendString("/");
-	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", sniffedName);
-	      sendString(buf);
-	      numAddresses++;
 	    }
 
 	    if(el->nonIPTraffic->atNetwork) {

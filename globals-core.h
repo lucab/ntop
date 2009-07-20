@@ -517,6 +517,7 @@ extern int in6_isglobal(struct in6_addr *addr);
 extern unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, int size);
 extern unsigned short addrlookup(struct in6_addr *addr,  NtopIfaceAddr *addrs);
 extern NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
+extern void maximize_socket_buffer(int sock_fd, int buf_type); 
 extern unsigned short isLinkLocalAddress(struct in6_addr *addr,
 					 u_int32_t *the_local_network, 
 					 u_int32_t *the_local_network_mask);

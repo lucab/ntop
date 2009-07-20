@@ -1359,6 +1359,7 @@ static int setsFlowInSocket(int deviceId) {
 	       (long)myGlobals.device[deviceId].sflowGlobals->sflowThread,
 	       myGlobals.device[deviceId].sflowGlobals->sflowInPort);
   }
+  maximize_socket_buffer(myGlobals.device[deviceId].sflowGlobals->sflowInSocket, SO_RCVBUF);
 
   return(0);
 }

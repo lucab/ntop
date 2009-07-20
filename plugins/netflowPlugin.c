@@ -323,6 +323,7 @@ static int setNetFlowInSocket(int deviceId) {
 	       (long)myGlobals.device[deviceId].netflowGlobals->netFlowThread,
 	       myGlobals.device[deviceId].netflowGlobals->netFlowInPort);
   }
+  maximize_socket_buffer(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, SO_RCVBUF);
 
   return(0);
 }
@@ -3411,7 +3412,7 @@ static int createNetFlowDevice(int netFlowDeviceId) {
   int deviceId;
   char buf[32], value[128];
 
-  traceEvent(CONST_TRACE_INFO, "NETFLOW: createNetFlowDevice(%d)", netFlowDeviceId);
+  /* traceEvent(CONST_TRACE_INFO, "NETFLOW: createNetFlowDevice(%d)", netFlowDeviceId); */
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s.%d", NETFLOW_DEVICE_NAME, netFlowDeviceId);
   deviceId = createDummyInterface(buf);
@@ -3766,7 +3767,7 @@ static void handleNetflowHTTPrequest(char* _url) {
        && (strlen(value) > 0)) {
       char *strtokState, *dev, value1[128], buf[256];
 
-      traceEvent(CONST_TRACE_INFO, "NETFLOW: knownDevices=%s", value);
+      /* traceEvent(CONST_TRACE_INFO, "NETFLOW: knownDevices=%s", value); */
 
       value1[0] = '\0';
 

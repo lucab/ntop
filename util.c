@@ -1766,6 +1766,26 @@ int getLocalHostAddress(struct in_addr *hostAddress, u_int8_t *netmask_v6, char*
 
 /* ********************************* */
 
+void maximize_socket_buffer(int sock_fd, int buf_type)  {
+  int rcv_buffsize_base, rcv_buffsize, max_buf_size = 1024 * 2 * 1024 /* 2 MB */, debug = 0;
+  socklen_t len = sizeof(rcv_buffsize_base);
+  int i;
+
+  if(getsockopt(sock_fd, SOL_SOCKET, buf_type, &rcv_buffsize_base, &len) < 0) {
+    return;
+  }
+  for(i=2;; i++) {
+    rcv_buffsize = i * rcv_buffsize_base;
+    if(rcv_buffsize > max_buf_size) break;
+
+    if(setsockopt(sock_fd, SOL_SOCKET, buf_type, &rcv_buffsize, sizeof(rcv_buffsize)) < 0) {
+      break;
+    }
+  }
+}
+
+/* ********************************* */
+
 #ifndef WIN32
 
 /* *********** MULTITHREAD STUFF *********** */
