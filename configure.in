@@ -1940,20 +1940,28 @@ if test -f $GEO_DYLIB; then
    ln -s $GEO_DYLIB .
 fi
 
+if test -f "GeoLiteCity.dat.gz"; then
+   gunzip GeoLiteCity.dat.gz
+else
 if test -f "GeoLiteCity.dat"; then
    echo "GeoLiteCity.dat already present"
 else
    wget http://www.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
    gunzip GeoLiteCity.dat.gz
 fi
+fi
 
+
+if test -f "GeoIPASNum.dat.gz"; then
+   gunzip GeoIPASNum.dat.gz
+else
 if test -f "GeoIPASNum.dat"; then
    echo "GeoIPASNum.dat already present"
 else
    wget http://www.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz
    gunzip GeoIPASNum.dat.gz
 fi
-
+fi
 
 GEO_DIR=`find $PWD -type d -name "GeoIP-*"`
 GEO_IP="$GEO_DIR/libGeoIP/"

@@ -1221,17 +1221,11 @@ void initDevices(char* devices) {
   if(myGlobals.pcap_file_list != NULL) {
     createDummyInterface("none");
     myGlobals.device[0].dummyDevice = 0;
-    myGlobals.device[0].pcapPtr  = pcap_open_offline(myGlobals.pcap_file_list->fileName, ebuf);
+    myGlobals.device[0].pcapPtr  = myGlobals.pcap_file_list->pcapPtr;
 
-    if(myGlobals.device[0].pcapPtr == NULL) {
-      traceEvent(CONST_TRACE_ERROR, "pcap_open_offline(%s): '%s'",
-		 myGlobals.pcap_file_list->fileName, ebuf);
-      exit(-1);
-    } else {
-      if(myGlobals.device[0].humanFriendlyName != NULL) free(myGlobals.device[0].humanFriendlyName);
-      myGlobals.device[0].humanFriendlyName = strdup(myGlobals.pcap_file_list->fileName);
-      calculateUniqueInterfaceName(0);
-    }
+    if(myGlobals.device[0].humanFriendlyName != NULL) free(myGlobals.device[0].humanFriendlyName);
+    myGlobals.device[0].humanFriendlyName = strdup(myGlobals.pcap_file_list->fileName);
+    calculateUniqueInterfaceName(0);
 
     resetStats(0);
     initDeviceDatalink(0);

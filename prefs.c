@@ -157,11 +157,10 @@ static struct option const long_options[] = {
   { "no-invalid-lun",                   no_argument,       0,    149 },
 
   { "skip-version-check",               required_argument, NULL, 150 },
-  { "pcap-file-list",                   required_argument, NULL, 151 },
-  { "known-subnets",                    required_argument, NULL, 152 },
-  { "live",                             no_argument,       NULL, 153 },
+  { "known-subnets",                    required_argument, NULL, 151 },
+  { "live",                             no_argument,       NULL, 152 },
 #ifdef ENABLE_EFFICIENCY
-  { "enable-efficiency",                no_argument,       NULL, 154 },
+  { "enable-efficiency",                no_argument,       NULL, 153 },
 #endif
 
   {NULL, 0, NULL, 0}
@@ -266,10 +265,10 @@ void loadPrefs(int argc, char* argv[]) {
 
 static void readPcapFileList(char * filenames) {
   const int block = 32;
-  char *line;
+  char *line, ebuf[CONST_SIZE_PCAP_ERR_BUF];
   int i=0,j=0, idx;
   struct fileList *fl, *prev;
-  
+
   line = strtok(filenames, ",");
 
   while(line != NULL) {
@@ -278,7 +277,7 @@ static void readPcapFileList(char * filenames) {
       fl = (struct fileList*)malloc(sizeof(struct fileList));
 
       if(!fl) {
-	traceEvent(CONST_TRACE_ERROR, "Not enough memory parsing --pcap-file-list argument");
+	traceEvent(CONST_TRACE_ERROR, "Not enough memory parsing -f argument");
 	return;
       }
 
@@ -288,24 +287,32 @@ static void readPcapFileList(char * filenames) {
 
       if(!fl->fileName) {
 	free(fl);
-	traceEvent(CONST_TRACE_ERROR, "Not enough memory parsing --pcap-file-list argument");
+	traceEvent(CONST_TRACE_ERROR, "Not enough memory parsing -f argument");
 	return;
       }
 
-      fl->next = NULL;      
-      
-      if(myGlobals.pcap_file_list != NULL) {
-	prev = myGlobals.pcap_file_list;
-	while(prev != NULL) {
-	  if(prev->next)
-	    prev = prev->next;
-	  else
-	    break;
-	}
+      fl->pcapPtr = pcap_open_offline(fl->fileName, ebuf);
+
+      if(fl->pcapPtr == NULL) {
+	traceEvent(CONST_TRACE_ERROR, "Skipping pcap file %s: '%s'", fl->fileName, ebuf);
+	free(fl->fileName);
+	free(fl);
+      } else {	
+	fl->next = NULL;      
 	
-	prev->next = fl;
-      } else
-	myGlobals.pcap_file_list = fl;
+	if(myGlobals.pcap_file_list != NULL) {
+	  prev = myGlobals.pcap_file_list;
+	  while(prev != NULL) {
+	    if(prev->next)
+	      prev = prev->next;
+	    else
+	      break;
+	  }
+	
+	  prev->next = fl;
+	} else
+	  myGlobals.pcap_file_list = fl;
+      }
     }
 
     line = strtok(NULL, ",");
@@ -748,21 +755,16 @@ int parseOptions(int argc, char* argv[]) {
       break;
 
     case 151:
-      stringSanityCheck(optarg, "--pcap-file-list");
-      readPcapFileList(optarg);
-      break;
-
-    case 152:
       stringSanityCheck(optarg, "--known-subnets");
       myGlobals.runningPref.knownSubnets = strdup(optarg);
       break;
 
-    case 153:
+    case 152:
       myGlobals.runningPref.liveMode = 1;
       break;
 
 #ifdef ENABLE_EFFICIENCY
-    case 154:
+    case 153:
       myGlobals.runningPref.calculateEfficiency = 1;
       break;
 #endif

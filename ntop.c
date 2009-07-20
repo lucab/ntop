@@ -117,20 +117,14 @@ void* pcapDispatch(void *_i) {
 	    char ebuf[CONST_SIZE_PCAP_ERR_BUF];
 
 	    if(myGlobals.device[i].pcapPtr) pcap_close(myGlobals.device[i].pcapPtr);
-	    myGlobals.device[i].pcapPtr  = pcap_open_offline(myGlobals.pcap_file_list->fileName, ebuf);
+	    myGlobals.device[i].pcapPtr  = myGlobals.pcap_file_list->pcapPtr;
 	    
-	    if(myGlobals.device[i].pcapPtr == NULL) {
-	      traceEvent(CONST_TRACE_ERROR, "pcap_open_offline(%s): '%s'",
-			 myGlobals.pcap_file_list->fileName, ebuf);
-	      goto reopen_pcap;
-	    } else {
-	      if(myGlobals.device[i].humanFriendlyName != NULL) free(myGlobals.device[i].humanFriendlyName);
-	      myGlobals.device[i].humanFriendlyName = strdup(myGlobals.pcap_file_list->fileName);
-	      calculateUniqueInterfaceName(0);
-	      traceEvent(CONST_TRACE_INFO, "pcap_loop (%s) : reading packets from file %s",
-			 myGlobals.device[i].humanFriendlyName, myGlobals.pcap_file_list->fileName);
-	      myGlobals.device[i].datalink = pcap_datalink(myGlobals.device[i].pcapPtr);
-	    }
+	    if(myGlobals.device[i].humanFriendlyName != NULL) free(myGlobals.device[i].humanFriendlyName);
+	    myGlobals.device[i].humanFriendlyName = strdup(myGlobals.pcap_file_list->fileName);
+	    calculateUniqueInterfaceName(0);
+	    traceEvent(CONST_TRACE_INFO, "pcap_loop (%s) : reading packets from file %s",
+		       myGlobals.device[i].humanFriendlyName, myGlobals.pcap_file_list->fileName);
+	    myGlobals.device[i].datalink = pcap_datalink(myGlobals.device[i].pcapPtr);	    
 	  } else
 	    break; /* No more packets to read */
 	} else	

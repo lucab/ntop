@@ -620,11 +620,12 @@ void initNtop(char *devices) {
   if((myGlobals.pcap_file_list != NULL) &&
      ((myGlobals.runningPref.localAddresses == NULL) &&
       !myGlobals.runningPref.printFcOnly)) {
-    setRunState(FLAG_NTOPSTATE_SHUTDOWN);
-    traceEvent(CONST_TRACE_FATALERROR,
-	       "-m | local-subnets must be specified when the -f | --traffic-dump-file option is used"
-	       "Capture not started");
-    exit(2); /* Just in case */
+    char *any_net = "0.0.0.0/0";
+
+    traceEvent(CONST_TRACE_WARNING,
+	       "-m | local-subnets must be specified when the -f option is used"
+	       "Assuming %s", any_net);
+    myGlobals.runningPref.localAddresses = strdup(any_net);
   }
 
   if(myGlobals.runningPref.currentFilterExpression != NULL)

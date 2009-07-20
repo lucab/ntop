@@ -563,6 +563,7 @@ typedef struct userList {
 /* *********************** */
 
 typedef struct fileList {
+  pcap_t *pcapPtr;
   char *fileName;
   fd_set fileFlags;
   struct fileList *next;
