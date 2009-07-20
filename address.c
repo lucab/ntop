@@ -130,15 +130,12 @@ static void queueAddress(HostAddr elem) {
   datum key_data, data_data;
   char dataBuf[sizeof(StoredAddress)+4];
   int rc, i;
-  HostAddrList *cloned = (HostAddrList*)malloc(sizeof(HostAddrList));
+  HostAddrList *cloned = NULL;
 
-  if(myGlobals.runningPref.numericFlag
-     || (cloned == NULL)
+  if(myGlobals.runningPref.numericFlag     
      || (myGlobals.runningPref.trackOnlyLocalHosts
 	 && (!_pseudoLocalAddress(&elem, NULL, NULL))))
     return;
-
-  memcpy(&cloned->addr, &elem, sizeof(HostAddr));
 
   accessAddrResMutex("queueAddress");
 
@@ -146,15 +143,13 @@ static void queueAddress(HostAddr elem) {
     if(memcmp(&lastResolvedAddr[i], &elem, sizeof(HostAddr)) == 0) {
 #ifdef DEBUG
       traceEvent(CONST_TRACE_ERROR, "queueAddress(%s): already been resolved", addrtostr(&elem));
-#endif
-      free(cloned);
+#endif     
       releaseAddrResMutex();
       return;
     }
   }
 
-  if(myGlobals.addressQueuedCurrent > 16384) {
-    free(cloned);
+  if(myGlobals.addressQueuedCurrent > 16384) {   
     myGlobals.addressUnresolvedDrops++;
     releaseAddrResMutex();
     return;
@@ -163,12 +158,11 @@ static void queueAddress(HostAddr elem) {
     HostAddrList *head = hostAddrList_head;
     
     while(head != NULL) {
-      if(memcmp(&head->addr, &elem, sizeof(elem)) == 0) {
-	free(cloned);
+      if(memcmp(&head->addr, &elem, sizeof(elem)) == 0) {	
 	releaseAddrResMutex();
 	return;
       }
-
+      
       head = head->next;
     }
 
@@ -176,12 +170,15 @@ static void queueAddress(HostAddr elem) {
     traceEvent(CONST_TRACE_ERROR, "queueAddress(%s)", addrtostr(&elem));
 #endif
 
-    cloned->next = hostAddrList_head;
-    hostAddrList_head = cloned;
-    signalCondvar(&myGlobals.queueAddressCondvar);  
-    myGlobals.addressQueuedCurrent++;
-    if(myGlobals.addressQueuedCurrent > myGlobals.addressQueuedMax)
-      myGlobals.addressQueuedMax = myGlobals.addressQueuedCurrent;
+    if((cloned = (HostAddrList*)malloc(sizeof(HostAddrList))) != NULL) {
+      memcpy(&cloned->addr, &elem, sizeof(HostAddr));
+      cloned->next = hostAddrList_head;
+      hostAddrList_head = cloned;
+      signalCondvar(&myGlobals.queueAddressCondvar);  
+      myGlobals.addressQueuedCurrent++;
+      if(myGlobals.addressQueuedCurrent > myGlobals.addressQueuedMax)
+	myGlobals.addressQueuedMax = myGlobals.addressQueuedCurrent;
+    }
   }
   
   releaseAddrResMutex();

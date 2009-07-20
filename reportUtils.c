@@ -72,7 +72,7 @@ void formatUsageCounter(UsageCounter usageCtr,
 			Counter topValue,
 			/* If this value != 0 then a percentage is printed */
 			int actualDeviceId) {
-  char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
   int i, sendHeader=0;
   HostTraffic *el;
 
@@ -3100,7 +3100,7 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
 
 void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
   u_int i, titleSent = 0;
-  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
   HostTraffic tmpEl;
 
   if (isFcHost (el)) {
@@ -3483,7 +3483,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   u_short as=0;
   HostTraffic *theHost, tmpEl;
   char formatBuf[LEN_TIMEFORMAT_BUFFER], formatBuf1[LEN_TIMEFORMAT_BUFFER], 
-    formatBuf2[32], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER], custom_host_name[128];
+    formatBuf2[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER], custom_host_name[128];
 
   accessAddrResMutex("printAllSessionsHTML");
 
@@ -4617,7 +4617,7 @@ void printSectionTitle(char *text) {
 void printHostsCharacterization(void) {
   u_int a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0, i=0, unhealthy=0, totHosts=0;
   HostTraffic *el;
-  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER], headerSent = 0;
+  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER], headerSent = 0;
 
   printHTMLheader("Local Hosts Characterization", NULL, 0);
 
@@ -4875,7 +4875,7 @@ void printHostsStats(int fingerprintRemote) {
       countNotIP=0,
       countUnknownFP=0,
       countCantResolve=0;
-  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[2*LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
   char unknownFPs[LEN_GENERAL_WORK_BUFFER];
   int unknownFPsEtc=0;
 
