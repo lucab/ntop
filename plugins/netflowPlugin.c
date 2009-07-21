@@ -338,14 +338,17 @@ static void updateInterfaceName(InterfaceStats *ifStats) {
   addr.s_addr = ifStats->netflow_device_ip;
 
   getIfName(_intoa(addr, buf, sizeof(buf)),
+	    ifStats->netflow_device_port,
 	    "public", ifStats->interface_id,
-	    ifStats->interface_name, sizeof(ifStats->interface_name));
+	    ifStats->interface_name,
+	    sizeof(ifStats->interface_name));
 }
 #endif
 
 /* *************************** */
 
 static void updateNetFlowIfStats(u_int32_t netflow_device_ip,
+				 u_int16_t netflow_device_port,
 				 int deviceId, u_int32_t ifId,
 				 u_char selfUpdate, u_char sentStats,
 				 u_int32_t _pkts, u_int32_t _octets) {
@@ -362,7 +365,10 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip,
     ifStats = myGlobals.device[deviceId].netflowGlobals->ifStats;
 
     while(ifStats != NULL) {
-      if((ifStats->interface_id == ifId) && (ifStats->netflow_device_ip == netflow_device_ip)) {
+      if((ifStats->interface_id == ifId) 
+	 && (ifStats->netflow_device_ip == netflow_device_ip)
+	 && (ifStats->netflow_device_port == netflow_device_port)
+	 ) {
 	found = 1;
 	break;
       } else if(ifStats->interface_id > ifId)
@@ -381,7 +387,9 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip,
       }
 
       memset(ifStats, 0, sizeof(InterfaceStats));
-      ifStats->netflow_device_ip = netflow_device_ip, ifStats->interface_id = ifId;
+      ifStats->netflow_device_ip = netflow_device_ip, 
+	ifStats->netflow_device_port = netflow_device_port,
+	ifStats->interface_id = ifId;
       resetTrafficCounter(&ifStats->outBytes);
       resetTrafficCounter(&ifStats->outPkts);
       resetTrafficCounter(&ifStats->inBytes);
@@ -430,6 +438,7 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip,
 /* *************************** */
 
 static void updateInterfaceStats(u_int32_t netflow_device_ip,
+				 u_int16_t netflow_device_port,
 				 int deviceId, struct generic_netflow_record *record) {
 
   if((myGlobals.device[deviceId].netflowGlobals == NULL) || (record == NULL)) {
@@ -444,19 +453,22 @@ static void updateInterfaceStats(u_int32_t netflow_device_ip,
 	       record->sentPkts, record->sentOctets,
 	       record->rcvdPkts, record->rcvdOctets);
 
-  updateNetFlowIfStats(netflow_device_ip, deviceId, record->output, 0, 1,
+  updateNetFlowIfStats(netflow_device_ip, netflow_device_port, deviceId, record->output, 0, 1,
 		       record->sentPkts, record->sentOctets);
 
   if(record->input == record->output)
-    updateNetFlowIfStats(netflow_device_ip, deviceId, record->input,
+    updateNetFlowIfStats(netflow_device_ip, netflow_device_port,
+			 deviceId, record->input,
 			 1 /* self update */, 0, (2*record->sentPkts),
 			 (2*record->sentOctets));
   else if(record->rcvdPkts != 0) {
-    updateNetFlowIfStats(netflow_device_ip, deviceId, record->input, 0, 0,
+    updateNetFlowIfStats(netflow_device_ip, netflow_device_port,
+			 deviceId, record->input, 0, 0,
 			 record->rcvdPkts, record->rcvdOctets);
   } else {
     /* pre v9 */
-    updateNetFlowIfStats(netflow_device_ip, deviceId, record->input, 0, 0,
+    updateNetFlowIfStats(netflow_device_ip, netflow_device_port,
+			 deviceId, record->input, 0, 0,
 			 record->sentPkts, record->sentOctets);
   }
 }
@@ -487,6 +499,7 @@ static inline int is_zero_timeval(struct timeval *tv) {
 /* *************************** */
 
 static int handleGenericFlow(u_int32_t netflow_device_ip,
+			     u_int16_t netflow_device_port,
 			     time_t recordActTime, time_t recordSysUpTime,
 			     struct generic_netflow_record *record,
 			     int deviceId, time_t *firstSeen, time_t *lastSeen) {
@@ -659,7 +672,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
   /* accessMutex(&myGlobals.hostsHashMutex, "processNetFlowPacket"); */
 
-  updateInterfaceStats(netflow_device_ip, deviceId, record);
+  updateInterfaceStats(netflow_device_ip, netflow_device_port, deviceId, record);
 
   if(!skipSRC) {
     switch((skipSRC = isOKtoSave(record->srcaddr,
@@ -1261,10 +1274,26 @@ static char* nf_hex_dump(char *buf, u_short len) {
 
 /* ********************************************************* */
 
+static void updateSenderFlowSequence(int deviceId, int probeId, 
+				     int numFlows, u_int32_t flowSequence) {
+  traceEvent(CONST_TRACE_INFO, "updateSenderFlowSequence(numFlows=%d, flowSequence=%u)",
+	     numFlows, flowSequence);
+
+  myGlobals.device[deviceId].netflowGlobals->probeList[probeId].totNumFlows += numFlows;
+  myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lastSequenceNumber = flowSequence;
+  if(flowSequence > myGlobals.device[deviceId].netflowGlobals->probeList[probeId].highestSequenceNumber)
+    myGlobals.device[deviceId].netflowGlobals->probeList[probeId].highestSequenceNumber = flowSequence;
+}
+
+/* ********************************************************* */
+
 static void dissectFlow(u_int32_t netflow_device_ip,
+			u_int16_t netflow_device_port,
+			int probeId,
 			char *buffer, int bufferLen, int deviceId) {
   NetFlow5Record the5Record;
-  int flowVersion;
+  int flowVersion, numFlows = 0;
+  u_int32_t flowSequence = 0;
   time_t recordActTime = 0, recordSysUpTime = 0;
   struct generic_netflow_record record;
 #ifdef DEBUG_FLOWS
@@ -1299,14 +1328,14 @@ static void dissectFlow(u_int32_t netflow_device_ip,
     Courtesy of Bernd Ziller <bziller@ba-stuttgart.de>
   */
   if((flowVersion == 1) || (flowVersion == 7)) {
-    int numFlows, i, j;
+    int i, j;
     NetFlow1Record the1Record;
     NetFlow7Record the7Record;
 
     if(flowVersion == 1) {
       memcpy(&the1Record, buffer, bufferLen > sizeof(the1Record) ?
 	     sizeof(the1Record): bufferLen);
-      numFlows = ntohs(the1Record.flowHeader.count);
+      numFlows = ntohs(the1Record.flowHeader.count);      
       if(numFlows > CONST_V1FLOWS_PER_PAK) numFlows = CONST_V1FLOWS_PER_PAK;
       myGlobals.device[deviceId].netflowGlobals->numNetFlowsV1Rcvd += numFlows;
       recordActTime   = the1Record.flowHeader.unix_secs;
@@ -1315,6 +1344,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
       memcpy(&the7Record, buffer, bufferLen > sizeof(the7Record) ?
 	     sizeof(the7Record): bufferLen);
       numFlows = ntohs(the7Record.flowHeader.count);
+      flowSequence = ntohl(the7Record.flowHeader.flow_sequence);
       if(numFlows > CONST_V7FLOWS_PER_PAK) numFlows = CONST_V7FLOWS_PER_PAK;
       myGlobals.device[deviceId].netflowGlobals->numNetFlowsV7Rcvd += numFlows;
       recordActTime   = the7Record.flowHeader.unix_secs;
@@ -1393,7 +1423,11 @@ static void dissectFlow(u_int32_t netflow_device_ip,
     int i;
     u_char handle_ipfix;
 
+    numFlows = 1;
+    
     if(the5Record.flowHeader.version == htons(9)) handle_ipfix = 0; else handle_ipfix = 1;
+
+    flowSequence = ntohl(the5Record.flowHeader.flow_sequence);
 
     if(handle_ipfix) {
       numEntries = ntohs(the5Record.flowHeader.count), displ = sizeof(V9FlowHeader);
@@ -1761,7 +1795,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		de_endianFlow(&record);
 
 		// if(record.sentPkts > 0)
-		  handleGenericFlow(netflow_device_ip, recordActTime,
+		  handleGenericFlow(netflow_device_ip, netflow_device_port, recordActTime,
 				    recordSysUpTime, &record,
 				    deviceId, &firstSeen, &lastSeen);
 
@@ -1813,7 +1847,10 @@ static void dissectFlow(u_int32_t netflow_device_ip,
       }      
     } /* for */
   } else if(the5Record.flowHeader.version == htons(5)) {
-    int i, numFlows = ntohs(the5Record.flowHeader.count);
+    int i;
+
+    numFlows = ntohs(the5Record.flowHeader.count);
+    flowSequence = ntohl(the5Record.flowHeader.flow_sequence);
 
     recordActTime   = the5Record.flowHeader.unix_secs;
     recordSysUpTime = the5Record.flowHeader.sysUptime;
@@ -1860,7 +1897,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
       record.src_mask   = the5Record.flowRecord[i].src_mask;
 
       de_endianFlow(&record);
-      handleGenericFlow(netflow_device_ip, recordActTime,
+      handleGenericFlow(netflow_device_ip, netflow_device_port, recordActTime,
 			recordSysUpTime, &record,
 			deviceId, &firstSeen, &lastSeen);
     }
@@ -1871,6 +1908,11 @@ static void dissectFlow(u_int32_t netflow_device_ip,
     releaseMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex);
   } else
     myGlobals.device[deviceId].netflowGlobals->numBadNetFlowsVersionsRcvd++; /* CHANGE */
+
+  if((flowVersion != 1) && (probeId != -1)) {
+    /* NetFlow v1 does not have the flow sequence */
+    updateSenderFlowSequence(deviceId, probeId, numFlows, flowSequence);
+  }
 }
 
 /* ****************************** */
@@ -1964,7 +2006,7 @@ static void* netflowUtilsLoop(void* _deviceId) {
 
 static void* netflowMainLoop(void* _deviceId) {
   fd_set netflowMask;
-  int rc, len, deviceId;
+  int rc, len, deviceId, probeId = -1;
   u_char buffer[2048];
   struct sockaddr_in fromHost;
 
@@ -2081,20 +2123,27 @@ static void* netflowMainLoop(void* _deviceId) {
 
 	myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd++;
 	NTOHL(fromHost.sin_addr.s_addr);
+	NTOHS(fromHost.sin_port);
 
 	for(i=0; i<MAX_NUM_PROBES; i++) {
 	  if(myGlobals.device[deviceId].netflowGlobals->probeList[i].probeAddr.s_addr == 0) {
 	    myGlobals.device[deviceId].netflowGlobals->probeList[i].probeAddr.s_addr = fromHost.sin_addr.s_addr;
+	    myGlobals.device[deviceId].netflowGlobals->probeList[i].probePort = fromHost.sin_port;
 	    myGlobals.device[deviceId].netflowGlobals->probeList[i].pkts = 1;
+	    probeId = i;
 	    break;
-	  } else if(myGlobals.device[deviceId].netflowGlobals->probeList[i].probeAddr.s_addr == fromHost.sin_addr.s_addr) {
+	  } else if((myGlobals.device[deviceId].netflowGlobals->probeList[i].probeAddr.s_addr == fromHost.sin_addr.s_addr)
+		    && (myGlobals.device[deviceId].netflowGlobals->probeList[i].probePort == fromHost.sin_port)) {
 	    myGlobals.device[deviceId].netflowGlobals->probeList[i].pkts++;
+	    probeId = i;
 	    break;
 	  }
 	}
-
-	dissectFlow(fromHost.sin_addr.s_addr, (char*)buffer, rc, deviceId);
-
+	
+	dissectFlow(fromHost.sin_addr.s_addr,  
+		    fromHost.sin_port, probeId,
+		    (char*)buffer, rc, deviceId);
+	
 #ifdef MAX_NETFLOW_PACKET_BUFFER
         gettimeofday(&netflowEndOfRecordProcessing, NULL);
         elapsed = timeval_subtract(netflowEndOfRecordProcessing, netflowStartOfRecordProcessing);
@@ -2102,7 +2151,6 @@ static void* netflowMainLoop(void* _deviceId) {
         if(elapsed > netflowpmaxTime)
           netflowpmaxTime = elapsed;
 #endif
-
       }
     } else {
       if((rc < 0) && (myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) && (errno != EINTR /* Interrupted system call */)) {
@@ -3019,7 +3067,8 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 
       if(!found) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<TR " TR_ON ">\n<TH " TH_BG " ALIGN=\"LEFT\" "DARK_BG " NOWRAP>Interface %d</th>\n<td width=\"20%\">",
+		      "<TR " TR_ON ">\n<TH " TH_BG " ALIGN=\"LEFT\" "DARK_BG " NOWRAP>"
+		      "Interface %d</th>\n<td width=\"20%\">",
 		      ifStats->interface_id);
 	sendString(buf);
       } else {
@@ -3036,8 +3085,9 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 
       addr.s_addr = ifStats->netflow_device_ip;
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "NetFlow&nbsp;Device: %s<br>",
-		    _intoa(addr, formatBuf, sizeof(formatBuf)));
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "NetFlow&nbsp;Device: %s:%d<br>",
+		    _intoa(addr, formatBuf, sizeof(formatBuf)),
+		    ifStats->netflow_device_port);
       sendString(buf);
 
       if(ifStats->interface_name[0] != '\0') {
@@ -3065,7 +3115,6 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
     }
   }
 
-
   /* ***************************************************************** */
 
   sendString("<tr " TR_ON ">\n"
@@ -3078,9 +3127,12 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
   for(i=0; i<MAX_NUM_PROBES; i++) {
     if(myGlobals.device[deviceId].netflowGlobals->probeList[i].probeAddr.s_addr == 0) break;
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s [%s pkts]<br>\n",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s:%d [%s pkts][%s flows]<br>\n",
 		  _intoa(myGlobals.device[deviceId].netflowGlobals->probeList[i].probeAddr, buf, sizeof(buf)),
-		  formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].pkts, formatBuf, sizeof(formatBuf)));
+		  myGlobals.device[deviceId].netflowGlobals->probeList[i].probePort,
+		  formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].pkts, formatBuf, sizeof(formatBuf)),
+		  formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].totNumFlows, 
+			     formatBuf2, sizeof(formatBuf2)));
     sendString(buf);
   }
   sendString("&nbsp;</td>\n</tr>\n");

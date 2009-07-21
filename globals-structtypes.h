@@ -1093,7 +1093,9 @@ typedef enum {
 
 typedef struct probeInfo {
   struct in_addr probeAddr;
+  u_int16_t probePort;
   u_int32_t      pkts;
+  u_int32_t lastSequenceNumber, highestSequenceNumber, totNumFlows;
 } ProbeInfo;
 
 /* *************************** */
@@ -1280,6 +1282,7 @@ typedef struct flowSetV9 {
 
 typedef struct interfaceStats {
   u_int32_t netflow_device_ip;
+  u_int16_t netflow_device_port;
   u_short interface_id;
   char interface_name[32];
   TrafficCounter inBytes, outBytes, inPkts, outPkts;
