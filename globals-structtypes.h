@@ -1095,7 +1095,8 @@ typedef struct probeInfo {
   struct in_addr probeAddr;
   u_int16_t probePort;
   u_int32_t      pkts;
-  u_int32_t lastSequenceNumber, highestSequenceNumber, totNumFlows;
+  u_int32_t lastSequenceNumber, lowestSequenceNumber, highestSequenceNumber, totNumFlows;
+  u_int32_t lostFlows;
 } ProbeInfo;
 
 /* *************************** */
