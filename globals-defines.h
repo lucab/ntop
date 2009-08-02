@@ -2138,19 +2138,6 @@
 /* #define MAX_HOSTS_PURGE_PER_CYCLE 512 */
 
 /*
- * TCP Wrapper defaults
- */
-#ifdef HAVE_LIBWRAP
- #ifdef MAKE_WITH_SYSLOG
-  #define DEFAULT_TCPWRAP_ALLOW             LOG_AUTHPRIV|LOG_INFO
-  #define DEFAULT_TCPWRAP_DENY              LOG_AUTHPRIV|LOG_WARNING
- #else
-  #define DEFAULT_TCPWRAP_ALLOW             0
-  #define DEFAULT_TCPWRAP_DENY              0
- #endif
-#endif
-
-/*
  * Default port to use for netflow.
  */
 #define DEFAULT_NETFLOW_PORT_STR   "2055"

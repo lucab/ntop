@@ -3596,23 +3596,6 @@ void handleHTTPrequest(HostAddr from) {
   char tmpStr[512];
   int isPostMethod = FALSE;
 
-#ifdef HAVE_LIBWRAP
-  struct request_info req;
-
-  request_init(&req, RQ_DAEMON, CONST_DAEMONNAME, RQ_FILE, myGlobals.newSock, NULL);
-  fromhost(&req);
-  if(!hosts_access(&req)) {
-    closelog(); /* just in case */
-    if(myGlobals.runningPref.instance != NULL)
-      openlog(myGlobals.runningPref.instance, LOG_PID, deny_severity);
-    else
-      openlog(CONST_DAEMONNAME, LOG_PID, deny_severity);
-    syslog(deny_severity, "refused connect from %s", eval_client(&req));
-    myGlobals.numHandledBadrequests[myGlobals.newSock > 0]++;
-    return;
-  }
-#endif /* HAVE_LIBWRAP */
-
   myGlobals.numHandledRequests[myGlobals.newSock > 0]++;
 
   gettimeofday(&httpRequestedAt, NULL);

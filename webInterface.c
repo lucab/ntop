@@ -1813,14 +1813,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBWRAP",
-#ifdef HAVE_LIBWRAP
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "HAVE_LIBXML2",
 #ifdef HAVE_LIBXML2
                          "yes"

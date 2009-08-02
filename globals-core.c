@@ -70,17 +70,6 @@ static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR, DEFAULT_NTOP_CFG_CON
 #endif
 				   NULL };
 
-/*
- *  ** TCP Wrappers
- *
- *      Because of limits in the way libwrap.a does things, these MUST
- *      be open global values.
- *
- */
-#ifdef HAVE_LIBWRAP
-int allow_severity, deny_severity;
-#endif /* HAVE_LIBWRAP */
-
 #if defined(INET6)
 struct in6_addr _in6addr_linklocal_allnodes;
 #endif
@@ -176,11 +165,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
   myGlobals.checkVersionStatus = FLAG_CHECKVERSION_NOTCHECKED;
   myGlobals.checkVersionStatusAgain = 1;
-
-#if !defined(WIN32) && defined(HAVE_LIBWRAP)
-  allow_severity = DEFAULT_TCPWRAP_ALLOW;
-  deny_severity = DEFAULT_TCPWRAP_DENY;
-#endif
 
   /* Other flags (to be set via command line options one day) */
   myGlobals.enableFragmentHandling = 1;

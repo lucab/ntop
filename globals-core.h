@@ -49,10 +49,6 @@ extern struct in6_addr _in6addr_linklocal_allnodes;
 #define releaseAddrResMutex()
 #endif
 
-#ifdef HAVE_LIBWRAP
-extern int allow_severity, deny_severity;
-#endif
-
 /* version.c */
 extern char *version, *osName, *author, *buildDate, *configureDate,
   *configure_parameters,
