@@ -142,7 +142,8 @@ static void queueAddress(HostAddr elem) {
   for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
     if(memcmp(&lastResolvedAddr[i], &elem, sizeof(HostAddr)) == 0) {
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_ERROR, "queueAddress(%s): already been resolved", addrtostr(&elem));
+      traceEvent(CONST_TRACE_ERROR, "queueAddress(%s): already been resolved", 
+		 addrtostr(&elem));
 #endif     
       releaseAddrResMutex();
       return;
@@ -151,8 +152,6 @@ static void queueAddress(HostAddr elem) {
 
   if(myGlobals.addressQueuedCurrent > 16384) {   
     myGlobals.addressUnresolvedDrops++;
-    releaseAddrResMutex();
-    return;
   } else {
     /* First check if the address we want to resolve is already in queue */
     HostAddrList *head = hostAddrList_head;
@@ -216,20 +215,17 @@ void* dequeueAddress(void *_i) {
 
       if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
 
-      /*
-	Make sure that elem is not set if there's not address 
-	to resolve
-      */
-      elem = NULL;
-
       accessAddrResMutex("dequeueAddress");
+
       if(hostAddrList_head != NULL) {
 	elem = hostAddrList_head;
 	hostAddrList_head = hostAddrList_head->next;
 	if(myGlobals.addressQueuedCurrent > 0) myGlobals.addressQueuedCurrent--;
-      }
-      memcpy(&lastResolvedAddr[lastResolvedAddrIdx], &elem->addr, sizeof(HostAddr));
-      lastResolvedAddrIdx = (lastResolvedAddrIdx + 1) % myGlobals.numDequeueAddressThreads;
+	memcpy(&lastResolvedAddr[lastResolvedAddrIdx], &elem->addr, sizeof(HostAddr));
+	lastResolvedAddrIdx = (lastResolvedAddrIdx + 1) % myGlobals.numDequeueAddressThreads;
+      } else
+	elem = NULL;
+
       releaseAddrResMutex();
 
       if(elem) {
