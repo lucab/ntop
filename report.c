@@ -2869,11 +2869,15 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	  }
 	  sendString(buf);
 
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			"<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>",
-			(el->community == NULL) ? "&nbsp;" : el->community);
+	  if(el->community == NULL)
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			  "<TD "TD_BG" ALIGN=RIGHT NOWRAP>&nbsp;</TD>");
+	  else
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			  "<TD "TD_BG" ALIGN=RIGHT NOWRAP><A HREF=/"
+			  CONST_COMMUNITIES_STATS_HTML"?community=%s>%s</A></TD>",
+			  el->community, el->community);
 	  sendString(buf);
-
 
 	  sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
 
@@ -5440,11 +5444,7 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
     /* We don't worry about whether this is single or multi domain, since if it is a single
        domain, our fallback to hostResolvedName will rule anyway.
     */
-    if(a->clusterName && b->clusterName)
-      rc = strcmp(a->clusterName, b->clusterName);
-    else
-      rc = cmpFctnLocationName(a, b);
-    return(rc);
+    rc = cmpFctnLocationName(a, b); return(rc);
   case 2: a_  = a->bytesSent.value, b_ = b->bytesSent.value;   break;
   case 3: a_  = a->bytesRcvd.value, b_ = b->bytesRcvd.value;   break;
   case 4: a_  = a->tcpSent.value  , b_ = b->tcpSent.value;     break;
@@ -5467,13 +5467,13 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
 
 /* ****************************************** */
 
-#define CLUSTER_HEADER       "cluster."
-#define CLUSTER_HEADER_LEN   strlen(CLUSTER_HEADER)
-#define MAX_NUM_CLUSTERS     16
+#define COMMUNITY_HEADER       "community."
+#define COMMUNITY_HEADER_LEN   strlen(COMMUNITY_HEADER)
+#define MAX_NUM_COMMUNITIES     16
 
 /* if myGlobals.runningPref.domainName == NULL -> print all domains */
 void printDomainStats(char* domain_network_name, int network_mode,
-		      int clusterMode, int sortedColumn,
+		      int communityMode, int sortedColumn,
 		      int revertOrder, int pageNum) {
   u_int idx, tmpIdx, numEntries=0, printedEntries=0, maxHosts;
   short keyValue=0, i;
@@ -5486,13 +5486,13 @@ void printDomainStats(char* domain_network_name, int network_mode,
   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32], formatBuf4[32],
     formatBuf5[32], formatBuf6[32], formatBuf7[32], formatBuf8[32], formatBuf9[32],
     hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
-  NetworkStats localNetworks[MAX_NUM_CLUSTERS][MAX_NUM_NETWORKS]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
-  u_short numLocalNetworks[MAX_NUM_CLUSTERS], totNumClusters=0;
-  u_char *clusterNames[MAX_NUM_CLUSTERS], debug = 0;
+  NetworkStats localNetworks[MAX_NUM_COMMUNITIES][MAX_NUM_NETWORKS]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
+  u_short numLocalNetworks[MAX_NUM_COMMUNITIES], totNumCommunities=0;
+  u_char *communityNames[MAX_NUM_COMMUNITIES], debug = 0;
 
   network_mode_sort = network_mode;
 
-  if(!clusterMode) {
+  if(!communityMode) {
     char sym_nw_name[256] = { 0 };
 
     if(domain_network_name == NULL)
@@ -5561,15 +5561,15 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	char val[256];
 
 	if((fetchPrefsValue(key.dptr, val, sizeof(val)) == 0)
-	   && (!strncmp(key.dptr, CLUSTER_HEADER, CLUSTER_HEADER_LEN))) {
+	   && (!strncmp(key.dptr, COMMUNITY_HEADER, COMMUNITY_HEADER_LEN))) {
 	  localAddresses[0] = '\0';
-	  numLocalNetworks[totNumClusters] = 0;
-	  handleAddressLists(val, localNetworks[totNumClusters], 
-			     &numLocalNetworks[totNumClusters],
+	  numLocalNetworks[totNumCommunities] = 0;
+	  handleAddressLists(val, localNetworks[totNumCommunities], 
+			     &numLocalNetworks[totNumCommunities],
 			     localAddresses, sizeof(localAddresses),
-			     CONST_HANDLEADDRESSLISTS_CLUSTERS);
-	  clusterNames[totNumClusters] = (u_char*)strdup((char*)&key.dptr[CLUSTER_HEADER_LEN]);
-	  totNumClusters++;
+			     CONST_HANDLEADDRESSLISTS_COMMUNITIES);
+	  communityNames[totNumCommunities] = (u_char*)strdup((char*)&key.dptr[COMMUNITY_HEADER_LEN]);
+	  totNumCommunities++;
 	}
 
 	nextkey = gdbm_nextkey (myGlobals.prefsFile, key);
@@ -5577,38 +5577,38 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	key = nextkey;
       }
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Statistics for all clusters");
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Statistics for all communities");
     } else {
-      char clusterAddresses[256];
+      char communityAddresses[256];
 
-      snprintf(buf, sizeof(buf), CLUSTER_HEADER"%s", domain_network_name);
-      if(fetchPrefsValue(buf, clusterAddresses, sizeof(clusterAddresses)) != -1) {
+      snprintf(buf, sizeof(buf), COMMUNITY_HEADER"%s", domain_network_name);
+      if(fetchPrefsValue(buf, communityAddresses, sizeof(communityAddresses)) != -1) {
 	localAddresses[0] = '\0';
-	numLocalNetworks[totNumClusters] = 0;
-	handleAddressLists(clusterAddresses, localNetworks[totNumClusters], &numLocalNetworks[totNumClusters],
+	numLocalNetworks[totNumCommunities] = 0;
+	handleAddressLists(communityAddresses, localNetworks[totNumCommunities], &numLocalNetworks[totNumCommunities],
 			   localAddresses, sizeof(localAddresses),
-			   CONST_HANDLEADDRESSLISTS_CLUSTERS);
-	/* clusterNames[totNumClusters] = (u_char*)strdup((char*)&domain_network_name[CLUSTER_HEADER_LEN]);  */
-	clusterNames[totNumClusters] = (u_char*)strdup(domain_network_name);
+			   CONST_HANDLEADDRESSLISTS_COMMUNITIES);
+	/* communityNames[totNumCommunities] = (u_char*)strdup((char*)&domain_network_name[COMMUNITY_HEADER_LEN]);  */
+	communityNames[totNumCommunities] = (u_char*)strdup(domain_network_name);
 
-	if(debug) traceEvent(CONST_TRACE_WARNING, "clusterNames[%d]=[%s]", totNumClusters,  clusterNames[totNumClusters]);
+	if(debug) traceEvent(CONST_TRACE_WARNING, "communityNames[%d]=[%s]", totNumCommunities,  communityNames[totNumCommunities]);
 
-	totNumClusters++;
+	totNumCommunities++;
       }
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Statistics for hosts in cluster <i>%s</i>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Statistics for hosts in community <i>%s</i>",
 		    domain_network_name);
     }
 
-    if(totNumClusters == 0) {
+    if(totNumCommunities == 0) {
       printHTMLheader(buf, NULL, 0);
-      printFlagedWarning("<I>Empty cluster list. Jump to <A HREF=/"CONST_EDIT_PREFS">cluster definition</A>.</I>");
+      printFlagedWarning("<I>Empty community list. Jump to <A HREF=/"CONST_EDIT_PREFS">community definition</A>.</I>");
       if(tmpStats != NULL) free(tmpStats);
-      goto free_clusters;
+      goto free_communitys;
     }
   }
 
-  if(debug) traceEvent(CONST_TRACE_WARNING, "totNumClusters=%d", totNumClusters);
+  if(debug) traceEvent(CONST_TRACE_WARNING, "totNumCommunities=%d", totNumCommunities);
 
   printHTMLheader(buf, NULL, 0);
 
@@ -5622,7 +5622,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
   if(stats == NULL) {
     /* also free the block of memory allocated a few lines up */
     if(tmpStats != NULL) free(tmpStats);
-    goto free_clusters;
+    goto free_communitys;
     return;
   }
 
@@ -5720,30 +5720,37 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	  }
 	}
       } else {
-	/* Cluster */
-	if(el->community && (!isAllowedCommunity(el->community)))
-	  continue;
-	else if(broadcastHost(el))
+	/* Community */
+	if(communityMode) {
+	  if(domain_network_name) {
+	    if (el->community == NULL) continue;
+	    if(strcmp(el->community, domain_network_name))          continue;
+	  }
+	  if((el->community) && (!isAllowedCommunity(el->community))) continue;
+      } else if(broadcastHost(el))
 	  continue;
 	else {	  
-	    if(domain_network_name
-	       && el->dnsDomainValue
-	       && (strcmp(el->dnsDomainValue, domain_network_name) != 0))
-	      continue;
+	  if(domain_network_name && (!communityMode)
+	     && el->dnsDomainValue
+	     && (strcmp(el->dnsDomainValue, domain_network_name) != 0))
+	    continue;
 
-	    if((el->dnsDomainValue == NULL)
-	       || (el->dnsDomainValue[0] == '\0')
-	       || (el->hostResolvedName[0] == '\0')
-	       /*
+	  if(domain_network_name && (!communityMode)
+	     && ((el->dnsDomainValue == NULL)
+		 || (el->dnsDomainValue[0] == '\0')
+		 || (el->hostResolvedName[0] == '\0')
+		 )
+	     /*
 	       || (el->ip2ccValue == NULL)
-	       || (el->ip2ccValue == '\0') */
-	       )
+	       || (el->ip2ccValue == '\0') 
+	     */
+	     )
 	    continue;
 	}
       }
-
+      
       if(domain_network_name == NULL) /* All entries */ {
-	if(!clusterMode) {
+	if(!communityMode) {
 	  if(network_mode == NETWORK_VIEW) {
 	    int s = (int)el->known_subnet_id;
 	    keyValue = (short)s;
@@ -5772,18 +5779,18 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	      keyValue = (keyValue+1) % maxHosts;
 	  }
 	} else {
-	  /* Cluster */
+	  /* Community */
 	  u_char found = 0;
 
 	  if(el->hostIpAddress.hostFamily != AF_INET) continue;
 
 	  keyValue = 0;
-	all_hosts_cluster:
+	all_hosts_community:
 
-	  if(debug) traceEvent(CONST_TRACE_WARNING, "[keyValue=%d][totNumClusters=%d]",
-			       keyValue, totNumClusters);
+	  if(debug) traceEvent(CONST_TRACE_WARNING, "[keyValue=%d][totNumCommunities=%d]",
+			       keyValue, totNumCommunities);
 
-	  for(; keyValue<totNumClusters; keyValue++) {
+	  for(; keyValue<totNumCommunities; keyValue++) {
 	    if(__pseudoLocalAddress(&el->hostIpAddress.addr._hostIp4Address,
 				    localNetworks[keyValue], numLocalNetworks[keyValue], NULL, NULL)) {
 	      found = 1;
@@ -5791,7 +5798,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	    }
 	  }
 
-	  if((!found) || (keyValue >= totNumClusters  /* due to the goto */)) continue;
+	  if((!found) || (keyValue >= totNumCommunities  /* due to the goto */)) continue;
 	}
 
 	if(stats[keyValue] != NULL)
@@ -5800,8 +5807,8 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	  statsEntry = &tmpStats[numEntries++];
 	  memset(statsEntry, 0, sizeof(DomainStats));
 
-	  if(clusterMode)
-	    statsEntry->clusterName = (char*)clusterNames[keyValue];
+	  if(communityMode)
+	    statsEntry->communityName = (char*)communityNames[keyValue];
 	  else {
 	    if((network_mode == NETWORK_VIEW) && (domain_network_name == NULL) /* All entries */)
 	      statsEntry->known_subnet_id = el->known_subnet_id;
@@ -5815,11 +5822,13 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	  // traceEvent(CONST_TRACE_INFO, "[%d] %s/%s", numEntries, el->dnsDomainValue, el->ip2ccValue); 
 	}
       } else /* Only the selected items */ {
-	if(clusterMode) {
+	/*
+	if(communityMode) {
 	  if(!__pseudoLocalAddress(&el->hostIpAddress.addr._hostIp4Address,
 				   localNetworks[0], numLocalNetworks[0], NULL, NULL))
 	    continue;
 	}
+	*/
 
 	statsEntry = &tmpStats[numEntries++];
 	memset(statsEntry, 0, sizeof(DomainStats));
@@ -5843,10 +5852,10 @@ void printDomainStats(char* domain_network_name, int network_mode,
       statsEntry->icmpRcvd.value  += el->icmpRcvd.value;
       statsEntry->icmp6Rcvd.value += el->icmp6Rcvd.value;
 
-      /* Handle overlapping clusters */
-      if(keyValue < (totNumClusters-1)) {
+      /* Handle overlapping communitys */
+      if(keyValue < (totNumCommunities-1)) {
 	keyValue++;
-	goto all_hosts_cluster;
+	goto all_hosts_community;
       }
 
       if(numEntries >= maxHosts) break;
@@ -5855,7 +5864,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
     if(numEntries == 0) {
       printNoDataYet();
       free(tmpStats); free(stats);
-      goto free_clusters;
+      goto free_communitys;
       return;
     }
 
@@ -5874,14 +5883,14 @@ void printDomainStats(char* domain_network_name, int network_mode,
     /* NOTE: col= must be the last parameter */
     if(domain_network_name == NULL) {
       safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?netmode=%d&col=%s",
-		    clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, network_mode, sign);
+		    communityMode ? CONST_COMMUNITIES_STATS_HTML : CONST_DOMAIN_STATS_HTML, network_mode, sign);
       safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?netmode=%d&col=",
-		    clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, network_mode);
+		    communityMode ? CONST_COMMUNITIES_STATS_HTML : CONST_DOMAIN_STATS_HTML, network_mode);
     } else {
       safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s&netmode=%dcol=%s&",
-		    clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, domain_network_name, network_mode, sign);
+		    communityMode ? CONST_COMMUNITIES_STATS_HTML : CONST_DOMAIN_STATS_HTML, domain_network_name, network_mode, sign);
       safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?dom=%s&netmode=%d&col=",
-		    clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, domain_network_name, network_mode);
+		    communityMode ? CONST_COMMUNITIES_STATS_HTML : CONST_DOMAIN_STATS_HTML, domain_network_name, network_mode);
     }
 
     for(i=0; i<=15; i++)
@@ -6013,9 +6022,9 @@ void printDomainStats(char* domain_network_name, int network_mode,
 			statsEntry->domainHost->hostAS, sym_as_name);
 	} else
 	  safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s>%s</A>",
-			clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML,
-			clusterMode ? statsEntry->clusterName : statsEntry->domainHost->dnsDomainValue,
-			clusterMode ? statsEntry->clusterName : statsEntry->domainHost->dnsDomainValue);
+			communityMode ? CONST_COMMUNITIES_STATS_HTML : CONST_DOMAIN_STATS_HTML,
+			communityMode ? statsEntry->communityName : statsEntry->domainHost->dnsDomainValue,
+			communityMode ? statsEntry->communityName : statsEntry->domainHost->dnsDomainValue);
       } else {
 	char *hostLink;
 	u_int len;
@@ -6058,7 +6067,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>",
 		    getRowColor(), htmlAnchor, (network_mode == AS_VIEW) ? "</TD>" : "</TH>",
-		    ((clusterMode && (!domain_network_name)) || (!statsEntry->domainHost)) ?
+		    ((communityMode && (!domain_network_name)) || (!statsEntry->domainHost)) ?
 		    "&nbsp;" : getHostCountryIconURL(statsEntry->domainHost),
 		    formatBytes(statsEntry->bytesSent.value, 1, formatBuf, sizeof(formatBuf)),
 		    (100*((float)statsEntry->bytesSent.value/(float)totBytesSent)),
@@ -6094,11 +6103,11 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		      "<img class=tooltip valign=top border=0 src=/graph.gif></A></TD></TR>\n",
 		      CONST_DOMAIN_STATS_HTML, AS_GRAPH_VIEW, sym_as_name);
 	sendString(buf);
-      } else if(clusterMode && statsEntry && statsEntry->clusterName) {
+      } else if(communityMode && statsEntry && statsEntry->communityName) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<TD "TD_BG" ALIGN=CENTER><A HREF=\"/" CONST_PLUGINS_HEADER "rrdPlugin?action=list&cluster=%s\">"
+		      "<TD "TD_BG" ALIGN=CENTER><A HREF=\"/" CONST_PLUGINS_HEADER "rrdPlugin?action=list&community=%s\">"
 		      "<img class=tooltip valign=top border=0 src=/graph.gif></A></TD></TR>\n",
-		      statsEntry->clusterName);
+		      statsEntry->communityName);
 	sendString(buf);
       } else if((network_mode == NETWORK_VIEW) 
 		&& ((statsEntry->domainHost != NULL)
@@ -6138,17 +6147,17 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
     if(domain_network_name != NULL) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s?dom=%s",
-		    clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML, domain_network_name);
+		    communityMode ? CONST_COMMUNITIES_STATS_HTML : CONST_DOMAIN_STATS_HTML, domain_network_name);
     } else {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
-		    clusterMode ? CONST_CLUSTER_STATS_HTML : CONST_DOMAIN_STATS_HTML);
+		    communityMode ? CONST_COMMUNITIES_STATS_HTML : CONST_DOMAIN_STATS_HTML);
     }
 
     addPageIndicator(buf, pageNum, numEntries,
 		     myGlobals.runningPref.maxNumLines,
 		     revertOrder, abs(sortedColumn), network_mode);
 
-    if(!clusterMode) {
+    if(!communityMode) {
       sendString("<p align=\"center\"><b>NOTE</b>: ");
       if(network_mode == NETWORK_VIEW)
 	sendString("<small>You can define networks using the --known-subnets flag. Networks with no traffic/hosts do not have a hyperlink associated.</small>\n");
@@ -6159,15 +6168,15 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		   "the first name, so for host x.yz.com, the domain is yz.com and for host "
 		   "x.y.z.com, the domain is y.z.com.</small></p>\n");
     } else {
-      sendString("<p align=\"center\"><b>NOTE</b>: <small>You can define host clusters in the ntop <A HREF=/"CONST_EDIT_PREFS">preferences</A>. "
-		 "Please understand that a host cluster is an aggregated view of hosts known to ntop.</small></p>\n");
+      sendString("<p align=\"center\"><b>NOTE</b>: <small>You can define host communitys in the ntop <A HREF=/"CONST_EDIT_PREFS">preferences</A>. "
+		 "Please understand that a host community is an aggregated view of hosts known to ntop.</small></p>\n");
     }
 
     free(tmpStats); free(stats);
 
-  free_clusters:
-    for(i=0; i<totNumClusters; i++)
-      if(clusterNames[i] != NULL) free(clusterNames[i]);
+  free_communitys:
+    for(i=0; i<totNumCommunities; i++)
+      if(communityNames[i] != NULL) free(communityNames[i]);
   }
 }
 

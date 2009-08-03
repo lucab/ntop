@@ -8886,7 +8886,6 @@ void edit_prefs(char *db_key, char *db_val) {
   sendString("<P><SMALL><B>NOTE:</B><ul>\n");
   sendString("<li>Set the value to \"\" (empty value) to delete an entry\n");
   sendString("<li>You can define a community adding an entry of type community.&lt;name&gt;=&lt;network list&gt;. For instance community.ntop.org=131.114.21.22/32\n");
-  sendString("<li>You can define a host cluster adding an entry of type cluster.&lt;name&gt;=&lt;network list&gt;. For instance cluster.Home=192.168.0.0/16,172.0.0.0/8\n");
   sendString("<li>You can map a numeric vlan id to a name adding an entry of type vlan.&lt;vlan id&gt;=&lt;vlan name&gt;. For instance vlan.10=Administration\n");
   sendString("</ul></SMALL><p>\n");
 

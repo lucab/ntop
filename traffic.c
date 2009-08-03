@@ -776,7 +776,7 @@ char* findHostCommunity(u_int32_t host_ip, char *buf, u_short buf_len) {
 
 	handleAddressLists(val, localNetworks, &numLocalNetworks,
 			   localAddresses, sizeof(localAddresses),
-			   CONST_HANDLEADDRESSLISTS_COMMUNITY);
+			   CONST_HANDLEADDRESSLISTS_COMMUNITIES);
 
 	// traceEvent(CONST_TRACE_WARNING, "--> Community %s has %d entries", communityName, numLocalNetworks);
 	for(i=0; i<numLocalNetworks; i++) {

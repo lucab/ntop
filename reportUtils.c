@@ -3989,7 +3989,9 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if(el->community) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		  "%s</TD></TR>\n", getRowColor(), "Community", el->community);
+		  "<A HREF=/"CONST_COMMUNITIES_STATS_HTML"?community=%s>%s</A>"
+		  "</TD></TR>\n", getRowColor(), "Community", 
+		  el->community, el->community);
     sendString(buf);
   }
 

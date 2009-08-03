@@ -353,7 +353,7 @@ static int cmpStrings(const void *_a, const void *_b)
 /* ******************************************* */
 
 static void listResource(char *rrdPath, char *rrdTitle,
-			 char *cluster, char *filterString,
+			 char *community, char *filterString,
 			 char *startTime, char* endTime) {
   char path[512] = { '\0' }, url[512] = { '\0' }, hasNetFlow;
   char buf[512] = { '\0' }, filter[64] = { '\0' }, titleBuf[128] = { '\0' };
@@ -376,10 +376,10 @@ static void listResource(char *rrdPath, char *rrdTitle,
   safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/%s", myGlobals.rrdPath, rrdPath);
   revertSlashIfWIN32(path, 0);
 
-  if(cluster == NULL)
+  if(community == NULL)
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about %s", rrdTitle);
   else
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about cluster %s", cluster);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about community %s", community);
 
   printHTMLheader(buf, NULL, 0);
   sendString("<p ALIGN=left>\n");
@@ -390,10 +390,10 @@ static void listResource(char *rrdPath, char *rrdTitle,
     safe_snprintf(__FILE__, __LINE__, filter, sizeof(filter), "&filter=%s", filterString);
 
   safe_snprintf(__FILE__, __LINE__, url, sizeof(url),
-		"/" CONST_PLUGINS_HEADER "%s?action=list&key=%s&title=%s&end=%u&cluster=%s",
+		"/" CONST_PLUGINS_HEADER "%s?action=list&key=%s&title=%s&end=%u&community=%s",
 		rrdPluginInfo->pluginURLname,
 		rrdPath, titleBuf, (unsigned long)now,
-		cluster ? cluster : "");
+		community ? community : "");
 
   sendString("<script type=\"text/javascript\">\n"
 	     "	function send(f)\n"
@@ -469,7 +469,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
   sendString("<TABLE BORDER=0 "TABLE_DEFAULTS">\n");
 
-  if(cluster == NULL) {
+  if(community == NULL) {
     if(hasNetFlow
        && ((filterString == NULL) || strcasestr(filterString, "flow"))) {
       for(i=1; i<=3; i++) {
@@ -606,18 +606,18 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
     closedir(directoryPointer);
   } else {
-    /* Cluster */
-    char clusterAddresses[256] = { '\0' }, localAddresses[1024] = { '\0' };
+    /* Community */
+    char communityAddresses[256] = { '\0' }, localAddresses[1024] = { '\0' };
     NetworkStats localNetworks[MAX_NUM_NETWORKS]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
     u_short numLocalNetworks = 0, found = 0, num_rrds = 0;
     char *keys[MAX_NUM_RRDS];
     int k;
 
-    snprintf(buf, sizeof(buf), "cluster.%s", cluster);
-    if(fetchPrefsValue(buf, clusterAddresses, sizeof(clusterAddresses)) != -1) {
-      handleAddressLists(clusterAddresses, localNetworks, &numLocalNetworks,
+    snprintf(buf, sizeof(buf), "community.%s", community);
+    if(fetchPrefsValue(buf, communityAddresses, sizeof(communityAddresses)) != -1) {
+      handleAddressLists(communityAddresses, localNetworks, &numLocalNetworks,
 			 localAddresses, sizeof(localAddresses),
-			 CONST_HANDLEADDRESSLISTS_CLUSTERS);
+			 CONST_HANDLEADDRESSLISTS_COMMUNITIES);
     }
 
     for(i=0; i<numLocalNetworks; i++) {
@@ -717,7 +717,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
     if(!found) {
       sendString("<tr><td>");
-      printFlagedWarning("<I>No data (yet) for this cluster</I>");
+      printFlagedWarning("<I>No data (yet) for this community</I>");
       sendString("</td></tr>");
     }
   }
@@ -3978,7 +3978,7 @@ static void handleRRDHTTPrequest(char* url) {
   char rrdKey[512] = { '\0' }, rrdName[64] = { '\0' }, rrdTitle[128] = { '\0' };
   char rrdCounter[64] = { '\0' }, startTime[32] = { '\0' }, endTime[32] = { '\0' };
   char rrdPrefix[32] = { '\0' }, rrdIP[32] = { '\0' }, rrdInterface[64] = { '\0' };
-  char rrdPath[512] = { '\0' }, mode[32] = { '\0' }, cluster[32] = { '\0' }, filterString[64] = { '\0' };
+  char rrdPath[512] = { '\0' }, mode[32] = { '\0' }, community[32] = { '\0' }, filterString[64] = { '\0' };
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
   int _dumpDomains, _dumpFlows, _dumpSubnets, _dumpHosts, _dumpInterfaces, _dumpASs, _enableAberrant, _delay,
@@ -4056,8 +4056,8 @@ static void handleRRDHTTPrequest(char* url) {
 	  else if(strcmp(value, "interfaceSummary") == 0)         action = FLAG_RRD_ACTION_IF_SUMMARY;
 	  else if(strcmp(value, "netflowIfSummary") == 0)         action = FLAG_RRD_ACTION_NF_IF_SUMMARY;
 	  else if(strcmp(value, "list") == 0)                     action = FLAG_RRD_ACTION_LIST;
-	} else if(strcmp(key, "cluster") == 0) {
-	  safe_snprintf(__FILE__, __LINE__, cluster, sizeof(cluster), "%s", value);
+	} else if(strcmp(key, "community") == 0) {
+	  safe_snprintf(__FILE__, __LINE__, community, sizeof(community), "%s", value);
 	} else if(strcmp(key, "filter") == 0) {
 	  safe_snprintf(__FILE__, __LINE__, filterString, sizeof(filterString), "%s", value);
 	} else if(strcmp(key, "key") == 0) {
@@ -4305,7 +4305,7 @@ static void handleRRDHTTPrequest(char* url) {
     interfaceSummary(rrdKey, graphId, startTime, endTime, rrdPrefix, mode);
     return;
   } else if(action == FLAG_RRD_ACTION_LIST) {
-    listResource(rrdKey, rrdTitle, cluster[0] != '\0' ? cluster : NULL,
+    listResource(rrdKey, rrdTitle, community[0] != '\0' ? community : NULL,
 		 (filterString[0] == '\0') ? NULL : filterString, startTime, endTime);
     return;
   }

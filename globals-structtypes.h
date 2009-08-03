@@ -926,7 +926,7 @@ typedef struct hostTraffic {
 
 typedef struct domainStats {
   HostTraffic *domainHost; /* ptr to a host that belongs to the domain */
-  char *clusterName;
+  char *communityName;
   int8_t known_subnet_id;
   TrafficCounter bytesSent, bytesRcvd;
   TrafficCounter tcpSent, udpSent;

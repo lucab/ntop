@@ -966,8 +966,7 @@ void handleAddressLists(char* addresses, NetworkStats theNetworks[MAX_NUM_NETWOR
 		   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
 		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster" :
-		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
+		   flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITIES ? "community" : "unknown",
 		   addresses);
 
   memset(localAddresses, 0, localAddressesLen);
@@ -1129,8 +1128,7 @@ void handleAddressLists(char* addresses, NetworkStats theNetworks[MAX_NUM_NETWOR
 		 flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
 		 flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
 		 flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" :
-		 flagWhat == CONST_HANDLEADDRESSLISTS_CLUSTERS ? "cluster"  :
-		 flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITY ? "community" : "unknown",
+		 flagWhat == CONST_HANDLEADDRESSLISTS_COMMUNITIES ? "community" : "unknown",
 		 a, b, c, d, bits,
 		 MAX_NUM_NETWORKS);
     }
