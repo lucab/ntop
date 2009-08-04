@@ -3149,12 +3149,12 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 	sendString(buf);
       }
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=right>%s&nbsp;in/%s&nbsp;out</td>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=right>%s&nbsp;in<br>%s&nbsp;out</td>",
 		    formatPkts(ifStats->inPkts.value, formatBuf, sizeof(formatBuf)),
 		    formatPkts(ifStats->outPkts.value, formatBuf2, sizeof(formatBuf2)));
       sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=right>%s&nbsp;in/%s&nbsp;</td>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=right>%s&nbsp;in<br>%s&nbsp; out</td>",
 		    formatBytes(ifStats->inBytes.value, 1, formatBuf, sizeof(formatBuf)),
 		    formatBytes(ifStats->outBytes.value, 1, formatBuf2, sizeof(formatBuf2)));
       sendString(buf);
@@ -3185,15 +3185,17 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 		  "<tr><td align=right>%s:%d</td>"
 		  "<td align=right>%s</td>"
 		  "<td align=right>%s</td>"
-		  "<td align=right>%s</td></tr>\n",
+		  "<td align=right>%s%s%s</td></tr>\n",
 		  _intoa(myGlobals.device[deviceId].netflowGlobals->probeList[i].probeAddr, buf, sizeof(buf)),
 		  myGlobals.device[deviceId].netflowGlobals->probeList[i].probePort,
 		  formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].pkts, 
 			     formatBuf, sizeof(formatBuf)),
 		  formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].totNumFlows, 
 			     formatBuf2, sizeof(formatBuf2)), 
+		  (myGlobals.device[deviceId].netflowGlobals->probeList[i].lostFlows > 0) ? "<b><FONT color=red>" : "",
 		  formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].lostFlows, 
-			     formatBuf3, sizeof(formatBuf3)));
+			     formatBuf3, sizeof(formatBuf3)),
+		  (myGlobals.device[deviceId].netflowGlobals->probeList[i].lostFlows > 0) ? "</FONT></b>" : "");
     sendString(buf);
   }
   sendString("</table></td>\n</tr>\n");

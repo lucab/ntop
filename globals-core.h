@@ -40,14 +40,8 @@ extern MYCODE myFacilityNames[];
 extern struct in6_addr _in6addr_linklocal_allnodes;
 #endif
 
-/* Fix courtesy of Tim Gardner <timg@tpi.com> */
-#ifdef ASYNC_ADDRESS_RESOLUTION
 #define accessAddrResMutex(a) if(myGlobals.runningPref.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex,a)
 #define releaseAddrResMutex() if(myGlobals.runningPref.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex)
-#else
-#define accessAddrResMutex(a)
-#define releaseAddrResMutex()
-#endif
 
 /* version.c */
 extern char *version, *osName, *author, *buildDate, *configureDate,
