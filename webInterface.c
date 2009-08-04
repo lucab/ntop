@@ -290,8 +290,6 @@ makeHostLink(HostTraffic *el, short mode,
     return(buf);
   }
 
-  accessAddrResMutex("makeHostLink");
-
   if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE)
      || (el->hostResolvedName[0] == '\0') /* Safety check */
      ) {
@@ -299,14 +297,12 @@ makeHostLink(HostTraffic *el, short mode,
      */
     if(addrnull(&el->hostIpAddress) && (el->ethAddressString[0] == '\0')) {
       FD_SET(FLAG_BROADCAST_HOST, &el->flags); /* Just to be safe */
-      releaseAddrResMutex();
       if(mode == FLAG_HOSTLINK_HTML_FORMAT)
         return("<TH "TH_BG" ALIGN=LEFT>&lt;broadcast&gt;</TH>");
       else
         return("&lt;broadcast&gt;");
     }
     if(cmpSerial(&el->hostSerial, &myGlobals.otherHostEntry->hostSerial)) {
-      releaseAddrResMutex();
       if(mode == FLAG_HOSTLINK_HTML_FORMAT)
         return("<TH "TH_BG" ALIGN=LEFT>&lt;other&gt;<!-- cmpSerial() match --></TH>");
       else
@@ -356,8 +352,7 @@ makeHostLink(HostTraffic *el, short mode,
         strncat(noteBuf, " [Appletalk]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
       }
     } else {
-      releaseAddrResMutex();
-      if(mode == FLAG_HOSTLINK_HTML_FORMAT)
+    if(mode == FLAG_HOSTLINK_HTML_FORMAT)
         return("<TH "TH_BG" ALIGN=LEFT>&lt;unknown&gt;</TH>");
       else
         return("&lt;unknown&gt;");
@@ -499,8 +494,6 @@ makeHostLink(HostTraffic *el, short mode,
       break;
   }
 
-  releaseAddrResMutex();
-
   /* Flag set? Cutoff name at 1st . */
   if(cutName &&
      (symIp[0] != '*') &&
@@ -621,7 +614,6 @@ char* getHostName(HostTraffic *el, short cutName, char *buf, int bufLen) {
   if(broadcastHost(el))
     return("broadcast");
 
-  accessAddrResMutex("getHostName");
   tmpStr = el->hostResolvedName;
 
   if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
@@ -659,7 +651,6 @@ char* getHostName(HostTraffic *el, short cutName, char *buf, int bufLen) {
       }
   }
 
-  releaseAddrResMutex();
   return(buf);
 }
 

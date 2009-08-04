@@ -45,7 +45,6 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
     return("&nbsp;");
   }
 
-  accessAddrResMutex("makeHostLink");
   tmpStr = NULL;
   devTypeStr = "";
   vendorStr = "";
@@ -170,16 +169,13 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
     safe_snprintf(__FILE__, __LINE__, buf, buflen, "%s-%d", tmpStr, el->fcCounters->vsanId);
   }
 
-  releaseAddrResMutex ();
   return(buf);
 }
 
 /* ******************************* */
 
 char *makeVsanLink (u_short vsanId, short mode, char *buf, int buflen) {
-  accessAddrResMutex("makeHostLink");
-
-  if(vsanId) {
+   if(vsanId) {
     safe_snprintf(__FILE__, __LINE__, buf, buflen,
 		  "%s<a href=\"" CONST_VSAN_DETAIL_HTML "?vsan=%d\">%d</a>%s",
 		  (mode == FLAG_HOSTLINK_HTML_FORMAT) ? "<th " TH_BG " align=\"right\" NOWRAP>" : "",
@@ -192,7 +188,6 @@ char *makeVsanLink (u_short vsanId, short mode, char *buf, int buflen) {
 		  (mode == FLAG_HOSTLINK_HTML_FORMAT) ? "</th>" : "");
   }
 
-  releaseAddrResMutex ();
   return (buf);
 }
 
@@ -421,21 +416,15 @@ int cmpFcFctn(const void *_a, const void *_b)
     int rc;
 
     /* Host name */
-    accessAddrResMutex("cmpFctn");
-
-    CMP_FC_PORT ((*a), (*b))
-      releaseAddrResMutex();
+    CMP_FC_PORT ((*a), (*b));
     return(rc);
   } else if(myGlobals.columnSort == FLAG_DOMAIN_DUMMY_IDX) {
     int rc;
-
-    accessAddrResMutex("cmpFctn");
 
     a_ = (*a)->fcCounters->vsanId, b_ = (*b)->fcCounters->vsanId;
 
     rc = (a_ < b_) ? -1 : (a_ > b_) ? 1 : 0;
 
-    releaseAddrResMutex();
     return(rc);
   }
 
@@ -1630,20 +1619,15 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
   char *vendorName;
   char formatBuf[32], formatBuf1[32], formatBuf2[32];
 
-  accessAddrResMutex("printFcHostDetailedInfo");
-
   buf1[0]=0;
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about %s\n", el->hostResolvedName);
 
-  releaseAddrResMutex();
   printSectionTitle(buf);
   sendString("<CENTER>\n");
   sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n");
 
-  accessAddrResMutex("printAllSessions-2");
-
-  if(el->fcCounters->vsanId) {
+    if(el->fcCounters->vsanId) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%d%s</TD></TR>\n",
 		  getRowColor(), "VSAN",
@@ -2151,8 +2135,6 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
   FcFabricElementHash *hash, **theHash;
   FcDomainList *domListEntry;
 
-  accessAddrResMutex("printAllSessionsHTML");
-
   buf1[0]=0;
 
   if(vsanId) {
@@ -2161,8 +2143,6 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
   else {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about VSAN\n");
   }
-
-  releaseAddrResMutex();
 
   printSectionTitle(buf);
 
@@ -2194,8 +2174,6 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
 
   sendString("<CENTER>\n");
   sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n");
-
-  accessAddrResMutex("printAllSessions-2");
 
   if(hash->principalSwitch.str[0] != '\0') {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"

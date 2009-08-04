@@ -912,9 +912,7 @@ void handleNetbios(HostTraffic *srcHost,
 	    char buffer[64];
 
 	    safe_snprintf(__FILE__, __LINE__, buffer, sizeof(buffer), ":%s", &data[45]);
-	    accessAddrResMutex("makeHostLink");
 	    srcHost->fingerprint = strdup(buffer);
-	    releaseAddrResMutex();
 	  }
 	} else /* dport == 139 */ {
 	  /* Request */
@@ -944,9 +942,7 @@ void handleNetbios(HostTraffic *srcHost,
 	    char buffer[64];
 
 	    safe_snprintf(__FILE__, __LINE__, buffer, sizeof(buffer), ":%s", &data[i]);
-	    accessAddrResMutex("makeHostLink");
 	    srcHost->fingerprint = strdup(buffer);
-	    releaseAddrResMutex();
 	  }
 	}
       }

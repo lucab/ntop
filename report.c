@@ -6034,15 +6034,12 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	char tmpBuf[64];
 
 	if(statsEntry->domainHost) {
-	  accessAddrResMutex("getHostIcon");
-
 	  blankId = strlen(statsEntry->domainHost->hostResolvedName)-1;
+	  
 	  if(statsEntry->domainHost->dnsDomainValue != NULL)
 	    blankId -= strlen(statsEntry->domainHost->dnsDomainValue);
 
 	  strncpy(tmpBuf, statsEntry->domainHost->hostResolvedName, sizeof(tmpBuf));
-
-	  releaseAddrResMutex();
 
 	  if((blankId > 0) && (strcmp(&tmpBuf[blankId+1], domain_network_name) == 0))
 	    tmpBuf[blankId] = '\0';

@@ -3485,8 +3485,6 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   char formatBuf[LEN_TIMEFORMAT_BUFFER], formatBuf1[LEN_TIMEFORMAT_BUFFER], 
     formatBuf2[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER], custom_host_name[128];
 
-  accessAddrResMutex("printAllSessionsHTML");
-
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "hostname.%s",
 		(el->hostNumIpAddress[0] != '\0') ? el->hostNumIpAddress : el->ethAddressString);
   
@@ -3523,14 +3521,11 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  (custom_host_name[0] != '\0') ? custom_host_name : el->ethAddressString);
   }
 
-  releaseAddrResMutex();
   printHTMLheader(buf2, buf, 0);
   sendString("<CENTER>\n<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=80%%>\n");
 
   if(el->hostNumIpAddress[0] != '\0') {
     char *hostType, tmpBuf[64];
-
-    accessAddrResMutex("printAllSessions-2");
 
     if(broadcastHost(el)) hostType = "broadcast";
     else if(multicastHost(el)) hostType = "multicast";
@@ -4472,8 +4467,6 @@ char* buildHTMLBrowserWindowsLabel(int i, int j, u_short forIpTraffic) {
   int idx = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts + j;
   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32];
 
-  accessAddrResMutex("buildHTMLBrowserWindowsLabel");
-
   if((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx] == NULL)
      || ((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value == 0)
 	 && (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd.value == 0)))
@@ -4504,7 +4497,6 @@ char* buildHTMLBrowserWindowsLabel(int i, int j, u_short forIpTraffic) {
 		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->pktsRcvd.value, formatBuf3, sizeof(formatBuf3)));
   }
 
-  releaseAddrResMutex();
   return(buf);
 }
 

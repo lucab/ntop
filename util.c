@@ -1965,8 +1965,8 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
   }
 
   if(rc != 0) {
-    traceEvent(CONST_TRACE_ERROR, "accessMutex() call '%s' failed (rc=%d) [%p@%s:%d]",
-               where, rc, (void*)&(mutexId->mutex), fileName, fileLine);
+    traceEvent(CONST_TRACE_ERROR, "accessMutex() call '%s' failed (rc=%d/%s) [%p@%s:%d]",
+               where, rc, strerror(rc), (void*)&(mutexId->mutex), fileName, fileLine);
   } else {
 
 #ifdef MUTEX_DEBUG
@@ -2096,8 +2096,8 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   rc = pthread_mutex_unlock(&(mutexId->mutex));
 
   if(rc != 0)
-    traceEvent(CONST_TRACE_ERROR, "releaseMutex() failed (rc=%d) [t%lu m%p, @%s:%d]",
-               rc, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+    traceEvent(CONST_TRACE_ERROR, "releaseMutex() failed (rc=%d/%s) [t%lu m%p, @%s:%d]",
+               rc, strerror(rc), pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
   else {
     mutexId->isLocked = 0;
     mutexId->numReleases++;
@@ -3442,8 +3442,6 @@ void fillDomainName(HostTraffic *el) {
   if(theDomainHasBeenComputed(el))
     return;
 
-  accessAddrResMutex("fillDomainName");
-
   /* Reset values... */
   if(el->dnsDomainValue != NULL) free(el->dnsDomainValue);
   el->dnsDomainValue = NULL;
@@ -3454,7 +3452,6 @@ void fillDomainName(HostTraffic *el) {
      (el->hostResolvedName    == NULL) ||
      (el->hostResolvedName[0] == '\0')) {
     /* Do NOT set FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED - we still might learn the DNS Name later */
-    releaseAddrResMutex();
     return;
   }
 
@@ -3501,7 +3498,6 @@ void fillDomainName(HostTraffic *el) {
 
   FD_SET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &el->flags);
 
-  releaseAddrResMutex();
   return;
 }
 
@@ -4381,8 +4377,6 @@ void setHostFingerprint(HostTraffic *srcHost) {
     return; /* Reporting fork()ed child, don't update! */
   }
 
-  accessAddrResMutex("setHostFingerprint");
-
   safe_snprintf(__FILE__, __LINE__, fingerprint, sizeof(fingerprint)-1, "%s", srcHost->fingerprint);
   strtokState = NULL;
   WIN = strtok_r(fingerprint, ":", &strtokState); if(!WIN) goto unknownFingerprint;
@@ -4476,8 +4470,6 @@ void setHostFingerprint(HostTraffic *srcHost) {
     traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: match! %s [%d runs]",
 	       srcHost->fingerprint, numEntries);
 #endif
-
-  releaseAddrResMutex();
 }
 
 /* ******************************************
@@ -6003,8 +5995,6 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
     return(1);
   }
 
-  accessAddrResMutex("cmpFctnResolvedName");
-
   if(((*a)->hostResolvedName != NULL) &&
      ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE) &&
      ((*b)->hostResolvedName != NULL) &&
@@ -6198,8 +6188,6 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
       }
     }
   }
-
-  releaseAddrResMutex();
 
 #ifdef CMPFCTN_DEBUG
   traceEvent(CONST_TRACE_INFO, "CMPFCTN_DEBUG: cmpFctn(): %s rc=%d", debugCmpFctn, rc);

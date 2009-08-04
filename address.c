@@ -187,7 +187,6 @@ static void queueAddress(HostAddr elem) {
 
 void* dequeueAddress(void *_i) {
   int dqaIndex = (int)((long)_i);
-  HostAddr addr;
   char keyBuf[LEN_ADDRESS_BUFFER];
 
   traceEvent(CONST_TRACE_INFO, 
@@ -203,8 +202,6 @@ void* dequeueAddress(void *_i) {
       if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
       waitCondvar(&myGlobals.queueAddressCondvar);
     }
-
-    if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
 
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Address resolution started...");
@@ -231,7 +228,7 @@ void* dequeueAddress(void *_i) {
       if(elem) {
 	struct hostent *he = NULL;
 	int family, size;
-	char theAddr[32];
+	char theAddr[64];
 #if defined(HAVE_GETHOSTBYADDR_R)
 	struct hostent _hp, *__hp;
 	char buffer[512];	
@@ -272,6 +269,7 @@ void* dequeueAddress(void *_i) {
 	  accessAddrResMutex("dequeueAddress"); myGlobals.failedResolvedAddresses++; releaseAddrResMutex();
 	}
 
+	memset(elem, 0, sizeof(HostAddr));
 	free(elem);
       }
     } /* while */

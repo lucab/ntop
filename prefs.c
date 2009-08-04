@@ -238,7 +238,6 @@ void loadPrefs(int argc, char* argv[]) {
   traceEvent(CONST_TRACE_NOISY, "NOTE: Reading preferences file entries");
   key = gdbm_firstkey(myGlobals.prefsFile);
   while (key.dptr) {
-
     /* Handle key w/o trailing \0 so valgrind is happy */
     zeroPadMallocString(key.dsize, key.dptr);
 

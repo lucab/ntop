@@ -1616,9 +1616,7 @@ static void processIpPkt(const u_char *bp,
 #if 0
 	    traceEvent(CONST_TRACE_INFO, "[%s][%s]", srcHost->hostNumIpAddress, fingerprint);
 #endif
-	    accessAddrResMutex("processIpPkt");
 	    srcHost->fingerprint = strdup(fingerprint);
-	    releaseAddrResMutex();
 	  }
 	}
       }

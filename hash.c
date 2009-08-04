@@ -810,7 +810,6 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
     if(el) {
       lockHostsHashMutex(el, "_lookupHost");
-      accessMutex(&myGlobals.hostsHashLockMutex, "lookupHost");
       el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
       locked_mutex = 1;
     }
@@ -898,7 +897,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     numRuns++;
   } /* while */
 
-  if(locked_mutex) releaseMutex(&myGlobals.hostsHashLockMutex);
+  if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
 
   if((hostFound == 1) && (vlanId != NO_VLAN) && (el->vlanId != NO_VLAN)
      && (vlanId != el->vlanId) && (!isMultivlaned(el))) {

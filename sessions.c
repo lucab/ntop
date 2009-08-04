@@ -1447,9 +1447,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 		if((delimiter = strchr(buffer, '(')) != NULL) delimiter[0] = '\0';
 		if((delimiter = strchr(buffer, ')')) != NULL) delimiter[0] = '\0';
 
-		accessAddrResMutex("makeHostLink");
 		srcHost->fingerprint = strdup(buffer);
-		releaseAddrResMutex();
 	      }
 	    }
 	    break;
