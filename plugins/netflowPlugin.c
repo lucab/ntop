@@ -3149,12 +3149,12 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 	sendString(buf);
       }
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=right>%s&nbsp;in<br>%s&nbsp;out</td>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=right nowrap>%s&nbsp;in<br>%s&nbsp;out</td>",
 		    formatPkts(ifStats->inPkts.value, formatBuf, sizeof(formatBuf)),
 		    formatPkts(ifStats->outPkts.value, formatBuf2, sizeof(formatBuf2)));
       sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=right>%s&nbsp;in<br>%s&nbsp; out</td>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=right nowrap>%s&nbsp;in<br>%s&nbsp;out</td>",
 		    formatBytes(ifStats->inBytes.value, 1, formatBuf, sizeof(formatBuf)),
 		    formatBytes(ifStats->outBytes.value, 1, formatBuf2, sizeof(formatBuf2)));
       sendString(buf);
