@@ -1819,8 +1819,13 @@ static u_int64_t getData64(SFSample *sample, int deviceId) {
 }
 
 static void skipBytes(SFSample *sample, int skip, int deviceId) {
+#if 0
   int quads = (skip + 3) / 4;
   sample->datap += quads;
+#else
+  /* Fix below courtesy of Daniele Dgandurra <sgandurra@ntop.org> */
+  sample->datap += skip;
+#endif
   if((u_char *)sample->datap > sample->endp) SFABORT(sample, SF_ABORT_EOS);
 }
 
