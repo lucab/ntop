@@ -1539,14 +1539,15 @@ int32_t gmt2local(time_t t) {
 
 /* ********************************* */
 
-char *dotToSlash(char *name) {
+char *dotToSlash(char *name, char *buf, int buf_len ) {
   /*
    *  Convert a dotted quad ip address name a.b.c.d to a/b/c/d or a\b\c\d
    */
   char* localBuffer;
   int i;
 
-  localBuffer = strdup(name);
+  safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s", name);
+  localBuffer = buf;
 
   for (i=0; i<strlen(localBuffer); i++) {
     if((localBuffer[i] == '.') || (localBuffer[i] == ':'))

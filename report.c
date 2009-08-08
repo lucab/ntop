@@ -7066,7 +7066,7 @@ char* hostRRdGraphLink(HostTraffic *el, int network_mode,
 		       u_char is_subnet_host, 
 		       char *tmpStr, int tmpStrLen) {
   struct stat statbuf;
-  char *key, buf[256], rrd_buf[256], subnet_buf[32];
+  char *key, buf[256], rrd_buf[256], subnet_buf[32], buf1[64];
   int rc;
 
   if(is_subnet_host) {
@@ -7087,7 +7087,7 @@ char* hostRRdGraphLink(HostTraffic *el, int network_mode,
 		myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		is_subnet_host ? ((network_mode == DOMAIN_VIEW) ? "domains" : "subnet") : "hosts",
-		(network_mode == DOMAIN_VIEW) ? key : dotToSlash(key)); 
+		(network_mode == DOMAIN_VIEW) ? key : dotToSlash(key, buf1, sizeof(buf1))); 
 
   safe_snprintf(__FILE__, __LINE__, rrd_buf, sizeof(rrd_buf), "%s/bytesRcvd.rrd", buf);
   revertSlashIfWIN32(rrd_buf, 0);
@@ -7108,9 +7108,10 @@ char* hostRRdGraphLink(HostTraffic *el, int network_mode,
 		  (myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName[0] == '/') ? "" : "/",
                   myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		  is_subnet_host ? ((network_mode == DOMAIN_VIEW) ? "domains" : "subnet") : "hosts",
-                  (network_mode == DOMAIN_VIEW) ? key : dotToSlash(key),
+                  (network_mode == DOMAIN_VIEW) ? key : dotToSlash(key, buf1, sizeof(buf1)),
 		  is_subnet_host ? ((network_mode == DOMAIN_VIEW) ? "subnet+" : "network+") : "host+",
-		  is_subnet_host ? ((network_mode == DOMAIN_VIEW) ? key : subnet_buf) : (el->hostResolvedName[0] != '\0' ? el->hostResolvedName : el->hostNumIpAddress),
+		  is_subnet_host ? ((network_mode == DOMAIN_VIEW) ? key : subnet_buf) 
+		  : (el->hostResolvedName[0] != '\0' ? el->hostResolvedName : el->hostNumIpAddress),
 		  is_subnet_host ? ((network_mode == DOMAIN_VIEW) ? "domain" : "subnet") : "host");
   } else
     tmpStr[0] = '\0';

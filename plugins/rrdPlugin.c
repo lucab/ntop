@@ -4617,7 +4617,7 @@ RETSIGTYPE rrdcleanup(int signo) {
 /* ****************************** */
 
 static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet_host) {
-  char value[512 /* leave it big for hosts filter */], subnet_buf[32];
+  char value[512 /* leave it big for hosts filter */], subnet_buf[32], buf1[64];
   NetworkStats networks[32];
   u_short numLocalNets;
   int idx;
@@ -4676,7 +4676,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       hostKey = host2networkName(el, subnet_buf, sizeof(subnet_buf));
     }
 
-    adjHostName = dotToSlash(hostKey);
+    adjHostName = dotToSlash(hostKey, buf1, sizeof(buf1));
 
     safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/%s/%s/",
 		  myGlobals.rrdPath, myGlobals.device[devIdx].uniqueIfName,
@@ -4917,9 +4917,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 /* ****************************** */
 
 static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
-  char rrdPath[512];
-  char *adjHostName;
-  char hostKey[128];
+  char rrdPath[512], *adjHostName, hostKey[128], buf1[64];
 
   lockHostsHashMutex(el, "rrdUpdateFcHostStats");
 
@@ -4934,7 +4932,7 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
       return;
     }
 
-    adjHostName = dotToSlash(hostKey);
+    adjHostName = dotToSlash(hostKey, buf1, sizeof(buf1));
 
     safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath),
 		  "%s/interfaces/%s/hosts/%s/",

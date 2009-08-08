@@ -592,7 +592,7 @@ extern unsigned short isPseudoBroadcastAddress(HostAddr *addr,
 					       u_int32_t *the_local_network_mask);
 extern void printLogTime(void);
 extern int32_t gmt2local(time_t t);
-extern char *dotToSlash(char *name);
+extern char *dotToSlash(char *name, char *buf, int buf_len);
 extern int getLocalHostAddress(struct in_addr *hostIpAddress, u_int8_t *netmask_v6, char* device);
 extern NtopIfaceAddr * getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
 extern void fillDomainName(HostTraffic *el);

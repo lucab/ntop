@@ -982,12 +982,14 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     }
     memset(el->ipProtosList, 0, len);
 
+    /*
     len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**);
     if((el->protoIPTrafficInfos = (ProtoTrafficInfo**)malloc(len)) == NULL) {
       if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
       return(NULL);
     }
     memset(el->protoIPTrafficInfos, 0, len);   
+    */
 
     el->magic = CONST_MAGIC_NUMBER;
     el->hostTrafficBucket = idx; /* Set the bucket index */

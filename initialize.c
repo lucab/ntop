@@ -1612,14 +1612,7 @@ u_int createDummyInterface(char *ifName) {
   }
 #endif
 
-  if(myGlobals.runningPref.enableSessionHandling) {
-    int len = sizeof(IPSession*)*MAX_TOT_NUM_SESSIONS;
-    myGlobals.device[deviceId].tcpSession = (IPSession**)malloc(len);
-    memset(myGlobals.device[deviceId].tcpSession, 0, len);
-  }
-
   /* Allocate memory for dhcp stats */
-
   for(i=0; i<myGlobals.numKnownSubnets; i++) {
     myGlobals.device[deviceId].networkHost[i].protocolInfo = calloc(1, sizeof(ProtocolInfo));
     myGlobals.device[deviceId].networkHost[i].protocolInfo->dnsStats = calloc(1, sizeof(ServiceStats));

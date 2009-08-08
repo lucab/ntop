@@ -3467,7 +3467,7 @@ static int checkHTTPpassword(char *theRequestedURL,
     fmtkey.dsize = strlen(users3) + 1;
     fmtdata = gdbm_fetch(myGlobals.pwFile, fmtkey);
     if(fmtdata.dptr != NULL) {
-      rc=crypt_set_format(fmtdata.dptr);
+      rc = crypt_set_format(fmtdata.dptr);
       if(rc == 0)
         traceEvent(CONST_TRACE_WARNING, "Unable to set crypt format ... password compare may fail");
 #ifdef URL_DEBUG

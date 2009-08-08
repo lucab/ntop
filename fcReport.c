@@ -1847,7 +1847,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
 		    myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
-		    dotToSlash(key));
+		    dotToSlash(key, buf1, sizeof(buf1)));
 
       if(stat(buf, &statbuf) == 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
@@ -1861,7 +1861,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
 		      getRowColor(), 
 		      (myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName[0] == '/') ? "" : "/",
 		      myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
-		      dotToSlash(key),
+		      dotToSlash(key, buf1, sizeof(buf1)),
 		      el->hostResolvedName[0] != '\0' ? el->hostResolvedName : el->fcCounters->hostNumFcAddress);
 	sendString(buf);
       }
