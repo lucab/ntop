@@ -2268,6 +2268,19 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
   if(el->hostResolvedName[0] != '\0') strcpy(buf, el->hostResolvedName);
   else if(el->hostNumIpAddress[0] != '\0') strcpy(buf, el->hostNumIpAddress);
   else if(el->ethAddressString[0] != '\0') strcpy(buf, el->ethAddressString);
+  else {
+    HostTraffic *el1;
+    
+    for(el1=getFirstHost(myGlobals.actualReportDeviceId);
+	el1 != NULL; el1 = getNextHost(myGlobals.actualReportDeviceId, el1)) {
+      if(((strcmp(el1->hostNumIpAddress, el->hostNumIpAddress) == 0) 
+	  || (strcmp(el1->ethAddressString, el->ethAddressString) == 0))
+	 && (el1->vlanId == el->vlanId)) {
+	safe_snprintf (__FILE__, __LINE__,  buf, len, "%s", el1->hostResolvedName);
+	break;
+      } 
+    }
+  }
 }
 
 /* ****************************************************************** */
@@ -3178,6 +3191,18 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     vlanId = vsanId = atoi(&tok[1]);
     *tok = '\0';
   }
+
+  /* ****************************** */
+
+#if 0
+  i=0;
+
+  for(el=getFirstHost(actualDeviceId);
+      el != NULL; el = getNextHost(actualDeviceId, el))
+    traceEvent (CONST_TRACE_WARNING, "[%3d] %s", i++, el->hostNumIpAddress);
+#endif
+ 
+  /* ****************************** */
 
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {

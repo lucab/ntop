@@ -1349,6 +1349,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
   }
 #endif
 
+  memset(&record, 0, sizeof(record));
   dumpFlow(buffer, bufferLen, deviceId);
 
   memcpy(&the5Record, buffer, bufferLen > sizeof(the5Record) ? sizeof(the5Record): bufferLen);

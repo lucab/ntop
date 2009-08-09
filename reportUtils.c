@@ -3022,7 +3022,7 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
   FcNameServerCacheEntry *fcnsEntry;
   FcScsiCounters *tmp;
   HostTraffic *srcEl;
-
+  
   if(cmpSerial(&theSerial, &myGlobals.broadcastEntry->hostSerial)) {
     memcpy(el, myGlobals.broadcastEntry, sizeof(HostTraffic));
     return(el);
@@ -3049,7 +3049,7 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
 	    _addrtostr(&el->hostIpAddress, buf, sizeof(buf)),
 	    sizeof(el->hostNumIpAddress));
 
-    // FIX -- Update address
+    // FIX -- Update address TODO
   } else if (theSerial.serialType == SERIAL_FC) {
     memcpy ((u_int8_t *)&el->fcCounters->hostFcAddress,
             (u_int8_t *)&theSerial.value.fcSerial.fcAddress,

@@ -6301,7 +6301,9 @@ static PortUsage* allocatePortUsage(void) {
 #endif
 
   ptr = (PortUsage*)calloc(1, sizeof(PortUsage));
-  setEmptySerial(&ptr->clientUsesLastPeer), setEmptySerial(&ptr->serverUsesLastPeer);
+  
+  if(ptr)
+    setEmptySerial(&ptr->clientUsesLastPeer), setEmptySerial(&ptr->serverUsesLastPeer);
 
   return(ptr);
 }
