@@ -274,9 +274,8 @@ static int ntop_register(lua_State *L) {
 /* http://localhost:3000/lua/test.lua */
 
 int handleLuaHTTPRequest(char *url) {
-  int lua_argc = 2, idx, found = 0;
+  int idx, found = 0;
   char lua_path[256];
-  char * lua_argv[] = { "", NULL };
   struct stat statbuf;
   lua_State* L;
   char *question_mark = strchr(url, '?');

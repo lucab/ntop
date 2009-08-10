@@ -3018,8 +3018,7 @@ void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
 /* ************************************ */
 
 HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) {
-  int type;
-  FcNameServerCacheEntry *fcnsEntry;
+    FcNameServerCacheEntry *fcnsEntry;
   FcScsiCounters *tmp;
   HostTraffic *srcEl;
   
@@ -3039,7 +3038,6 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
   if((theSerial.serialType == SERIAL_IPV4) ||
      (theSerial.serialType == SERIAL_IPV6)){
     /* IP */
-    char sniffedName[MAXDNAME];
     char buf[LEN_GENERAL_WORK_BUFFER];
 
     addrcpy(&el->hostIpAddress,&theSerial.value.ipSerial.ipAddress);
@@ -3475,7 +3473,7 @@ void checkHostProvidedServices(HostTraffic *el) {
 /* ************************************ */
 
 void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
-  char buf[3*LEN_GENERAL_WORK_BUFFER], buf1[64], buf2[128], sniffedName[MAXDNAME], osBuf[512];
+  char buf[3*LEN_GENERAL_WORK_BUFFER], buf1[64], buf2[128], osBuf[512];
   float percentage;
   Counter total;
   int printedHeader, i;

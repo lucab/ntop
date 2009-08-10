@@ -2997,7 +2997,7 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
                            const u_char *bp, FCSession *theSession,
                            int actualDeviceId)
 {
-  u_char cmd, status, task_mgmt;
+  u_char cmd = 0, status, task_mgmt;
   struct timeval rtt;
   u_int16_t lun;
   u_int32_t xferRdySize, ioSize, duration = 0, hostDur = 0, iops;

@@ -98,38 +98,8 @@ static void updateHostNameInfo(HostAddr addr, char* symbolic, int type) {
 
 /* ************************************ */
 
-static int validDNSChar(char c) {
-  if((c == '-') || (c == '_') || (c == '.')) return(1);
-  if((c >= '0') && (c <= '9')) return(1);
-  if((c >= 'a') && (c <= 'z')) return(1);
-  if((c >= 'A') && (c <= 'Z')) return(1);
-
-  return(0);
-}
-
-/* ************************************ */
-
-static int validDNSName(char *name) {
-  int i, len;
-
-  if(name == NULL)
-    return(0);
-  else
-    len = strlen(name);
-
-  for(i=0; i<len; i++)
-    if(!validDNSChar(name[i]))
-      return(0);
-
-  return(1);
-}
-
-/* ************************************ */
-
 static void queueAddress(HostAddr elem) {
-  datum key_data, data_data;
-  char dataBuf[sizeof(StoredAddress)+4];
-  int rc, i;
+  int i;
   HostAddrList *cloned = NULL;
 
   if(myGlobals.runningPref.numericFlag     
@@ -187,11 +157,10 @@ static void queueAddress(HostAddr elem) {
 
 void* dequeueAddress(void *_i) {
   int dqaIndex = (int)((long)_i);
-  char keyBuf[LEN_ADDRESS_BUFFER];
 
   traceEvent(CONST_TRACE_INFO, 
 	     "THREADMGMT[t%lu]: DNSAR(%d): Address resolution thread running",
-             pthread_self(), dqaIndex+1);
+             (long unsigned int)pthread_self(), dqaIndex+1);
   
   while(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) {
 #ifdef DEBUG
@@ -278,7 +247,7 @@ void* dequeueAddress(void *_i) {
   myGlobals.dequeueAddressThreadId[dqaIndex] = 0;
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Address resolution thread terminated [p%d]",
-             pthread_self(), dqaIndex+1, 
+             (long unsigned int)pthread_self(), dqaIndex+1, 
 #ifndef WIN32
 			 getpid()
 #else

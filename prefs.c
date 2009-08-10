@@ -261,9 +261,8 @@ void loadPrefs(int argc, char* argv[]) {
 /* ***************************************************** */
 
 static void readPcapFileList(char * filenames) {
-  const int block = 32;
   char *line, ebuf[CONST_SIZE_PCAP_ERR_BUF];
-  int i=0,j=0, idx;
+  int idx;
   struct fileList *fl, *prev;
 
   line = strtok(filenames, ",");

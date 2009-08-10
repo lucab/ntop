@@ -521,7 +521,9 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   time_t initTime;
   Counter total_pkts, total_bytes;
   u_int total_flows, ratio;
+#ifdef ENABLE_EFFICIENCY  
   Counter pkt_efficiency;
+#endif
 
 #ifdef MAX_NETFLOW_FLOW_BUFFER
   float elapsed;
@@ -1087,7 +1089,9 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   }
 
   if(session) {
+#ifdef DEBUG_FLOWS
     time_t timeDiff = recordActTime - (*lastSeen - *firstSeen);
+#endif
 
     if(session->session_info == NULL) {
       if((!isEmpty(record->sip_call_id))

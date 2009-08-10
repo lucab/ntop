@@ -31,7 +31,7 @@
 
 static void* sflowMainLoop(void* _deviceId);
 
-#define DEBUG_FLOWS 
+/* #define DEBUG_FLOWS  */
 
 /* ********************************* */
 
@@ -4594,8 +4594,7 @@ static void termsFlowFunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
 static void handlesFlowPacket(u_char *_deviceId,
 			      const struct pcap_pkthdr *h,
 			      const u_char *p) {
-  int sampledPacketSize;
-  int deviceId, rc;
+  int deviceId;
 
   if(myGlobals.pcap_file_list->fileName != NULL) {
     /* ntop is reading packets from a file */
@@ -4603,7 +4602,6 @@ static void handlesFlowPacket(u_char *_deviceId,
     u_int32_t caplen = h->caplen;
     u_int32_t length = h->len;
     unsigned short eth_type;
-    u_int8_t flags = 0;
     struct ip ip;
 
     deviceId = 1; /* Dummy value */
@@ -4627,7 +4625,6 @@ static void handlesFlowPacket(u_char *_deviceId,
 
       if(eth_type == ETHERTYPE_IP) {
 	u_int32_t plen, hlen;
-	u_short sport, dport;
 
 #ifdef DEBUG_FLOWS
 	if(0)

@@ -460,7 +460,7 @@ extern int isInitialFtpData(char* packetData);
 extern char* findHostCommunity(u_int32_t host_ip, char *buf, u_short buf_len);
 extern void setHostCommunity(HostTraffic *el);
 extern void updateDeviceThpt(int deviceToUpdate, int quickUpdate);
-extern void checkCommunities();
+extern void checkCommunities(void);
 
 /* prefs.c */
 extern void loadPrefs(int argc, char* argv[]);
@@ -780,7 +780,6 @@ extern int snprintf(char *str, size_t n, const char *fmt, ...);
 extern int getopt_long(int ___argc, char *const *___argv,
 		       const char *__shortopts,
 		       const struct option *__longopts, int *__longind);
-extern int getopt_long_only();
 #endif /* HAVE_GETOPT_H */
 
 #ifndef HAVE_BUILDARGV

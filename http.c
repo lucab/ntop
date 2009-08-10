@@ -505,7 +505,7 @@ static int decodeString(char *bufcoded,
 
 /* ************************* */
 
-static void ssiMenu_Head() {
+static void ssiMenu_Head(void) {
   FlowFilterList *flows = myGlobals.flowsList;
   short foundAplugin = 0;
   char buf[LEN_GENERAL_WORK_BUFFER];
@@ -730,8 +730,7 @@ static void ssiMenu_Head() {
 		  "--></script>\n");
 }
 
-static void ssiMenu_Body() {
-
+static void ssiMenu_Body(void) {
   sendStringWOssi(
 		  "<table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
 		  " <tr>\n"
@@ -1865,8 +1864,8 @@ static int checkURLsecurity(char *url) {
 	   (strcasecmp(&workURL[i], "js")   == 0) || /* Javascript */
 	   (strcasecmp(&workURL[i], "json") == 0) ||
 	   (strcasecmp(&workURL[i], "pdf")  == 0) ||
-	   (strcasecmp(&workURL[i], "pl")   == 0) ||  /* used for Perl binding */
-	   (strcasecmp(&workURL[i], "lua")   == 0) || /* used for Lua binding */
+	   (strcasecmp(&workURL[i], "lua")  == 0) || /* used for Lua binding */
+	   (strcasecmp(&workURL[i], "py")   == 0) || /* used for Python binding */
 	   (strcasecmp(&workURL[i], "bytecode")   == 0) || /* used for Lua bytecode binding */
 	   (strcasecmp(&workURL[i], "css")  == 0)))) {
     traceEvent(CONST_TRACE_NOISY,
@@ -2659,6 +2658,22 @@ static int returnHTTPPage(char* pageName,
 	return(FLAG_HTTP_INVALID_PAGE);
 #else
       returnHTTPpageNotFound("Lua support disabled into this ntop instance");
+#endif
+    } else if(strncasecmp(pageName, CONST_EMBEDDED_PYTHON_HEADER, 
+			  strlen(CONST_EMBEDDED_PYTHON_HEADER)) == 0) {
+      if(domainNameParm != NULL) free(domainNameParm);
+      if(db_key != NULL) free(db_key);
+      if(db_val != NULL) free(db_val);
+      
+      printTrailer = 0;
+      
+#ifdef HAVE_PYTHON
+      if(handlePythonHTTPRequest(&pageName[strlen(CONST_EMBEDDED_PYTHON_HEADER)])) {
+	;
+      } else
+	return(FLAG_HTTP_INVALID_PAGE);
+#else
+      returnHTTPpageNotFound("Python support disabled into this ntop instance");
 #endif
     } else
 

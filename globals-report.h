@@ -353,7 +353,14 @@ extern void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent);
 extern void drawVsanSwilsProtoDistribution(u_short vsanId);
 
 /* lua.c */
+#ifdef HAVE_LUA
 extern int handleLuaHTTPRequest(char *url);
+#endif
+
+/* python.c */
+#ifdef HAVE_PYTHON
+extern int handlePythonHTTPRequest(char *url);
+#endif
 
 /* map.c */
 extern void init_maps(void);

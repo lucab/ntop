@@ -172,7 +172,9 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	     u_int efficiencySent /* 0 = unknown */,
 	     u_int efficiencyRcvd /* 0 = unknown */) {
   int idx;
+#ifdef ENABLE_EFFICIENCY
   Counter pkt_efficiency = 0;
+#endif
   Counter length = (Counter)_length;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
@@ -2600,7 +2602,7 @@ void* dequeuePacket(void* _deviceId) {
 
   traceEvent(CONST_TRACE_INFO,
              "THREADMGMT[t%lu]: NPA: network packet analyzer (packet processor) thread running [p%d]",
-             pthread_self(), getpid());
+             (long unsigned int)pthread_self(), getpid());
 
   /* Don't bother stalling until RUN, start grabbing packets NOW ... */
 
@@ -2669,7 +2671,8 @@ void* dequeuePacket(void* _deviceId) {
 
   traceEvent(CONST_TRACE_INFO,
              "THREADMGMT[t%lu]: NPA: network packet analyzer (%s) thread terminated [p%d]",
-             pthread_self(), myGlobals.device[deviceId].humanFriendlyName, getpid());
+             (long unsigned int)pthread_self(),
+	     myGlobals.device[deviceId].humanFriendlyName, getpid());
 
   return(NULL);
 }
@@ -3796,7 +3799,6 @@ void processPacket(u_char *_deviceId,
 	struct ether_arp arpHdr;
 	HostAddr addr;
 	TrafficCounter ctr;
-	char buf[32];
 
 	if(length > hlen)
 	  length -= hlen;
@@ -3866,56 +3868,6 @@ void processPacket(u_char *_deviceId,
 		allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
 		incrementHostTrafficCounter(srcHost, nonIPTraffic->arpReplyPktsSent, 1);
 	      }
-
-#if 0
-	      /* DO NOT ADD A break ABOVE ! */
-	    case ARPOP_REQUEST: /* ARP request */
-	      if(srcHost != NULL) {
-		HostTraffic *srcHost1;
-
-		addr.hostFamily = AF_INET;
-		memcpy(&addr.Ip4Address.s_addr, &arpHdr.arp_spa, sizeof(struct in_addr));
-		addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
-		srcHost1 = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, vlanId, 0, 0, actualDeviceId);
-
-		srcHost->hostIpAddress.hostFamily = AF_INET;
-		memcpy(&srcHost->hostIpAddress.Ip4Address.s_addr, arpHdr.arp_spa, sizeof(struct in_addr));
-		srcHost->hostIpAddress.Ip4Address.s_addr = ntohl(srcHost->hostIpAddress.Ip4Address.s_addr);
-		setHostSerial(srcHost);
-		strncpy(srcHost->hostNumIpAddress,
-			_addrtostr(&srcHost->hostIpAddress, buf, sizeof(buf)),
-			sizeof(srcHost->hostNumIpAddress));
-		setResolvedName(srcHost, srcHost->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
-
-		if(myGlobals.runningPref.numericFlag == 0)
-		  ipaddr2str(srcHost, srcHost->hostIpAddress, srcHost->vlanId, actualDeviceId);
-
-		if(srcHost != srcHost1) {
-		  /* The netmask is probably wrong of this network interface has some aliases
-		     as the same host is seen as both local and remote */
-		  FD_SET(FLAG_HOST_WRONG_NETMASK, &srcHost->flags);
-		  FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &srcHost->flags);
-		  FD_SET(FLAG_SUBNET_LOCALHOST, &srcHost->flags);
-
-		  FD_SET(FLAG_HOST_WRONG_NETMASK, &srcHost1->flags);
-		} else {
-		  if(isPseudoLocalAddress(&srcHost->hostIpAddress, actualDeviceId, NULL, NULL)) {
-		    FD_SET(FLAG_SUBNET_LOCALHOST, &srcHost->flags);
-		    FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &srcHost->flags);
-		  } else {
-		    FD_CLR(FLAG_SUBNET_LOCALHOST, &srcHost->flags);
-		    FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &srcHost->flags);
-		  }
-		}
-
-		updateHostKnownSubnet(srcHost);
-		allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic)); /* Necessary after updateHostKnownSubnet() */
-
-		if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) {
-		  incrementHostTrafficCounter(srcHost, nonIPTraffic->arpReqPktsSent, 1);
-		}
-	      }
-#endif
 	    }
 	  }
 	  /* DO NOT ADD A break ABOVE ! */

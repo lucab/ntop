@@ -9,13 +9,13 @@ ntop.getFirstHost(0);
 
 ntop.sendString("<ol>\n");
 while ntop.getNextHost(0) do
-      if(host.ipAddress() == "") then
-            ntop.sendString("<li> <A HREF=\"/" .. host.ethAddress() .. ".html\">" .. string.gsub(host.ethAddress(), ':', '_'))
-      else
-             ntop.sendString("<li> <A HREF=\"/" .. host.ipAddress() .. ".html\">" .. host.ipAddress());
-     end
+   if(host.ipAddress() == "") then
+       ntop.sendString("<li> <A HREF=\"/" .. host.ethAddress() .. ".html\">" .. string.gsub(host.ethAddress(), ':', '_'))
+   else
+       ntop.sendString("<li> <A HREF=\"/" .. host.ipAddress() .. ".html\">" .. host.ipAddress());
+   end
 
-     ntop.sendString("</A> [sent=".. host.pktSent() .. " / rcvd=" .. host.pktRcvd().. "]</li>\n")
+   ntop.sendString("</A> [sent=".. host.pktSent() .. " / rcvd=" .. host.pktRcvd().. "]</li>\n")
 end
 ntop.sendString("</ol>\n");
 

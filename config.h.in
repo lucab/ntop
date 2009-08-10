@@ -330,6 +330,9 @@
 /* Define to 1 if you have the <pwd.h> header file. */
 #undef HAVE_PWD_H
 
+/* Python is supported */
+#undef HAVE_PYTHON
+
 /* Define to 1 if you have the <sched.h> header file. */
 #undef HAVE_SCHED_H
 
@@ -549,18 +552,8 @@
    slash. */
 #undef LSTAT_FOLLOWS_SLASHED_SYMLINK
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
-#undef LT_OBJDIR
-
 /* Define for Jumbo (9k) Ethernet Frames */
 #undef MAKE_WITH_JUMBO_FRAMES
-
-/* Support SSLv3 if available */
-#undef MAKE_WITH_SSLV3_SUPPORT
-
-/* Enable SSL Watchdog */
-#undef MAKE_WITH_SSLWATCHDOG_COMPILETIME
 
 /* ZLIB is available */
 #undef MAKE_WITH_ZLIB
