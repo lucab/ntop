@@ -187,13 +187,6 @@
  */
 #define PARM_MIN_WEBPAGE_AUTOREFRESH_TIME   15
 
-/*
- * SSLWATCHDOG
- *
- * For PARM_SSLWATCHDOG_WAITWOKE_LIMIT and PARM_SSLWATCHDOG_WAIT_INTERVAL,
- * see below, after MAKE_WITH_SSLWATCHDOG is set
- */
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* M A K E option items                                                              */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -482,16 +475,6 @@
  */
 /* #define SESSION_TRACE_DEBUG */
 
-/*
- * SSLWATCHDOG_DEBUG causes webInterface.c to log the activities of the
- * parent and child(watchdog) threads in exhaustive details.
- *
- *   Note the code below (in derived settings) to undef this if the MAKE_WITH_SSLWATCHDOG
- *        option isn't enabled.      Leave that alone!
- *
- */
-/* #define SSLWATCHDOG_DEBUG */
-
 /* STORAGE_DEBUG causes util.c to log the store/resurrection of host information,
  * i.e. the -S command line parameter.
  */
@@ -510,58 +493,6 @@
 /* VENDOR_DEBUG debugs the vendor table stuff in vendor.c
  */
 /* #define VENDOR_DEBUG */
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* SSLWATCHDOG - this crosses the line.                                            */
-/*   If the required libraries exist (multithreaded, openSSL, pthreads and         */
-/*     NOT WIN32, then the user can                                                */
-/*                                                                                 */
-/*          1) request it at ./configure time (which should really be a            */
-/*             HAVE_, but PARM_ seems closer to what we're telling ntop to do).    */
-/*          2) Build it for a run-time parameter (MAKE_)                           */
-/*                                                                                 */
-/*    SSLWATCHDOG_DEBUG is used in webInterface.c to determine if we               */
-/*    report stuff, but it's also used in globals-core.h to make or not-make       */
-/*    debuging code.                                                               */
-/*                                                                                 */
-/*  Who needs that complexity in multiple places, so we put it all here!           */
-/*  (since we're potentially unsetting SSLWATCHDOG_DEBUG, it has to go after       */
-/*   the place to uncomment it...)                                                 */
-/*                                                                                 */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-#if defined(HAVE_OPENSSL) && defined(HAVE_PTHREAD_H) && defined(HAVE_SETJMP_H) && !defined(WIN32)
- #define MAKE_WITH_SSLWATCHDOG
- #ifdef MAKE_WITH_SSLWATCHDOG_COMPILETIME
-  /* Compile Time option */
-  #undef  MAKE_WITH_SSLWATCHDOG_RUNTIME
- #else
-  /* Run time option */
-  #undef SSLWATCHDOG_DEBUG
-  #define MAKE_WITH_SSLWATCHDOG_RUNTIME
- #endif
-#else
- /* Neither - don't have the required headers */
- #undef MAKE_WITH_SSLWATCHDOG
- #undef MAKE_WITH_SSLWATCHDOG_COMPILETIME
- #undef MAKE_WITH_SSLWATCHDOG_RUNTIME
- #undef SSLWATCHDOG_DEBUG
-#endif
-
-/*
- *  PARM_SSLWATCHDOG_WAITWOKE_LIMIT
- *    This is the number of times we'll allow ourselves to be woken up
- *    (for reasons other than the expiration of the watchdog interval
- *    or completion of the ssl accept).
- *
- *  PARM_SSLWATCHDOG_WAIT_INTERVAL
- *    This is the number of seconds to wait in the watchdog for the
- *    ssl accept to finish.
- */
-#ifdef MAKE_WITH_SSLWATCHDOG
- #define PARM_SSLWATCHDOG_WAITWOKE_LIMIT    5
- #define PARM_SSLWATCHDOG_WAIT_INTERVAL     3
-#endif
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* L E N,  L I M,  M A X  items                                                    */
@@ -1901,24 +1832,6 @@
 #define FLAG_HOST_SYM_ADDR_TYPE_NETBIOS     27
 #define FLAG_HOST_SYM_ADDR_TYPE_NAME        29
 #define FLAG_HOST_SYM_ADDR_TYPE_MDNS        30 /* Multicast DNS */
-/*
- * SSLWATCHDOG stuff
- */
-#ifdef MAKE_WITH_SSLWATCHDOG
-
- #define FLAG_SSLWATCHDOG_PARENT            0
- #define FLAG_SSLWATCHDOG_CHILD             1
- #define FLAG_SSLWATCHDOG_BOTH              -1
-
- #define FLAG_SSLWATCHDOG_UNINIT            0  /* No child */
- #define FLAG_SSLWATCHDOG_WAITINGREQUEST    1  /* waiting for request */
- #define FLAG_SSLWATCHDOG_HTTPREQUEST       2  /* http request received */
- #define FLAG_SSLWATCHDOG_HTTPCOMPLETE      3  /* Parent done w/ http */
- #define FLAG_SSLWATCHDOG_FINISHED          9
-
- #define FLAG_SSLWATCHDOG_RETURN_LOCKED     1
- #define FLAG_SSLWATCHDOG_ENTER_LOCKED      2
-#endif
 
 /*
  * FibreChannel
@@ -2836,7 +2749,6 @@ struct ip6_hdr
 #define NTOP_PREF_NO_ISESS_PURGE         "ntop.disableInstantSessionPurge"
 #define NTOP_PREF_NO_TRUST_MAC           "ntop.dontTrustMACaddr"
 #define NTOP_PREF_PCAP_LOGBASE           "ntop.pcapLogBasePath"
-#define NTOP_PREF_USE_SSLWATCH           "ntop.useSSLwatchdog"
 #define NTOP_PREF_NO_SCHEDYLD            "ntop.schedYield"
 #define NTOP_PREF_DBG_MODE               "ntop.debugMode"
 #define NTOP_PREF_TRACE_LVL              "ntop.traceLevel"

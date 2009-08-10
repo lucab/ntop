@@ -285,15 +285,6 @@ extern void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr)
 extern bool processNtopPref (char *key, char *value, bool savePref,
                              UserPref *pref);
 
-#ifdef MAKE_WITH_SSLWATCHDOG
-extern int sslwatchdogWaitFor(int stateValue, int parentchildFlag, int alreadyLockedFlag);
-extern int sslwatchdogClearLock(int parentchildFlag);
-extern int sslwatchdogGetLock(int parentchildFlag);
-extern int sslwatchdogSignal(int parentchildFlag);
-extern int sslwatchdogSetState(int stateNewValue, int parentchildFlag, int enterLockedFlag, int exitLockedFlag);
-extern void sslwatchdogSighandler(int signum);
-extern void* sslwatchdogChildThread(void* notUsed _UNUSED_);
-#endif
 extern int printNtopLogReport(int printAsText);
 extern char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize);
 extern void edit_prefs(char *db_key, char *db_val);

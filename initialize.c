@@ -746,17 +746,6 @@ void initThreads(void) {
                  (long)myGlobals.dequeueAddressThreadId[i], i+1);
     }
   }
-
-#ifdef MAKE_WITH_SSLWATCHDOG
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  if(myGlobals.runningPref.useSSLwatchdog == 1)
-#endif
-    {
-      traceEvent(CONST_TRACE_NOISY, "Initializing Condvar for ssl watchdog");
-      createCondvar(&myGlobals.sslwatchdogCondvar);
-      myGlobals.sslwatchdogCondvar.predicate = FLAG_SSLWATCHDOG_UNINIT;
-    }
-#endif
 }
 
 /*

@@ -160,9 +160,6 @@ void usage(FILE * fp) {
   fprintf(fp, "    [--p3p-cp]                                            %sSet return value for p3p compact policy, header\n", newLine);
   fprintf(fp, "    [--p3p-uri]                                           %sSet return value for p3p policyref header\n", newLine);
   fprintf(fp, "    [--skip-version-check]                                %sSkip ntop version check\n", newLine);
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  fprintf(fp, "    [--ssl-watchdog]                                      %sUse ssl watchdog (NS6 problem)\n", newLine);
-#endif
   fprintf(fp, "    [--known-subnets]                                     %sList of known subnets (separated by ,)\n", newLine);
   fprintf(fp, "                                                          %sIf the argument starts with @ it is assumed it is a file path\n", newLine);
   fprintf(fp, "                                                          %sE.g. 192.168.0.0/14=home,172.16.0.0/16=private\n", newLine);

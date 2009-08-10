@@ -2128,10 +2128,6 @@ typedef struct _userPref {
   int  sslPort;
 #endif
 
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  bool useSSLwatchdog;           /* --ssl-watchdog '133' */
-#endif
-
 #ifdef MAKE_WITH_SCHED_YIELD
   bool disableSchedYield;        /* --disable-schedyield '134' */
 #endif
@@ -2283,12 +2279,6 @@ typedef struct ntopGlobals {
   SSL_CTX* ctx;
   SSL_connection ssl[MAX_SSL_CONNECTIONS];
 
-#ifdef MAKE_WITH_SSLWATCHDOG
-  /* sslwatchdog stuff... */
-  ConditionalVariable sslwatchdogCondvar;
-  pthread_t sslwatchdogChildThreadId;
-#endif
-
 #endif /* HAVE_OPENSSL */
 
   /* ntop state - see flags in globals-defines.h */
@@ -2391,9 +2381,6 @@ typedef struct ntopGlobals {
   unsigned long numUnsuccessfulNotfound[2];
   unsigned long numUnsuccessfulDenied[2];
   unsigned long numUnsuccessfulForbidden[2];
-#ifdef MAKE_WITH_SSLWATCHDOG
-  unsigned long numHTTPSrequestTimeouts;
-#endif
   unsigned long numSSIRequests,
                 numBadSSIRequests,
                 numHandledSSIRequests;

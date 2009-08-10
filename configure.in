@@ -209,11 +209,6 @@ AC_ARG_WITH(ssl,
               fi,
               ac_disable_openssl="no")
 
-AC_ARG_ENABLE(sslwatchdog,
-              [  --enable-sslwatchdog        enable Watchdog for ssl hangups [[default=disabled]]],
-              ac_enable_sslwatchdog="$enableval",
-              ac_enable_sslwatchdog="no")
-
 AC_ARG_ENABLE(plugins,
               [  --disable-plugins           disable compilation of plugins [[default=enabled]]],
               if test "x$enableval" = xno; then
@@ -758,69 +753,6 @@ dnl>   we test for libraries.  It's ok to set values via AC_DEFINE_UNQUOTED().
 dnl> So, we...
 
 dnl> Test the enable, disable and with's for unreasonable combinations.
-
-dnl> Process the trivially simple ones and be done with 'em
-
-echo
-echo "-------------------------------------------------------------------"
-echo
-echo "   **Handling your --enable and --disable requests**"
-echo
-
-echo
-echo "SSL?"
-if test ".${ac_disable_openssl}" = ".yes"; then
-    echo "    ...Disabled via ./configure command line option --without-ssl"
-    if test ".${OSSL_LIB}" != "." ||
-       test ".${OSSL_INCLUDE}" != "." ||
-       test ".${ac_enable_sslv3}" = ".yes" ||
-       test ".${ac_enable_sslwatchdog}" = ".yes"; then
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* WARNING:    You disabled ssl but explicitly or implicitly specified"
-        echo "*             the conflicting options:"
-        echo "*                --with-ossl-lib=${OSSL_LIB}"
-        echo "*                --with-ossl-include=${OSSL_INCLUDE}"
-        if test ".${ac_enable_sslv3}" = ".yes"; then
-            echo "*                --enable-sslv3"
-        fi
-        if test ".${ac_enable_sslwatchdog}" = ".yes"; then
-            echo "*                --enable-sslwatchdog"
-        fi
-        echo "*"
-        echo "*>>> Ignoring the option(s)"
-        echo "*"
-        echo "*???     1. Remove the --without-ssl option"
-        echo "*??? or  2. Remove the conflicting --with-xxxxx-xxxxx or "
-        echo "*           --enable-xxxxx options"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-        OSSL_LIB=
-        OSSL_INCLUDE=
-        ac_enable_sslv3="no"
-        ac_enable_sslwatchdog="no"
-        HAS_WARNING="yes"
-    fi
-else
-    echo "    ...(Default) Requested if available. Disable via ./configure command line option --without-ssl."
-    echo "  sslv3?"
-    if test ".${ac_enable_sslv3}" = ".yes"; then
-        echo "    ...Requested if available AT RUN TIME."
-        AC_DEFINE_UNQUOTED(MAKE_WITH_SSLV3_SUPPORT, 1, [Support SSLv3 if available])
-    else
-        echo "    ...(Default) Disabled. Request via ./configure command line option --enable-sslv3"
-    fi
-    echo "  ssl watchdog?"
-    if test ".${ac_enable_sslwatchdog}" = ".yes"; then
-        echo "    ...Requested via ./configure command line option --enable-sslwatchdog"
-        AC_DEFINE_UNQUOTED(MAKE_WITH_SSLWATCHDOG_COMPILETIME, 1, [Enable SSL Watchdog])
-    else
-        echo "    ...(Default) Disabled. Request via ./configure command line option  --enable-sslwatchdog"
-        echo "                                    or ntop run time option --ssl-watchdog."
-    fi
-fi
 
 echo
 echo "Plugins?"

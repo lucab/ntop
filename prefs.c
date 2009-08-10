@@ -131,9 +131,7 @@ static struct option const long_options[] = {
   { "use-syslog",                       optional_argument, NULL, 131 },
 #endif
 
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  { "ssl-watchdog",                     no_argument,       NULL, 133 },
-#endif
+  /* 132/133 are AVAILABLE */
 
 #ifdef MAKE_WITH_SCHED_YIELD
   { "disable-schedyield",               optional_argument, NULL, 134 },
@@ -646,13 +644,6 @@ int parseOptions(int argc, char* argv[]) {
 	printf("NOTE: --use-syslog, no facility specified, using default value.  Did you forget the =?\n");
 	myGlobals.runningPref.useSyslog = DEFAULT_SYSLOG_FACILITY;
       }
-      break;
-#endif
-
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-    case 133:
-      /* Burton M. Strauss III - Jun 2002 */
-      myGlobals.runningPref.useSSLwatchdog = 1;
       break;
 #endif
 
@@ -1320,12 +1311,6 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
     processStrPref(NTOP_PREF_PCAP_LOGBASE, value,
 		    &pref->pcapLogBasePath, savePref);
   }
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  else if(strcmp(key, NTOP_PREF_USE_SSLWATCH) == 0) {
-    processBoolPref(NTOP_PREF_USE_SSLWATCH, value2bool(value),
-		     &pref->useSSLwatchdog, savePref);
-  }
-#endif
   else if(strcmp(key, NTOP_PREF_DBG_MODE) == 0) {
     processBoolPref(NTOP_PREF_DBG_MODE, value2bool(value), &pref->debugMode,
 		     savePref);
@@ -1432,9 +1417,6 @@ void initUserPrefs(UserPref *pref) {
 //   pref->sslAddr = DEFAULT_NTOP_WEB_ADDR;
 //   pref->sslPort = DEFAULT_NTOP_WEB_PORT+1;
 // #endif
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-   pref->useSSLwatchdog = 0;
-#endif
 
 #ifdef MAKE_WITH_SCHED_YIELD
    pref->disableSchedYield = DEFAULT_NTOP_SCHED_YIELD;

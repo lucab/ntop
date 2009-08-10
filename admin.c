@@ -1175,9 +1175,6 @@ void addDefaultAdminUser(void) {
    tmpPrefs.dontTrustMACaddr = 0;
    tmpPrefs.enableOtherPacketDump = tmpPrefs.enableSuspiciousPacketDump = 0;
    tmpPrefs.enableSessionHandling = 0;
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-   tmpPrefs.useSSLwatchdog = 0;
-#endif
 
 #ifdef MAKE_WITH_SCHED_YIELD
    tmpPrefs.disableSchedYield = 0;
@@ -1295,12 +1292,6 @@ void addDefaultAdminUser(void) {
    if (advanced_prefs && myGlobals.savedPref.dontTrustMACaddr && !tmpPrefs.dontTrustMACaddr) {
      processNtopPref(NTOP_PREF_NO_TRUST_MAC, FALSE, savePref, &tmpPrefs);
    }
-
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-   if (advanced_prefs && myGlobals.savedPref.useSSLwatchdog && !tmpPrefs.useSSLwatchdog) {
-     processNtopPref(NTOP_PREF_USE_SSLWATCH, FALSE, savePref, &tmpPrefs);
-   }
-#endif
 
 #ifdef MAKE_WITH_SCHED_YIELD
    if (advanced_prefs && myGlobals.savedPref.disableSchedYield && !tmpPrefs.disableSchedYield) {
@@ -1836,12 +1827,6 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
     CONFIG_STR_ENTRY(DARK_BG, "Pcap Log Base Path (-O)",
 		     NTOP_PREF_PCAP_LOGBASE, 50, pref->pcapLogBasePath,
 		     "Directory where packet dump files are created");
-
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-    CONFIG_RADIO_ENTRY(DARK_BG, "Use SSL Watchdog",
-		       NTOP_PREF_USE_SSLWATCH, pref->useSSLwatchdog,
-		       "");
-#endif
 
 #ifdef MAKE_WITH_SCHED_YIELD
     CONFIG_RADIO_ENTRY(DARK_BG, "Disable SchedYield",

@@ -1027,46 +1027,6 @@ Code "inherited" from nslookup
 /* Shorthand, used in traffic.c */
 /* #define getSerial(a) myGlobals.device[deviceToUpdate].hash_hostTraffic[a]->hostSerial */
 
-#ifdef SSLWATCHDOG_DEBUG
-#define sslwatchdogDebug(text, bpcFlag, note) {				\
-    traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: %1d %-10s %-15s %-15s %s", \
-	       myGlobals.sslwatchdogCondvar.predicate,			\
-	       ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""),	\
-	       ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""),	\
-	       ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""),	\
-	       note);							\
-  }
-#define sslwatchdogDebugN(text, bpcFlag, note) {			\
-    traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: %1d %-10s %-15s %-15s %d", \
-	       myGlobals.sslwatchdogCondvar.predicate,			\
-	       ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""),	\
-	       ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""),	\
-	       ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""),	\
-	       note);							\
-  }
-#define sslwatchdogError(text, bpcFlag, note) {				\
-    traceEvent(CONST_TRACE_INFO, "SSLWDERROR: %1d %-10s %-15s %-15s %s", \
-	       myGlobals.sslwatchdogCondvar.predicate,			\
-	       ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""),	\
-	       ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""),	\
-	       ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""),	\
-	       note);							\
-  }
-#define sslwatchdogErrorN(text, bpcFlag, note) {			\
-    traceEvent(CONST_TRACE_INFO, "SSLWDERROR: %1d %-10s %-15s %-15s %d", \
-	       myGlobals.sslwatchdogCondvar.predicate,			\
-	       ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""),	\
-	       ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""),	\
-	       ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""),	\
-	       note);							\
-  }
-#else
-#define sslwatchdogDebug(text, bpcFlag, note) {}
-#define sslwatchdogDebugN(text, bpcFlag, note) {}
-#define sslwatchdogError(text, bpsFlag, note) {}
-#define sslwatchdogErrorN(text, bpcFlag, note) {}
-#endif
-
 #define CONST_LLC_U_CMD(u)    ((u) & 0xef)
 #define CONST_LLC_S_CMD(is)   (((is) >> 10) & 0x03)
 #define CONST_LLC_IS_NR(is)   (((is) >> 1) & 0x7f)

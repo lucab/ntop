@@ -28,19 +28,6 @@
 #include <pwd.h>
 #endif
 
-#ifdef MAKE_WITH_SSLWATCHDOG
-/* Stuff for the watchdog */
-#include <setjmp.h>
-
-jmp_buf sslwatchdogJump;
-
-/* Forward */
-void* sslwatchdogChildThread(void* notUsed _UNUSED_);
-void sslwatchdogSighandler (int signum);
-int sslwatchdogSignal(int parentchildFlag);
-
-#endif
-
 #ifdef PARM_USE_COLOR
 static short alternateColor=0;
 #endif
@@ -1256,14 +1243,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "SESSION_TRACE_DEBUG",
 #ifdef SESSION_TRACE_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "SSLWATCHDOG_DEBUG",
-#ifdef SSLWATCHDOG_DEBUG
                          "yes"
 #else
                          "no"
@@ -2734,14 +2713,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SNMP",
 #ifdef MAKE_WITH_SNMP
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLWATCHDOG_COMPILETIME",
-#ifdef MAKE_WITH_SSLWATCHDOG_COMPILETIME
                          "yes"
 #else
                          "no"
@@ -4833,22 +4804,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLWATCHDOG",
-#ifdef MAKE_WITH_SSLWATCHDOG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLWATCHDOG_RUNTIME",
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SYSLOG",
 #ifdef MAKE_WITH_SYSLOG
                          "yes"
@@ -5681,18 +5636,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "PARM_SLEEP_LIMIT", "undefined");
 #endif
 
-#ifdef PARM_SSLWATCHDOG_WAIT_INTERVAL
-  printFeatureConfigNum(textPrintFlag, "PARM_SSLWATCHDOG_WAIT_INTERVAL", PARM_SSLWATCHDOG_WAIT_INTERVAL);
-#else
-  printFeatureConfigInfo(textPrintFlag, "PARM_SSLWATCHDOG_WAIT_INTERVAL", "undefined");
-#endif
-
-#ifdef PARM_SSLWATCHDOG_WAITWOKE_LIMIT
-  printFeatureConfigNum(textPrintFlag, "PARM_SSLWATCHDOG_WAITWOKE_LIMIT", PARM_SSLWATCHDOG_WAITWOKE_LIMIT);
-#else
-  printFeatureConfigInfo(textPrintFlag, "PARM_SSLWATCHDOG_WAITWOKE_LIMIT", "undefined");
-#endif
-
 #ifdef PARM_THROUGHPUT_REFRESH_INTERVAL
   printFeatureConfigNum(textPrintFlag, "PARM_THROUGHPUT_REFRESH_INTERVAL", PARM_THROUGHPUT_REFRESH_INTERVAL);
 #else
@@ -6419,12 +6362,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                            pref->skipVersionCheck == 1 ? "Yes" : "No",
                            "No");
 
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  printParameterConfigInfo(textPrintFlag, "--ssl-watchdog",
-                           pref->useSSLwatchdog == 1 ? "Yes" : "No",
-                           "No");
-#endif
-
   printParameterConfigInfo(textPrintFlag, "--w3c",
                            pref->w3c == TRUE ? "Yes" : "No",
                            "No");
@@ -6774,16 +6711,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numHandledSIGPIPEerrors);
   printFeatureConfigInfo(textPrintFlag, "# Handled SIGPIPE Errors", buf);
-
-#ifdef MAKE_WITH_SSLWATCHDOG
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  if(pref->useSSLwatchdog == 1)
-#endif
-    {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numHTTPSrequestTimeouts);
-      printFeatureConfigInfo(textPrintFlag, "# HTTPS Request Timeouts", buf);
-    }
-#endif
 
   if(textPrintFlag == TRUE) {
     printInfoSectionTitle(textPrintFlag, "Memory Usage");
@@ -7402,7 +7329,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     defined(PACKET_DEBUG)              || \
     defined(PLUGIN_DEBUG)              || \
     defined(SESSION_TRACE_DEBUG)       || \
-    defined(SSLWATCHDOG_DEBUG)         || \
     defined(STORAGE_DEBUG)             || \
     defined(UNKNOWN_PACKET_DEBUG)      || \
     defined(URL_DEBUG)
@@ -8052,50 +7978,8 @@ void initWeb(void) {
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: INITWEB: Started thread for web server",
 	     myGlobals.handleWebConnectionsThreadId);
 
-#ifdef MAKE_WITH_SSLWATCHDOG
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  if(myGlobals.runningPref.useSSLwatchdog == 1)
-#endif
-    {
-      int rc;
-
-      traceEvent(CONST_TRACE_INFO, "INITWEB: Starting https:// watchdog");
-
-#ifdef SSLWATCHDOG_DEBUG
-      traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: ****S*S*L*W*A*T*C*H*D*O*G*********STARTING");
-      traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: P Common     Parent         Child");
-      traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: - ---------- -------------- --------------");
-#endif
-
-      if((rc = sslwatchdogGetLock(FLAG_SSLWATCHDOG_BOTH)) != 0) {
-	/* Bad thing - can't lock the mutex */
-	sslwatchdogErrorN(">LockErr", FLAG_SSLWATCHDOG_BOTH, rc);
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-	/* --use-sslwatchdog?  Let's cheat - turn it off */
-	traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: *****Turning off sslWatchdog and continuing...");
-	myGlobals.runningPref.useSSLwatchdog = 0;
-#else
-	/* ./configure parm? very bad... */
-	traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: *****SSL Watchdog set via ./configure, aborting...");
-	cleanup(0);
-#endif
-      }
-
-      sslwatchdogDebug("CreateThread", FLAG_SSLWATCHDOG_BOTH, "");
-      createThread(&myGlobals.sslwatchdogChildThreadId, sslwatchdogChildThread, NULL);
-      traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: INITWEB: Started thread for ssl watchdog",
-		 myGlobals.sslwatchdogChildThreadId);
-
-      signal(SIGUSR1, sslwatchdogSighandler);
-      sslwatchdogDebug("setsig()", FLAG_SSLWATCHDOG_BOTH, "");
-
-      sslwatchdogClearLock(FLAG_SSLWATCHDOG_BOTH);
-    }
-#endif /* MAKE_WITH_SSLWATCHDOG */
-
   traceEvent(CONST_TRACE_NOISY, "INITWEB: Server started... continuing with initialization");
 }
-
 
 /* ************************************* */
 
@@ -8128,235 +8012,6 @@ static void PIPEhandler(int sig) {
   signal (SIGPIPE, PIPEhandler);
 }
 #endif
-
-/* **************************************** */
-
-#ifdef MAKE_WITH_SSLWATCHDOG
-
-int sslwatchdogWaitFor(int stateValue, int parentchildFlag, int alreadyLockedFlag) {
-  int waitwokeCount;
-  int rc=0, rc1;
-
-  sslwatchdogDebugN("WaitFor=", parentchildFlag, stateValue);
-
-  if(alreadyLockedFlag == FLAG_SSLWATCHDOG_ENTER_LOCKED) {
-    sslwatchdogDebug("Lock", parentchildFlag, "");
-    if((rc = pthread_mutex_lock(&myGlobals.sslwatchdogCondvar.mutex)) != 0) {
-      sslwatchdogDebugN(">LockErr", parentchildFlag, rc);
-      return rc;
-    } else {
-      sslwatchdogDebug(">Locked", parentchildFlag, "");
-    }
-  }
-
-  /* We're going to wait until the state = our test value or abort... */
-  waitwokeCount = 0;
-
-  while(myGlobals.sslwatchdogCondvar.predicate != stateValue) {
-    /* Test for finished flag... */
-    if(myGlobals.sslwatchdogCondvar.predicate == FLAG_SSLWATCHDOG_FINISHED) {
-      sslwatchdogDebug(">ABORT", parentchildFlag, "");
-      break;
-    }
-    if(myGlobals.sslwatchdogCondvar.predicate == stateValue) {
-      sslwatchdogDebug(">Continue", parentchildFlag, "");
-      break;
-    }
-    if(waitwokeCount > PARM_SSLWATCHDOG_WAITWOKE_LIMIT) {
-      sslwatchdogDebug(">abort(lim)", parentchildFlag, "");
-      break;
-    }
-    sslwatchdogDebugN("wait", parentchildFlag, waitwokeCount);
-    sslwatchdogDebug("(unlock)", parentchildFlag, "");
-    rc = pthread_cond_wait(&myGlobals.sslwatchdogCondvar.condvar,
-			   &myGlobals.sslwatchdogCondvar.mutex);
-    sslwatchdogDebug("(lock)", parentchildFlag, "");
-    sslwatchdogDebug("woke", parentchildFlag, "");
-    waitwokeCount++;
-  } /* while */
-
-  sslwatchdogDebug("unlock", parentchildFlag, "");
-  if((rc1 = pthread_mutex_unlock(&myGlobals.sslwatchdogCondvar.mutex)) != 0) {
-    sslwatchdogDebugN(">UnlockErr", parentchildFlag, rc1);
-    return rc1;
-  } else {
-    sslwatchdogDebug(">Unlocked", parentchildFlag, "");
-  }
-
-  return rc; /* This is the code from the while loop, above */
-}
-
-/* **************************************** */
-
-int sslwatchdogClearLock(int parentchildFlag) {
-  int rc;
-
-  sslwatchdogDebug("unlock", parentchildFlag, "");
-  if((rc = pthread_mutex_unlock(&myGlobals.sslwatchdogCondvar.mutex)) != 0) {
-    sslwatchdogDebugN(">UnlockErr", parentchildFlag, rc);
-  } else {
-    sslwatchdogDebug(">Unlocked", parentchildFlag, "");
-  };
-  return rc;
-}
-
-/* **************************************** */
-
-int sslwatchdogGetLock(int parentchildFlag) {
-  int rc;
-
-  sslwatchdogDebug("lock", parentchildFlag, "");
-  if((rc = pthread_mutex_lock(&myGlobals.sslwatchdogCondvar.mutex)) != 0) {
-    sslwatchdogDebugN(">LockErr", parentchildFlag, rc);
-  } else {
-    sslwatchdogDebug(">Locked", parentchildFlag, "");
-  }
-
-  return rc;
-}
-
-/* **************************************** */
-
-int sslwatchdogSignal(int parentchildFlag) {
-  int rc;
-
-  sslwatchdogDebug("signaling", parentchildFlag, "");
-  rc = pthread_cond_signal(&myGlobals.sslwatchdogCondvar.condvar);
-  if(rc != 0) {
-    sslwatchdogError("sigfail",  parentchildFlag, "");
-  } else {
-    sslwatchdogDebug("signal->", parentchildFlag, "");
-  }
-
-  return(rc);
-}
-
-/* **************************************** */
-
-int sslwatchdogSetState(int stateNewValue, int parentchildFlag,
-			int enterLockedFlag, int exitLockedFlag) {
-  int rc=0;
-
-  sslwatchdogDebugN("SetState=", parentchildFlag, stateNewValue);
-
-  if(enterLockedFlag != FLAG_SSLWATCHDOG_ENTER_LOCKED) {
-    rc = sslwatchdogGetLock(parentchildFlag);
-  }
-
-  myGlobals.sslwatchdogCondvar.predicate = stateNewValue;
-
-  sslwatchdogSignal(parentchildFlag);
-
-  if(exitLockedFlag != FLAG_SSLWATCHDOG_RETURN_LOCKED) {
-    rc = sslwatchdogClearLock(parentchildFlag);
-  }
-
-  return(rc);
-}
-
-/* **************************************** */
-
-void sslwatchdogSighandler(int signum) {
-  /* If this goes off, the ssl_accept() below didn't respond */
-  signal(SIGUSR1, SIG_DFL);
-  sslwatchdogDebug("->SIGUSR1", FLAG_SSLWATCHDOG_PARENT, "");
-  longjmp (sslwatchdogJump, 1);
-}
-
-/* **************************************** */
-
-void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
-  /* This is the watchdog (child) */
-  int rc;
-  struct timespec expiration;
-
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: ssl watchdog thread running [p%d]", pthread_self(), getpid());
-
-  /* ENTRY: from above, state 0 (FLAG_SSLWATCHDOG_UNINIT) */
-  sslwatchdogDebug("BEGINthread", FLAG_SSLWATCHDOG_CHILD, "");
-
-  rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_WAITINGREQUEST,
-			   FLAG_SSLWATCHDOG_CHILD,
-			   0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
-			   0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
-
-  while((myGlobals.sslwatchdogCondvar.predicate != FLAG_SSLWATCHDOG_FINISHED) &&
-        (myGlobals.ntopRunState <= FLAG_NTOPSTATE_STOPCAP)) {
-
-    sslwatchdogWaitFor(FLAG_SSLWATCHDOG_HTTPREQUEST,
-		       FLAG_SSLWATCHDOG_CHILD,
-		       0-FLAG_SSLWATCHDOG_ENTER_LOCKED);
-
-    expiration.tv_sec = time(NULL) + PARM_SSLWATCHDOG_WAIT_INTERVAL; /* watchdog timeout */
-    expiration.tv_nsec = 0;
-    sslwatchdogDebug("Expires", FLAG_SSLWATCHDOG_CHILD, formatTime(&expiration.tv_sec, 0, buf, sizeof(buf)));
-
-    while(myGlobals.sslwatchdogCondvar.predicate == FLAG_SSLWATCHDOG_HTTPREQUEST) {
-
-      rc = sslwatchdogGetLock(FLAG_SSLWATCHDOG_CHILD);
-
-      /* Suspended wait until abort or we're woken up for a request */
-      /*   Note: we hold the mutex when we come back */
-      sslwatchdogDebug("twait",    FLAG_SSLWATCHDOG_CHILD, "");
-      sslwatchdogDebug("(unlock)", FLAG_SSLWATCHDOG_CHILD, "");
-      rc = pthread_cond_timedwait(&myGlobals.sslwatchdogCondvar.condvar,
-				  &myGlobals.sslwatchdogCondvar.mutex,
-				  &expiration);
-
-      sslwatchdogDebug("(lock)",  FLAG_SSLWATCHDOG_CHILD, "");
-      sslwatchdogDebug("endwait",
-		       FLAG_SSLWATCHDOG_CHILD,
-		       ((rc == ETIMEDOUT) ? " TIMEDOUT" : ""));
-
-      /* Something woke us up ... probably "https complete" or "finshed" message */
-      if(rc == ETIMEDOUT) {
-	/* No response from the parent thread... oh dear... */
-	sslwatchdogDebug("send(USR1)", FLAG_SSLWATCHDOG_CHILD, "");
-	rc = pthread_kill(myGlobals.handleWebConnectionsThreadId, SIGUSR1);
-	if(rc != 0) {
-	  sslwatchdogErrorN("sent(USR1)", FLAG_SSLWATCHDOG_CHILD, rc);
-	} else {
-	  sslwatchdogDebug("sent(USR1)", FLAG_SSLWATCHDOG_CHILD, "");
-	}
-	rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_WAITINGREQUEST,
-				 FLAG_SSLWATCHDOG_CHILD,
-				 FLAG_SSLWATCHDOG_ENTER_LOCKED,
-				 0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
-	break;
-      }
-      if(rc == 0) {
-	if(myGlobals.sslwatchdogCondvar.predicate == FLAG_SSLWATCHDOG_FINISHED) {
-	  sslwatchdogDebug("woke", FLAG_SSLWATCHDOG_CHILD, "*finished*");
-	  break;
-	}
-
-	/* Ok, hSWC() is done, so recycle the watchdog for next time */
-	rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_WAITINGREQUEST,
-				 FLAG_SSLWATCHDOG_CHILD,
-				 FLAG_SSLWATCHDOG_ENTER_LOCKED,
-				 0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
-	break;
-      }
-
-      /* rc != 0 --- error */
-      rc = sslwatchdogClearLock(FLAG_SSLWATCHDOG_CHILD);
-
-      if(myGlobals.ntopRunState > FLAG_NTOPSTATE_STOPCAP) break;
-
-    } /* while(... == FLAG_SSLWATCHDOG_HTTPREQUEST) */
-  } /* while(... != FLAG_SSLWATCHDOG_FINISHED) */
-
-    /* Bye bye child... */
-
-  sslwatchdogDebug("ENDthread", FLAG_SSLWATCHDOG_CHILD, "");
-
-  myGlobals.sslwatchdogChildThreadId = 0;
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: ssl watchdog thread terminated [p%d]", pthread_self(), getpid());
-
-  return(NULL);
-}
-
-#endif /* MAKE_WITH_SSLWATCHDOG */
 
 /* ******************************************* */
 
@@ -8577,7 +8232,6 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
     while(myGlobals.ntopRunState < FLAG_NTOPSTATE_SHUTDOWNREQ) {
       struct timeval wait_time;
 
-	sslwatchdogDebug("BEGINloop", FLAG_SSLWATCHDOG_BOTH, "");
 #ifdef DEBUG
 	traceEvent(CONST_TRACE_INFO, "DEBUG: Select(ing) %d....", topSock);
 #endif
@@ -8589,12 +8243,8 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 #endif
 	if(rc > 0) {
 	  /* Now, handle the web connection ends up in SSL_Accept() */
-	  sslwatchdogDebug("->hSWC()", FLAG_SSLWATCHDOG_PARENT, "");
 	  handleSingleWebConnection(&mask);
-	  sslwatchdogDebug("hSWC()->", FLAG_SSLWATCHDOG_PARENT, "");
 	}
-	sslwatchdogDebug("ENDloop", FLAG_SSLWATCHDOG_BOTH, "");
-
     } /* while myGlobals.ntopRunState < FLAG_NTOPSTATE_SHUTDOWNREQ */
 
     myGlobals.handleWebConnectionsThreadId = 0;
@@ -8666,54 +8316,6 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 #ifdef HAVE_OPENSSL
 	if(myGlobals.sslInitialized)
 	    if(FD_ISSET(myGlobals.sock_ssl, fdmask)) {
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-		if(myGlobals.runningPref.useSSLwatchdog == 1)
-#endif
-		{
-#ifdef MAKE_WITH_SSLWATCHDOG
-		    int rc;
-
-		    /* The watchdog ... */
-		    if(setjmp(sslwatchdogJump) != 0) {
-			int i, j, k;
-			char buf[256];
-
-			sslwatchdogError("TIMEOUT", FLAG_SSLWATCHDOG_PARENT, "processing continues!");
-			myGlobals.numHTTPSrequestTimeouts++;
-			traceEvent(CONST_TRACE_ERROR,
-				   "SSLWDERROR: Watchdog timer has expired. "
-				   "Aborting request, but ntop processing continues!\n");
-			for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
-			    if(myGlobals.ssl[i].socketId == myGlobals.newSock) {
-				break;
-			    }
-			}
-			if(i<MAX_SSL_CONNECTIONS) {
-			    j=k=0;
-			    while((k<255) && (myGlobals.ssl[i].ctx->packet[j] != '\0')) {
-				if((myGlobals.ssl[i].ctx->packet[j] >= 32 /* space */) &&
-				   (myGlobals.ssl[i].ctx->packet[j] < 127))
-				    buf[k++]=myGlobals.ssl[i].ctx->packet[j];
-				j++;
-			    }
-			    buf[k+1]='\0';
-			    traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: Failing request was (translated): %s", buf);
-			}
-			signal(SIGUSR1, sslwatchdogSighandler);
-			return;
-		    }
-
-		    rc = sslwatchdogWaitFor(FLAG_SSLWATCHDOG_WAITINGREQUEST,
-					    FLAG_SSLWATCHDOG_PARENT,
-					    0-FLAG_SSLWATCHDOG_ENTER_LOCKED);
-
-		    rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_HTTPREQUEST,
-					     FLAG_SSLWATCHDOG_PARENT,
-					     0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
-					     0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
-#endif /* MAKE_WITH_SSLWATCHDOG */
-		}
-
 		if(accept_ssl_connection(myGlobals.newSock) == -1) {
 		    traceEvent(CONST_TRACE_WARNING, "Unable to accept SSL connection");
 		    closeNwSocket(&myGlobals.newSock);
@@ -8721,20 +8323,6 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 		} else {
 		    myGlobals.newSock = -myGlobals.newSock;
 		}
-
-#ifdef MAKE_WITH_SSLWATCHDOG
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-		if(myGlobals.runningPref.useSSLwatchdog == 1)
-#endif
-		{
-		    int rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_HTTPCOMPLETE,
-						 FLAG_SSLWATCHDOG_PARENT,
-						 0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
-						 0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
-		    /* Wake up child */
-		    rc = sslwatchdogSignal(FLAG_SSLWATCHDOG_PARENT);
-		}
-#endif /* MAKE_WITH_SSLWATCHDOG */
 	    }
 #endif /* HAVE_OPENSSL */
 

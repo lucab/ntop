@@ -2171,7 +2171,7 @@ static void* netflowMainLoop(void* _deviceId) {
 	    myGlobals.device[deviceId].netflowGlobals->probeList[i].probePort = fromHost.sin_port;
 	    myGlobals.device[deviceId].netflowGlobals->probeList[i].pkts = 1;
 	    myGlobals.device[deviceId].netflowGlobals->probeList[i].lastSequenceNumber = 0;
-	    myGlobals.device[deviceId].netflowGlobals->probeList[i].lowestSequenceNumber = ULONG_MAX;
+	    myGlobals.device[deviceId].netflowGlobals->probeList[i].lowestSequenceNumber = (u_int32_t)ULONG_MAX;
 	    myGlobals.device[deviceId].netflowGlobals->probeList[i].highestSequenceNumber = 0;
 	    myGlobals.device[deviceId].netflowGlobals->probeList[i].totNumFlows = 0;
 	    probeId = i;

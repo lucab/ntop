@@ -777,11 +777,6 @@ static void cleanupThreadIs(char *buf, int sizeofbuf) {
       strncpy(buf, "SIH", sizeofbuf);
     else if(pthread_self() == myGlobals.handleWebConnectionsThreadId)
       strncpy(buf, "WEB", sizeofbuf);
-
-#if defined(HAVE_OPENSSL) && defined(MAKE_WITH_SSLWATCHDOG)
-    else if(pthread_self() == myGlobals.sslwatchdogChildThreadId)
-      strncpy(buf, "SSL", sizeofbuf);
-#endif
   }
 
   if(buf[0] == '\0') {
@@ -839,18 +834,10 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
   if(!do_join) {
     memset(&buf2, 0, sizeof(buf2));
 
-#if defined(HAVE_OPENSSL) && defined(MAKE_WITH_SSLWATCHDOG)
-    safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "%s%s%s%s",
-		  myGlobals.scanFingerprintsThreadId != 0 ? " SFP" : "",
-		  myGlobals.scanIdleThreadId != 0 ? " SIH" : "",
-		  myGlobals.handleWebConnectionsThreadId != 0 ? " WEB" : "",
-		  myGlobals.sslwatchdogChildThreadId != 0 ? " SSL" : "");
-#else
     safe_snprintf(__FILE__, __LINE__, buf, sizeofbuf, "%s%s%s",
 		  myGlobals.scanFingerprintsThreadId != 0 ? " SFP" : "",
 		  myGlobals.scanIdleThreadId != 0 ? " SIH" : "",
 		  myGlobals.handleWebConnectionsThreadId != 0 ? " WEB" : "");
-#endif
   }
 
   for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
@@ -1042,22 +1029,6 @@ RETSIGTYPE cleanup(int signo) {
   runningThreads(buf, sizeof(buf), 0);
   traceEvent(CONST_TRACE_INFO, "CLEANUP: Running threads%s", buf);
   runningThreads(buf, sizeof(buf), 1);
-
-#ifndef WIN32
-
-#ifdef MAKE_WITH_SSLWATCHDOG
-  if(myGlobals.sslwatchdogChildThreadId != 0) {
-    killThread(&myGlobals.sslwatchdogChildThreadId);
-  }
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  if(myGlobals.runningPref.useSSLwatchdog == 1)
-#endif
-    {
-      deleteCondvar(&myGlobals.sslwatchdogCondvar);
-    }
-#endif
-
-#endif /* #ifndef WIN32 */
 
   killThread(&myGlobals.handleWebConnectionsThreadId);
   killThread(&myGlobals.scanIdleThreadId);
