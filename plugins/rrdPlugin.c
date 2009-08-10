@@ -4684,7 +4684,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 		  adjHostName);
     mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
-    traceEventRRDebug(2, "Updating %s [%s/%s]", hostKey, el->hostNumIpAddress, el->ethAddressString);
+    /* traceEventRRDebug(2, "Updating %s [%s/%s]", hostKey, el->hostNumIpAddress, el->ethAddressString); */
 
     updateTrafficCounter(rrdPath, "pktSent", &el->pktSent, 0);
     updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd, 0);
@@ -4841,7 +4841,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       updateCounter(rrdPath, "totPeersRcvd", el->totContactedRcvdPeers, 0);
 
       if(el->protoIPTrafficInfos) {
-	traceEventRRDebug(0, "Updating %s %s", is_subnet_host ? "subnet" : "hosts", hostKey);
+	/* traceEventRRDebug(0, "Updating %s %s", is_subnet_host ? "subnet" : "hosts", hostKey); */
 
 	safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/%s/%s/IP_",
 		      myGlobals.rrdPath,
@@ -4904,9 +4904,6 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	}
       }
     }
-
-    if(adjHostName != NULL)
-      free(adjHostName);
   }
 
   ntop_conditional_sched_yield(); /* Allow other threads to run */
