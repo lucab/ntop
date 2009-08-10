@@ -148,9 +148,13 @@ int init_ssl(void) {
 
 
   SSL_load_error_strings();
-  SSLeay_add_ssl_algorithms();
+  SSL_library_init();
+  OpenSSL_add_ssl_algorithms();
+#if (OPENSSL_VERSION_NUMBER < 0x00905100l)
+  needs_openssl_095_or_later();
+#endif
   meth = SSLv23_server_method();
-  myGlobals.ctx = SSL_CTX_new (meth);
+  myGlobals.ctx = SSL_CTX_new(meth);
   if (!myGlobals.ctx) {
     ntop_ssl_error_report("ssl_init-server_method");
     return(2);
