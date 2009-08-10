@@ -31,7 +31,7 @@
 
 static void* sflowMainLoop(void* _deviceId);
 
-//#define DEBUG_FLOWS 
+// #define DEBUG_FLOWS 
 
 /* ********************************* */
 
@@ -1824,7 +1824,7 @@ static void skipBytes(SFSample *sample, int skip, int deviceId) {
   sample->datap += quads;
 #else
   /* Fix below courtesy of Daniele Dgandurra <sgandurra@ntop.org> */
-  sample->datap += skip;
+  sample->datap = (u_int32_t*)((u_int32_t)sample->datap+skip);
 #endif
   if((u_char *)sample->datap > sample->endp) SFABORT(sample, SF_ABORT_EOS);
 }
@@ -2938,7 +2938,7 @@ static void readSFlowDatagram(SFSample *sample, int deviceId)
       if(SFLOW_DEBUG(deviceId))
 	traceEvent(CONST_TRACE_INFO, "endSample [%d]  ----------------------\n", sample->sampleType);
       
-      traceEvent(CONST_TRACE_INFO, "endSample [%d]  ----------------------\n", sample->sampleType);
+      // traceEvent(CONST_TRACE_INFO, "endSample [%d]  ----------------------\n", sample->sampleType);
       
       if((sample->sampleType == SFLFLOW_SAMPLE)
 	 || (sample->sampleType == SFLFLOW_SAMPLE_EXPANDED)) {
