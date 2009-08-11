@@ -1088,7 +1088,6 @@
 #define CONST_ACTIVE_TCP_SESSIONS_HTML      "NetNetstat.html"
 #define CONST_NETWORK_IMAGE_MAP             "network_map.png"
 #define CONST_CGI_HEADER                    "ntop-bin/"
-#define CONST_EMBEDDED_LUA_HEADER           "lua/"
 #define CONST_EMBEDDED_PYTHON_HEADER        "python/"
 #define CONST_MAN_NTOP_HTML                 "ntop.html"
 #define CONST_NTOP_P3P                      "ntop.p3p"

@@ -106,7 +106,7 @@ void* pcapDispatch(void *_i) {
       if(myGlobals.pcap_file_list != NULL) {
 	traceEvent(CONST_TRACE_INFO, "pcap_loop (%s) returned %d [No more packets to read]",
 		   myGlobals.device[i].humanFriendlyName, rc);
-      reopen_pcap:	
+
 	if(myGlobals.pcap_file_list->next != NULL) {
 	  struct fileList *fl = myGlobals.pcap_file_list;
 	  
@@ -114,8 +114,6 @@ void* pcapDispatch(void *_i) {
 	  free(fl->fileName); free(fl);
 
 	  if(myGlobals.pcap_file_list != NULL) {
-	    char ebuf[CONST_SIZE_PCAP_ERR_BUF];
-
 	    if(myGlobals.device[i].pcapPtr) pcap_close(myGlobals.device[i].pcapPtr);
 	    myGlobals.device[i].pcapPtr  = myGlobals.pcap_file_list->pcapPtr;
 	    
@@ -439,7 +437,7 @@ void createPortHash(void) {
 /* **************************************** */
 
 void handleProtocols(void) {
-  char *proto, *buffer=NULL, *strtokState,
+  char *proto, *buffer=NULL, *strtokState = NULL,
 	   *bufferCurrent, *bufferWork, tmpStr[512];
   FILE *fd;
 

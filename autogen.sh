@@ -10,48 +10,6 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # $Log$
-# Revision 2.19  2007/06/07 22:28:19  deri
-# FreeBSD fixes
-#
-# Revision 2.18  2007/05/17 15:30:08  deri
-# Added supoport for HTTP 304 that should reduce the amount of traffic exchanged
-# between ntop and web clients.
-# Updated copyright date
-#
-# Revision 2.17  2007/05/03 09:48:04  deri
-#
-# Added configure fixes and MySQL 4.x
-#
-# Revision 2.16  2007/05/01 07:02:49  deri
-# Minor changes: mutex info is now displayed even in non-debug mode
-#
-# Revision 2.15  2007/04/09 20:34:24  deri
-# Added fix for detecting automake 1.10 and above. Thanks to
-# Marco Scandaletti <marco@scanda.it> for reporting it.
-#
-# Revision 2.14  2007/03/19 09:16:45  deri
-# Added patches courtesy of Bernard and Patrick
-#
-# Revision 2.13  2007/01/11 14:39:11  deri
-# Fixed autogen check
-#
-# Revision 2.12  2006/11/23 08:50:16  deri
-# Added initial SNMP name resolution for NetFlow device names
-#
-# Revision 2.11  2006/09/03 13:06:05  deri
-# Minor updates. Added the skeleton of a new plugin that allows ntop to be
-# queried from remote without a web browser
-#
-# Revision 2.10  2006/05/26 13:39:44  deri
-#
-# Added (open)solaris fixes
-#
-# Revision 2.9  2006/05/17 13:04:00  burton
-# (1) Add test for v2.50-2.52 of autoconf to autogen.sh
-# (2) Begin to update docs and FAQ with change to autogen.sh
-#
-# -----Burton
-#
 #
 
 ######################################

@@ -796,7 +796,6 @@ void setPcapFilter(char* filters, int device_id) {
 
 int doChangeFilter(int len) {
   int i,idx,badChar=0;
-  struct bpf_program fcode;
   char *currentFilterExpressionSav;
   char buf[LEN_GENERAL_WORK_BUFFER],postData[256],*key,*err=NULL;
 

@@ -2643,23 +2643,7 @@ static int returnHTTPPage(char* pageName,
     }
 #endif
 
-    if(strncasecmp(pageName, CONST_EMBEDDED_LUA_HEADER, 
-			  strlen(CONST_EMBEDDED_LUA_HEADER)) == 0) {
-      if(domainNameParm != NULL) free(domainNameParm);
-      if(db_key != NULL) free(db_key);
-      if(db_val != NULL) free(db_val);
-      
-      printTrailer = 0;
-      
-#ifdef HAVE_LUA
-      if(handleLuaHTTPRequest(&pageName[strlen(CONST_EMBEDDED_LUA_HEADER)])) {
-	;
-      } else
-	return(FLAG_HTTP_INVALID_PAGE);
-#else
-      returnHTTPpageNotFound("Lua support disabled into this ntop instance");
-#endif
-    } else if(strncasecmp(pageName, CONST_EMBEDDED_PYTHON_HEADER, 
+    if(strncasecmp(pageName, CONST_EMBEDDED_PYTHON_HEADER, 
 			  strlen(CONST_EMBEDDED_PYTHON_HEADER)) == 0) {
       if(domainNameParm != NULL) free(domainNameParm);
       if(db_key != NULL) free(db_key);

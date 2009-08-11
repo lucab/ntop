@@ -55,7 +55,7 @@ static void handlecPacketHTTPrequest(char* url);
 static void printcPacketConfiguration(int deviceId);
 static int createcPacketDevice(int cpacketDeviceId);
 static int mapcPacketDeviceToNtopDevice(int deviceId);
-static void printcPacketStatistics();
+static void printcPacketStatistics(void);
 static void printcPacketCounterStats(int deviceId, int page_header, int print_table);
 
 /* ****************************** */
@@ -440,8 +440,7 @@ static char* cpValue(int deviceId, char *name, int appendDeviceId) {
 /* ****************************** */
 
 static void initcPacketDevice(int deviceId) {
-  int a, b, c, d, a1, b1, c1, d1, rc;
-  char value[1024], workList[1024];
+  char value[1024];
 
   if(!pluginActive) return;
 
@@ -585,7 +584,7 @@ static void printcPacketDeviceConfiguration(void) {
 
 /* ****************************** */
 
-static void printcPacketStatistics() {
+static void printcPacketStatistics(void) {
   int i, printedStatistics = 0;
   char buf[1024], formatBuf[64];
 
@@ -625,7 +624,6 @@ static void printcPacketStatistics() {
 
 static void printcPacketCounterStats(int deviceId, int page_header, int print_table) {
   char buf[1024], *title = "cTap Counters";
-  int i, printedStatistics=0;
 
   if((deviceId < 0) || (deviceId >myGlobals.numDevices)) return;
   
@@ -697,7 +695,7 @@ static void printcPacketCounterStats(int deviceId, int page_header, int print_ta
 /* ****************************** */
 
 static void printcPacketConfiguration(int deviceId) {
-  char buf[512], buf1[32], buf2[32];
+  char buf[512];
 
 #define UDPSLASHSCPT "UDP"
 

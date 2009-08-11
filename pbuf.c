@@ -3473,7 +3473,7 @@ void processPacket(u_char *_deviceId,
 		 && (ipxBuffer[30] == 0x0)  /* SAP Response (byte 0) */
 		 && (ipxBuffer[31] == 0x02) /* SAP Response (byte 1) */) {
 		u_int16_t serverType;
-		char serverName[57];
+		char serverName[MAX_LEN_SYM_HOST_NAME];
 		int i, found;
 
 		memcpy(&serverType, &ipxBuffer[32], 2);
@@ -3653,7 +3653,7 @@ void processPacket(u_char *_deviceId,
 			 || (strcmp(srcHost->nonIPTraffic->atNodeType[i], nodeName) == 0))
 			break;
 
-		    if(srcHost->nonIPTraffic->atNodeType[i] == NULL)
+		    if((i < MAX_NODE_TYPES) && (srcHost->nonIPTraffic->atNodeType[i] == NULL))
 		      srcHost->nonIPTraffic->atNodeType[i] = strdup(nodeName);
 		  }
 		}

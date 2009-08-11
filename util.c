@@ -1766,7 +1766,7 @@ int getLocalHostAddress(struct in_addr *hostAddress, u_int8_t *netmask_v6, char*
 /* ********************************* */
 
 void maximize_socket_buffer(int sock_fd, int buf_type)  {
-  int rcv_buffsize_base, rcv_buffsize, max_buf_size = 1024 * 2 * 1024 /* 2 MB */, debug = 0;
+  int rcv_buffsize_base, rcv_buffsize, max_buf_size = 1024 * 2 * 1024 /* 2 MB */;
   socklen_t len = sizeof(rcv_buffsize_base);
   int i;
 
@@ -3438,7 +3438,6 @@ int _safe_strncat(char* file, int line,
 
 void fillDomainName(HostTraffic *el) {
   u_int i;
-  char *ip2cc;
 
   if(theDomainHasBeenComputed(el))
     return;

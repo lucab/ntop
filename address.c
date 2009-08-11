@@ -46,8 +46,16 @@ typedef struct hostAddrList {
 } HostAddrList;
 
 static HostAddrList *hostAddrList_head = NULL;
-static HostAddr lastResolvedAddr[MAX_NUM_DEQUEUE_ADDRESS_THREADS] = { 0 };
-static u_short lastResolvedAddrIdx = 0;
+static HostAddr lastResolvedAddr[MAX_NUM_DEQUEUE_ADDRESS_THREADS];
+static u_short lastResolvedAddrIdx;
+
+
+/* **************************************** */
+
+void initAddressResolution(void) {
+  memset(&lastResolvedAddr, 0, sizeof(lastResolvedAddr));
+  lastResolvedAddrIdx = 0;
+}
 
 /* **************************************** */
 

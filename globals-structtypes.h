@@ -2044,8 +2044,10 @@ typedef enum {
   showPrefIPPref,
   showPrefFCPref,
   showPrefAdvPref,
-  showPrefDbgPref,
-  showPrefDBPref
+  showPrefDbgPref
+#ifdef HAVE_MYSQL_H
+  , showPrefDBPref
+#endif
 } UserPrefDisplayPage;
 
 /* *********************************** */

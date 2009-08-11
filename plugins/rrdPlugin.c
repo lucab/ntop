@@ -102,7 +102,7 @@ static void updateGauge(char *hostPath, char *key, Counter value, char short_ste
 static void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter, char short_step);
 char x2c(char *what);
 static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
-static void addRrdDelay();
+static void addRrdDelay(void);
 
 #define MAX_NUM_RRDS 64
 #define alloc_buf(a, b, c)  { for(i=0; i<b; i++) { a[i] = (char*)calloc(sizeof(char),c); if(a[i] == NULL) no_mem = 1; }}
@@ -200,7 +200,7 @@ static int validHostCommunity(char *host_ip /* 1.2.3.4 */) {
 
 /* ******************************************* */
 
-static void addRrdDelay() {
+static void addRrdDelay(void) {
   static struct timeval lastSleep;
   struct timeval thisSleep;
   float deltaMs;
@@ -3982,7 +3982,7 @@ static void handleRRDHTTPrequest(char* url) {
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
   int _dumpDomains, _dumpFlows, _dumpSubnets, _dumpHosts, _dumpInterfaces, _dumpASs, _enableAberrant, _delay,
-    _dumpMatrix, _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId,
+    _dumpMatrix, _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId = 0,
     _heartbeat;
   int i, len, idx;
   time_t date1 = 0, date2 = 0;

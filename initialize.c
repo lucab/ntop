@@ -109,8 +109,7 @@ static void setDomainName(void) {
  */
 void initIPServices(void) {
   FILE* fd;
-  int idx, numSlots, len, rc;
-  int major, minor;
+  int idx, numSlots, len;
 
   traceEvent(CONST_TRACE_NOISY, "Initializing IP services");
 
@@ -362,15 +361,6 @@ void resetDevice(int devIdx, short fullReset) {
 
 void initCounters(void) {
   int len, i;
-  FILE* fd;
-  int numRead = 0;
-  u_char compressedFormat;
-  char buf[LEN_GENERAL_WORK_BUFFER];
-  struct dirent **dirList;
-  int iLang, nLang, found;
-  DIR *testDirEnt;
-  char *tmpStr;
-  char* realLocale;
 
   setDomainName();
 
@@ -704,12 +694,12 @@ void initThreads(void) {
   int i;
 
   /*
-  for(i=0; i<myGlobals.numDevices; i++) {
+    for(i=0; i<myGlobals.numDevices; i++) {
     createThread(&myGlobals.device[i].dequeuePacketThreadId, dequeuePacket, (void*)((long)i));
     traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NPA: Started thread for network packet analyzer (%s)",
-	       (long)myGlobals.device[i].dequeuePacketThreadId,
-	       myGlobals.device[i].humanFriendlyName);
-  }
+    (long)myGlobals.device[i].dequeuePacketThreadId,
+    myGlobals.device[i].humanFriendlyName);
+    }
   */
 
   if(!myGlobals.runningPref.liveMode) {
@@ -729,21 +719,23 @@ void initThreads(void) {
              (long)myGlobals.scanIdleThreadId);
 
   if(myGlobals.runningPref.numericFlag == 0) {
-   createMutex(&myGlobals.addressResolutionMutex);
+    createMutex(&myGlobals.addressResolutionMutex);
  
 #if defined(HAVE_GETHOSTBYADDR_R)
-   myGlobals.numDequeueAddressThreads = MAX_NUM_DEQUEUE_ADDRESS_THREADS;
+    myGlobals.numDequeueAddressThreads = MAX_NUM_DEQUEUE_ADDRESS_THREADS;
 #else
-   myGlobals.numDequeueAddressThreads = 1;
+    myGlobals.numDequeueAddressThreads = 1;
 #endif
 
+    initAddressResolution();
+   
     /*
      * Create the thread (5) - DNSAR - DNS Address Resolution - optional
-     */
+     */  
     for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
       createThread(&myGlobals.dequeueAddressThreadId[i], dequeueAddress, (char*)((long)i));
       traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Started thread for DNS address resolution",
-                 (long)myGlobals.dequeueAddressThreadId[i], i+1);
+		 (long)myGlobals.dequeueAddressThreadId[i], i+1);
     }
   }
 }
@@ -1472,7 +1464,6 @@ void parseTrafficFilter(void) {
   /* Construct, compile and set filter */
   if(myGlobals.runningPref.currentFilterExpression != NULL) {
     int i;
-    struct bpf_program fcode;
 
     for(i=0; i<myGlobals.numDevices; i++)
       setPcapFilter(myGlobals.runningPref.currentFilterExpression, i);

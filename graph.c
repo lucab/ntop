@@ -73,7 +73,7 @@ static void send_graph_header(u_char is_pie) {
  
 /**********************************************************/
 
-static void send_graph_middle() {
+static void send_graph_middle(void) {
 sendString("]\n"
 	     "   };\n"
 	     "\n"
@@ -1508,12 +1508,10 @@ void drawVsanSwilsProtoDistribution(u_short vsanId) {
 void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent) {
   int i, idx=0, numEntries = 0;
   FcFabricElementHash *hash;
-  float p[MAX_VSANS_GRAPHED+1];
+  float p[MAX_VSANS_GRAPHED+1] = { 0 };
   char *lbl[MAX_VSANS_GRAPHED+1], labels[MAX_VSANS_GRAPHED+1][8];
   Counter total;
   SortedFcDomainStatsEntry *fcDomainStats;
-
-  p[MAX_FC_DOMAINS+1] = 0;
 
   hash = getFcFabricElementHash (vsanId, myGlobals.actualReportDeviceId);
 

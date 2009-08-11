@@ -43,7 +43,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
   char key[64], value[16];
   int rc;
 #ifndef WIN32
-  PluginInfo* (*pluginJumpFunc)();
+  PluginInfo* (*pluginJumpFunc)(void);
 #endif
   FlowFilterList *newFlow,
     *work, *prev = NULL;
@@ -74,7 +74,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
     return;
   }
 
-  pluginJumpFunc = (PluginInfo*(*)())pluginEntryFctnPtr;
+  pluginJumpFunc = (PluginInfo*(*)(void))pluginEntryFctnPtr;
   pluginInfo = pluginJumpFunc();
 #else /* MAKE_STATIC_PLUGIN */
 

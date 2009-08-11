@@ -228,9 +228,6 @@
    than `double'. */
 #undef HAVE_LONG_DOUBLE_WIDER
 
-/* LUA is supported */
-#undef HAVE_LUA
-
 /* Define to 1 if you have the <math.h> header file. */
 #undef HAVE_MATH_H
 
@@ -551,6 +548,10 @@
 /* Define to 1 if `lstat' dereferences a symlink specified with a trailing
    slash. */
 #undef LSTAT_FOLLOWS_SLASHED_SYMLINK
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
 
 /* Define for Jumbo (9k) Ethernet Frames */
 #undef MAKE_WITH_JUMBO_FRAMES

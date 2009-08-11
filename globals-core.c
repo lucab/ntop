@@ -100,7 +100,7 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
 
 /* ******************************* */
 
-static void allocateOtherHosts() {
+static void allocateOtherHosts(void) {
   if(myGlobals.otherHostEntry != NULL) {
     traceEvent(CONST_TRACE_WARNING, "Attempting to call twice allocateOtherHosts()");
     return;
@@ -481,7 +481,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
 /* ********************************* */
 
-static void loadGeoIP() {
+static void loadGeoIP(void) {
   int i;
   struct stat statbuf;
 

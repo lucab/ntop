@@ -657,6 +657,6 @@ void processFcNSCacheFile(char *filename) {
     memcpy (&entry->pWWN.str[0], &pWWN.str[0], LEN_WWN_ADDRESS);
     memcpy (&entry->nWWN.str[0], &nWWN.str[0], LEN_WWN_ADDRESS);
     strncpy (&entry->alias[0], alias, MAX_LEN_SYM_HOST_NAME);
-    entry->alias[MAX_LEN_SYM_HOST_NAME] = '\0';
+    entry->alias[MAX_LEN_SYM_HOST_NAME-1] = '\0';
   }
 }

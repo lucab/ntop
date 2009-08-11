@@ -25,15 +25,6 @@ static int network_mode_sort;
 
 /* *************************** */
 
-#ifndef WIN32
-static void ignoreSignal(int signalId) {
-  closeNwSocket(&myGlobals.newSock);
-  (void)signal(signalId, ignoreSignal);
-}
-#endif
-
-/* ******************************* */
-
 void printBandwidthFooter(void) {
   sendString("<p><b>NOTE</b>:</p>\n<ul>"
 	     "<li>You can <a href=\"" CONST_EDIT_PREFS "\">define</a> "
@@ -3046,8 +3037,6 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	  }
 
 	  {
-	    u_int flags = 0;
-
 	    sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
 
 	    for(i=0; i<MAX_FLAG_HOST_TYPE; i++) {

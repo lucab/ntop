@@ -572,11 +572,4 @@ void          rewinddir(DIR *);
 
 #include "iface.h"
 
-#ifdef HAVE_LUA
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
-#endif
-
-
 #endif /* NTOP_H */

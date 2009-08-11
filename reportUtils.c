@@ -4987,7 +4987,7 @@ void printHostsStats(int fingerprintRemote) {
       if(theOSs[i].name == NULL)
 	break;
       else {
-        char *strtokState, *os, *word;
+        char *strtokState = NULL, *os, *word;
         int sentBR=0;
 
 	sendString("<TH>");

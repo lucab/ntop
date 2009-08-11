@@ -144,7 +144,7 @@ libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN
 libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
                            fcReport.c      http.c            \
                            report.c        reportUtils.c     ssl.c   \
-                           webInterface.c  map.c	     lua.c   \
+                           webInterface.c  map.c	     \
 		           python.c
 
 

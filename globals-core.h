@@ -125,6 +125,7 @@ extern void resetLeaks();
 #endif
 
 /* address.c */
+extern void initAddressResolution(void);
 extern int printable(int ch);
 extern void cleanupAddressQueue(void);
 extern void* dequeueAddress(void* notUsed);

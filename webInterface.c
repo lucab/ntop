@@ -6425,16 +6425,15 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 #endif
 			 );
 
-#ifdef HAVE_LUA
+
   printFeatureConfigInfo(textPrintFlag, 
-			 "Embedded <A HREF=http://www.lua.org>Lua</A> API Version",
-#ifdef  LUA_RELEASE
-			 LUA_RELEASE
+			 "Embedded <A HREF=http://www.python.org>Python</A>",
+#ifdef HAVE_PYTHON
+			 "Present"
 #else
-			 "Unknown"
-#endif
-);
-#endif
+			 "Not present"
+#endif       		 
+			 );
 
 #if defined(WIN32)
   printFeatureConfigInfo(textPrintFlag, "WinPcap version", (char*)PacketGetVersion());
@@ -6805,7 +6804,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 {
   char tmpBuf[LEN_GENERAL_WORK_BUFFER];
   float qminDelay=99999.0, qmaxDelay=0.0,
-        /*stddev:*/ qM, qT, qQ, qR, qSD, qXBAR,
+        /*stddev:*/ qM = 0, qT = 0, qQ, qR, qSD, qXBAR,
         pminDelay=99999.0, pmaxDelay=0.0,
     /*stddev:*/ pM=0, pT=0, pQ=0, pR=0, pSD=0, pXBAR;
 
