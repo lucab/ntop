@@ -630,8 +630,7 @@ typedef struct protocolInfo {
   VirtualHostList *httpVirtualHosts;
   /* POP3/SMTP... */
   UserList *userList;
-  /* P2P */
-  FileList *fileList;
+
   ServiceStats     *dnsStats, *httpStats;
   DHCPStats        *dhcpStats;
 } ProtocolInfo;

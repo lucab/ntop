@@ -435,18 +435,6 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
       }
     }
 
-    if(host->protocolInfo->fileList != NULL) {
-      FileList *list = host->protocolInfo->fileList;
-
-      while(list != NULL) {
-	FileList *next = list->next;
-        if(list->fileName != NULL)
-          free(list->fileName);
-	free(list);
-	list = next;
-      }
-    }
-
     if(host->protocolInfo->dnsStats  != NULL) free(host->protocolInfo->dnsStats);
     if(host->protocolInfo->httpStats != NULL) free(host->protocolInfo->httpStats);
     if(host->protocolInfo->dhcpStats != NULL) free(host->protocolInfo->dhcpStats);

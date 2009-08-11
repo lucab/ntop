@@ -1014,7 +1014,7 @@ Code "inherited" from nslookup
 
 #define isDHCPClient(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_DHCP_CLIENT, &(a->flags)))
 #define isDHCPServer(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_DHCP_SERVER, &(a->flags)))
-#define isP2P(a)                    ((a != NULL) && (a->protocolInfo != NULL) && (a->protocolInfo->fileList != NULL))
+#define isP2P(a)                    ((a != NULL) && (a->protocolInfo != NULL))
 #define isNtpServer(a)              ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_NTP_SERVER, &(a->flags)))
 
 /* Host health */

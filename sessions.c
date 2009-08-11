@@ -98,56 +98,6 @@ static void updateHTTPVirtualHosts(char *virtualHostName,
 
 /* ************************************ */
 
-static void updateFileList(char *fileName, u_char upDownloadMode, HostTraffic *theRemHost) {
-  if(fileName != NULL) {
-    FileList *list, *lastPtr = NULL;
-    int numEntries = 0;
-
-    if(theRemHost->protocolInfo == NULL) theRemHost->protocolInfo = calloc(1, sizeof(ProtocolInfo));
-    list = theRemHost->protocolInfo->fileList;
-
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "updateFileList: %s for host %s",
-	       fileName, theRemHost->hostNumIpAddress);
-#endif
-
-    while(list != NULL) {
-      if(strcmp(list->fileName, fileName) == 0) {
-	FD_SET(upDownloadMode, &list->fileFlags);
-	return;
-      } else {
-	lastPtr = list;
-	list = list->next;
-	numEntries++;
-      }
-    }
-
-    if(list == NULL) {
-      list = (FileList*)malloc(sizeof(FileList));
-      list->fileName = strdup(fileName);
-      FD_ZERO(&list->fileFlags);
-      FD_SET(upDownloadMode, &list->fileFlags);
-      list->next = NULL;
-
-      if(numEntries >= MAX_NUM_LIST_ENTRIES) {
-	FileList *ptr = theRemHost->protocolInfo->fileList->next;
-
-	lastPtr->next = list; /* Append */
-	/* Free the first entry */
-	free(theRemHost->protocolInfo->fileList->fileName);
-	free(theRemHost->protocolInfo->fileList);
-	/* The first ptr points to the second element */
-	theRemHost->protocolInfo->fileList = ptr;
-      } else {
-	list->next = theRemHost->protocolInfo->fileList;
-	theRemHost->protocolInfo->fileList = list;
-      }
-    }
-  }
-}
-
-/* ************************************ */
-
 void updateHostUsers(char *userName, int userType, HostTraffic *theHost) {
   int i;
 
@@ -1097,167 +1047,6 @@ static void handleMsnMsgrSession (const struct pcap_pkthdr *h,
 
 /* *********************************** */
 
-static void handleGnutellaSession(const struct pcap_pkthdr *h,
-				  HostTraffic *srcHost, u_short sport,
-                                   HostTraffic *dstHost, u_short dport,
-                                   u_int packetDataLength, u_char* packetData,
-                                   IPSession *theSession, int actualDeviceId) {
-  u_char *rcStr, tmpStr[256];
-
-  if(theSession->bytesProtoSent.value == 0) {
-    char *strtokState, *row;
-    char *theStr = "GET /get/";
-
-    if ((rcStr = (u_char*)malloc(packetDataLength+1)) == NULL) {
-      traceEvent (CONST_TRACE_WARNING, "handleGnutellaSession: Unable to "
-		  "allocate memory, Gnutella Session handling incomplete\n");
-      return;
-    }
-    memcpy(rcStr, packetData, packetDataLength);
-    rcStr[packetDataLength] = '\0';
-
-    if(strncmp((char*)rcStr, theStr, strlen(theStr)) == 0) {
-      char *file;
-      int i, begin=0;
-
-      row = strtok_r((char*)rcStr, "\n", &strtokState);
-      file = &row[strlen(theStr)+1];
-      if(strlen(file) > 10) file[strlen(file)-10] = '\0';
-
-      for(i=0; file[i] != '\0'; i++) {
-	if(file[i] == '/') begin = i;
-      }
-
-      begin++;
-
-      unescape((char*)tmpStr, sizeof(tmpStr), &file[begin]);
-
-#ifdef P2P_DEBUG
-      traceEvent(CONST_TRACE_INFO, "Gnutella: %s->%s [%s]",
-		 srcHost->hostNumIpAddress,
-		 dstHost->hostNumIpAddress,
-		 tmpStr);
-#endif
-      updateFileList((char*)tmpStr, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
-      updateFileList((char*)tmpStr, BITFLAG_P2P_UPLOAD_MODE, dstHost);
-      theSession->isP2P = FLAG_P2P_GNUTELLA;
-    }
-    free(rcStr);
-  }
-}
-
-/* *********************************** */
-
-static void handleKazaaSession(const struct pcap_pkthdr *h,
-                               HostTraffic *srcHost, u_short sport,
-                               HostTraffic *dstHost, u_short dport,
-                               u_int packetDataLength, u_char* packetData,
-                               IPSession *theSession, int actualDeviceId) {
-  char *rcStr;
-  char tmpStr[256];
-
-  if(theSession->bytesProtoSent.value == 0) {
-    char *strtokState, *row;
-
-    if ((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
-      traceEvent (CONST_TRACE_WARNING, "handleKazaaSession: Unable to "
-		  "allocate memory, Kazaa Session handling incomplete\n");
-      return;
-    }
-    memcpy(rcStr, packetData, packetDataLength);
-    rcStr[packetDataLength] = '\0';
-
-    if(strncmp(rcStr, "GET ", 4) == 0) {
-      row = strtok_r(rcStr, "\n", &strtokState);
-
-      while(row != NULL) {
-	if(strncmp(row, "GET /", 4) == 0) {
-	  char *theStr = "GET /.hash=";
-	  if(strncmp(row, theStr, strlen(theStr)) != 0) {
-	    char *strtokState1 = NULL, *file = strtok_r(&row[4], " ", &strtokState1);
-	    int i, begin=0;
-
-	    if(file != NULL) {
-	      for(i=0; file[i] != '\0'; i++) {
-		if(file[i] == '/') begin = i;
-	      }
-
-	      begin++;
-
-	      unescape(tmpStr, sizeof(tmpStr), &file[begin]);
-
-#ifdef P2P_DEBUG
-	      traceEvent(CONST_TRACE_INFO, "Kazaa: %s->%s [%s]",
-			 srcHost->hostNumIpAddress,
-			 dstHost->hostNumIpAddress,
-			 tmpStr);
-#endif
-	      updateFileList(tmpStr, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
-	      updateFileList(tmpStr, BITFLAG_P2P_UPLOAD_MODE, dstHost);
-	      theSession->isP2P = FLAG_P2P_KAZAA;
-	    }
-	  }
-	} else if(strncmp(row, "X-Kazaa-Username", 15) == 0) {
-	  char *user;
-
-	  row[strlen(row)-1] = '\0';
-
-	  user = &row[18];
-	  if(strlen(user) > 48)
-	    user[48] = '\0';
-
-	  /* traceEvent(CONST_TRACE_INFO, "DEBUG: USER='%s'", user); */
-
-	  updateHostUsers(user, BITFLAG_P2P_USER, srcHost);
-	  theSession->isP2P = FLAG_P2P_KAZAA;
-	}
-
-	row = strtok_r(NULL, "\n", &strtokState);
-      }
-
-      /* printf("==>\n\n%s\n\n", rcStr); */
-    }
-    free(rcStr);
-
-  } else if (((theSession->bytesProtoSent.value > 0)
-	      || (theSession->bytesProtoSent.value < 32))) {
-    char *strtokState, *row;
-
-    if ((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
-      traceEvent (CONST_TRACE_WARNING, "handleKazaaSession: Unable to "
-		  "allocate memory, Kazaa Session handling incomplete\n");
-      return;
-    }
-    memcpy(rcStr, packetData, packetDataLength);
-    rcStr[packetDataLength] = '\0';
-
-    if(strncmp(rcStr, "HTTP", 4) == 0) {
-      row = strtok_r(rcStr, "\n", &strtokState);
-
-      while(row != NULL) {
-	char *str = "X-KazaaTag: 4=";
-
-	if(strncmp(row, str, strlen(str)) == 0) {
-	  char *file = &row[strlen(str)];
-
-	  file[strlen(file)-1] = '\0';
-#ifdef P2P_DEBUG
-	  traceEvent(CONST_TRACE_INFO, "Uploading '%s'", file);
-#endif
-	  updateFileList(file, BITFLAG_P2P_UPLOAD_MODE, srcHost);
-	  updateFileList(file, BITFLAG_P2P_DOWNLOAD_MODE, dstHost);
-	  theSession->isP2P = FLAG_P2P_KAZAA;
-	  break;
-	}
-	row = strtok_r(NULL, "\n", &strtokState);
-      }
-    }
-    free(rcStr);
-  }
-}
-
-/* *********************************** */
-
 static void handleHTTPSession(const struct pcap_pkthdr *h,
                               HostTraffic *srcHost, u_short sport,
                               HostTraffic *dstHost, u_short dport,
@@ -2165,16 +1954,12 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 			 packetDataLength, packetData, theSession,
 			 actualDeviceId);
     } else if((dport == IP_TCP_PORT_KAZAA) && (packetDataLength > 0)) {
-      handleKazaaSession(h, srcHost, sport, dstHost, dport,
-			  packetDataLength, packetData, theSession,
-			  actualDeviceId);
+      theSession->isP2P = FLAG_P2P_KAZAA;
     } else if (((dport == IP_TCP_PORT_GNUTELLA1) ||
 		(dport == IP_TCP_PORT_GNUTELLA2) ||
 		(dport == IP_TCP_PORT_GNUTELLA3))
 	       && (packetDataLength > 0)) {
-      handleGnutellaSession(h, srcHost, sport, dstHost, dport,
-			     packetDataLength, packetData, theSession,
-			     actualDeviceId);
+      theSession->isP2P = FLAG_P2P_GNUTELLA;
     } else if (((sport == IP_TCP_PORT_MSMSGR) ||
 		(dport == IP_TCP_PORT_MSMSGR))
 	       && (packetDataLength > 0)) {
@@ -2234,8 +2019,6 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	    theSession->voipSession = 1;
 	  } else {
 	    theSession->isP2P = FLAG_P2P_EDONKEY;
-	    updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
-	    updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
 	  }
 	} else if(portRange(sport, dport, 6881, 6889)
 		  || portRange(sport, dport, 6969, 6969)
@@ -2246,27 +2029,19 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 		  || (strstr((char*)rcStr, "GET TrackPak") != NULL)
 		  || (strstr((char*)rcStr, "BitTorrent") != NULL)) {
 	  theSession->isP2P = FLAG_P2P_BITTORRENT;
-	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
-	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
 	} else if(portRange(sport, dport, 6346, 6347)
 		  || (!strncmp((char*)rcStr, "GNUTELLA", 8))
 		  || (!strncmp((char*)rcStr, "GIV", 3))
 		  || (!strncmp((char*)rcStr, "GET /uri-res/", 13))) {
 	  theSession->isP2P = FLAG_P2P_GNUTELLA;
-	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
-	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
 	} else if((!strncmp((char*)rcStr,    "GET hash:", 9))
 		  || (!strncmp((char*)rcStr, "PUSH", 4))
 		  || (!strncmp((char*)rcStr, "GET /uri-res/", 12))) {
 	  /* Ares */
 	  theSession->isP2P = FLAG_P2P_OTHER_PROTOCOL;
-	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
-	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
 	} else if((!strncmp((char*)rcStr,    "GET /$$$$$$$$$/", 15))) {
 	  /* EarthStation5 */
 	  theSession->isP2P = FLAG_P2P_OTHER_PROTOCOL;
-	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
-	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
 	}
 
 	free(rcStr);

@@ -3487,53 +3487,24 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
   }
 
   /* *************************************************** */
-
-  if((el->protocolInfo != NULL)
-     && (el->protocolInfo->fileList != NULL)) {
-    FileList *list = el->protocolInfo->fileList;
-
-    printSectionTitle("P2P Recently Exchanged Files\n");
-
-    sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
-	       "<TH "TH_BG" NOWRAP>File Name</TH></TR>\n");
-    sendString("<TR><TD align=left NOWRAP><ol>\n");
-
-    while(list != NULL) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>%s&nbsp;",
-		    list->fileName);
-      sendString(buf);
-
-      if(FD_ISSET(BITFLAG_P2P_UPLOAD_MODE, &list->fileFlags))
-	sendString("<IMG SRC=/upload.gif ALT=Upload VALIGN=MIDDLE>&nbsp;");
-      if(FD_ISSET(BITFLAG_P2P_DOWNLOAD_MODE, &list->fileFlags))
-	sendString("<IMG SRC=/download.gif ALT=Download VALIGN=MIDDLE>&nbsp;");
-
-      list = list->next;
-    }
-
-    sendString("\n</ol></TD></TR></TABLE></CENTER>\n");
-  }
-
-  /* *************************************************** */
   
   if(el->clientDelay || el ->serverDelay) {
     printSectionTitle("Recent Sessions: Network Delay");
     
     sendString("<P>\n<CENTER>\n");
     sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">");
-    if(el->clientDelay)  sendString("<TH "TH_BG" NOWRAP colspan=2>Client Mode</TH>");
-    if(el ->serverDelay) sendString("<TH "TH_BG" NOWRAP colspan=2>Server Mode</TH></TR>\n");
+    if(el->clientDelay)  sendString("<TH "TH_BG" NOWRAP>Client Mode</TH>");
+    if(el ->serverDelay) sendString("<TH "TH_BG" NOWRAP>Server Mode</TH></TR>\n");
     sendString("<TR>");
 
     if(el->clientDelay) {
-      sendString("<TD ALIGN=CENTER VALIGN=TOP colspan=100%>");
+      sendString("<TD ALIGN=CENTER VALIGN=TOP width=100%>");
       printHostNwDelay(el, actualDeviceId, el->clientDelay, 1), cols++;
       sendString("</TD>");
     }
 
     if(el->serverDelay) {
-      sendString("<TD ALIGN=CENTER VALIGN=TOP colspan=100%>");
+      sendString("<TD ALIGN=CENTER VALIGN=TOP width=100%>");
       printHostNwDelay(el, actualDeviceId, el->serverDelay, 0), cols++;
       sendString("</TD>");
     }
@@ -3549,8 +3520,6 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 	       "</td></tr>\n");
     sendString("</TABLE></CENTER>\n<P>\n");
   }
-
-  /* *************************************************** */
 
   printHostSessions(el, actualDeviceId);
 }
