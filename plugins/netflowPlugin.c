@@ -338,7 +338,7 @@ static void updateInterfaceName(InterfaceStats *ifStats) {
   addr.s_addr = ifStats->netflow_device_ip;
 
   getIfName(_intoa(addr, buf, sizeof(buf)),
-	    ifStats->netflow_device_port,
+	    /* ifStats->netflow_device_port, */
 	    "public", ifStats->interface_id,
 	    ifStats->interface_name,
 	    sizeof(ifStats->interface_name));
