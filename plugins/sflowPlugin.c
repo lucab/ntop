@@ -1824,7 +1824,7 @@ static void skipBytes(SFSample *sample, int skip, int deviceId) {
   sample->datap += quads;
 #else
   /* Fix below courtesy of Daniele Dgandurra <sgandurra@ntop.org> */
-  sample->datap = (u_int32_t*)((void*)sample->datap+skip);
+  sample->datap = (u_int32_t*)((u_int32_t*)sample->datap+skip);
 #endif
   if((u_char *)sample->datap > sample->endp) SFABORT(sample, SF_ABORT_EOS);
 }

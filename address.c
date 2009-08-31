@@ -55,6 +55,7 @@ static u_short lastResolvedAddrIdx;
 void initAddressResolution(void) {
   memset(&lastResolvedAddr, 0, sizeof(lastResolvedAddr));
   lastResolvedAddrIdx = 0;
+  createCondvar(&myGlobals.queueAddressCondvar);
 }
 
 /* **************************************** */
