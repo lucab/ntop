@@ -96,12 +96,22 @@ void* pcapDispatch(void *_i) {
     if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
 
     if(rc == -1) {
-      if(myGlobals.device[i].name != NULL) /* This is not a shutdown */
+      if(myGlobals.device[i].name != NULL) { /* This is not a shutdown */
+	char *emsg = pcap_geterr(myGlobals.device[i].pcapPtr);
+
 	traceEvent(CONST_TRACE_ERROR, "Reading packets on device %d (%s): '%s'",
-		   i,
-		   myGlobals.device[i].humanFriendlyName,
-		   pcap_geterr(myGlobals.device[i].pcapPtr));
-      break;
+		   i, myGlobals.device[i].humanFriendlyName, emsg);
+ 
+	/* 
+	   Ugly way to check for EAGAIN since the errno itself is not avail 
+	   Courtesy of Andreas Stolcke <stolcke@speech.sri.com>	   
+	*/
+	if(strcmp(emsg, strerror(EAGAIN)) == 0) {
+	  sleep(1);
+	} else {
+	  break;
+	}
+      }
     } else if(rc == 0) {
       if(myGlobals.pcap_file_list != NULL) {
 	traceEvent(CONST_TRACE_INFO, "pcap_loop (%s) returned %d [No more packets to read]",

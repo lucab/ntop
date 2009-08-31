@@ -408,9 +408,11 @@ void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId) {
 
 	if(strcasecmp(tmpStr, "language") == 0) {
 	  lang = DEFAULT_FLAG_LANGUAGE;
-	  for(j=1;j <= MAX_FLAG_LANGUGE;j++) {
-	    if(strcasecmp(&tmpStr[i+1], languages[j]) == 0)
+	  for(j=1;j < MAX_FLAG_LANGUGE;j++) {
+	    if(strcasecmp(&tmpStr[i+1], languages[j]) == 0) {
 	      lang = j;
+	      break;
+	    }
 	  }
 	}
       }
@@ -472,9 +474,11 @@ void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
 
 	if(strcasecmp(tmpStr, "language") == 0) {
 	  lang = DEFAULT_FLAG_LANGUAGE;
-	  for(j=1;j <= MAX_FLAG_LANGUGE;j++) {
-	    if(strcasecmp(&tmpStr[i+1], languages[j]) == 0)
+	  for(j=1;j < MAX_FLAG_LANGUGE;j++) {
+	    if(strcasecmp(&tmpStr[i+1], languages[j]) == 0) {
 	      lang = j;
+	      break;
+	    }
 	  }
 	}
       }
@@ -568,9 +572,11 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 
 	if(strcasecmp(tmpStr, "language") == 0) {
 	  lang = DEFAULT_FLAG_LANGUAGE;
-	  for(j=1;j <= MAX_FLAG_LANGUGE;j++) {
-	    if(strcasecmp(&tmpStr[i+1], languages[j]) == 0)
+	  for(j=1;j < MAX_FLAG_LANGUGE;j++) {
+	    if(strcasecmp(&tmpStr[i+1], languages[j]) == 0) {
 	      lang = j;
+	      break;
+	    }
 	  }
 	} else if(strcmp(tmpStr, "key") == 0) {
 	  strncpy(key, &tmpStr[i+1], sizeof(key));
@@ -1146,9 +1152,11 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
 	if(strcmp(tmpStr, "language") == 0) {
 
 	  lang = DEFAULT_FLAG_LANGUAGE;
-	  for(j=1;j <= MAX_FLAG_LANGUGE;j++) {
-	    if(strcmp(&tmpStr[i+1], languages[j]) == 0)
+	  for(j=1;j < MAX_FLAG_LANGUGE;j++) {
+	    if(strcmp(&tmpStr[i+1], languages[j]) == 0) {
 	      lang = j;
+	      break;
+	    }
 	  }
 	}
       }
@@ -1224,9 +1232,11 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 
 	if(strcmp(tmpStr, "language") == 0) {
 	  lang = DEFAULT_FLAG_LANGUAGE;
-	  for(j=1;j <= MAX_FLAG_LANGUGE;j++) {
-	    if(strcmp(&tmpStr[i+1], languages[j]) == 0)
+	  for(j=1;j < MAX_FLAG_LANGUGE;j++) {
+	    if(strcmp(&tmpStr[i+1], languages[j]) == 0) {
 	      lang = j;
+	      break;
+	    }
 	  }
 	} else if(strcmp(tmpStr, "key") == 0) {
 	  strncpy(key, &tmpStr[i+1], sizeof(key));
