@@ -1073,8 +1073,9 @@ void addDevice(char* deviceName, char* deviceDescr) {
         myGlobals.fcTrafficMatrixMemoryUsage += memlen;
 
         memlen = sizeof(struct hostTraffic*)*myGlobals.device[deviceId].numHosts;
-        myGlobals.device[deviceId].fcTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
-                                                                                       myGlobals.device[deviceId].numHosts);
+        myGlobals.device[deviceId].fcTrafficMatrixHosts = 
+	  (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
+				       myGlobals.device[deviceId].numHosts);
       }
 #endif
     }
@@ -1087,7 +1088,8 @@ void addDevice(char* deviceName, char* deviceDescr) {
     
     getLocalHostAddress(&myGlobals.device[deviceId].ifAddr, &netmask_v6, myGlobals.device[deviceId].name);
 #ifdef INET6
-    myGlobals.device[deviceId].v6Addrs = getLocalHostAddressv6(myGlobals.device[deviceId].v6Addrs, myGlobals.device[deviceId].name);
+    myGlobals.device[deviceId].v6Addrs = getLocalHostAddressv6(myGlobals.device[deviceId].v6Addrs, 
+							       myGlobals.device[deviceId].name);
 #endif
   }
 

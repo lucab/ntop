@@ -576,12 +576,12 @@ m4_define([lt_decl_dquote_varnames],
 # lt_decl_varnames_tagged([SEPARATOR], [VARNAME1...])
 # ---------------------------------------------------
 m4_define([lt_decl_varnames_tagged],
-[m4_assert([$# <= 2])dnl
-_$0(m4_quote(m4_default([$1], [[, ]])),
-    m4_ifval([$2], [[$2]], [m4_dquote(lt_decl_tag_varnames)]),
-    m4_split(m4_normalize(m4_quote(_LT_TAGS)), [ ]))])
-m4_define([_lt_decl_varnames_tagged],
-[m4_ifval([$3], [lt_combine([$1], [$2], [_], $3)])])
+[_$0(m4_quote(m4_default([$1], [[, ]])),
+     m4_quote(m4_if([$2], [],
+		     m4_quote(lt_decl_tag_varnames),
+		  m4_quote(m4_shift($@)))),
+     m4_split(m4_normalize(m4_quote(_LT_TAGS))))])
+m4_define([_lt_decl_varnames_tagged], [lt_combine([$1], [$2], [_], $3)])
 
 
 # lt_decl_all_varnames([SEPARATOR], [VARNAME1...])
@@ -872,8 +872,8 @@ _LT_CONFIG_SAVE_COMMANDS([
     fi
 
     cfgfile="${ofile}T"
-    trap "$RM \"$cfgfile\"; exit 1" 1 2 15
-    $RM "$cfgfile"
+    trap "$RM -f \"$cfgfile\"; exit 1" 1 2 15
+    $RM -f "$cfgfile"
 
     cat <<_LT_EOF >> "$cfgfile"
 #! $SHELL
@@ -1065,7 +1065,7 @@ ac_outfile=conftest.$ac_objext
 echo "$lt_simple_compile_test_code" >conftest.$ac_ext
 eval "$ac_compile" 2>&1 >/dev/null | $SED '/^$/d; /^ *+/d' >conftest.err
 _lt_compiler_boilerplate=`cat conftest.err`
-$RM conftest*
+$RM -r conftest*
 ])# _LT_COMPILER_BOILERPLATE
 
 
@@ -1141,10 +1141,10 @@ m4_defun_once([_LT_REQUIRED_DARWIN_CHECKS],[
       _lt_dar_allow_undefined='${wl}-undefined ${wl}suppress' ;;
     darwin1.*)
       _lt_dar_allow_undefined='${wl}-flat_namespace ${wl}-undefined ${wl}suppress' ;;
-    darwin*) # darwin 5.x on
+    darwin*) # darwin 5.x on 
       # if running on 10.5 or later, the deployment target defaults
       # to the OS version, if on x86, and 10.4, the deployment
-      # target defaults to 10.4. Don't you love it?
+      # target defaults to 10.4. Don't you love it? 
       case ${MACOSX_DEPLOYMENT_TARGET-10.0},$host in
 	10.0,*86*-darwin8*|10.0,*-darwin[[91]]*)
 	  _lt_dar_allow_undefined='${wl}-undefined ${wl}dynamic_lookup' ;;
@@ -1186,11 +1186,7 @@ m4_defun([_LT_DARWIN_LINKER_FEATURES],
   _LT_TAGVAR(whole_archive_flag_spec, $1)=''
   _LT_TAGVAR(link_all_deplibs, $1)=yes
   _LT_TAGVAR(allow_undefined_flag, $1)="$_lt_dar_allow_undefined"
-  case $cc_basename in
-     ifort*) _lt_dar_can_shared=yes ;;
-     *) _lt_dar_can_shared=$GCC ;;
-  esac
-  if test "$_lt_dar_can_shared" = "yes"; then
+  if test "$GCC" = "yes"; then
     output_verbose_link_cmd=echo
     _LT_TAGVAR(archive_cmds, $1)="\$CC -dynamiclib \$allow_undefined_flag -o \$lib \$libobjs \$deplibs \$compiler_flags -install_name \$rpath/\$soname \$verstring $_lt_dar_single_mod${_lt_dsymutil}"
     _LT_TAGVAR(module_cmds, $1)="\$CC \$allow_undefined_flag -o \$lib -bundle \$libobjs \$deplibs \$compiler_flags${_lt_dsymutil}"
@@ -1626,7 +1622,7 @@ AC_CACHE_CHECK([$1], [$2],
        $2=yes
      fi
    fi
-   $RM conftest*
+   $RM -r conftest*
 ])
 
 if test x"[$]$2" = xyes; then
@@ -1712,7 +1708,7 @@ AC_CACHE_VAL([lt_cv_sys_max_cmd_len], [dnl
     lt_cv_sys_max_cmd_len=-1;
     ;;
 
-  cygwin* | mingw* | cegcc*)
+  cygwin* | mingw*)
     # On Win9x/ME, this test blows up -- it succeeds, but takes
     # about 5 minutes as the teststring grows exponentially.
     # Worse, since 9x/ME are not pre-emptively multitasking,
@@ -1880,6 +1876,10 @@ else
 #  endif
 #endif
 
+#ifdef __cplusplus
+extern "C" void exit (int);
+#endif
+
 void fnord() { int i=42;}
 int main ()
 {
@@ -1895,7 +1895,7 @@ int main ()
   else
     puts (dlerror ());
 
-  return status;
+    exit (status);
 }]
 _LT_EOF
   if AC_TRY_EVAL(ac_link) && test -s conftest${ac_exeext} 2>/dev/null; then
@@ -1934,7 +1934,7 @@ else
     lt_cv_dlopen_self=yes
     ;;
 
-  mingw* | pw32* | cegcc*)
+  mingw* | pw32*)
     lt_cv_dlopen="LoadLibrary"
     lt_cv_dlopen_libs=
     ;;
@@ -2081,14 +2081,14 @@ AC_CACHE_CHECK([if $compiler supports -c -o file.$ac_objext],
      fi
    fi
    chmod u+w . 2>&AS_MESSAGE_LOG_FD
-   $RM conftest*
+   $RM -r conftest*
    # SGI C++ compiler will create directory out/ii_files/ for
    # template instantiation
    test -d out/ii_files && $RM out/ii_files/* && rmdir out/ii_files
    $RM out/* && rmdir out
    cd ..
    $RM -r conftest
-   $RM conftest*
+   $RM -r conftest*
 ])
 _LT_TAGDECL([compiler_c_o], [lt_cv_prog_compiler_c_o], [1],
 	[Does compiler simultaneously support -c and -o options?])
@@ -2108,7 +2108,7 @@ if test "$_LT_TAGVAR(lt_cv_prog_compiler_c_o, $1)" = no && test "$need_locks" !=
   # do not overwrite the value of need_locks provided by the user
   AC_MSG_CHECKING([if we can lock with hard links])
   hard_links=yes
-  $RM conftest*
+  $RM -r conftest*
   ln conftest.a conftest.b 2>/dev/null && hard_links=no
   touch conftest.a
   ln conftest.a conftest.b 2>&5 || hard_links=no
@@ -2231,7 +2231,6 @@ m4_defun([_LT_SYS_DYNAMIC_LINKER],
 [AC_REQUIRE([AC_CANONICAL_HOST])dnl
 m4_require([_LT_DECL_EGREP])dnl
 m4_require([_LT_FILEUTILS_DEFAULTS])dnl
-m4_require([_LT_DECL_OBJDUMP])dnl
 m4_require([_LT_DECL_SED])dnl
 AC_MSG_CHECKING([dynamic linker characteristics])
 m4_if([$1],
@@ -2396,14 +2395,14 @@ bsdi[[45]]*)
   # libtool to hard-code these into programs
   ;;
 
-cygwin* | mingw* | pw32* | cegcc*)
+cygwin* | mingw* | pw32*)
   version_type=windows
   shrext_cmds=".dll"
   need_version=no
   need_lib_prefix=no
 
   case $GCC,$host_os in
-  yes,cygwin* | yes,mingw* | yes,pw32* | yes,cegcc*)
+  yes,cygwin* | yes,mingw* | yes,pw32*)
     library_names_spec='$libname.dll.a'
     # DLL is installed to $(libdir)/../bin by postinstall_cmds
     postinstall_cmds='base_file=`basename \${file}`~
@@ -2426,7 +2425,7 @@ cygwin* | mingw* | pw32* | cegcc*)
       soname_spec='`echo ${libname} | sed -e 's/^lib/cyg/'``echo ${release} | $SED -e 's/[[.]]/-/g'`${versuffix}${shared_ext}'
       sys_lib_search_path_spec="/usr/lib /lib/w32api /lib /usr/local/lib"
       ;;
-    mingw* | cegcc*)
+    mingw*)
       # MinGW DLLs use traditional 'lib' prefix
       soname_spec='${libname}`echo ${release} | $SED -e 's/[[.]]/-/g'`${versuffix}${shared_ext}'
       sys_lib_search_path_spec=`$CC -print-search-dirs | $GREP "^libraries:" | $SED -e "s/^libraries://" -e "s,=/,/,g"`
@@ -2463,7 +2462,7 @@ darwin* | rhapsody*)
   version_type=darwin
   need_lib_prefix=no
   need_version=no
-  library_names_spec='${libname}${release}${major}$shared_ext ${libname}$shared_ext'
+  library_names_spec='${libname}${release}${major}$shared_ext ${libname}$shared_ext ${libname}${release}${versuffix}$shared_ext'
   soname_spec='${libname}${release}${major}$shared_ext'
   shlibpath_overrides_runpath=yes
   shlibpath_var=DYLD_LIBRARY_PATH
@@ -2681,18 +2680,6 @@ linux* | k*bsd*-gnu)
   dynamic_linker='GNU/Linux ld.so'
   ;;
 
-netbsdelf*-gnu)
-  version_type=linux
-  need_lib_prefix=no
-  need_version=no
-  library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext}$major ${libname}${shared_ext}'
-  soname_spec='${libname}${release}${shared_ext}$major'
-  shlibpath_var=LD_LIBRARY_PATH
-  shlibpath_overrides_runpath=no
-  hardcode_into_libs=yes
-  dynamic_linker='NetBSD ld.elf_so'
-  ;;
-
 netbsd*)
   version_type=sunos
   need_lib_prefix=no
@@ -2864,7 +2851,7 @@ tpf*)
   version_type=linux
   need_lib_prefix=no
   need_version=no
-  library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext}$major $libname${shared_ext}'
+  library_name_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext}$major $libname${shared_ext}'
   shlibpath_var=LD_LIBRARY_PATH
   shlibpath_overrides_runpath=no
   hardcode_into_libs=yes
@@ -2888,7 +2875,7 @@ variables_saved_for_relink="PATH $shlibpath_var $runpath_var"
 if test "$GCC" = yes; then
   variables_saved_for_relink="$variables_saved_for_relink GCC_EXEC_PREFIX COMPILER_PATH LIBRARY_PATH"
 fi
-
+ 
 if test "${lt_cv_sys_lib_search_path_spec+set}" = set; then
   sys_lib_search_path_spec="$lt_cv_sys_lib_search_path_spec"
 fi
@@ -3165,7 +3152,6 @@ _LT_DECL([], [reload_cmds], [2])dnl
 #  -- PORTME fill in with the dynamic library characteristics
 m4_defun([_LT_CHECK_MAGIC_METHOD],
 [m4_require([_LT_DECL_EGREP])
-m4_require([_LT_DECL_OBJDUMP])
 AC_CACHE_CHECK([how to recognize dependent libraries],
 lt_cv_deplibs_check_method,
 [lt_cv_file_magic_cmd='$MAGIC_CMD'
@@ -3214,12 +3200,6 @@ mingw* | pw32*)
     lt_cv_deplibs_check_method='file_magic file format pei*-i386(.*architecture: i386)?'
     lt_cv_file_magic_cmd='$OBJDUMP -f'
   fi
-  ;;
-
-cegcc)
-  # use the weaker test based on 'objdump'. See mingw*.
-  lt_cv_deplibs_check_method='file_magic file format pe-arm-.*little(.*architecture: arm)?'
-  lt_cv_file_magic_cmd='$OBJDUMP -f'
   ;;
 
 darwin* | rhapsody*)
@@ -3284,7 +3264,7 @@ linux* | k*bsd*-gnu)
   lt_cv_deplibs_check_method=pass_all
   ;;
 
-netbsd* | netbsdelf*-gnu)
+netbsd*)
   if echo __ELF__ | $CC -E - | $GREP __ELF__ > /dev/null; then
     lt_cv_deplibs_check_method='match_pattern /lib[[^/]]+(\.so\.[[0-9]]+\.[[0-9]]+|_pic\.a)$'
   else
@@ -3446,7 +3426,7 @@ AC_CACHE_CHECK([the name lister ($NM) interface], [lt_cv_nm_interface],
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
   fi
-  rm -f conftest*])
+  rm -r -f conftest*])
 ])# LT_PATH_NM
 
 # Old names:
@@ -3533,7 +3513,7 @@ case $host_os in
 aix*)
   symcode='[[BCDT]]'
   ;;
-cygwin* | mingw* | pw32* | cegcc*)
+cygwin* | mingw* | pw32*)
   symcode='[[ABCDGISTW]]'
   ;;
 hpux*)
@@ -3617,7 +3597,7 @@ for ac_symprfx in "" "_"; do
   # Check to see that the pipe works correctly.
   pipe_works=no
 
-  rm -f conftest*
+  rm -r -f conftest*
   cat > conftest.$ac_ext <<_LT_EOF
 #ifdef __cplusplus
 extern "C" {
@@ -3779,7 +3759,7 @@ m4_if([$1], [CXX], [
     beos* | irix5* | irix6* | nonstopux* | osf3* | osf4* | osf5*)
       # PIC is the default for these OSes.
       ;;
-    mingw* | cygwin* | os2* | pw32* | cegcc*)
+    mingw* | cygwin* | os2* | pw32*)
       # This hack is so that the source file can tell whether it is being
       # built for inclusion in a dll (and should export symbols for example).
       # Although the cygwin gcc ignores -fPIC, still need this for old-style
@@ -3806,11 +3786,10 @@ m4_if([$1], [CXX], [
       fi
       ;;
     hpux*)
-      # PIC is the default for 64-bit PA HP-UX, but not for 32-bit
-      # PA HP-UX.  On IA64 HP-UX, PIC is the default but the pic flag
-      # sets the default TLS model and affects inlining.
+      # PIC is the default for IA64 HP-UX and 64-bit HP-UX, but
+      # not for PA HP-UX.
       case $host_cpu in
-      hppa*64*)
+      hppa*64*|ia64*)
 	;;
       *)
 	_LT_TAGVAR(lt_prog_compiler_pic, $1)='-fPIC'
@@ -3908,17 +3887,10 @@ m4_if([$1], [CXX], [
 	    _LT_TAGVAR(lt_prog_compiler_wl, $1)='--backend -Wl,'
 	    _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fPIC'
 	    ;;
-	  ecpc* )
-	    # old Intel C++ for x86_64 which still supported -KPIC.
+	  icpc* | ecpc* )
+	    # Intel C++
 	    _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
 	    _LT_TAGVAR(lt_prog_compiler_pic, $1)='-KPIC'
-	    _LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
-	    ;;
-	  icpc* )
-	    # Intel C++, used to be incompatible with GCC.
-	    # ICC 10 doesn't accept -KPIC any more.
-	    _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
-	    _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fPIC'
 	    _LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
 	    ;;
 	  pgCC* | pgcpp*)
@@ -3965,7 +3937,7 @@ m4_if([$1], [CXX], [
 	    ;;
 	esac
 	;;
-      netbsd* | netbsdelf*-gnu)
+      netbsd*)
 	;;
       *qnx* | *nto*)
         # QNX uses GNU C++, but need to define -shared option too, otherwise
@@ -4086,7 +4058,7 @@ m4_if([$1], [CXX], [
       # PIC is the default for these OSes.
       ;;
 
-    mingw* | cygwin* | pw32* | os2* | cegcc*)
+    mingw* | cygwin* | pw32* | os2*)
       # This hack is so that the source file can tell whether it is being
       # built for inclusion in a dll (and should export symbols for example).
       # Although the cygwin gcc ignores -fPIC, still need this for old-style
@@ -4102,11 +4074,10 @@ m4_if([$1], [CXX], [
       ;;
 
     hpux*)
-      # PIC is the default for 64-bit PA HP-UX, but not for 32-bit
-      # PA HP-UX.  On IA64 HP-UX, PIC is the default but the pic flag
-      # sets the default TLS model and affects inlining.
+      # PIC is the default for IA64 HP-UX and 64-bit HP-UX, but
+      # not for PA HP-UX.
       case $host_cpu in
-      hppa*64*)
+      hppa*64*|ia64*)
 	# +Z the default
 	;;
       *)
@@ -4156,7 +4127,7 @@ m4_if([$1], [CXX], [
       fi
       ;;
 
-    mingw* | cygwin* | pw32* | os2* | cegcc*)
+    mingw* | cygwin* | pw32* | os2*)
       # This hack is so that the source file can tell whether it is being
       # built for inclusion in a dll (and should export symbols for example).
       m4_if([$1], [GCJ], [],
@@ -4187,25 +4158,11 @@ m4_if([$1], [CXX], [
 
     linux* | k*bsd*-gnu)
       case $cc_basename in
-      # old Intel for x86_64 which still supported -KPIC.
-      ecc*)
+      icc* | ecc* | ifort*)
 	_LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
 	_LT_TAGVAR(lt_prog_compiler_pic, $1)='-KPIC'
 	_LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
         ;;
-      # icc used to be incompatible with GCC.
-      # ICC 10 doesn't accept -KPIC any more.
-      icc* | ifort*)
-	_LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
-	_LT_TAGVAR(lt_prog_compiler_pic, $1)='-fPIC'
-	_LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
-        ;;
-      # Lahey Fortran 8.1.
-      lf95*)
-	_LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
-	_LT_TAGVAR(lt_prog_compiler_pic, $1)='--shared'
-	_LT_TAGVAR(lt_prog_compiler_static, $1)='--static'
-	;;
       pgcc* | pgf77* | pgf90* | pgf95*)
         # Portland Group compilers (*not* the Pentium gcc compiler,
 	# which looks to be a dead project)
@@ -4387,11 +4344,8 @@ m4_if([$1], [CXX], [
   pw32*)
     _LT_TAGVAR(export_symbols_cmds, $1)="$ltdll_cmds"
   ;;
-  cygwin* | mingw* | cegcc*)
+  cygwin* | mingw*)
     _LT_TAGVAR(export_symbols_cmds, $1)='$NM $libobjs $convenience | $global_symbol_pipe | $SED -e '\''/^[[BCDGRS]][[ ]]/s/.*[[ ]]\([[^ ]]*\)/\1 DATA/;/^.*[[ ]]__nm__/s/^.*[[ ]]__nm__\([[^ ]]*\)[[ ]][[^ ]]*/\1 DATA/;/^I[[ ]]/d;/^[[AITW]][[ ]]/s/.* //'\'' | sort | uniq > $export_symbols'
-  ;;
-  linux* | k*bsd*-gnu)
-    _LT_TAGVAR(link_all_deplibs, $1)=no
   ;;
   *)
     _LT_TAGVAR(export_symbols_cmds, $1)='$NM $libobjs $convenience | $global_symbol_pipe | $SED '\''s/.* //'\'' | sort | uniq > $export_symbols'
@@ -4442,7 +4396,7 @@ dnl Note also adjust exclude_expsyms for C++ above.
   extract_expsyms_cmds=
 
   case $host_os in
-  cygwin* | mingw* | pw32* | cegcc*)
+  cygwin* | mingw* | pw32*)
     # FIXME: the MSVC++ port hasn't been tested in a loooong time
     # When not using gcc, we currently assume that we are using
     # Microsoft Visual C++.
@@ -4529,7 +4483,7 @@ _LT_EOF
       fi
       ;;
 
-    cygwin* | mingw* | pw32* | cegcc*)
+    cygwin* | mingw* | pw32*)
       # _LT_TAGVAR(hardcode_libdir_flag_spec, $1) is actually meaningless,
       # as there is no search path for DLLs.
       _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='-L$libdir'
@@ -4595,9 +4549,6 @@ _LT_EOF
 	  tmp_addflag=' -i_dynamic -nofor_main' ;;
 	ifc* | ifort*)			# Intel Fortran compiler
 	  tmp_addflag=' -nofor_main' ;;
-	lf95*)				# Lahey Fortran 8.1
-	  _LT_TAGVAR(whole_archive_flag_spec, $1)=
-	  tmp_sharedflag='--shared' ;;
 	xl[[cC]]*)			# IBM XL C 8.0 on PPC (deal with xlf below)
 	  tmp_sharedflag='-qmkshrobj'
 	  tmp_addflag= ;;
@@ -4639,7 +4590,7 @@ _LT_EOF
       fi
       ;;
 
-    netbsd* | netbsdelf*-gnu)
+    netbsd*)
       if echo __ELF__ | $CC -E - | $GREP __ELF__ >/dev/null; then
 	_LT_TAGVAR(archive_cmds, $1)='$LD -Bshareable $libobjs $deplibs $linker_flags -o $lib'
 	wlarc=
@@ -4814,7 +4765,6 @@ _LT_EOF
 	if test "$aix_use_runtimelinking" = yes; then
 	  shared_flag="$shared_flag "'${wl}-G'
 	fi
-	_LT_TAGVAR(link_all_deplibs, $1)=no
       else
 	# not using gcc
 	if test "$host_cpu" = ia64; then
@@ -4830,7 +4780,6 @@ _LT_EOF
 	fi
       fi
 
-      _LT_TAGVAR(export_dynamic_flag_spec, $1)='${wl}-bexpall'
       # It seems that -bexpall does not export symbols beginning with
       # underscore (_), so it is better to generate a list of symbols to export.
       _LT_TAGVAR(always_export_symbols, $1)=yes
@@ -4885,7 +4834,7 @@ _LT_EOF
       _LT_TAGVAR(export_dynamic_flag_spec, $1)=-rdynamic
       ;;
 
-    cygwin* | mingw* | pw32* | cegcc*)
+    cygwin* | mingw* | pw32*)
       # When not using gcc, we currently assume that we are using
       # Microsoft Visual C++.
       # hardcode_libdir_flag_spec is actually meaningless, as there is
@@ -4989,7 +4938,7 @@ _LT_EOF
 	  _LT_TAGVAR(archive_cmds, $1)='$CC -shared ${wl}+h ${wl}$soname -o $lib $libobjs $deplibs $compiler_flags'
 	  ;;
 	ia64*)
-	  _LT_TAGVAR(archive_cmds, $1)='$CC -shared -fPIC ${wl}+h ${wl}$soname ${wl}+nodefaultrpath -o $lib $libobjs $deplibs $compiler_flags'
+	  _LT_TAGVAR(archive_cmds, $1)='$CC -shared ${wl}+h ${wl}$soname ${wl}+nodefaultrpath -o $lib $libobjs $deplibs $compiler_flags'
 	  ;;
 	*)
 	  _LT_TAGVAR(archive_cmds, $1)='$CC -shared -fPIC ${wl}+h ${wl}$soname ${wl}+b ${wl}$install_libdir -o $lib $libobjs $deplibs $compiler_flags'
@@ -5053,7 +5002,7 @@ _LT_EOF
       _LT_TAGVAR(link_all_deplibs, $1)=yes
       ;;
 
-    netbsd* | netbsdelf*-gnu)
+    netbsd*)
       if echo __ELF__ | $CC -E - | $GREP __ELF__ >/dev/null; then
 	_LT_TAGVAR(archive_cmds, $1)='$LD -Bshareable -o $lib $libobjs $deplibs $linker_flags'  # a.out
       else
@@ -5324,7 +5273,7 @@ x|xyes)
       # systems, -lgcc has to come before -lc. If gcc already passes -lc
       # to ld, don't add -lc before -lgcc.
       AC_MSG_CHECKING([whether -lc should be explicitly linked in])
-      $RM conftest*
+      $RM -r conftest*
       echo "$lt_simple_compile_test_code" > conftest.$ac_ext
 
       if AC_TRY_EVAL(ac_compile) 2>conftest.err; then
@@ -5351,7 +5300,7 @@ x|xyes)
       else
         cat conftest.err 1>&5
       fi
-      $RM conftest*
+      $RM -r conftest*
       AC_MSG_RESULT([$_LT_TAGVAR(archive_cmds_need_lc, $1)])
       ;;
     esac
@@ -5774,7 +5723,6 @@ if test "$_lt_caught_CXX_error" != yes; then
           fi
         fi
 
-        _LT_TAGVAR(export_dynamic_flag_spec, $1)='${wl}-bexpall'
         # It seems that -bexpall does not export symbols beginning with
         # underscore (_), so it is better to generate a list of symbols to
 	# export.
@@ -5833,7 +5781,7 @@ if test "$_lt_caught_CXX_error" != yes; then
         esac
         ;;
 
-      cygwin* | mingw* | pw32* | cegcc*)
+      cygwin* | mingw* | pw32*)
         # _LT_TAGVAR(hardcode_libdir_flag_spec, $1) is actually meaningless,
         # as there is no search path for DLLs.
         _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='-L$libdir'
@@ -7215,18 +7163,6 @@ _LT_DECL([], [EGREP], [1], [An ERE matcher])
 _LT_DECL([], [FGREP], [1], [A literal string matcher])
 dnl Non-bleeding-edge autoconf doesn't subst GREP, so do it here too
 AC_SUBST([GREP])
-])
-
-
-# _LT_DECL_OBJDUMP
-# --------------
-# If we don't have a new enough Autoconf to choose the best objdump
-# available, choose the one first in the user's PATH.
-m4_defun([_LT_DECL_OBJDUMP],
-[AC_CHECK_TOOL(OBJDUMP, objdump, false)
-test -z "$OBJDUMP" && OBJDUMP=objdump
-_LT_DECL([], [OBJDUMP], [1], [An object symbol dumper])
-AC_SUBST([OBJDUMP])
 ])
 
 

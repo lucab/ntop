@@ -54,6 +54,7 @@ static struct in_addr *in4_cpy(struct in_addr *dst, struct in_addr *src) {
 
 /* ************************************************* */
 
+#ifdef LINUX
 static void str2in6_addr(char *str, struct in6_addr *addr) {
   int i;
   unsigned int x;
@@ -63,6 +64,7 @@ static void str2in6_addr(char *str, struct in6_addr *addr) {
     addr->s6_addr[i]= x & 0xff;
   }
 }
+#endif
 
 /* ************************************************* */
 
@@ -101,7 +103,7 @@ struct iface_handler *iface_new(void) {
   int i;
   int if_pos = 0;
   int addr_pos = 0;
-  struct iface_addr	*ia;
+  struct iface_addr	*ia = NULL;
 
   /* Allocate memory for iface handler
    */

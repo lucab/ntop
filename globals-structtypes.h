@@ -2453,6 +2453,6 @@ typedef struct ntopGlobals {
 
   /* GeoIP */
   GeoIP *geo_ip_db, *geo_ip_asn_db;
-
+  PthreadMutex geolocalizationMutex;
 } NtopGlobals;
 

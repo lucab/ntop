@@ -5812,11 +5812,14 @@ void urlFixupToRFC1945Inplace(char* url) {
 static void updateGeoIP(HostTraffic *el) {
   if(el->hostNumIpAddress[0] != '\0') {
     if((el->geo_ip == NULL) && (myGlobals.geo_ip_db != NULL)) {
+      accessMutex(&myGlobals.geolocalizationMutex, "GeoIP_record_by_addr");
       el->geo_ip = GeoIP_record_by_addr(myGlobals.geo_ip_db, el->hostNumIpAddress);
+      releaseMutex(&myGlobals.geolocalizationMutex);
 
       if((el->hostAS == 0) && (myGlobals.geo_ip_asn_db != NULL)) {
 	char *rsp = NULL;
 
+	accessMutex(&myGlobals.geolocalizationMutex, "GeoIP_name_by_ipnum/v6");
 	if(el->hostIpAddress.hostFamily == AF_INET)
 	  rsp = GeoIP_name_by_ipnum(myGlobals.geo_ip_asn_db, el->hostIpAddress.Ip4Address.s_addr);
 	else {
@@ -5826,6 +5829,7 @@ static void updateGeoIP(HostTraffic *el) {
 #endif
 #endif
 	}
+	releaseMutex(&myGlobals.geolocalizationMutex);
 
 	if(rsp != NULL) {
 	  /* Example: AS20959 This AS Number will be used by the Datacom Network. */

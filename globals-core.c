@@ -263,6 +263,8 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.numBadSSIRequests = 0;
   myGlobals.numHandledSSIRequests = 0;
 
+  createMutex(&myGlobals.geolocalizationMutex); /* GeoIP mutex */
+
   /* create the logView stuff Mutex first... must be before the 1st traceEvent() call */
   createMutex(&myGlobals.logViewMutex);     /* synchronize logView buffer */
 #ifdef FORPRENPTL
