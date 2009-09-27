@@ -3403,12 +3403,9 @@ static int checkHTTPpassword(char *theRequestedURL,
 
   i = decodeString(thePw, (unsigned char*)outBuffer, sizeof(outBuffer));
 
-  if(i == 0) {
-    user = "", thePw[0] = '\0';
-    outBuffer[0] = '\0';
-  } else {
-    outBuffer[i] = '\0';
+  user = "", thePw[0] = '\0', outBuffer[i] = '\0';
 
+  if(i > 0) {
     for(i=0; i<(int)sizeof(outBuffer); i++)
       if(outBuffer[i] == ':') {
 	outBuffer[i] = '\0';
