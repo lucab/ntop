@@ -1,8 +1,6 @@
 import ntop;
 import host;
 
-print 'Hello';
-
 ntop.sendHTTPHeader(0);
 ntop.printHTMLHeader("Luca");
 
