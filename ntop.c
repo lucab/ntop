@@ -1156,7 +1156,8 @@ RETSIGTYPE cleanup(int signo) {
     if(myGlobals.device[i].packetQueue)
       free(myGlobals.device[i].packetQueue);
 
-    free(myGlobals.device[i].tcpSession);
+    if(myGlobals.device[i].tcpSession) free(myGlobals.device[i].tcpSession);
+
     free(myGlobals.device[i].humanFriendlyName);
     free(myGlobals.device[i].uniqueIfName);
     free(myGlobals.device[i].name);
