@@ -2,13 +2,14 @@ import ntop;
 import host;
 
 ntop.sendHTTPHeader(0);
-ntop.printHTMLHeader("Luca");
+ntop.printHTMLHeader("Welcome to ntop+Python");
 
-ntop.getFirstHost(0);
-ntop.sendString(host.ethAddress());
+ntop.sendString("<center><table border>\n");
+ntop.sendString("<tr><th>MAC Address</th><th>IP Address</th></tr>\n");
 
 while ntop.getNextHost(0):
-    ntop.sendString(host.ethAddress()+"/"+host.ipAddress()+"<br>");
+    ntop.sendString("<tr><td align=right>"+host.ethAddress()+"</td><td align=right>"+host.ipAddress()+"</td></tr>\n");
+    
+ntop.sendString("</table></center>\n");
 
-ntop.sendString('Hello');
 ntop.printHTMLFooter();

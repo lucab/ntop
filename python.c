@@ -36,11 +36,12 @@ static char query_string[2048];
 
 /* **************************************** */
 
-static PyObject* python_sendHTTPHeader(PyObject *self,
-				       PyObject *args) {
+static PyObject* python_sendHTTPHeader(PyObject *self, PyObject *args) {
   int mime_type;
+
+  // traceEvent(CONST_TRACE_WARNING, "-%s-", "python_sendHTTPHeader");
   
-  if(!PyArg_Parse(args, "d", &mime_type)) return NULL;
+  if(!PyArg_ParseTuple(args, "i", &mime_type)) return NULL;
     
   sendHTTPHeader(mime_type /* FLAG_HTTP_TYPE_HTML */, 0, 0);
   return PyString_FromString("");
@@ -52,7 +53,9 @@ static PyObject* python_printHTMLHeader(PyObject *self,
 				       PyObject *args) {
   char *title;
   
-  if(!PyArg_Parse(args, "s", &title)) return NULL;
+  // traceEvent(CONST_TRACE_WARNING, "-%s-", "python_printHTMLHeader");
+
+  if(!PyArg_ParseTuple(args, "s", &title)) return NULL;
     
   printHTMLheader(title, NULL, 0);
   return PyString_FromString("");
@@ -62,6 +65,9 @@ static PyObject* python_printHTMLHeader(PyObject *self,
 
 static PyObject* python_printHTMLFooter(PyObject *self,
 				       PyObject *args) {
+
+  // traceEvent(CONST_TRACE_WARNING, "-%s-", "python_printHTMLFooter");
+
   printHTMLtrailer();
   return PyString_FromString("");
 }
@@ -72,8 +78,10 @@ static PyObject* python_sendString(PyObject *self,
 				   PyObject *args) {
   char *msg;
   
+  //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_sendString");
+  
   /* parse the incoming arguments */
-  if (!PyArg_Parse(args, "s", &msg)) {
+  if (!PyArg_ParseTuple(args, "s", &msg)) {
       return NULL;
     }
 
@@ -86,31 +94,37 @@ static PyObject* python_sendString(PyObject *self,
 static PyObject* python_getFirstHost(PyObject *self,
 				     PyObject *args) {
   int actualDeviceId;
+
+  // traceEvent(CONST_TRACE_WARNING, "-%s- [%p]", "python_getFirstHost", ntop_host);
   
   /* parse the incoming arguments */
-  if(!PyArg_Parse(args, "d", &actualDeviceId))
+  if(!PyArg_ParseTuple(args, "i", &actualDeviceId))
     return NULL;
     
   ntop_host = getFirstHost(actualDeviceId);
   
-  //return PyString_FromString(ntop_host ? "1" : "0");
+  //Return PyString_FromString(ntop_host ? "1" : "0");
   return Py_BuildValue("i", ntop_host ? 1 : 0);
 }
 
 /* **************************************** */
 
+static int num_iter = 0;
+
 static PyObject* python_getNextHost(PyObject *self,
 				    PyObject *args) {
   int actualDeviceId;
+
+  //traceEvent(CONST_TRACE_WARNING, "-%s- [%p]", "python_getNextHost", ntop_host);
   
   /* parse the incoming arguments */
-  if(!PyArg_Parse(args, "d", &actualDeviceId))
+  if(!PyArg_ParseTuple(args, "i", &actualDeviceId))
     return NULL;
 
-  if(ntop_host == NULL)
-    ntop_host = getFirstHost(actualDeviceId);
-  else 
+  if(ntop_host != NULL)
     ntop_host = getNextHost(actualDeviceId, ntop_host);  
+  else
+    ntop_host = getFirstHost(actualDeviceId);
 
   //return PyString_FromString(ntop_host ? "1" : "0");
   return Py_BuildValue("i", ntop_host ? 1 : 0);
@@ -121,6 +135,8 @@ static PyObject* python_getNextHost(PyObject *self,
 
 static PyObject* python_ethAddress(PyObject *self,
 				   PyObject *args) {
+
+  //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ethAddress");
   return PyString_FromString(ntop_host ? ntop_host->ethAddressString : "");
 }
 
@@ -128,31 +144,33 @@ static PyObject* python_ethAddress(PyObject *self,
 
 static PyObject* python_ipAddress(PyObject *self,
 				   PyObject *args) {
-  return PyString_FromString(ntop_host ? ntop_host->hostNumIpAddress : "");
+  //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
+
+  return PyString_FromString((ntop_host && ntop_host->hostNumIpAddress) ? ntop_host->hostNumIpAddress : "");
 }
 
 /* **************************************** */
 
 static PyMethodDef ntop_methods[] = {
-  { "sendHTTPHeader", python_sendHTTPHeader },
+  { "sendHTTPHeader", python_sendHTTPHeader, METH_VARARGS| METH_KEYWORDS, "" },
 
-  { "printHTMLHeader", python_printHTMLHeader },
-  { "printHTMLFooter", python_printHTMLFooter },
-  { "sendString", python_sendString },
+  { "printHTMLHeader", python_printHTMLHeader, METH_VARARGS, "" },
+  { "printHTMLFooter", python_printHTMLFooter, METH_VARARGS, "" },
+  { "sendString", python_sendString, METH_VARARGS, "" },
 
-  { "getFirstHost", python_getFirstHost },
-  { "getNextHost",  python_getNextHost },
+  { "getFirstHost", python_getFirstHost, METH_VARARGS, "" },
+  { "getNextHost",  python_getNextHost, METH_VARARGS, "" },
 
-  { NULL, NULL}
+  { NULL, NULL, 0, NULL }
 };
 
 /* **************************************** */
 
 static PyMethodDef host_methods[] = {
-  { "ethAddress", python_ethAddress },
-  { "ipAddress",  python_ipAddress },
+  { "ethAddress", python_ethAddress, METH_NOARGS, "Get host MAC address" },
+  { "ipAddress",  python_ipAddress, METH_NOARGS, "Get host IP address" },
 
-  { NULL, NULL}
+  { NULL, NULL, 0, NULL }
 };
 
 /* **************************************** */
