@@ -44,8 +44,10 @@ char static_ntop;
  * Hello World! This is ntop speaking...
  */
 void welcome (FILE * fp) {
-  fprintf (fp, "Welcome to %s v.%s\n[Configured on %s, built on %s]\n",
-	   myGlobals.program_name, version, configureDate, buildDate);
+  fprintf (fp, "Welcome to %s v.%s (%d bit)\n"
+	   "[Configured on %s, built on %s]\n",
+	   myGlobals.program_name, version, sizeof(long) == 8 ? 64 : 32,
+	   configureDate, buildDate);
 
   fprintf (fp, "Copyright 1998-2009 by %s.\n", author);
   fprintf (fp, "Get the freshest ntop from http://www.ntop.org/\n");
@@ -617,7 +619,7 @@ int main(int argc, char *argv[]) {
 
   verifyOptions();
 
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s", version);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s (%d bit)", version, sizeof(long) == 8 ? 64 : 32);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Configured on %s, built on %s.", configureDate, buildDate);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2009 by %s", author);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Get the freshest ntop from http://www.ntop.org/");

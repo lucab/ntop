@@ -6010,7 +6010,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                       "<TABLE border=\"1\" "TABLE_DEFAULTS" width=\"" xstr(CONST_INFOHTML_WIDTH) "\">\n"));
 
   printInfoSectionTitle(textPrintFlag, "Basic Information");
-  printFeatureConfigInfo(textPrintFlag, "ntop Version", version);
+
+  safe_snprintf(__FILE__, __LINE__, formatBuf, sizeof(formatBuf), "%s (%d bit)", 
+		osName, sizeof(long) == 8 ? 64 : 32);
+  printFeatureConfigInfo(textPrintFlag, "ntop Version", formatBuf);
 
 #ifndef WIN32
   {
@@ -6023,8 +6026,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "Configured on", configureDate);
   printFeatureConfigInfo(textPrintFlag, "Built on", buildDate);
 
-  safe_snprintf(__FILE__, __LINE__, formatBuf, sizeof(formatBuf), "%s [%d bit]",
-	  osName, (sizeof(int) == 4) ? 32 : 64);
+  safe_snprintf(__FILE__, __LINE__, formatBuf, sizeof(formatBuf), "%s", osName);
   printFeatureConfigInfo(textPrintFlag, "OS", formatBuf);
 
   if(myGlobals.checkVersionStatus != FLAG_CHECKVERSION_NOTCHECKED) {
