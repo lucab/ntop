@@ -222,13 +222,13 @@ void str2serial(HostSerial *theSerial, char *buf, int buf_len) {
 /* ************************************ */
 
 HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
-  if (emptySerial (&theSerial)) return (NULL);
+  if(emptySerial(&theSerial)) return(NULL);
   if(theSerial.serialType == SERIAL_IPV4 || theSerial.serialType == SERIAL_IPV6) {
     return(findHostByNumIP(theSerial.value.ipSerial.ipAddress,
 			   theSerial.value.ipSerial.vlanId,
 			   actualDeviceId));
-  } else if (theSerial.serialType == SERIAL_FC) {
-    return (findHostByFcAddress (&theSerial.value.fcSerial.fcAddress,
+  } else if(theSerial.serialType == SERIAL_FC) {
+    return(findHostByFcAddress(&theSerial.value.fcSerial.fcAddress,
 				 theSerial.value.fcSerial.vsanId,
 				 actualDeviceId));
   }

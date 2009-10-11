@@ -548,6 +548,8 @@ void handleProtocols(void) {
     }
 
     if(!ignore_protocol) {
+      char protoStr[256] = { '\0' };
+
       protoName = strchr(proto, '=');
 
       if(protoName == NULL)
@@ -556,22 +558,20 @@ void handleProtocols(void) {
 		   proto);
       else {
 	protoName[0] = '\0';
-	memset(tmpStr, 0, sizeof(tmpStr));
-	strncpy(tmpStr, &protoName[1], sizeof(tmpStr));
-	len = strlen(tmpStr);
+	strncpy(protoStr, &protoName[1], sizeof(protoStr));
+	len = strlen(protoStr);
 
-	if(tmpStr[len-1] != '|') {
+	if(protoStr[len-1] != '|') {
 	  /* Make sure that the string ends with '|' */
-	  tmpStr[len] = '|';
-	  tmpStr[len+1] = '\0';
+	  protoStr[len] = '|';
+	  protoStr[len+1] = '\0';
 	}
 
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "          %30s %s", proto, tmpStr);
+	traceEvent(CONST_TRACE_INFO, "          %30s %s", proto, protoStr);
 #endif
 
-	handleProtocolList(proto, tmpStr);
-
+	handleProtocolList(proto, protoStr);
       }
     }
 
@@ -589,7 +589,7 @@ void addDefaultProtocols(void) {
   handleProtocolList("HTTP",     "http|www|https|3128|"); /* 3128 is HTTP cache */
   handleProtocolList("DNS",      "name|domain|");
   handleProtocolList("Telnet",   "telnet|login|");
-  handleProtocolList("NBios-IP", "netbios-ns|netbios-dgm|netbios-ssn|");
+  handleProtocolList("NBios/CIFS", "netbios-ns|netbios-dgm|netbios-ssn|445");
   handleProtocolList("Mail",     "pop-2|pop-3|pop3|kpop|smtp|imap|imap2|");
   handleProtocolList("DHCP-BOOTP", "67-68|");
   handleProtocolList("SNMP",     "snmp|snmp-trap|");

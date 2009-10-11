@@ -2009,6 +2009,10 @@ void printHostsTraffic(int reportTypeReq,
 					  formatBuf, sizeof(formatBuf)) : "0");
 		sendString(buf);
 	      }
+	    } else {
+	      /* No protocol traffic just print empty cells */
+	      for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
+		sendString("<TD "TD_BG" ALIGN=RIGHT>0</TD>");
 	    }
 
 	    /* Rounding may cause troubles */
