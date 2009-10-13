@@ -131,6 +131,19 @@ static PyObject* python_findHostByNumIP(PyObject *self,
 
 /* **************************************** */
 
+static PyObject* python_getPreference(PyObject *self,
+				      PyObject *args) {
+  char *key, value[512] = { '\0' };
+  int rc;
+  
+  if(!PyArg_ParseTuple(args, "s", &key)) return NULL;
+    
+  rc = fetchPrefsValue(key, value, sizeof(value));
+  return PyString_FromString(rc == 0 ? value : "");
+}
+
+/* **************************************** */
+
 static int num_iter = 0;
 
 static PyObject* python_getNextHost(PyObject *self,
@@ -468,8 +481,8 @@ static PyObject* python_synPktsSent(PyObject *self,
 
 static PyMethodDef ntop_methods[] = {
   { "sendHTTPHeader", python_sendHTTPHeader, METH_VARARGS| METH_KEYWORDS, "" },
-
   { "printHTMLHeader", python_printHTMLHeader, METH_VARARGS, "" },
+
   { "printHTMLFooter", python_printHTMLFooter, METH_VARARGS, "" },
   { "sendString",      python_sendString,      METH_VARARGS, "" },
 
@@ -477,6 +490,7 @@ static PyMethodDef ntop_methods[] = {
   { "getNextHost",     python_getNextHost,     METH_VARARGS, "" },
   { "findHostByNumIP", python_findHostByNumIP, METH_VARARGS, "" },
 
+  { "getPreference",      python_getPreference,      METH_VARARGS, "" },
   { NULL, NULL, 0, NULL }
 };
 
