@@ -857,6 +857,9 @@ extern FCSession* handleFcSession(const struct pcap_pkthdr *h,
 				  u_char isXchgOrig, const u_char *bp,
 				  int actualDeviceId);
 
+/* event.c */
+extern void notifyEvent(EventType evt, HostTraffic *el, IPSession *session);
+
 /* fcUtils.c */
 extern int isFlogiAcc(FcAddress *fcAddress, u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
 extern int fillFcHostInfo(const u_char *bp, HostTraffic *srcHost);

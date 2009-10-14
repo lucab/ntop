@@ -262,7 +262,8 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   if(host == NULL) {
     traceEvent(CONST_TRACE_WARNING, "Attempting to call freeHostInfo(NULL)");
     return;
-  }
+  } else
+    notifyEvent(hostDeletion, host, NULL);
 
   /* If this is one of the special ones, let's clear the other pointer to it
    * to prevent a free of freed memory error later.
@@ -1148,6 +1149,8 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 
     setHostSerial(el);
     handlePluginHostCreationDeletion(el, (u_short)actualDeviceId, 1 /* host creation */);
+
+    notifyEvent(hostCreation, el, NULL);
   }
 
   if(el != NULL) {
@@ -1314,7 +1317,9 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
                el->ethAddressString, el->hostNumIpAddress, list->idx, actualDeviceId,
                myGlobals.device[actualDeviceId].actualHashSize, myGlobals.device[actualDeviceId].hostsno);
 #endif
+
     setHostSerial(el);
+    notifyEvent(hostCreation, el, NULL);
   }
 
   if(el != NULL) {

@@ -1098,6 +1098,15 @@ typedef struct probeInfo {
   u_int32_t lostFlows;
 } ProbeInfo;
 
+/* Flow aggregation */
+typedef enum {
+  hostCreation = 0,
+  hostDeletion,
+  sessionCreation,
+  sessionDeletion,
+  hostFlagged
+} EventType;
+
 /* *************************** */
 
 #define CONST_FLOW_VERSION_1		    1

@@ -252,6 +252,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 		 u_char lockMutex /* unused so far */) {
   /* Session to purge */
 
+  notifyEvent(sessionDeletion, NULL, sessionToPurge);
   dump_session_to_db(sessionToPurge);
 
   if(sessionToPurge->magic != CONST_MAGIC_NUMBER) {
@@ -360,6 +361,8 @@ void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
     int i;
 
     /* Session to purge */
+
+    // notifyEvent(sessionDeletion, NULL, sessionToPurge); - FIX
 
     if(sessionToPurge->magic != CONST_MAGIC_NUMBER) {
       traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) freeFcSession()",
@@ -1873,6 +1876,8 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 
     theSession->firstSeen = myGlobals.actTime;
     flowDirection = FLAG_CLIENT_TO_SERVER;
+
+    notifyEvent(sessionCreation, NULL, theSession);
   } /* End of new session branch */
 
   /* traceEvent(CONST_TRACE_ERROR, "--> DEBUG: [state=%d][flags=%d]", theSession->sessionState, tp->th_flags); */
