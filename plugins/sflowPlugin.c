@@ -22,8 +22,6 @@
   ntop includes sFlow(TM), freely available from http://www.inmon.com/".
 
   Some code has been copied from the InMon sflowtool
-
-  This plugin works only with threads
 */
 
 #include "ntop.h"
@@ -31,7 +29,7 @@
 
 static void* sflowMainLoop(void* _deviceId);
 
-/* #define DEBUG_FLOWS  */
+/* #define DEBUG_FLOWS */
 
 /* ********************************* */
 
@@ -1075,7 +1073,6 @@ typedef struct _SFConfig {
   struct mySendPacket sendPkt;
   u_int32_t packetLen;
 #endif
-
 } SFConfig;
 
 /* make the options structure global to the program */
@@ -1091,7 +1088,11 @@ typedef struct _SFSample {
   u_char *endp;
 
   /* decode cursor */
+#if 0
   u_int32_t *datap;
+#else
+  u_char *datap;
+#endif
 
   u_int32_t datagramVersion;
   u_int32_t sampleType;
@@ -1224,8 +1225,11 @@ typedef struct _SFSample {
 
 /* ********************************* */
 
+#ifdef DEBUG_FLOWS
+#define SFLOW_DEBUG(a) (1)
+#else
 #define SFLOW_DEBUG(a) ((a < myGlobals.numDevices) && myGlobals.device[a].sflowGlobals && myGlobals.device[a].sflowGlobals->sflowDebug)
-
+#endif
 /* ********************************* */
 
 /* Forward */
@@ -1275,7 +1279,7 @@ static PluginInfo sflowPluginInfo[] = {
     handlesFlowHTTPrequest,
     NULL, /* no host creation/deletion handle */
 #ifdef DEBUG_FLOWS
-    "udp and (port 6343 or port 7343)",
+    "udp and (port 6343 or port 9002)",
 #else
     NULL, /* no capture */
 #endif
@@ -1560,6 +1564,18 @@ static void receiveError(SFSample *sample, char *errm, int hexdump)
   SFABORT(sample, SF_ABORT_DECODE_ERROR);
 }
 
+static void skipBytes(SFSample *sample, int skip) {
+#if 0
+  int quads = (skip + 3) / 4;
+
+  sample->datap += quads;
+#else
+  /* Luca's fix */  
+  sample->datap += skip;
+#endif
+  if((u_char *)sample->datap > sample->endp) SFABORT(sample, SF_ABORT_EOS);
+}
+
 /*_________________---------------------------__________________
   _________________    lengthCheck            __________________
   -----------------___________________________------------------
@@ -1567,7 +1583,9 @@ static void receiveError(SFSample *sample, char *errm, int hexdump)
 
 static void lengthCheck(SFSample *sample, char *description, u_char *start, int len) {
   u_int32_t actualLen = (u_char *)sample->datap - start;
-  if(actualLen != len) {
+
+  if(actualLen != len) 
+  {
     fprintf(stderr, "%s length error (expected %d, found %d)\n", description, len, actualLen);
     SFABORT(sample, SF_ABORT_LENGTH_ERROR);
   }
@@ -1802,13 +1820,24 @@ static u_int16_t in_checksum(u_int16_t *addr, int len)
 */
 
 static u_int32_t getData32(SFSample *sample, int deviceId) {
+  u_int32_t *val;
+
   if((u_char *)sample->datap > sample->endp) SFABORT(sample, SF_ABORT_EOS);
-  return ntohl(*(sample->datap)++);
+  val = (u_int32_t*)sample->datap;
+  skipBytes(sample, 4);
+
+  return ntohl(*val);
 }
 
 static u_int32_t getData32_nobswap(SFSample *sample, int deviceId) {
+  u_int32_t *val;
+
   if((u_char *)sample->datap > sample->endp) SFABORT(sample, SF_ABORT_EOS);
-  return *(sample->datap)++;
+
+  val = (u_int32_t*)sample->datap;
+  skipBytes(sample, 4);
+
+  return *val;
 }
 
 static u_int64_t getData64(SFSample *sample, int deviceId) {
@@ -1816,17 +1845,6 @@ static u_int64_t getData64(SFSample *sample, int deviceId) {
   tmpHi = getData32(sample, deviceId);
   tmpLo = getData32(sample, deviceId);
   return (tmpHi << 32) + tmpLo;
-}
-
-static void skipBytes(SFSample *sample, int skip, int deviceId) {
-#if 0
-  int quads = (skip + 3) / 4;
-  sample->datap += quads;
-#else
-  /* Fix below courtesy of Daniele Dgandurra <sgandurra@ntop.org> */
-  sample->datap = (u_int32_t*)((u_int32_t*)sample->datap+skip);
-#endif
-  if((u_char *)sample->datap > sample->endp) SFABORT(sample, SF_ABORT_EOS);
 }
 
 static u_int32_t sf_log_next32(SFSample *sample, char *fieldName, int deviceId) {
@@ -1848,7 +1866,7 @@ static u_int32_t getString(SFSample *sample, char *buf, int bufLen, int deviceId
   read_len = (len >= bufLen) ? (bufLen - 1) : len;
   memcpy(buf, sample->datap, read_len);
   buf[read_len] = '\0';   // null terminate
-  skipBytes(sample, len, deviceId);
+  skipBytes(sample, len);
   return len;
 }
 
@@ -1859,7 +1877,7 @@ static u_int32_t getAddress(SFSample *sample, SFLAddress *address, int deviceId)
 #ifdef INET6
   else {
     memcpy(&address->address.ip_v6.s6_addr, sample->datap, 16);
-    skipBytes(sample, 16, deviceId);
+    skipBytes(sample, 16);
   }
 #endif
   return address->type;
@@ -1892,7 +1910,7 @@ static u_int32_t skipTLVRecord(SFSample *sample, u_int32_t tag, char *descriptio
   len = getData32(sample, deviceId);
   // sanity check
   if(len > sample->rawSampleLen) SFABORT(sample, SF_ABORT_EOS);
-  else skipBytes(sample, len, deviceId);
+  else skipBytes(sample, len);
   return len;
 }
 
@@ -1955,7 +1973,7 @@ static void readExtendedGateway_v2(SFSample *sample, int deviceId)
   if(sample->dst_as_path_len > 0) {
     sample->dst_as_path = sample->datap;
     /* and skip over it in the input */
-    skipBytes(sample, sample->dst_as_path_len * 4, deviceId);
+    skipBytes(sample, sample->dst_as_path_len * 4);
     // fill in the dst and dst_peer fields too
     sample->dst_peer_as = ntohl(sample->dst_as_path[0]);
     sample->dst_as = ntohl(sample->dst_as_path[sample->dst_as_path_len - 1]);
@@ -2044,7 +2062,7 @@ static void readExtendedGateway(SFSample *sample, int deviceId)
   /* just point at the communities array */
   if(sample->communities_len > 0) sample->communities = sample->datap;
   /* and skip over it in the input */
-  skipBytes(sample, sample->communities_len * 4, deviceId);
+  skipBytes(sample, sample->communities_len * 4);
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_GATEWAY;
   if(sample->communities_len > 0) {
@@ -2125,7 +2143,7 @@ static void mplsLabelStack(SFSample *sample, char *fieldName, int deviceId)
   /* just point at the lablelstack array */
   if(lstk.depth > 0) lstk.stack = (u_int32_t *)sample->datap;
   /* and skip over it in the input */
-  skipBytes(sample, lstk.depth * 4, deviceId);
+  skipBytes(sample, lstk.depth * 4);
 
   if(lstk.depth > 0) {
     int j = 0;
@@ -2260,7 +2278,7 @@ static void readExtendedVlanTunnel(SFSample *sample, int deviceId)
   /* just point at the lablelstack array */
   if(lstk.depth > 0) lstk.stack = (u_int32_t *)sample->datap;
   /* and skip over it in the input */
-  skipBytes(sample, lstk.depth * 4, deviceId);
+  skipBytes(sample, lstk.depth * 4);
 
   if(lstk.depth > 0) {
     int j = 0;
@@ -2300,7 +2318,7 @@ static void readFlowSample_header(SFSample *sample, int deviceId)
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "headerLen %lu\n", (long unsigned int)sample->headerLen);
 
   sample->header = (u_char *)sample->datap; /* just point at the header */
-  skipBytes(sample, sample->headerLen, deviceId);
+  skipBytes(sample, sample->headerLen);
   {
     char scratch[2000];
     printHex(sample->header, sample->headerLen, (u_char*)scratch, 2000, 0, 2000);
@@ -2352,9 +2370,9 @@ static void readFlowSample_ethernet(SFSample *sample, int deviceId)
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "flowSampleType ETHERNET\n");
   sample->eth_len = getData32(sample, deviceId);
   memcpy(sample->eth_src, sample->datap, 6);
-  skipBytes(sample, 6, deviceId);
+  skipBytes(sample, 6);
   memcpy(sample->eth_dst, sample->datap, 6);
-  skipBytes(sample, 6, deviceId);
+  skipBytes(sample, 6);
   sample->eth_type = getData32(sample, deviceId);
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ethernet_type %lu\n", (long unsigned int)sample->eth_type);
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ethernet_len %lu\n", (long unsigned int)sample->eth_len);
@@ -2375,7 +2393,7 @@ static void readFlowSample_IPv4(SFSample *sample, int deviceId)
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "flowSampleType IPV4\n");
   sample->headerLen = sizeof(SFLSampled_ipv4);
   sample->header = (u_char *)sample->datap; /* just point at the header */
-  skipBytes(sample, sample->headerLen, deviceId);
+  skipBytes(sample, sample->headerLen);
   {
     char buf[51];
     SFLSampled_ipv4 nfKey;
@@ -2430,7 +2448,7 @@ static void readFlowSample_IPv6(SFSample *sample, int deviceId)
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "flowSampleType IPV6\n");
   sample->header = (u_char *)sample->datap; /* just point at the header */
   sample->headerLen = sizeof(SFLSampled_ipv6);
-  skipBytes(sample, sample->headerLen, deviceId);
+  skipBytes(sample, sample->headerLen);
   {
     SFLSampled_ipv6 nfKey6;
     memcpy(&nfKey6, sample->header, sizeof(nfKey6));

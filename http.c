@@ -712,9 +712,29 @@ static void ssiMenu_Head(void) {
 
   sendStringWOssi(
 		  "	[null,'Admin',null,null,null,\n");
-  if(!myGlobals.runningPref.mergeInterfaces)
+  if(!myGlobals.runningPref.mergeInterfaces) {
+    int i;
+
     sendStringWOssi(
-		    "		[null,'Switch NIC','/" CONST_SWITCH_NIC_HTML "',null,null],\n");
+		    "		[null,'Switch NIC',null,null,null,\n");
+    
+    for(i=0; i<myGlobals.numDevices; i++) {
+      if(((!myGlobals.device[i].virtualDevice) 
+	  || (myGlobals.device[i].sflowGlobals)
+	  || (myGlobals.device[i].netflowGlobals))
+	 &&  myGlobals.device[i].activeDevice) {
+	if(myGlobals.actualReportDeviceId != i) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "			[null,'%s','/" CONST_SWITCH_NIC_HTML "?interface=%d',null,null],\n",
+		      myGlobals.device[i].humanFriendlyName, i+1);
+	sendString(buf);
+	  }
+      }
+    }
+
+    sendString("		],\n");
+  }
+
   sendStringWOssi(
 		  "		['<img src=\"/lock.png\">','Configure',null,null,null,\n"
 		  "			['<img src=\"/lock.png\">','Startup Options','/" CONST_CONFIG_NTOP_HTML "',null,null],\n"

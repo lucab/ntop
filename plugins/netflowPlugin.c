@@ -134,7 +134,7 @@ static PluginInfo netflowPluginInfo[] = {
     handleNetflowHTTPrequest,
     NULL, /* no host creation/deletion handle */
 #ifdef DEBUG_FLOWS
-    "udp and (port 2055 or port 1024 or port 9501)",
+    "udp and (port 2055 or port 9996)",
 #else
     NULL, /* no capture */
 #endif
@@ -1341,7 +1341,6 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 #ifdef DEBUG_FLOWS
   static int num_pdu = 0;
   int debug = 1;
-  char buf[LEN_SMALL_WORK_BUFFER], buf1[LEN_SMALL_WORK_BUFFER];
 #endif
 
 #ifdef DEBUG_FLOWS
@@ -4021,8 +4020,7 @@ static void termNetflowFunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
 
 static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 				const u_char *p) {
-  int sampledPacketSize;
-  int deviceId, rc;
+  int deviceId;
 
   if(myGlobals.pcap_file_list != NULL) {
     /* ntop is reading packets from a file */
@@ -4030,7 +4028,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
     u_int caplen = h->caplen;
     u_int length = h->len;
     unsigned short eth_type;
-    u_int8_t flags = 0, debug = 0;
+    u_int8_t debug = 0;
     struct ip ip;
 
     deviceId = 1; /* Dummy value */
@@ -4053,7 +4051,6 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 
       if(eth_type == ETHERTYPE_IP) {
 	u_int plen, hlen;
-	u_short sport, dport;
 
 #ifdef DEBUG_FLOWS
 	if(debug)
@@ -4086,7 +4083,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 #endif
 
 	    myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd++;
-	    dissectFlow(ip.ip_src.s_addr, rawSample, rawSampleLen, deviceId);
+	    dissectFlow(ip.ip_src.s_addr, 0 /* port */, 0 /* probeId */, rawSample, rawSampleLen, deviceId);
 	  }
 	}
       } else {
@@ -4111,7 +4108,7 @@ PluginInfo* netflowPluginEntryFctn(void)
 #endif
 {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-	     "NETFLOW: Welcome to %s.(C) 2002-08 by Luca Deri",
+	     "NETFLOW: Welcome to %s.(C) 2002-09 by Luca Deri",
 	     netflowPluginInfo->pluginName);
 
   return(netflowPluginInfo);
