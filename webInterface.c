@@ -6419,15 +6419,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "GDBM version", gdbm_version);
 #endif
 
-  printFeatureConfigInfo(textPrintFlag, "Embedded Perl API",
-#ifdef HAVE_PERL
-			 "Present"
-#else
-			 "Not present"
-#endif
-			 );
-
-
   printFeatureConfigInfo(textPrintFlag, 
 			 "Embedded <A HREF=http://www.python.org>Python</A>",
 #ifdef HAVE_PYTHON
