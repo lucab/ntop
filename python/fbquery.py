@@ -76,6 +76,9 @@ else:
 fb_limit = form.getvalue('limit', default="50")
 
 
+# Debug
+fb_submit = form.getvalue('submit')
+
 #
 # Check for mandatory ntop preferences
 #
@@ -117,37 +120,41 @@ if not fb_where:
 
     ntop.printHTMLHeader("fbquery");
     ntop.sendString ("<center>")
-    ntop.sendString ("<font color=red>Warning: you have submitted an empty or illegal query!</font><br><br><br>")
-    ntop.sendString ("URL parameters available:<br><br>")
 
-    # Table
+    if fb_submit:
+        ntop.sendString ("<font color=red>Warning: you have submitted an empty or illegal query!</font><br><br><br>")
+
+    # Form
+    ntop.sendString ("<form name=input action=\"\" method=get>\n")
+    ntop.sendString ("<table align=center>")
+    ntop.sendString ("<tr><td><b>SELECT</b></td><td><input type=text name=select size=40></td></tr>")
+    ntop.sendString ("<tr><td><b>FROM</b></td><td><input type=text name=from size=40 value="+fb_partition+"></td></tr>")
+    ntop.sendString ("<tr><td><b>WHERE</b></td><td> <input type=text name=where size=40></td></tr>")
+    ntop.sendString ("<input type=hidden name=output value=PLAIN>")
+    ntop.sendString ("<input type=hidden name=submit value=yes>")
+    ntop.sendString ("<tr><td colspan=2 align=center><input type=submit value=\"Query!\"></td></tr>")
+    ntop.sendString ("</table></form>\n")
+    ntop.sendString ("<br><br>")
+
+    # How to
+    ntop.sendString ("How to submit a query:<br><br>")
     ntop.sendString ("<table border=1 cellspacing=0 cellpadding=2>")
-    ntop.sendString ("<tr><th align=center bgcolor=#f3f3f3>Parameter</th>")
+    ntop.sendString ("<tr><th align=center bgcolor=#f3f3f3>Field</th>")
     ntop.sendString ("<th align=center bgcolor=#f3f3f3>Value</th>")
     ntop.sendString ("<th align=center bgcolor=#f3f3f3>Example</th></tr>")
 
-    ntop.sendString ("<tr><th align=left bgcolor=#f3f3f3>select</th>")
+    ntop.sendString ("<tr><th align=left bgcolor=#f3f3f3>SELECT</th>")
     ntop.sendString ("<td align=left bgcolor=white>Comma separated column names</td>")
-    ntop.sendString ("<td align=left bgcolor=white>select=IPV4_SRC_ADDR</td></tr>")
+    ntop.sendString ("<td align=left bgcolor=white>IPV4_SRC_ADDR,L4_SRC_PORT,L4_DST_PORT</td></tr>")
 
-    ntop.sendString ("<tr><th align=left bgcolor=#f3f3f3>where</th>")
+    ntop.sendString ("<tr><th align=left bgcolor=#f3f3f3>FROM</th>")
+    ntop.sendString ("<td align=left bgcolor=white>Absolute pathname of Fastbit directory to query</td>")
+    ntop.sendString ("<td align=left bgcolor=white>/usr/local/network/database</td></tr>")
+
+    ntop.sendString ("<tr><th align=left bgcolor=#f3f3f3>WHERE</th>")
     ntop.sendString ("<td align=left bgcolor=white>Query conditions to satisfy [mandatory]</td>")
-    ntop.sendString ("<td align=left bgcolor=white>where=L4_SRC_PORT>80</td></tr>")
-
-    ntop.sendString ("<tr><th align=left bgcolor=#f3f3f3>output</th>")
-    ntop.sendString ("<td align=left bgcolor=white>Output format: PLAIN or XML</td>")
-    ntop.sendString ("<td align=left bgcolor=white>output=PLAIN</td></tr>")
-
-    ntop.sendString ("<tr><th align=left bgcolor=#f3f3f3>limit</th>")
-    ntop.sendString ("<td align=left bgcolor=white>Rows limit number in fbquery output</td>")
-    ntop.sendString ("<td align=left bgcolor=white>limit=25</td></tr>")
+    ntop.sendString ("<td align=left bgcolor=white>L4_SRC_PORT>80</td></tr>")
     ntop.sendString ("</table>")
-
-    ntop.sendString ("<br><br>")
-    ntop.sendString ("Complete URL sample: <br><br>")
-    url = "fbquery.py?<b>select</b>=IPV4_SRC_ADDR&<b>where</b>=L4_SRC_PORT>80&<b>output</b>=PLAIN&<b>limit</b>=25"
-    ntop.sendString (url)
-    ntop.sendString ("<br><br>")
 
     # Exit
     ntop.printHTMLFooter();
