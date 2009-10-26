@@ -395,7 +395,10 @@ struct iface_handler *iface_new(void) {
 
     }
   }
+
+  fclose(fd);
   return hdlr;
+
  failed:
   iface_destroy(hdlr);
   return NULL;
