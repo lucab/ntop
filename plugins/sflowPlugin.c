@@ -2304,6 +2304,8 @@ static void readExtendedVlanTunnel(SFSample *sample, int deviceId)
 
 static void readFlowSample_header(SFSample *sample, int deviceId)
 {
+  u_int toSkip;
+
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "flowSampleType HEADER\n");
   sample->headerProtocol = getData32(sample, deviceId);
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "headerProtocol %lu\n", (long unsigned int)sample->headerProtocol);
@@ -2318,7 +2320,9 @@ static void readFlowSample_header(SFSample *sample, int deviceId)
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "headerLen %lu\n", (long unsigned int)sample->headerLen);
 
   sample->header = (u_char *)sample->datap; /* just point at the header */
-  skipBytes(sample, sample->headerLen);
+
+  toSkip = ((sample->headerLen + 3) / 4) * 4; /* L.Deri */
+  skipBytes(sample, toSkip);
   {
     char scratch[2000];
     printHex(sample->header, sample->headerLen, (u_char*)scratch, 2000, 0, 2000);
@@ -2498,8 +2502,8 @@ static void readFlowSample_v2v4(SFSample *sample, int deviceId)
 
   sample->packet_data_tag = getData32(sample, deviceId);
 
+  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "packet_data_tag=%d",  sample->packet_data_tag);
   switch(sample->packet_data_tag) {
-
   case INMPACKETTYPE_HEADER: readFlowSample_header(sample, deviceId); break;
   case INMPACKETTYPE_IPV4: readFlowSample_IPv4(sample, deviceId); break;
 #ifdef INET6
@@ -4634,12 +4638,27 @@ static void handlesFlowPacket(u_char *_deviceId,
 
 #ifdef DEBUG_FLOWS
     if(0)
-      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "Rcvd packet to dissect [caplen=%d][len=%d]", caplen, length);
+      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, 
+					   "Rcvd packet to dissect [caplen=%d][len=%d]", 
+					   caplen, length);
 #endif
 
     if(caplen >= sizeof(struct ether_header)) {
-      memcpy(&ehdr, p, sizeof(struct ether_header));
+      int displ = sizeof(struct ether_header);
+
+      memcpy(&ehdr, p, displ);
       eth_type = ntohs(ehdr.ether_type);
+
+#ifdef DEBUG_FLOWS
+      /* 
+	 Quick patch for files captures with 
+	 Linux cooked capture (i.e. -i any)
+      */
+
+      if(eth_type != ETHERTYPE_IP) {
+	eth_type = ETHERTYPE_IP, displ = 16;
+      }
+#endif
 
       if(eth_type == ETHERTYPE_IP) {
 	u_int32_t plen, hlen;
@@ -4649,28 +4668,28 @@ static void handlesFlowPacket(u_char *_deviceId,
 	  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect");
 #endif
 
-	memcpy(&ip, p+sizeof(struct ether_header), sizeof(struct ip));
+	memcpy(&ip, p+displ, sizeof(struct ip));
 	hlen =(u_int32_t)ip.ip_hl * 4;
 	NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
 
-	plen = length-sizeof(struct ether_header);
+	plen = length-displ;
 
 #ifdef DEBUG_FLOWS
-	if(0)
-	  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect [deviceId=%d][sender=%s][proto=%d][len=%d][hlen=%d]",
-					       deviceId, intoa(ip.ip_src), ip.ip_p, plen, hlen);
+	  if(SFLOW_DEBUG(deviceId)) 
+	    traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect [deviceId=%d][sender=%s][proto=%d][len=%d][hlen=%d]",
+		       deviceId, intoa(ip.ip_src), ip.ip_p, plen, hlen);
 #endif
 
 	if(ip.ip_p == IPPROTO_UDP) {
 	  if(plen >(hlen+sizeof(struct udphdr))) {
 	    SFSample sample;
-	    char* rawSample    =(char*)(p+sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
-	    int   rawSampleLen = h->caplen-(sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
+	    char* rawSample    =(char*)(p+displ+hlen+sizeof(struct udphdr));
+	    int   rawSampleLen = h->caplen-(displ+hlen+sizeof(struct udphdr));
 
 #ifdef DEBUG_FLOWS
-	    if(0)
-	      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "Rcvd from from %s", 
-						   intoa(ip.ip_src));
+	      if(SFLOW_DEBUG(deviceId)) 
+		traceEvent(CONST_TRACE_INFO, "Rcvd from from %s", 
+			   intoa(ip.ip_src));
 #endif
 
 	    myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd++;
@@ -4706,7 +4725,8 @@ PluginInfo* sflowPluginEntryFctn(void)
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Welcome to %s.(C) 2002-04 by Luca Deri",
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
+	     "SFLOW: Welcome to %s.(C) 2002-09 by Luca Deri",
 	     sflowPluginInfo->pluginName);
 
   return(sflowPluginInfo);
