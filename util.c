@@ -3496,7 +3496,7 @@ void fillDomainName(HostTraffic *el) {
   else if (myGlobals.shortDomainName != NULL)
     el->dnsDomainValue = strdup(myGlobals.shortDomainName);
 
-  FD_SET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &el->flags);
+  setHostFlag(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &el);
 
   return;
 }
@@ -3594,11 +3594,11 @@ void setNBnodeNameType(HostTraffic *theHost, char nodeType,
   if(!isQuery) {
     switch(nodeType) {
     case 0x0:  /* Workstation */
-      FD_SET(FLAG_HOST_TYPE_WORKSTATION, &theHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_WORKSTATION, &theHost);
     case 0x20: /* Server */
-      FD_SET(FLAG_HOST_TYPE_SERVER, &theHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_SERVER, &theHost);
     case 0x1B: /* Master Browser */
-      FD_SET(FLAG_HOST_TYPE_MASTER_BROWSER, &theHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_MASTER_BROWSER, &theHost);
     }
   }
 }
@@ -4620,7 +4620,7 @@ void addPortToList(HostTraffic *host, int *thePorts /* 0...MAX_NUM_RECENT_PORTS 
   u_short i, found;
 
   if(port == 0)
-    FD_SET(FLAG_HOST_IP_ZERO_PORT_TRAFFIC, &host->flags);
+    setHostFlag(FLAG_HOST_IP_ZERO_PORT_TRAFFIC, &host);
 
   for(i = 0, found = 0; i<MAX_NUM_RECENT_PORTS; i++)
     if(thePorts[i] == port) {
@@ -6361,6 +6361,20 @@ PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary) 
 
   releaseMutex(&myGlobals.portsMutex);
   return(newPort);
+}
+
+/* *************************************************** */
+
+void setHostFlag(int flag_value, HostTraffic *host) {
+  FD_SET(flag_value, &host->flags);
+  notifyEvent(hostFlagged, host, NULL, flag_value);
+}
+
+/* *************************************************** */
+
+void clearHostFlag(int flag_value, HostTraffic *host) {
+  FD_CLR(flag_value, &host->flags);
+  notifyEvent(hostUnflagged, host, NULL, flag_value);
 }
 
 /* *************************************************** */

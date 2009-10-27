@@ -65,7 +65,7 @@ void handleBootp(HostTraffic *srcHost,
 
   switch(sport) {
   case 67: /* BOOTP/DHCP: server -> client*/
-    FD_SET(FLAG_HOST_TYPE_SVC_DHCP_SERVER, &srcHost->flags);
+    setHostFlag(FLAG_HOST_TYPE_SVC_DHCP_SERVER, srcHost);
 
 #ifdef DHCP_DEBUG
     traceEvent(CONST_TRACE_INFO, "%s:%d->%s:%d",
@@ -143,7 +143,7 @@ void handleBootp(HostTraffic *srcHost,
 	      allocHostTrafficCounterMemory(srcHost, protocolInfo, sizeof(ProtocolInfo));
 	      allocHostTrafficCounterMemory(srcHost, protocolInfo->dhcpStats, sizeof(DHCPStats));
 
-	      FD_SET(FLAG_HOST_TYPE_SVC_DHCP_CLIENT, &realDstHost->flags);
+	      setHostFlag(FLAG_HOST_TYPE_SVC_DHCP_CLIENT, realDstHost);
 	      realDstHost->protocolInfo->dhcpStats->assignTime = myGlobals.actTime;
 	      realDstHost->protocolInfo->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIp4Address.s_addr;
 	      realDstHost->protocolInfo->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIp4Address.s_addr;
@@ -169,9 +169,9 @@ void handleBootp(HostTraffic *srcHost,
                 if (realDstHost->dnsTLDValue != NULL) free(realDstHost->dnsTLDValue);
 		realDstHost->dnsTLDValue = NULL;
 		if(isBroadcastAddress(&realDstHost->hostIpAddress, NULL, NULL))
-		  FD_SET(FLAG_BROADCAST_HOST, &realDstHost->flags);
+		  setHostFlag(FLAG_BROADCAST_HOST, realDstHost);
 		else
-		  FD_CLR(FLAG_BROADCAST_HOST, &realDstHost->flags);
+		  clearHostFlag(FLAG_BROADCAST_HOST, realDstHost);
 	      }
 
 	      while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
@@ -203,7 +203,7 @@ void handleBootp(HostTraffic *srcHost,
 		  trafficHost = findHostByNumIP(addr, srcHost->vlanId, actualDeviceId);
 		  if(trafficHost != NULL) {
 		    incrementUsageCounter(&realDstHost->contactedRouters, trafficHost, actualDeviceId);
-		    FD_SET(FLAG_GATEWAY_HOST, &trafficHost->flags);
+		    setHostFlag(FLAG_GATEWAY_HOST, trafficHost);
 		  }
 
 		  /* *************** */
@@ -305,7 +305,7 @@ void handleBootp(HostTraffic *srcHost,
 
 		  trafficHost = findHostByNumIP(addr, srcHost->vlanId, actualDeviceId);
 		  if(trafficHost != NULL) {
-		    FD_SET(FLAG_HOST_TYPE_SVC_WINS, &trafficHost->flags);
+		    setHostFlag(FLAG_HOST_TYPE_SVC_WINS, trafficHost);
 		  }
 
 		  /* *************** */
@@ -444,8 +444,8 @@ void handleBootp(HostTraffic *srcHost,
 	For more info see http://www.dhcp.org/
       */
 
-      FD_SET(FLAG_HOST_TYPE_SVC_DHCP_CLIENT, &srcHost->flags);
-      FD_SET(FLAG_HOST_TYPE_SVC_DHCP_SERVER, &dstHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_SVC_DHCP_CLIENT, srcHost);
+      setHostFlag(FLAG_HOST_TYPE_SVC_DHCP_SERVER, dstHost);
 
       if(packetDataLength >= sizeof(BootProtocol))
 	len = sizeof(BootProtocol);
@@ -853,7 +853,7 @@ void handleNetbios(HostTraffic *srcHost,
 			free(srcHost->nonIPTraffic->nbDescr);
 
 		      if(tmpBuffer[17] == 0x0F)
-			FD_SET(FLAG_HOST_TYPE_MASTER_BROWSER, &srcHost->flags);
+			setHostFlag(FLAG_HOST_TYPE_MASTER_BROWSER, srcHost);
 
 		      srcHost->nonIPTraffic->nbDescr = strdup(&tmpBuffer[49]);
 #ifdef DEBUG

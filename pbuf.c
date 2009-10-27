@@ -667,7 +667,7 @@ static void checkNetworkRouter(HostTraffic *srcHost, HostTraffic *dstHost,
 
 #endif
 
-    FD_SET(FLAG_GATEWAY_HOST, &router->flags);
+    setHostFlag(FLAG_GATEWAY_HOST, router);
     updateRoutedTraffic(router);
   }
 }
@@ -1251,7 +1251,7 @@ static void processIpPkt(const u_char *bp,
 	  dumpSuspiciousPacket(actualDeviceId);
 	}
 
-	FD_SET(FLAG_HOST_WRONG_NETMASK, &srcHost->flags);
+	setHostFlag(FLAG_HOST_WRONG_NETMASK, srcHost);
       }
     }
 #ifdef INET6
@@ -1863,7 +1863,7 @@ static void processIpPkt(const u_char *bp,
 	      }
 
 	      /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-	      if(sport != 5353) FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
+	      if(sport != 5353) setHostFlag(FLAG_NAME_SERVER_HOST, srcHost);
 
 	      if(positiveReply) {
 		incrementHostTrafficCounter(srcHost, protocolInfo->dnsStats->numPositiveReplSent, 1);
@@ -1875,7 +1875,7 @@ static void processIpPkt(const u_char *bp,
 	    }
 	  } else {
 	    /* no packet decoding (let's speculate a bit) */
-	    if(sport != 5353) FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
+	    if(sport != 5353) setHostFlag(FLAG_NAME_SERVER_HOST, srcHost);
 	  }
 	} else if(sport == 123) /* NTP */ {
 	  if(myGlobals.runningPref.enablePacketDecoding) {
@@ -1883,7 +1883,7 @@ static void processIpPkt(const u_char *bp,
 	    u_char ntpRole = ntpPktPtr[0] & 0x07;
 
 	    if(ntpRole ==  4 /* NTP Server */)
-	      FD_SET(FLAG_HOST_TYPE_SVC_NTP_SERVER, &srcHost->flags);
+	      setHostFlag(FLAG_HOST_TYPE_SVC_NTP_SERVER, srcHost);
 	  }
 	} else if(sport == 500) /* IPSEC IKE */ {
 	  incrementHostTrafficCounter(srcHost, ipsecSent, length);
@@ -1994,8 +1994,8 @@ static void processIpPkt(const u_char *bp,
 	  if(theSession) theSession->voipSession = 1;
 	  isVoipSess = 1;
 
-	  FD_SET(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, &srcHost->flags);
-	  FD_SET(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, &dstHost->flags);
+	  setHostFlag(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, srcHost);
+	  setHostFlag(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, dstHost);
 	}
 
         /* Handle UDP traffic like TCP, above -
@@ -2303,7 +2303,7 @@ static void processIpPkt(const u_char *bp,
 
       if(icmp6Pkt.icmp6_type == ND_ROUTER_ADVERT) {
 	HostTraffic *router = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
-	if(router != NULL) FD_SET(FLAG_GATEWAY_HOST, &router->flags);
+	if(router != NULL) setHostFlag(FLAG_GATEWAY_HOST, router);
       }
 
       if(icmp6Pkt.icmp6_type == ICMP6_DST_UNREACH /* Destination Unreachable */) {
@@ -3454,7 +3454,7 @@ void processPacket(u_char *_deviceId,
 
 	      incrementHostTrafficCounter(srcHost, nonIPTraffic->stpSent, length);
 	      incrementHostTrafficCounter(dstHost, nonIPTraffic->stpRcvd, length);
-	      FD_SET(FLAG_HOST_TYPE_SVC_BRIDGE, &srcHost->flags);
+	      setHostFlag(FLAG_HOST_TYPE_SVC_BRIDGE, srcHost);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].stpBytes, length);
 	    } else if(myGlobals.runningPref.enablePacketDecoding && (sap_type == 0xE0)) {
 	      /* NetWare */
@@ -3504,13 +3504,13 @@ void processPacket(u_char *_deviceId,
 		  case 0x0003: /* Print Queue */
 		  case 0x8002: /* Intel NetPort Print Server */
 		  case 0x030c: /* HP LaserJet / Quick Silver */
-		    FD_SET(FLAG_HOST_TYPE_PRINTER, &srcHost->flags);
+		    setHostFlag(FLAG_HOST_TYPE_PRINTER, srcHost);
 		    break;
 
 		  case 0x0027: /* TCP/IP gateway */
 		  case 0x0021: /* NAS SNA gateway */
 		  case 0x055d: /* Attachmate SNA gateway */
-		    FD_SET(FLAG_GATEWAY_HOST, &srcHost->flags);
+		    setHostFlag(FLAG_GATEWAY_HOST, srcHost);
 		    /* ==> updateRoutedTraffic(srcHost);
 		       is not needed as there are no routed packets */
 		    break;
@@ -3525,25 +3525,25 @@ void processPacket(u_char *_deviceId,
 		  case 0x0111: /* Test server */
 		  case 0x03e1: /* UnixWare Application Server */
 		  case 0x0810: /* ELAN License Server Demo */
-		    FD_SET(FLAG_HOST_TYPE_SERVER, &srcHost->flags);
+		    setHostFlag(FLAG_HOST_TYPE_SERVER, srcHost);
 		    break;
 
 		  case 0x0278: /* NetWare Directory server */
-		    FD_SET(FLAG_HOST_TYPE_SVC_DIRECTORY, &srcHost->flags);
+		    setHostFlag(FLAG_HOST_TYPE_SVC_DIRECTORY, srcHost);
 		    break;
 
 		  case 0x0024: /* Rem bridge */
 		  case 0x0026: /* Bridge server */
-		    FD_SET(FLAG_HOST_TYPE_SVC_BRIDGE, &srcHost->flags);
+		    setHostFlag(FLAG_HOST_TYPE_SVC_BRIDGE, srcHost);
 		    break;
 
 		  case 0x0640: /* NT Server-RPC/GW for NW/Win95 User Level Sec */
 		  case 0x064e: /* NT Server-IIS */
-		    FD_SET(FLAG_HOST_TYPE_SERVER, &srcHost->flags);
+		    setHostFlag(FLAG_HOST_TYPE_SERVER, srcHost);
 		    break;
 
 		  case 0x0133: /* NetWare Name Service */
-		    FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
+		    setHostFlag(FLAG_NAME_SERVER_HOST, srcHost);
 		    break;
 		  }
 		}
@@ -3585,7 +3585,7 @@ void processPacket(u_char *_deviceId,
 	      /* DLC (protocol used for printers) */
 	      incrementHostTrafficCounter(srcHost, nonIPTraffic->dlcSent, length);
 	      incrementHostTrafficCounter(dstHost, nonIPTraffic->dlcRcvd, length);
-	      FD_SET(FLAG_HOST_TYPE_PRINTER, &dstHost->flags);
+	      setHostFlag(FLAG_HOST_TYPE_PRINTER, dstHost);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].dlcBytes, length);
 	    } else if(sap_type == 0xAA /* SNAP */) {
 	      u_int16_t snapType;
@@ -3671,7 +3671,7 @@ void processPacket(u_char *_deviceId,
 		     this is Cisco Discovery Protocol
 		  */
 
-		  FD_SET(FLAG_GATEWAY_HOST, &srcHost->flags);
+		  setHostFlag(FLAG_GATEWAY_HOST, srcHost);
 		}
 
 		incrementHostTrafficCounter(srcHost, nonIPTraffic->otherSent, length);

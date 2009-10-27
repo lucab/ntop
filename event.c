@@ -20,9 +20,20 @@
 
 #include "ntop.h"
 
-void notifyEvent(EventType evt, HostTraffic *el, IPSession *session) {
-  char *event = NULL;
-  
+/* ************************************************* */
+
+char* flag2string(int eventValue) {
+  static char buf[64];
+
+  snprintf(buf, sizeof(buf), "%d", eventValue);
+  return(buf);
+}
+
+/* ************************************************* */
+
+void notifyEvent(EventType evt, HostTraffic *el, IPSession *session, int eventValue) {
+  char *event = NULL, *info = "";
+
   switch(evt) {
   case hostCreation:
     event = "Host created";
@@ -38,14 +49,20 @@ void notifyEvent(EventType evt, HostTraffic *el, IPSession *session) {
     break;
   case hostFlagged:
     event = "Host flagged";
+    info = flag2string(eventValue);
+    break;
+  case hostUnflagged:
+    event = "Host un-flagged";
+    info = flag2string(eventValue);
     break;
   }
 
   if(el) {
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "[event: %s][target: %s/%s]",
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "[event: %s][target: %s/%s/%s]",
 	       event,
 	       el->ethAddressString,
-	       el->hostNumIpAddress);	       
+	       el->hostNumIpAddress,
+	       info);
   }
 
 }

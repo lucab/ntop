@@ -345,6 +345,7 @@ struct iface_handler *iface_new(void) {
     errno = ENOMEM;
     goto failed;
   }
+
   fp = fopen(PATH_PROC_NET_IF_INET6,"r");
   if (fp == NULL)
     goto failed;
@@ -396,7 +397,7 @@ struct iface_handler *iface_new(void) {
     }
   }
 
-  fclose(fd);
+  fclose(fp);
   return hdlr;
 
  failed:

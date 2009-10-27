@@ -946,7 +946,7 @@ static void handleMdnsName(HostTraffic *srcHost, u_short sport, u_char *mdns_nam
 
       if((!strcmp(appl, "ipp")) || (!strcmp(appl, "printer"))) {
 	/* Printer */
-	FD_SET(FLAG_HOST_TYPE_PRINTER, &srcHost->flags);
+	setHostFlag(FLAG_HOST_TYPE_PRINTER, srcHost);
 	setHostName(srcHost, name);
       } else if(!strcmp(appl, "afpovertcp")) {
 	/* Sharing name under MacOS */
@@ -956,7 +956,7 @@ static void handleMdnsName(HostTraffic *srcHost, u_short sport, u_char *mdns_nam
 	setHostName(srcHost, strtok(name, "["));
       } else if(!strcmp(appl, "http")) {
 	/* HTTP server */
-	FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &srcHost->flags);
+	setHostFlag(FLAG_HOST_TYPE_SVC_HTTP, srcHost);
       } else if(!strcmp(appl, "daap")) {
 	/* Digital Audio Access Protocol (daap.sourceforge.net) */
 	updateHostUsers(name, BITFLAG_DAAP_USER, srcHost);
@@ -1315,8 +1315,8 @@ void checkSpoofing(HostTraffic *hostToCheck, int actualDeviceId) {
       /* Spoofing detected */
       if((!hasDuplicatedMac(el))
 	 && (!hasDuplicatedMac(hostToCheck))) {
-	FD_SET(FLAG_HOST_DUPLICATED_MAC, &hostToCheck->flags);
-	FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
+	setHostFlag(FLAG_HOST_DUPLICATED_MAC, hostToCheck);
+	setHostFlag(FLAG_HOST_DUPLICATED_MAC, el);
 
 	if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	  traceEvent(CONST_TRACE_WARNING,
@@ -1413,8 +1413,8 @@ void updateHostKnownSubnet(HostTraffic *el) {
     if((el->hostIpAddress.addr._hostIp4Address.s_addr & myGlobals.subnetStats[i].address[CONST_NETMASK_ENTRY])
        == myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY]) {
       el->known_subnet_id = i;
-      // FD_SET(FLAG_SUBNET_LOCALHOST, &el->flags);
-      FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
+      // setHostFlag(FLAG_SUBNET_LOCALHOST, &el);
+      setHostFlag(FLAG_SUBNET_PSEUDO_LOCALHOST, el);
       return;
     }
   }

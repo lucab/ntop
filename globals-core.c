@@ -425,9 +425,9 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 	  sizeof(myGlobals.broadcastEntry->hostNumIpAddress));
   myGlobals.broadcastEntry->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_FAKE;
   strcpy(myGlobals.broadcastEntry->ethAddressString, "FF:FF:FF:FF:FF:FF");
-  FD_SET(FLAG_SUBNET_LOCALHOST, &myGlobals.broadcastEntry->flags);
-  FD_SET(FLAG_BROADCAST_HOST, &myGlobals.broadcastEntry->flags);
-  FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &myGlobals.broadcastEntry->flags);
+  setHostFlag(FLAG_SUBNET_LOCALHOST, myGlobals.broadcastEntry);
+  setHostFlag(FLAG_BROADCAST_HOST, myGlobals.broadcastEntry);
+  setHostFlag(FLAG_SUBNET_PSEUDO_LOCALHOST, myGlobals.broadcastEntry);
   memset(&myGlobals.broadcastEntry->hostSerial, 0, sizeof(HostSerial));
 
   allocateOtherHosts();

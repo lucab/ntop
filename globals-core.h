@@ -800,6 +800,8 @@ extern unsigned short isOKtoSave(u_int32_t addr,
 extern float timeval_subtract(struct timeval x, struct timeval y);
 extern void freePortsUsage(HostTraffic *el);
 extern PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary);
+extern void setHostFlag(int flag_value, HostTraffic *host);
+extern void clearHostFlag(int flag_value, HostTraffic *host);
 extern char* vlan2name(u_int16_t vlanId, char *buf, int buf_len);
 extern void mkdir_p(char *tag, char *path, int permission);
 extern char* read_file(char* path, char* buf, u_int buf_len);
@@ -858,7 +860,7 @@ extern FCSession* handleFcSession(const struct pcap_pkthdr *h,
 				  int actualDeviceId);
 
 /* event.c */
-extern void notifyEvent(EventType evt, HostTraffic *el, IPSession *session);
+extern void notifyEvent(EventType evt, HostTraffic *el, IPSession *session, int eventValue);
 
 /* fcUtils.c */
 extern int isFlogiAcc(FcAddress *fcAddress, u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);

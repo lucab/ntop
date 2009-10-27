@@ -1104,7 +1104,8 @@ typedef enum {
   hostDeletion,
   sessionCreation,
   sessionDeletion,
-  hostFlagged
+  hostFlagged,
+  hostUnflagged
 } EventType;
 
 /* *************************** */

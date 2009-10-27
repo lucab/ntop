@@ -263,7 +263,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     traceEvent(CONST_TRACE_WARNING, "Attempting to call freeHostInfo(NULL)");
     return;
   } else
-    notifyEvent(hostDeletion, host, NULL);
+    notifyEvent(hostDeletion, host, NULL, 0);
 
   /* If this is one of the special ones, let's clear the other pointer to it
    * to prevent a free of freed memory error later.
@@ -832,7 +832,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	      if(!(addrnull(&el->hostIpAddress)) &&
 		 (addrcmp(&el->hostIpAddress,hostIpAddress) != 0)) {
 		isMultihomed = 1;
-		FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
+		setHostFlag(FLAG_HOST_TYPE_MULTIHOMED, el);
 	      } else {
 		updateIPinfo = 1;
 	      }
@@ -855,7 +855,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	  */
 
 	  if(!hasDuplicatedMac(el)) {
-	    FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
+	    setHostFlag(FLAG_HOST_DUPLICATED_MAC, el);
 
 	    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	      char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
@@ -890,7 +890,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 
   if((hostFound == 1) && (vlanId != NO_VLAN) && (el->vlanId != NO_VLAN)
      && (vlanId != el->vlanId) && (!isMultivlaned(el))) {
-    FD_SET(FLAG_HOST_TYPE_MULTIVLANED, &el->flags);
+    setHostFlag(FLAG_HOST_TYPE_MULTIVLANED, el);
 
     if(myGlobals.multipleVLANedHostCount == 0) {
       traceEvent(CONST_TRACE_ERROR, "mVLAN: Host (identical IP/MAC) found on multiple VLANs [%d][%d]", vlanId, el->vlanId);
@@ -928,7 +928,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
         ipaddr2str(el, el->hostIpAddress, el->vlanId, actualDeviceId);
 
       if(isBroadcastAddress(&el->hostIpAddress, NULL, NULL))
-        FD_SET(FLAG_BROADCAST_HOST, &el->flags);
+        setHostFlag(FLAG_BROADCAST_HOST, el);
     }
   } else {
     /* New host entry */
@@ -959,7 +959,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     el->vlanId = vlanId;
 
     if(isMultihomed)
-      FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
+      setHostFlag(FLAG_HOST_TYPE_MULTIHOMED, el);
 
     if(el->portsUsage != NULL)
       freePortsUsage(el);
@@ -1011,8 +1011,8 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	memcpy(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS);
 	strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
 	symEthName = getSpecialMacInfo(el, (short)(!myGlobals.separator[0]));
-	FD_SET(FLAG_SUBNET_LOCALHOST, &el->flags);
-	FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
+	setHostFlag(FLAG_SUBNET_LOCALHOST, el);
+	setHostFlag(FLAG_SUBNET_PSEUDO_LOCALHOST, el);
 	/* traceEvent(CONST_TRACE_WARNING, "-> %u/%u", the_local_network, the_local_network_mask); */
       } else if(hostIpAddress != NULL) {
 	/* This is packet that's being routed or belonging to a
@@ -1027,21 +1027,21 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	    memcpy(el->ethAddress, &hostIpAddress->Ip6Address.s6_addr[8], 4);
 #endif
 
-	  FD_CLR(FLAG_SUBNET_LOCALHOST, &el->flags);
+	  clearHostFlag(FLAG_SUBNET_LOCALHOST, el);
 
 	  if(isPrivateAddress(hostIpAddress, &the_local_network, &the_local_network_mask))
-	    FD_SET(FLAG_PRIVATE_IP_ADDRESS, &el->flags);
+	    setHostFlag(FLAG_PRIVATE_IP_ADDRESS, el);
 
 	  if(!isBroadcastAddress(hostIpAddress, &the_local_network, &the_local_network_mask)) {
 	    if(isPseudoLocalAddress(hostIpAddress, actualDeviceId, &the_local_network, &the_local_network_mask))
-	      FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
+	      setHostFlag(FLAG_SUBNET_PSEUDO_LOCALHOST, el);
 	    else
-	      FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
+	      clearHostFlag(FLAG_SUBNET_PSEUDO_LOCALHOST, el);
 	  }
 	}
       } else {
-	FD_CLR(FLAG_SUBNET_LOCALHOST, &el->flags);
-	FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
+	clearHostFlag(FLAG_SUBNET_LOCALHOST, el);
+	clearHostFlag(FLAG_SUBNET_PSEUDO_LOCALHOST, el);
       }
 
       updateHostKnownSubnet(el);
@@ -1061,9 +1061,9 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 #endif
 	}
 
-	FD_SET(FLAG_BROADCAST_HOST, &el->flags);
+	setHostFlag(FLAG_BROADCAST_HOST, el);
 	if(isMulticastAddress(&el->hostIpAddress, &the_local_network, &the_local_network_mask))
-	  FD_SET(FLAG_MULTICAST_HOST, &el->flags);
+	  setHostFlag(FLAG_MULTICAST_HOST, el);
 	strncpy(el->hostNumIpAddress,
 		_addrtostr(&el->hostIpAddress, buf, sizeof(buf)),
 		strlen(el->hostNumIpAddress));
@@ -1113,11 +1113,11 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       strncpy(el->hostNumIpAddress,
 	      _addrtostr(hostIpAddress, buf, sizeof(buf)),
 	      sizeof(el->hostNumIpAddress));
-      if(isBroadcastAddress(&el->hostIpAddress, &the_local_network, &the_local_network_mask)) FD_SET(FLAG_BROADCAST_HOST, &el->flags);
-      if(isMulticastAddress(&el->hostIpAddress, &the_local_network, &the_local_network_mask)) FD_SET(FLAG_MULTICAST_HOST, &el->flags);
-      if(isPrivateAddress(hostIpAddress, &the_local_network, &the_local_network_mask))        FD_SET(FLAG_PRIVATE_IP_ADDRESS,  &el->flags);
+      if(isBroadcastAddress(&el->hostIpAddress, &the_local_network, &the_local_network_mask)) setHostFlag(FLAG_BROADCAST_HOST, el);
+      if(isMulticastAddress(&el->hostIpAddress, &the_local_network, &the_local_network_mask)) setHostFlag(FLAG_MULTICAST_HOST, el);
+      if(isPrivateAddress(hostIpAddress, &the_local_network, &the_local_network_mask))        setHostFlag(FLAG_PRIVATE_IP_ADDRESS, el);
       if((ether_addr == NULL) && (isPseudoLocalAddress(hostIpAddress, actualDeviceId, &the_local_network, &the_local_network_mask)))
-	FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
+	setHostFlag(FLAG_SUBNET_PSEUDO_LOCALHOST, el);
 
       setResolvedName(el, el->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
       updateHostKnownSubnet(el);
@@ -1150,14 +1150,14 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     setHostSerial(el);
     handlePluginHostCreationDeletion(el, (u_short)actualDeviceId, 1 /* host creation */);
 
-    notifyEvent(hostCreation, el, NULL);
+    notifyEvent(hostCreation, el, NULL, 0);
   }
 
   if(el != NULL) {
     el->lastSeen = myGlobals.actTime;
 
     if(setSpoofingFlag)
-      FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
+      setHostFlag(FLAG_HOST_DUPLICATED_MAC, el);
 
 #ifdef DEBUG
     {
@@ -1319,7 +1319,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 #endif
 
     setHostSerial(el);
-    notifyEvent(hostCreation, el, NULL);
+    notifyEvent(hostCreation, el, NULL, 0);
   }
 
   if(el != NULL) {

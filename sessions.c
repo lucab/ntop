@@ -252,7 +252,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 		 u_char lockMutex /* unused so far */) {
   /* Session to purge */
 
-  notifyEvent(sessionDeletion, NULL, sessionToPurge);
+  notifyEvent(sessionDeletion, NULL, sessionToPurge, 0);
   dump_session_to_db(sessionToPurge);
 
   if(sessionToPurge->magic != CONST_MAGIC_NUMBER) {
@@ -362,7 +362,7 @@ void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
 
     /* Session to purge */
 
-    // notifyEvent(sessionDeletion, NULL, sessionToPurge); - FIX
+    // notifyEvent(sessionDeletion, NULL, sessionToPurge, 0); - FIX
 
     if(sessionToPurge->magic != CONST_MAGIC_NUMBER) {
       traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) freeFcSession()",
@@ -527,9 +527,9 @@ static void handleFTPSession(const struct pcap_pkthdr *h,
   char *rcStr;
 
   if(sport == IP_TCP_PORT_FTP)
-    FD_SET(FLAG_HOST_TYPE_SVC_FTP, &srcHost->flags);
+    setHostFlag(FLAG_HOST_TYPE_SVC_FTP, srcHost);
   else
-    FD_SET(FLAG_HOST_TYPE_SVC_FTP, &dstHost->flags);
+    setHostFlag(FLAG_HOST_TYPE_SVC_FTP, dstHost);
 
   if(((theSession->bytesProtoRcvd.value < 64)
       || (theSession->bytesProtoSent.value < 64))
@@ -571,9 +571,9 @@ static void handleSMTPSession (const struct pcap_pkthdr *h,
   char *rcStr;
 
   if(sport == IP_TCP_PORT_SMTP)
-    FD_SET(FLAG_HOST_TYPE_SVC_SMTP, &srcHost->flags);
+    setHostFlag(FLAG_HOST_TYPE_SVC_SMTP, srcHost);
   else
-    FD_SET(FLAG_HOST_TYPE_SVC_SMTP, &dstHost->flags);
+    setHostFlag(FLAG_HOST_TYPE_SVC_SMTP, dstHost);
 
   if(((theSession->bytesProtoRcvd.value < 64)
       || (theSession->bytesProtoSent.value < 64))
@@ -634,9 +634,9 @@ static void handlePOPSession (const struct pcap_pkthdr *h,
   char *rcStr;
 
   if((sport == IP_TCP_PORT_POP2) || (sport == IP_TCP_PORT_POP3))
-    FD_SET(FLAG_HOST_TYPE_SVC_POP, &srcHost->flags);
+    setHostFlag(FLAG_HOST_TYPE_SVC_POP, srcHost);
   else
-    FD_SET(FLAG_HOST_TYPE_SVC_POP, &dstHost->flags);
+    setHostFlag(FLAG_HOST_TYPE_SVC_POP, dstHost);
 
   if(((theSession->bytesProtoRcvd.value < 64)
       || (theSession->bytesProtoSent.value < 64)) /* The user name is sent at the beginning of the communication */
@@ -678,9 +678,9 @@ static void handleIMAPSession (const struct pcap_pkthdr *h,
   char *rcStr;
 
   if(sport == IP_TCP_PORT_IMAP)
-    FD_SET(FLAG_HOST_TYPE_SVC_IMAP, &srcHost->flags);
+    setHostFlag(FLAG_HOST_TYPE_SVC_IMAP, srcHost);
   else
-    FD_SET(FLAG_HOST_TYPE_SVC_IMAP, &dstHost->flags);
+    setHostFlag(FLAG_HOST_TYPE_SVC_IMAP, dstHost);
 
   if(((theSession->bytesProtoRcvd.value < 64)
       || (theSession->bytesProtoSent.value < 64))
@@ -811,8 +811,8 @@ static void handleAsteriskSession(const struct pcap_pkthdr *h,
 	 && (called_num[0] != '\0')) {
 	char logStr[256];
 
-	FD_SET(FLAG_HOST_TYPE_SVC_VOIP_CLIENT,  &srcHost->flags);
-	FD_SET(FLAG_HOST_TYPE_SVC_VOIP_GATEWAY, &dstHost->flags);
+	setHostFlag(FLAG_HOST_TYPE_SVC_VOIP_CLIENT,  &srcHost);
+	setHostFlag(FLAG_HOST_TYPE_SVC_VOIP_GATEWAY, dstHost);
 
 	safe_snprintf(__FILE__, __LINE__, logStr, sizeof(logStr),
 		      "%s <%s> -> <%s>",
@@ -921,9 +921,9 @@ static void handleSIPSession(const struct pcap_pkthdr *h,
       }
 
       if(server != NULL)
-	FD_SET(FLAG_HOST_TYPE_SVC_VOIP_GATEWAY, &srcHost->flags);
+	setHostFlag(FLAG_HOST_TYPE_SVC_VOIP_GATEWAY, srcHost);
       else
-	FD_SET(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, &srcHost->flags);
+	setHostFlag(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, srcHost);
 
       free(rcStr);
     }
@@ -998,8 +998,8 @@ static void handleSCCPSession(const struct pcap_pkthdr *h,
       else if(dport == IP_TCP_PORT_SCCP)
 	addVoIPSessionInfo(&dstHost->hostIpAddress, dport, theSession->session_info);
 
-      FD_SET(FLAG_HOST_TYPE_SVC_VOIP_GATEWAY, &dstHost->flags);
-      FD_SET(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, &srcHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_SVC_VOIP_GATEWAY, dstHost);
+      setHostFlag(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, srcHost);
 
       updateHostUsers(caller, BITFLAG_VOIP_USER, srcHost);
 
@@ -1058,8 +1058,8 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
   char *rcStr, tmpStr[256] = { '\0' };
   struct timeval tvstrct;
 
-  if (sport == IP_TCP_PORT_HTTP) FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &srcHost->flags);
-  if (dport == IP_TCP_PORT_HTTP) FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &dstHost->flags);
+  if (sport == IP_TCP_PORT_HTTP) setHostFlag(FLAG_HOST_TYPE_SVC_HTTP, srcHost);
+  if (dport == IP_TCP_PORT_HTTP) setHostFlag(FLAG_HOST_TYPE_SVC_HTTP, dstHost);
 
   if ((sport == IP_TCP_PORT_HTTP)
       && (theSession->bytesProtoRcvd.value == 0)) {
@@ -1877,7 +1877,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     theSession->firstSeen = myGlobals.actTime;
     flowDirection = FLAG_CLIENT_TO_SERVER;
 
-    notifyEvent(sessionCreation, NULL, theSession);
+    notifyEvent(sessionCreation, NULL, theSession, 0);
   } /* End of new session branch */
 
   /* traceEvent(CONST_TRACE_ERROR, "--> DEBUG: [state=%d][flags=%d]", theSession->sessionState, tp->th_flags); */
@@ -1984,9 +1984,9 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     } else if(((dport == IP_TCP_PORT_PRINTER) || (sport == IP_TCP_PORT_PRINTER))
 	      && (theSession->sessionState == FLAG_STATE_ACTIVE)) {
       if(sport == IP_TCP_PORT_PRINTER)
-	FD_SET(FLAG_HOST_TYPE_PRINTER, &srcHost->flags);
+	setHostFlag(FLAG_HOST_TYPE_PRINTER, srcHost);
       else
-	FD_SET(FLAG_HOST_TYPE_PRINTER, &dstHost->flags);
+	setHostFlag(FLAG_HOST_TYPE_PRINTER, dstHost);
     } else if(((sport == IP_TCP_PORT_POP2) || (sport == IP_TCP_PORT_POP3)
 	       || (dport == IP_TCP_PORT_POP2) || (dport == IP_TCP_PORT_POP3))
 	      && (theSession->sessionState == FLAG_STATE_ACTIVE)) {
@@ -2057,49 +2057,49 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 
     switch(sport) {
     case IP_TCP_PORT_FTP:
-      FD_SET(FLAG_HOST_TYPE_SVC_FTP, &srcHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_SVC_FTP, srcHost);
       break;
     case IP_TCP_PORT_SMTP:
-      FD_SET(FLAG_HOST_TYPE_SVC_SMTP, &srcHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_SVC_SMTP, srcHost);
       break;
     case IP_TCP_PORT_HTTP:
     case IP_TCP_PORT_HTTPS:
-      FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &srcHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_SVC_HTTP, srcHost);
       break;
     case IP_TCP_PORT_POP2:
     case IP_TCP_PORT_POP3:
-      FD_SET(FLAG_HOST_TYPE_SVC_POP, &srcHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_SVC_POP, srcHost);
       break;
     case IP_TCP_PORT_IMAP:
-      FD_SET(FLAG_HOST_TYPE_SVC_IMAP, &srcHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_SVC_IMAP, srcHost);
       break;
     case IP_TCP_PORT_PRINTER:
     case IP_TCP_PORT_JETDIRECT:
-      FD_SET(FLAG_HOST_TYPE_PRINTER, &srcHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_PRINTER, srcHost);
       break;
     }
 
     switch(dport) {
     case IP_TCP_PORT_FTP:
-      FD_SET(FLAG_HOST_TYPE_SVC_FTP, &dstHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_SVC_FTP, dstHost);
       break;
     case IP_TCP_PORT_SMTP:
-      FD_SET(FLAG_HOST_TYPE_SVC_SMTP, &dstHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_SVC_SMTP, dstHost);
       break;
     case IP_TCP_PORT_HTTP:
     case IP_TCP_PORT_HTTPS:
-      FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &dstHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_SVC_HTTP, dstHost);
       break;
     case IP_TCP_PORT_POP2:
     case IP_TCP_PORT_POP3:
-      FD_SET(FLAG_HOST_TYPE_SVC_POP, &dstHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_SVC_POP, dstHost);
       break;
     case IP_TCP_PORT_IMAP:
-      FD_SET(FLAG_HOST_TYPE_SVC_IMAP, &dstHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_SVC_IMAP, dstHost);
       break;
     case IP_TCP_PORT_PRINTER:
     case IP_TCP_PORT_JETDIRECT:
-      FD_SET(FLAG_HOST_TYPE_PRINTER, &dstHost->flags);
+      setHostFlag(FLAG_HOST_TYPE_PRINTER, dstHost);
       break;
     }
   }
