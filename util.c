@@ -6366,15 +6366,19 @@ PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary) 
 /* *************************************************** */
 
 void setHostFlag(int flag_value, HostTraffic *host) {
-  FD_SET(flag_value, &host->flags);
-  notifyEvent(hostFlagged, host, NULL, flag_value);
+  if(!FD_ISSET(flag_value, &host->flags)) {
+    FD_SET(flag_value, &host->flags);
+    notifyEvent(hostFlagged, host, NULL, flag_value);
+  }
 }
 
 /* *************************************************** */
 
 void clearHostFlag(int flag_value, HostTraffic *host) {
-  FD_CLR(flag_value, &host->flags);
-  notifyEvent(hostUnflagged, host, NULL, flag_value);
+  if(FD_ISSET(flag_value, &host->flags)) {
+    FD_CLR(flag_value, &host->flags);
+    notifyEvent(hostUnflagged, host, NULL, flag_value);
+  }
 }
 
 /* *************************************************** */

@@ -1671,6 +1671,8 @@
 
 /*
  * Flags for fileFlags in typedef struct fileList {}
+ *
+ * If you change them please update event.c
  */
 #define FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED   1
 #define FLAG_PRIVATE_IP_ADDRESS             2 /* the IP address is private (192.168..) */

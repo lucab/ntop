@@ -25,8 +25,40 @@
 char* flag2string(int eventValue) {
   static char buf[64];
 
-  snprintf(buf, sizeof(buf), "%d", eventValue);
-  return(buf);
+  switch(eventValue) {
+  case FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED   : return("THE_DOMAIN_HAS_BEEN_COMPUTED");
+  case FLAG_PRIVATE_IP_ADDRESS             : return("PRIVATE_IP_ADDRESS");
+  case FLAG_SUBNET_LOCALHOST               : return("SUBNET_LOCALHOST");
+  case FLAG_BROADCAST_HOST                 : return("BROADCAST_HOST");
+  case FLAG_MULTICAST_HOST                 : return("MULTICAST_HOST");
+  case FLAG_GATEWAY_HOST                   : return("GATEWAY_HOST");
+  case FLAG_NAME_SERVER_HOST               : return("NAME_SERVER_HOST");
+  case FLAG_SUBNET_PSEUDO_LOCALHOST        : return("SUBNET_PSEUDO_LOCALHOST");
+  case FLAG_HOST_TYPE_SERVER               : return("HOST_TYPE_SERVER");
+  case FLAG_HOST_TYPE_WORKSTATION          : return("HOST_TYPE_WORKSTATION");
+  case FLAG_HOST_TYPE_PRINTER              : return("HOST_TYPE_PRINTER");
+  case FLAG_HOST_TYPE_SVC_SMTP             : return("HOST_TYPE_SVC_SMTP");
+  case FLAG_HOST_TYPE_SVC_POP              : return("HOST_TYPE_SVC_POP");
+  case FLAG_HOST_TYPE_SVC_IMAP             : return("HOST_TYPE_SVC_IMAP");
+  case FLAG_HOST_TYPE_SVC_DIRECTORY        : return("HOST_TYPE_SVC_DIRECTORY");
+  case FLAG_HOST_TYPE_SVC_FTP              : return("HOST_TYPE_SVC_FTP");
+  case FLAG_HOST_TYPE_SVC_HTTP             : return("HOST_TYPE_SVC_HTTP");
+  case FLAG_HOST_TYPE_SVC_WINS             : return("HOST_TYPE_SVC_WINS");
+  case FLAG_HOST_TYPE_SVC_BRIDGE           : return("HOST_TYPE_SVC_BRIDGE");   
+  case FLAG_HOST_TYPE_SVC_DHCP_CLIENT      : return("HOST_TYPE_SVC_DHCP_CLIENT");
+  case FLAG_HOST_TYPE_SVC_DHCP_SERVER      : return("HOST_TYPE_SVC_DHCP_SERVER");
+  case FLAG_HOST_TYPE_MASTER_BROWSER       : return("HOST_TYPE_MASTER_BROWSER");
+  case FLAG_HOST_TYPE_MULTIHOMED           : return("HOST_TYPE_MULTIHOMED");
+  case FLAG_HOST_TYPE_SVC_NTP_SERVER       : return("HOST_TYPE_SVC_NTP_SERVER");
+  case FLAG_HOST_TYPE_MULTIVLANED          : return("HOST_TYPE_MULTIVLANED");
+  case FLAG_HOST_TYPE_SVC_VOIP_CLIENT      : return("HOST_TYPE_SVC_VOIP_CLIENT");
+  case FLAG_HOST_TYPE_SVC_VOIP_GATEWAY     : return("HOST_TYPE_SVC_VOIP_GATEWAY");
+  case FLAG_HOST_WRONG_NETMASK             : return("HOST_WRONG_NETMASK");
+  case FLAG_HOST_DUPLICATED_MAC            : return("HOST_DUPLICATED_MAC");
+  default:
+    snprintf(buf, sizeof(buf), "%d", eventValue);
+    return(buf);
+  }
 }
 
 /* ************************************************* */
