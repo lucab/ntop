@@ -811,7 +811,7 @@ static void handleAsteriskSession(const struct pcap_pkthdr *h,
 	 && (called_num[0] != '\0')) {
 	char logStr[256];
 
-	setHostFlag(FLAG_HOST_TYPE_SVC_VOIP_CLIENT,  &srcHost);
+	setHostFlag(FLAG_HOST_TYPE_SVC_VOIP_CLIENT,  srcHost);
 	setHostFlag(FLAG_HOST_TYPE_SVC_VOIP_GATEWAY, dstHost);
 
 	safe_snprintf(__FILE__, __LINE__, logStr, sizeof(logStr),

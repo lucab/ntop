@@ -3496,7 +3496,7 @@ void fillDomainName(HostTraffic *el) {
   else if (myGlobals.shortDomainName != NULL)
     el->dnsDomainValue = strdup(myGlobals.shortDomainName);
 
-  setHostFlag(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &el);
+  setHostFlag(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, el);
 
   return;
 }
@@ -3594,11 +3594,11 @@ void setNBnodeNameType(HostTraffic *theHost, char nodeType,
   if(!isQuery) {
     switch(nodeType) {
     case 0x0:  /* Workstation */
-      setHostFlag(FLAG_HOST_TYPE_WORKSTATION, &theHost);
+      setHostFlag(FLAG_HOST_TYPE_WORKSTATION, theHost);
     case 0x20: /* Server */
-      setHostFlag(FLAG_HOST_TYPE_SERVER, &theHost);
+      setHostFlag(FLAG_HOST_TYPE_SERVER, theHost);
     case 0x1B: /* Master Browser */
-      setHostFlag(FLAG_HOST_TYPE_MASTER_BROWSER, &theHost);
+      setHostFlag(FLAG_HOST_TYPE_MASTER_BROWSER, theHost);
     }
   }
 }
@@ -4620,7 +4620,7 @@ void addPortToList(HostTraffic *host, int *thePorts /* 0...MAX_NUM_RECENT_PORTS 
   u_short i, found;
 
   if(port == 0)
-    setHostFlag(FLAG_HOST_IP_ZERO_PORT_TRAFFIC, &host);
+    setHostFlag(FLAG_HOST_IP_ZERO_PORT_TRAFFIC, host);
 
   for(i = 0, found = 0; i<MAX_NUM_RECENT_PORTS; i++)
     if(thePorts[i] == port) {

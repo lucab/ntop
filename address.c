@@ -1413,7 +1413,7 @@ void updateHostKnownSubnet(HostTraffic *el) {
     if((el->hostIpAddress.addr._hostIp4Address.s_addr & myGlobals.subnetStats[i].address[CONST_NETMASK_ENTRY])
        == myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY]) {
       el->known_subnet_id = i;
-      // setHostFlag(FLAG_SUBNET_LOCALHOST, &el);
+      // setHostFlag(FLAG_SUBNET_LOCALHOST, el);
       setHostFlag(FLAG_SUBNET_PSEUDO_LOCALHOST, el);
       return;
     }
