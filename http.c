@@ -1197,7 +1197,7 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   /* ******************************************************* */
 
   if((headerFlags & BITFLAG_HTML_NO_BODY) == 0) {
-    sendString("<body link=\"blue\" vlink=\"blue\" class=\"yui-skin-sam\">\n\n");
+    sendString("<body link=\"blue\" vlink=\"blue\">\n\n");
     ssiMenu_Body();
 
     if((theTitle != NULL) && ((headerFlags & BITFLAG_HTML_NO_HEADING) == 0))

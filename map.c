@@ -43,6 +43,30 @@ void init_maps() {
   }
 }
 
+/* ************************************************** */
+
+char* escape_string(char *in, char *out, u_int out_len) {
+  int i, i_max=strlen(in), j;
+
+  for(i=0, j=0; i<i_max; i++) {
+    switch(in[i]) {
+    case '\'':
+    case '\"':
+      out[j++] = '\\'; 
+      if(j >= out_len-1) return(out);
+      /* No break here */
+    default:
+      out[j++] = in[i];
+      if(j >= out_len-1) return(out);
+      break;
+    }
+  }
+
+  return(out);
+}
+
+/* ************************************************** */
+
 void create_host_map() {
   HostTraffic *el;
   int num_hosts = 0;
@@ -54,7 +78,7 @@ void create_host_map() {
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if(el->geo_ip) {
-      char buf[512];
+      char buf[512], buf1[256] = { 0 };
       int showSymIp;
 
       if((el->hostResolvedName[0] != '\0')
@@ -67,7 +91,7 @@ void create_host_map() {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 		    "map.addOverlay(createMarker(new GLatLng(%.2f, %.2f), '%s%s<A HREF=/%s.html>%s</A><br>%s<br>%s'));\n",
 		    el->geo_ip->latitude, el->geo_ip->longitude,
-		    showSymIp ? el->hostResolvedName : "", 
+		    showSymIp ? escape_string(el->hostResolvedName, buf1, sizeof(buf1)) : "", 
 		    showSymIp ? "<br>" : "",
 		    el->hostNumIpAddress, el->hostNumIpAddress,
 		    el->geo_ip->city ? el->geo_ip->city : "", 
