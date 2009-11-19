@@ -768,7 +768,7 @@ static void ssiMenu_Body(void) {
     } else {
       sendStringWOssi(CONST_NTOP_LOGO);
     }
-    sendStringWOssi("\" class=tooltip alt=\"ntop logo\" border=0></A></td>\n"
+    sendStringWOssi("\" class=\"reflect rheight50 ropacity33\" alt=\"ntop logo\" border=0></A></td>\n"
 		    "        <td valign=\"top\" align=\"right\" class=\"instance\">Instance:&nbsp;");
     sendStringWOssi(myGlobals.runningPref.instance);
     sendStringWOssi(
@@ -777,7 +777,7 @@ static void ssiMenu_Body(void) {
 		    "      </table>");
   } else {
     sendStringWOssi(
-		    "      <A HREF=http://www.ntop.org><img src=\"/" CONST_NTOP_LOGO "\" border=0></A>");
+		    "      <A HREF=http://www.ntop.org><img src=\"/" CONST_NTOP_LOGO "\" class=\"reflect rheight50 ropacity33\" border=0></A>");
   }
   sendStringWOssi(
 		  "     </td>\n"
@@ -1176,6 +1176,7 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
 
   /* sendString("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"ntop\" href=\"/rss.xml\">"); */
 
+  sendString("<script type=\"text/javascript\" src=\"/reflection.js\"></script>\n");
   sendString("<script type=\"text/javascript\" src=\"/MochiKit/MochiKit.js\"></script>\n");
   sendString("<script type=\"text/javascript\" src=\"/PlotKit/excanvas.js\"></script>\n");
   sendString("<script type=\"text/javascript\" src=\"/PlotKit/Base.js\"></script>\n");
