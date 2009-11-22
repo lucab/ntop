@@ -247,10 +247,6 @@ AC_ARG_WITH(  rrd-home,
               [  --with-rrd-home=DIR        Usually /usr/local/rrdtool-1.2.x],
               RRD_HOME="$withval",
               RRD_HOME=/usr/local/rrdtool-1.2.19)
-AC_ARG_WITH(  pfring-root,
-              [  --with-pfring-root=DIR      PF_RING main DIR],
-              PFRING_ROOT="$withval",
-              PFRING_ROOT=)
 AC_ARG_WITH(  pcap-root,
               [  --with-pcap-root=DIR        LBNL pcap located in DIR],
               PCAP_ROOT="$withval",
@@ -542,36 +538,7 @@ LDFLAGS="${LDFLAGS}"
 
 dnl> NTOPCONFIGDEBUG_SETTINGS([After presets])
 
-if test ".${PFRING_ROOT}" != .; then
-  AC_MSG_CHECKING([for libpfring.a inside $PFRING_ROOT])
-  if test -d $PFRING_ROOT &&
-     test -r $PFRING_ROOT/userland/lib/libpfring.a ; then
-      echo ""
-      PFRING_ROOT=`cd ${PFRING_ROOT} && pwd`      
-      AC_MSG_RESULT([found in $PFRING_ROOT/userland/lib/])
-      PCAPRING_DIR=`find $PFRING_ROOT/userland -type d -name "libpcap*ring"`
-      AC_MSG_CHECKING([for libpcap patched with PF_RING in $PFRING_ROOT/userland])
-      if test -r $PCAPRING_DIR/libpcap.a &&
-         test -r $PCAPRING_DIR/pcap.h; then
-       PCAPRING_DIR=`cd ${PCAPRING_DIR} && pwd`
-       CORELIBS="${CORELIBS} $PCAPRING_DIR/libpcap.a $PFRING_ROOT/userland/lib/libpfring.a"
-       INCS="${INCS} -I$PCAPRING_DIR"
-       echo ""
-       AC_MSG_RESULT([found in $PCAPRING_DIR])
-      else
-       PCAPRING_DIR=""
-       AC_MSG_RESULT([not found in ${PFRING_ROOT}])
-       AC_MSG_RESULT([             *** WARNING ***             ])
-       AC_MSG_RESULT([ It looks that you don't have pcap library patched with PF_RING compiled.])
-       AC_MSG_RESULT([ Please check inside the ${PFRING_ROOT}/userland directory.])
-       AC_MSG_RESULT([ When finished please re-run this program.])
-       AC_MSG_RESULT([ ])
-      fi
-  else
-    AC_MSG_RESULT([not found in ${PFRING_ROOT}/userland/lib/])
-  fi
-fi
-
+AC_CHECK_LIB([pfring], [pfring_open], LDFLAGS="${LDFLAGS} -lpfring")
 
 echo
 echo "Critical library/include tests..."
@@ -1754,49 +1721,27 @@ else
 fi
 
 dnl> GeoIP (http://www.maxmind.com/)
-if test -f "GeoIP.tar.gz"; then
-   echo "GeoIP already present on this machine"
-else
-   wget http://www.maxmind.com/download/geoip/api/c/GeoIP.tar.gz
-fi
-tar xvfz GeoIP.tar.gz
-GEO_DIR=`find $PWD -type d -name "GeoIP-*"`
-cd $GEO_DIR; ./configure --prefix=${prefix}; make; cd ..
-# OSX Fix
-GEO_DYLIB="$GEO_DIR/libGeoIP/.libs/libGeoIP.dylib"
-if test -f $GEO_DYLIB; then
-   ln -s $GEO_DYLIB .
-fi
+AC_CHECK_LIB([GeoIP], [GeoIP_record_by_ipnum], AC_DEFINE_UNQUOTED(HAVE_GEOIP, 1, [GeoIP support is present]))
 
-if test -f "GeoLiteCity.dat.gz"; then
-   gunzip GeoLiteCity.dat.gz
-else
+if test ".${ac_cv_lib_GeoIP_GeoIP_record_by_ipnum}" = ".yes"; then
+LIBS="$LIBS -lGeoIP"
+
 if test -f "GeoLiteCity.dat"; then
    echo "GeoLiteCity.dat already present"
 else
    wget http://www.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
    gunzip GeoLiteCity.dat.gz
 fi
-fi
 
-
-if test -f "GeoIPASNum.dat.gz"; then
-   gunzip GeoIPASNum.dat.gz
-else
 if test -f "GeoIPASNum.dat"; then
    echo "GeoIPASNum.dat already present"
 else
    wget http://www.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz
    gunzip GeoIPASNum.dat.gz
 fi
+else
+AC_MSG_RESULT(Build ntop without geolocation - GeoIP (http://www.maxmind.com/))
 fi
-
-GEO_DIR=`find $PWD -type d -name "GeoIP-*"`
-GEO_IP="$GEO_DIR/libGeoIP/"
-CFLAGS="$CFLAGS -I$GEO_IP"
-LDFLAGS="-L$GEO_IP.libs/ -lGeoIP $LDFLAGS"
-
-dnl> NTOPCONFIGDEBUG_SETTINGS([precet])
 
 if test -d ./configureextra; then
 
