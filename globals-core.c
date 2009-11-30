@@ -795,7 +795,7 @@ short _setRunState(char *file, int line, short newRunState) {
 
   myGlobals.ntopRunState = newRunState;
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "THREADMGMT[t%lu]: ntop RUNSTATE: %s(%d)",
-             pthread_self(),
+             (long unsigned int)pthread_self(),
              stateTransitionTableNames[newRunState],
              newRunState);
 

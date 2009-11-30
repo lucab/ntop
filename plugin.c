@@ -311,14 +311,14 @@ void startPlugins(void) {
 
 /* ******************* */
 
-void handlePluginHostCreationDeletion(HostTraffic *el, u_short deviceId, u_char hostCreation) {
+void handlePluginHostCreationDeletion(HostTraffic *el, u_short deviceId, u_char host_creation) {
   FlowFilterList *flows = myGlobals.flowsList;
 
   while(flows != NULL) {
     if(flows->pluginStatus.pluginMemoryPtr != NULL) {
       if(flows->pluginStatus.activePlugin 
 	 && (flows->pluginStatus.pluginPtr->crtDltFunct != NULL))
-	flows->pluginStatus.pluginPtr->crtDltFunct(el, deviceId, hostCreation);
+	flows->pluginStatus.pluginPtr->crtDltFunct(el, deviceId, host_creation);
     }
     
     flows = flows->next;

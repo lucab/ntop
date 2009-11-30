@@ -7968,7 +7968,7 @@ void initWeb(void) {
   traceEvent(CONST_TRACE_INFO, "INITWEB: Starting web server");
   createThread(&myGlobals.handleWebConnectionsThreadId, handleWebConnections, NULL);
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: INITWEB: Started thread for web server",
-	     myGlobals.handleWebConnectionsThreadId);
+	     (long unsigned int)myGlobals.handleWebConnectionsThreadId);
 
   traceEvent(CONST_TRACE_NOISY, "INITWEB: Server started... continuing with initialization");
 }
@@ -8075,7 +8075,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 
 #ifndef WIN32
     traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: Server connection thread starting [p%d]",
-               pthread_self(), getpid());
+               (long unsigned int)pthread_self(), getpid());
 #endif
 
 #ifdef MAKE_WITH_HTTPSIGTRAP
@@ -8216,7 +8216,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 
 #ifndef WIN32
     traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: Server connection thread running [p%d]",
-               pthread_self(), getpid());
+               (long unsigned int)pthread_self(), getpid());
 #endif
 
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: ntop's web server is now processing requests");
@@ -8241,7 +8241,8 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 
     myGlobals.handleWebConnectionsThreadId = 0;
 
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: Server connection thread terminated [p%d]", pthread_self(), getpid());
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: Server connection thread terminated [p%d]", 
+	       (long unsigned int)pthread_self(), getpid());
 
     if(myGlobals.ntopRunState == FLAG_NTOPSTATE_SHUTDOWNREQ) {
 

@@ -22,7 +22,7 @@
 
 /* ************************************************* */
 
-char* flag2string(int eventValue) {
+static char* flag2string(int eventValue) {
   static char buf[64];
 
   switch(eventValue) {

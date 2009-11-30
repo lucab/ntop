@@ -1472,6 +1472,10 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
 #endif
     break;
+
+  case showPrefDBPref:
+    /* Nothing to do */
+    break;
   }
 
   sendString (buf);

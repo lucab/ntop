@@ -1852,15 +1852,16 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   if((rc = pthread_mutex_init(&(mutexId->mutex), NULL)) != 0) {
     traceEvent(CONST_TRACE_ERROR, "createMutex() call returned %s(%d) [t%lu m%p @%s:%d]",
-               strerror(rc), rc, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+               strerror(rc), rc, (long unsigned int)pthread_self(), 
+	       (void*)&(mutexId->mutex), fileName, fileLine);
   } else if((rc = pthread_mutex_init(&(mutexId->statedatamutex), NULL)) != 0) {
     traceEvent(CONST_TRACE_ERROR, "createMutex() call2 returned %s(%d) [t%lu m%p @%s:%d]",
-               strerror(rc), rc, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+               strerror(rc), rc, (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
   } else {
     mutexId->isInitialized = 1;
 #ifdef MUTEX_DEBUG
     traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: createMutex() succeeded [t%lu m%p @%s:%d]",
-               pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+               (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   }
 
@@ -1876,7 +1877,7 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   if(mutexId == NULL) {
     if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR, "deleteMutex() called with a NULL mutex [t%lu mNULL @%s:%d]",
-                 pthread_self(), fileName, fileLine);
+                 (long unsigned int)pthread_self(), fileName, fileLine);
     return;
   }
 
@@ -1884,7 +1885,7 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
     if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR,
                  "deleteMutex() called with an UN-INITIALIZED mutex [t%lu m%p @%s:%d]",
-                 pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+                 (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
     return;
   }
 
@@ -1893,22 +1894,22 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   rc = pthread_mutex_unlock(&(mutexId->mutex));
 #ifdef MUTEX_DEBUG
   traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() unlock (rc=%d) [t%lu m%p @%s:%d]",
-             rc, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+             rc, (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_destroy(&(mutexId->mutex));
 #ifdef MUTEX_DEBUG
   traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() destroy (rc=%d) [t%lu m%p @%s:%d]",
-             rc, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+             rc, (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_unlock(&(mutexId->statedatamutex));
 #ifdef MUTEX_DEBUG
   traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() #2 unlock (rc=%d) [t%lu m%p @%s:%d]",
-             rc, pthread_self(), (void*)&(mutexId->statedatamutex), fileName, fileLine);
+             rc, (long unsigned int)pthread_self(), (void*)&(mutexId->statedatamutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_destroy(&(mutexId->statedatamutex));
 #ifdef MUTEX_DEBUG
   traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() #2 destroy (rc=%d) [t%lu m%p @%s:%d]",
-             rc, pthread_self(), (void*)&(mutexId->statedatamutex), fileName, fileLine);
+             rc, (long unsigned int)pthread_self(), (void*)&(mutexId->statedatamutex), fileName, fileLine);
 #endif
 
   memset(mutexId, 0, sizeof(PthreadMutex));
@@ -1924,7 +1925,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
     if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR,
                  "accessMutex() called '%s' with a NULL mutex [t%lu mNULL @%s:%d]",
-                 where, pthread_self(), fileName, fileLine);
+                 where, (long unsigned int)pthread_self(), fileName, fileLine);
     return(-1);
   }
 
@@ -1935,13 +1936,13 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
     if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR,
                  "accessMutex() called '%s' with an UN-INITIALIZED mutex [t%lu m%p @%s:%d]",
-                 where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+                 where, (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
 
 #ifdef MUTEX_DEBUG
   traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: accessMutex() called '%s' [t%lu m%p @%s:%d]",
-             where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+             where, (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
   if(!myGlobals.runningPref.disableMutexExtraInfo) {
@@ -1952,7 +1953,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
          && (pthread_equal(mutexId->lock.thread, pthread_self()))) {
         traceEvent(CONST_TRACE_WARNING,
                    "accessMutex() called '%s' with a self-LOCKED mutex [t%lu m%p @%s:%d]",
-                   where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+                   where, (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
       }
     }
     setHolder(mutexId->attempt);
@@ -1998,7 +1999,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLi
     if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR,
                  "tryLockMutex() called '%s' with a NULL mutex [t%lu mNULL @%s:%d]",
-                 where, pthread_self(), fileName, fileLine);
+                 where, (long unsigned int)pthread_self(), fileName, fileLine);
     return(-1);
   }
 
@@ -2009,13 +2010,13 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLi
     if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR,
                  "tryLockMutex() called '%s' with an UN-INITIALIZED mutex [t%lu m%p @%s:%d]",
-                 where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+                 where, (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
 
 #ifdef MUTEX_DEBUG
   traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: tryLockMutex() called '%s' [t%lu m%p @%s:%d]",
-             where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+             where, (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
   if(!myGlobals.runningPref.disableMutexExtraInfo) {
@@ -2027,7 +2028,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLi
          ) {
         traceEvent(CONST_TRACE_WARNING,
                    "accessMutex() called '%s' with a self-LOCKED mutex [t%lu m%p @%s:%d]",
-                   where, pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+                   where, (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
       }
     }
 
@@ -2066,7 +2067,7 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   if(mutexId == NULL) {
     if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR, "releaseMutex() called with a NULL mutex [t%lu mNULL @%s:%d]]",
-                 pthread_self(), fileName, fileLine);
+                 (long unsigned int)pthread_self(), fileName, fileLine);
     return(-1);
   }
 
@@ -2078,27 +2079,27 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
     if(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN)
       traceEvent(CONST_TRACE_ERROR, "releaseMutex() called with an UN-INITIALIZED mutex [t%lu m%p @%s:%d]",
-                 pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+                 (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
     return(-1);
   }
 
   if(!mutexId->isLocked) {
     traceEvent(CONST_TRACE_WARNING, "releaseMutex() called with an UN-LOCKED mutex [t%lu m%p @%s:%d] last unlock [t%lu m%u @%s:%d]",
-	       pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine,
-               mutexId->unlock.thread, (int)mutexId->unlock.pid,
+	       (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine,
+               (long unsigned int)mutexId->unlock.thread, (int)mutexId->unlock.pid,
 	       mutexId->unlock.file, mutexId->unlock.line);
 
   }
 
 #ifdef MUTEX_DEBUG
   traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: releaseMutex() releasing [t%lu m%p, @%s:%d]",
-             pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+             (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_unlock(&(mutexId->mutex));
 
   if(rc != 0)
     traceEvent(CONST_TRACE_ERROR, "releaseMutex() failed (rc=%d/%s) [t%lu m%p, @%s:%d]",
-               rc, strerror(rc), pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+               rc, strerror(rc), (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
   else {
     mutexId->isLocked = 0;
     mutexId->numReleases++;
@@ -2122,10 +2123,10 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 #ifdef MUTEX_DEBUG
   if (rc != 0)
     traceEvent(CONST_TRACE_WARNING, "MUTEX_DEBUG: releaseMutex() failed (rc=%d) [t%lu m%p @%s:%d]",
-               pthread_self(), (void*)&(mutexId->mutex), rc, fileName, fileLine);
+               (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), rc, fileName, fileLine);
   else
     traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: releaseMutex() succeeded [t%lu m%p @%s:%d]",
-               pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
+               (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   return(rc);
 }
@@ -2712,7 +2713,7 @@ void traceEvent(int eventTraceLevel, char* file,
 	if(myGlobals.runningPref.traceLevel >= CONST_DETAIL_TRACE_LEVEL) {
 #ifdef LONG_FORMAT
 	  safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[t%lu %s:%d] ",
-			pthread_self(), &mFile[beginFileIdx], line);
+			(long unsigned int)pthread_self(), &mFile[beginFileIdx], line);
 #else
 	  safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[%s:%d] ",
 			&mFile[beginFileIdx], line);
@@ -4167,7 +4168,8 @@ unsigned int _ntopSleepWhileSameState(char *file, int line, unsigned int secs) {
 /* ---------- */
 
 void ntopSleepUntilStateRUN(void) {
-  traceEvent(CONST_TRACE_BEYONDNOISY, "WAIT[t%lu]: for ntopState RUN", pthread_self());
+  traceEvent(CONST_TRACE_BEYONDNOISY, "WAIT[t%lu]: for ntopState RUN", 
+	     (long unsigned int)pthread_self());
 
   while(myGlobals.ntopRunState < FLAG_NTOPSTATE_RUN) {
 #ifdef WIN32
@@ -4183,7 +4185,8 @@ void ntopSleepUntilStateRUN(void) {
 #endif /* WIN32 */
   }
 
-  traceEvent(CONST_TRACE_BEYONDNOISY, "WAIT[t%lu]: ntopState is RUN", pthread_self());
+  traceEvent(CONST_TRACE_BEYONDNOISY, "WAIT[t%lu]: ntopState is RUN", 
+	     (long unsigned int)pthread_self());
 }
 
 /* ---------- */

@@ -315,7 +315,7 @@ static void* cpacketMainLoop(void* _deviceId) {
   if(!(myGlobals.device[deviceId].cpacketGlobals->cpacketInSocket > 0)) return(NULL);
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: CPACKET: thread starting [p%d]",
-             pthread_self(), getpid());
+             (long unsigned int)pthread_self(), getpid());
 
 #ifdef MAKE_WITH_CPACKETSIGTRAP
   signal(SIGSEGV, cpacketcleanup);
@@ -351,7 +351,7 @@ static void* cpacketMainLoop(void* _deviceId) {
 
   ntopSleepUntilStateRUN();
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: CPACKET: (port %d) thread running [p%d]",
-             pthread_self(), myGlobals.device[deviceId].cpacketGlobals->cpacketInPort, getpid());
+             (long unsigned int)pthread_self(), myGlobals.device[deviceId].cpacketGlobals->cpacketInPort, getpid());
 
   for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
     int maxSock = myGlobals.device[deviceId].cpacketGlobals->cpacketInSocket;
@@ -413,7 +413,7 @@ static void* cpacketMainLoop(void* _deviceId) {
   myGlobals.device[deviceId].activeDevice = 0;
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: CPACKET: thread terminated [p%d][cpacketDeviceId=%d]",
-	     pthread_self(), getpid(), myGlobals.device[deviceId].cpacketGlobals->cpacketDeviceId);
+	     (long unsigned int)pthread_self(), getpid(), myGlobals.device[deviceId].cpacketGlobals->cpacketDeviceId);
 
   return(NULL);
 }

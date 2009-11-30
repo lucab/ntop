@@ -740,19 +740,21 @@ int main(int argc, char *argv[]) {
   }
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: Main thread shutting down",
-	     pthread_self());
+	     (long unsigned int)pthread_self());
   endTime = time(NULL) + PARM_SLEEP_LIMIT + 2;
 
   while((myGlobals.ntopRunState != FLAG_NTOPSTATE_TERM) &&
         (time(NULL) < endTime)) {
     sleep(1);
   }
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: Main thread terminating", pthread_self());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: Main thread terminating", 
+	     (long unsigned int)pthread_self());
 
   memset(&buf, 0, sizeof(buf));
   runningThreads(buf, sizeof(buf), 0);
   if(buf[0] != '\0')
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: Still running threads%s", pthread_self(), buf);
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: Still running threads%s", 
+	       (long unsigned int)pthread_self(), buf);
 
   traceEvent(CONST_TRACE_INFO, "===================================");
   traceEvent(CONST_TRACE_INFO, "        ntop is shutdown...        ");

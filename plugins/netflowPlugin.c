@@ -28,7 +28,7 @@ static void* netflowMainLoop(void* _deviceId);
 static void* netflowUtilsLoop(void* _deviceId);
 #endif
 
-/* #define DEBUG_FLOWS */
+//#define DEBUG_FLOWS
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -1844,22 +1844,22 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 		tot_len += accum_len;
 		myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd++;
-	      }
-	    }
 
-	    if(tot_len < fs.flowsetLen) {
-	      u_short padding = fs.flowsetLen - tot_len;
-
-	      if(padding >= 4) {
-		traceEvent(CONST_TRACE_WARNING, "Template len mismatch [tot_len=%d][flow_len=%d]",
-			   tot_len, fs.flowsetLen);
-	      } else {
+		if(tot_len < fs.flowsetLen) {
+		  u_short padding = fs.flowsetLen - tot_len;
+		  
+		  if(padding >= 4) {
+		    traceEvent(CONST_TRACE_WARNING, "Template len mismatch [tot_len=%d][flow_len=%d]",
+			       tot_len, fs.flowsetLen);
+		  } else {
 #ifdef DEBUG_FLOWS
-		if(debug)
-		  traceEvent(CONST_TRACE_INFO, ">>>>> %d bytes padding [tot_len=%d][flow_len=%d]",
-			     padding, tot_len, fs.flowsetLen);
+		    if(debug)
+		      traceEvent(CONST_TRACE_INFO, ">>>>> %d bytes padding [tot_len=%d][flow_len=%d]",
+				 padding, tot_len, fs.flowsetLen);
 #endif
-		displ += padding;
+		    displ += padding;
+		  }
+		}
 	      }
 	    }
 	  } else {
@@ -2064,7 +2064,7 @@ static void* netflowMainLoop(void* _deviceId) {
   if(!(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket > 0)) return(NULL);
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread starting [p%d]",
-             pthread_self(), getpid());
+             (long unsigned int)pthread_self(), getpid());
 
 #ifdef MAKE_WITH_NETFLOWSIGTRAP
   signal(SIGSEGV, netflowcleanup);
@@ -2100,7 +2100,7 @@ static void* netflowMainLoop(void* _deviceId) {
 
   ntopSleepUntilStateRUN();
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: (port %d) thread running [p%d]",
-             pthread_self(), myGlobals.device[deviceId].netflowGlobals->netFlowInPort, getpid());
+             (long unsigned int)pthread_self(), myGlobals.device[deviceId].netflowGlobals->netFlowInPort, getpid());
 
   for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
     int maxSock = myGlobals.device[deviceId].netflowGlobals->netFlowInSocket;
@@ -2218,7 +2218,8 @@ static void* netflowMainLoop(void* _deviceId) {
   myGlobals.device[deviceId].activeDevice = 0;
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread terminated [p%d][netFlowDeviceId=%d]",
-	     pthread_self(), getpid(), myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+	     (long unsigned int)pthread_self(), getpid(), 
+	     myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
 
   return(NULL);
 }

@@ -2274,6 +2274,8 @@ static void readExtendedVlanTunnel(SFSample *sample, int deviceId)
 {
   u_int32_t lab;
   SFLLabelStack lstk;
+
+  memset(&lstk, 0, sizeof(lstk));
   lstk.depth = getData32(sample, deviceId);
   /* just point at the lablelstack array */
   if(lstk.depth > 0) lstk.stack = (u_int32_t *)sample->datap;
@@ -3058,7 +3060,7 @@ static void* sflowMainLoop(void* _deviceId) {
   if(!(myGlobals.device[deviceId].sflowGlobals->sflowInSocket > 0)) return(NULL);
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: SFLOW: thread starting [p%d, t%lu]...",
-             getpid(), pthread_self());
+             getpid(), (long unsigned int)pthread_self());
 
 #ifdef MAKE_WITH_SFLOWSIGTRAP
   signal(SIGSEGV, sflowcleanup);
@@ -3096,7 +3098,7 @@ static void* sflowMainLoop(void* _deviceId) {
   ntopSleepUntilStateRUN();
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: SFLOW: thread running [p%d, t%lu]...",
-             getpid(), pthread_self());
+             getpid(), (long unsigned int)pthread_self());
 
   for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
     int maxSock = myGlobals.device[deviceId].sflowGlobals->sflowInSocket;

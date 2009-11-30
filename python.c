@@ -144,8 +144,6 @@ static PyObject* python_getPreference(PyObject *self,
 
 /* **************************************** */
 
-static int num_iter = 0;
-
 static PyObject* python_getNextHost(PyObject *self,
 				    PyObject *args) {
   int actualDeviceId;

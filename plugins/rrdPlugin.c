@@ -2512,7 +2512,7 @@ static void deleteRRD(char *basePath, char *key) {
   if(unlink(path) != 0)
     traceEvent(CONST_TRACE_WARNING,
 	       "THREADMGMT[t%lu]: RRD: deleteRRD(%s) failed: %s",
-	       pthread_self(), path, strerror(errno));
+	       (long unsigned int)pthread_self(), path, strerror(errno));
 }
 
 /* ******************************* */
@@ -4990,13 +4990,13 @@ static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
 
   traceEvent(CONST_TRACE_INFO,
              "THREADMGMT[t%lu]: RRD: Throughput data collection: Thread starting [p%d]",
-             pthread_self(), getpid());
+             (long unsigned int)pthread_self(), getpid());
 
   ntopSleepUntilStateRUN();
 
   traceEvent(CONST_TRACE_INFO,
              "THREADMGMT[t%lu]: RRD: Throughput data collection: Thread running [p%d]",
-             pthread_self(), getpid());
+             (long unsigned int)pthread_self(), getpid());
 
   for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
     int devIdx;
@@ -5006,7 +5006,7 @@ static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
     if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) {
       traceEvent(CONST_TRACE_INFO,
                  "THREADMGMT[t%lu]: RRD: Throughput data collection: Thread stopping [p%d] State>RUN",
-                 pthread_self(), getpid());
+                 (long unsigned int)pthread_self(), getpid());
       break;
     }
 
@@ -5038,7 +5038,7 @@ static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
 
   traceEvent(CONST_TRACE_INFO,
              "THREADMGMT[t%lu]: RRD: Throughput data collection: Thread terminated [p%d]",
-             pthread_self(), getpid());
+             (long unsigned int)pthread_self(), getpid());
   return(NULL);
 }
 
@@ -5059,7 +5059,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   float elapsed;
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: RRD: Data collection thread starting [p%d]",
-	     pthread_self(), getpid());
+	     (long unsigned int)pthread_self(), getpid());
 
 #ifdef MAKE_WITH_RRDSIGTRAP
   signal(SIGSEGV, rrdcleanup);
@@ -5136,12 +5136,12 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   createThread(&rrdTrafficThread, rrdTrafficThreadLoop, NULL);
   traceEvent(CONST_TRACE_INFO,
              "THREADMGMT[t%lu]: RRD: Started thread for throughput data collection",
-             rrdTrafficThread);
+             (long unsigned int)rrdTrafficThread);
 
   ntopSleepUntilStateRUN();
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: RRD: Data collection thread running [p%d]",
-	     pthread_self(), getpid());
+	     (long unsigned int)pthread_self(), getpid());
 
   for(;myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN;) {
     do {
@@ -5157,7 +5157,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_STOPCAP) {
       traceEvent(CONST_TRACE_INFO,
                  "THREADMGMT[t%lu]: RRD: Data collection thread stopping [p%d] %s",
-                 pthread_self(),
+                 (long unsigned int)pthread_self(),
                  getpid(),
                  myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN ? "State>RUN" : "Plugin inactive");
       break;
@@ -5706,14 +5706,14 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
      * we kill the thread...
      */
     if(myGlobals.ntopRunState == FLAG_NTOPSTATE_STOPCAP) {
-      traceEvent(CONST_TRACE_WARNING, "THREADMGMT[t%lu]: RRD: STOPCAP, ending rrd thread", pthread_self());
+      traceEvent(CONST_TRACE_WARNING, "THREADMGMT[t%lu]: RRD: STOPCAP, ending rrd thread", (long unsigned int)pthread_self());
       break;
     }
   }
 
   rrdThread = 0;
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: RRD: Data collection thread terminated [p%d]",
-	     pthread_self(), getpid());
+	     (long unsigned int)pthread_self(), getpid());
 
   return(0);
 }
@@ -5741,7 +5741,8 @@ static int initRRDfunct(void) {
     commonRRDinit();
 
   createThread(&rrdThread, rrdMainLoop, NULL);
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: RRD: Started thread (t%lu) for data collection", rrdThread);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: RRD: Started thread (t%lu) for data collection",
+	     (long unsigned int)rrdThread);
 
   fflush(stdout);
   numTotalRRDUpdates = 0;
@@ -5773,11 +5774,11 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
       if (rc == 0)
         traceEvent(CONST_TRACE_INFO,
                    "THREADMGMT[t%lu]: RRD: killThread(rrdThread) succeeded",
-                   pthread_self());
+                   (long unsigned int)pthread_self());
       else
         traceEvent(CONST_TRACE_ERROR,
                    "THREADMGMT[t%lu]: RRD: killThread(rrdThread) failed, rc %s(%d)",
-                   pthread_self(), strerror(rc), rc);
+                   (long unsigned int)pthread_self(), strerror(rc), rc);
     }
 
     if(rrdTrafficThread) {
@@ -5785,22 +5786,23 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
       if (rc == 0)
 	traceEvent(CONST_TRACE_INFO,
                    "THREADMGMT[t%lu]: RRD: killThread(rrdTrafficThread) succeeded",
-                   pthread_self());
+                   (long unsigned int)pthread_self());
       else
 	traceEvent(CONST_TRACE_ERROR,
                    "THREADMGMT[t%lu]: RRD: killThread(rrdTrafficThread) failed, rc %s(%d)",
-                   pthread_self(), strerror(rc), rc);
+                   (long unsigned int)pthread_self(), strerror(rc), rc);
     }
 
     /*
       if((rrdThread != 0) || (rrdTrafficThread != 0)) {
       traceEvent(CONST_TRACE_INFO,
       "THREADMGMT[t%lu]: RRD: Waiting %d seconds for threads to stop",
-      pthread_self(), (PARM_SLEEP_LIMIT + 2));
+      (long unsigned int)pthread_self(), (PARM_SLEEP_LIMIT + 2));
       sleep(PARM_SLEEP_LIMIT + 2);
       }
     */
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: RRD: Plugin shutdown continuing", pthread_self());
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: RRD: Plugin shutdown continuing", 
+	       (long unsigned int)pthread_self());
   }
 
   if(hostsFilter != NULL) free(hostsFilter);
