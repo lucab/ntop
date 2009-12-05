@@ -65,6 +65,14 @@ static char* flag2string(int eventValue) {
 
 void notifyEvent(EventType evt, HostTraffic *el, IPSession *session, int eventValue) {
   char *event = NULL, *info = "";
+  FILE *fd;
+
+  if((el == NULL)
+     || (!(myGlobals.event_mask && evt)) 
+     || (myGlobals.event_log == NULL)
+     || (myGlobals.event_log[0] == '\0')
+     )
+    return;
 
   switch(evt) {
   case hostCreation:
@@ -89,12 +97,44 @@ void notifyEvent(EventType evt, HostTraffic *el, IPSession *session, int eventVa
     break;
   }
 
-  if(el) {
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "[event: %s][target: %s/%s/%s]",
-	       event,
-	       el->ethAddressString,
-	       el->hostNumIpAddress,
-	       info);
+  if((fd = fopen(myGlobals.event_log, "a")) != NULL) {
+    time_t theTime = time(NULL);
+    struct tm t;
+    char bufTime[LEN_TIMEFORMAT_BUFFER];
+  
+    memset(bufTime, 0, sizeof(bufTime));
+    strftime(bufTime, sizeof(bufTime), 
+	     CONST_LOCALE_TIMESPEC, localtime_r(&theTime, &t));
+
+    fprintf(fd, "%s [event: %s][target: %s/%s/%s]\n",
+	    bufTime, event,
+	    el->ethAddressString,
+	    el->hostNumIpAddress,
+	    info);
+    fclose(fd);
+  } else
+    traceEvent(CONST_TRACE_WARNING, "Unable to write into log event [%s]", 
+	       myGlobals.event_log);
+}
+
+/* ************************************************* */
+
+void init_events() {
+  char buf[64], *key;
+
+  key = "events.mask";
+  if(fetchPrefsValue(key, buf, sizeof(buf)) != -1) {
+    myGlobals.event_mask = atoi(buf);
+  } else {
+    myGlobals.event_mask = 0;
+    storePrefsValue(key, "0");
   }
 
+  key = "events.event_log";
+  if(fetchPrefsValue(key, buf, sizeof(buf)) != -1) {
+    myGlobals.event_log = strdup(buf);
+  } else {
+    myGlobals.event_log = NULL;
+    storePrefsValue(key, "");
+  }
 }

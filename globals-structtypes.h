@@ -1100,12 +1100,12 @@ typedef struct probeInfo {
 
 /* Flow aggregation */
 typedef enum {
-  hostCreation = 0,
-  hostDeletion,
-  sessionCreation,
-  sessionDeletion,
-  hostFlagged,
-  hostUnflagged
+  hostCreation = 1,
+  hostDeletion = 1 << 2,
+  sessionCreation = 1 << 3,
+  sessionDeletion = 1 << 4,
+  hostFlagged = 1 << 5,
+  hostUnflagged  = 1 << 6
 } EventType;
 
 /* *************************** */
@@ -2464,5 +2464,9 @@ typedef struct ntopGlobals {
   /* GeoIP */
   GeoIP *geo_ip_db, *geo_ip_asn_db;
   PthreadMutex geolocalizationMutex;
+
+  /* Event Handling */
+  u_int32_t event_mask;
+  char *event_log;
 } NtopGlobals;
 

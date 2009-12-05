@@ -557,6 +557,8 @@ void initNtop(char *devices) {
    */
   initDevices(devices);
 
+  init_events();
+
   if(myGlobals.runningPref.enableSessionHandling)
     initPassiveSessions();
 
