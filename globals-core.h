@@ -861,6 +861,7 @@ extern FCSession* handleFcSession(const struct pcap_pkthdr *h,
 
 /* event.c */
 extern void notifyEvent(EventType evt, HostTraffic *el, IPSession *session, int eventValue);
+extern void init_events(void);
 
 /* fcUtils.c */
 extern int isFlogiAcc(FcAddress *fcAddress, u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);

@@ -2786,6 +2786,9 @@ struct ip6_hdr
 #define AS_VIEW              2
 #define AS_GRAPH_VIEW        3
 
+#define EVENTS_MASK          "events.mask"
+#define EVENTS_LOG           "events.log"
+
 /* *************************** */
 
 #define MAX_NUM_INTERFACE_NETWORKS      128

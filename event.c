@@ -119,10 +119,10 @@ void notifyEvent(EventType evt, HostTraffic *el, IPSession *session, int eventVa
 
 /* ************************************************* */
 
-void init_events() {
+void init_events(void) {
   char buf[64], *key;
 
-  key = "events.mask";
+  key = EVENTS_MASK;
   if(fetchPrefsValue(key, buf, sizeof(buf)) != -1) {
     myGlobals.event_mask = atoi(buf);
   } else {
@@ -130,11 +130,14 @@ void init_events() {
     storePrefsValue(key, "0");
   }
 
-  key = "events.event_log";
+  key = EVENTS_LOG;
   if(fetchPrefsValue(key, buf, sizeof(buf)) != -1) {
     myGlobals.event_log = strdup(buf);
   } else {
     myGlobals.event_log = NULL;
     storePrefsValue(key, "");
   }
+
+  traceEvent(CONST_TRACE_INFO, "Initialized events [mask: %d][path: %s]",
+	     myGlobals.event_mask,  myGlobals.event_log ?  myGlobals.event_log : "<none>");
 }

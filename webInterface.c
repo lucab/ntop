@@ -69,24 +69,24 @@ void showPluginsList(char* pluginName) {
 	char key[64];
 
 	if(status_found) {
-	if(newPluginStatus == 0 /* disabled */) {
-	  if(flows->pluginStatus.pluginPtr->termFunct != NULL)
-	    flows->pluginStatus.pluginPtr->termFunct(0 /* term plugin */);
-	} else {
-	  if(flows->pluginStatus.pluginPtr->startFunct != NULL)
-	    rc = flows->pluginStatus.pluginPtr->startFunct();
-	  if(rc || (flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL))
-	    newPluginStatus = 0 /* Disabled */;
-	}
-
-	flows->pluginStatus.activePlugin = newPluginStatus;
-
-	safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "pluginStatus.%s",
-		    flows->pluginStatus.pluginPtr->pluginName);
-
-	storePrefsValue(key, newPluginStatus ? "1" : "0");
-      }
+	  if(newPluginStatus == 0 /* disabled */) {
+	    if(flows->pluginStatus.pluginPtr->termFunct != NULL)
+	      flows->pluginStatus.pluginPtr->termFunct(0 /* term plugin */);
+	  } else {
+	    if(flows->pluginStatus.pluginPtr->startFunct != NULL)
+	      rc = flows->pluginStatus.pluginPtr->startFunct();
+	    if(rc || (flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL))
+	      newPluginStatus = 0 /* Disabled */;
 	  }
+
+	  flows->pluginStatus.activePlugin = newPluginStatus;
+
+	  safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "pluginStatus.%s",
+			flows->pluginStatus.pluginPtr->pluginName);
+
+	  storePrefsValue(key, newPluginStatus ? "1" : "0");
+	}
+      }
     }
 
     if(!thePlugin || (strcmp(flows->pluginStatus.pluginPtr->pluginURLname, thePlugin) == 0)) {
@@ -103,57 +103,59 @@ void showPluginsList(char* pluginName) {
         doPrintHeader = 1;
       }
 
-      safe_snprintf(__FILE__, __LINE__, tmpBuf1, sizeof(tmpBuf1), "<A HREF=\"/plugins/%s\"  class=tooltip title=\"Invoke plugin\">%s</A>",
-		  flows->pluginStatus.pluginPtr->pluginURLname, flows->pluginStatus.pluginPtr->pluginURLname);
+      safe_snprintf(__FILE__, __LINE__, tmpBuf1, sizeof(tmpBuf1), 
+		    "<A HREF=\"/plugins/%s\"  class=tooltip title=\"Invoke plugin\">%s</A>",
+		    flows->pluginStatus.pluginPtr->pluginURLname, flows->pluginStatus.pluginPtr->pluginURLname);
 
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TR "TR_ON" %s><TH "TH_BG" align=\"left\" %s>",
-		  getRowColor(),
-                  flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL ?
-                      "rowspan=\"2\"" :
-                      "");
+		    getRowColor(),
+		    flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL ?
+		    "rowspan=\"2\"" :
+		    "");
       sendString(tmpBuf);
 
       if(flows->pluginStatus.pluginPtr->inactiveSetup) {
-          sendString("&nbsp;</TH>\n");
+	sendString("&nbsp;</TH>\n");
       } else {
-          safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s</TH>\n",
+	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s</TH>\n",
                       flows->pluginStatus.activePlugin ?
-                          tmpBuf1 : flows->pluginStatus.pluginPtr->pluginURLname);
-          sendString(tmpBuf);
+		      tmpBuf1 : flows->pluginStatus.pluginPtr->pluginURLname);
+	sendString(tmpBuf);
       }
 
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TH "TH_BG" align=\"left\" %s>",
-                  flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL ?
-                      "rowspan=\"2\"" :
-                      "");
+		    flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL ?
+		    "rowspan=\"2\"" :
+		    "");
       sendString(tmpBuf);
 
       if(flows->pluginStatus.pluginPtr->inactiveSetup) {
-          safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s</TH>\n", tmpBuf1);
-          sendString(tmpBuf);
+	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s</TH>\n", tmpBuf1);
+	sendString(tmpBuf);
       } else {
-          sendString("&nbsp;</TH>\n");
+	sendString("&nbsp;</TH>\n");
       }
 
       if(flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL) {
-	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TD colspan=\"4\"><font COLOR=\"#FF0000\">%s</font></TD></TR>\n<TR "TR_ON" %s>\n",
-		    flows->pluginStatus.pluginPtr->pluginStatusMessage,
-		    getRowColor());
+	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), 
+		      "<TD colspan=\"4\"><font COLOR=\"#FF0000\">%s</font></TD></TR>\n<TR "TR_ON" %s>\n",
+		      flows->pluginStatus.pluginPtr->pluginStatusMessage,
+		      getRowColor());
 	sendString(tmpBuf);
       }
 
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TD "TD_BG" align=\"left\">%s</TD>\n"
-		  "<TD "TD_BG" ALIGN=CENTER>%s</TD>\n"
-		  "<TD "TD_BG" align=\"left\">%s</TD>\n"
-		  "<TD "TD_BG" ALIGN=CENTER><A HREF=\"" CONST_SHOW_PLUGINS_HTML "?%s=%d\">%s</A></TD>"
-		  "</TR>\n",
-		  flows->pluginStatus.pluginPtr->pluginDescr,
-		  flows->pluginStatus.pluginPtr->pluginVersion,
-		  flows->pluginStatus.pluginPtr->pluginAuthor,
-		  flows->pluginStatus.pluginPtr->pluginURLname,
-		  flows->pluginStatus.activePlugin ? 0: 1,
-		  flows->pluginStatus.activePlugin ?
-		  "Yes" : "<FONT COLOR=\"#FF0000\">No</FONT>");
+		    "<TD "TD_BG" ALIGN=CENTER>%s</TD>\n"
+		    "<TD "TD_BG" align=\"left\">%s</TD>\n"
+		    "<TD "TD_BG" ALIGN=CENTER><A HREF=\"" CONST_SHOW_PLUGINS_HTML "?%s=%d\">%s</A></TD>"
+		    "</TR>\n",
+		    flows->pluginStatus.pluginPtr->pluginDescr,
+		    flows->pluginStatus.pluginPtr->pluginVersion,
+		    flows->pluginStatus.pluginPtr->pluginAuthor,
+		    flows->pluginStatus.pluginPtr->pluginURLname,
+		    flows->pluginStatus.activePlugin ? 0: 1,
+		    flows->pluginStatus.activePlugin ?
+		    "Yes" : "<FONT COLOR=\"#FF0000\">No</FONT>");
       sendString(tmpBuf);
     }
 
@@ -209,7 +211,7 @@ char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
 
 /* ******************************* */
 
-char* 
+char*
 makeHostLink(HostTraffic *el, short mode,
 	     short cutName, short addCountryFlag,
 	     char *buf, int bufLen) {
@@ -270,7 +272,7 @@ makeHostLink(HostTraffic *el, short mode,
       safe_snprintf(__FILE__, __LINE__, buf, bufLen, fmt, "", el->hostResolvedName);
     } else {
       safe_snprintf(__FILE__, __LINE__, commentBuf, sizeof(commentBuf),
-                  "<!-- unknown %d lt NONE -->", el->hostResolvedNameType);
+		    "<!-- unknown %d lt NONE -->", el->hostResolvedNameType);
       safe_snprintf(__FILE__, __LINE__, buf, bufLen, fmt, commentBuf, el->hostResolvedName);
     }
 
@@ -299,16 +301,16 @@ makeHostLink(HostTraffic *el, short mode,
     /* User other names if we have them, but follow (High->Low) the numerical
      * sequence of FLAG_HOST_SYM_ADDR_TYPE_xxx so it still sorts right
      */
-  if((el->hostNumIpAddress[0] != '\0')
-     && (!((el->ethAddressString[0] == '\0') && subnetPseudoLocalHost(el)))) {
-    /* We have the IP, so the DNS is probably still getting the entry name */
+    if((el->hostNumIpAddress[0] != '\0')
+       && (!((el->ethAddressString[0] == '\0') && subnetPseudoLocalHost(el)))) {
+      /* We have the IP, so the DNS is probably still getting the entry name */
       strncpy(symIp, el->hostNumIpAddress, sizeof(symIp));
 #ifndef CMPFCTN_DEBUG
       if(myGlobals.runningPref.debugMode == 1)
 #endif
         safe_snprintf(__FILE__, __LINE__, noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:NumIpAddr(%s) -->",
-                    el->hostNumIpAddress);
-        strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
+		      el->hostNumIpAddress);
+      strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
     } else if(el->ethAddressString[0] != '\0') {
       /* Use the MAC address */
       strncpy(symIp, el->ethAddressString, sizeof(symIp));
@@ -317,16 +319,16 @@ makeHostLink(HostTraffic *el, short mode,
       if(myGlobals.runningPref.debugMode == 1)
 #endif
         safe_snprintf(__FILE__, __LINE__, noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:MAC(%s) -->",
-                    el->ethAddressString);
-        strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
+		      el->ethAddressString);
+      strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
     } else if(el->fcCounters->hostNumFcAddress[0] != '\0') {
       strncpy(symIp, el->fcCounters->hostNumFcAddress, sizeof(symIp));
 #ifndef CMPFCTN_DEBUG
       if(myGlobals.runningPref.debugMode == 1)
 #endif
         safe_snprintf(__FILE__, __LINE__, noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:FC(%s) -->",
-                    el->fcCounters->hostNumFcAddress);
-        strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
+		      el->fcCounters->hostNumFcAddress);
+      strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
     } else if(el->nonIPTraffic) {
       if(el->nonIPTraffic->nbHostName != NULL) {
         strncpy(symIp, el->nonIPTraffic->nbHostName, sizeof(symIp));
@@ -339,7 +341,7 @@ makeHostLink(HostTraffic *el, short mode,
         strncat(noteBuf, " [Appletalk]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
       }
     } else {
-    if(mode == FLAG_HOSTLINK_HTML_FORMAT)
+      if(mode == FLAG_HOSTLINK_HTML_FORMAT)
         return("<TH "TH_BG" ALIGN=LEFT>&lt;unknown&gt;</TH>");
       else
         return("&lt;unknown&gt;");
@@ -358,38 +360,38 @@ makeHostLink(HostTraffic *el, short mode,
       strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
 
     if(el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NETBIOS) {
-        strncat(noteBuf, " [NetBIOS]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
+      strncat(noteBuf, " [NetBIOS]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
     }
 #ifndef CMPFCTN_DEBUG
     if(myGlobals.runningPref.debugMode == 1)
 #endif
       switch (el->hostResolvedNameType) {
-        case FLAG_HOST_SYM_ADDR_TYPE_FCID:
-        case FLAG_HOST_SYM_ADDR_TYPE_FC_WWN:
-        case FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS:
-          strncat(noteBuf, " [FibreChannel]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
-          break;
-        case FLAG_HOST_SYM_ADDR_TYPE_MAC:
-          strncat(noteBuf, " [MAC]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
-          break;
-        case FLAG_HOST_SYM_ADDR_TYPE_IPX:
-          strncat(noteBuf, " [IPX]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
-          break;
-        case FLAG_HOST_SYM_ADDR_TYPE_IP:
-          strncat(noteBuf, " [IP]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
-          break;
-        case FLAG_HOST_SYM_ADDR_TYPE_ATALK:
-          strncat(noteBuf, " [Appletalk]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
-          break;
-        case FLAG_HOST_SYM_ADDR_TYPE_NETBIOS:
-          /* Do nothing - handled in open code above */
-          break;
-        case FLAG_HOST_SYM_ADDR_TYPE_NAME:
-          break;
+      case FLAG_HOST_SYM_ADDR_TYPE_FCID:
+      case FLAG_HOST_SYM_ADDR_TYPE_FC_WWN:
+      case FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS:
+	strncat(noteBuf, " [FibreChannel]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
+	break;
+      case FLAG_HOST_SYM_ADDR_TYPE_MAC:
+	strncat(noteBuf, " [MAC]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
+	break;
+      case FLAG_HOST_SYM_ADDR_TYPE_IPX:
+	strncat(noteBuf, " [IPX]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
+	break;
+      case FLAG_HOST_SYM_ADDR_TYPE_IP:
+	strncat(noteBuf, " [IP]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
+	break;
+      case FLAG_HOST_SYM_ADDR_TYPE_ATALK:
+	strncat(noteBuf, " [Appletalk]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
+	break;
+      case FLAG_HOST_SYM_ADDR_TYPE_NETBIOS:
+	/* Do nothing - handled in open code above */
+	break;
+      case FLAG_HOST_SYM_ADDR_TYPE_NAME:
+	break;
       }
 
     if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NAME) && (el->ethAddressString[0] != '\0')) {
-	strncpy(linkName, addrtostr(&(el->hostIpAddress)), sizeof(linkName));
+      strncpy(linkName, addrtostr(&(el->hostIpAddress)), sizeof(linkName));
     } else if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_MAC) &&
 	      (symIp[2] != ':') && (el->ethAddressString[0] != '\0')) {
       /* MAC address, one which has already been fixed up with the vendor string -
@@ -434,7 +436,7 @@ makeHostLink(HostTraffic *el, short mode,
     flag[0] = '\0';
   else {
     safe_snprintf(__FILE__, __LINE__, flag, sizeof(flag), "<td "TD_BG" align=\"center\">%s</td>",
-                getHostCountryIconURL(el));
+		  getHostCountryIconURL(el));
   }
 
   /* Set all the addon Str's */
@@ -467,18 +469,18 @@ makeHostLink(HostTraffic *el, short mode,
   }
 
   switch(isHostHealthy(el)) {
-    case 1: /* Minor */
-      healthStr = CONST_IMG_LOW_RISK;
-      break;
-    case 2: /* Warning */
-      healthStr = CONST_IMG_MEDIUM_RISK;
-      break;
-    case 3: /* Error */
-      healthStr = CONST_IMG_HIGH_RISK;
-      break;
-    default: /* OK, bad call */
-      healthStr = "";
-      break;
+  case 1: /* Minor */
+    healthStr = CONST_IMG_LOW_RISK;
+    break;
+  case 2: /* Warning */
+    healthStr = CONST_IMG_MEDIUM_RISK;
+    break;
+  case 3: /* Error */
+    healthStr = CONST_IMG_HIGH_RISK;
+    break;
+  default: /* OK, bad call */
+    healthStr = "";
+    break;
   }
 
   /* Flag set? Cutoff name at 1st . */
@@ -515,8 +517,8 @@ makeHostLink(HostTraffic *el, short mode,
     if(vendorInfo[0] != '\0') {
       safe_snprintf(__FILE__, __LINE__, symIp, sizeof(symIp), "%s%s", vendorInfo, &el->ethAddressString[8]);
       safe_snprintf(__FILE__, __LINE__, titleBuf, sizeof(titleBuf),
-                  "%s Actual MAC address is %s",
-                  titleBuf, el->ethAddressString);
+		    "%s Actual MAC address is %s",
+		    titleBuf, el->ethAddressString);
     }
   }
 
@@ -576,7 +578,7 @@ makeHostLink(HostTraffic *el, short mode,
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "/%s%s.html", linkName, vlanStr);
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<a %s href=\"/%s%s.html\" %s nowrap width=\"250\" %s%s%s>%s%s</a>\n"
-                "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+		  "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
 		  tooltip, linkName, vlanStr,
 		  makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)),
 		  titleBuf[0] != '\0' ? "title=\"" : "",
@@ -604,38 +606,38 @@ char* getHostName(HostTraffic *el, short cutName, char *buf, int bufLen) {
   tmpStr = el->hostResolvedName;
 
   if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
-      strncpy (buf, el->hostResolvedName, 80);
+    strncpy (buf, el->hostResolvedName, 80);
   }
   else {
-      if(broadcastHost(el)) {
-          strcpy (buf, "broadcast");
-      }
-      else {
-          tmpStr = el->hostResolvedName;
+    if(broadcastHost(el)) {
+      strcpy (buf, "broadcast");
+    }
+    else {
+      tmpStr = el->hostResolvedName;
 
-          if((tmpStr == NULL) || (tmpStr[0] == '\0')) {
-              /* The DNS is still getting the entry name */
-              if(el->hostNumIpAddress[0] != '\0')
-                  strncpy(buf, el->hostNumIpAddress, 80);
-              else
-                  strncpy(buf, el->ethAddressString, 80);
-          } else if(tmpStr[0] != '\0') {
-              strncpy(buf, tmpStr, 80);
-              if(cutName) {
-                  int i;
+      if((tmpStr == NULL) || (tmpStr[0] == '\0')) {
+	/* The DNS is still getting the entry name */
+	if(el->hostNumIpAddress[0] != '\0')
+	  strncpy(buf, el->hostNumIpAddress, 80);
+	else
+	  strncpy(buf, el->ethAddressString, 80);
+      } else if(tmpStr[0] != '\0') {
+	strncpy(buf, tmpStr, 80);
+	if(cutName) {
+	  int i;
 
-                  for(i=0; buf[i] != '\0'; i++)
-                      if((buf[i] == '.')
-                         && (!(isdigit(buf[i-1])
-                               && isdigit(buf[i+1]))
-                             )) {
-                          buf[i] = '\0';
-                          break;
-                      }
-              }
-          } else
-              strncpy(buf, el->ethAddressString, 80);
-      }
+	  for(i=0; buf[i] != '\0'; i++)
+	    if((buf[i] == '.')
+	       && (!(isdigit(buf[i-1])
+		     && isdigit(buf[i+1]))
+		   )) {
+	      buf[i] = '\0';
+	      break;
+	    }
+	}
+      } else
+	strncpy(buf, el->ethAddressString, 80);
+    }
   }
 
   return(buf);
@@ -698,7 +700,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
     if(rc == 0)
       img = c_buf;
-    
+
     /* traceEvent(CONST_TRACE_WARNING, "%s", path); */
   }
 
@@ -766,15 +768,15 @@ void switchNwInterface(int _interface) {
     }
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\">Note that "
-	      "the NetFlow and sFlow plugins - if enabled - force -M to be set (i.e. "
-	      "they disable interface merging).</font></p>\n");
+		"the NetFlow and sFlow plugins - if enabled - force -M to be set (i.e. "
+		"they disable interface merging).</font></p>\n");
   sendString(buf);
 
   sendString("<P>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\"><B>\n");
 
   if(myGlobals.runningPref.mergeInterfaces) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sorry, but you cannot switch among different interfaces "
-                "unless the -M command line switch is specified at run time.");
+		  "unless the -M command line switch is specified at run time.");
     sendString(buf);
   } else if((mwInterface != -1) &&
 	    ((mwInterface >= myGlobals.numDevices) || myGlobals.device[mwInterface].virtualDevice)) {
@@ -782,18 +784,18 @@ void switchNwInterface(int _interface) {
     sendString(buf);
   } else if((myGlobals.numDevices == 1) || (!found)) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sorry, you are currently capturing traffic from only a "
-		"single/dummy interface [%s].<br><br>"
-                "</b> This interface switch feature is meaningful only when your ntop "
-                "instance captures traffic from multiple interfaces. <br>You must specify "
-                "additional interfaces via the -i command line switch at run time.<b>",
-		myGlobals.device[myGlobals.actualReportDeviceId].name);
+		  "single/dummy interface [%s].<br><br>"
+		  "</b> This interface switch feature is meaningful only when your ntop "
+		  "instance captures traffic from multiple interfaces. <br>You must specify "
+		  "additional interfaces via the -i command line switch at run time.<b>",
+		  myGlobals.device[myGlobals.actualReportDeviceId].name);
     sendString(buf);
   } else if(mwInterface >= 0) {
     char value[8];
 
     myGlobals.actualReportDeviceId = (mwInterface)%myGlobals.numDevices;
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "The current interface is now [%s].",
-		myGlobals.device[myGlobals.actualReportDeviceId].name);
+		  myGlobals.device[myGlobals.actualReportDeviceId].name);
     sendString(buf);
 
     safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", myGlobals.actualReportDeviceId);
@@ -5896,18 +5898,18 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   /* ***Plugins stuff************************ */
   if(textPrintFlag == TRUE) {
-      sendString("\n\nPLUGINS:\n\n");
+    sendString("\n\nPLUGINS:\n\n");
 
-      sendString("RRD:\n");
+    sendString("RRD:\n");
 
-      printFeatureConfigInfo(textPrintFlag, "RRD path", myGlobals.rrdPath);
+    printFeatureConfigInfo(textPrintFlag, "RRD path", myGlobals.rrdPath);
 #ifndef WIN32
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "%04o", myGlobals.rrdDirectoryPermissions);
-      printFeatureConfigInfo(textPrintFlag, "New directory permissions", buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+    printFeatureConfigInfo(textPrintFlag, "New directory permissions", buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "%04o", myGlobals.rrdUmask);
-      printFeatureConfigInfo(textPrintFlag, "New file umask", buf);
+    printFeatureConfigInfo(textPrintFlag, "New file umask", buf);
 #endif
 
   }
@@ -5921,7 +5923,7 @@ void printHostColorCode(int textPrintFlag, int isInfo) {
 	       "<TR>"
 	       "<TD colspan=\"5\">The color of the host link");
     if(isInfo == 1)
-        sendString(" on many pages");
+      sendString(" on many pages");
     sendString(" indicates how recently the host was FIRST seen"
                "</TD></TR>\n"
                "<TR>"
@@ -6011,7 +6013,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   printInfoSectionTitle(textPrintFlag, "Basic Information");
 
-  safe_snprintf(__FILE__, __LINE__, formatBuf, sizeof(formatBuf), "%s (%d bit)", 
+  safe_snprintf(__FILE__, __LINE__, formatBuf, sizeof(formatBuf), "%s (%d bit)",
 		osName, sizeof(long) == 8 ? 64 : 32);
   printFeatureConfigInfo(textPrintFlag, "ntop Version", formatBuf);
 
@@ -6100,10 +6102,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printInfoSectionTitle(textPrintFlag, "Preferences Used");
 
   printInfoSectionNote(textPrintFlag,
-                   CONST_REPORT_ITS_EFFECTIVE "   means that "
-            	   "this is the value after ntop has processed the parameter."
-                   CONST_REPORT_ITS_DEFAULT "means this is the default value, usually "
-            	   "(but not always) set by a #define in globals-defines.h.");
+		       CONST_REPORT_ITS_EFFECTIVE "   means that "
+		       "this is the value after ntop has processed the parameter."
+		       CONST_REPORT_ITS_DEFAULT "means this is the default value, usually "
+		       "(but not always) set by a #define in globals-defines.h.");
 
   printParameterConfigInfo(textPrintFlag, "-a | --access-log-file",
                            pref->accessLogFile,
@@ -6124,8 +6126,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 #endif
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%d",
-	      pref->maxNumLines == CONST_NUM_TABLE_ROWS_PER_PAGE ? CONST_REPORT_ITS_DEFAULT : "",
-	      pref->maxNumLines);
+		pref->maxNumLines == CONST_NUM_TABLE_ROWS_PER_PAGE ? CONST_REPORT_ITS_DEFAULT : "",
+		pref->maxNumLines);
   printFeatureConfigInfo(textPrintFlag, "-e | --max-table-rows", buf);
 
   printParameterConfigInfo(textPrintFlag, "-g | --track-local-hosts",
@@ -6146,8 +6148,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 			     DEFAULT_NTOP_PCAP_LOG_FILENAME);
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%s.&lt;device&gt;.pcap",
-		pref->pcapLogBasePath,
-		pref->pcapLog);
+		  pref->pcapLogBasePath,
+		  pref->pcapLog);
     printParameterConfigInfo(textPrintFlag, "-l | --pcap-log" CONST_REPORT_ITS_EFFECTIVE,
 			     buf,
 			     DEFAULT_NTOP_PCAP_LOG_FILENAME);
@@ -6176,8 +6178,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                            DEFAULT_NTOP_SUSPICIOUS_PKT_DUMP == 1 ? "Enabled" : "Disabled");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%d",
-	      pref->refreshRate == DEFAULT_NTOP_AUTOREFRESH_INTERVAL ? CONST_REPORT_ITS_DEFAULT : "",
-	      pref->refreshRate);
+		pref->refreshRate == DEFAULT_NTOP_AUTOREFRESH_INTERVAL ? CONST_REPORT_ITS_DEFAULT : "",
+		pref->refreshRate);
   printFeatureConfigInfo(textPrintFlag, "-r | --refresh-time", buf);
 
   printParameterConfigInfo(textPrintFlag, "-s | --no-promiscuous",
@@ -6185,15 +6187,15 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                            DEFAULT_NTOP_DISABLE_PROMISCUOUS == 1 ? "Yes" : "No");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%d",
-	      pref->traceLevel == DEFAULT_TRACE_LEVEL ? CONST_REPORT_ITS_DEFAULT : "",
-	      pref->traceLevel);
+		pref->traceLevel == DEFAULT_TRACE_LEVEL ? CONST_REPORT_ITS_DEFAULT : "",
+		pref->traceLevel);
   printFeatureConfigInfo(textPrintFlag, "-t | --trace-level", buf);
 
 #ifndef WIN32
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s (uid=%d, gid=%d)",
-	      myGlobals.effectiveUserName,
-	      myGlobals.userId,
-	      myGlobals.groupId);
+		myGlobals.effectiveUserName,
+		myGlobals.userId,
+		myGlobals.groupId);
   printFeatureConfigInfo(textPrintFlag, "-u | --user", buf);
 #endif
 
@@ -6201,22 +6203,22 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     strcpy(buf, "Inactive");
   } else if(pref->webAddr != 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		"%sActive, address %s, port %d",
-		( (pref->webAddr == DEFAULT_NTOP_WEB_ADDR) && (pref->webPort == DEFAULT_NTOP_WEB_PORT) ) ? CONST_REPORT_ITS_DEFAULT : "",
-		pref->webAddr,
-		pref->webPort);
+		  "%sActive, address %s, port %d",
+		  ( (pref->webAddr == DEFAULT_NTOP_WEB_ADDR) && (pref->webPort == DEFAULT_NTOP_WEB_PORT) ) ? CONST_REPORT_ITS_DEFAULT : "",
+		  pref->webAddr,
+		  pref->webPort);
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		"%sActive, all interfaces, port %d",
-		((pref->webAddr == DEFAULT_NTOP_WEB_ADDR) && (pref->webPort == DEFAULT_NTOP_WEB_PORT) )
-		? CONST_REPORT_ITS_DEFAULT : "", pref->webPort);
+		  "%sActive, all interfaces, port %d",
+		  ((pref->webAddr == DEFAULT_NTOP_WEB_ADDR) && (pref->webPort == DEFAULT_NTOP_WEB_PORT) )
+		  ? CONST_REPORT_ITS_DEFAULT : "", pref->webPort);
   }
 
   printFeatureConfigInfo(textPrintFlag, "-w | --http-server", buf);
 
   if(pref->maxNumHashEntries != DEFAULT_NTOP_MAX_HASH_ENTRIES) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",
-                pref->maxNumHashEntries);
+		  pref->maxNumHashEntries);
     printFeatureConfigInfo(textPrintFlag, "-x", buf);
   }
 
@@ -6296,21 +6298,21 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     strcpy(buf, "Inactive");
   } else if(pref->sslAddr != 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		"%sActive, address %s, port %d",
-		( (pref->sslAddr == DEFAULT_NTOP_WEB_ADDR) && (pref->sslPort == DEFAULT_NTOP_WEB_PORT) )
-		? CONST_REPORT_ITS_DEFAULT : "", pref->sslAddr,pref->sslPort);
+		  "%sActive, address %s, port %d",
+		  ( (pref->sslAddr == DEFAULT_NTOP_WEB_ADDR) && (pref->sslPort == DEFAULT_NTOP_WEB_PORT) )
+		  ? CONST_REPORT_ITS_DEFAULT : "", pref->sslAddr,pref->sslPort);
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		"%sActive, all interfaces, port %d",
-		( (pref->sslAddr == DEFAULT_NTOP_WEB_ADDR) && (pref->sslPort == DEFAULT_NTOP_WEB_PORT) )
-		? CONST_REPORT_ITS_DEFAULT : "", pref->sslPort);
+		  "%sActive, all interfaces, port %d",
+		  ( (pref->sslAddr == DEFAULT_NTOP_WEB_ADDR) && (pref->sslPort == DEFAULT_NTOP_WEB_PORT) )
+		  ? CONST_REPORT_ITS_DEFAULT : "", pref->sslPort);
   }
   printFeatureConfigInfo(textPrintFlag, "-W | --https-server", buf);
 #endif
 
   if(pref->maxNumHashEntries != DEFAULT_NTOP_MAX_NUM_SESSIONS) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",
-                pref->maxNumSessions);
+		  pref->maxNumSessions);
     printFeatureConfigInfo(textPrintFlag, "-X", buf);
   }
 
@@ -6370,13 +6372,13 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   if(textPrintFlag == FALSE) {
     printInfoSectionNote(textPrintFlag,
-                     "The --w3c flag makes the generated html MORE compatible with the w3c "
-                     "recommendations, but it in no way addresses all of the compatibility "
-                     "and markup issues.  We would like to make <b>ntop</b> more compatible, "
-                     "but some basic issues of looking decent on real-world browsers mean it "
-                     "will never be 100%.  If you find any issues, please report them to "
-                     "<a class=external href=\"http://lists.ntop.org/mailman/listinfo/ntop-dev\" "
-                     "title=\"ntop-dev list home page\">ntop-dev</a>.\n");
+			 "The --w3c flag makes the generated html MORE compatible with the w3c "
+			 "recommendations, but it in no way addresses all of the compatibility "
+			 "and markup issues.  We would like to make <b>ntop</b> more compatible, "
+			 "but some basic issues of looking decent on real-world browsers mean it "
+			 "will never be 100%.  If you find any issues, please report them to "
+			 "<a class=external href=\"http://lists.ntop.org/mailman/listinfo/ntop-dev\" "
+			 "title=\"ntop-dev list home page\">ntop-dev</a>.\n");
   }
 
   /* *************************** */
@@ -6388,7 +6390,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "http://%s:%d",
 		    pref->webAddr, pref->webPort);
     } else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "http://any:%d", 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "http://any:%d",
 		    pref->webPort);
     }
     printFeatureConfigInfo(textPrintFlag, "Web server URL", buf);
@@ -6399,7 +6401,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 #ifdef HAVE_OPENSSL
   if(pref->sslPort != 0) {
     if(pref->sslAddr != 0) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "https://%s:%d", 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "https://%s:%d",
 		    pref->sslAddr, pref->sslPort);
     } else {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "https://any:%d",
@@ -6419,13 +6421,13 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "GDBM version", gdbm_version);
 #endif
 
-  printFeatureConfigInfo(textPrintFlag, 
+  printFeatureConfigInfo(textPrintFlag,
 			 "Embedded <A HREF=http://www.python.org>Python</A>",
 #ifdef HAVE_PYTHON
 			 "Present"
 #else
 			 "Not present"
-#endif       		 
+#endif
 			 );
 
 #if defined(WIN32)
@@ -6444,7 +6446,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   /* *************************** */
 
-  printFeatureConfigInfo(textPrintFlag, "Protocol Decoders",   
+  printFeatureConfigInfo(textPrintFlag, "Protocol Decoders",
 			 pref->enablePacketDecoding == 1 ? "Enabled" : "Disabled");
   printFeatureConfigInfo(textPrintFlag, "Fragment Handling",
 			 myGlobals.enableFragmentHandling == 1 ? "Enabled" : "Disabled");
@@ -6454,7 +6456,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 		myGlobals.numIpProtosToMonitor);
   printFeatureConfigInfo(textPrintFlag, "# IP Protocols Being Monitored", buf);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",
 		myGlobals.numActServices);
   printFeatureConfigInfo(textPrintFlag, "# Protocol slots", buf);
 
@@ -6462,7 +6464,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 		myGlobals.ipPortMapper.numElements);
   printFeatureConfigInfo(textPrintFlag, "# IP Ports Being Monitored", buf);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",
 		myGlobals.ipPortMapper.numSlots);
   printFeatureConfigInfo(textPrintFlag, "# IP Ports slots", buf);
 
@@ -6472,11 +6474,11 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   if(!myGlobals.runningPref.numericFlag) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[current: %d][max: %d][drops: %d]",
-		  (int)myGlobals.addressQueuedCurrent, 
+		  (int)myGlobals.addressQueuedCurrent,
 		  (int)myGlobals.addressQueuedMax,
 		  (int)myGlobals.addressUnresolvedDrops);
     printFeatureConfigInfo(textPrintFlag, "DNS Resolution Request Queue", buf);
-    
+
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[resolved: %u][failed: %u]",
 		  myGlobals.resolvedAddresses, myGlobals.failedResolvedAddresses);
     printFeatureConfigInfo(textPrintFlag, "DNS Resolved Addresses", buf);
@@ -6485,26 +6487,26 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numDevices);
   printFeatureConfigInfo(textPrintFlag, "Devices (Network Interfaces)", buf);
 
-  printFeatureConfigInfo(textPrintFlag, "Domain name (short)", 
+  printFeatureConfigInfo(textPrintFlag, "Domain name (short)",
 			 myGlobals.shortDomainName);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",
 		myGlobals.hashCollisionsLookup);
   printFeatureConfigInfo(textPrintFlag,
 			 "Total Hash Collisions (Vendor/Special) (lookup)", buf);
 
-  printFeatureConfigInfo(textPrintFlag, "Database (MySQL) Support Enabled", 
+  printFeatureConfigInfo(textPrintFlag, "Database (MySQL) Support Enabled",
 			 is_db_enabled() ? "Yes" : "No");
 
   if(is_db_enabled()) {
     printFeatureConfigInfo(textPrintFlag, "Database Configuration",
 			   myGlobals.runningPref.sqlDbConfig);
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s [%u failures]",
-		  formatPkts(num_db_insert, formatBuf, sizeof(formatBuf)), 
+		  formatPkts(num_db_insert, formatBuf, sizeof(formatBuf)),
 		  num_db_insert_failed);
     printFeatureConfigInfo(textPrintFlag, "Database Record Insert", buf);
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "[Save Data into DB: %s] [Save Sessions into DB: %s]",
  		  myGlobals.runningPref.saveRecordsIntoDb ? "Yes" : "No",
 		  myGlobals.runningPref.saveSessionsIntoDb ? "Yes" : "No");
@@ -6688,10 +6690,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   if(textPrintFlag != TRUE) {
     printInfoSectionNote(textPrintFlag,
-                     "</i><ul>\n"
-                     "<li><i>Counts may not total because of in-process requests.</i></li>\n"
-                     "<li><i>Each request to the ntop web server - "
-                     "page, chart, etc. is counted separately</i></li></ul>\n<i>");
+			 "</i><ul>\n"
+			 "<li><i>Counts may not total because of in-process requests.</i></li>\n"
+			 "<li><i>Each request to the ntop web server - "
+			 "page, chart, etc. is counted separately</i></li></ul>\n<i>");
   }
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numSSIRequests);
@@ -6714,7 +6716,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printInfoSectionTitle(textPrintFlag, "Host Memory Cache");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "#define MAX_HOSTS_CACHE_LEN %d", MAX_HOSTS_CACHE_LEN);
+		"#define MAX_HOSTS_CACHE_LEN %d", MAX_HOSTS_CACHE_LEN);
   printFeatureConfigInfo(textPrintFlag, "Limit", buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.hostsCacheLen);
@@ -6730,7 +6732,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printInfoSectionTitle(textPrintFlag, "Session Memory Cache");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-              "#define MAX_SESSIONS_CACHE_LEN %d", MAX_SESSIONS_CACHE_LEN);
+		"#define MAX_SESSIONS_CACHE_LEN %d", MAX_SESSIONS_CACHE_LEN);
   printFeatureConfigInfo(textPrintFlag, "Limit", buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.sessionsCacheLen);
@@ -6794,125 +6796,125 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   }
 
 #ifdef MAX_PROCESS_BUFFER
-{
-  char tmpBuf[LEN_GENERAL_WORK_BUFFER];
-  float qminDelay=99999.0, qmaxDelay=0.0,
-        /*stddev:*/ qM = 0, qT = 0, qQ, qR, qSD, qXBAR,
-        pminDelay=99999.0, pmaxDelay=0.0,
-    /*stddev:*/ pM=0, pT=0, pQ=0, pR=0, pSD=0, pXBAR;
+  {
+    char tmpBuf[LEN_GENERAL_WORK_BUFFER];
+    float qminDelay=99999.0, qmaxDelay=0.0,
+      /*stddev:*/ qM = 0, qT = 0, qQ, qR, qSD, qXBAR,
+      pminDelay=99999.0, pmaxDelay=0.0,
+      /*stddev:*/ pM=0, pT=0, pQ=0, pR=0, pSD=0, pXBAR;
 
-  if(myGlobals.queueBufferCount >= MAX_PROCESS_BUFFER) {
+    if(myGlobals.queueBufferCount >= MAX_PROCESS_BUFFER) {
 
-    for(i=0; i<MAX_PROCESS_BUFFER; i++) {
-      if(myGlobals.queueBuffer[i] > qmaxDelay)   qmaxDelay = myGlobals.queueBuffer[i];
-      if(myGlobals.queueBuffer[i] < qminDelay)   qminDelay = myGlobals.queueBuffer[i];
-      if(myGlobals.processBuffer[i] > pmaxDelay) pmaxDelay = myGlobals.processBuffer[i];
-      if(myGlobals.processBuffer[i] < pminDelay) pminDelay = myGlobals.processBuffer[i];
+      for(i=0; i<MAX_PROCESS_BUFFER; i++) {
+	if(myGlobals.queueBuffer[i] > qmaxDelay)   qmaxDelay = myGlobals.queueBuffer[i];
+	if(myGlobals.queueBuffer[i] < qminDelay)   qminDelay = myGlobals.queueBuffer[i];
+	if(myGlobals.processBuffer[i] > pmaxDelay) pmaxDelay = myGlobals.processBuffer[i];
+	if(myGlobals.processBuffer[i] < pminDelay) pminDelay = myGlobals.processBuffer[i];
 
-      if(i==0) {
-        qM = myGlobals.queueBuffer[0];
-        qT = 0.0;
-        pM = myGlobals.processBuffer[0];
-        pT = 0.0;
-      } else {
-        qQ = myGlobals.queueBuffer[i] - qM;
-        qR = qQ / (float)(i+1);
-        qM += qR;
-        qT = qT + i * qQ * qR;
-        pQ = myGlobals.processBuffer[i] - pM;
-        pR = pQ / (float)(i+1);
-        pM += pR;
-        pT = pT + i * pQ * pR;
+	if(i==0) {
+	  qM = myGlobals.queueBuffer[0];
+	  qT = 0.0;
+	  pM = myGlobals.processBuffer[0];
+	  pT = 0.0;
+	} else {
+	  qQ = myGlobals.queueBuffer[i] - qM;
+	  qR = qQ / (float)(i+1);
+	  qM += qR;
+	  qT = qT + i * qQ * qR;
+	  pQ = myGlobals.processBuffer[i] - pM;
+	  pR = pQ / (float)(i+1);
+	  pM += pR;
+	  pT = pT + i * pQ * pR;
+	}
       }
+      qSD = sqrtf(qT / (MAX_PROCESS_BUFFER - 1));
+      qXBAR /*average*/ = qM;
+      pSD = sqrtf(pT / (MAX_PROCESS_BUFFER - 1));
+      pXBAR /*average*/ = pM;
+
+      printFeatureConfigTitle3Col(textPrintFlag,
+				  "Packet processing:....Queue (pre-process).......Processing\n",
+				  "Packet Processing", "Queue (pre-process)", "Processing");
+
+      printFeatureConfigInfo3ColFlt6(textPrintFlag,
+				     "Minimum",
+				     TRUE, qminDelay, TRUE, pminDelay,
+				     TRUE);
+      printFeatureConfigInfo3ColFlt6(textPrintFlag,
+				     "Average",
+				     TRUE, qXBAR, TRUE, pXBAR,
+				     TRUE);
+      printFeatureConfigInfo3ColFlt6(textPrintFlag,
+				     "Maximum",
+				     TRUE, qmaxDelay, TRUE, pmaxDelay,
+				     TRUE);
+      printFeatureConfigInfo3ColFlt6(textPrintFlag,
+				     "Standard Deviation",
+				     TRUE, qSD, TRUE, pSD,
+				     TRUE);
+
+      printFeatureConfigInfo3ColFlt6(textPrintFlag,
+				     "Maximum ever",
+				     TRUE, myGlobals.qmaxDelay, TRUE, myGlobals.pmaxDelay,
+				     TRUE);
+
+      sendString(texthtml("", "<tr><th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
+      sendString("Throughput (pps) min/avg/max");
+
+      if(textPrintFlag == TRUE) {
+	sendString(".....");
+      } else {
+	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf),
+		      "</th>\n<td "TD_BG" align=\"center\" width=\"%d\" colspan=\"2\">",
+		      CONST_INFOHTML_COL2_WIDTH + CONST_INFOHTML_COL3_WIDTH);
+	sendString(tmpBuf);
+      }
+      /* Yes, confusing - maximum RATE is 1/minumum delay) */
+      if(qmaxDelay+pmaxDelay > 0.0) {
+	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.1f", 1.0/(qmaxDelay+pmaxDelay));
+	sendString(tmpBuf);
+      } else
+	sendString("0");
+
+      sendString(texthtml("/", "&nbsp;/&nbsp;"));
+      if(qXBAR+pXBAR > 0.0) {
+	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.1f", 1.0/(qXBAR+pXBAR));
+	sendString(tmpBuf);
+      } else
+	sendString("0");
+
+      sendString(texthtml("/", "&nbsp;/&nbsp;"));
+      if(qminDelay+pminDelay > 0.0) {
+	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.1f", 1.0/(qminDelay+pminDelay));
+	sendString(tmpBuf);
+      } else
+	sendString("0");
+
+      sendString(texthtml("\n", "</td></tr>\n"));
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "'Queue' time is the elapsed time between the packet arrival (libpcap) "
+		    "and the gettimeofday() value as the packet starts processPacket(). For a queued "
+		    "packet, this includes the time in queue. "
+		    "<br><br>'Processing' time is the elapsed time between starting and finishing "
+		    "processPacket().  Errors and/or unrecognized packets may cause processing to be "
+		    "abandoned and those packets are not counted in the 'processing' averages. This means "
+		    "that the %d packets for the 'queue' and 'processing' "
+		    "calculations are not necessarily the same physical packets, and may lead to over "
+		    "estimation of the per-packet 'processing' time."
+		    "<br><br>Small averages are good, especially if the standard deviation is small "
+		    "(standard deviation is a measurement of the variability of the actual values "
+		    "around the average). The computations are based only on the most recent "
+		    "%d packets processed."
+		    "<br><br>\"Maximum ever\" ignores the first 100 packets for each device - this lets "
+		    "<b>ntop</b> get over startup agony."
+		    "<br><br>What does this mean? Not much.  Still, the 'Throughput' numbers give a very "
+		    "rough indication of the packet per second rate this instance of ntop can handle.",
+		    MAX_PROCESS_BUFFER,
+		    MAX_PROCESS_BUFFER);
+      printInfoSectionNote(textPrintFlag, buf);
     }
-    qSD = sqrtf(qT / (MAX_PROCESS_BUFFER - 1));
-    qXBAR /*average*/ = qM;
-    pSD = sqrtf(pT / (MAX_PROCESS_BUFFER - 1));
-    pXBAR /*average*/ = pM;
-
-    printFeatureConfigTitle3Col(textPrintFlag,
-                                "Packet processing:....Queue (pre-process).......Processing\n",
-                                "Packet Processing", "Queue (pre-process)", "Processing");
-
-    printFeatureConfigInfo3ColFlt6(textPrintFlag,
-				   "Minimum",
-				   TRUE, qminDelay, TRUE, pminDelay,
-				   TRUE);
-    printFeatureConfigInfo3ColFlt6(textPrintFlag,
-				   "Average",
-				   TRUE, qXBAR, TRUE, pXBAR,
-				   TRUE);
-    printFeatureConfigInfo3ColFlt6(textPrintFlag,
-				   "Maximum",
-				   TRUE, qmaxDelay, TRUE, pmaxDelay,
-				   TRUE);
-    printFeatureConfigInfo3ColFlt6(textPrintFlag,
-				   "Standard Deviation",
-				   TRUE, qSD, TRUE, pSD,
-				   TRUE);
-
-    printFeatureConfigInfo3ColFlt6(textPrintFlag,
-				   "Maximum ever",
-				   TRUE, myGlobals.qmaxDelay, TRUE, myGlobals.pmaxDelay,
-                                  TRUE);
-
-    sendString(texthtml("", "<tr><th "DARK_BG" "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
-    sendString("Throughput (pps) min/avg/max");
-
-    if(textPrintFlag == TRUE) {
-      sendString(".....");
-    } else {
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf),
-                    "</th>\n<td "TD_BG" align=\"center\" width=\"%d\" colspan=\"2\">",
-                    CONST_INFOHTML_COL2_WIDTH + CONST_INFOHTML_COL3_WIDTH);
-      sendString(tmpBuf);
-    }
-    /* Yes, confusing - maximum RATE is 1/minumum delay) */
-    if(qmaxDelay+pmaxDelay > 0.0) {
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.1f", 1.0/(qmaxDelay+pmaxDelay));
-      sendString(tmpBuf);
-    } else
-      sendString("0");
-
-    sendString(texthtml("/", "&nbsp;/&nbsp;"));
-    if(qXBAR+pXBAR > 0.0) {
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.1f", 1.0/(qXBAR+pXBAR));
-      sendString(tmpBuf);
-    } else
-      sendString("0");
-
-    sendString(texthtml("/", "&nbsp;/&nbsp;"));
-    if(qminDelay+pminDelay > 0.0) {
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%.1f", 1.0/(qminDelay+pminDelay));
-      sendString(tmpBuf);
-    } else
-      sendString("0");
-
-    sendString(texthtml("\n", "</td></tr>\n"));
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "'Queue' time is the elapsed time between the packet arrival (libpcap) "
-		  "and the gettimeofday() value as the packet starts processPacket(). For a queued "
-		  "packet, this includes the time in queue. "
-		  "<br><br>'Processing' time is the elapsed time between starting and finishing "
-		  "processPacket().  Errors and/or unrecognized packets may cause processing to be "
-		  "abandoned and those packets are not counted in the 'processing' averages. This means "
-		  "that the %d packets for the 'queue' and 'processing' "
-		  "calculations are not necessarily the same physical packets, and may lead to over "
-		  "estimation of the per-packet 'processing' time."
-		  "<br><br>Small averages are good, especially if the standard deviation is small "
-		  "(standard deviation is a measurement of the variability of the actual values "
-		  "around the average). The computations are based only on the most recent "
-		  "%d packets processed."
-		  "<br><br>\"Maximum ever\" ignores the first 100 packets for each device - this lets "
-		  "<b>ntop</b> get over startup agony."
-		  "<br><br>What does this mean? Not much.  Still, the 'Throughput' numbers give a very "
-		  "rough indication of the packet per second rate this instance of ntop can handle.",
-                  MAX_PROCESS_BUFFER,
-                  MAX_PROCESS_BUFFER);
-    printInfoSectionNote(textPrintFlag, buf);
   }
-}
 #endif
 
   /* **** */
@@ -7040,9 +7042,9 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   }
 
   printFeatureConfigNum(textPrintFlag, "DNS Packets processed", (int)(myGlobals.dnsSniffCount
- 					    - myGlobals.dnsSniffRequestCount
-					    - myGlobals.dnsSniffFailedCount
-					    - myGlobals.dnsSniffARPACount));
+								      - myGlobals.dnsSniffRequestCount
+								      - myGlobals.dnsSniffFailedCount
+								      - myGlobals.dnsSniffARPACount));
 
   printFeatureConfigNum(textPrintFlag, "Stored in cache (includes aliases)", (int)myGlobals.dnsSniffStoredInCache);
 
@@ -7093,7 +7095,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
 #if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
   {
-//TODO Fixup for new table structure...
+    //TODO Fixup for new table structure...
     struct tm t;
     char buf3[64], buf4[64];
     time_t lockoutExpires;
@@ -7111,7 +7113,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 	}
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
-		    _addrtostr(&myGlobals.weDontWantToTalkWithYou[i].addr, buf3, sizeof(buf3)));
+		      _addrtostr(&myGlobals.weDontWantToTalkWithYou[i].addr, buf3, sizeof(buf3)));
 	safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%d", myGlobals.weDontWantToTalkWithYou[i].count);
 	strftime(buf3, sizeof(buf3), CONST_LOCALE_TIMESPEC,
 		 localtime_r(&myGlobals.weDontWantToTalkWithYou[i].lastBadAccess, &t));
@@ -7172,10 +7174,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   for(i=0; myGlobals.dataFileDirs[i] != NULL; i++) {
     bufUsed = safe_snprintf(__FILE__, __LINE__, &buf[bufPosition],
-			   bufLength,
-			   "%s%s\n",
-			   i > 0 ? "                " : "",
-			   myGlobals.dataFileDirs[i]);
+			    bufLength,
+			    "%s%s\n",
+			    i > 0 ? "                " : "",
+			    myGlobals.dataFileDirs[i]);
     if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
     if(bufUsed > 0) {
       bufPosition += bufUsed;
@@ -7190,10 +7192,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
     bufUsed = safe_snprintf(__FILE__, __LINE__, &buf[bufPosition],
-			   bufLength,
-			   "%s%s\n",
-			   i > 0 ? "                  " : "",
-			   myGlobals.configFileDirs[i]);
+			    bufLength,
+			    "%s%s\n",
+			    i > 0 ? "                  " : "",
+			    myGlobals.configFileDirs[i]);
     if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
     if(bufUsed > 0) {
       bufPosition += bufUsed;
@@ -7208,9 +7210,9 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   for(i=0; myGlobals.pluginDirs[i] != NULL; i++) {
     bufUsed = safe_snprintf(__FILE__, __LINE__, &buf[bufPosition],
-			   bufLength, "%s%s\n",
-			   i > 0 ? "             " : "",
-			   myGlobals.pluginDirs[i]);
+			    bufLength, "%s%s\n",
+			    i > 0 ? "             " : "",
+			    myGlobals.pluginDirs[i]);
     if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
     if(bufUsed > 0) {
       bufPosition += bufUsed;
@@ -7220,7 +7222,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "Plugins", buf);
 
   printInfoSectionNote(textPrintFlag, "REMEMBER that the . (current working directory) value will be different "
-                                      "when you run ntop from the command line vs. a cron job or startup script!");
+		       "when you run ntop from the command line vs. a cron job or startup script!");
 
   /* *************************** *************************** */
 
@@ -7238,35 +7240,35 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 #endif
 
   /*
-#ifdef MEMORY_DEBUG
-  printFeatureConfigInfo(textPrintFlag, "Memory Debug option", memoryDebug);
- #if (MEMORY_DEBUG == 1)
-  printFeatureConfigInfo(textPrintFlag, "Trace File", getenv("MALLOC_TRACE"));
- #endif
-#endif
+    #ifdef MEMORY_DEBUG
+    printFeatureConfigInfo(textPrintFlag, "Memory Debug option", memoryDebug);
+    #if (MEMORY_DEBUG == 1)
+    printFeatureConfigInfo(textPrintFlag, "Trace File", getenv("MALLOC_TRACE"));
+    #endif
+    #endif
   */
 
 #if defined(__GNUC__)
- #if defined(__GNUC_PATCHLEVEL__)
-  #define PATCHLEVEL __GNUC_PATCHLEVEL__
- #else
-  #define PATCHLEVEL 0
- #endif
+#if defined(__GNUC_PATCHLEVEL__)
+#define PATCHLEVEL __GNUC_PATCHLEVEL__
+#else
+#define PATCHLEVEL 0
+#endif
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s (%d.%d.%d)",
-	      __VERSION__,
-              __GNUC__,
-              __GNUC_MINOR__,
-              PATCHLEVEL);
+		__VERSION__,
+		__GNUC__,
+		__GNUC_MINOR__,
+		PATCHLEVEL);
   printFeatureConfigInfo(textPrintFlag, "GNU C (gcc) version", buf);
- #undef PATCHLEVEL
+#undef PATCHLEVEL
 
 #if defined(HAVE_SYS_UTSNAME_H) && defined(HAVE_UNAME)
   if (uname(&unameData) == 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "sysname(%s) release(%s) version(%s) machine(%s)",
-                         unameData.sysname,
-                         unameData.release,
-                         unameData.version,
-                         unameData.machine);
+		  unameData.sysname,
+		  unameData.release,
+		  unameData.version,
+		  unameData.machine);
     printFeatureConfigInfo(textPrintFlag, "uname data", buf);
   }
 #endif
@@ -7282,8 +7284,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     localeInfo = localeconv();
     if (localeInfo != NULL) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "1%s000%s00",
-                  localeInfo->thousands_sep,
-                  localeInfo->decimal_point);
+		    localeInfo->thousands_sep,
+		    localeInfo->decimal_point);
       printFeatureConfigInfo(textPrintFlag, "Numeric format", buf);
     } else {
       printFeatureConfigInfo(textPrintFlag, "Numeric format", "localeconv() returned null");
@@ -7301,29 +7303,29 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
      (Burton - 05-Jun-2002) (Unless we're in debug mode)
   */
 
-#if defined(DEBUG)                     || \
-    defined(ADDRESS_DEBUG)             || \
-    defined(DNS_DEBUG)                 || \
-    defined(DNS_SNIFF_DEBUG)           || \
-    defined(FRAGMENT_DEBUG)            || \
-    defined(FC_DEBUG)                  || \
-    defined(FINGERPRINT_DEBUG)         || \
-    defined(FTP_DEBUG)                 || \
-    defined(GDBM_DEBUG)                || \
-    defined(HASH_DEBUG)                || \
-    defined(IDLE_PURGE_DEBUG)          || \
-    defined(INITWEB_DEBUG)             || \
-    defined(HOST_FREE_DEBUG)           || \
-    defined(HTTP_DEBUG)                || \
-    defined(MEMORY_DEBUG)              || \
-    defined(MUTEX_DEBUG)               || \
-    defined(NETFLOW_DEBUG)             || \
-    defined(PACKET_DEBUG)              || \
-    defined(PLUGIN_DEBUG)              || \
-    defined(SESSION_TRACE_DEBUG)       || \
-    defined(STORAGE_DEBUG)             || \
-    defined(UNKNOWN_PACKET_DEBUG)      || \
-    defined(URL_DEBUG)
+#if defined(DEBUG)                     ||	\
+  defined(ADDRESS_DEBUG)             ||		\
+  defined(DNS_DEBUG)                 ||		\
+  defined(DNS_SNIFF_DEBUG)           ||		\
+  defined(FRAGMENT_DEBUG)            ||		\
+  defined(FC_DEBUG)                  ||		\
+  defined(FINGERPRINT_DEBUG)         ||		\
+  defined(FTP_DEBUG)                 ||		\
+  defined(GDBM_DEBUG)                ||		\
+  defined(HASH_DEBUG)                ||		\
+  defined(IDLE_PURGE_DEBUG)          ||		\
+  defined(INITWEB_DEBUG)             ||		\
+  defined(HOST_FREE_DEBUG)           ||		\
+  defined(HTTP_DEBUG)                ||		\
+  defined(MEMORY_DEBUG)              ||		\
+  defined(MUTEX_DEBUG)               ||		\
+  defined(NETFLOW_DEBUG)             ||		\
+  defined(PACKET_DEBUG)              ||		\
+  defined(PLUGIN_DEBUG)              ||		\
+  defined(SESSION_TRACE_DEBUG)       ||		\
+  defined(STORAGE_DEBUG)             ||		\
+  defined(UNKNOWN_PACKET_DEBUG)      ||		\
+  defined(URL_DEBUG)
 #else
   if(textPrintFlag == TRUE)
 #endif
@@ -7351,58 +7353,58 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 void printNtopConfigInfo(int textPrintFlag, UserPref *pref) {
   /* This has the header */
   printHTMLheader("ntop Configuration", NULL, 0);
-//  sendString("<h1>ntop Configuration</h1>\n");
+  //  sendString("<h1>ntop Configuration</h1>\n");
   printNtopConfigInfoData(textPrintFlag, pref);
 }
 
 /* *************************** */
 
 int printNtopLogReport(int printAsText) {
-    int i, j, lines = 0;
-    char buf[LEN_GENERAL_WORK_BUFFER];
+  int i, j, lines = 0;
+  char buf[LEN_GENERAL_WORK_BUFFER];
 
-    if(myGlobals.logView == NULL) return(0);
+  if(myGlobals.logView == NULL) return(0);
 
-    if(!printAsText) {
-      printHTMLheader("ntop Log", NULL, BITFLAG_HTTP_NO_CACHE_CONTROL);
-      sendString("<HR>");
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\"><center>"
-                "This is a rolling display of upto the last %d ntop log messages "
-                "of priority INFO or higher.  Click on the \"log\" option, above, to refresh."
-                "</center></font></p>", CONST_LOG_VIEW_BUFFER_SIZE);
-      sendString(buf);
-      sendString("<HR>");
-      sendString("<pre>");
-    }
-
-#ifdef WIN32
-    WaitForSingleObject(myGlobals.logViewMutex.mutex, INFINITE);
-#else
-    pthread_mutex_lock(&myGlobals.logViewMutex.mutex);
-#endif
-
-    for (i=0; i<CONST_LOG_VIEW_BUFFER_SIZE; i++) {
-        j = (myGlobals.logViewNext + i) % CONST_LOG_VIEW_BUFFER_SIZE;
-
-        if(myGlobals.logView[j] != NULL) {
-            sendString(myGlobals.logView[j]);
-            lines++;
-            if(myGlobals.logView[j][strlen(myGlobals.logView[j])-1] != '\n');
-                sendString("\n");
-        }
-    }
+  if(!printAsText) {
+    printHTMLheader("ntop Log", NULL, BITFLAG_HTTP_NO_CACHE_CONTROL);
+    sendString("<HR>");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\"><center>"
+		  "This is a rolling display of upto the last %d ntop log messages "
+		  "of priority INFO or higher.  Click on the \"log\" option, above, to refresh."
+		  "</center></font></p>", CONST_LOG_VIEW_BUFFER_SIZE);
+    sendString(buf);
+    sendString("<HR>");
+    sendString("<pre>");
+  }
 
 #ifdef WIN32
-    ReleaseMutex(myGlobals.logViewMutex.mutex);
+  WaitForSingleObject(myGlobals.logViewMutex.mutex, INFINITE);
 #else
-    pthread_mutex_unlock(&myGlobals.logViewMutex.mutex);
+  pthread_mutex_lock(&myGlobals.logViewMutex.mutex);
 #endif
 
-    if(!printAsText) {
-      sendString("</pre>");
-    }
+  for (i=0; i<CONST_LOG_VIEW_BUFFER_SIZE; i++) {
+    j = (myGlobals.logViewNext + i) % CONST_LOG_VIEW_BUFFER_SIZE;
 
-    return(lines);
+    if(myGlobals.logView[j] != NULL) {
+      sendString(myGlobals.logView[j]);
+      lines++;
+      if(myGlobals.logView[j][strlen(myGlobals.logView[j])-1] != '\n');
+      sendString("\n");
+    }
+  }
+
+#ifdef WIN32
+  ReleaseMutex(myGlobals.logViewMutex.mutex);
+#else
+  pthread_mutex_unlock(&myGlobals.logViewMutex.mutex);
+#endif
+
+  if(!printAsText) {
+    sendString("</pre>");
+  }
+
+  return(lines);
 }
 
 /* *************************** */
@@ -7513,8 +7515,8 @@ void printNtopProblemReport(void) {
 
 #ifdef PROBLEMREPORTID_DEBUG
   safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2),
-              "%-12s %48s %8s %8s\n",
-              "Item", "Raw value", "Hex", "v value");
+		"%-12s %48s %8s %8s\n",
+		"Item", "Raw value", "Hex", "v value");
   sendString(buf2);
 #endif
 
@@ -7529,8 +7531,8 @@ void printNtopProblemReport(void) {
   v += myGlobals.actTime - myGlobals.initialSniffTime;
 #ifdef PROBLEMREPORTID_DEBUG
   safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Elapsed",
-	   (myGlobals.actTime - myGlobals.initialSniffTime),
-	   (myGlobals.actTime - myGlobals.initialSniffTime), v);
+		(myGlobals.actTime - myGlobals.initialSniffTime),
+		(myGlobals.actTime - myGlobals.initialSniffTime), v);
   sendString(buf2);
 #endif
 
@@ -7555,7 +7557,7 @@ void printNtopProblemReport(void) {
   v ^= scr;
 #ifdef PROBLEMREPORTID_DEBUG
   safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Bytes(scramble)",
-	   scr, scr, v);
+		scr, scr, v);
   sendString(buf2);
 #endif
 
@@ -7583,16 +7585,16 @@ void printNtopProblemReport(void) {
 #if defined(HAVE_SYS_UTSNAME_H) && defined(HAVE_UNAME)
   if (uname(&unameData) == 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "sysname(%s) release(%s) version(%s) machine(%s)",
-                         unameData.sysname,
-                         unameData.release,
-                         unameData.version,
-                         unameData.machine);
+		  unameData.sysname,
+		  unameData.release,
+		  unameData.version,
+		  unameData.machine);
     sendString("OS(uname): ");
     sendString(buf);
     sendString("\n\n");
   } else {
 #endif
-  sendString("OS: __________  version: __________\n\n");
+    sendString("OS: __________  version: __________\n\n");
 #if defined(HAVE_SYS_UTSNAME_H) && defined(HAVE_UNAME)
   }
 #endif
@@ -7607,13 +7609,13 @@ void printNtopProblemReport(void) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Received:  %10u\n", myGlobals.receivedPackets);
   sendString(buf);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Processed: %10u (immediately)\n",
-              myGlobals.receivedPacketsProcessed);
+		myGlobals.receivedPacketsProcessed);
   sendString(buf);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Queued:    %10u\n",
-              myGlobals.receivedPacketsQueued);
+		myGlobals.receivedPacketsQueued);
   sendString(buf);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Lost:      %10u (queue full)\n",
-              myGlobals.receivedPacketsLostQ);
+		myGlobals.receivedPacketsLostQ);
   sendString(buf);
 
   for(i=0; i<myGlobals.numDevices; i++) {
@@ -7630,32 +7632,32 @@ void printNtopProblemReport(void) {
     sendString("Merged packet counts:\n");
     if(myGlobals.device[0].receivedPkts.value > 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Received:  %10u\n",
-                  myGlobals.device[0].receivedPkts.value);
+		    myGlobals.device[0].receivedPkts.value);
       sendString(buf);
     }
     if(myGlobals.device[0].droppedPkts.value > 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Dropped:   %10u\n",
-                  myGlobals.device[0].droppedPkts.value);
+		    myGlobals.device[0].droppedPkts.value);
       sendString(buf);
     }
     if(myGlobals.device[0].ethernetPkts.value > 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Ethernet:  %10u\n",
-                  myGlobals.device[0].ethernetPkts.value);
+		    myGlobals.device[0].ethernetPkts.value);
       sendString(buf);
     }
     if(myGlobals.device[0].broadcastPkts.value > 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Broadcast: %10u\n",
-                  myGlobals.device[0].broadcastPkts.value);
+		    myGlobals.device[0].broadcastPkts.value);
       sendString(buf);
     }
     if(myGlobals.device[0].multicastPkts.value > 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Multicast: %10u\n",
-                  myGlobals.device[0].multicastPkts.value);
+		    myGlobals.device[0].multicastPkts.value);
       sendString(buf);
     }
     if(myGlobals.device[0].ipPkts.value > 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     IP:        %10u\n",
-                  myGlobals.device[0].ipPkts.value);
+		    myGlobals.device[0].ipPkts.value);
       sendString(buf);
     }
     sendString("\n");
@@ -7691,7 +7693,7 @@ void printNtopProblemReport(void) {
       sendString("\n");
     }
 
-/* pcap_stats gets weirded out under some circumstances under WIN32 - skip this */
+    /* pcap_stats gets weirded out under some circumstances under WIN32 - skip this */
 #ifndef WIN32
     if((myGlobals.device[i].pcapPtr != NULL) &&
        (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0)) {
@@ -7709,32 +7711,32 @@ void printNtopProblemReport(void) {
     if(myGlobals.runningPref.mergeInterfaces == 0) {
       if(myGlobals.device[i].receivedPkts.value > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Received:       %10u\n",
-                     myGlobals.device[i].receivedPkts.value);
+		      myGlobals.device[i].receivedPkts.value);
 	sendString(buf);
       }
       if(myGlobals.device[i].droppedPkts.value > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Dropped (ntop): %10u\n",
-                     myGlobals.device[i].droppedPkts.value);
+		      myGlobals.device[i].droppedPkts.value);
 	sendString(buf);
       }
       if(myGlobals.device[i].ethernetPkts.value > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Ethernet:       %10u\n",
-                     myGlobals.device[i].ethernetPkts.value);
+		      myGlobals.device[i].ethernetPkts.value);
 	sendString(buf);
       }
       if(myGlobals.device[i].broadcastPkts.value > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Broadcast:      %10u\n",
-                     myGlobals.device[i].broadcastPkts.value);
+		      myGlobals.device[i].broadcastPkts.value);
 	sendString(buf);
       }
       if(myGlobals.device[i].multicastPkts.value > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Multicast:      %10u\n",
-                     myGlobals.device[i].multicastPkts.value);
+		      myGlobals.device[i].multicastPkts.value);
 	sendString(buf);
       }
       if(myGlobals.device[i].ipPkts.value > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     IP:             %10u\n",
-                    myGlobals.device[i].ipPkts.value);
+		      myGlobals.device[i].ipPkts.value);
 	sendString(buf);
       }
 
@@ -7837,33 +7839,33 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 
 #ifdef INITWEB_DEBUG
   safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d.%d.%d.%d", \
-               (int) ((sockIn.sin_addr.s_addr >> 24) & 0xff), \
-               (int) ((sockIn.sin_addr.s_addr >> 16) & 0xff), \
-               (int) ((sockIn.sin_addr.s_addr >>  8) & 0xff), \
-               (int) ((sockIn.sin_addr.s_addr >>  0) & 0xff)); \
+		(int) ((sockIn.sin_addr.s_addr >> 24) & 0xff), \
+		(int) ((sockIn.sin_addr.s_addr >> 16) & 0xff), \
+		(int) ((sockIn.sin_addr.s_addr >>  8) & 0xff), \
+		(int) ((sockIn.sin_addr.s_addr >>  0) & 0xff)); \
   traceEvent(CONST_TRACE_INFO, "INITWEB_DEBUG: sockIn = %s:%d",
              value,
              ntohs(sockIn.sin_port));
 #endif
 #endif /* INET6 */
 
-    errno = 0;
+  errno = 0;
 #if defined(INET6) && !defined(WIN32)
-    *sock = socket(ai->ai_family, SOCK_STREAM, 0);
-    if((*sock < 0) || (errno != 0) ) {
-      errno = 0;
-      /* It might be that IPv6 is not supported by the running system */
-      *sock = socket(AF_INET, SOCK_STREAM, 0);
-    }
-#else
+  *sock = socket(ai->ai_family, SOCK_STREAM, 0);
+  if((*sock < 0) || (errno != 0) ) {
+    errno = 0;
+    /* It might be that IPv6 is not supported by the running system */
     *sock = socket(AF_INET, SOCK_STREAM, 0);
+  }
+#else
+  *sock = socket(AF_INET, SOCK_STREAM, 0);
 #endif
-    if((*sock < 0) || (errno != 0)) {
-      traceEvent(CONST_TRACE_FATALERROR, "INITWEB: Unable to create a new%s socket - returned %d, error is '%s'(%d)",
-                 sslOrNot, *sock, strerror(errno), errno);
-      exit(37); /* Just in case */
-    }
-    traceEvent(CONST_TRACE_NOISY, "INITWEB: Created a new%s socket (%d)", sslOrNot, *sock);
+  if((*sock < 0) || (errno != 0)) {
+    traceEvent(CONST_TRACE_FATALERROR, "INITWEB: Unable to create a new%s socket - returned %d, error is '%s'(%d)",
+	       sslOrNot, *sock, strerror(errno), errno);
+    exit(37); /* Just in case */
+  }
+  traceEvent(CONST_TRACE_NOISY, "INITWEB: Created a new%s socket (%d)", sslOrNot, *sock);
 
 #ifdef INITWEB_DEBUG
   traceEvent(CONST_TRACE_INFO, "INITWEB_DEBUG:%s setsockopt(%d, SOL_SOCKET, SO_REUSEADDR ...",
@@ -7929,7 +7931,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 /* **************************************** */
 
 /* SSL fixes courtesy of Curtis Doty <curtis@greenkey.net>
-                         Matthias Kattanek <mattes@mykmk.com> */
+   Matthias Kattanek <mattes@mykmk.com> */
 
 void initWeb(void) {
 
@@ -8019,47 +8021,47 @@ RETSIGTYPE webservercleanup(int signo) {
   if(msgSent<10) {
     traceEvent(CONST_TRACE_FATALERROR, "webserver: caught signal %d %s", signo,
                signo == SIGHUP ? "SIGHUP" :
-                 signo == SIGINT ? "SIGINT" :
-                 signo == SIGQUIT ? "SIGQUIT" :
-                 signo == SIGILL ? "SIGILL" :
-                 signo == SIGABRT ? "SIGABRT" :
-                 signo == SIGFPE ? "SIGFPE" :
-                 signo == SIGKILL ? "SIGKILL" :
-                 signo == SIGSEGV ? "SIGSEGV" :
-                 signo == SIGPIPE ? "SIGPIPE" :
-                 signo == SIGALRM ? "SIGALRM" :
-                 signo == SIGTERM ? "SIGTERM" :
-                 signo == SIGUSR1 ? "SIGUSR1" :
-                 signo == SIGUSR2 ? "SIGUSR2" :
-                 signo == SIGCHLD ? "SIGCHLD" :
- #ifdef SIGCONT
-                 signo == SIGCONT ? "SIGCONT" :
- #endif
- #ifdef SIGSTOP
-                 signo == SIGSTOP ? "SIGSTOP" :
- #endif
- #ifdef SIGBUS
-                 signo == SIGBUS ? "SIGBUS" :
- #endif
- #ifdef SIGSYS
-                 signo == SIGSYS ? "SIGSYS"
- #endif
+	       signo == SIGINT ? "SIGINT" :
+	       signo == SIGQUIT ? "SIGQUIT" :
+	       signo == SIGILL ? "SIGILL" :
+	       signo == SIGABRT ? "SIGABRT" :
+	       signo == SIGFPE ? "SIGFPE" :
+	       signo == SIGKILL ? "SIGKILL" :
+	       signo == SIGSEGV ? "SIGSEGV" :
+	       signo == SIGPIPE ? "SIGPIPE" :
+	       signo == SIGALRM ? "SIGALRM" :
+	       signo == SIGTERM ? "SIGTERM" :
+	       signo == SIGUSR1 ? "SIGUSR1" :
+	       signo == SIGUSR2 ? "SIGUSR2" :
+	       signo == SIGCHLD ? "SIGCHLD" :
+#ifdef SIGCONT
+	       signo == SIGCONT ? "SIGCONT" :
+#endif
+#ifdef SIGSTOP
+	       signo == SIGSTOP ? "SIGSTOP" :
+#endif
+#ifdef SIGBUS
+	       signo == SIGBUS ? "SIGBUS" :
+#endif
+#ifdef SIGSYS
+	       signo == SIGSYS ? "SIGSYS"
+#endif
                : "other");
     msgSent++;
   }
 
- #ifdef HAVE_BACKTRACE
+#ifdef HAVE_BACKTRACE
   size = backtrace(array, 20);
   strings = (char**)backtrace_symbols(array, size);
 
   traceEvent(CONST_TRACE_ERROR, "webserver: BACKTRACE:     backtrace is:");
   if(size < 2)
-      traceEvent(CONST_TRACE_ERROR, "webserver: BACKTRACE:         **unavailable!");
+    traceEvent(CONST_TRACE_ERROR, "webserver: BACKTRACE:         **unavailable!");
   else
-      /* Ignore the 0th entry, that's our cleanup() */
-      for (i=1; i<size; i++)
-          traceEvent(CONST_TRACE_ERROR, "webserver: BACKTRACE:          %2d. %s", i, strings[i]);
- #endif
+    /* Ignore the 0th entry, that's our cleanup() */
+    for (i=1; i<size; i++)
+      traceEvent(CONST_TRACE_ERROR, "webserver: BACKTRACE:          %2d. %s", i, strings[i]);
+#endif
 
   traceEvent(CONST_TRACE_FATALERROR, "webserver: ntop shutting down...");
   exit(41); /* Just in case */
@@ -8069,192 +8071,192 @@ RETSIGTYPE webservercleanup(int signo) {
 /* ******************************************* */
 
 void* handleWebConnections(void* notUsed _UNUSED_) {
-    int rc;
-    fd_set mask, mask_copy;
-    int topSock = myGlobals.sock;
+  int rc;
+  fd_set mask, mask_copy;
+  int topSock = myGlobals.sock;
 
 #ifndef WIN32
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: Server connection thread starting [p%d]",
-               (long unsigned int)pthread_self(), getpid());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: Server connection thread starting [p%d]",
+	     (long unsigned int)pthread_self(), getpid());
 #endif
 
 #ifdef MAKE_WITH_HTTPSIGTRAP
-    signal(SIGSEGV, webservercleanup);
-    signal(SIGHUP,  webservercleanup);
-    signal(SIGINT,  webservercleanup);
-    signal(SIGQUIT, webservercleanup);
-    signal(SIGILL,  webservercleanup);
-    signal(SIGABRT, webservercleanup);
-    signal(SIGFPE,  webservercleanup);
-    signal(SIGKILL, webservercleanup);
-    signal(SIGPIPE, webservercleanup);
-    signal(SIGALRM, webservercleanup);
-    signal(SIGTERM, webservercleanup);
-    signal(SIGUSR1, webservercleanup);
-    signal(SIGUSR2, webservercleanup);
-    /* signal(SIGCHLD, webservercleanup); */
+  signal(SIGSEGV, webservercleanup);
+  signal(SIGHUP,  webservercleanup);
+  signal(SIGINT,  webservercleanup);
+  signal(SIGQUIT, webservercleanup);
+  signal(SIGILL,  webservercleanup);
+  signal(SIGABRT, webservercleanup);
+  signal(SIGFPE,  webservercleanup);
+  signal(SIGKILL, webservercleanup);
+  signal(SIGPIPE, webservercleanup);
+  signal(SIGALRM, webservercleanup);
+  signal(SIGTERM, webservercleanup);
+  signal(SIGUSR1, webservercleanup);
+  signal(SIGUSR2, webservercleanup);
+  /* signal(SIGCHLD, webservercleanup); */
 #ifdef SIGCONT
-    signal(SIGCONT, webservercleanup);
+  signal(SIGCONT, webservercleanup);
 #endif
 #ifdef SIGSTOP
-    signal(SIGSTOP, webservercleanup);
+  signal(SIGSTOP, webservercleanup);
 #endif
 #ifdef SIGBUS
-    signal(SIGBUS,  webservercleanup);
+  signal(SIGBUS,  webservercleanup);
 #endif
 #ifdef SIGSYS
-    signal(SIGSYS,  webservercleanup);
+  signal(SIGSYS,  webservercleanup);
 #endif
 #endif /* MAKE_WITH_HTTPSIGTRAP */
 
 #ifndef WIN32
-    /*
-     *  The great ntop "mysterious web server death" fix... and other tales of
-     *  sorcery.
-     *
-     *PART1
-     *
-     *  The problem is that Internet Explorer (and other browsers) seem to close
-     *  the connection when they receive an unknown certificate in response to
-     *  an https:// request.  This causes a SIGPIPE and kills the web handling
-     *  thread - sometimes (for sure, the ONLY case I know of is if ntop is
-     *  run under Linux gdb connected to from a Win2K browser).
-     *
-     *  This code simply counts SIGPIPEs and ignores them.
-     *
-     *  However, it's not that simple - under gdb under Linux (and perhaps other
-     *  OSes), the thread mask on a child thread disables our ability to set a
-     *  signal handler for SIGPIPE. However, gdb seems to trap the SIGPIPE and
-     *  reflect it to the code, even if the code wouldn't see it without the debug!
-     *
-     *  Hence the multi-step code.
-     *
-     *  This code SHOULD be safe.  Many other programs have had to so this.
-     *
-     *  Because I'm not sure, I've put both a compile time (--enable-ignoresigpipe)
-     *  and run-time --ignore-sigpipe option in place.
-     *
-     *  Recommended:
-     *    If you aren't seeing the "mysterious death of web server" problem:
-     *        don't worry - be happy.
-     *    If you are, try running for a while with --ignore-sigpipe
-     *        If that seems to fix it, then compile with --enable-ignoressigpipe
-     *
-     *PART2
-     *
-     *  For reasons unknown Netscape 6.2.2 (and probably others) goes into ssl_accept
-     *  and never returns.
-     *
-     *  It's been reported as a bug in Netscape 6.2.2, that has a workaround in
-     *  openSSL 0.9.6c but I can't get it to work.
-     *
-     *  So, we create - also optional - and only if we're using ssl - a watchdog
-     *  thread.  If we've not completed the sslAccept in a few seconds, we signal
-     *  the main thread and force it to abandon the accept.
-     *
-     *  June 2002 - Burton M. Strauss III <Burton@ntopsupport.com>
-     *
-     */
+  /*
+   *  The great ntop "mysterious web server death" fix... and other tales of
+   *  sorcery.
+   *
+   *PART1
+   *
+   *  The problem is that Internet Explorer (and other browsers) seem to close
+   *  the connection when they receive an unknown certificate in response to
+   *  an https:// request.  This causes a SIGPIPE and kills the web handling
+   *  thread - sometimes (for sure, the ONLY case I know of is if ntop is
+   *  run under Linux gdb connected to from a Win2K browser).
+   *
+   *  This code simply counts SIGPIPEs and ignores them.
+   *
+   *  However, it's not that simple - under gdb under Linux (and perhaps other
+   *  OSes), the thread mask on a child thread disables our ability to set a
+   *  signal handler for SIGPIPE. However, gdb seems to trap the SIGPIPE and
+   *  reflect it to the code, even if the code wouldn't see it without the debug!
+   *
+   *  Hence the multi-step code.
+   *
+   *  This code SHOULD be safe.  Many other programs have had to so this.
+   *
+   *  Because I'm not sure, I've put both a compile time (--enable-ignoresigpipe)
+   *  and run-time --ignore-sigpipe option in place.
+   *
+   *  Recommended:
+   *    If you aren't seeing the "mysterious death of web server" problem:
+   *        don't worry - be happy.
+   *    If you are, try running for a while with --ignore-sigpipe
+   *        If that seems to fix it, then compile with --enable-ignoressigpipe
+   *
+   *PART2
+   *
+   *  For reasons unknown Netscape 6.2.2 (and probably others) goes into ssl_accept
+   *  and never returns.
+   *
+   *  It's been reported as a bug in Netscape 6.2.2, that has a workaround in
+   *  openSSL 0.9.6c but I can't get it to work.
+   *
+   *  So, we create - also optional - and only if we're using ssl - a watchdog
+   *  thread.  If we've not completed the sslAccept in a few seconds, we signal
+   *  the main thread and force it to abandon the accept.
+   *
+   *  June 2002 - Burton M. Strauss III <Burton@ntopsupport.com>
+   *
+   */
 
-    {
-	sigset_t a_oset, a_nset;
-	sigset_t *oset, *nset;
+  {
+    sigset_t a_oset, a_nset;
+    sigset_t *oset, *nset;
 
-	/* First, build our mask - empty, except for "UNBLOCK" SIGPIPE... */
-	oset = &a_oset;
-	nset = &a_nset;
+    /* First, build our mask - empty, except for "UNBLOCK" SIGPIPE... */
+    oset = &a_oset;
+    nset = &a_nset;
 
-	sigemptyset(nset);
-	rc = sigemptyset(nset);
-	if(rc != 0)
-	    traceEvent(CONST_TRACE_ERROR, "SIGPIPE mask, sigemptyset() = %d, gave %p", rc, nset);
+    sigemptyset(nset);
+    rc = sigemptyset(nset);
+    if(rc != 0)
+      traceEvent(CONST_TRACE_ERROR, "SIGPIPE mask, sigemptyset() = %d, gave %p", rc, nset);
 
-	rc = sigaddset(nset, SIGPIPE);
-	if(rc != 0)
-	    traceEvent(CONST_TRACE_ERROR, "SIGPIPE mask, sigaddset() = %d, gave %p", rc, nset);
+    rc = sigaddset(nset, SIGPIPE);
+    if(rc != 0)
+      traceEvent(CONST_TRACE_ERROR, "SIGPIPE mask, sigaddset() = %d, gave %p", rc, nset);
 
 #ifndef DARWIN
-	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
+    rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: SIGPIPE mask was pthread_setsigmask(-, NULL, %x) returned %d",
-		   oset, rc);
+    traceEvent(CONST_TRACE_INFO, "DEBUG: SIGPIPE mask was pthread_setsigmask(-, NULL, %x) returned %d",
+	       oset, rc);
 #endif
 
-	rc = pthread_sigmask(SIG_UNBLOCK, nset, oset);
-	if(rc != 0)
-	    traceEvent(CONST_TRACE_ERROR, "SIGPIPE mask set, pthread_setsigmask(SIG_UNBLOCK, %p, %p) returned %d",
-		       nset, oset, rc);
+    rc = pthread_sigmask(SIG_UNBLOCK, nset, oset);
+    if(rc != 0)
+      traceEvent(CONST_TRACE_ERROR, "SIGPIPE mask set, pthread_setsigmask(SIG_UNBLOCK, %p, %p) returned %d",
+		 nset, oset, rc);
 
-	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
+    rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: SIGPIPE mask is pthread_setsigmask(-, NULL, %x) returned %d",
-		   oset, rc);
+    traceEvent(CONST_TRACE_INFO, "DEBUG: SIGPIPE mask is pthread_setsigmask(-, NULL, %x) returned %d",
+	       oset, rc);
 #endif
 #endif /* DARWIN */
 
-	if(rc == 0) {
-	    signal(SIGPIPE, PIPEhandler);
-	    traceEvent(CONST_TRACE_INFO, "Note: SIGPIPE handler set (ignore)");
-	}
+    if(rc == 0) {
+      signal(SIGPIPE, PIPEhandler);
+      traceEvent(CONST_TRACE_INFO, "Note: SIGPIPE handler set (ignore)");
     }
+  }
 #endif /* WIN32 */
 
-    FD_ZERO(&mask);
+  FD_ZERO(&mask);
 
-    if(myGlobals.runningPref.webPort > 0)
-	FD_SET((unsigned int)myGlobals.sock, &mask);
+  if(myGlobals.runningPref.webPort > 0)
+    FD_SET((unsigned int)myGlobals.sock, &mask);
 
 #ifdef HAVE_OPENSSL
-    if(myGlobals.sslInitialized) {
-	FD_SET(myGlobals.sock_ssl, &mask);
-	if(myGlobals.sock_ssl > topSock)
-	    topSock = myGlobals.sock_ssl;
-    }
+  if(myGlobals.sslInitialized) {
+    FD_SET(myGlobals.sock_ssl, &mask);
+    if(myGlobals.sock_ssl > topSock)
+      topSock = myGlobals.sock_ssl;
+  }
 #endif
 
-    memcpy(&mask_copy, &mask, sizeof(fd_set));
+  memcpy(&mask_copy, &mask, sizeof(fd_set));
 
 #ifndef WIN32
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: Server connection thread running [p%d]",
-               (long unsigned int)pthread_self(), getpid());
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: Server connection thread running [p%d]",
+	     (long unsigned int)pthread_self(), getpid());
 #endif
 
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: ntop's web server is now processing requests");
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: ntop's web server is now processing requests");
 
-    while(myGlobals.ntopRunState < FLAG_NTOPSTATE_SHUTDOWNREQ) {
-      struct timeval wait_time;
+  while(myGlobals.ntopRunState < FLAG_NTOPSTATE_SHUTDOWNREQ) {
+    struct timeval wait_time;
 
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: Select(ing) %d....", topSock);
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Select(ing) %d....", topSock);
 #endif
-	memcpy(&mask, &mask_copy, sizeof(fd_set));
-	wait_time.tv_sec = PARM_SLEEP_LIMIT; wait_time.tv_usec = 0;
-	rc = select(topSock+1, &mask, 0, 0, &wait_time);
+    memcpy(&mask, &mask_copy, sizeof(fd_set));
+    wait_time.tv_sec = PARM_SLEEP_LIMIT; wait_time.tv_usec = 0;
+    rc = select(topSock+1, &mask, 0, 0, &wait_time);
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: select returned: %d", rc);
+    traceEvent(CONST_TRACE_INFO, "DEBUG: select returned: %d", rc);
 #endif
-	if(rc > 0) {
-	  /* Now, handle the web connection ends up in SSL_Accept() */
-	  handleSingleWebConnection(&mask);
-	}
-    } /* while myGlobals.ntopRunState < FLAG_NTOPSTATE_SHUTDOWNREQ */
-
-    myGlobals.handleWebConnectionsThreadId = 0;
-
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: Server connection thread terminated [p%d]", 
-	       (long unsigned int)pthread_self(), getpid());
-
-    if(myGlobals.ntopRunState == FLAG_NTOPSTATE_SHUTDOWNREQ) {
-
-      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Terminating ntop based on user shutdown request");
-
-      sleep(1);
-      raise(SIGINT);
-      /* Returning from above is a bad thing */
-
+    if(rc > 0) {
+      /* Now, handle the web connection ends up in SSL_Accept() */
+      handleSingleWebConnection(&mask);
     }
+  } /* while myGlobals.ntopRunState < FLAG_NTOPSTATE_SHUTDOWNREQ */
 
-    return(NULL);
+  myGlobals.handleWebConnectionsThreadId = 0;
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: WEB: Server connection thread terminated [p%d]",
+	     (long unsigned int)pthread_self(), getpid());
+
+  if(myGlobals.ntopRunState == FLAG_NTOPSTATE_SHUTDOWNREQ) {
+
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Terminating ntop based on user shutdown request");
+
+    sleep(1);
+    raise(SIGINT);
+    /* Returning from above is a bad thing */
+
+  }
+
+  return(NULL);
 
 }
 
@@ -8279,7 +8281,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
   } else {
 #if defined(DEBUG) && defined(HAVE_OPENSSL)
     if(myGlobals.sslInitialized)
-	    traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTPS request...");
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTPS request...");
 #endif
 #ifdef HAVE_OPENSSL
     if(myGlobals.sslInitialized)
@@ -8302,28 +8304,28 @@ static void handleSingleWebConnection(fd_set *fdmask) {
   }
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Request accepted (sock=%d) (errno=%d)", myGlobals.newSock, errno);
+  traceEvent(CONST_TRACE_INFO, "Request accepted (sock=%d) (errno=%d)", myGlobals.newSock, errno);
 #endif
 
-    if(myGlobals.newSock >= 0) {
+  if(myGlobals.newSock >= 0) {
 #ifdef HAVE_OPENSSL
-	if(myGlobals.sslInitialized)
-	    if(FD_ISSET(myGlobals.sock_ssl, fdmask)) {
-		if(accept_ssl_connection(myGlobals.newSock) == -1) {
-		    traceEvent(CONST_TRACE_WARNING, "Unable to accept SSL connection");
-		    closeNwSocket(&myGlobals.newSock);
-		    return;
-		} else {
-		    myGlobals.newSock = -myGlobals.newSock;
-		}
-	    }
+    if(myGlobals.sslInitialized)
+      if(FD_ISSET(myGlobals.sock_ssl, fdmask)) {
+	if(accept_ssl_connection(myGlobals.newSock) == -1) {
+	  traceEvent(CONST_TRACE_WARNING, "Unable to accept SSL connection");
+	  closeNwSocket(&myGlobals.newSock);
+	  return;
+	} else {
+	  myGlobals.newSock = -myGlobals.newSock;
+	}
+      }
 #endif /* HAVE_OPENSSL */
 
-	handleHTTPrequest(remote_ipaddr);
-	closeNwSocket(&myGlobals.newSock);
-    } else {
-	traceEvent(CONST_TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d: %s)", errno, strerror(errno));
-    }
+    handleHTTPrequest(remote_ipaddr);
+    closeNwSocket(&myGlobals.newSock);
+  } else {
+    traceEvent(CONST_TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d: %s)", errno, strerror(errno));
+  }
 }
 
 /* ******************* */
@@ -8391,6 +8393,10 @@ void edit_prefs(char *db_key, char *db_val) {
 	     "<TH ALIGN=CENTER "DARK_BG">Configured Value</TH>"
 	     "<TH ALIGN=CENTER "DARK_BG">Action</TH></TR>\n");
 
+  if(db_key && (!strcmp(db_key, EVENTS_MASK))) {
+    if(!db_val) db_val = strdup("0");
+  }
+
   if(db_key && db_val) {
     u_short len = strlen(DEVICE_NAME);
 
@@ -8422,7 +8428,7 @@ void edit_prefs(char *db_key, char *db_val) {
 
   key = gdbm_firstkey(myGlobals.prefsFile);
   while (key.dptr) {
-    char val[512];
+    char val[1024];
 
     if((db_key == NULL) || (strcmp(key.dptr, db_key) == 0)) {
       num_added++;
@@ -8430,11 +8436,48 @@ void edit_prefs(char *db_key, char *db_val) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<FORM ACTION="CONST_EDIT_PREFS">"
 		      "<TR><TH ALIGN=LEFT "DARK_BG"><INPUT TYPE=HIDDEN NAME=key VALUE=\"%s\">"
-			  "<A NAME=\"%s\">%s</A></TH>"
-		      "<TD><INPUT TYPE=TEXT NAME=val VALUE=\"%s\" size=60></TD>"
-		      "<TD ALIGN=CENTER><INPUT TYPE=SUBMIT VALUE=Set></TD></TR></FORM></A>\n",
-		      key.dptr, key.dptr, key.dptr, val);
+		      "<A NAME=\"%s\">%s</A></TH>"
+		      "<TD>",
+		      key.dptr, key.dptr, key.dptr);
 	sendString(buf);
+
+	if(!strcmp(key.dptr, EVENTS_MASK)) {
+	  sendString("<SELECT NAME=val MULTIPLE>");
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<option value=%d %s>Host Creation</option>",
+			hostCreation, ((atoi(val) & hostCreation) == hostCreation) ? "SELECTED" : "");
+	  sendString(buf);
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<option value=%d %s>Host Deletion</option>",
+			hostDeletion, ((atoi(val) & hostDeletion) == hostDeletion) ? "SELECTED" : "");
+	  sendString(buf);
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<option value=%d %s>Session Creation</option>",
+			sessionCreation, ((atoi(val) & sessionCreation) == sessionCreation) ? "SELECTED" : "");
+	  sendString(buf);
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<option value=%d %s>Session Deletion</option>",
+			sessionDeletion, ((atoi(val) & sessionDeletion) == sessionDeletion) ? "SELECTED" : "");
+	  sendString(buf);
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<option value=%d %s>Host Flagged</option>",
+			hostFlagged, ((atoi(val) & hostFlagged) == hostFlagged) ? "SELECTED" : "");
+	  sendString(buf);
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<option value=%d %s>Host Unflagged</option>",
+			hostUnflagged, ((atoi(val) & hostUnflagged) == hostUnflagged) ? "SELECTED" : "");
+	  sendString(buf);
+
+	  sendString("</SELECT>");
+	} else {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<INPUT TYPE=TEXT NAME=val VALUE=\"%s\" size=60>",
+			val);
+	  sendString(buf);
+	}
+
+	sendString("</TD><TD ALIGN=CENTER><INPUT TYPE=SUBMIT VALUE=Set></TD></TR></FORM></A>\n");
       }
     }
 
@@ -8461,5 +8504,10 @@ void edit_prefs(char *db_key, char *db_val) {
   sendString("<li>You can map a numeric vlan id to a name adding an entry of type vlan.&lt;vlan id&gt;=&lt;vlan name&gt;. For instance vlan.10=Administration\n");
   sendString("</ul></SMALL><p>\n");
 
+  if(db_key
+     && ((!strcmp(db_key, EVENTS_MASK))
+	 || (!strcmp(db_key, EVENTS_LOG)))) {
+    init_events(); /* Reload events */
+  }
 }
 

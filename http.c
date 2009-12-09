@@ -2129,7 +2129,26 @@ static int returnHTTPPage(char* pageName,
       } else if(strncmp(tkn, "key=", 4) == 0) {
 	db_key = strdup(&tkn[4]);
       } else if(strncmp(tkn, "val=", 4) == 0) {
-	db_val = strdup(&tkn[4]);
+	u_int val = 0;
+	
+	if(db_val != NULL) {
+	  if(db_key && (!strcmp(db_key, EVENTS_MASK)))
+	    val = atoi(db_val);
+	  free(db_val);
+	}
+	
+	if(db_key && (!strcmp(db_key, EVENTS_MASK))) {
+	  char str_val[16];
+	  
+	  val = val | atoi(&tkn[4]);
+
+	  safe_snprintf(__FILE__, __LINE__, 
+			str_val, sizeof(str_val), 
+			"%d", val);
+			
+	  db_val = strdup(str_val);
+	} else
+	  db_val = strdup(&tkn[4]);
       } else if(strncmp(tkn, "port=", 5) == 0) {
 	portNr = atoi(&tkn[5]);
       } else if(strncmp(tkn, "unit=", 5) == 0) {
