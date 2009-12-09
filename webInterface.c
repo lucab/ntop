@@ -3266,22 +3266,10 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_IMG_FC_VEN_BROCADE", "undefined");
 #endif
 
-#ifdef CONST_IMG_FC_VEN_EMC
-  printFeatureConfigInfo(textPrintFlag, "CONST_IMG_FC_VEN_EMC", CONST_IMG_FC_VEN_EMC);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_IMG_FC_VEN_EMC", "undefined");
-#endif
-
 #ifdef CONST_IMG_FC_VEN_EMULEX
   printFeatureConfigInfo(textPrintFlag, "CONST_IMG_FC_VEN_EMULEX", CONST_IMG_FC_VEN_EMULEX);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_IMG_FC_VEN_EMULEX", "undefined");
-#endif
-
-#ifdef CONST_IMG_FC_VEN_JNI
-  printFeatureConfigInfo(textPrintFlag, "CONST_IMG_FC_VEN_JNI", CONST_IMG_FC_VEN_JNI);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_IMG_FC_VEN_JNI", "undefined");
 #endif
 
 #ifdef CONST_IMG_FC_VEN_SEAGATE

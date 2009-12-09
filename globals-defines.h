@@ -1555,7 +1555,6 @@
 #define CONST_IMG_SCSI_DISK            "<img class=tooltip src=\"/disk.gif\" border=\"0\" alt=\"SCSI Block Device (disk)\" title=\"SCSI Block Device (disk)\">"
 
 #define CONST_IMG_FC_VEN_BROCADE       "<img class=tooltip src=\"/brocade.gif\" border=\"0\" alt=\"Brocade Communications Systems, Inc.\" title=\"Brocade Communications Systems, Inc.\">"
-#define CONST_IMG_FC_VEN_EMC           "<img class=tooltip src=\"/emc.gif\" border=\"0\" alt=\"EMC Corporation\" title=\"EMC Corporation\">"
 #define CONST_IMG_FC_VEN_EMULEX        "<img class=tooltip src=\"/emulex.gif\" border=\"0\" alt=\"Emulex Corporation\" title=\"Emulex Corporation\">"
 #define CONST_IMG_FC_VEN_JNI           "<img class=tooltip src=\"/jni.gif\" border=\"0\" alt=\"JNI Corporation\" title=\"JNI Corporation\">"
 #define CONST_IMG_FC_VEN_SEAGATE       "<img class=tooltip src=\"/seagate.gif\" border=\"0\" alt=\"Seagate Technology\" title=\"Seagate Technology\">"

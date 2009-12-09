@@ -112,14 +112,8 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
 		       strlen ("EMULEX CORPORATION"))) {
 	vendorStr = "&nbsp;" CONST_IMG_FC_VEN_EMULEX;
       }
-      else if(!strcasecmp (vendorName, "JNI Corporation")) {
-	vendorStr = "&nbsp;" CONST_IMG_FC_VEN_JNI;
-      }
       else if(!strcasecmp (vendorName, "BROCADE COMMUNICATIONS SYSTEMS, Inc.")) {
 	vendorStr = "&nbsp;" CONST_IMG_FC_VEN_BROCADE;
-      }
-      else if(!strncmp (vendorName, "EMC", strlen ("EMC"))) {
-	vendorStr = "&nbsp;" CONST_IMG_FC_VEN_EMC;
       }
       else if(!strcasecmp (vendorName, "SEAGATE TECHNOLOGY")) {
 	vendorStr = "&nbsp;" CONST_IMG_FC_VEN_SEAGATE;
