@@ -639,7 +639,7 @@ char* getHostName(HostTraffic *el, short cutName, char *buf, int bufLen) {
 	strncpy(buf, el->ethAddressString, 80);
     }
   }
-
+  
   return(buf);
 }
 
@@ -6994,35 +6994,37 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", MAX_TOT_NUM_SESSIONS);
 	printFeatureConfigInfo(textPrintFlag, "Session Actual Hash Size", buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
-		      formatPkts(myGlobals.device[i].numTcpSessions, buf2, sizeof(buf2)));
-	printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
+	if(myGlobals.device[i].tcpSession != NULL) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
+			formatPkts(myGlobals.device[i].numTcpSessions, buf2, sizeof(buf2)));
+	  printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
-		      formatPkts(myGlobals.device[i].maxNumTcpSessions, buf2, sizeof(buf2)));
-	printFeatureConfigInfo(textPrintFlag, "Max Num. Sessions", buf);
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
+			formatPkts(myGlobals.device[i].maxNumTcpSessions, buf2, sizeof(buf2)));
+	  printFeatureConfigInfo(textPrintFlag, "Max Num. Sessions", buf);
 
-	minLen=-1, maxLen=0;
-	for(idx=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
-	  IPSession *sess;
+	  minLen=-1, maxLen=0;
+	  for(idx=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
+	    IPSession *sess;
 
-	  if((sess = myGlobals.device[i].tcpSession[idx]) != NULL) {
-	    unsigned int len=0;
+	    if((sess = myGlobals.device[i].tcpSession[idx]) != NULL) {
+	      unsigned int len=0;
 
-	    nonEmptyBuckets++;
+	      nonEmptyBuckets++;
 
-	    for(; sess != NULL; sess = sess->next) {
-	      totBuckets++, len++;
+	      for(; sess != NULL; sess = sess->next) {
+		totBuckets++, len++;
+	      }
+
+	      if(minLen > len) minLen = len;
+	      if(maxLen < len) maxLen = len;
 	    }
-
-	    if(minLen > len) minLen = len;
-	    if(maxLen < len) maxLen = len;
 	  }
-	}
 
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[min %u][max %u][avg %.1f]",
-		      minLen, maxLen, (float)totBuckets/(float)nonEmptyBuckets);
-	printFeatureConfigInfo(textPrintFlag, "Session Bucket List Length", buf);
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[min %u][max %u][avg %.1f]",
+			minLen, maxLen, (float)totBuckets/(float)nonEmptyBuckets);
+	  printFeatureConfigInfo(textPrintFlag, "Session Bucket List Length", buf);
+	}
       }
     }
   }

@@ -3187,12 +3187,14 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
   /* ****************************** */
 
-#if 0
+#if 1
   i=0;
 
   for(el=getFirstHost(actualDeviceId);
-      el != NULL; el = getNextHost(actualDeviceId, el))
-    traceEvent (CONST_TRACE_WARNING, "[%3d] %s", i++, el->hostNumIpAddress);
+      el != NULL; el = getNextHost(actualDeviceId, el)) {
+    if(strcmp(el->hostNumIpAddress, host) == 0)
+      traceEvent (CONST_TRACE_WARNING, "[%3d] %s", i++, el->hostNumIpAddress);
+  }
 #endif
  
   /* ****************************** */
