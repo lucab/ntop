@@ -227,14 +227,20 @@ static void addRrdDelay(void) {
 
 /* ******************************************* */
 
-static void createMultihostGraph(char *rrdName,
-				 HostTraffic *rrdHosts[MAX_NUM_NETWORKS],
-				 u_int32_t numRrdHosts,
-				 char *startTime, char* endTime) {
+static int createMultihostGraph(char *rrdName,
+				HostTraffic *rrdHosts[MAX_NUM_NETWORKS],
+				u_int32_t numRrdHosts,
+				char *startTime, char* endTime) {
   char buf[1024], hosts[512] = { '\0' };
-  int i;
+  int i, maxRRDhosts = 10;
 
-  for(i=0; i<numRrdHosts; i++) {
+  if((strncmp(rrdName, "IP_", 3) == 0) 
+     || (strncmp(rrdName, "other", 5) == 0) 
+     || strstr(rrdName, "Fragments") 
+     )
+    return(0);	
+
+  for(i=0; (i<numRrdHosts) && (i<MAX_NUM_NETWORKS) && (i < maxRRDhosts); i++) {
     char *host_ip;
 
     host_ip = (rrdHosts[i]->ethAddressString[0] != '\0') ? rrdHosts[i]->ethAddressString : rrdHosts[i]->hostNumIpAddress;
@@ -259,16 +265,17 @@ static void createMultihostGraph(char *rrdName,
   */
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		"</td>&nbsp;<td><IMG SRC=\"/" CONST_PLUGINS_HEADER "%s?action=graphSummary&graphId=98&name=%s&start=%s&end=%s&key=%s\"></td>\n",
+		"</td>&nbsp;<td  valign=top><IMG SRC=\"/" CONST_PLUGINS_HEADER "%s?action=graphSummary&graphId=98&name=%s&start=%s&end=%s&key=%s\"></td>\n",
 		rrdPluginInfo->pluginURLname, rrdName, startTime, endTime, hosts);
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		"<td><A HREF=\"/" CONST_PLUGINS_HEADER "%s?mode=zoom&action=graphSummary&graphId=98&name=%s&start=%s&end=%s&key=%s\">"
+		"<td ><A HREF=\"/" CONST_PLUGINS_HEADER "%s?mode=zoom&action=graphSummary&graphId=98&name=%s&start=%s&end=%s&key=%s\">"
 		"<IMG valign=top class=tooltip SRC=/graph_zoom.gif border=0></A>\n",
 		rrdPluginInfo->pluginURLname, rrdName, startTime, endTime, hosts);
   sendString(buf);
 
+  return(1);
 }
 
 /* ******************************************* */
@@ -473,7 +480,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
     if(hasNetFlow
        && ((filterString == NULL) || strcasestr(filterString, "flow"))) {
       for(i=1; i<=3; i++) {
-	sendString("<TR><TD align=left>");
+	sendString("<TR><TD valign=top align=left>");
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<IMG SRC=\"/" CONST_PLUGINS_HEADER "%s?action=netflowSummary"
@@ -483,7 +490,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 	sendString(buf);
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "</td><td><A HREF=\"/" CONST_PLUGINS_HEADER "%s?"
+		      "</td><td valign=middle><A HREF=\"/" CONST_PLUGINS_HEADER "%s?"
 		      "mode=zoom&action=netflowIfSummary&graphId=%d&key=%s/&start=%s&end=%s\">\n"
 		      "<IMG valign=top class=tooltip SRC=/graph_zoom.gif border=0></A>\n",
 		      rrdPluginInfo->pluginURLname, i, rrdPath, startTime, endTime);
@@ -665,6 +672,23 @@ static void listResource(char *rrdPath, char *rrdTitle,
 	    else {
 	      int duplicated = 0;
 
+	      if(community != NULL) {
+		if(
+		   strstr(dp->d_name, "bytes")
+		   || strstr(dp->d_name, "pkts")
+		   || strstr(dp->d_name, "tcp")
+		   || strstr(dp->d_name, "udp")
+		   || strstr(dp->d_name, "icmp")
+		   ) {
+  
+		  if(strstr(dp->d_name, "other")
+		     || strstr(dp->d_name, "Fragments") 
+		     )
+		    continue;
+		} else
+		  continue;
+	      }
+
 	      found = 1;
 
 	      for(k=0; k<num_rrds; k++)
@@ -690,33 +714,23 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
     sendString("<table border=0>\n");
 
-    for(k=0; k<num_rrds; k++) {
+    for(k=0, i=0; k<num_rrds; k++) {
       sendString("\n<!-- XXX -->\n");
 
-      if(strstr(keys[k], "Rcvd")) {
-	if((k > 0) && strstr(keys[k-1], "Rcvd"))
-	  sendString("<td colspan=3>&nbsp;<td></tr>\n");
+      if(i==0) sendString("<tr>");
 
-	sendString("<tr><td>");
-      } else if(strstr(keys[k], "Sent")) {
-	if((k > 0) && strstr(keys[k-1], "Sent"))
-	  sendString("<tr><td colspan=3>&nbsp;<td>");
-	else
-	  sendString("<td>");
-      }
-
+      sendString("<td>");
       expandRRDList(keys[k], localNetworks, numLocalNetworks, startTime, endTime);
-
-      if(strstr(keys[k], "Rcvd"))
-	sendString("</td>");
-      else if(strstr(keys[k], "Sent"))
-	sendString("</td></tr>\n");
+      sendString("</td>");
+      i++;
+      
+      if(i == 2) sendString("</tr>\n"), i=0;
     }
 
     sendString("</table>");
 
     if(!found) {
-      sendString("<tr><td>");
+      sendString("<tr><td valign=top>");
       printFlagedWarning("<I>No data (yet) for this community</I>");
       sendString("</td></tr>");
     }

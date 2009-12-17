@@ -7007,6 +7007,7 @@ void findHost(char *key) {
     u_char do_add = 0;
 
     if(el == myGlobals.broadcastEntry) continue;
+    if(el->community && (!isAllowedCommunity(el->community))) continue;
 
     if((key == NULL) || (key[0] == '\0')) do_add = 1;
     else if(el->hostNumIpAddress && strcasestr(el->hostNumIpAddress, key)) do_add = 1;

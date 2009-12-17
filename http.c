@@ -2050,7 +2050,9 @@ int isAllowedCommunity(char *community_name) {
 
   //traceEvent(CONST_TRACE_INFO, "-> isAllowedCommunity(%s)", community_name);
 
-  if(theHttpUser[0] == '\0') return(1); /* No authentication */
+  if((theHttpUser[0] == '\0') /* No authentication */
+     || (!strcmp(theHttpUser, "admin"))) /* Admin user */
+    return(1); 
 
   for(i=0; i<MAX_NUM_COMMUNITIES; i++) {
     if(listAllowedCommunities[i] == NULL) break;
