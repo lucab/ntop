@@ -466,6 +466,29 @@ static PyObject* python_fingerprint(PyObject *self,
 
 /* **************************************** */
 
+#ifdef HAVE_GEOIP
+
+#define VAL(a) ((a != NULL) ? a : "")
+
+static PyObject* python_getGeoIP(PyObject *self, PyObject *args) {
+  PyObject *obj = PyDict_New();
+  GeoIPRecord *geo = (ntop_host && ntop_host->geo_ip) ? ntop_host->geo_ip : NULL;
+
+  if(geo != NULL) {
+    PyDict_SetItem(obj, PyString_FromString("country_code"), PyString_FromString(VAL(geo->country_code)));
+    PyDict_SetItem(obj, PyString_FromString("country_name"), PyString_FromString(VAL(geo->country_name)));
+    PyDict_SetItem(obj, PyString_FromString("region"), PyString_FromString(VAL(geo->region)));
+    PyDict_SetItem(obj, PyString_FromString("city"), PyString_FromString(VAL(geo->city)));
+    PyDict_SetItem(obj, PyString_FromString("latitude"), PyFloat_FromDouble((double)geo->latitude));
+    PyDict_SetItem(obj, PyString_FromString("longitude"), PyFloat_FromDouble((double)geo->longitude));
+  }
+
+  return obj;
+}
+#endif
+
+/* **************************************** */
+
 static PyObject* python_synPktsSent(PyObject *self,
 				   PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
@@ -529,6 +552,9 @@ static PyMethodDef host_methods[] = {
   { "totContactedRcvdPeers",  python_totContactedRcvdPeers, METH_NOARGS, "Check totContactedRcvdPeers Host" },
   { "fingerprint",  python_fingerprint, METH_NOARGS, "Check fingerprint Host" },
   { "synPktsSent",  python_synPktsSent, METH_NOARGS, "Check synPktsSent Host" },
+#ifdef HAVE_GEOIP
+  { "geoIP",  python_getGeoIP, METH_NOARGS, "Read geoLocalization info" },
+#endif
   { NULL, NULL, 0, NULL }
 };
 
