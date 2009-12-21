@@ -1491,7 +1491,9 @@ if test ".${ac_disable_python}" != ".yes"; then
     echo "python libs: ${PYTHON_LIBS}"
     LIBS="${LIBS} ${PYTHON_LIBS}"
 dnl remove unecessary path
-    INCS="${INCS} `python-config --cflags`"
+    dnl line below workaround for OSX 10.6 (Snow Leopard)
+    PYTHON_INCS=`python-config --cflags | sed -e "s/-arch i386 -arch ppc -arch x86_64//"`
+    INCS="${INCS} ${PYTHON_INCS}"
   else
     AC_MSG_RESULT(PYTHON is not present)
   fi
