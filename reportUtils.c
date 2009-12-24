@@ -5367,7 +5367,7 @@ void printPluginTrailer(char *left, char *middle) {
   sendString("&nbsp;");
 
   sendString("</td>\n<td align=\"right\">"
-             "&nbsp;[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]"
+             "&nbsp;[ Back to <a href=\"/" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]"
              "</td></tr></table>\n<br>\n");
 }
 
