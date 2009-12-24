@@ -1128,7 +1128,7 @@ void addDefaultAdminUser(void) {
 #define NTOP_SAVE_PREFS     "SP"
 #define NTOP_RESTORE_DEF    "RD"
 #define CONFIG_STR_ENTRY(bg,title,name,size,configvalue,descr) \
-        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s</td><td align=left><INPUT NAME=%s SIZE=%d VALUE=%s><BR>%s</td></TR>\n", bg, title, name, size, (configvalue != NULL) ? configvalue : "", descr); \
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s</td><td align=left><INPUT NAME=\"%s\" SIZE=%d VALUE=\"%s\"><BR>%s</td></TR>\n", bg, title, name, size, (configvalue != NULL) ? configvalue : "", descr); \
         sendString (buf);
 
 #define CONFIG_FILE_ENTRY(bg,title,name,size,value,descr) \

@@ -947,7 +947,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     argv[argc++] = "VDEF:ninetyfive=ctr,95,PERCENT";
     argv[argc++] = "LINE1.2:ninetyfive#ff00ffBB:95th Percentile";
 
-    if(1 || debug_rrd_graph) {
+    if(debug_rrd_graph) {
       int j;
 
       for(j=0; j<argc; j++)
