@@ -421,28 +421,10 @@ void ipaddr2str(HostTraffic *el, HostAddr hostIpAddress,
 /* ************************************ */
 
 char* etheraddr_string(const u_char *ep, char *buf) {
-  u_int i, j;
-  char *cp;
-
-  cp = buf;
-  if ((j = *ep >> 4) != 0)
-    *cp++ = hex[j];
-  else
-    *cp++ = '0';
-
-  *cp++ = hex[*ep++ & 0xf];
-
-  for(i = 5; (int)--i >= 0;) {
-    *cp++ = ':';
-    if ((j = *ep >> 4) != 0)
-      *cp++ = hex[j];
-    else
-      *cp++ = '0';
-
-    *cp++ = hex[*ep++ & 0xf];
-  }
-
-  *cp = '\0';
+  sprintf(buf, "%02X:%02X:%02X:%02X:%02X:%02X", 
+	  ep[0] & 0xFF, ep[1] & 0xFF,
+	  ep[2] & 0xFF, ep[3] & 0xFF,
+	  ep[3] & 0xFF, ep[5] & 0xFF);
   return (buf);
 }
 
