@@ -1459,8 +1459,8 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  );
     break;
 
-#ifdef HAVE_MYSQL_H
   case showPrefDBPref:
+#ifdef HAVE_MYSQL_H
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
 		  "[ <A HREF=%s1>Basic Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s2>Display Prefs</A> ]&nbsp;"
@@ -1470,12 +1470,11 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
 		  "[ <B>DB Prefs</B> ]&nbsp;</p>",
 		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+#else
+	  /* Nothing to do */
 #endif
     break;
 
-  case showPrefDBPref:
-    /* Nothing to do */
-    break;
   }
 
   sendString (buf);

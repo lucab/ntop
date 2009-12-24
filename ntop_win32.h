@@ -72,7 +72,7 @@ typedef int NDIS_STATUS, *PNDIS_STATUS;
 
 extern int getopt(int num, char *const *argv, const char *opts);
 #define getopt getopt____
-
+#define putenv _putenv
 #define unlink(a) _unlink(a)
 #define close(a) _close(a)
 
@@ -95,7 +95,7 @@ extern ULONG GetHostIPAddr();
 #define HAVE_DIRENT_H
 #define HAVE_PCAP_FREEALLDEVS
 #define HAVE_MYSQL_H
-#define HAVE_PERL
+#define HAVE_PYTHON
 
 #if !defined(__GNUC__)
 #define INET6

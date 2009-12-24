@@ -573,6 +573,8 @@ int handlePythonHTTPRequest(char *url) {
   struct stat statbuf;
   FILE *fd;
   char *question_mark = strchr(url, '?');
+	char str[255];
+
 
   traceEvent(CONST_TRACE_INFO, "Calling python... [%s]", url);
 
@@ -580,7 +582,8 @@ int handlePythonHTTPRequest(char *url) {
   safe_snprintf(__FILE__, __LINE__, query_string, sizeof(query_string)-1, 
 		"%s", question_mark ? &question_mark[1] : "");
 
-  setenv("QUERY_STRING", query_string, 1);
+  snprintf(str, sizeof(str), "QUERY_STRING=%s", query_string);
+  putenv(str);
 
   for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
     safe_snprintf(__FILE__, __LINE__, python_path, sizeof(python_path),
