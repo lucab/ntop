@@ -2492,7 +2492,7 @@ void queuePacket(u_char *_deviceId,
     }
   }
 
-  if(myGlobals.runningPref.dontTrustMACaddr && (h->len <= 64)) {
+  if(myGlobals.runningPref.dontTrustMACaddr && (h->len < 60)) {
     /* Filter out noise */
     updateDevicePacketStats(h->len, actDeviceId);
     return;
