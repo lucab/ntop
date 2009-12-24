@@ -31,6 +31,8 @@
 
 #define NTOP_WATERMARK "NTOP / LUCA DERI"
 
+#define RRD_GRAPH_SIZE        16
+
 static u_char debug_rrd_graph = 0;
 static char *rrdd_sock_path = NULL;
 #ifdef WIN32
@@ -234,11 +236,11 @@ static int createMultihostGraph(char *rrdName,
   char buf[1024], hosts[512] = { '\0' };
   int i, maxRRDhosts = 10;
 
-  if((strncmp(rrdName, "IP_", 3) == 0) 
-     || (strncmp(rrdName, "other", 5) == 0) 
-     || strstr(rrdName, "Fragments") 
+  if((strncmp(rrdName, "IP_", 3) == 0)
+     || (strncmp(rrdName, "other", 5) == 0)
+     || strstr(rrdName, "Fragments")
      )
-    return(0);	
+    return(0);
 
   for(i=0; (i<numRrdHosts) && (i<MAX_NUM_NETWORKS) && (i < maxRRDhosts); i++) {
     char *host_ip;
@@ -680,9 +682,9 @@ static void listResource(char *rrdPath, char *rrdTitle,
 		   || strstr(dp->d_name, "udp")
 		   || strstr(dp->d_name, "icmp")
 		   ) {
-  
+
 		  if(strstr(dp->d_name, "other")
-		     || strstr(dp->d_name, "Fragments") 
+		     || strstr(dp->d_name, "Fragments")
 		     )
 		    continue;
 		} else
@@ -723,7 +725,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
       expandRRDList(keys[k], localNetworks, numLocalNetworks, startTime, endTime);
       sendString("</td>");
       i++;
-      
+
       if(i == 2) sendString("</tr>\n"), i=0;
     }
 
@@ -781,12 +783,28 @@ static char* sanitizeRrdPath(char *in_path) {
 
 /* ******************************************* */
 
+static void fetch_graph_size(char rrd_height[], char rrd_width[]) {
+  if(fetchPrefsValue("rrd.height", rrd_height, RRD_GRAPH_SIZE) == -1) {
+    snprintf(rrd_height, sizeof(rrd_height), "%d", 120);
+    storePrefsValue("rrd.height", rrd_height);
+  }
+
+  if(fetchPrefsValue("rrd.width", rrd_width, RRD_GRAPH_SIZE) == -1) {
+    snprintf(rrd_width, sizeof(rrd_width), "%d", 500);
+    storePrefsValue("rrd.width", rrd_width);
+  }
+}
+
+/* ********************************************************** */
+
 static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdCounter,
 			char *startTime, char* endTime, char *rrdPrefix) {
-  char path[512], *argv[64], buf[384], buf1[384], buf2[384], fname[384], *label, tmpStr[32];
+  char path[512], *argv[64], buf[384], buf1[384], buf2[384],
+    fname[384], *label, tmpStr[32];
   char bufa1[384], bufa2[384], bufa3[384], show_trend = 1;
   struct stat statbuf;
   int argc = 0, rc, x, y;
+  char rrd_height[RRD_GRAPH_SIZE], rrd_width[RRD_GRAPH_SIZE];
   double ymin,ymax;
 
   // if((!active) || (!initialized)) return(-1);
@@ -843,6 +861,8 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
   else if(strstr(rrdName, "knownHostsNum")) label = "Number of Peers";
   else label = capitalizeInitial(rrdName);
 
+  fetch_graph_size(rrd_height, rrd_width);
+
   if((!strcmp(endTime, "now"))
      && (!strcmp(startTime, "now-600s")))
     show_trend = 0;
@@ -893,9 +913,9 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     argv[argc++] = "--base";
     argv[argc++] = "1024";
     argv[argc++] = "--height";
-    argv[argc++] = "120";
+    argv[argc++] = rrd_height;
     argv[argc++] = "--width";
-    argv[argc++] = "500";
+    argv[argc++] = rrd_width;
     argv[argc++] = "--alt-autoscale-max";
     argv[argc++] = "--lower-limit";
     argv[argc++] = "0";
@@ -1229,7 +1249,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
     pathIdx = i;
   else
     pathIdx = 0;
-    
+
   for(i=0, entryId=0; rrds[i].name != NULL; i++) {
     char metric_name[32];
 
@@ -1255,7 +1275,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
       argv[argc++] = buf[entryId];
 
       safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-		    entryId, rrd_colors[entryId], 
+		    entryId, rrd_colors[entryId],
 		    spacer(rrds[i].label, tmpStr, sizeof(tmpStr), metric_name, sizeof(metric_name), RRD_DEFAULT_SPACER_LEN));
       argv[argc++] = buf1[entryId];
 
@@ -2586,7 +2606,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 
       if(0) {
 	int j;
-	
+
 	for(j=0; j<argc; j++)
 	  traceEvent(CONST_TRACE_ERROR, "[%d] '%s'", j, argv[j]);
       }
@@ -2598,7 +2618,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	  Patch courtesy of Graeme Fowler <graeme@graemef.net>
 	 */
 	safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr),
-		      "DS:counter:%s:%d:0:%u", 
+		      "DS:counter:%s:%d:0:%u",
 		      "DERIVE" /* "COUNTER" */,
 		      heartbeat, topValue);
       } else {
@@ -2854,8 +2874,8 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
     lastRRDupdateDuration = elapsed = timeval_subtract(rrdEndOfProcessing, rrdStartOfProcessing);
     if(lastRRDupdateDuration > maxRRDupdateDuration)
       maxRRDupdateDuration = lastRRDupdateDuration;
-      
-    
+
+
 #ifdef MAX_RRD_PROCESS_BUFFER
     rrdprocessBuffer[++rrdprocessBufferCount & (MAX_RRD_PROCESS_BUFFER - 1)] = elapsed;
     if(elapsed > rrdpmaxDelay)
@@ -3184,7 +3204,7 @@ static void commonRRDinit(void) {
 #endif /* RRD_DEBUG */
 
   if (MAX_NUM_ENTRIES > CONST_NUM_BAR_COLORS)
-    traceEvent(CONST_TRACE_WARNING, 
+    traceEvent(CONST_TRACE_WARNING,
 	       "RRD: Too few colors defined in rrd_colors - graphs could be truncated");
 
   initialized = 1;
@@ -3651,7 +3671,7 @@ static void statisticsPage(void) {
 
   sendString("<tr><th align=\"center\" "DARK_BG" colspan=2>RRD Graph</th></tr>\n");
   sendString("<tr><th align=\"left\" "DARK_BG">Graphic Requests</th><td align=\"right\">");
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n", 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%lu</td></tr>\n",
 		(unsigned long)rrdGraphicRequests);
   sendString(buf);
   sendString("</table>\n</center>\n");
@@ -4005,6 +4025,7 @@ static void handleRRDHTTPrequest(char* url) {
   int _dumpPermissions;
 #endif
   time_t now = time(NULL);
+  char rrd_height[RRD_GRAPH_SIZE], rrd_width[RRD_GRAPH_SIZE];
 
   if(initialized == 0)
     commonRRDinit();
@@ -4215,7 +4236,7 @@ static void handleRRDHTTPrequest(char* url) {
 	dumpShortInterval = _dumpShortInterval;
 
 	for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
-	  if((myGlobals.device[devIdx].virtualDevice 
+	  if((myGlobals.device[devIdx].virtualDevice
 	      && (!myGlobals.device[devIdx].sflowGlobals)
 	      && (!myGlobals.device[devIdx].netflowGlobals)
 	      )
@@ -4258,7 +4279,7 @@ static void handleRRDHTTPrequest(char* url) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpMonths);
       storePrefsValue("rrd.dataDumpMonths", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", rrdd_sock_path);
-      storePrefsValue("rrd.rrdcSockPath", buf);      
+      storePrefsValue("rrd.rrdcSockPath", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDomains);
       storePrefsValue("rrd.dataDumpDomains", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpFlows);
@@ -4332,15 +4353,34 @@ static void handleRRDHTTPrequest(char* url) {
   else
     sendString("<p>Changes here will take effect when the plugin is started.</p>\n");
 
+  sendString("<center>"
+	     "<table border=\"1\"  width=\"80%%\" "TABLE_DEFAULTS">\n"
+	     "<tr><th align=\"center\" "DARK_BG">Item</th>"
+	     "<th align=\"center\" "DARK_BG">Description and Notes</th></tr>\n");
+
+  fetch_graph_size(rrd_height, rrd_width);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		"<center><form action=\"/" CONST_PLUGINS_HEADER "%s\" method=GET>\n"
-		"<table border=\"1\"  width=\"80%%\" "TABLE_DEFAULTS">\n"
-		"<tr><th align=\"center\" "DARK_BG">Item</th>"
-		"<th align=\"center\" "DARK_BG">Description and Notes</th></tr>\n"
+		"<tr><th align=\"left\" "DARK_BG">Graph Size</th><td>"
+		"<form action=\"/" CONST_EDIT_PREFS "\" method=GET>\n"
+		"<input name=key value=rrd.width type=hidden>"
+		"<input name=val size=5 VALUE=%s><input type=submit value=Set></form>",
+		rrd_width);
+  sendString(buf);
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		"<form action=\"/" CONST_EDIT_PREFS "\" method=GET>\n"
+		"<input name=key value=rrd.height type=hidden>"
+		"<input name=val size=5 VALUE=%s><input type=submit value=Set></form>"
+		"Set the size of RRD graphs generated by ntop</td></tr>", rrd_height);
+  sendString(buf);
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"<tr><th align=\"left\" "DARK_BG">Dump Interval</th><td>"
+		"<form action=\"/" CONST_PLUGINS_HEADER "%s\" method=GET>\n"
 		"<INPUT NAME=interval SIZE=5 VALUE=",
 		rrdPluginInfo->pluginURLname);
   sendString(buf);
+
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)dumpInterval);
   sendString(buf);
   sendString("> seconds<br>Specifies how often data is stored permanently.</td></tr>\n");
@@ -4726,7 +4766,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	  el->greEfficiencyRcvd.value = 0; /* Reset value */
 	}
       }
-	
+
       /* ********************************************* */
 
       if(el->ipsecSent.value > 0) {
@@ -4745,7 +4785,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	  el->lastIpsecPktRcvd.value = el->ipsecPktRcvd.value;
 	  el->ipsecEfficiencyRcvd.value = 0; /* Reset value */
 	}
-      }	
+      }
     }
 #endif
 
@@ -5027,7 +5067,7 @@ static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
     rrdTime =  time(NULL);
 
     for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
-      if((myGlobals.device[devIdx].virtualDevice 
+      if((myGlobals.device[devIdx].virtualDevice
 	  && (!myGlobals.device[devIdx].sflowGlobals)
 	  && (!myGlobals.device[devIdx].netflowGlobals))
 	 || (!myGlobals.device[devIdx].activeDevice))
@@ -5370,7 +5410,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     if(dumpInterfaces) {
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
 
-	if((myGlobals.device[devIdx].virtualDevice 
+	if((myGlobals.device[devIdx].virtualDevice
 	    && (!myGlobals.device[devIdx].sflowGlobals)
 	    && (!myGlobals.device[devIdx].netflowGlobals))
 	   || (!myGlobals.device[devIdx].activeDevice))
@@ -5815,7 +5855,7 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
       sleep(PARM_SLEEP_LIMIT + 2);
       }
     */
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: RRD: Plugin shutdown continuing", 
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: RRD: Plugin shutdown continuing",
 	       (long unsigned int)pthread_self());
   }
 
