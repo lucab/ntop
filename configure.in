@@ -1923,7 +1923,8 @@ echo "version.c..."
 echo
 /bin/rm -f version.c
 echo $PACKAGE_VERSION $NTOP_VERSION_EXTRA  | sed -e 's/.*/char * version   = "&";/' > version.c
-osName=`./config.guess`
+osRelease=`uname -r`
+osName=`./config.guess | sed -e "s/unknown/${osRelease}/g"`
 echo "${osName}" | sed -e 's/.*/char * osName    = "&";/' >> version.c
 echo "char * author    = \"Luca Deri <deri@ntop.org>\";" >> version.c
 dnl> This is an odd format, but it matches cpp's __DATE__ and __TIME__ macros...
