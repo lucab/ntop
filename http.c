@@ -547,7 +547,13 @@ static void ssiMenu_Head(void) {
 		  "		[null,'Traffic','/" CONST_TRAFFIC_STATS_HTML "',null,null],\n"
 		  "		[null,'Hosts','/" CONST_HOSTS_INFO_HTML "',null,null],\n"
 		  "		[null,'Network Load','/" CONST_SORT_DATA_THPT_STATS_HTML "',null,null],\n"
-		  "		[null,'Hosts World Map','/" CONST_HOST_MAP "',null,null],\n");
+		  "		[null,'Traffic Maps',null,null,null,\n"
+#ifdef HAVE_PYTHON
+		  "		       [null,'Region Map','/" CONST_REGION_MAP "',null,null],\n"
+#endif
+		  "		       [null,'Host Map','/" CONST_HOST_MAP "',null,null],\n"
+		  "          ],\n"
+		  );
   if(myGlobals.haveVLANs == TRUE)
     sendStringWOssi(
 		    "		[null,'VLAN Info','/" CONST_VLAN_LIST_HTML "',null,null],\n");

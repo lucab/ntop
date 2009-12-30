@@ -1,0 +1,195 @@
+﻿
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<script type="text/javascript">
+	google.load('visualization', '1', {'packages': ['geomap', 'table']});
+
+function drawVisualization() {
+	var data = new google.visualization.DataTable();
+	var array= new Array();
+
+	var emptyTable = new google.visualization.DataTable();
+
+	emptyTable.addRows(1);
+	emptyTable.addColumn('number', 'LATITUDE', 'Latitude');
+	emptyTable.addColumn('number', 'LONGITUDE', 'Longitude');
+	emptyTable.addColumn('number', 'Num Hosts', 'Value');
+	emptyTable.addColumn('string', 'City', 'Hover');
+
+	emptyTable.setValue(0,0,0.000000);
+	emptyTable.setValue(0,1,0.000000);
+	emptyTable.setValue(0,2,0);
+	emptyTable.setValue(0,3,'None');
+
+	data.addColumn('string', 'Code');
+	data.addColumn('number', 'Num Hosts');
+	data.addColumn('string', 'Country');
+	data.addRows(${len(countries)});
+<%
+i=0
+%>
+% for key in countries:
+<%
+	country = countries[key]
+	dizCities = country.getDictionaryCities()
+	cod = country.getCode()
+%>
+
+	data.setValue(${i}, 0, '${cod}');
+	data.setValue(${i}, 1, ${country.getTotal()});
+	data.setValue(${i}, 2,'${country.getName()}');
+
+	var ${cod}Table = new google.visualization.DataTable();
+	${cod}Table.addColumn('number', 'LATITUDE', 'Latitude');
+	${cod}Table.addColumn('number', 'LONGITUDE', 'Longitude');
+	${cod}Table.addColumn('number', 'Num Hosts', 'Value');
+	${cod}Table.addColumn('string', 'City', 'Hover');
+	${cod}Table.addRows(${len(dizCities)});
+
+	array['${cod}']=${cod}Table;
+
+<%
+	j=0
+%>
+	  % for key2 in dizCities:
+<%
+		city=dizCities[key2]
+%>
+
+	${cod}Table.setValue(${j},0,${city.getLatitude()});
+	${cod}Table.setValue(${j},1,${city.getLongitude()});
+	${cod}Table.setValue(${j},2,${city.getTotalHosts()});
+	${cod}Table.setValue(${j},3,'${city.getName()}');
+	
+% if city.getName() == 'Unknown':
+    ${cod}Table.setTableProperty('unk', ${j});
+% endif
+
+<%
+	  j += 1
+%>
+	% endfor
+<%
+	i+=1
+%>
+% endfor
+
+	var geomap = new google.visualization.GeoMap(document.getElementById('GeoMappa'));
+
+	var options={};
+	options['width'] = '640px';
+	options['height'] = '480px';
+	options['showLegend'] = true;
+	options['region'] = 'world';
+	options['dataMode'] = 'regions';
+
+	geomap.draw(data, options);
+	var table = new google.visualization.Table(document.getElementById('table'));
+
+	var viewTable= new google.visualization.DataView(data);
+	viewTable.setColumns([2,1,0]);
+	table.draw(viewTable, { sortColumn: 1, sortAscending: false} );
+
+	google.visualization.events.addListener(geomap, 'regionClick', clickHandler);
+	google.visualization.events.addListener(geomap, 'zoomOut', zoomOut);
+	google.visualization.events.addListener(table, 'select', tableClick );
+	var table2 = new google.visualization.Table(document.getElementById('table2'));
+
+function clickHandler(msg) {
+	//alert('You selected the region ' +msg['region']);
+	options['region']= msg['region'];
+	options['showZoomOut']=true;
+	options['colors'] = [0x9999FF, 0x0000FF, 0x000066];
+	options['dataMode'] = 'markers';
+
+	if(array[msg['region']]!= undefined){
+	var view= new google.visualization.DataView(array[msg['region']]);
+	view.setColumns([3, 2]);
+	var countryV=new google.visualization.DataView(array[msg['region']]);
+	var toHide=(array[msg['region']]).getTableProperty('unk');
+		if(toHide!=null){
+			countryV.hideRows([toHide]);
+		}
+	table2.draw(view,null);
+	geomap.draw(countryV, options);
+	}else{
+	geomap.draw(emptyTable, options);
+	var temp=document.getElementById('table2');
+	temp.removeChild(temp.firstChild);
+	}
+};
+function tableClick() {
+	var temp=table.getSelection();
+	var arrayAss=new Object()
+	arrayAss['region']=data.getFormattedValue(temp[0].row, 0);
+	clickHandler(arrayAss);
+};
+function zoomOut(){
+	options['region']= 'world';
+	options['showZoomOut']=false;
+	options['colors'] = [0xE0FFD4, 0xA5EF63, 0x50AA00, 0x267114];
+	options['dataMode']='regions';
+	table.setSelection();
+	geomap.setSelection();
+	geomap.draw(data,options);
+	var temp=document.getElementById('table2');
+	temp.removeChild(temp.firstChild);
+};
+};
+
+	google.setOnLoadCallback(drawVisualization);
+</script>
+
+
+<center>	
+<p class="nobottomgap">Click on a region of the map or on a row of the table to see the information collected on that region</p>
+<p>&nbsp;</p>
+<table cellspacing="5">
+	<tr>
+	<td colspan="2"><div id="GeoMappa" style="width: 700px; height: 480px;"></div>
+</td>
+	</tr>
+<tr>
+
+	<td height="50" colspan="2">&nbsp;</td>
+	</tr>
+<tr>
+	<td valign="top"><div id="table" style="width: 300px;"></div>
+	</td>
+
+	<td valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0">
+	<tr>
+	<td></td>
+	</tr>
+</table>
+
+<div id="table2" style="width: 220px;"> </div></td>
+</tr>
+</table>
+<p>&nbsp;</p>
+<table width="60%" border="1" cellpadding="2" cellspacing="0" >
+	<tr><th colspan='3' scope="col" bgcolor="#F3F3F3">Geolocation Summary</th>
+</tr>
+<tr onMouseOver="this.bgColor = '#EDF3FE'" onMouseOut ="this.bgColor = '#FFFFFF'">
+	<th width="80%" scope="row" bgcolor="#FFFFFF" align="left">Hosts considered for analysis</td>
+	<td width="20%" align="right" scope="row">${totalHosts}</td>
+</tr>
+% if unknownCountries > 0:
+<tr onMouseOver="this.bgColor = '#EDF3FE'" onMouseOut ="this.bgColor = '#FFFFFF'">
+	<th width="80%" scope="row" bgcolor="#FFFFFF" align="left">Hosts located in unknown countries</td>
+	<td width="20%" align="right" scope="row">${unknownCountries}</td>
+</tr>
+%endif
+
+% if unknownCities > 0:
+<tr onMouseOver="this.bgColor = '#EDF3FE'" onMouseOut ="this.bgColor = '#FFFFFF'">
+	<th width="80%" scope="row" bgcolor="#FFFFFF" align="left">Hosts located in unknown cities</td>
+	<td width="20%" align="right" scope="row">${unknownCities}</td>
+</tr>
+%endif
+
+</table>
+	<p>&nbsp;</p>
+
+</center>
+<p class="footrow">GeoPacketVisualizer by <a class="mailto" href="mailto:medici@ntop.org">Gianluca Medici</a>. 
+
