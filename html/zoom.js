@@ -253,8 +253,10 @@ function zoomGraphObjRefresh() {
 	y_displacement = 8;
 
 	// This is the size of the graph visible area - L.Deri
-	zoomBoxWidth = 498;
-	zoomBoxHeight = 120;
+	//zoomBoxWidth = 498;
+	//zoomBoxHeight = 120;
+	zoomBoxWidth = parseInt(gUrlObj.getUrlParameterValue("graph_width")) - 2;
+	zoomBoxHeight = parseInt(gUrlObj.getUrlParameterValue("graph_height"));
 
 	// Get absolute image position relative to the overall window.
 	//
