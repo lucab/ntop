@@ -1483,21 +1483,27 @@ fi
 dnl>
 dnl> PYTHON
 dnl>
-if test ".${ac_disable_python}" != ".yes"; then
+dnl> if test ".${ac_disable_python}" != ".yes"; then
   AC_CHECK_TOOL(PYTHON, python-config)
   if test "x$ac_cv_prog_ac_ct_PYTHON" = "xpython-config"; then
     AC_DEFINE_UNQUOTED(HAVE_PYTHON, 1, [Python is supported])
     PYTHON_LIBS="`python-config --libs`"
-    echo "python libs: ${PYTHON_LIBS}"
+    if test "x$PYTHON_LIBS" = "x"; then
+      AC_MSG_RESULT(Python[-devel] support is present but misconfigured)
+      exit 1
+    fi
+
+    echo "Python libs: ${PYTHON_LIBS}"
     LIBS="${LIBS} ${PYTHON_LIBS}"
 dnl remove unecessary path
     dnl line below workaround for OSX 10.6 (Snow Leopard)
     PYTHON_INCS=`python-config --cflags | sed -e "s/-arch i386 -arch ppc -arch x86_64//"`
     INCS="${INCS} ${PYTHON_INCS}"
   else
-    AC_MSG_RESULT(PYTHON is not present)
+    AC_MSG_RESULT(Python[-devel] support is not present)
+    exit 1
   fi
-fi
+dnl> fi
 
 dnl>
 dnl> SCTP - RFC 3286
@@ -1743,7 +1749,7 @@ else
 fi
 else
 AC_MSG_RESULT(Please install GeoIP (http://www.maxmind.com/))
-exit 0
+exit 1
 fi
 
 if test -d ./configureextra; then
