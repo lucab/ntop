@@ -1119,6 +1119,10 @@ RETSIGTYPE cleanup(int signo) {
   tryLockMutex(&myGlobals.purgeMutex, "cleanup");
   deleteMutex(&myGlobals.purgeMutex);
 
+#ifdef HAVE_PYTHON
+  term_python();
+#endif
+
   for(i=0; i<myGlobals.numDevices; i++) {
     traceEvent(CONST_TRACE_INFO, "CLEANUP: Freeing device %s",
 	       myGlobals.device[i].humanFriendlyName);

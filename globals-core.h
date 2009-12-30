@@ -191,6 +191,11 @@ extern char* _formatTime(time_t *theTime, char *outStr, int outStrLen, char *fil
 /* fcUtils.c */
 extern HostTraffic* allocFcScsiCounters(HostTraffic *host);
 
+#ifdef HAVE_PYTHON
+extern void init_python(int argc, char *argv[]);
+extern void term_python(void);
+#endif
+
 /* hash.c */
 extern u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 		      short* useIPAddressForSearching, HostTraffic **el, int actualDeviceId);

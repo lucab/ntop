@@ -1,7 +1,7 @@
 #!/bin/sh
 
 echo "        Setting SuSE specific flag values"
-LDFLAGS="${LDFLAGS} -L/usr/X11R6/lib"
+LDFLAGS="${LDFLAGS} -L/usr/X11R6/lib -L/usr/lib64"
 
 if ! test -f /usr/X11R6/lib/libXpm.so; then
     echo

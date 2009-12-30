@@ -637,6 +637,10 @@ int main(int argc, char *argv[]) {
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Initializing ntop");
 
+#ifdef HAVE_PYTHON
+  init_python(effective_argc, effective_argv);
+#endif
+
   reportValues(&lastTime);
 
   if(myGlobals.runningPref.P3Pcp != NULL)

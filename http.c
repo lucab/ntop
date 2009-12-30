@@ -2278,13 +2278,8 @@ static int returnHTTPPage(char* pageName,
 			"%s/html/%s",
 			myGlobals.dataFileDirs[idx],
 			pageURI);
-#ifdef WIN32
-	i=0;
-	while(tmpStr[i] != '\0') {
-	  if(tmpStr[i] == '/') tmpStr[i] = '\\';
-	  i++;
-	}
-#endif
+
+	  revertSlashIfWIN32(tmpStr, 0);
 
 #if defined(HTTP_DEBUG) || defined(URL_DEBUG)
 	traceEvent(CONST_TRACE_INFO, "HTTP/URL_DEBUG: Testing for page %s at %s",

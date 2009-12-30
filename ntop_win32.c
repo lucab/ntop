@@ -2508,5 +2508,12 @@ inet_ntop(
   /* NOTREACHED */
 }
 
+/* ************************************************** */
 
+int setenv(char *key, char *value, int mode) {
+  char str[256];
+
+  snprintf(str, sizeof(str), "%s=%s", key, value);
+  return(putenv(str));
+}
 

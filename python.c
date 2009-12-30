@@ -6,6 +6,7 @@
  *             Copyright (C) 2009 Luca Deri <deri@ntop.org>
  *                                Daniele Sgandurra <sgandurra@ntop.org>
  *                                Jaime Blasco <jaime.blasco@alienvault.com>
+ *                                Gianluca Medici <gianluca_medici@tin.it>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -34,6 +35,7 @@
 
 static HostTraffic *ntop_host = NULL;
 static char query_string[2048];
+static pthread_mutex_t python_mutex;
 
 /* **************************************** */
 
@@ -457,11 +459,28 @@ static PyObject* python_totContactedRcvdPeers(PyObject *self,
 
 /* **************************************** */
 
-static PyObject* python_fingerprint(PyObject *self,
-				   PyObject *args) {
-  //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
-
+static PyObject* python_fingerprint(PyObject *self, PyObject *args) {
   return PyString_FromString((ntop_host && ntop_host->fingerprint) ? ntop_host->fingerprint : "");
+}
+
+/* **************************************** */
+
+static PyObject* python_pktsSent(PyObject *self, PyObject *args) {
+  return PyString_FromFormat("%lu", (unsigned long)(ntop_host->pktSent.value));
+}
+
+static PyObject* python_pktsRcvd(PyObject *self, PyObject *args) {
+  return PyString_FromFormat("%lu", (unsigned long)(ntop_host->pktRcvd.value));
+}
+
+/* **************************************** */
+
+static PyObject* python_bytesSent(PyObject *self, PyObject *args) {
+  return PyString_FromFormat("%lu", (unsigned long)(ntop_host->bytesSent.value));
+}
+
+static PyObject* python_bytesRcvd(PyObject *self, PyObject *args) {
+  return PyString_FromFormat("%lu", (unsigned long)(ntop_host->bytesRcvd.value));
 }
 
 /* **************************************** */
@@ -552,6 +571,10 @@ static PyMethodDef host_methods[] = {
   { "totContactedRcvdPeers",  python_totContactedRcvdPeers, METH_NOARGS, "Check totContactedRcvdPeers Host" },
   { "fingerprint",  python_fingerprint, METH_NOARGS, "Check fingerprint Host" },
   { "synPktsSent",  python_synPktsSent, METH_NOARGS, "Check synPktsSent Host" },
+  { "pktSent",  python_pktsSent, METH_NOARGS, "Return the number of packets sent by this host" },
+  { "pktRcvd",  python_pktsRcvd, METH_NOARGS, "Return the number of packets rcvd by this host" },
+  { "bytesSent",  python_bytesSent, METH_NOARGS, "Return the number of bytes sent by this host" },
+  { "bytesRcvd",  python_bytesRcvd, METH_NOARGS, "Return the number of bytes rcvd by this host" },
 #ifdef HAVE_GEOIP
   { "geoIP",  python_getGeoIP, METH_NOARGS, "Read geoLocalization info" },
 #endif
@@ -561,8 +584,31 @@ static PyMethodDef host_methods[] = {
 /* **************************************** */
 
 static void init_python_ntop(void) {
+  pthread_mutex_init(&python_mutex, 0);
   Py_InitModule("ntop", ntop_methods);
   Py_InitModule("host", host_methods);
+}
+
+/* **************************************** */
+
+void init_python(int argc, char *argv[]) {
+  if(argv) Py_SetProgramName(argv[0]);
+
+  /* Initialize the Python interpreter.  Required. */
+  Py_Initialize();
+  
+  if(argv) PySys_SetArgv(argc, argv);
+
+  /* Initialize thread support */
+  PyEval_InitThreads();
+
+  init_python_ntop();
+}
+
+/* **************************************** */
+
+void term_python(void) {
+  Py_Finalize();   /* Cleaning up the interpreter */
 }
 
 /* **************************************** */
@@ -572,9 +618,7 @@ int handlePythonHTTPRequest(char *url) {
   char python_path[256];
   struct stat statbuf;
   FILE *fd;
-  char *question_mark = strchr(url, '?');
-	char str[255];
-
+  char *question_mark = strchr(url, '?'), *key;
 
   traceEvent(CONST_TRACE_INFO, "Calling python... [%s]", url);
 
@@ -582,8 +626,19 @@ int handlePythonHTTPRequest(char *url) {
   safe_snprintf(__FILE__, __LINE__, query_string, sizeof(query_string)-1, 
 		"%s", question_mark ? &question_mark[1] : "");
 
-  snprintf(str, sizeof(str), "QUERY_STRING=%s", query_string);
-  putenv(str);
+  for(idx=0; myGlobals.dataFileDirs[idx] != NULL; idx++) {
+    char tmpStr[256];
+    
+    safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
+		  "%s/html", myGlobals.dataFileDirs[idx]);
+    revertSlashIfWIN32(tmpStr, 0);
+    if(stat(tmpStr, &statbuf) == 0) {
+      setenv("DOCUMENT_ROOT", tmpStr, 1);
+      break;
+    }
+  }
+ 
+  setenv("QUERY_STRING", query_string, 1);
 
   for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
     safe_snprintf(__FILE__, __LINE__, python_path, sizeof(python_path),
@@ -610,20 +665,14 @@ int handlePythonHTTPRequest(char *url) {
   traceEvent(CONST_TRACE_INFO, "[PYTHON] Executing %s", 
 	     python_path);
 
-  /* Pass argv[0] to the Python interpreter */
-  Py_SetProgramName(python_path);
-
-  /* Initialize the Python interpreter.  Required. */
-  Py_Initialize();
-
-  /* Initialize ntop module */
-  init_python_ntop();
-
-  if((fd = fopen(python_path, "r")) != NULL)
+  if((fd = fopen(python_path, "r")) != NULL) {
+    /* TODO: remove this mutex */
+    pthread_mutex_lock(&python_mutex);
     PyRun_SimpleFile(fd, python_path);
+    pthread_mutex_unlock(&python_mutex);
+  }
 
-  /* Cleaning up the interpreter */
-  Py_Finalize();
+  fclose(fd);
 
   return(1);
 }

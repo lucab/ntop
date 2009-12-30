@@ -1,7 +1,7 @@
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
-# Copyright (c) 1998-2004 Luca Deri <deri@ntop.org>
+# Copyright (c) 1998-2009 Luca Deri <deri@ntop.org>
 # Updated 1Q 2000 Rocco Carbone <rocco@ntop.org>
 # Updates 2003-2004 Luca Deri and Burton Strauss
 #
@@ -362,7 +362,8 @@ install-data-local: ntop.txt ntop.html faq.html dnetter
              cp -p $$file $(DESTDIR)/$(CFG_CONFIGFILE_DIR)/$$file; \
           fi; \
         done
-
+	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/python
+	cp -r python/* $(DESTDIR)/$(datadir)/ntop/python
 
 # build the IPX SAP table
 #sapt: saptable.h
