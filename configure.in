@@ -1742,7 +1742,8 @@ else
    gunzip GeoIPASNum.dat.gz
 fi
 else
-AC_MSG_RESULT(Build ntop without geolocation - GeoIP (http://www.maxmind.com/))
+AC_MSG_RESULT(Please install GeoIP (http://www.maxmind.com/))
+exit 0
 fi
 
 if test -d ./configureextra; then
