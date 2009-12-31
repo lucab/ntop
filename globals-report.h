@@ -196,13 +196,8 @@ extern int combineReportTypeLocality(int reportTypeReq, LocalityDisplayPolicy sh
 extern void printHostsTraffic(int reportType, int sortedColumn, int revertOrder,
 			      int pageNum, char* url, HostsDisplayPolicy showHostsMode,
                               LocalityDisplayPolicy showLocalityMode, int vlanId);
-extern void printFcHostsTraffic(int reportType,
-			      int sortedColumn, int revertOrder,
-			      int pageNum, char* url,
-                              LocalityDisplayPolicy showLocalityMode);
 extern void printMulticastStats(int sortedColumn /* ignored so far */,
                                 int revertOrder, int pageNum);
-extern void printVSANList(unsigned int deviceId);
 extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, 
 			   int showBytes, int vlanId, int ifId, int knownSubnetId);
 extern void makeDot(void);
@@ -220,6 +215,16 @@ extern void printIpAccounting(int remoteToLocal, int sortedColumn,
 extern void printFcAccounting(int remoteToLocal, int sortedColumn,
 			      int revertOrder, int pageNum);
 extern void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el);
+extern void printIpProtocolUsage(void);
+extern void printBar(char *buf, int bufLen, unsigned short percentageS, unsigned short percentageR,
+                     unsigned short maxPercentage, unsigned short ratio);
+extern void printIpProtocolDistribution(int mode, int revertOrder, int printGraph);
+
+#ifdef ENABLE_FC
+extern void printFcProtocolDistribution(int mode, int revertOrder, int printGraph);
+extern void printFcTrafficMatrix (u_short vsanId, u_char sent);
+extern void drawVsanStatsGraph (unsigned int deviceId);
+extern void printVSANList(unsigned int deviceId);
 extern void printFCSessions(int actualDeviceId, int sortedColumn, int revertOrder,
                             int pageNum, char *url, HostTraffic *el);
 extern int printScsiSessionBytes (int actualDeviceId, int sortedColumn,
@@ -239,15 +244,16 @@ extern void printScsiLunStats (HostTraffic *el, int actualDeviceId,
                                int pageNum, char *lun);
 extern void printScsiLunGraphs (HostTraffic *el, int actualDeviceId);
 extern void printFcTrafficSummary (u_short vsanId);
-extern void printIpProtocolUsage(void);
-extern void printBar(char *buf, int bufLen, unsigned short percentageS, unsigned short percentageR,
-                     unsigned short maxPercentage, unsigned short ratio);
-extern void printIpProtocolDistribution(int mode, int revertOrder, int printGraph);
-extern void printFcProtocolDistribution(int mode, int revertOrder, int printGraph);
+extern void printFcHostsTraffic(int reportType,
+			      int sortedColumn, int revertOrder,
+			      int pageNum, char* url,
+                              LocalityDisplayPolicy showLocalityMode);
+extern void printVSANList(unsigned int deviceId);
+#endif
+
 extern void printProtoTraffic(int printGraph);
 extern void printProcessInfo(int processPid, int actualReportDeviceId);
 extern void printIpTrafficMatrix(void);
-extern void printFcTrafficMatrix (u_short vsanId, u_char sent);
 extern void printThptStatsMatrix(int sortedColumn);
 extern void printThptStats(int sortedColumn);
 extern void printDomainStats(char* domain_domain_name, int network_mode, int communityMode, 
@@ -258,8 +264,6 @@ extern void listNetFlows(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
 extern void printVLANList(unsigned int deviceId);
 extern void showPortTraffic(u_short portNr);
-extern void drawVsanStatsGraph (unsigned int deviceId);
-extern void printVSANList(unsigned int deviceId);
 extern void handleNtopConfig (char *url, UserPrefDisplayPage page, int postLen);
 extern void purgeHost(char *serialized_serial);
 extern void printInterfaceStats(void);

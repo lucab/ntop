@@ -4306,8 +4306,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
 
 /* ********************************** */
 
-void printFcProtocolDistribution(int mode, int revertOrder, int printGraph)
-{
+void printFcProtocolDistribution(int mode, int revertOrder, int printGraph) {
   char buf[2*LEN_GENERAL_WORK_BUFFER], *sign;
   float total, partialTotal, remainingTraffic;
   float percentage;

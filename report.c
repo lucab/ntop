@@ -578,10 +578,13 @@ void printTrafficSummary (int revertOrder) {
     sendString("<p>\n");
     printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, FALSE);
   }
+
+#ifdef ENABLE_FC
   if(!myGlobals.runningPref.printIpOnly) {
     sendString("<p>\n");
     printFcTrafficSummary(0);
   }
+#endif
 }
 
 /* ******************************* */
@@ -1402,10 +1405,13 @@ void printTrafficStatistics(int revertOrder) {
     sendString("<p>\n");
     printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, TRUE);
   }
+
+#ifdef ENABLE_FC
   if(!myGlobals.runningPref.printIpOnly) {
     sendString("<p>\n");
     printFcProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, TRUE);
   }
+#endif
 }
 
 /* ******************************* */
