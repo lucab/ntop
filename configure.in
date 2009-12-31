@@ -136,14 +136,9 @@ dnl> NTOPCONFIGDEBUG_SETTINGS([ntop defaults])
 
 AC_ARG_ENABLE(void,
               [  +--ntop:---------------------------------------------------------------------+])
-dnl> Test before we use it, below
-AC_ARG_ENABLE(iknowbetter,
-              [  --enable-iknowbetter        Override WILLFAIL],
-              ac_willfailoverride="$enableval",
-              ac_willfailoverride="no")
 
 AC_ARG_ENABLE(mysql,
-              [  --enable-mysql                 Enable usage of mysql [[default=disabled]]],
+              [  --enable-mysql              Enable usage of mysql [[default=disabled]]],
               [if test "x$enableval" = xyes; then
                   ac_with_mysql="yes"
               else
@@ -151,6 +146,26 @@ dnl	          echo "x$enableval"
                   ac_with_mysql="no"
               fi],
               [ac_with_mysql="no"])
+
+AC_ARG_ENABLE(efficiency,
+              [  --enable-efficiency         Enable computation of ATM network efficiency [[default=disabled]]],
+              [if test "x$enableval" = xyes; then
+                  ac_with_efficiency="yes"
+              else
+dnl	          echo "x$enableval"
+                  ac_with_efficiency="no"
+              fi],
+              [ac_with_efficiency="no"])
+
+AC_ARG_ENABLE(fc,
+              [  --enable-fc                 Enable Fibre Channel/iSCSI support [[default=disabled]]],
+              [if test "x$enableval" = xyes; then
+                  ac_with_fc="yes"
+              else
+dnl	          echo "x$enableval"
+                  ac_with_fc="no"
+              fi],
+              [ac_with_fc="no"])
 
 AC_ARG_ENABLE(void,
               [  +----------------------------------------------------------------------------+])
@@ -413,8 +428,6 @@ case "${target}:${CC}" in
         echo "*"
         echo "*******************************************************************"
         if test "x${ac_willfailoverride}" = "xyes"; then
-            echo "*"
-            echo "* --enable-iknowbetter is set, so we will attempt to continue."
             echo "*"
             echo "* Fasten your seat belt and good luck!  If you are injured, the"
             echo "* development team will disavow any knowledge of your intentions."
@@ -1189,7 +1202,6 @@ AC_CHECK_FUNCS([gettimeofday])
 AC_CHECK_FUNCS([localtime_r])
 AC_CHECK_FUNCS([memchr memset])
 AC_CHECK_FUNCS([putenv])
-AC_CHECK_FUNCS([sched_yield])
 AC_CHECK_FUNCS([select socket])
 AC_CHECK_FUNCS([snprintf])
 AC_CHECK_FUNCS([sqrtf])
@@ -1427,6 +1439,20 @@ else
     echo "*******************************************************************"
     echo
     HAS_WARNING="yes"
+fi
+
+dnl>
+dnl> Network Efficiency
+dnl>
+if test "x$ac_with_efficiency" = "xyes"; then
+    AC_DEFINE_UNQUOTED(ENABLE_EFFICIENCY, 1, [Compute ATM network efficiency])
+fi
+
+dnl>
+dnl> Fibre Channel, iSCSI... support
+dnl>
+if test "x$ac_with_fc" = "xyes"; then
+    AC_DEFINE_UNQUOTED(ENABLE_FC, 1, [Enable Fibre Channel support])
 fi
 
 dnl>

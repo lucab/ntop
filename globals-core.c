@@ -451,6 +451,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
   myGlobals.startedAs = startedAs;
 
+#ifdef ENABLE_FC
   /* FC & SCSI-specific stuff */
   myGlobals.scsiDefaultDevType = SCSI_DEV_UNINIT;
 
@@ -473,6 +474,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
   myGlobals.fcMatrixHashCollisions = 0;
   myGlobals.fcMatrixHashUnresCollisions = 0;
+#endif
 
   /* 
      Efficiency is the ability to fill-up ATM cells so that they

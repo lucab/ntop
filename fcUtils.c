@@ -1,4 +1,4 @@
-/**
+/*
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
  *                          http://www.ntop.org
@@ -23,8 +23,9 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
 #include "ntop.h"
+
+#ifdef ENABLE_FC
 #include <stdarg.h>
 #include <assert.h>
 #include "fcUtils.h"
@@ -660,3 +661,5 @@ void processFcNSCacheFile(char *filename) {
     entry->alias[MAX_LEN_SYM_HOST_NAME-1] = '\0';
   }
 }
+
+#endif /* ENABLE_FC */

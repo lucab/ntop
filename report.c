@@ -196,7 +196,10 @@ void addPageIndicator(char *url, u_int pageNum,
 void printTrafficSummary (int revertOrder) {
   Counter unicastPkts;
   int i;
-  char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32], formatBuf1[32];
+  char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32];
+#ifdef ENABLE_FC
+  char formatBuf1[32];
+#endif
   struct pcap_stat pcapStat;
 
   unicastPkts = 0;
@@ -469,6 +472,7 @@ void printTrafficSummary (int revertOrder) {
 
     /* ****************** */
 
+#ifdef ENABLE_FC
     if(!myGlobals.runningPref.printIpOnly &&
        myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value > 0) {
       if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
@@ -512,6 +516,8 @@ void printTrafficSummary (int revertOrder) {
       sendString(buf);
 
     }
+#endif
+
     /* ****************** */
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
@@ -987,6 +993,7 @@ void printTrafficStatistics(int revertOrder) {
 
     /* ****************** */
 
+#ifdef ENABLE_FC
     if(!myGlobals.runningPref.printIpOnly &&
        myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value > 0) {
       sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">FC Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
@@ -1151,6 +1158,7 @@ void printTrafficStatistics(int revertOrder) {
       sendString(buf);
 
     }
+#endif
     /* ****************** */
 
     sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
@@ -3207,7 +3215,9 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
        && ((vlanId == NO_VLAN) || ((el->vlanId <= 0) || (el->vlanId == vlanId)))) {
       found = 1;
       break;
-    } else if((el->fcCounters != NULL)
+    }
+#ifdef ENABLE_FC
+    else if((el->fcCounters != NULL)
 	      && ((strncmp(fc_to_str ((u_int8_t *)&el->fcCounters->hostFcAddress),
 			   host, LEN_FC_ADDRESS_DISPLAY) == 0) &&
 		  ((el->fcCounters->vsanId == vsanId) || (vsanId == 0)))) {
@@ -3215,6 +3225,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
       foundFcHost = 1;
       break;
     }
+#endif
   }
 
   /* Dennis Schoen (dennis@cns.dnsalias.org)
@@ -3260,7 +3271,9 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     printHostHTTPVirtualHosts(el, actualDeviceId);
     printHostUsedServices(el, actualDeviceId);
     printHostFingerprint(el); /* ----- **** ----- */
-  } else if(foundFcHost) {
+  }
+#ifdef ENABLE_FC
+  else if(foundFcHost) {
     printHTMLheader("", NULL, 0);
     printFcHostHeader(el, url, revertOrder, sortedColumn, hostInfoPage);
 
@@ -3303,9 +3316,9 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
       break;
     }
 
-
     return;
   }
+#endif
 
   /* ***************************************************** */
 
@@ -4976,18 +4989,22 @@ void printThptStatsMatrix(int sortedColumn) {
 
   printHTMLheader("Network Load Statistics Matrix", NULL, 0);
 
-  memset (&tmpEl, 0, sizeof(HostTraffic));
+  memset(&tmpEl, 0, sizeof(HostTraffic));
+#ifdef ENABLE_FC
   if(allocFcScsiCounters(&tmpEl) == NULL) {
     traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for FC counters");
     return;
   }
+#endif
 
   switch(sortedColumn) {
   case 0:
   case 1:
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 1) {
       printNoDataYet();
+#ifdef ENABLE_FC
       free(tmpEl.fcCounters);
+#endif
       return;
     }
 
@@ -5128,7 +5145,9 @@ void printThptStatsMatrix(int sortedColumn) {
   default:
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 60) {
       printNoDataYet();
+#ifdef ENABLE_FC
       free (tmpEl.fcCounters);
+#endif
       return;
     } else {
       sendString("<CENTER>\n");
@@ -5262,7 +5281,9 @@ void printThptStatsMatrix(int sortedColumn) {
   }
 
   sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
+#ifdef ENABLE_FC
   free (tmpEl.fcCounters);
+#endif
 }
 
 /* ************************ */
@@ -6283,13 +6304,15 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
   sendString("<TR "TR_ON"><TH "TH_BG" "DARK_BG">Total</TH>\n");
 
+#ifdef ENABLE_FC
   if(isFcHost (el)) {
     targetStr = el->fcCounters->hostNumFcAddress;
-  }
-  else {
-    safe_snprintf(__FILE__, __LINE__, macAddr, sizeof(macAddr), "%s", el->ethAddressString);
-    targetStr = el->hostNumIpAddress[0] == '\0' ?  macAddr : el->hostNumIpAddress;
-  }
+  } else 
+#endif
+    {
+      safe_snprintf(__FILE__, __LINE__, macAddr, sizeof(macAddr), "%s", el->ethAddressString);
+      targetStr = el->hostNumIpAddress[0] == '\0' ?  macAddr : el->hostNumIpAddress;
+    }
 
   urlFixupToRFC1945Inplace(targetStr);
 
@@ -6564,6 +6587,7 @@ void showPortTraffic(u_short portNr) {
 
 /* ******************************************* */
 
+#ifdef ENABLE_FC
 void printFcHostsTraffic(int reportType,
                          int sortedColumn,
                          int revertOrder,
@@ -6918,6 +6942,7 @@ void printFcHostsTraffic(int reportType,
   myGlobals.lastRefreshTime = myGlobals.actTime;
   free(tmpTable);
 }
+#endif
 
 /* ************************************ */
 

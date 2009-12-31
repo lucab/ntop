@@ -30,6 +30,12 @@
 /* ntop built for unknown machine */
 #undef CFG_UNKNOWN_ENDIAN
 
+/* Compute ATM network efficiency */
+#undef ENABLE_EFFICIENCY
+
+/* Enable Fibre Channel support */
+#undef ENABLE_FC
+
 /* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM
 
@@ -336,9 +342,6 @@
 /* Define to 1 if you have the <sched.h> header file. */
 #undef HAVE_SCHED_H
 
-/* Define to 1 if you have the `sched_yield' function. */
-#undef HAVE_SCHED_YIELD
-
 /* SCTP is supported */
 #undef HAVE_SCTP
 
@@ -439,7 +442,7 @@
 /* Define to 1 if you have the `strtoul' function. */
 #undef HAVE_STRTOUL
 
-/* Define to 1 if `tm_zone' is member of `struct tm'. */
+/* Define to 1 if `struct tm' is a member of `tm_zone'. */
 #undef HAVE_STRUCT_TM_TM_ZONE
 
 /* Define to 1 if you have the `sysctl' function. */
@@ -576,6 +579,9 @@
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION

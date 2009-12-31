@@ -227,12 +227,13 @@ HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
     return(findHostByNumIP(theSerial.value.ipSerial.ipAddress,
 			   theSerial.value.ipSerial.vlanId,
 			   actualDeviceId));
+#ifdef ENABLE_FC
   } else if(theSerial.serialType == SERIAL_FC) {
     return(findHostByFcAddress(&theSerial.value.fcSerial.fcAddress,
 				 theSerial.value.fcSerial.vsanId,
 				 actualDeviceId));
-  }
-  else {
+#endif
+  } else {
     /* MAC */
     return(findHostByMAC((char*)theSerial.value.ethSerial.ethAddress,
 			 theSerial.value.ethSerial.vlanId,
@@ -2525,8 +2526,11 @@ void resetHostsVariables(HostTraffic* el) {
   el->icmpInfo = NULL;
   if (el->protocolInfo != NULL)        free(el->protocolInfo);
   el->protocolInfo = NULL;
+
+#ifdef ENABLE_FC
   if(el->fcCounters != NULL) free(el->fcCounters);
   el->fcCounters = NULL;
+#endif
 
   resetUsageCounter(&el->contactedSentPeers);
   resetUsageCounter(&el->contactedRcvdPeers);
@@ -4265,6 +4269,7 @@ void resetTrafficCounter(TrafficCounter *ctr) {
 
 /* ******************************** */
 
+#ifdef ENABLE_FC
 void allocateElementHash(int deviceId, u_short hashType) {
   int fcmemLen = sizeof(FcFabricElementHash*)*MAX_ELEMENT_HASH;
 
@@ -4277,6 +4282,7 @@ void allocateElementHash(int deviceId, u_short hashType) {
     break;
   }
 }
+#endif
 
 /* *************************************************** */
 
@@ -4289,8 +4295,10 @@ u_int numActiveSenders(u_int deviceId) {
     if(broadcastHost(el)
        || ((myGlobals.actTime-el->lastSeen) > PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES))
       continue;
+#ifdef ENABLE_FC
     else if (isFcHost (el) && (el->fcCounters->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
       continue;
+#endif
     else
       numSenders++;
   }
@@ -4299,6 +4307,8 @@ u_int numActiveSenders(u_int deviceId) {
 }
 
 /* *************************************************** */
+
+#ifdef ENABLE_FC
 u_int numActiveVsans(u_int deviceId)
 {
   u_int numVsans = 0, i;
@@ -4318,8 +4328,7 @@ u_int numActiveVsans(u_int deviceId)
 
   return (numVsans);
 }
-
-
+#endif
 
 /* *************************************************** */
 
@@ -4682,6 +4691,7 @@ void removeNtopPid(void) {
 
 /* ************************************ */
 
+#ifdef ENABLE_FC
 /* The following two routines have been extracted from Ethereal */
 static char *
 bytestring_to_str(const u_int8_t *ad, u_int32_t len, char punct) {
@@ -4730,14 +4740,12 @@ bytestring_to_str(const u_int8_t *ad, u_int32_t len, char punct) {
   return p;
 }
 
-char *
-fc_to_str(const u_int8_t *ad)
+char* fc_to_str(const u_int8_t *ad)
 {
   return bytestring_to_str (ad, 3, '.');
 }
 
-char *
-fcwwn_to_str (const u_int8_t *ad)
+char* fcwwn_to_str (const u_int8_t *ad)
 {
   u_int8_t zero_wwn[LEN_WWN_ADDRESS] = {0,0,0,0,0,0,0,0};
 
@@ -4747,21 +4755,19 @@ fcwwn_to_str (const u_int8_t *ad)
 
   return bytestring_to_str (ad, 8, ':');
 }
+#endif
 
 /* ************************************ */
 
-
-/* BStrauss - August 2003 - Check the flag and skip the call... */
 int ntop_conditional_sched_yield(void) {
-
-#ifdef MAKE_WITH_SCHED_YIELD
-  if(!myGlobals.runningPref.disableSchedYield) {
+#ifndef WIN32
     return(sched_yield());
-  }
+#else
+    return(0);
 #endif
-
-  return(0);
 }
+
+#ifdef ENABLE_FC
 
 /* *************************************************** */
 
@@ -4825,6 +4831,7 @@ FcNameServerCacheEntry *findFcHostNSCacheEntry(FcAddress *fcAddr, u_short vsanId
 
   return (NULL);
 }
+#endif
 
 /* ************************************ */
 
@@ -5877,12 +5884,15 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
                  file, line);
 #endif
 
+#ifdef ENABLE_FC
     if (updateType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN) {
       safe_snprintf(__FILE__, __LINE__, el->hostResolvedName,
 		    sizeof(el->hostResolvedName),
 		    fcwwn_to_str ((u_int8_t*)updateValue));
       el->hostResolvedName[LEN_WWN_ADDRESS_DISPLAY] = '\0';
-    } else {
+    } else 
+#endif
+      {
       safe_snprintf(__FILE__, __LINE__, el->hostResolvedName, 
 		    sizeof(el->hostResolvedName), "%s", updateValue);
     }

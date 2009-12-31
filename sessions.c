@@ -354,10 +354,11 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 
 /* ************************************ */
 
+#ifdef ENABLE_FC
+
 void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
                    u_char allocateMemoryIfNeeded,
-                   u_char lockMutex /* unused so far */)
-{
+                   u_char lockMutex /* unused so far */) {
     int i;
 
     /* Session to purge */
@@ -405,6 +406,7 @@ void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
     free(sessionToPurge);
 #endif
 }
+#endif
 
 /* ************************************ */
 
@@ -2670,6 +2672,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 
 /* ******************* */
 
+#ifdef ENABLE_FC
 static int getScsiCmdType(u_char scsiCmd, u_int32_t *ioSize, const u_char *bp) {
   int cmdType;
 
@@ -3697,3 +3700,6 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
   releaseMutex(&myGlobals.fcSessionsMutex);
   return (theSession);
 }
+
+#endif
+

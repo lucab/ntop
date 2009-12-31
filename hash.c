@@ -111,6 +111,7 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 
 /* ************************************ */
 
+#ifdef ENABLE_FC
 u_int hashFcHost(FcAddress *fcaddr, u_short vsanId, HostTraffic **el,
 		 int actualDeviceId)
 {
@@ -140,6 +141,7 @@ u_int hashFcHost(FcAddress *fcaddr, u_short vsanId, HostTraffic **el,
 
   return(idx);
 }
+#endif
 
 /* ************************************ */
 /*
@@ -202,8 +204,8 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 		 host->hostNumIpAddress, host->hostResolvedName, host->numHostSessions);
     }
 #endif
-  }
-  else {
+  } else {
+#ifdef ENABLE_FC
     for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
       FCSession *prevSession, *nextSession, *theSession;
 
@@ -250,6 +252,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
       traceEvent(CONST_TRACE_ERROR, "====> Host %s/%s has %d sessions still to be purged",
 		 host->hostNumIpAddress, host->hostResolvedName, host->numHostSessions);
     }
+#endif
 #endif
   }
 }
@@ -331,6 +334,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     }
   }
 
+#ifdef ENABLE_FC
   if(myGlobals.device[actualDeviceId].fcTrafficMatrix != NULL) {
       int id = matrixHostHash (host, actualDeviceId, 0);
 
@@ -341,9 +345,11 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
           myGlobals.device[actualDeviceId].fcTrafficMatrix[i*myGlobals.device[actualDeviceId].numHosts+id] = NULL;
       }
   }
+#endif
 
   freeHostSessions(host, actualDeviceId);
 
+#ifdef ENABLE_FC
   if(host->fcCounters != NULL) {
     if(host->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
       for (i = 0; i < MAX_LUNS_SUPPORTED; i++) {
@@ -355,6 +361,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
     free(host->fcCounters);
   }
+#endif
 
   myGlobals.device[actualDeviceId].hostsno--;
 
@@ -545,8 +552,13 @@ int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now) {
 	     || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) &&
 		 ((el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
 		  || (!subnetPseudoLocalHost(el)))) /* Purge remote hosts only */
+#ifdef ENABLE_FC
 	     || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) &&
-		 (el->fcCounters->hostNumFcAddress[0] == '\0')))))
+		 (el->fcCounters->hostNumFcAddress[0] == '\0'))
+#endif
+	     )
+	 )
+     )
     return(1);
   else
     return(0);
@@ -709,6 +721,7 @@ void setHostSerial(HostTraffic *el) {
   if(el->hostSerial.serialType != SERIAL_NONE)
     return;
 
+#ifdef ENABLE_FC
   if(isFcHost(el)) {
     if(el->fcCounters->hostNumFcAddress[0] != '\0') {
       el->hostSerial.serialType = SERIAL_FC;
@@ -720,7 +733,9 @@ void setHostSerial(HostTraffic *el) {
     else
       traceEvent (CONST_TRACE_ERROR, "setHostSerial: Received NULL FC Address entry");
   }
-  else if(el->hostNumIpAddress[0] == '\0') {
+  else 
+#endif
+    if(el->hostNumIpAddress[0] == '\0') {
     el->hostSerial.serialType = SERIAL_MAC;
     memcpy(&el->hostSerial.value.ethSerial.ethAddress, el->ethAddress, LEN_ETHERNET_ADDRESS);
     el->hostSerial.value.ethSerial.vlanId = el->vlanId;
@@ -1189,6 +1204,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 
 /* ********************************************************** */
 
+#ifdef ENABLE_FC
 HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
                            int actualDeviceId) {
   u_int idx;
@@ -1337,6 +1353,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
   if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
   return(el);
 }
+#endif
 
 /* ************************************ */
 

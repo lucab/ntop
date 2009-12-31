@@ -24,6 +24,7 @@
 
 #include "ntop.h"
 
+#ifdef ENABLE_FC
 static void processFcPkt(const u_char *bp, const struct pcap_pkthdr *h,
 			 u_int16_t ethertype, int actualDeviceId);
 
@@ -31,6 +32,7 @@ static char *fcProtocolStrings[] = {
   "", "SW_ILS", "IP", "SCSI", "BLS", "ELS", "FCCT", "LinkData",
   "Video", "LinkCtl", "SWILS_RSP", "FICON", "Undefined"
 };
+#endif
 
 /* PPPoE - Courtesy of Andreas Pfaller Feb2003 */
 #ifdef HAVE_LINUX_IF_PPPOX_H
@@ -69,8 +71,8 @@ static void	updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
 
 /* ******************************* */
 
-static u_int32_t getFcProtocol (u_int8_t r_ctl, u_int8_t type)
-{
+#ifdef ENABLE_FC
+static u_int32_t getFcProtocol (u_int8_t r_ctl, u_int8_t type) {
   switch (r_ctl & 0xF0) {
   case FC_RCTL_DEV_DATA:
     switch (type) {
@@ -118,6 +120,7 @@ static u_int32_t getFcProtocol (u_int8_t r_ctl, u_int8_t type)
     break;
   }
 }
+#endif
 
 /* ******************************* */
 
@@ -384,9 +387,11 @@ static void addContactedPeers(HostTraffic *sender, HostAddr *srcAddr,
 			      HostTraffic *receiver, HostAddr *dstAddr,
 			      int actualDeviceId) {
   if((sender == NULL) || (receiver == NULL) || (sender == receiver)) {
-    if ((sender != NULL) && (sender->l2Family == FLAG_HOST_TRAFFIC_AF_FC) &&
-	(strncasecmp (sender->fcCounters->hostNumFcAddress, FC_FAB_CTLR_ADDR,
-		      strlen (FC_FAB_CTLR_ADDR)) == 0)) {
+    if ((sender != NULL) && (sender->l2Family == FLAG_HOST_TRAFFIC_AF_FC)
+#ifdef ENABLE_FC
+	&& (strncasecmp(sender->fcCounters->hostNumFcAddress, FC_FAB_CTLR_ADDR, strlen(FC_FAB_CTLR_ADDR)) == 0)
+#endif
+	) {
       /* This is normal. Return without warning */
       return;
     }
@@ -711,6 +716,7 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
 
   if (!myGlobals.runningPref.printIpOnly) {
     if (srcHost == dstHost) {
+#ifdef ENABLE_FC
       /* Fabric controllers exchange link messages where the S_ID & D_ID
        * are equal. A lot of control traffic is exchanged using these
        * addresses and so we must track this as an exception to the case of
@@ -722,9 +728,11 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
 	  return;
 	}
       }
-      else {
-	return;
-      }
+      else
+#endif
+	{
+	  return;
+	}
     }
     else if ((srcHost == myGlobals.otherHostEntry)
 	     && (dstHost == myGlobals.otherHostEntry)) {
@@ -3715,6 +3723,7 @@ void processPacket(u_char *_deviceId,
 			      &dstHost->hostIpAddress, ctr, 1, actualDeviceId);
 	  }
 	}
+#ifdef ENABLE_FC
       } else if (((eth_type == ETHERTYPE_MDSHDR) || (eth_type == ETHERTYPE_BRDWLK) ||
                   (eth_type == ETHERTYPE_UNKNOWN) || (eth_type == ETHERTYPE_BRDWLK_OLD)) &&
                  (!myGlobals.runningPref.printIpOnly)) {
@@ -3722,6 +3731,7 @@ void processPacket(u_char *_deviceId,
 	 * Ethertypes.
 	 */
 	processFcPkt (p, h, eth_type, actualDeviceId);
+#endif
       } else if((eth_type == ETHERTYPE_IP) || (eth_type == ETHERTYPE_IPv6)) {
 	if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type > ETHERMTU)) {
 	  processIpPkt(p, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
@@ -3968,8 +3978,9 @@ void processPacket(u_char *_deviceId,
 
 /* ************************************ */
 
+#ifdef ENABLE_FC
 void updateFcDevicePacketStats(u_int length, int actualDeviceId) {
-  if(length <= 36)        incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdFcPktStats.upTo36, 1);
+  if(length <= 36)       incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdFcPktStats.upTo36, 1);
   else if(length <= 48)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdFcPktStats.upTo48, 1);
   else if(length <= 52)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdFcPktStats.upTo52, 1);
   else if(length <= 68)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdFcPktStats.upTo68, 1);
@@ -4264,6 +4275,7 @@ static void processFcPkt(const u_char *bp,
 		   ntohs(fchdr.oxid), ntohs (fchdr.rxid), protocol,
 		   fchdr.r_ctl, isXchgOrig, &bp[offset+24], actualDeviceId);
 }
+#endif
 
 /* ************************************ */
 

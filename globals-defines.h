@@ -239,15 +239,6 @@
 #endif
 
 /*
- * MAKE_WITH_SCHED_YIELD is shorthand
- */
-#if ( defined(HAVE_SCHED_H) || defined(HAVE_SYS_SCHED_H) ) && defined(HAVE_SCHED_YIELD)
- #define MAKE_WITH_SCHED_YIELD
-#else
- #undef MAKE_WITH_SCHED_YIELD
-#endif
-
-/*
  * This flag indicates that fork() is implemented with copy-on-write.
  * This means that the set of tables reported on in fork()ed processes
  * will be complete and unchanged as of the instant of the fork.
@@ -2005,10 +1996,6 @@
 #define DEFAULT_NTOP_MAPPER_URL             "http://geotool.servehttp.com/" /* -U -*/
 #endif
 
-#ifdef MAKE_WITH_SCHED_YIELD
-#define DEFAULT_NTOP_SCHED_YIELD            TRUE
-#endif
-
 #define DEFAULT_NTOP_FCNS_FILE              NULL
 #define DEFAULT_NTOP_W3C                    TRUE
 #define DEFAULT_NTOP_P3PCP                  NULL
@@ -2726,8 +2713,6 @@ struct ip6_hdr
 #define NTOP_PREF_DAEMON                 "ntop.daemonMode"
 #define NTOP_PREF_REFRESH_RATE           "ntop.refreshRate"
 #define NTOP_PREF_MAXLINES               "ntop.maxNumLines"
-#define NTOP_PREF_PRINT_FCORIP           "ntop.printFcOrIp"
-#define NTOP_PREF_NO_INVLUN              "ntop.noInvalidLunDisplay"
 #define NTOP_PREF_W3C                    "ntop.w3c"
 #define NTOP_PREF_IPV4                   "ntop.ipv4"
 #define NTOP_PREF_IPV6                   "ntop.ipv6"
@@ -2737,7 +2722,13 @@ struct ip6_hdr
 #define NTOP_PREF_PROTOSPECS             "ntop.protoSpecs"
 #define NTOP_PREF_P3PCP                  "ntop.P3Pcp"
 #define NTOP_PREF_P3PURI                 "ntop.P3Puri"
+
+#ifdef ENABLE_FC
 #define NTOP_PREF_WWN_MAP                "ntop.fcNSCacheFile"
+#define NTOP_PREF_PRINT_FCORIP           "ntop.printFcOrIp"
+#define NTOP_PREF_NO_INVLUN              "ntop.noInvalidLunDisplay"
+#endif
+
 #define NTOP_PREF_MAXHASH                "ntop.maxNumHashEntries"
 #define NTOP_PREF_SQL_DB_CONFIG          "ntop.sqlDbConfig"
 #define NTOP_PREF_SQL_REC_LIFETIME       "ntop.sqlRecDaysLifetime"
@@ -2751,7 +2742,6 @@ struct ip6_hdr
 #define NTOP_PREF_NO_ISESS_PURGE         "ntop.disableInstantSessionPurge"
 #define NTOP_PREF_NO_TRUST_MAC           "ntop.dontTrustMACaddr"
 #define NTOP_PREF_PCAP_LOGBASE           "ntop.pcapLogBasePath"
-#define NTOP_PREF_NO_SCHEDYLD            "ntop.schedYield"
 #define NTOP_PREF_DBG_MODE               "ntop.debugMode"
 #define NTOP_PREF_TRACE_LVL              "ntop.traceLevel"
 #define NTOP_PREF_DUMP_OTHER             "ntop.enableOtherPacketDump"

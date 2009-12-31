@@ -138,7 +138,9 @@ void usage(FILE * fp) {
 
   fprintf(fp, "    [-M             | --no-interface-merge]               %sDon't merge network interfaces (see man page)\n",
 	  newLine);
+#ifdef ENABLE_FC
   fprintf(fp, "    [-N             | --wwn-map]                          %sMap file providing map of WWN to FCID/VSAN\n", newLine);
+#endif
   fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            %sPath for log files in pcap format\n", newLine);
   fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     %sURL (mapper.pl) for displaying host location\n",
 	  newLine);
@@ -151,14 +153,15 @@ void usage(FILE * fp) {
 
   fprintf(fp, "    [--disable-instantsessionpurge]                       %sDisable instant FIN session purge\n", newLine);
   fprintf(fp, "    [--disable-mutexextrainfo]                            %sDisable extra mutex info\n", newLine);
-#ifdef MAKE_WITH_SCHED_YIELD
-  fprintf(fp, "    [--disable-schedyield]                                %sTurn off sched_yield() calls, if ntop is deadlocking on them\n", newLine);
-#endif
   fprintf(fp, "    [--disable-stopcap]                                   %sCapture packets even if there's no memory left\n", newLine);
+
+#ifdef ENABLE_FC
   fprintf(fp, "    [--fc-only]                                           %sDisplay only Fibre Channel statistics\n", newLine);
   fprintf(fp, "    [--no-fc]                                             %sDisable processing & Display of Fibre Channel\n", newLine);
-  fprintf(fp, "    [--instance]                                          %sSet log name for this ntop instance\n", newLine);
   fprintf(fp, "    [--no-invalid-lun]                                    %sDon't display Invalid LUN information\n", newLine);
+#endif
+
+  fprintf(fp, "    [--instance]                                          %sSet log name for this ntop instance\n", newLine);
   fprintf(fp, "    [--p3p-cp]                                            %sSet return value for p3p compact policy, header\n", newLine);
   fprintf(fp, "    [--p3p-uri]                                           %sSet return value for p3p policyref header\n", newLine);
   fprintf(fp, "    [--skip-version-check]                                %sSkip ntop version check\n", newLine);
@@ -651,9 +654,11 @@ int main(int argc, char *argv[]) {
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "P3P: Policy reference uri is '%s'",
 		 myGlobals.runningPref.P3Puri);
 
-  if (!myGlobals.runningPref.printIpOnly && (myGlobals.runningPref.fcNSCacheFile != NULL)) {
-      processFcNSCacheFile (myGlobals.runningPref.fcNSCacheFile);
+#ifdef ENABLE_FC
+  if(!myGlobals.runningPref.printIpOnly && (myGlobals.runningPref.fcNSCacheFile != NULL)) {
+    processFcNSCacheFile (myGlobals.runningPref.fcNSCacheFile);
   }
+#endif
 
   initNtop(myGlobals.runningPref.devices);
 

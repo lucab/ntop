@@ -321,6 +321,7 @@ makeHostLink(HostTraffic *el, short mode,
         safe_snprintf(__FILE__, __LINE__, noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:MAC(%s) -->",
 		      el->ethAddressString);
       strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
+#ifdef ENABLE_FC
     } else if(el->fcCounters->hostNumFcAddress[0] != '\0') {
       strncpy(symIp, el->fcCounters->hostNumFcAddress, sizeof(symIp));
 #ifndef CMPFCTN_DEBUG
@@ -329,6 +330,7 @@ makeHostLink(HostTraffic *el, short mode,
         safe_snprintf(__FILE__, __LINE__, noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:FC(%s) -->",
 		      el->fcCounters->hostNumFcAddress);
       strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
+#endif
     } else if(el->nonIPTraffic) {
       if(el->nonIPTraffic->nbHostName != NULL) {
         strncpy(symIp, el->nonIPTraffic->nbHostName, sizeof(symIp));
@@ -2115,14 +2117,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "HAVE_SCHED_H",
 #ifdef HAVE_SCHED_H
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_SCHED_YIELD",
-#ifdef HAVE_SCHED_YIELD
                          "yes"
 #else
                          "no"
@@ -4786,14 +4780,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SCHED_YIELD",
-#ifdef MAKE_WITH_SCHED_YIELD
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SYSLOG",
 #ifdef MAKE_WITH_SYSLOG
                          "yes"
@@ -6259,9 +6245,11 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 			   "(parameter -M set, Interfaces separate) No",
                            DEFAULT_NTOP_MERGE_INTERFACES == 1 ? "(Merging Interfaces) Yes" : "");
 
+#ifdef ENABLE_FC
   printParameterConfigInfo(textPrintFlag, "-N | --wwn-map",
                            pref->fcNSCacheFile,
                            NULL);
+#endif
 
   printParameterConfigInfo(textPrintFlag, "-O | --pcap-file-path",
                            pref->pcapLogBasePath,
@@ -6303,12 +6291,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 		  pref->maxNumSessions);
     printFeatureConfigInfo(textPrintFlag, "-X", buf);
   }
-
-#ifdef MAKE_WITH_SCHED_YIELD
-  printParameterConfigInfo(textPrintFlag, "--disable-schedYield",
-                           pref->disableSchedYield == TRUE ? "Yes" : "No",
-                           "No");
-#endif
 
   printParameterConfigInfo(textPrintFlag, "--disable-instantsessionpurge",
                            pref->disableInstantSessionPurge == TRUE ? "Yes" : "No",

@@ -618,7 +618,7 @@ int handlePythonHTTPRequest(char *url) {
   char python_path[256];
   struct stat statbuf;
   FILE *fd;
-  char *question_mark = strchr(url, '?'), *key;
+  char *question_mark = strchr(url, '?');
 
   traceEvent(CONST_TRACE_INFO, "Calling python... [%s]", url);
 

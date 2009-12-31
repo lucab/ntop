@@ -238,21 +238,17 @@ ntop.h
 /*
  * thread management
  */
-#ifdef MAKE_WITH_SCHED_YIELD
+#ifdef HAVE_SCHED_H
+#ifdef LINUX
+#undef HAVE_SCHED_H      /* Linux doesn't seem to really like it */
+#else
+#include <sched.h>
+#endif
+#endif
 
- #ifdef HAVE_SCHED_H
- # ifdef LINUX
- #  undef HAVE_SCHED_H      /* Linux doesn't seem to really like it */
- # else
- #  include <sched.h>
- # endif
- #endif
-
- #ifdef HAVE_SYS_SCHED_H
-  #include <sys/sched.h>
- #endif
-
-#endif /* MAKE_WITH_SCHED_YIELD */
+#ifdef HAVE_SYS_SCHED_H
+#include <sys/sched.h>
+#endif
 
 #ifdef HAVE_PTHREAD_H
  #include <pthread.h>

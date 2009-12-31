@@ -188,9 +188,12 @@ extern void clearUserUrlList(void);
 extern char* _formatTime(time_t *theTime, char *outStr, int outStrLen, char *file, int line);
 #define formatTime(t, o, l) _formatTime(t, o, l, __FILE__, __LINE__)
 
+#ifdef ENABLE_FC
 /* fcUtils.c */
 extern HostTraffic* allocFcScsiCounters(HostTraffic *host);
+#endif
 
+/* python.c */
 #ifdef HAVE_PYTHON
 extern void init_python(int argc, char *argv[]);
 extern void term_python(void);
@@ -199,8 +202,10 @@ extern void term_python(void);
 /* hash.c */
 extern u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 		      short* useIPAddressForSearching, HostTraffic **el, int actualDeviceId);
+#ifdef ENABLE_FC
 extern u_int hashFcHost(FcAddress *fcAddress, u_short vsanId,
 			HostTraffic **el, int actualDeviceId);
+#endif
 extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now);
@@ -211,8 +216,9 @@ extern HostTraffic * _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 				 u_char forceUsingIPaddress, int actualDeviceId,
 				 char *file, int line);
 #define lookupHost(a, b, c, d, e, f) _lookupHost(a, b, c, d, e, f, __FILE__, __LINE__)
-extern HostTraffic * lookupFcHost(FcAddress *fcAddress, u_short vsanId,
-				  int actualDeviceId);
+#ifdef ENABLE_FC
+extern HostTraffic * lookupFcHost(FcAddress *fcAddress, u_short vsanId, int actualDeviceId);
+#endif
 extern void add_valid_ptr(void* ptr);
 extern void remove_valid_ptr(void* ptr);
 extern int is_valid_ptr(void* ptr);
@@ -503,10 +509,12 @@ extern int ntop_conditional_sched_yield(void);
 extern HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualDeviceId);
 extern HostTraffic* findHostBySerial(HostSerial serial, u_int actualDeviceId);
 extern HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId);
+#ifdef ENABLE_FC
 extern HostTraffic* findHostByFcAddress(FcAddress *fcAddr, u_short vsanId, u_int actualDeviceId);
 extern FcNameServerCacheEntry *findFcHostNSCacheEntry(FcAddress *fcAddr, u_short vsanId);
 extern char* fc_to_str(const u_int8_t *ad);
 extern char* fcwwn_to_str(const u_int8_t *ad);
+#endif
 #ifdef INET6
 extern unsigned long in6_hash(struct in6_addr *addr);
 extern int in6_isglobal(struct in6_addr *addr);
@@ -831,8 +839,10 @@ extern void l7SessionProtoDetection(IPSession *theSession,
 extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);
 extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, 
 			u_char allocateMemoryIfNeeded, u_char lockMutex);
+#ifdef ENABLE_FC
 extern void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
 			  u_char allocateMemoryIfNeeded, u_char lockMutex);
+#endif
 extern void scanTimedoutTCPSessions(int actualDeviceId);
 extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
 			    u_short sport, u_short dport, u_int length);
@@ -856,6 +866,7 @@ extern void updatePeersDelayStats(HostTraffic *peer_a, HostSerial *peer_b_serial
 				  u_char is_client_delay, 
 				  int port_idx);
 extern void updateSessionDelayStats(IPSession* session);
+#ifdef ENABLE_FC
 extern FCSession* handleFcSession(const struct pcap_pkthdr *h,
 				  u_short fragmentedData,
 				  HostTraffic *srcHost, HostTraffic *dstHost,
@@ -863,11 +874,14 @@ extern FCSession* handleFcSession(const struct pcap_pkthdr *h,
 				  u_short rxid, u_short protocol, u_char rCtl,
 				  u_char isXchgOrig, const u_char *bp,
 				  int actualDeviceId);
+#endif
 
 /* event.c */
 extern void notifyEvent(EventType evt, HostTraffic *el, IPSession *session, int eventValue);
 extern void init_events(void);
 
+
+#ifdef ENABLE_FC
 /* fcUtils.c */
 extern int isFlogiAcc(FcAddress *fcAddress, u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
 extern int fillFcHostInfo(const u_char *bp, HostTraffic *srcHost);
@@ -885,6 +899,7 @@ extern int updateFcFabricElementHash(FcFabricElementHash **theHash, u_short vsan
 				     u_short protocol, u_char r_ctl,
 				     u_int32_t pktlen);
 extern void processFcNSCacheFile(char *filename);
+#endif
 
 extern u_int32_t num_db_insert, num_db_insert_failed;
 extern int is_db_enabled(void);

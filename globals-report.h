@@ -113,13 +113,17 @@ extern HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffi
 extern void printHostContactedPeers(HostTraffic *el, int actualDeviceId);
 extern void printFcHostContactedPeers(HostTraffic *el, int actualDeviceId);
 extern char *getSessionState(IPSession *session);
+#ifdef ENABLE_FC
 extern char *getFcSessionState(FCSession *session);
+#endif
 extern void printHostSessions(HostTraffic *el, int actualDeviceId);
 extern u_short isHostHealthy(HostTraffic *el);
 extern void printHostDetailedInfo(HostTraffic *el, int actualDeviceId);
+#ifdef ENABLE_FC
 extern void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId);
 extern void printVsanDetailedInfo (u_int vsanId, int actualDeviceId);
 extern void printVsanProtocolStats (FcFabricElementHash *hash, int actualDeviceId);
+#endif
 extern void printServiceStats(char* svcName, ServiceStats* ss, short printSentStats);
 extern void printHostUsedServices(HostTraffic *el, int actualDeviceId);
 extern void printHostIcmpStats(HostTraffic *el);
@@ -140,11 +144,11 @@ extern void dumpNtopTrafficInfo(FILE*, char* options);
 extern void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId);
 extern void checkHostProvidedServices(HostTraffic *el);
 extern void printHostsStats(int fingerprintRemote);
-
+#ifdef ENABLE_FC
 extern FcFabricElementHash *getFcFabricElementHash (u_short vsanId, int actualDeviceId);
 extern void dumpFcFabricElementHash (FcFabricElementHash **theHash, char* label,
                                      u_char dumpLoopbackTraffic, u_char vsanHash);
-
+#endif
 extern void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName);
 
 extern void printPluginTrailer(char *left, char *middle);

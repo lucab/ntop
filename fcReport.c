@@ -1,4 +1,4 @@
-/**
+/*
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
  *                          http://www.ntop.org
@@ -25,14 +25,14 @@
 
 
 #include "ntop.h"
+
+#ifdef ENABLE_FC
 #include <stdarg.h>
 #include <assert.h>
 #include "fcUtils.h"
 #include "globals-report.h"
 
 /* **************************************** */
-
-/* ******************* */
 
 char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
                       short compactWWN, char *buf, int buflen) {
@@ -4726,3 +4726,5 @@ void printFcTrafficSummary (u_short vsanId)
   }
   sendString("</TABLE>"TABLE_OFF"<P>\n");
 }
+
+#endif /* ENABLE_FC */

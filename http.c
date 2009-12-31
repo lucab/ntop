@@ -601,6 +601,8 @@ static void ssiMenu_Head(void) {
 		  "				[null,'Local Matrix','/" CONST_IP_TRAFFIC_MATRIX_HTML "',null,null],\n"
 		  "		],\n"
 		  "	],\n");
+
+#ifdef ENABLE_FC
   if(!myGlobals.runningPref.printIpOnly
      && myGlobals.device[myGlobals.actualReportDeviceId].vsanHash /* We have something to show */) {
     sendStringWOssi(
@@ -629,6 +631,8 @@ static void ssiMenu_Head(void) {
     sendStringWOssi(
 		    "	],\n");
   }
+#endif
+
   sendStringWOssi(
 		  "	[null,'Utils',null,null,null,\n"
 		  "		[null,'Data Dump','/dump.html',null,null],\n"
@@ -2845,6 +2849,7 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawVsanStatsGraph(myGlobals.actualReportDeviceId);
 	printTrailer=0;
+#ifdef ENABLE_FC
       } else if(strncasecmp (pageName, CONST_VSAN_DETAIL_HTML, strlen (CONST_VSAN_DETAIL_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printVsanDetailedInfo (vsanId, myGlobals.actualReportDeviceId);
@@ -2896,6 +2901,7 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
         drawVsanDomainTrafficDistribution(vsanId, FALSE);
 	printTrailer=0;
+#endif
       } else if(strncasecmp(pageName, CONST_PIE_IP_TRAFFIC, strlen(CONST_PIE_IP_TRAFFIC)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawTrafficPie();
@@ -2914,6 +2920,7 @@ static int returnHTTPPage(char* pageName,
 	} else {
 	  printNoDataYet();
 	}
+#ifdef ENABLE_FC
       } else if(strncasecmp(pageName, CONST_PIE_FC_PKT_SZ_DIST,
 			    strlen(CONST_PIE_FC_PKT_SZ_DIST)) == 0) {
 	if(myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value > 0) {
@@ -2923,6 +2930,7 @@ static int returnHTTPPage(char* pageName,
 	} else {
 	  printNoDataYet();
 	}
+#endif
       } else if(strncasecmp(pageName, CONST_PIE_TTL_DIST, strlen(CONST_PIE_TTL_DIST)) == 0) {
 	if(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value > 0) {
 	  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -3007,11 +3015,14 @@ static int returnHTTPPage(char* pageName,
 		   || (strcmp(el->ethAddressString, hostName) == 0))) {
 	      break;
 	    }
-          } else {
+          }
+#ifdef ENABLE_FC
+	  else {
 	    if((el->fcCounters->hostNumFcAddress != NULL) &&
 	       strcmp(el->fcCounters->hostNumFcAddress, hostName) == 0)
 	      break;
           }
+#endif
         }
 
 	if(el == NULL) {
@@ -3064,11 +3075,14 @@ static int returnHTTPPage(char* pageName,
 	       && ((strcmp(el->hostNumIpAddress, hostName) == 0)
 		   || (strcmp(el->ethAddressString, hostName) == 0)))
 	      break;
-	  } else {
+	  }
+#ifdef ENABLE_FC
+	  else {
 	    if((el->fcCounters->hostNumFcAddress != NULL) &&
 	       strcmp(el->fcCounters->hostNumFcAddress, hostName) == 0)
 	      break;
 	  }
+#endif
         }
 
         if(el == NULL) {
@@ -3150,11 +3164,14 @@ static int returnHTTPPage(char* pageName,
 
 	  for(el=getFirstHost(myGlobals.actualReportDeviceId);
 	      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+#ifdef ENABLE_FC
 	    if(isFcHost(el)) {
               if((el->fcCounters->hostNumFcAddress != NULL) &&
 		 strcmp(el->fcCounters->hostNumFcAddress, hostName) == 0)
 		break;
-	    } else {
+	    } else
+#endif
+	      {
 	      if((el != myGlobals.broadcastEntry)
 		 && (el->hostNumIpAddress != NULL)
 		 && ((el->vlanId <= 0) || (el->vlanId == vlanId))

@@ -1078,6 +1078,7 @@ int drawHostsDistanceGraph(int checkOnly) {
 
 /* ************************ */
 
+#ifdef ENABLE_FC
 void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent) {
   float p[MAX_NUM_PROTOS];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
@@ -1568,3 +1569,4 @@ void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent) {
 
   build_pie(idx, p, lbl);
 }
+#endif /* ENABLE_FC */

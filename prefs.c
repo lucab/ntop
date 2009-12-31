@@ -56,11 +56,23 @@ static char __see__ []    =
    * ('P' option) and so these are processed separately.
    */
 #ifdef WIN32
-static char*  short_options = "46a:bce:f:ghi:jl:m:nop:qr:st:w:x:zAB:C:D:F:MN:O:P:Q:S:U:VX:W:";
+static char*  short_options = "46a:bce:f:ghi:jl:m:nop:qr:st:w:x:zAB:C:D:F:M" 
+#ifdef ENABLE_FC
+  "N:"
+#endif
+  "O:P:Q:S:U:VX:W:";
 #elif defined(MAKE_WITH_SYSLOG)
-static char*  short_options = "46a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKLMN:O:P:Q:S:U:VX:W:";
+static char*  short_options = "46a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKLM" 
+#ifdef ENABLE_FC
+  "N:"
+#endif
+  "O:P:Q:S:U:VX:W:";
 #else
-static char*  short_options = "46a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKMN:O:P:Q:S:U:VX:W:";
+static char*  short_options = "46a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKM"
+#ifdef ENABLE_FC
+  "N:"
+#endif
+  "O:P:Q:S:U:VX:W:";
 #endif
 
 static struct option const long_options[] = {
@@ -109,7 +121,9 @@ static struct option const long_options[] = {
 
   { "no-interface-merge",               no_argument,       NULL, 'M' },
 
+#ifdef ENABLE_FC
   { "wwn-map",                          required_argument, NULL, 'N' },
+#endif
 
   { "output-packet-path",               required_argument, NULL, 'O' },
   { "db-file-path",                     required_argument, NULL, 'P' },
@@ -131,11 +145,7 @@ static struct option const long_options[] = {
   { "use-syslog",                       optional_argument, NULL, 131 },
 #endif
 
-  /* 132/133 are AVAILABLE */
-
-#ifdef MAKE_WITH_SCHED_YIELD
-  { "disable-schedyield",               optional_argument, NULL, 134 },
-#endif
+  /* 132/133/134 are AVAILABLE */
 
   { "set-admin-password",               optional_argument, NULL, 135 },
 
@@ -150,9 +160,11 @@ static struct option const long_options[] = {
   { "disable-instantsessionpurge",      no_argument,       NULL, 144 },
   { "disable-mutexextrainfo",           no_argument,       NULL, 145 },
 
+#ifdef ENABLE_FC
   { "fc-only",                          no_argument,       NULL, 147 },
   { "no-fc",                            no_argument,       0,    148 },
   { "no-invalid-lun",                   no_argument,       0,    149 },
+#endif
 
   { "skip-version-check",               required_argument, NULL, 150 },
   { "known-subnets",                    required_argument, NULL, 151 },
@@ -537,10 +549,12 @@ int parseOptions(int argc, char* argv[]) {
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Interface merge disabled due to command line switch");
       break;
 
+#ifdef ENABLE_FC
     case 'N':
       pathSanityCheck(optarg, "-N | --wwn-map");
       myGlobals.runningPref.fcNSCacheFile = strdup (optarg);
       break;
+#endif
 
     case 'O': /* pcap log path - Ola Lundqvist <opal@debian.org> */
       pathSanityCheck(optarg, "-O | --output-packet-path");
@@ -643,12 +657,6 @@ int parseOptions(int argc, char* argv[]) {
 	printf("NOTE: --use-syslog, no facility specified, using default value.  Did you forget the =?\n");
 	myGlobals.runningPref.useSyslog = DEFAULT_SYSLOG_FACILITY;
       }
-      break;
-#endif
-
-#ifdef MAKE_WITH_SCHED_YIELD
-    case 134: /* disable-schedyield */
-      myGlobals.runningPref.disableSchedYield = TRUE;
       break;
 #endif
 
@@ -1091,7 +1099,9 @@ static bool value2bool(char* value) {
 bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
   bool startCap = FALSE;
   char buf[16], *tmpStr = NULL;
+#ifdef ENABLE_FC
   int tmpInt;
+#endif
 
   if(value == NULL) value = ""; /* Safer */
 
@@ -1214,6 +1224,7 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
     }
     processIntPref(NTOP_PREF_MAXLINES, value, &pref->maxNumLines,
 		    savePref);
+#ifdef ENABLE_FC
   } else if(strcmp(key, NTOP_PREF_PRINT_FCORIP) == 0) {
     tmpInt = atoi (value);
     if(tmpInt == NTOP_PREF_VALUE_PRINT_IPONLY) {
@@ -1228,6 +1239,7 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
   } else if(strcmp(key, NTOP_PREF_NO_INVLUN) == 0) {
     processBoolPref(NTOP_PREF_NO_INVLUN, value2bool(value),
 		     &pref->noInvalidLunDisplay, savePref);
+#endif
   } else if(strcmp(key, NTOP_PREF_W3C) == 0) {
     processBoolPref(NTOP_PREF_W3C, value2bool(value), &pref->w3c, savePref);
   } else if(strcmp(key, NTOP_PREF_IPV4V6) == 0) {
@@ -1249,9 +1261,11 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
     processStrPref(NTOP_PREF_P3PCP, value, &pref->P3Pcp, savePref);
   } else if(strcmp(key, NTOP_PREF_P3PURI) == 0) {
     processStrPref(NTOP_PREF_P3PURI, value, &pref->P3Puri, savePref);
+#ifdef ENABLE_FC
   } else if(strcmp(key, NTOP_PREF_WWN_MAP) == 0) {
     processStrPref(NTOP_PREF_WWN_MAP, value, &pref->fcNSCacheFile,
 		    savePref);
+#endif
   } else if(strcmp(key, NTOP_PREF_MAXHASH) == 0) {
     if(value == NULL) {
       safe_snprintf (__FILE__, __LINE__, buf, sizeof(buf), "%d",
@@ -1349,12 +1363,6 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
     processBoolPref(NTOP_PREF_NO_MUTEX_EXTRA, value2bool(value),
 		     &pref->disableMutexExtraInfo, savePref);
   }
-#ifdef MAKE_WITH_SCHED_YIELD
-  else if(strcmp(key, NTOP_PREF_NO_SCHEDYLD) == 0) {
-    processBoolPref(NTOP_PREF_NO_SCHEDYLD, value2bool(value),
-		     &pref->disableSchedYield, savePref);
-  }
-#endif
   else if(strncmp (key, "ntop.", strlen ("ntop.")) == 0) {
     traceEvent(CONST_TRACE_WARNING, "Unknown preference: %s, value = %s\n",
 		key, (value == NULL) ? "(null)" : value);
@@ -1409,17 +1417,15 @@ void initUserPrefs(UserPref *pref) {
 #else
   pref->pcapLogBasePath = strdup(CFG_DBFILE_DIR);
 #endif
+#ifdef ENABLE_FC
   pref->fcNSCacheFile   = DEFAULT_NTOP_FCNS_FILE;
+#endif
   /* note that by default ntop will merge network interfaces */
   pref->mapperURL = DEFAULT_NTOP_MAPPER_URL;
 // #ifdef HAVE_OPENSSL
 //   pref->sslAddr = DEFAULT_NTOP_WEB_ADDR;
 //   pref->sslPort = DEFAULT_NTOP_WEB_PORT+1;
 // #endif
-
-#ifdef MAKE_WITH_SCHED_YIELD
-   pref->disableSchedYield = DEFAULT_NTOP_SCHED_YIELD;
-#endif
 
    pref->w3c    = DEFAULT_NTOP_W3C;
    pref->P3Pcp  = DEFAULT_NTOP_P3PCP;

@@ -1175,10 +1175,6 @@ void addDefaultAdminUser(void) {
    tmpPrefs.enableOtherPacketDump = tmpPrefs.enableSuspiciousPacketDump = 0;
    tmpPrefs.enableSessionHandling = 0;
 
-#ifdef MAKE_WITH_SCHED_YIELD
-   tmpPrefs.disableSchedYield = 0;
-#endif
-
    devices = tmpPrefs.devices;
    tmpPrefs.devices = NULL;
 
@@ -1262,10 +1258,12 @@ void addDefaultAdminUser(void) {
        processNtopPref(NTOP_PREF_DAEMON, FALSE, savePref, &tmpPrefs);
      }
 
+#ifdef ENABLE_FC
      if (display_prefs && myGlobals.savedPref.noInvalidLunDisplay &&
 	 !tmpPrefs.noInvalidLunDisplay) {
        processNtopPref(NTOP_PREF_NO_INVLUN, FALSE, savePref, &tmpPrefs);
      }
+#endif
 
    if (display_prefs && myGlobals.savedPref.w3c && !tmpPrefs.w3c) {
      processNtopPref(NTOP_PREF_W3C, FALSE, savePref, &tmpPrefs);
@@ -1291,12 +1289,6 @@ void addDefaultAdminUser(void) {
    if (advanced_prefs && myGlobals.savedPref.dontTrustMACaddr && !tmpPrefs.dontTrustMACaddr) {
      processNtopPref(NTOP_PREF_NO_TRUST_MAC, FALSE, savePref, &tmpPrefs);
    }
-
-#ifdef MAKE_WITH_SCHED_YIELD
-   if (advanced_prefs && myGlobals.savedPref.disableSchedYield && !tmpPrefs.disableSchedYield) {
-     processNtopPref(NTOP_PREF_NO_SCHEDYLD, FALSE, savePref, &tmpPrefs);
-   }
-#endif
 
    if (debug_prefs && myGlobals.savedPref.debugMode && !tmpPrefs.debugMode) {
      processNtopPref(NTOP_PREF_DBG_MODE, FALSE, savePref, &tmpPrefs);
@@ -1706,6 +1698,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		     "Max number of lines that ntop will display on each "
 		     " generated HTML page");
 
+#ifdef ENABLE_FC
     sendString("<TR><TD ALIGN=LEFT "DARK_BG">Show Menus For</TD><TD ALIGN=LEFT>");
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<INPUT TYPE=radio NAME=%s  VALUE=%d %s>IP<br>\n",
@@ -1730,6 +1723,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		       NTOP_PREF_NO_INVLUN,
 		       pref->noInvalidLunDisplay,
 		       "Don't display info about non-existent LUNs");
+#endif
 
     CONFIG_RADIO_ENTRY(DARK_BG, "Use W3C", NTOP_PREF_W3C,
 		       pref->w3c,
@@ -1783,6 +1777,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 
     break;
 
+#ifdef ENABLE_FC
   case showPrefFCPref:
     sendString("<INPUT TYPE=HIDDEN NAME=FC_PREFS VALUE=1>");
 
@@ -1790,6 +1785,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		     50, pref->fcNSCacheFile,
 		     "Location of file mapping VSAN/FC_ID to WWN/Alias");
     break;
+#endif
 
   case showPrefAdvPref:
     sendString("<INPUT TYPE=HIDDEN NAME=ADVANCED_PREFS VALUE=1>");
@@ -1829,12 +1825,6 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
     CONFIG_STR_ENTRY(DARK_BG, "Pcap Log Base Path (-O)",
 		     NTOP_PREF_PCAP_LOGBASE, 50, pref->pcapLogBasePath,
 		     "Directory where packet dump files are created");
-
-#ifdef MAKE_WITH_SCHED_YIELD
-    CONFIG_RADIO_ENTRY(DARK_BG, "Disable SchedYield",
-		       NTOP_PREF_NO_SCHEDYLD, pref->disableSchedYield,
-		       "");
-#endif
     break;
 
   case showPrefDbgPref:

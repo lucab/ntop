@@ -4977,6 +4977,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 
 /* ****************************** */
 
+#ifdef ENABLE_FC
 static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
   char rrdPath[512], *adjHostName, hostKey[128], buf1[64];
 
@@ -5044,9 +5045,8 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
   unlockHostsHashMutex(el);
 
   ntop_conditional_sched_yield(); /* Allow other threads to run */
-
-  return;
 }
+#endif
 
 /* ****************************** */
 
@@ -5377,8 +5377,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	for (el = getFirstHost(devIdx); el != NULL; el = getNextHost(devIdx, el)) {
 	  if (el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH)
 	    rrdUpdateIPHostStats(el, devIdx, 0);
+#ifdef ENABLE_FC
 	  else if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC)
 	    rrdUpdateFcHostStats(el, devIdx);
+#endif
         }
       }
     }

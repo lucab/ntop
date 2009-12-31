@@ -850,6 +850,7 @@ int sortHostFctn(const void *_a, const void *_b) {
     return(rc);
     break;
   case 2:
+#ifdef ENABLE_FC
       if (isFcHost ((*a)) && isFcHost ((*b))) {
 	if((*a)->fcCounters->hostFcAddress.domain > (*b)->fcCounters->hostFcAddress.domain)
               return(1);
@@ -869,26 +870,31 @@ int sortHostFctn(const void *_a, const void *_b) {
                       return (0);
               }
           }
-      }
-      else {
+      } else
+#endif
+	{
           rc = addrcmp(&(*a)->hostIpAddress,&(*b)->hostIpAddress);
           return(rc);
       }
     break;
   case 3:
+#ifdef ENABLE_FC
       if (isFcHost ((*a)) && isFcHost ((*b))) {
           n_a = (*a)->fcCounters->vsanId, n_b = (*b)->fcCounters->vsanId;
           return ((n_a < n_b) ? -1 : (n_a > n_b) ? 1 : 0);
-      }
-      else {
+      } else
+#endif
+	{
           return(strcasecmp((*a)->ethAddressString, (*b)->ethAddressString));
       }
   case 5:
+#ifdef ENABLE_FC
       if (isFcHost ((*a)) && isFcHost ((*b))) {
 	return(strcasecmp(getVendorInfo(&((*a)->fcCounters->pWWN.str[2]), 0),
 			  getVendorInfo(&((*b)->fcCounters->pWWN.str[2]), 0)));
-      }
-      else {
+      } else
+#endif
+	{
           return(strcasecmp(getVendorInfo((*a)->ethAddress, 0),
                             getVendorInfo((*b)->ethAddress, 0)));
       }
@@ -1798,21 +1804,25 @@ int cmpHostsFctn(const void *_a, const void *_b) {
 
   switch(myGlobals.columnSort) {
   case 2: /* IP Address */
+#ifdef ENABLE_FC
     if(isFcHost((*a)) && isFcHost((*b))) {
       return(memcmp(((u_int8_t *)&(*a)->fcCounters->hostFcAddress), 
 		    ((u_int8_t *)&(*b)->fcCounters->hostFcAddress),
 		    LEN_FC_ADDRESS));
     }
     else
+#endif
       return(addrcmp(&(*a)->hostIpAddress, &(*b)->hostIpAddress));
     break;
 
   case 3: /* Data Sent */
+#ifdef ENABLE_FC
     if (isFcHost((*a)) && isFcHost((*b))) {
       a_ = (*a)->fcCounters->fcBytesSent.value;
       b_ = (*b)->fcCounters->fcBytesSent.value;
-    }
-    else {
+    } else
+#endif
+      {
       switch(myGlobals.sortFilter) {
       case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
 	a_ = (*a)->bytesSentLoc.value;
@@ -1832,11 +1842,13 @@ int cmpHostsFctn(const void *_a, const void *_b) {
     break;
 
   case 4: /* Data Rcvd */
+#ifdef ENABLE_FC
     if(isFcHost((*a)) && isFcHost((*b))) {
       a_ = (*a)->fcCounters->fcBytesRcvd.value;
       b_ = (*b)->fcCounters->fcBytesRcvd.value;
-    }
-    else {
+    } else
+#endif
+      {
       switch(myGlobals.sortFilter) {
       case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
 	a_ = (*a)->bytesRcvdLoc.value;
@@ -1855,13 +1867,15 @@ int cmpHostsFctn(const void *_a, const void *_b) {
     if(a_ < b_) return(1); else if (a_ > b_) return(-1); else return(0);
     break;
 
+#ifdef ENABLE_FC
   case 5: /* VSAN */
     if(isFcHost((*a)) && isFcHost((*b))) {
       a_ = (*a)->fcCounters->vsanId, b_ = (*b)->fcCounters->vsanId;
       return((a_ < b_) ? -1 : (a_ > b_) ? 1 : 0);
     }
     break;
-    
+#endif
+
   default: /* Host Name */
     return(cmpFctnResolvedName(a, b));
   }
@@ -3018,9 +3032,11 @@ void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
 /* ************************************ */
 
 HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) {
-    FcNameServerCacheEntry *fcnsEntry;
+#ifdef ENABLE_FC
+  FcNameServerCacheEntry *fcnsEntry;
   FcScsiCounters *tmp;
   HostTraffic *srcEl;
+#endif
   
   if(cmpSerial(&theSerial, &myGlobals.broadcastEntry->hostSerial)) {
     memcpy(el, myGlobals.broadcastEntry, sizeof(HostTraffic));
@@ -3030,9 +3046,13 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     return(0);
   }
 
+#ifdef ENABLE_FC
   tmp = el->fcCounters;
+#endif
   memset(el, 0, sizeof(HostTraffic));
+#ifdef ENABLE_FC
   el->fcCounters = tmp;
+#endif
   copySerial(&el->hostSerial, &theSerial);
 
   if((theSerial.serialType == SERIAL_IPV4) ||
@@ -3048,7 +3068,9 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
 	    sizeof(el->hostNumIpAddress));
 
     // FIX -- Update address TODO
-  } else if (theSerial.serialType == SERIAL_FC) {
+  }
+#ifdef ENABLE_FC
+  else if (theSerial.serialType == SERIAL_FC) {
     memcpy ((u_int8_t *)&el->fcCounters->hostFcAddress,
             (u_int8_t *)&theSerial.value.fcSerial.fcAddress,
             LEN_FC_ADDRESS);
@@ -3078,7 +3100,9 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
 		  LEN_WWN_ADDRESS);
         }
     }
-  } else {
+  }
+#endif
+  else {
     /* MAC */
     char *ethAddr;
     char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
@@ -3101,11 +3125,13 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
   char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
   HostTraffic tmpEl;
 
+#ifdef ENABLE_FC
   if (isFcHost (el)) {
       printFcHostContactedPeers (el, actualDeviceId);
       return;
   }
-  
+#endif
+
   if((el->pktSent.value != 0) || (el->pktRcvd.value != 0)) {
       int ok =0;
 

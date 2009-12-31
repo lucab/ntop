@@ -551,8 +551,10 @@ int isMatrixHost(HostTraffic *host, int actualDeviceId) {
 
 unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash) {
   unsigned long hash = 0;
+#ifdef ENABLE_FC
   char tmpBuf[80], *str;
   int c;
+#endif
 
   if(myGlobals.device[actualDeviceId].numHosts  == 0) return(0);
 
@@ -564,6 +566,7 @@ unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash) {
       hash = *(u_int32_t *)&host->hostIp6Address.s6_addr[0];
 #endif
   }
+#ifdef ENABLE_FC
   else {
     if (host->fcCounters->vsanId) {
       hash ^= host->fcCounters->vsanId;
@@ -593,7 +596,8 @@ unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash) {
       hash += c;
     }
   }
-    
+#endif
+ 
   return((unsigned int)(hash) % myGlobals.device[actualDeviceId].numHosts);
 }
 
@@ -631,9 +635,10 @@ void updateTrafficMatrix(HostTraffic *srcHost,
 
 /* ************************ */
 
+#ifdef ENABLE_FC
 void updateFcTrafficMatrix(HostTraffic *srcHost,
-			 HostTraffic *dstHost,
-			 TrafficCounter length, 
+			   HostTraffic *dstHost,
+			   TrafficCounter length, 
 			   int actualDeviceId) {
   unsigned int a, b, id;
 
@@ -689,6 +694,7 @@ void updateFcTrafficMatrix(HostTraffic *srcHost,
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcTrafficMatrix[id]->bytesRcvd, length.value);
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcTrafficMatrix[id]->pktsRcvd, 1);
 }
+#endif
 
 /* ************************ */
 

@@ -264,6 +264,7 @@ void resetDevice(int devIdx, short fullReset) {
   resetTrafficCounter(&myGlobals.device[devIdx].greBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].ipv6Bytes);
   resetTrafficCounter(&myGlobals.device[devIdx].otherBytes);
+#ifdef ENABLE_FC
   resetTrafficCounter(&myGlobals.device[devIdx].fcBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].fragmentedFcBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].fcFcpBytes);
@@ -276,6 +277,13 @@ void resetDevice(int devIdx, short fullReset) {
   resetTrafficCounter(&myGlobals.device[devIdx].class2Bytes);
   resetTrafficCounter(&myGlobals.device[devIdx].class3Bytes);
   resetTrafficCounter(&myGlobals.device[devIdx].classFBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcEofaPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcEofAbnormalPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcAbnormalPkts);
+  resetTrafficCounter(&myGlobals.device[devIdx].fcBroadcastPkts);
+  memset(&myGlobals.device[devIdx].rcvdFcPktStats, 0, sizeof(FcPacketStats));
+#endif
   resetTrafficCounter(&myGlobals.device[devIdx].lastMinEthernetBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastFiveMinsEthernetBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastMinEthernetPkts);
@@ -288,13 +296,7 @@ void resetDevice(int devIdx, short fullReset) {
   resetTrafficCounter(&myGlobals.device[devIdx].lastEthernetBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastIpBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastNonIpBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcPkts);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcEofaPkts);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcEofAbnormalPkts);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcAbnormalPkts);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcBroadcastPkts);
   memset(&myGlobals.device[devIdx].rcvdPktStats, 0, sizeof(PacketStats));
-  memset(&myGlobals.device[devIdx].rcvdFcPktStats, 0, sizeof(FcPacketStats));
   memset(&myGlobals.device[devIdx].rcvdPktTTLStats, 0, sizeof(TTLstats));
   myGlobals.device[devIdx].peakThroughput = 0;
   myGlobals.device[devIdx].actualThpt = 0;
@@ -395,12 +397,16 @@ void initCounters(void) {
       myGlobals.device[i].tcpSession = (IPSession**)malloc(len);
       memset(myGlobals.device[i].tcpSession, 0, len);
 
+#ifdef ENABLE_FC
       len = sizeof(FCSession *)*MAX_TOT_NUM_SESSIONS;
       myGlobals.device[i].fcSession = (FCSession **)malloc(len);
       memset(myGlobals.device[i].fcSession, 0, len);
+#endif
     } else {
       myGlobals.device[i].tcpSession     = NULL;
+#ifdef ENABLE_FC
       myGlobals.device[i].fcSession      = NULL;
+#endif
     }
 
     myGlobals.device[i].fragmentList = NULL;
@@ -409,6 +415,7 @@ void initCounters(void) {
   myGlobals.ipxsapHashLoadCollisions = 0;
   myGlobals.hashCollisionsLookup     = 0;
 
+#ifdef ENABLE_FC
   myGlobals.numVendorLookupRead = 0;
   myGlobals.numVendorLookupAdded = 0;
   myGlobals.numVendorLookupAddedSpecial = 0;
@@ -418,14 +425,13 @@ void initCounters(void) {
   myGlobals.numVendorLookupFound24bit = 0;
   myGlobals.numVendorLookupFoundMulticast = 0;
   myGlobals.numVendorLookupFoundLAA = 0;
+#endif
 
-  if (myGlobals.pcap_file_list == NULL) {
-      myGlobals.initialSniffTime = myGlobals.lastRefreshTime = time(NULL);
-  }
-  else {
-      myGlobals.initialSniffTime = 0; /* We set the start when first pkt is
-                                       * read */
-  }
+  if (myGlobals.pcap_file_list == NULL)
+    myGlobals.initialSniffTime = myGlobals.lastRefreshTime = time(NULL);  
+  else
+    myGlobals.initialSniffTime = 0; /* We set the start when first pkt is
+                                       * read */  
 
 /* TODO why here AND in globals-core.c? */
   myGlobals.numHandledSIGPIPEerrors = 0;
@@ -461,8 +467,11 @@ void initCounters(void) {
 /* ******************************* */
 
 void resetStats(int deviceId) {
-  u_int j, i;
+  u_int j;
+#ifdef ENABLE_FC
+  int i;
   FCSession *session;
+#endif
 
   traceEvent(CONST_TRACE_INFO, "Resetting traffic statistics for device %s",
 	     myGlobals.device[deviceId].humanFriendlyName);
@@ -503,6 +512,7 @@ void resetStats(int deviceId) {
       }
   }
 
+#ifdef ENABLE_FC
   if(myGlobals.device[deviceId].fcSession != NULL) {
     for(j=0; j<MAX_TOT_NUM_SESSIONS; j++)
       if((session = myGlobals.device[deviceId].fcSession[j]) != NULL) {
@@ -521,6 +531,7 @@ void resetStats(int deviceId) {
       free (myGlobals.device[deviceId].vsanHash);
       myGlobals.device[deviceId].vsanHash = NULL;
   }
+#endif
 
   myGlobals.device[deviceId].hash_hostTraffic[BROADCAST_HOSTS_ENTRY] = myGlobals.broadcastEntry;
   myGlobals.broadcastEntry->hostSerial.serialType = SERIAL_IPV4;
