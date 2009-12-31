@@ -1763,20 +1763,35 @@ LIBS="$LIBS -lGeoIP"
 if test -f "GeoLiteCity.dat"; then
    echo "GeoLiteCity.dat already present"
 else
-   wget http://www.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+   if test -f "3rd_party/GeoLiteCity.dat.gz"; then
+     cp 3rd_party/GeoLiteCity.dat.gz .
+   else
+     wget http://www.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+   fi
+
    gunzip GeoLiteCity.dat.gz
 fi
+
+dnl> --------
 
 if test -f "GeoIPASNum.dat"; then
    echo "GeoIPASNum.dat already present"
 else
-   wget http://www.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz
+   if test -f "3rd_party/GeoIPASNum.dat.gz"; then
+     cp 3rd_party/GeoIPASNum.dat.gz .
+   else
+     wget http://www.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz
+   fi
+
    gunzip GeoIPASNum.dat.gz
 fi
 else
 AC_MSG_RESULT(Please install GeoIP (http://www.maxmind.com/))
 exit 1
 fi
+
+cp "3rd_party/oui.txt.gz" .
+cp "3rd_party/specialMAC.txt.gz" .
 
 if test -d ./configureextra; then
 

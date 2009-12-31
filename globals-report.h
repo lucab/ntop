@@ -327,9 +327,11 @@ extern char *getRowColor(void);
 extern char *makeHostLink(HostTraffic *el, short mode,
                           short cutName, short addCountryFlag,
 			  char *buf, int bufLen);
+#ifdef ENABLE_FC
 extern char *makeFcHostLink (HostTraffic *el, short mode, short cutName,
                              short compactWWN, char *buf, int buflen);
 extern char *makeVsanLink (u_short vsanId, short mode, char *buf, int buflen);
+#endif
 extern void  buildMapLink(HostTraffic *el, char *buf, int buf_len);
 extern char *getHostName(HostTraffic *el, short cutName, char *buf, int bufLen);
 
@@ -352,6 +354,7 @@ extern void drawThptGraph(int sortedColumn);
 extern void drawGlobalProtoDistribution(void);
 extern int  drawHostsDistanceGraph(int);
 extern void drawGlobalIpProtoDistribution(void);
+#ifdef ENABLE_FC
 extern void drawGlobalFcProtoDistribution(void);
 extern void drawLunStatsBytesDistribution(HostTraffic *el);
 extern void drawLunStatsPktsDistribution(HostTraffic *el);
@@ -359,6 +362,7 @@ extern void drawVsanStatsBytesDistribution(int deviceId);
 extern void drawVsanStatsPktsDistribution(int deviceId);
 extern void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent);
 extern void drawVsanSwilsProtoDistribution(u_short vsanId);
+#endif
 
 /* python.c */
 #ifdef HAVE_PYTHON

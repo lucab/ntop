@@ -211,10 +211,9 @@ char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
 
 /* ******************************* */
 
-char*
-makeHostLink(HostTraffic *el, short mode,
-	     short cutName, short addCountryFlag,
-	     char *buf, int bufLen) {
+char* makeHostLink(HostTraffic *el, short mode,
+		   short cutName, short addCountryFlag,
+		   char *buf, int bufLen) {
   char symIp[256], linkName[256], flag[256], colorSpec[64], vlanStr[8], mapStr[1024];
   char osBuf[128], titleBuf[256], noteBuf[256], noteBufAppend[64], tooltip[256];
   char *dhcpBootpStr, *p2pStr, *multihomedStr, *multivlanedStr, *gwStr, *brStr, *dnsStr, *printStr,
@@ -232,9 +231,11 @@ makeHostLink(HostTraffic *el, short mode,
     custom_host_name[0] = '\0';
   }
 
+#ifdef ENABLE_FC
   if(el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
     return makeFcHostLink (el, mode, cutName, TRUE, buf, bufLen);
   }
+#endif
 
   memset(&symIp, 0, sizeof(symIp));
   memset(&linkName, 0, sizeof(linkName));

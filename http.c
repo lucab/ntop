@@ -2713,12 +2713,13 @@ static int returnHTTPPage(char* pageName,
 	/* We did the work in the function except for this */
 	if(strcasecmp(pageName, CONST_HOME_HTML) != 0)
 	  printTrailer=0;
-
+#ifdef ENABLE_FC
       } else if(strncasecmp(pageName, CONST_FC_DATA_HTML,
 			    strlen(CONST_FC_DATA_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printFcHostsTraffic(SORT_FC_DATA, sortedColumn, revertOrder,
 			    pageNum, CONST_FC_DATA_HTML, showLocalityMode);
+#endif
       } else if(strncasecmp(pageName, CONST_SORT_DATA_THPT_STATS_HTML,
 			    strlen(CONST_SORT_DATA_THPT_STATS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -2730,9 +2731,11 @@ static int returnHTTPPage(char* pageName,
       } else if(strncasecmp(pageName, CONST_HOSTS_INFO_HTML, strlen(CONST_HOSTS_INFO_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vlanId, ifId, subnetId);
+#ifdef ENABLE_FC
       } else if(strncasecmp(pageName, CONST_FC_HOSTS_INFO_HTML,
 			    strlen(CONST_FC_HOSTS_INFO_HTML)) == 0) {
         printFcHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vsanId);
+#endif
       } else if(strncasecmp(pageName, CONST_HOSTS_LOCAL_FINGERPRINT_HTML,
 			    strlen(CONST_HOSTS_LOCAL_FINGERPRINT_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -2765,12 +2768,14 @@ static int returnHTTPPage(char* pageName,
 	printHostsTraffic(SORT_DATA_THPT, sortedColumn, revertOrder,
 			  pageNum, CONST_SORT_DATA_THPT_HTML,
 			  showHostsMode, showLocalityMode, vlanId);
+#ifdef ENABLE_FC
       } else if(strncasecmp(pageName, CONST_FC_THPT_HTML,
 			    strlen(CONST_FC_THPT_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
 	printFcHostsTraffic(SORT_FC_THPT, sortedColumn, revertOrder,
 			    pageNum, CONST_FC_THPT_HTML, showLocalityMode);
+#endif
       } else if(strncasecmp(pageName, CONST_SORT_DATA_HOST_TRAFFIC_HTML,
 			    strlen(CONST_SORT_DATA_HOST_TRAFFIC_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -2778,12 +2783,14 @@ static int returnHTTPPage(char* pageName,
 	printHostsTraffic(SORT_DATA_HOST_TRAFFIC, sortedColumn, revertOrder,
 			  pageNum, CONST_SORT_DATA_HOST_TRAFFIC_HTML,
 			  showHostsMode, showLocalityMode, vlanId);
+#ifdef ENABLE_FC
       } else if(strncasecmp(pageName, CONST_FC_ACTIVITY_HTML,
 			    strlen(CONST_FC_ACTIVITY_HTML)) == 0) {
         sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
         if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
         printFcHostsTraffic(SORT_FC_ACTIVITY, sortedColumn, revertOrder,
                             pageNum, CONST_FC_ACTIVITY_HTML, showLocalityMode);
+#endif
       } else if(strcasecmp(pageName, CONST_NET_FLOWS_HTML) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	listNetFlows();
@@ -2837,6 +2844,7 @@ static int returnHTTPPage(char* pageName,
       } else if(strcasecmp(pageName, CONST_IP_PROTO_USAGE_HTML) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printIpProtocolUsage();
+#ifdef ENABLE_FC
       } else if(strncasecmp (pageName, CONST_FC_TRAFFIC_HTML,
 			     strlen (CONST_FC_TRAFFIC_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -2849,7 +2857,6 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawVsanStatsGraph(myGlobals.actualReportDeviceId);
 	printTrailer=0;
-#ifdef ENABLE_FC
       } else if(strncasecmp (pageName, CONST_VSAN_DETAIL_HTML, strlen (CONST_VSAN_DETAIL_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printVsanDetailedInfo (vsanId, myGlobals.actualReportDeviceId);
@@ -2968,6 +2975,7 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawHostsDistanceGraph(0);
 	printTrailer=0;
+#ifdef ENABLE_FC
       } else if(strncasecmp(pageName, CONST_BAR_FC_PROTO_DIST,
 			    strlen(CONST_BAR_FC_PROTO_DIST)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -3107,12 +3115,15 @@ static int returnHTTPPage(char* pageName,
         sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
         drawVsanStatsPktsDistribution (myGlobals.actualReportDeviceId);
         printTrailer=0;
+#endif
       } else if((strncasecmp(pageName,    "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0)
 		|| (strncasecmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0)
 		|| (strncasecmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0)
 		|| (strncasecmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0)
 		|| (strncasecmp(pageName, "hostTimeTrafficDistribution", strlen("hostTimeTrafficDistribution")) == 0)
+#ifdef ENABLE_FC
 		|| (strncasecmp(pageName, "hostFcTrafficDistrib", strlen("hostFcTrafficDistrib")) == 0)
+#endif
 		) {
 	char hostName[47], *theHost;
 
@@ -3128,9 +3139,11 @@ static int returnHTTPPage(char* pageName,
 	} else if(strncasecmp(pageName, "hostTimeTrafficDistribution", strlen("hostTimeTrafficDistribution")) == 0) {
 	  idx = 3;
 	  theHost = &pageName[strlen("hostTimeTrafficDistribution")+1];
+#ifdef ENABLE_FC
 	} else if(strncasecmp(pageName, "hostFcTrafficDistrib", strlen("hostFcTrafficDistrib")) == 0) {
 	  idx = 5;
 	  theHost = &pageName[strlen("hostFcTrafficDistrib")+1];
+#endif
 	} else {
 	  idx = 4;
 	  theHost = &pageName[strlen("hostIPTrafficDistrib")+1];
@@ -3206,8 +3219,10 @@ static int returnHTTPPage(char* pageName,
 	      case 4:
 		hostIPTrafficDistrib(el, sortedColumn);
 		break;
+#ifdef ENABLE_FC
 	      case 5:
 		hostFcTrafficDistrib(el, sortedColumn);
+#endif
 		break;
 	      }
 	    }
