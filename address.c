@@ -1389,7 +1389,9 @@ void addDeviceNetworkToKnownSubnetList(NtopInterface *device) {
 void updateHostKnownSubnet(HostTraffic *el) {
   int i;
 
-  if(el->hostIpAddress.hostFamily != AF_INET /* v4 */) return;
+  if((myGlobals.numKnownSubnets == 0)
+     || (el->hostIpAddress.hostFamily != AF_INET /* v4 */))
+    return;
 
   for(i=0; i<myGlobals.numKnownSubnets; i++) {
     if((el->hostIpAddress.addr._hostIp4Address.s_addr & myGlobals.subnetStats[i].address[CONST_NETMASK_ENTRY])
