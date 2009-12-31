@@ -994,7 +994,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
       }
 
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      printHTMLheader("RRD Graph", NULL, 0);
+      printHTMLheader("ntop RRD Graph", NULL, 0);
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
 		    "<I>Error while building graph of the requested file. %s</I>",
 		    rrd_get_error() ? rrd_get_error() : "");
@@ -1005,7 +1005,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
     releaseMutex(&rrdMutex);
   } else {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("RRD Graph", NULL, 0);
+    printHTMLheader("ntop RRD Graph", NULL, 0);
     printFlagedWarning("<I>Error while building graph of the requested file "
 		       "(unknown RRD file)</I>");
     rc = -1;
@@ -1081,7 +1081,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
     struct tm *the_tm;
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("RRD Graph", NULL, 0);
+    printHTMLheader("ntop RRD Graph", NULL, 0);
 
     sendString("<center>\n");
 
@@ -1178,7 +1178,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
     sendString("\n<SCRIPT type=\"text/javascript\">\n\nvar cURLBase = \"/plugins/rrdPlugin?mode=zoom\";\n\n"
 	       "// Global variables\nvar gZoomGraphName = \"zoomGraphImage\";\n"
 	       "var gZoomGraphObj;\nvar gMouseObj;\nvar gUrlObj;\nvar gBrowserObj;\nvar gGraphWidth;\n"
-	       "var gGraphHeight;\n\n\nwindow.onload = initBonsai;\n\n</SCRIPT>\n");
+	       "var gGraphHeight;\n\n\nwindow.onload = function () { initBonsai(); addReflections(); }\n\n</SCRIPT>\n");
 
     sendString("</center>\n");
 
@@ -1190,7 +1190,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
 
   if(rrds == NULL) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("RRD Graph Summary", NULL, 0);
+    printHTMLheader("ntop RRD Graph Summary", NULL, 0);
     printFlagedWarning("<I>Error while building graph of the requested file "
 		       "(unknown RRD files)</I>");
     return;
@@ -1332,7 +1332,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
     }
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("RRD Graph Summary", NULL, 0);
+    printHTMLheader("ntop RRD Graph Summary", NULL, 0);
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
 		  "<I>Error while building graph of the requested file. %s</I>",
 		  rrd_get_error() ? rrd_get_error() : "");
@@ -1410,7 +1410,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
     struct tm *the_tm;
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("RRD Graph", NULL, 0);
+    printHTMLheader("ntop RRD Graph", NULL, 0);
 
     sendString("<center>\n");
 
@@ -1507,7 +1507,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
     sendString("\n<SCRIPT type=\"text/javascript\">\n\nvar cURLBase = \"/plugins/rrdPlugin?mode=zoom\";\n\n"
 	       "// Global variables\nvar gZoomGraphName = \"zoomGraphImage\";\n"
 	       "var gZoomGraphObj;\nvar gMouseObj;\nvar gUrlObj;\nvar gBrowserObj;\nvar gGraphWidth;\n"
-	       "var gGraphHeight;\n\n\nwindow.onload = initBonsai;\n\n</SCRIPT>\n");
+	       "var gGraphHeight;\n\n\nwindow.onload = function () { initBonsai(); addReflections(); }\n\n</SCRIPT>\n");
 
     sendString("</center>\n");
 
@@ -1528,7 +1528,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
 
   if(rrds == NULL) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("RRD Graph Summary", NULL, 0);
+    printHTMLheader("ntop RRD Graph Summary", NULL, 0);
     printFlagedWarning("<I>Error while building graph of the requested file "
 		       "(unknown RRD files)</I>");
     free_buf(buf0, MAX_NUM_ENTRIES);free_buf(buf1, MAX_NUM_ENTRIES);
@@ -1681,7 +1681,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
     }
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("RRD Graph Summary", NULL, 0);
+    printHTMLheader("ntop RRD Graph Summary", NULL, 0);
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
 		  "<I>Error while building graph of the requested file. %s</I>",
 		  rrd_get_error() ? rrd_get_error() : "");
@@ -2158,7 +2158,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     struct tm *the_tm;
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("RRD Graph", NULL, 0);
+    printHTMLheader("ntop RRD Graph", NULL, 0);
 
     sendString("<center>\n");
 
@@ -2252,7 +2252,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     sendString("\n<SCRIPT type=\"text/javascript\">\n\nvar cURLBase = \"/plugins/rrdPlugin?mode=zoom\";\n\n"
 	       "// Global variables\nvar gZoomGraphName = \"zoomGraphImage\";\n"
 	       "var gZoomGraphObj;\nvar gMouseObj;\nvar gUrlObj;\nvar gBrowserObj;\nvar gGraphWidth;\n"
-	       "var gGraphHeight;\n\n\nwindow.onload = initBonsai;\n\n</SCRIPT>\n");
+	       "var gGraphHeight;\n\n\nwindow.onload = function () { initBonsai(); addReflections(); }\n\n</SCRIPT>\n");
 
     sendString("</center>\n");
 
@@ -2274,7 +2274,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
   if(rrds == NULL) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("RRD Graph Summary", NULL, 0);
+    printHTMLheader("ntop RRD Graph Summary", NULL, 0);
     printFlagedWarning("<I>Error while building graph of the requested file "
 		       "(unknown RRD files)</I>");
     free_buf(buf0, MAX_NUM_ENTRIES);free_buf(buf1, MAX_NUM_ENTRIES);
@@ -2495,7 +2495,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     }
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("RRD Graph Summary", NULL, 0);
+    printHTMLheader("ntop RRD Graph Summary", NULL, 0);
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
 		  "<I>Error while building graph of the requested file. %s</I>",
 		  rrd_get_error() ? rrd_get_error() : "");
@@ -3268,7 +3268,7 @@ static void arbitraryAction(char *rrdName,
     char buf1[LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printHTMLheader("RRD Graph", NULL, 0);
+    printHTMLheader("ntop RRD Graph", NULL, 0);
     escape(buf1, sizeof(buf1), rrdCounter);
     escape(buf2, sizeof(buf2), rrdTitle);
 
@@ -3371,7 +3371,7 @@ static void arbitraryAction(char *rrdName,
 
     sendString("\n<SCRIPT type=\"text/javascript\">\n\nvar cURLBase = \"/plugins/rrdPlugin?mode=zoom\";\n\n// Global variables\nvar gZoomGraphName = \"zoomGraphImage\";\n"
 	       "var gZoomGraphObj;\nvar gMouseObj;\nvar gUrlObj;\nvar gBrowserObj;\nvar gGraphWidth;\n"
-	       "var gGraphHeight;\n\n\nwindow.onload = initBonsai;\n\n</SCRIPT>\n");
+	       "var gGraphHeight;\n\n\nwindow.onload = function () { initBonsai(); addReflections(); }\n\n</SCRIPT>\n");
 
     sendString("</center>\n");
 
@@ -3477,7 +3477,7 @@ static void arbitraryAction(char *rrdName,
 
     if(_which == CONST_ARBITRARY_RRDREQUEST_FETCHME[0]) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-      printHTMLheader("RRD data dump", NULL, 0);
+      printHTMLheader("ntop RRD data dump", NULL, 0);
       sendString("<h1>For:&nbsp;");
       sendString(path);
       sendString("</h1>");
@@ -3649,7 +3649,7 @@ static void statisticsPage(void) {
   memset(&buf, 0, sizeof(buf));
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-  printHTMLheader("RRD Statistics", NULL, 0);
+  printHTMLheader("ntop RRD Statistics", NULL, 0);
 
   sendString("<center><table border=\"1\""TABLE_DEFAULTS">\n"
              "<tr><th align=\"center\" "DARK_BG" colspan=2>RRD Update</th></tr>\n");
@@ -4356,7 +4356,7 @@ static void handleRRDHTTPrequest(char* url) {
   }
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-  printHTMLheader("RRD Preferences", NULL, 0);
+  printHTMLheader("ntop RRD Preferences", NULL, 0);
 
   if(active == 1)
     sendString("<p>You must restart the rrd plugin for changes here to take affect.</p>\n");

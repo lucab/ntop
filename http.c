@@ -778,7 +778,7 @@ static void ssiMenu_Body(void) {
     } else {
       sendStringWOssi(CONST_NTOP_LOGO);
     }
-    sendStringWOssi("\" class=\"reflect rheight50 ropacity33\" alt=\"ntop logo\" border=0></A></td>\n"
+    sendStringWOssi("\" class=\"reflect\" alt=\"ntop logo\" border=0></A></td>\n"
 		    "        <td valign=\"top\" align=\"right\" class=\"instance\">Instance:&nbsp;");
     sendStringWOssi(myGlobals.runningPref.instance);
     sendStringWOssi(
@@ -786,8 +786,7 @@ static void ssiMenu_Body(void) {
 		    "       </tr>\n"
 		    "      </table>");
   } else {
-    sendStringWOssi(
-		    "      <A HREF=http://www.ntop.org><img src=\"/" CONST_NTOP_LOGO "\" class=\"reflect rheight50 ropacity33\" border=0></A>");
+    sendStringWOssi("      <A HREF=http://www.ntop.org><img src=\"/" CONST_NTOP_LOGO "\" class=\"reflect\" border=0></A>");
   }
   sendStringWOssi(
 		  "     </td>\n"
@@ -1609,6 +1608,7 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
     sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server\"\r\n");
   }
 
+  /* http://en.wikipedia.org/wiki/Internet_media_type */
   switch(mimeType) {
   case FLAG_HTTP_TYPE_HTML:
     sendString("Content-Type: text/html\r\n");
@@ -1635,7 +1635,7 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
     sendString("Content-Type: application/json\r\n");
     break;
   case FLAG_HTTP_TYPE_JS:
-    sendString("Content-Type: text/javascript\r\n");
+    sendString("Content-Type: application/javascript\r\n");
     break;
   case FLAG_HTTP_TYPE_XML:
     sendString("Content-Type: text/xml\r\n");
@@ -3251,7 +3251,7 @@ static int returnHTTPPage(char* pageName,
 	sendString("<ul><li>" CONST_MAILTO_STEFANO " has contributed several ideas and comments</li>");
 	sendString("<li>" CONST_MAILTO_ABDELKADER " and " CONST_MAILTO_OLIVIER " provided IPv6 support</li>");
 	sendString("<li>" CONST_MAILTO_DINESH " for SCSI & FiberChannel support</li>");
-	sendString("<li>" CONST_MAILTO_BURTON " the ntop factotum (user support, bug fixing, testing, packaging).</li></ul>");
+	sendString("<li>" CONST_MAILTO_BURTON " contributed to ntop in early 2000's.</li></ul>");
 	sendString("<p>In addition, many other people downloaded this program, tested it,");
 	sendString("joined the <a class=external href=\"http://lists.ntop.org/mailman/listinfo/ntop\"");
 	sendString(" class=tooltip title=\"ntop mailing list signup page\">ntop</a> ");

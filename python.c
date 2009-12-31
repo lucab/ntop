@@ -620,7 +620,7 @@ int handlePythonHTTPRequest(char *url) {
   FILE *fd;
   char *question_mark = strchr(url, '?');
 
-  traceEvent(CONST_TRACE_INFO, "Calling python... [%s]", url);
+  // traceEvent(CONST_TRACE_INFO, "Calling python... [%s]", url);
 
   if(question_mark) question_mark[0] = '\0';
   safe_snprintf(__FILE__, __LINE__, query_string, sizeof(query_string)-1, 
