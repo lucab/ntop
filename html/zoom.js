@@ -255,8 +255,8 @@ function zoomGraphObjRefresh() {
 	// This is the size of the graph visible area - L.Deri
 	//zoomBoxWidth = 498;
 	//zoomBoxHeight = 120;
-	zoomBoxWidth = parseInt(gUrlObj.getUrlParameterValue("graph_width")) - 2;
-	zoomBoxHeight = parseInt(gUrlObj.getUrlParameterValue("graph_height"));
+	zoomBoxWidth = parseInt(gUrlObj.getUrlParameterValue("graph_width"))+2;
+	zoomBoxHeight = parseInt(gUrlObj.getUrlParameterValue("graph_height"))+2;
 
 	// Get absolute image position relative to the overall window.
 	//
@@ -264,8 +264,8 @@ function zoomGraphObjRefresh() {
 	// ancestory of elements (tables, div's, spans, etc...) until
 	// we're at the top of the display.  Along the way we add in each element's
 	// coordinates to get absolute image postion.
-	left = 0;
-	top = 0;
+	left = 4;
+	top = 23;
 	do {
 		left += imgObject.offsetLeft;
 		top += imgObject.offsetTop;
