@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- *            Copyright (C) 1998-2009 Luca Deri <deri@ntop.org>
+ *            Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -33,6 +33,7 @@ static int *servicesMapper = NULL; /* temporary value */
 /* *************************** */
 
 static void printMutexInfo(PthreadMutex *mutexId, char *mutexName) {
+#ifdef MUTEX_DEBUG
   traceEvent(CONST_TRACE_INFO, "%s is %s (last lock %s:%d) [max lock time %s:%d (%.6f sec)]",
 	     mutexName,
 	     mutexId->isLocked ? "*locked*" : "unlocked",
@@ -40,6 +41,7 @@ static void printMutexInfo(PthreadMutex *mutexId, char *mutexName) {
 	     mutexId->max.file,
 	     mutexId->max.line,
 	     mutexId->maxLockedDuration);
+#endif
 }
 
 /* *************************** */

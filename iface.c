@@ -4,7 +4,7 @@
  *
  * Copyright (C) 2003      Abdelkader Lahmadi <Abdelkader.Lahmadi@loria.fr>
  *                         Olivier Festor <Olivier.Festor@loria.fr>
- * Copyright (C) 2003-09   Luca Deri <deri@ntop.org>
+ * Copyright (C) 2003-10   Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2009 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
  *
  *		 	    http://www.ntop.org/
  *
@@ -7357,7 +7357,7 @@ int printNtopLogReport(int printAsText) {
 #ifdef WIN32
   WaitForSingleObject(myGlobals.logViewMutex.mutex, INFINITE);
 #else
-  pthread_mutex_lock(&myGlobals.logViewMutex.mutex);
+  pthread_rwlock_wrlock(&myGlobals.logViewMutex.mutex);
 #endif
 
   for (i=0; i<CONST_LOG_VIEW_BUFFER_SIZE; i++) {
@@ -7374,7 +7374,7 @@ int printNtopLogReport(int printAsText) {
 #ifdef WIN32
   ReleaseMutex(myGlobals.logViewMutex.mutex);
 #else
-  pthread_mutex_unlock(&myGlobals.logViewMutex.mutex);
+  pthread_rwlock_unlock(&myGlobals.logViewMutex.mutex);
 #endif
 
   if(!printAsText) {

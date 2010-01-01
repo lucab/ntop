@@ -1,5 +1,5 @@
 /*
- *  Copyright(C) 2002-09 Luca Deri <deri@ntop.org>
+ *  Copyright(C) 2002-10 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -4514,6 +4514,7 @@ static void handlesFlowHTTPrequest(char* _url) {
 		 "</ul></td>\n"
 		 "<td width=\"25%\">&nbsp;</td>\n</tr>\n</table>\n");
 
+#ifdef MUTEX_DEBUG
       if(myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex.isLocked) {
 	sendString("<table><tr><td colspan=\"2\">&nbsp;</td></tr>\n"
 		   "<tr " TR_ON ">\n"
@@ -4526,6 +4527,7 @@ static void handlesFlowHTTPrequest(char* _url) {
 			 "White/Black list mutex");
 	sendString("</table><td></tr></table>\n");
       }
+#endif
     }
   }
 
@@ -4728,7 +4730,7 @@ PluginInfo* sflowPluginEntryFctn(void)
 #endif
 {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
-	     "SFLOW: Welcome to %s.(C) 2002-09 by Luca Deri",
+	     "SFLOW: Welcome to %s.(C) 2002-10 by Luca Deri",
 	     sflowPluginInfo->pluginName);
 
   return(sflowPluginInfo);

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-09 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 2002-10 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -5828,11 +5828,13 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
     sleep(3);
   }
 
+#ifdef MUTEX_DEBUG
   if(rrdMutex.isLocked) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Locked mutex, continuing shutdown");
   } else {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Unable to lock mutex, continuing shutdown anyway");
   }
+#endif
 
   if(active) {
     if(rrdThread) {
@@ -5901,7 +5903,7 @@ PluginInfo* rrdPluginEntryFctn(void)
 #endif
 {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-	     "RRD: Welcome to %s. (C) 2002-09 by Luca Deri.",
+	     "RRD: Welcome to %s. (C) 2002-10 by Luca Deri.",
 	     rrdPluginInfo->pluginName);
 
   return(rrdPluginInfo);

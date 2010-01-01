@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2009 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
  *
  *  			    http://www.ntop.org/
  *
@@ -90,20 +90,20 @@ void initWinsock32() {
   } else {
     osName = "WinNT/2K/XP";
 
-		// Get the full path and filename of this program
-	  if(GetModuleFileName( NULL, _wdir, sizeof(_wdir) ) == 0 ) {
-		_wdir[0] = '\0';
-	  } else {
-		int i;
+    // Get the full path and filename of this program
+    if(GetModuleFileName( NULL, _wdir, sizeof(_wdir) ) == 0 ) {
+      _wdir[0] = '\0';
+    } else {
+      int i;
 
-		for(i=strlen(_wdir)-1; i>0; i--)
-		  if(_wdir[i] == '\\') {
-		_wdir[i] = '\0';
-		break;
-		  }
-	  }
+      for(i=strlen(_wdir)-1; i>0; i--)
+	if(_wdir[i] == '\\') {
+	  _wdir[i] = '\0';
+	  break;
+	}
+    }
 
-	  /* traceEvent(CONST_TRACE_ERROR, "Wdir=%s", _wdir); */
+    /* traceEvent(CONST_TRACE_ERROR, "Wdir=%s", _wdir); */
   }
 
     
@@ -201,11 +201,11 @@ ULONG GetHostIPAddr () {
 
 /* **************************************
 
-WIN32 MULTITHREAD STUFF
+   WIN32 MULTITHREAD STUFF
 
-http://www-128.ibm.com/developerworks/eserver/articles/es-MigratingWin32toLinux.html
+   http://www-128.ibm.com/developerworks/eserver/articles/es-MigratingWin32toLinux.html
 
-************************************** */
+   ************************************** */
 
 int createThread(pthread_t *threadId,
 		 void *(*__start_routine) (void *), char* userParm) {
@@ -294,11 +294,11 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
   WaitForSingleObject(mutexId->mutex, INFINITE);
 
   mutexId->numLocks++;
-    mutexId->isLocked = 1;
-    if(!myGlobals.runningPref.disableMutexExtraInfo) {
-      memcpy(&(mutexId->lock), &(mutexId->attempt), sizeof(Holder));
-      memset(&(mutexId->attempt), 0, sizeof(Holder));
-    }
+  mutexId->isLocked = 1;
+  if(!myGlobals.runningPref.disableMutexExtraInfo) {
+    memcpy(&(mutexId->lock), &(mutexId->attempt), sizeof(Holder));
+    memset(&(mutexId->attempt), 0, sizeof(Holder));
+  }
 
   return(0);
 }
@@ -307,7 +307,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 
 int _tryLockMutex(PthreadMutex *mutexId, char* where,
 		  char* fileName, int fileLine) {
-	int rc;
+  int rc;
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]",
 	     mutexId->mutex, where, fileName, fileLine);
@@ -326,7 +326,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
     if(!myGlobals.runningPref.disableMutexExtraInfo) {
       memcpy(&(mutexId->lock), &(mutexId->attempt), sizeof(Holder));
       memset(&(mutexId->attempt), 0, sizeof(Holder));
-	}
+    }
 
     return(0);
   }
@@ -349,28 +349,28 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
     traceEvent(CONST_TRACE_WARNING, "Unlock failed for 0x%X [%s:%d] (LastError=%d)",
 	       mutexId->mutex, fileName, fileLine, GetLastError());
   }
-   mutexId->isLocked = 0;
-    mutexId->numReleases++;
+  mutexId->isLocked = 0;
+  mutexId->numReleases++;
 
-    if(!myGlobals.runningPref.disableMutexExtraInfo) {
+  if(!myGlobals.runningPref.disableMutexExtraInfo) {
 
-      setHolder(mutexId->unlock);
-      lockDuration = timeval_subtract(mutexId->unlock.time, mutexId->lock.time);
+    setHolder(mutexId->unlock);
+    lockDuration = timeval_subtract(mutexId->unlock.time, mutexId->lock.time);
 
-      if((mutexId->maxLockedDuration < lockDuration)
-         || (mutexId->max.line == 0 /* Never set */)) {
-        memcpy(&(mutexId->max), &(mutexId->lock), sizeof(Holder));
-        mutexId->maxLockedDuration = lockDuration;
-      }
+    if((mutexId->maxLockedDuration < lockDuration)
+       || (mutexId->max.line == 0 /* Never set */)) {
+      memcpy(&(mutexId->max), &(mutexId->lock), sizeof(Holder));
+      mutexId->maxLockedDuration = lockDuration;
     }
+  }
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: semaphore 0x%X [%s:%d] locked for %d secs",
-	       &(mutexId->mutex), fileName, fileLine,
-	       mutexId->maxLockedDuration);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: semaphore 0x%X [%s:%d] locked for %d secs",
+	     &(mutexId->mutex), fileName, fileLine,
+	     mutexId->maxLockedDuration);
 #endif
 
-   return(0);
+  return(0);
 }
 
 /* ************************************ */
@@ -433,10 +433,10 @@ void printAvailableInterfaces() {
     ;
   } else {
     for (i = 0; devpointer != 0; i++) {
-		if(validInterface(devpointer->description)) {
-		printf("   [index=%d] %s\n             (%s)\n",
-			numInterfaces++, devpointer->description, devpointer->name);
-		}
+      if(validInterface(devpointer->description)) {
+	printf("   [index=%d] %s\n             (%s)\n",
+	       numInterfaces++, devpointer->description, devpointer->name);
+      }
 
       devpointer = devpointer->next;
     } /* for */
@@ -707,11 +707,11 @@ char* getpass(const char *prompt) {
 
 /* *************************************************************
 
-Windown NT/2K Service Registration Routines
+   Windown NT/2K Service Registration Routines
 
-Copyright 2001 by Bill Giel/KC Multimedia and Design Group, Inc.
+   Copyright 2001 by Bill Giel/KC Multimedia and Design Group, Inc.
 
-************************************************************* */
+   ************************************************************* */
 
 
 #ifdef __cplusplus
@@ -1175,31 +1175,31 @@ void installService(int argc, char **argv)
       // Close the handle to this service object
       CloseServiceHandle(schService);
 
-	/* ****************************************** */
-	  // Set the service name. Courtesy of Yuri Francalacci <yuri@ntop.org>
+      /* ****************************************** */
+      // Set the service name. Courtesy of Yuri Francalacci <yuri@ntop.org>
       sprintf(szParamKey2, "SYSTEM\\CurrentControlSet\\Services\\%s",SZSERVICENAME);
       safe_snprintf(__FILE__, __LINE__, szDescr, sizeof(szDescr), "Ntop v.%s %s - Web-based network traffic monitor. http://www.ntop.org/",
-	   version, "MT");
+		    version, "MT");
 
       // Set the file value (where the message resources are located.... in this case, our runfile.)
       if(0 != setStringValue((const unsigned char *)szDescr,
-				    strlen(szDescr) + 1,HKEY_LOCAL_MACHINE, szParamKey2,TEXT("Description")))
+			     strlen(szDescr) + 1,HKEY_LOCAL_MACHINE, szParamKey2,TEXT("Description")))
 	{
 	  _tprintf(TEXT("The Message File value could\nnot be assigned.\n"));
 	}
-	/* ********************************************** */
+      /* ********************************************** */
 
 
       //Make a registry key to support logging messages using the service name.
       sprintf(szParamKey2, "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\%s",SZSERVICENAME);
       if(0 != makeNewKey(HKEY_LOCAL_MACHINE, szParamKey2)){
-		_tprintf(TEXT("The EventLog subkey could not be created.\n"));
+	_tprintf(TEXT("The EventLog subkey could not be created.\n"));
       }
 
       // Set the file value (where the message resources are located.... in this case, our runfile.)
       if(0 != setStringValue((const unsigned char *) szPath,
-				    strlen(szPath) + 1,HKEY_LOCAL_MACHINE,
-				    szParamKey2,TEXT("EventMessageFile")))
+			     strlen(szPath) + 1,HKEY_LOCAL_MACHINE,
+			     szParamKey2,TEXT("EventMessageFile")))
 	{
 	  _tprintf(TEXT("The Message File value could\nnot be assigned.\n"));
 	}
@@ -1477,17 +1477,17 @@ VOID AddToMessageLog(LPTSTR lpszMsg)
       lpszStrings[0] = szMsg;
 
       if (hEventSource != NULL) {
-		ReportEvent(hEventSource,
-				EVENTLOG_INFORMATION_TYPE,
-				0,
-				EVENT_GENERIC_INFORMATION,
-				NULL,
-				1,
-				0,
-				lpszStrings,
-				NULL);
+	ReportEvent(hEventSource,
+		    EVENTLOG_INFORMATION_TYPE,
+		    0,
+		    EVENT_GENERIC_INFORMATION,
+		    NULL,
+		    1,
+		    0,
+		    lpszStrings,
+		    NULL);
 
-		DeregisterEventSource(hEventSource);
+	DeregisterEventSource(hEventSource);
       }
     } else {
     _tprintf(TEXT("%s\n"), lpszMsg);
@@ -1826,18 +1826,18 @@ int spawnProcess(char* theProcess)
 /* ******************************* */
 
 static int get_drive_serial(char *drive, unsigned long *driveSerial) {
-	return(GetVolumeInformation(drive, NULL, 0, driveSerial, NULL, NULL, NULL, 0 ));
+  return(GetVolumeInformation(drive, NULL, 0, driveSerial, NULL, NULL, NULL, 0 ));
 }
 
 /* Use the HDD serial number to identify a PC. This is necesary as ntop can
    run from a mobile device hence it is necessary not to mix prefs and data
    coming from different PCs
-   */
+*/
 void get_serial(unsigned long *driveSerial) {
-	*driveSerial = 0;
+  *driveSerial = 0;
 
-	if(!get_drive_serial("C:\\", driveSerial))
-		get_drive_serial("D:\\", driveSerial);
+  if(!get_drive_serial("C:\\", driveSerial))
+    get_drive_serial("D:\\", driveSerial);
 }
 
 
@@ -1850,80 +1850,80 @@ static int got_GMT;
 #define asizeof(a)	(sizeof (a) / sizeof ((a)[0]))
 
 struct lc_time_T {
-    const char *    mon[12];
-    const char *    month[12];
-    const char *    wday[7];
-    const char *    weekday[7];
-    const char *    X_fmt;     
-    const char *    x_fmt;
-    const char *    c_fmt;
-    const char *    am;
-    const char *    pm;
-    const char *    date_fmt;
-    const char *    alt_month[12];
-    const char *    Ef_fmt;
-    const char *    EF_fmt;
+  const char *    mon[12];
+  const char *    month[12];
+  const char *    wday[7];
+  const char *    weekday[7];
+  const char *    X_fmt;     
+  const char *    x_fmt;
+  const char *    c_fmt;
+  const char *    am;
+  const char *    pm;
+  const char *    date_fmt;
+  const char *    alt_month[12];
+  const char *    Ef_fmt;
+  const char *    EF_fmt;
 };
 
 struct lc_time_T _time_localebuf;
 int _time_using_locale;
 
 const struct lc_time_T	_C_time_locale = {
-	{
-		"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-	}, {
-		"January", "February", "March", "April", "May", "June",
-		"July", "August", "September", "October", "November", "December"
-	}, {
-		"Sun", "Mon", "Tue", "Wed",
-		"Thu", "Fri", "Sat"
-	}, {
-		"Sunday", "Monday", "Tuesday", "Wednesday",
-		"Thursday", "Friday", "Saturday"
-	},
+  {
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  }, {
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  }, {
+    "Sun", "Mon", "Tue", "Wed",
+    "Thu", "Fri", "Sat"
+  }, {
+    "Sunday", "Monday", "Tuesday", "Wednesday",
+    "Thursday", "Friday", "Saturday"
+  },
 
-	/* X_fmt */
-	"%H:%M:%S",
+  /* X_fmt */
+  "%H:%M:%S",
 
-	/*
-	** x_fmt
-	** Since the C language standard calls for
-	** "date, using locale's date format," anything goes.
-	** Using just numbers (as here) makes Quakers happier;
-	** it's also compatible with SVR4.
-	*/
-	"%m/%d/%y",
+  /*
+  ** x_fmt
+  ** Since the C language standard calls for
+  ** "date, using locale's date format," anything goes.
+  ** Using just numbers (as here) makes Quakers happier;
+  ** it's also compatible with SVR4.
+  */
+  "%m/%d/%y",
 
-	/*
-	** c_fmt (ctime-compatible)
-	** Not used, just compatibility placeholder.
-	*/
-	NULL,
+  /*
+  ** c_fmt (ctime-compatible)
+  ** Not used, just compatibility placeholder.
+  */
+  NULL,
 
-	/* am */
-	"AM",
+  /* am */
+  "AM",
 
-	/* pm */
-	"PM",
+  /* pm */
+  "PM",
 
-	/* date_fmt */
-	"%a %Ef %X %Z %Y",
+  /* date_fmt */
+  "%a %Ef %X %Z %Y",
 	
-	{
-		"January", "February", "March", "April", "May", "June",
-		"July", "August", "September", "October", "November", "December"
-	},
+  {
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  },
 
-	/* Ef_fmt
-	** To determine short months / day order
-	*/
-	"%b %e",
+  /* Ef_fmt
+  ** To determine short months / day order
+  */
+  "%b %e",
 
-	/* EF_fmt
-	** To determine long months / day order
-	*/
-	"%B %e"
+  /* EF_fmt
+  ** To determine long months / day order
+  */
+  "%B %e"
 };
 
 #define Locale (&_C_time_locale)
@@ -1931,445 +1931,445 @@ const struct lc_time_T	_C_time_locale = {
 static char *
 _strptime(const char *buf, const char *fmt, struct tm *tm)
 {
-	char c;
-	const char *ptr;
-	int i,
-		len;
-	int Ealternative, Oalternative;
+  char c;
+  const char *ptr;
+  int i,
+    len;
+  int Ealternative, Oalternative;
 
-	ptr = fmt;
-	while (*ptr != 0) {
-		if (*buf == 0)
-			break;
+  ptr = fmt;
+  while (*ptr != 0) {
+    if (*buf == 0)
+      break;
 
-		c = *ptr++;
+    c = *ptr++;
 
-		if (c != '%') {
-			if (isspace((unsigned char)c))
-				while (*buf != 0 && isspace((unsigned char)*buf))
-					buf++;
-			else if (c != *buf++)
-				return 0;
-			continue;
-		}
+    if (c != '%') {
+      if (isspace((unsigned char)c))
+	while (*buf != 0 && isspace((unsigned char)*buf))
+	  buf++;
+      else if (c != *buf++)
+	return 0;
+      continue;
+    }
 
-		Ealternative = 0;
-		Oalternative = 0;
-label:
-		c = *ptr++;
-		switch (c) {
-		case 0:
-		case '%':
-			if (*buf++ != '%')
-				return 0;
-			break;
+    Ealternative = 0;
+    Oalternative = 0;
+  label:
+    c = *ptr++;
+    switch (c) {
+    case 0:
+    case '%':
+      if (*buf++ != '%')
+	return 0;
+      break;
 
-		case '+':
-			buf = _strptime(buf, Locale->date_fmt, tm);
-			if (buf == 0)
-				return 0;
-			break;
+    case '+':
+      buf = _strptime(buf, Locale->date_fmt, tm);
+      if (buf == 0)
+	return 0;
+      break;
 
-		case 'C':
-			if (!isdigit((unsigned char)*buf))
-				return 0;
+    case 'C':
+      if (!isdigit((unsigned char)*buf))
+	return 0;
 
-			/* XXX This will break for 3-digit centuries. */
-                        len = 2;
-			for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
-				i *= 10;
-				i += *buf - '0';
-				len--;
-			}
-			if (i < 19)
-				return 0;
+      /* XXX This will break for 3-digit centuries. */
+      len = 2;
+      for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
+	i *= 10;
+	i += *buf - '0';
+	len--;
+      }
+      if (i < 19)
+	return 0;
 
-			tm->tm_year = i * 100 - 1900;
-			break;
+      tm->tm_year = i * 100 - 1900;
+      break;
 
-		case 'c':
-			/* NOTE: c_fmt is intentionally ignored */
-                        buf = _strptime(buf, "%a %Ef %T %Y", tm);
-			if (buf == 0)
-				return 0;
-			break;
+    case 'c':
+      /* NOTE: c_fmt is intentionally ignored */
+      buf = _strptime(buf, "%a %Ef %T %Y", tm);
+      if (buf == 0)
+	return 0;
+      break;
 
-		case 'D':
-			buf = _strptime(buf, "%m/%d/%y", tm);
-			if (buf == 0)
-				return 0;
-			break;
+    case 'D':
+      buf = _strptime(buf, "%m/%d/%y", tm);
+      if (buf == 0)
+	return 0;
+      break;
 
-		case 'E':
-			if (Ealternative || Oalternative)
-				break;
-			Ealternative++;
-			goto label;
+    case 'E':
+      if (Ealternative || Oalternative)
+	break;
+      Ealternative++;
+      goto label;
 
-		case 'O':
-			if (Ealternative || Oalternative)
-				break;
-			Oalternative++;
-			goto label;
+    case 'O':
+      if (Ealternative || Oalternative)
+	break;
+      Oalternative++;
+      goto label;
 
-		case 'F':
-		case 'f':
-			if (!Ealternative)
-				break;
-			buf = _strptime(buf, (c == 'f') ? Locale->Ef_fmt : Locale->EF_fmt, tm);
-			if (buf == 0)
-				return 0;
-			break;
+    case 'F':
+    case 'f':
+      if (!Ealternative)
+	break;
+      buf = _strptime(buf, (c == 'f') ? Locale->Ef_fmt : Locale->EF_fmt, tm);
+      if (buf == 0)
+	return 0;
+      break;
 
-		case 'R':
-			buf = _strptime(buf, "%H:%M", tm);
-			if (buf == 0)
-				return 0;
-			break;
+    case 'R':
+      buf = _strptime(buf, "%H:%M", tm);
+      if (buf == 0)
+	return 0;
+      break;
 
-		case 'r':
-			buf = _strptime(buf, "%I:%M:%S %p", tm);
-			if (buf == 0)
-				return 0;
-			break;
+    case 'r':
+      buf = _strptime(buf, "%I:%M:%S %p", tm);
+      if (buf == 0)
+	return 0;
+      break;
 
-		case 'T':
-			buf = _strptime(buf, "%H:%M:%S", tm);
-			if (buf == 0)
-				return 0;
-			break;
+    case 'T':
+      buf = _strptime(buf, "%H:%M:%S", tm);
+      if (buf == 0)
+	return 0;
+      break;
 
-		case 'X':
-			buf = _strptime(buf, Locale->X_fmt, tm);
-			if (buf == 0)
-				return 0;
-			break;
+    case 'X':
+      buf = _strptime(buf, Locale->X_fmt, tm);
+      if (buf == 0)
+	return 0;
+      break;
 
-		case 'x':
-			buf = _strptime(buf, Locale->x_fmt, tm);
-			if (buf == 0)
-				return 0;
-			break;
+    case 'x':
+      buf = _strptime(buf, Locale->x_fmt, tm);
+      if (buf == 0)
+	return 0;
+      break;
 
-		case 'j':
-			if (!isdigit((unsigned char)*buf))
-				return 0;
+    case 'j':
+      if (!isdigit((unsigned char)*buf))
+	return 0;
 
-			len = 3;
-			for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
-				i *= 10;
-				i += *buf - '0';
-				len--;
-			}
-			if (i < 1 || i > 366)
-				return 0;
+      len = 3;
+      for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
+	i *= 10;
+	i += *buf - '0';
+	len--;
+      }
+      if (i < 1 || i > 366)
+	return 0;
 
-			tm->tm_yday = i - 1;
-			break;
+      tm->tm_yday = i - 1;
+      break;
 
-		case 'M':
-		case 'S':
-			if (*buf == 0 || isspace((unsigned char)*buf))
-				break;
+    case 'M':
+    case 'S':
+      if (*buf == 0 || isspace((unsigned char)*buf))
+	break;
 
-			if (!isdigit((unsigned char)*buf))
-				return 0;
+      if (!isdigit((unsigned char)*buf))
+	return 0;
 
-			len = 2;
-			for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
-				i *= 10;
-				i += *buf - '0';
-				len--;
-			}
+      len = 2;
+      for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
+	i *= 10;
+	i += *buf - '0';
+	len--;
+      }
 
-			if (c == 'M') {
-				if (i > 59)
-					return 0;
-				tm->tm_min = i;
-			} else {
-				if (i > 60)
-					return 0;
-				tm->tm_sec = i;
-			}
+      if (c == 'M') {
+	if (i > 59)
+	  return 0;
+	tm->tm_min = i;
+      } else {
+	if (i > 60)
+	  return 0;
+	tm->tm_sec = i;
+      }
 
-			if (*buf != 0 && isspace((unsigned char)*buf))
-				while (*ptr != 0 && !isspace((unsigned char)*ptr))
-					ptr++;
-			break;
+      if (*buf != 0 && isspace((unsigned char)*buf))
+	while (*ptr != 0 && !isspace((unsigned char)*ptr))
+	  ptr++;
+      break;
 
-		case 'H':
-		case 'I':
-		case 'k':
-		case 'l':
-			/*
-			 * Of these, %l is the only specifier explicitly
-			 * documented as not being zero-padded.  However,
-			 * there is no harm in allowing zero-padding.
-			 *
-			 * XXX The %l specifier may gobble one too many
-			 * digits if used incorrectly.
-			 */
-                        if (!isdigit((unsigned char)*buf))
-				return 0;
+    case 'H':
+    case 'I':
+    case 'k':
+    case 'l':
+      /*
+       * Of these, %l is the only specifier explicitly
+       * documented as not being zero-padded.  However,
+       * there is no harm in allowing zero-padding.
+       *
+       * XXX The %l specifier may gobble one too many
+       * digits if used incorrectly.
+       */
+      if (!isdigit((unsigned char)*buf))
+	return 0;
 
-			len = 2;
-			for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
-				i *= 10;
-				i += *buf - '0';
-				len--;
-			}
-			if (c == 'H' || c == 'k') {
-				if (i > 23)
-					return 0;
-			} else if (i > 12)
-				return 0;
+      len = 2;
+      for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
+	i *= 10;
+	i += *buf - '0';
+	len--;
+      }
+      if (c == 'H' || c == 'k') {
+	if (i > 23)
+	  return 0;
+      } else if (i > 12)
+	return 0;
 
-			tm->tm_hour = i;
+      tm->tm_hour = i;
 
-			if (*buf != 0 && isspace((unsigned char)*buf))
-				while (*ptr != 0 && !isspace((unsigned char)*ptr))
-					ptr++;
-			break;
+      if (*buf != 0 && isspace((unsigned char)*buf))
+	while (*ptr != 0 && !isspace((unsigned char)*ptr))
+	  ptr++;
+      break;
 
-		case 'p':
-			/*
-			 * XXX This is bogus if parsed before hour-related
-			 * specifiers.
-			 */
-                        len = strlen(Locale->am);
-			if (strncasecmp(buf, Locale->am, len) == 0) {
-				if (tm->tm_hour > 12)
-					return 0;
-				if (tm->tm_hour == 12)
-					tm->tm_hour = 0;
-				buf += len;
-				break;
-			}
+    case 'p':
+      /*
+       * XXX This is bogus if parsed before hour-related
+       * specifiers.
+       */
+      len = strlen(Locale->am);
+      if (strncasecmp(buf, Locale->am, len) == 0) {
+	if (tm->tm_hour > 12)
+	  return 0;
+	if (tm->tm_hour == 12)
+	  tm->tm_hour = 0;
+	buf += len;
+	break;
+      }
 
-			len = strlen(Locale->pm);
-			if (strncasecmp(buf, Locale->pm, len) == 0) {
-				if (tm->tm_hour > 12)
-					return 0;
-				if (tm->tm_hour != 12)
-					tm->tm_hour += 12;
-				buf += len;
-				break;
-			}
+      len = strlen(Locale->pm);
+      if (strncasecmp(buf, Locale->pm, len) == 0) {
+	if (tm->tm_hour > 12)
+	  return 0;
+	if (tm->tm_hour != 12)
+	  tm->tm_hour += 12;
+	buf += len;
+	break;
+      }
 
-			return 0;
+      return 0;
 
-		case 'A':
-		case 'a':
-			for (i = 0; i < asizeof(Locale->weekday); i++) {
-				if (c == 'A') {
-					len = strlen(Locale->weekday[i]);
-					if (strncasecmp(buf,
-							Locale->weekday[i],
-							len) == 0)
-						break;
-				} else {
-					len = strlen(Locale->wday[i]);
-					if (strncasecmp(buf,
-							Locale->wday[i],
-							len) == 0)
-						break;
-				}
-			}
-			if (i == asizeof(Locale->weekday))
-				return 0;
-
-			tm->tm_wday = i;
-			buf += len;
-			break;
-
-		case 'U':
-		case 'W':
-			/*
-			 * XXX This is bogus, as we can not assume any valid
-			 * information present in the tm structure at this
-			 * point to calculate a real value, so just check the
-			 * range for now.
-			 */
-                        if (!isdigit((unsigned char)*buf))
-				return 0;
-
-			len = 2;
-			for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
-				i *= 10;
-				i += *buf - '0';
-				len--;
-			}
-			if (i > 53)
-				return 0;
-
-			if (*buf != 0 && isspace((unsigned char)*buf))
-				while (*ptr != 0 && !isspace((unsigned char)*ptr))
-					ptr++;
-			break;
-
-		case 'w':
-			if (!isdigit((unsigned char)*buf))
-				return 0;
-
-			i = *buf - '0';
-			if (i > 6)
-				return 0;
-
-			tm->tm_wday = i;
-
-			if (*buf != 0 && isspace((unsigned char)*buf))
-				while (*ptr != 0 && !isspace((unsigned char)*ptr))
-					ptr++;
-			break;
-
-		case 'd':
-		case 'e':
-			/*
-			 * The %e specifier is explicitly documented as not
-			 * being zero-padded but there is no harm in allowing
-			 * such padding.
-			 *
-			 * XXX The %e specifier may gobble one too many
-			 * digits if used incorrectly.
-			 */
-                        if (!isdigit((unsigned char)*buf))
-				return 0;
-
-			len = 2;
-			for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
-				i *= 10;
-				i += *buf - '0';
-				len--;
-			}
-			if (i > 31)
-				return 0;
-
-			tm->tm_mday = i;
-
-			if (*buf != 0 && isspace((unsigned char)*buf))
-				while (*ptr != 0 && !isspace((unsigned char)*ptr))
-					ptr++;
-			break;
-
-		case 'B':
-		case 'b':
-		case 'h':
-			for (i = 0; i < asizeof(Locale->month); i++) {
-				if (Oalternative) {
-					if (c == 'B') {
-						len = strlen(Locale->alt_month[i]);
-						if (strncasecmp(buf,
-								Locale->alt_month[i],
-								len) == 0)
-							break;
-					}
-				} else {
-					if (c == 'B') {
-						len = strlen(Locale->month[i]);
-						if (strncasecmp(buf,
-								Locale->month[i],
-								len) == 0)
-							break;
-					} else {
-						len = strlen(Locale->mon[i]);
-						if (strncasecmp(buf,
-								Locale->mon[i],
-								len) == 0)
-							break;
-					}
-				}
-			}
-			if (i == asizeof(Locale->month))
-				return 0;
-
-			tm->tm_mon = i;
-			buf += len;
-			break;
-
-		case 'm':
-			if (!isdigit((unsigned char)*buf))
-				return 0;
-
-			len = 2;
-			for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
-				i *= 10;
-				i += *buf - '0';
-				len--;
-			}
-			if (i < 1 || i > 12)
-				return 0;
-
-			tm->tm_mon = i - 1;
-
-			if (*buf != 0 && isspace((unsigned char)*buf))
-				while (*ptr != 0 && !isspace((unsigned char)*ptr))
-					ptr++;
-			break;
-
-		case 'Y':
-		case 'y':
-			if (*buf == 0 || isspace((unsigned char)*buf))
-				break;
-
-			if (!isdigit((unsigned char)*buf))
-				return 0;
-
-			len = (c == 'Y') ? 4 : 2;
-			for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
-				i *= 10;
-				i += *buf - '0';
-				len--;
-			}
-			if (c == 'Y')
-				i -= 1900;
-			if (c == 'y' && i < 69)
-				i += 100;
-			if (i < 0)
-				return 0;
-
-			tm->tm_year = i;
-
-			if (*buf != 0 && isspace((unsigned char)*buf))
-				while (*ptr != 0 && !isspace((unsigned char)*ptr))
-					ptr++;
-			break;
-
-		case 'Z':
-			{
-			const char *cp;
-			char *zonestr;
-
-			for (cp = buf; *cp && isupper((unsigned char)*cp); ++cp) 
-                            {/*empty*/}
-			if (cp - buf) {
-				zonestr = alloca(cp - buf + 1);
-				strncpy(zonestr, buf, cp - buf);
-				zonestr[cp - buf] = '\0';
-				tzset();
-				if (0 == strcmp(zonestr, "GMT")) {
-				    got_GMT = 1;
-				} else {
-				    return 0;
-				}
-				buf += cp - buf;
-			}
-			}
-			break;
-		}
+    case 'A':
+    case 'a':
+      for (i = 0; i < asizeof(Locale->weekday); i++) {
+	if (c == 'A') {
+	  len = strlen(Locale->weekday[i]);
+	  if (strncasecmp(buf,
+			  Locale->weekday[i],
+			  len) == 0)
+	    break;
+	} else {
+	  len = strlen(Locale->wday[i]);
+	  if (strncasecmp(buf,
+			  Locale->wday[i],
+			  len) == 0)
+	    break;
 	}
-	return (char *)buf;
+      }
+      if (i == asizeof(Locale->weekday))
+	return 0;
+
+      tm->tm_wday = i;
+      buf += len;
+      break;
+
+    case 'U':
+    case 'W':
+      /*
+       * XXX This is bogus, as we can not assume any valid
+       * information present in the tm structure at this
+       * point to calculate a real value, so just check the
+       * range for now.
+       */
+      if (!isdigit((unsigned char)*buf))
+	return 0;
+
+      len = 2;
+      for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
+	i *= 10;
+	i += *buf - '0';
+	len--;
+      }
+      if (i > 53)
+	return 0;
+
+      if (*buf != 0 && isspace((unsigned char)*buf))
+	while (*ptr != 0 && !isspace((unsigned char)*ptr))
+	  ptr++;
+      break;
+
+    case 'w':
+      if (!isdigit((unsigned char)*buf))
+	return 0;
+
+      i = *buf - '0';
+      if (i > 6)
+	return 0;
+
+      tm->tm_wday = i;
+
+      if (*buf != 0 && isspace((unsigned char)*buf))
+	while (*ptr != 0 && !isspace((unsigned char)*ptr))
+	  ptr++;
+      break;
+
+    case 'd':
+    case 'e':
+      /*
+       * The %e specifier is explicitly documented as not
+       * being zero-padded but there is no harm in allowing
+       * such padding.
+       *
+       * XXX The %e specifier may gobble one too many
+       * digits if used incorrectly.
+       */
+      if (!isdigit((unsigned char)*buf))
+	return 0;
+
+      len = 2;
+      for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
+	i *= 10;
+	i += *buf - '0';
+	len--;
+      }
+      if (i > 31)
+	return 0;
+
+      tm->tm_mday = i;
+
+      if (*buf != 0 && isspace((unsigned char)*buf))
+	while (*ptr != 0 && !isspace((unsigned char)*ptr))
+	  ptr++;
+      break;
+
+    case 'B':
+    case 'b':
+    case 'h':
+      for (i = 0; i < asizeof(Locale->month); i++) {
+	if (Oalternative) {
+	  if (c == 'B') {
+	    len = strlen(Locale->alt_month[i]);
+	    if (strncasecmp(buf,
+			    Locale->alt_month[i],
+			    len) == 0)
+	      break;
+	  }
+	} else {
+	  if (c == 'B') {
+	    len = strlen(Locale->month[i]);
+	    if (strncasecmp(buf,
+			    Locale->month[i],
+			    len) == 0)
+	      break;
+	  } else {
+	    len = strlen(Locale->mon[i]);
+	    if (strncasecmp(buf,
+			    Locale->mon[i],
+			    len) == 0)
+	      break;
+	  }
+	}
+      }
+      if (i == asizeof(Locale->month))
+	return 0;
+
+      tm->tm_mon = i;
+      buf += len;
+      break;
+
+    case 'm':
+      if (!isdigit((unsigned char)*buf))
+	return 0;
+
+      len = 2;
+      for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
+	i *= 10;
+	i += *buf - '0';
+	len--;
+      }
+      if (i < 1 || i > 12)
+	return 0;
+
+      tm->tm_mon = i - 1;
+
+      if (*buf != 0 && isspace((unsigned char)*buf))
+	while (*ptr != 0 && !isspace((unsigned char)*ptr))
+	  ptr++;
+      break;
+
+    case 'Y':
+    case 'y':
+      if (*buf == 0 || isspace((unsigned char)*buf))
+	break;
+
+      if (!isdigit((unsigned char)*buf))
+	return 0;
+
+      len = (c == 'Y') ? 4 : 2;
+      for (i = 0; len && *buf != 0 && isdigit((unsigned char)*buf); buf++) {
+	i *= 10;
+	i += *buf - '0';
+	len--;
+      }
+      if (c == 'Y')
+	i -= 1900;
+      if (c == 'y' && i < 69)
+	i += 100;
+      if (i < 0)
+	return 0;
+
+      tm->tm_year = i;
+
+      if (*buf != 0 && isspace((unsigned char)*buf))
+	while (*ptr != 0 && !isspace((unsigned char)*ptr))
+	  ptr++;
+      break;
+
+    case 'Z':
+      {
+	const char *cp;
+	char *zonestr;
+
+	for (cp = buf; *cp && isupper((unsigned char)*cp); ++cp) 
+	  {/*empty*/}
+	if (cp - buf) {
+	  zonestr = alloca(cp - buf + 1);
+	  strncpy(zonestr, buf, cp - buf);
+	  zonestr[cp - buf] = '\0';
+	  tzset();
+	  if (0 == strcmp(zonestr, "GMT")) {
+	    got_GMT = 1;
+	  } else {
+	    return 0;
+	  }
+	  buf += cp - buf;
+	}
+      }
+      break;
+    }
+  }
+  return (char *)buf;
 }
 
 
 char *
 strptime(const char *buf, const char *fmt, struct tm *tm)
 {
-	char *ret;
+  char *ret;
 
-        got_GMT = 0;
-	ret = _strptime(buf, fmt, tm);
+  got_GMT = 0;
+  ret = _strptime(buf, fmt, tm);
 
-	return ret;
+  return ret;
 }
 
 /* ********************************* */
@@ -2491,11 +2491,11 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size) {
 PCSTR
 WSAAPI
 inet_ntop(
-    __in                                INT             af,
-    __in                                PVOID           src,
-    __out_ecount(StringBufSize)         PSTR            dst,
-    __in                                size_t          size
-    ){
+	  __in                                INT             af,
+	  __in                                PVOID           src,
+	  __out_ecount(StringBufSize)         PSTR            dst,
+	  __in                                size_t          size
+	  ){
   switch (af) {
   case AF_INET:
     return (inet_ntop4(src, dst, size));
@@ -2516,4 +2516,3 @@ int setenv(char *key, char *value, int mode) {
   snprintf(str, sizeof(str), "%s=%s", key, value);
   return(putenv(str));
 }
-

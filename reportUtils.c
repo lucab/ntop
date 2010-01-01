@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2009 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
  *
  *  			    http://www.ntop.org/
  *
@@ -5108,6 +5108,7 @@ void printHostsStats(int fingerprintRemote) {
 /* ******************************************************** */
 
 void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName) {
+#ifdef MUTEX_DEBUG
   char buf[LEN_GENERAL_WORK_BUFFER], bufAttempt[64], bufLock[64], bufUnlock[64];
   struct tm t;
 
@@ -5216,8 +5217,12 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
                   mutexId->numLocks, mutexId->numReleases);
     sendString(buf);
   }
+#endif
 }
 
+/* ************************************************ */
+
+#ifdef ENABLE_FC
 void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, char *url) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   char *sign, *arrowGif, *arrow[48], *theAnchor[48];
@@ -5372,6 +5377,7 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
 
   sendString("</TR>\n");
 }
+#endif
 
 /* ************************************ */
 

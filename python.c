@@ -3,10 +3,10 @@
  *
  *                          http://www.ntop.org
  *
- *             Copyright (C) 2009 Luca Deri <deri@ntop.org>
+ *             Copyright (C) 2010 Luca Deri <deri@ntop.org>
  *                                Daniele Sgandurra <sgandurra@ntop.org>
  *                                Jaime Blasco <jaime.blasco@alienvault.com>
- *                                Gianluca Medici <gianluca_medici@tin.it>
+ *                                Gianluca Medici <medici@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *

@@ -1847,6 +1847,7 @@ int _joinThread(char *file, int line, pthread_t *threadId) {
 
 #undef _createMutex
 int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
+#ifdef MUTEX_DEBUG
   int rc;
 
   memset(mutexId, 0, sizeof(PthreadMutex));
@@ -1860,19 +1861,24 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
                strerror(rc), rc, (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
   } else {
     mutexId->isInitialized = 1;
-#ifdef MUTEX_DEBUG
+#ifdef MUTEX_DEBUG_VERBOSE
     traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: createMutex() succeeded [t%lu m%p @%s:%d]",
                (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   }
 
   return(rc);
+#else
+  mutexId->isInitialized = 1;
+  return(pthread_rwlock_init(&mutexId->mutex, NULL));
+#endif
 }
 
 /* ************************************ */
 
 #undef _deleteMutex
 void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
+#ifdef MUTEX_DEBUG
   int rc;
 
   if(mutexId == NULL) {
@@ -1893,33 +1899,39 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   mutexId->isInitialized = 0;
 
   rc = pthread_mutex_unlock(&(mutexId->mutex));
-#ifdef MUTEX_DEBUG
+#ifdef MUTEX_DEBUG_VERBOSE
   traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() unlock (rc=%d) [t%lu m%p @%s:%d]",
              rc, (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_destroy(&(mutexId->mutex));
-#ifdef MUTEX_DEBUG
+#ifdef MUTEX_DEBUG_VERBOSE
   traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() destroy (rc=%d) [t%lu m%p @%s:%d]",
              rc, (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_unlock(&(mutexId->statedatamutex));
-#ifdef MUTEX_DEBUG
+#ifdef MUTEX_DEBUG_VERBOSE
   traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() #2 unlock (rc=%d) [t%lu m%p @%s:%d]",
              rc, (long unsigned int)pthread_self(), (void*)&(mutexId->statedatamutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_destroy(&(mutexId->statedatamutex));
-#ifdef MUTEX_DEBUG
+#ifdef MUTEX_DEBUG_VERBOSE
   traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: deleteMutex() #2 destroy (rc=%d) [t%lu m%p @%s:%d]",
              rc, (long unsigned int)pthread_self(), (void*)&(mutexId->statedatamutex), fileName, fileLine);
 #endif
 
   memset(mutexId, 0, sizeof(PthreadMutex));
+#else
+  pthread_rwlock_unlock(&mutexId->mutex);
+  pthread_rwlock_destroy(&mutexId->mutex);
+  mutexId->isInitialized = 0;
+#endif
 }
 
 /* ************************************ */
 
 #undef _accessMutex
 int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLine) {
+#ifdef MUTEX_DEBUG
   int rc;
 
   if(mutexId == NULL) {
@@ -1941,7 +1953,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
     return(-1);
   }
 
-#ifdef MUTEX_DEBUG
+#ifdef MUTEX_DEBUG_VERBOSE
   traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: accessMutex() called '%s' [t%lu m%p @%s:%d]",
              where, (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
@@ -1972,7 +1984,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
                where, rc, strerror(rc), (void*)&(mutexId->mutex), fileName, fileLine);
   } else {
 
-#ifdef MUTEX_DEBUG
+#ifdef MUTEX_DEBUG_VERBOSE
     traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: accessMutex() call '%s' succeeded [%p@%s:%d]",
 	       where, (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
@@ -1988,12 +2000,16 @@ int _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLin
   pthread_mutex_unlock(&(mutexId->statedatamutex));
 
   return(rc);
+#else
+  return(pthread_rwlock_wrlock(&mutexId->mutex));
+#endif
 }
 
 /* ************************************ */
 
 #undef _tryLockMutex
 int _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLine) {
+#ifdef MUTEX_DEBUG
   int rc;
 
   if(mutexId == NULL) {
@@ -2015,7 +2031,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLi
     return(-1);
   }
 
-#ifdef MUTEX_DEBUG
+#ifdef MUTEX_DEBUG_VERBOSE
   traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: tryLockMutex() called '%s' [t%lu m%p @%s:%d]",
              where, (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
@@ -2056,12 +2072,16 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLi
   pthread_mutex_unlock(&(mutexId->statedatamutex));
 
   return(rc);
+#else
+  return(pthread_rwlock_trywrlock(&mutexId->mutex));
+#endif
 }
 
 /* ************************************ */
 
 #undef _releaseMutex
 int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
+#ifdef MUTEX_DEBUG
   int rc;
   float lockDuration;
 
@@ -2092,7 +2112,7 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   }
 
-#ifdef MUTEX_DEBUG
+#ifdef MUTEX_DEBUG_VERBOSE
   traceEvent(CONST_TRACE_INFO, "MUTEX_DEBUG: releaseMutex() releasing [t%lu m%p, @%s:%d]",
              (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
@@ -2121,7 +2141,7 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   pthread_mutex_unlock(&(mutexId->statedatamutex));
 
-#ifdef MUTEX_DEBUG
+#ifdef MUTEX_DEBUG_VERBOSE
   if (rc != 0)
     traceEvent(CONST_TRACE_WARNING, "MUTEX_DEBUG: releaseMutex() failed (rc=%d) [t%lu m%p @%s:%d]",
                (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), rc, fileName, fileLine);
@@ -2130,6 +2150,9 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
                (long unsigned int)pthread_self(), (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
   return(rc);
+#else
+  return(pthread_rwlock_unlock(&mutexId->mutex));
+#endif
 }
 
 /* ************************************ */
@@ -2769,7 +2792,7 @@ void traceEvent(int eventTraceLevel, char* file,
 #ifdef WIN32
 	  WaitForSingleObject(myGlobals.logViewMutex.mutex, INFINITE);
 #else
-	  pthread_mutex_lock(&myGlobals.logViewMutex.mutex);
+	  pthread_rwlock_wrlock(&myGlobals.logViewMutex.mutex);
 #endif
 	}
 
@@ -2784,7 +2807,7 @@ void traceEvent(int eventTraceLevel, char* file,
 #ifdef WIN32
 	  ReleaseMutex(myGlobals.logViewMutex.mutex);
 #else
-	  pthread_mutex_unlock(&myGlobals.logViewMutex.mutex);
+	  pthread_rwlock_unlock(&myGlobals.logViewMutex.mutex);
 #endif
 	}
       }

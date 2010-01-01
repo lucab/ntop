@@ -1053,6 +1053,20 @@ dnl>    sched.h or sys/sched.h are optional, but improves performance
 AC_CHECK_HEADERS([sched.h sys/sched.h])
 AC_CHECK_HEADERS([pthread.h])
 
+AC_MSG_CHECKING([if r/w locks are supported])
+AC_TRY_RUN([
+#include <pthread.h>
+
+int main()
+{
+        pthread_rwlock_t t;
+        return 0;
+}
+
+]
+, [ AC_MSG_RESULT(yes) AC_DEFINE_UNQUOTED(HAVE_RW_LOCK, 1, [pthread has rw locks]) ], [AC_MSG_RESULT(no)]
+)
+
 dnl> Optional, used for -L parameter
 AC_CHECK_HEADERS([sys/syslog.h syslog.h])
 

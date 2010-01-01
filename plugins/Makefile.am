@@ -44,7 +44,6 @@ INCLUDES = -I.. @INCS@ ${RRD_INC}
 #
 noinst_PROGRAMS = \
                   icmpPlugin.so \
-                  lastSeenPlugin.so \
                   netflowPlugin.so \
                   cpacketPlugin.so \
                   rrdPlugin.so \
@@ -52,7 +51,6 @@ noinst_PROGRAMS = \
 
 lib_LTLIBRARIES = \
                   libicmpPlugin.la \
-                  liblastSeenPlugin.la \
                   libnetflowPlugin.la \
                   libcpacketPlugin.la \
                   librrdPlugin.la \
@@ -61,10 +59,6 @@ lib_LTLIBRARIES = \
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 libicmpPlugin_la_CFLAGS = $(AM_CFLAGS)
-
-liblastSeenPlugin_la_SOURCES = lastSeenPlugin.c
-liblastSeenPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-liblastSeenPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 libnetflowPlugin_la_SOURCES = netflowPlugin.c
 libnetflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
@@ -98,18 +92,6 @@ libsflowPlugin_la_CFLAGS = $(AM_CFLAGS)
 
 icmpPlugin.so$(EXEEXT): .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libicmpPlugin.so icmpPlugin.so
-
-###############
-
-.libs/liblastSeenPlugin.so@SO_VERSION_PATCH@:
-	@if test -f liblastSeenPlugin_la-lastSeenPlugin.o; then \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ liblastSeenPlugin_la-lastSeenPlugin.o; \
-	else \
-	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ lastSeenPlugin.o; \
-	fi
-
-lastSeenPlugin.so$(EXEEXT): .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
-	@$(LN_S) .libs/liblastSeenPlugin.so lastSeenPlugin.so
 
 ###############
 

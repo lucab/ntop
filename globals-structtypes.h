@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- *         Copyright (C) 1998-2009 Luca Deri <deri@ntop.org>
+ *         Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -305,6 +305,13 @@ typedef struct protocolsList {
   struct protocolsList *next;
 } ProtocolsList;
 
+#ifndef HAVE_RW_LOCK
+#define pthread_rwlock_t       pthread_mutex_t
+#define pthread_rwlock_init    pthread_mutex_init
+#define pthread_rwlock_wrlock  pthread_mutex_lock
+#define pthread_rwlock_unlock  pthread_mutex_unlock
+#endif
+
 #ifndef WIN32
 
 typedef struct conditionalVariable {
@@ -318,6 +325,7 @@ typedef struct conditionalVariable {
 #define pthread_t              HANDLE
 #define pthread_mutex_t        HANDLE
 #define pthread_cond_t         HANDLE
+#define pthread_rwlock_t       HANDLE
 
 typedef struct conditionalVariable {
   HANDLE condVar;
@@ -332,7 +340,6 @@ extern int  pthread_mutex_lock(pthread_mutex_t *mutex);
 extern int  pthread_mutex_trylock(pthread_mutex_t *mutex);
 extern int  pthread_mutex_unlock(pthread_mutex_t *mutex);
 
-
 #endif /* WIN32 */
 
 typedef struct holder {
@@ -343,15 +350,19 @@ typedef struct holder {
   char   file[5];
 } Holder;
 
+
 typedef struct pthreadMutex {
+  u_int8_t isInitialized;
+
+#ifdef MUTEX_DEBUG
   pthread_mutex_t mutex, statedatamutex;
-  char   isLocked, isInitialized;
+  u_int8_t isLocked;
   u_int  numLocks, numReleases;
-  Holder attempt,
-         lock,
-         unlock,
-         max;
+  Holder attempt, lock, unlock, max;
   float  maxLockedDuration;
+#else
+  pthread_rwlock_t mutex;
+#endif
 } PthreadMutex;
 
 typedef struct packetInformation {

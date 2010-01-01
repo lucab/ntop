@@ -339,6 +339,9 @@
 /* Python is supported */
 #undef HAVE_PYTHON
 
+/* pthread has rw locks */
+#undef HAVE_RW_LOCK
+
 /* Define to 1 if you have the <sched.h> header file. */
 #undef HAVE_SCHED_H
 
