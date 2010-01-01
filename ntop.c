@@ -1085,6 +1085,8 @@ RETSIGTYPE cleanup(int signo) {
   for(i=0; i<myGlobals.numDevices; i++) {
     tryLockMutex(&myGlobals.device[i].asMutex, "cleanup");
     deleteMutex(&myGlobals.device[i].asMutex);
+    tryLockMutex(&myGlobals.device[i].counterMutex, "cleanup");
+    deleteMutex(&myGlobals.device[i].counterMutex);
     tryLockMutex(&myGlobals.device[i].packetProcessMutex, "cleanup");
     deleteMutex(&myGlobals.device[i].packetProcessMutex);
     tryLockMutex(&myGlobals.device[i].packetQueueMutex, "cleanup");

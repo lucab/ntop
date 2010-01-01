@@ -765,6 +765,7 @@ void initDeviceSemaphores(int deviceId) {
   traceEvent(CONST_TRACE_INFO, "Initializing device %s (%d)",
 	     myGlobals.device[deviceId].name, deviceId);
     
+  createMutex(&myGlobals.device[deviceId].counterMutex);
   createMutex(&myGlobals.device[deviceId].asMutex);
   createMutex(&myGlobals.device[deviceId].packetProcessMutex);
   createMutex(&myGlobals.device[deviceId].packetQueueMutex);

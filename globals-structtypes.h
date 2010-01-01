@@ -1535,7 +1535,7 @@ typedef struct ntopInterface {
 
   int fd;                        /* unique identifier (Unix file descriptor) */
 
-  PthreadMutex asMutex;
+  PthreadMutex asMutex, counterMutex;
   AsStats *asStats;
 
   /*
