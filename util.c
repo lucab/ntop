@@ -73,7 +73,9 @@ static HostTraffic* __getFirstHost(u_int actualDeviceId, u_int beginIdx, char *f
 	  return(NULL);
 	}
 
-	if(!is_host_ready_to_purge(actualDeviceId, el, time(NULL))) {
+	if(!is_host_ready_to_purge(actualDeviceId, el, time(NULL),
+				   PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES,
+				   PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES)) {
 	  /* Do not return hosts that will soon be purged off memory */
 	  releaseMutex(&myGlobals.hostsHashLockMutex);
 	  return(el);
@@ -117,7 +119,9 @@ HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, i
       return(NULL);
     }
 
-    if(!is_host_ready_to_purge(actualDeviceId, host->next, now)) {
+    if(!is_host_ready_to_purge(actualDeviceId, host->next, now,
+			       PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES,
+			       PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES)) {
       releaseMutex(&myGlobals.hostsHashLockMutex);
       return(host->next);
     } else

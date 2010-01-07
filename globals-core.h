@@ -208,7 +208,8 @@ extern u_int hashFcHost(FcAddress *fcAddress, u_short vsanId,
 #endif
 extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
-extern int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now);
+extern int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now,
+				  u_int _noSessionPurgeTime, u_int _withSessionPurgeTime);
 extern int purgeIdleHosts(int devId);
 extern void setHostSerial(HostTraffic *el);
 extern HostTraffic * _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, 
