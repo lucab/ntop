@@ -5918,6 +5918,7 @@ void printHostColorCode(int textPrintFlag, int isInfo) {
 /* ******************************** */
 
 void printMutexStatusReport(int textPrintFlag) {
+#ifdef MUTEX_DEBUG
   int i;
 
   sendString(texthtml("\nMutexes:\n\n",
@@ -5963,6 +5964,7 @@ void printMutexStatusReport(int textPrintFlag) {
   printMutexStatus(textPrintFlag, &myGlobals.securityItemsMutex, "securityItemsMutex");
 
   sendString(texthtml("\n\n", "</table>"TABLE_OFF"</p>\n"));
+#endif
 }
 
 /* ******************************** */
@@ -5977,7 +5979,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 #ifndef WIN32
   char lib[LEN_GENERAL_WORK_BUFFER], env[LEN_GENERAL_WORK_BUFFER];
 #endif
-  char formatBuf[48];
+  char formatBuf[96];
   int i, bufLength, bufPosition, bufUsed;
   unsigned int idx, minLen, maxLen;
   unsigned long totBuckets=0, nonEmptyBuckets=0;
@@ -5988,7 +5990,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   sendString(texthtml("<pre>",
                       "<CENTER>\n<p>&nbsp;</p>\n"
-                      "<TABLE border=\"1\" "TABLE_DEFAULTS" width=\"" xstr(CONST_INFOHTML_WIDTH) "\">\n"));
+                      "<TABLE border=\"1\" "TABLE_DEFAULTS" width=\"90%\">\n"));
 
   printInfoSectionTitle(textPrintFlag, "Basic Information");
 

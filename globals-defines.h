@@ -934,7 +934,6 @@
 #define CONST_INFOHTML_COL2_WIDTH   175
 #define CONST_INFOHTML_COL3_WIDTH   175
 #define CONST_INFOHTML_COL23_WIDTH  350  /* columns 2 + 3 */
-#define CONST_INFOHTML_WIDTH        600  /* columns 1 + 2 + 3 */
 
 /*
  * How many pathological cases (same IP/MAC different VLANs) to warn about
