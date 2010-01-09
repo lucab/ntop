@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.19.2 -->
-<!-- CreationDate: Fri Apr 17 16:28:59 2009 -->
+<!-- CreationDate: Sat Jan  9 14:52:42 2010 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -85,9 +85,8 @@ display top network users</p>
 <i>&lt;URL&gt;</i>] [<b>-V</b>|<b>--version]</b> [<b>-X</b>
 <i>&lt;max_num_TCP_sessions&gt;</i>]
 [<b>--disable-instantsessionpurge</b>]
-[<b>--disable-mutexextrainfo</b>]
-[<b>--disable-schedyield</b>] [<b>--disable-stopcap</b>]
-[<b>--fc-only</b>] [<b>--instance</b>] [<b>--no-fc</b>]
+[<b>--disable-mutexextrainfo</b>] [<b>--fc-only</b>]
+[<b>--instance</b>] [<b>--no-fc</b>]
 [<b>--no-invalid-lun</b>] [<b>--p3p-cp</b>]
 [<b>--p3p-uri</b>] [<b>--skip-version-check</b>]
 [<b>--w3c</b>] [<b>-4</b>|<b>--ipv4]</b>
@@ -1121,24 +1120,6 @@ impact on <b>ntop</b> <br>
 - however should <b>ntop</b> actually deadlock, we would
 lose the information that sometimes tells us why.</p>
 
-
-<p style="margin-left:11%;"><b>--disable-schedyield</b></p>
-
-<p style="margin-left:12%;"><b>ntop</b> uses sched_yield()
-calls for better interactive performance. Under some
-situations, primarily under RedHat Linux 8.0, this can
-deadlock, causing the <b>ntop</b> web server to stop
-responding, although <b>ntop</b> appears to still be
-operational according to the ps command. Use this switch to
-disable these calls, IF you are seeing deadlocks.</p>
-
-<p style="margin-left:11%;"><b>--disable-stopcap</b></p>
-
-<p style="margin-left:12%;">Return <b>ntop</b> to the old
-(v2.1) behavior on a memory error. The default of stopcap
-enabled makes the web interface available albeit with static
-content until <b>ntop</b> is shutdown.</p>
-
 <p style="margin-left:11%;"><b>--fc-only</b></p>
 
 <p style="margin-left:12%; margin-top: 1em">Display only
@@ -1176,8 +1157,8 @@ LD_LIBRARY_PATH before invoking, e.g.</p>
 /devel/bin/ntop ...args...</p>
 
 <p style="margin-left:12%; margin-top: 1em">If present, a
-file of the form &lt;instance&gt;_ntop_logo.png will be used
-instead of the normal ntop_logo.png. This is tested for ONLY
+file of the form &lt;instance&gt;_ntop_logo.gif will be used
+instead of the normal ntop_logo.gif. This is tested for ONLY
 once, at the beginning of the run. The EXACT word(s) of the
 --instance flag are used, without testing if they make a
 proper file name. If - for any reason - the file is not

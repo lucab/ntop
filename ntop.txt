@@ -19,9 +19,9 @@ SSYYNNOOPPSSIISS
        [--NN|----wwwwnn--mmaapp _<_p_a_t_h_>] [--OO|--------oouuttppuutt--ppaacckkeett--ppaatthh _<_p_a_t_h_>] [--PP|----ddbb--ffiillee--
        ppaatthh  _<_p_a_t_h_>]   [--QQ|----ssppooooll--ffiillee--ppaatthh   _<_p_a_t_h_>]   [--UU|----mmaappppeerr   _<_U_R_L_>]
        [--VV|----vveerrssiioonn]]  [--XX  _<_m_a_x___n_u_m___T_C_P___s_e_s_s_i_o_n_s_>] [----ddiissaabbllee--iinnssttaannttsseessssiioonn--
-       ppuurrggee]  [----ddiissaabbllee--mmuutteexxeexxttrraaiinnffoo]  [----ddiissaabbllee--sscchheeddyyiieelldd]  [----ddiissaabbllee--
-       ssttooppccaapp]  [----ffcc--oonnllyy] [----iinnssttaannccee] [----nnoo--ffcc] [----nnoo--iinnvvaalliidd--lluunn] [----pp33pp--
-       ccpp] [----pp33pp--uurrii] [----sskkiipp--vveerrssiioonn--cchheecckk] [----ww33cc] [--44|----iippvv44]] [--66|----iippvv66]]
+       ppuurrggee] [----ddiissaabbllee--mmuutteexxeexxttrraaiinnffoo]  [----ffcc--oonnllyy]  [----iinnssttaannccee]  [----nnoo--ffcc]
+       [----nnoo--iinnvvaalliidd--lluunn]    [----pp33pp--ccpp]   [----pp33pp--uurrii]   [----sskkiipp--vveerrssiioonn--cchheecckk]
+       [----ww33cc] [--44|----iippvv44]] [--66|----iippvv66]]
 
        Unix options:
 
@@ -789,20 +789,6 @@ CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
         have no processing impact on nnttoopp
          - however should nnttoopp actually deadlock, we would lose  the  informa-
         tion that sometimes tells us why.
-
-
-       ----ddiissaabbllee--sscchheeddyyiieelldd
-        nnttoopp  uses  sched_yield()  calls  for  better interactive performance.
-        Under some situations, primarily under  RedHat  Linux  8.0,  this  can
-        deadlock,  causing  the  nnttoopp  web server to stop responding, although
-        nnttoopp appears to still be operational according to the ps command.  Use
-        this switch to disable these calls, IF you are seeing deadlocks.
-
-
-       ----ddiissaabbllee--ssttooppccaapp
-        Return nnttoopp to the old (v2.1) behavior on a memory error.  The default
-        of stopcap enabled makes  the  web  interface  available  albeit  with
-        static content until nnttoopp is shutdown.
 
 
        ----ffcc--oonnllyy

@@ -31,8 +31,6 @@
 
 #ifdef HAVE_PYTHON
 
-#include "Python.h" 
-
 static HostTraffic *ntop_host = NULL;
 static char query_string[2048];
 static pthread_mutex_t python_mutex;
@@ -43,9 +41,9 @@ static PyObject* python_sendHTTPHeader(PyObject *self, PyObject *args) {
   int mime_type;
 
   // traceEvent(CONST_TRACE_WARNING, "-%s-", "python_sendHTTPHeader");
-  
+
   if(!PyArg_ParseTuple(args, "i", &mime_type)) return NULL;
-    
+
   sendHTTPHeader(mime_type /* FLAG_HTTP_TYPE_HTML */, 0, 0);
   return PyString_FromString("");
 }
@@ -55,11 +53,11 @@ static PyObject* python_sendHTTPHeader(PyObject *self, PyObject *args) {
 static PyObject* python_printHTMLHeader(PyObject *self,
 				       PyObject *args) {
   char *title;
-  
+
   // traceEvent(CONST_TRACE_WARNING, "-%s-", "python_printHTMLHeader");
 
   if(!PyArg_ParseTuple(args, "s", &title)) return NULL;
-    
+
   printHTMLheader(title, NULL, 0);
   return PyString_FromString("");
 }
@@ -80,9 +78,9 @@ static PyObject* python_printHTMLFooter(PyObject *self,
 static PyObject* python_sendString(PyObject *self,
 				   PyObject *args) {
   char *msg;
-  
+
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_sendString");
-  
+
   /* parse the incoming arguments */
   if (!PyArg_ParseTuple(args, "s", &msg)) {
       return NULL;
@@ -94,18 +92,33 @@ static PyObject* python_sendString(PyObject *self,
 
 /* **************************************** */
 
+static PyObject* python_printFlagedWarning(PyObject *self,
+					   PyObject *args) {
+  char *msg;
+
+  /* parse the incoming arguments */
+  if (!PyArg_ParseTuple(args, "s", &msg)) {
+      return NULL;
+    }
+  
+  printFlagedWarning(msg);
+  return PyString_FromString("");
+}
+
+/* **************************************** */
+
 static PyObject* python_getFirstHost(PyObject *self,
 				     PyObject *args) {
   int actualDeviceId;
 
   // traceEvent(CONST_TRACE_WARNING, "-%s- [%p]", "python_getFirstHost", ntop_host);
-  
+
   /* parse the incoming arguments */
   if(!PyArg_ParseTuple(args, "i", &actualDeviceId))
     return NULL;
-    
+
   ntop_host = getFirstHost(actualDeviceId);
-  
+
   //Return PyString_FromString(ntop_host ? "1" : "0");
   return Py_BuildValue("i", ntop_host ? 1 : 0);
 }
@@ -125,9 +138,9 @@ static PyObject* python_findHostByNumIP(PyObject *self,
   if(!PyArg_ParseTuple(args, "sii", &hostIpAddress, &vlanId, &actualDeviceId))
     return NULL;
 
-  addr.Ip4Address.s_addr = inet_addr(hostIpAddress); /* FIX: add IPv6 support */    
+  addr.Ip4Address.s_addr = inet_addr(hostIpAddress); /* FIX: add IPv6 support */
   ntop_host = findHostByNumIP(addr, vlanId, actualDeviceId);
-  
+
   return Py_BuildValue("i", ntop_host ? 1 : 0);
 }
 
@@ -137,9 +150,9 @@ static PyObject* python_getPreference(PyObject *self,
 				      PyObject *args) {
   char *key, value[512] = { '\0' };
   int rc;
-  
+
   if(!PyArg_ParseTuple(args, "s", &key)) return NULL;
-    
+
   rc = fetchPrefsValue(key, value, sizeof(value));
   return PyString_FromString(rc == 0 ? value : "");
 }
@@ -151,13 +164,13 @@ static PyObject* python_getNextHost(PyObject *self,
   int actualDeviceId;
 
   //traceEvent(CONST_TRACE_WARNING, "-%s- [%p]", "python_getNextHost", ntop_host);
-  
+
   /* parse the incoming arguments */
   if(!PyArg_ParseTuple(args, "i", &actualDeviceId))
     return NULL;
 
   if(ntop_host != NULL)
-    ntop_host = getNextHost(actualDeviceId, ntop_host);  
+    ntop_host = getNextHost(actualDeviceId, ntop_host);
   else
     ntop_host = getFirstHost(actualDeviceId);
 
@@ -513,7 +526,7 @@ static PyObject* python_synPktsSent(PyObject *self,
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyString_FromFormat("%lu",
-			     (ntop_host && ntop_host->secHostPkts) ? 
+			     (ntop_host && ntop_host->secHostPkts) ?
 			     (unsigned long)(ntop_host->secHostPkts->synPktsSent.value.value) : 0);
 }
 
@@ -525,6 +538,7 @@ static PyMethodDef ntop_methods[] = {
 
   { "printHTMLFooter", python_printHTMLFooter, METH_VARARGS, "" },
   { "sendString",      python_sendString,      METH_VARARGS, "" },
+  { "printFlagedWarning",      python_printFlagedWarning,      METH_VARARGS, "" },
 
   { "getFirstHost",    python_getFirstHost,    METH_VARARGS, "" },
   { "getNextHost",     python_getNextHost,     METH_VARARGS, "" },
@@ -590,13 +604,21 @@ static void init_python_ntop(void) {
 }
 
 /* **************************************** */
+int _argc = 0;
+char **_argv;
 
 void init_python(int argc, char *argv[]) {
+
+  if(_argc == 0) {
+    _argc = argc;
+    _argv = argv;
+  }
+
   if(argv) Py_SetProgramName(argv[0]);
 
   /* Initialize the Python interpreter.  Required. */
   Py_Initialize();
-  
+
   if(argv) PySys_SetArgv(argc, argv);
 
   /* Initialize thread support */
@@ -615,7 +637,7 @@ void term_python(void) {
 
 int handlePythonHTTPRequest(char *url) {
   int idx, found = 0;
-  char python_path[256];
+  char python_path[256], *document_root = ".", buf[2048];
   struct stat statbuf;
   FILE *fd;
   char *question_mark = strchr(url, '?');
@@ -623,22 +645,20 @@ int handlePythonHTTPRequest(char *url) {
   // traceEvent(CONST_TRACE_INFO, "Calling python... [%s]", url);
 
   if(question_mark) question_mark[0] = '\0';
-  safe_snprintf(__FILE__, __LINE__, query_string, sizeof(query_string)-1, 
+  safe_snprintf(__FILE__, __LINE__, query_string, sizeof(query_string)-1,
 		"%s", question_mark ? &question_mark[1] : "");
 
   for(idx=0; myGlobals.dataFileDirs[idx] != NULL; idx++) {
     char tmpStr[256];
-    
+
     safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 		  "%s/html", myGlobals.dataFileDirs[idx]);
     revertSlashIfWIN32(tmpStr, 0);
     if(stat(tmpStr, &statbuf) == 0) {
-      setenv("DOCUMENT_ROOT", tmpStr, 1);
+      document_root = myGlobals.dataFileDirs[idx];
       break;
     }
   }
- 
-  setenv("QUERY_STRING", query_string, 1);
 
   for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
     safe_snprintf(__FILE__, __LINE__, python_path, sizeof(python_path),
@@ -662,12 +682,17 @@ int handlePythonHTTPRequest(char *url) {
 
   /* ********************************* */
 
-  traceEvent(CONST_TRACE_INFO, "[PYTHON] Executing %s", 
-	     python_path);
+  /* traceEvent(CONST_TRACE_INFO, "[PYTHON] Executing %s", python_path); */
 
   if((fd = fopen(python_path, "r")) != NULL) {
     /* TODO: remove this mutex */
     pthread_mutex_lock(&python_mutex);
+
+    /* See http://bugs.python.org/issue1159 */
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		  "import os\nos.environ['DOCUMENT_ROOT']='%s'\nos.environ['QUERY_STRING']='%s'",
+		  document_root, query_string);
+    PyRun_SimpleString(buf);
     PyRun_SimpleFile(fd, python_path);
     pthread_mutex_unlock(&python_mutex);
   }

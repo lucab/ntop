@@ -268,8 +268,6 @@ libclean:
 
 install: install-recursive
 
-	cd @GEO_DIR@; make install
-
 	@mkdir -p $(DESTDIR)/$(CFG_DBFILE_DIR)
 
 	@echo ""

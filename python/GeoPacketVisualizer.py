@@ -14,6 +14,7 @@ import ntop
 import host
 import os.path
 import sys
+import pprint
 
 # Import modules for CGI handling
 import cgi, cgitb
@@ -161,16 +162,19 @@ while ntop.getNextHost(0):
 
 ntop.printHTMLHeader('Host Map: Region View')
 
-try:
-    basedir =  os.environ.get('DOCUMENT_ROOT', '.')+'/python/templates'
-    mylookup = TemplateLookup(directories=[basedir])
-    myTemplate = mylookup.get_template('GeoPacketVisualizer.tmpl')
-    buf = StringIO()
-    ctx = Context(buf, countries = dictionaryCountries, totalHosts = totalHosts, unknownCountries = unknownCountries, 
-                  unknownCities = unknownCities, filename = os.path.basename(__file__))
-    myTemplate.render_context(ctx)
-    ntop.sendString(buf.getvalue())
-except:
-    ntop.sendString(exceptions.html_error_template().render())
+if totalHosts == 0:
+    ntop.printFlagedWarning('No hosts have been detected by ntop yet')
+else:
+    try:
+        basedir =  os.getenv('DOCUMENT_ROOT', '.')+'/python/templates'
+        mylookup = TemplateLookup(directories=[basedir])
+        myTemplate = mylookup.get_template('GeoPacketVisualizer.tmpl')
+        buf = StringIO()
+        ctx = Context(buf, countries = dictionaryCountries, totalHosts = totalHosts, unknownCountries = unknownCountries, 
+                      unknownCities = unknownCities, filename = os.path.basename(__file__))
+        myTemplate.render_context(ctx)
+        ntop.sendString(buf.getvalue())
+    except:
+        ntop.sendString(exceptions.html_error_template().render())
 
 ntop.printHTMLFooter()

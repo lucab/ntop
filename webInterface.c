@@ -24,10 +24,6 @@
 #include <locale.h>
 #endif
 
-#ifdef HAVE_PYTHON
-#include "patchlevel.h" /* It contains the python version */
-#endif
-
 #ifndef WIN32
 #include <pwd.h>
 #endif
@@ -6398,15 +6394,17 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "GDBM version", gdbm_version);
 #endif
 
-printFeatureConfigInfo(textPrintFlag,
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), Py_GetVersion());
+
+  printFeatureConfigInfo(textPrintFlag,
 			 "Embedded <A HREF=http://www.python.org>Python</A>",
 #ifdef HAVE_PYTHON
-			 PY_VERSION " [" PY_PATCHLEVEL_REVISION " ]"
+			 buf
 #else
 			 "Not present"
 #endif
 			 );
-
+  
 #if defined(WIN32)
   printFeatureConfigInfo(textPrintFlag, "WinPcap version", (char*)PacketGetVersion());
 #endif

@@ -469,6 +469,10 @@ ntop.h
 
 #include "rrd.h"
 
+#ifdef HAVE_PYTHON
+#include "Python.h" 
+#endif
+
 #ifdef HAVE_GETOPT_H
 #include "getopt.h"
 #endif

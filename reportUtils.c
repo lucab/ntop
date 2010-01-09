@@ -4582,7 +4582,7 @@ void printFlagedWarning(char *text) {
 
   safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
  	   "<center>\n"
-		"<p><img class=tooltip alt=\"Warning\" src=\"/warning.gif\"></p>\n"
+		"<p><img class=reflect alt=\"Warning\" src=\"/warning.gif\"></p>\n"
  	   "<p><font color=\"#FF0000\" size=\"+1\">%s</font></p>\n"
  	   "</center>\n", text);
   sendString(buf);
