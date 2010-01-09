@@ -524,6 +524,7 @@ static void ssiMenu_Head(void) {
 		  "[\n"
 		  "	[null,'About',null,null,null,\n"
 		  "		[null,'What is ntop?','/" CONST_ABTNTOP_HTML "',null,null],\n"
+		  "		[null,'ntop blog','http://www.ntop.org/blog/',null,null],\n"
 		  "		[null,'Credits','/" CONST_CREDITS_HTML "',null,null],\n"
 		  "		[null,'Make a Donation', 'http://shop.ntop.org/',null,null],\n"
 
