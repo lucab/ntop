@@ -143,13 +143,13 @@ while ntop.getNextHost(0):
         city = ''
         unknownCountries += 1
     elif not city :   
-        unknownCities += 1                                                  # the country was found but not the city, to list this case the city name is set to Unknown
+        unknownCities += 1                                     # the country was found but not the city, to list this case the city name is set to Unknown
         city = 'Unknown'
         latitude = decimal.Decimal('0.000000')
         longitude = decimal.Decimal('0.000000')
 
     if countryCode :
-        if dictionaryCountries.has_key(countryCode) :                         # the dictionary of nations already has the nationCode listed 
+        if dictionaryCountries.has_key(countryCode):           # the dictionary of nations already has the nationCode listed 
             country = dictionaryCountries[countryCode]
             country.addTotal(1)
         else:
@@ -157,16 +157,17 @@ while ntop.getNextHost(0):
             dictionaryCountries[countryCode] = country
 
     if city: 
-        country.addCity(city, latitude, longitude, 1)                 # insert the city found in the citiesDictionary of this nation object
+        country.addCity(city, latitude, longitude, 1)          # insert the city found in the citiesDictionary of this nation object
 
 ntop.printHTMLHeader('Host Map: Region View')
 
 try:
     basedir =  os.environ.get('DOCUMENT_ROOT', '.')+'/python/templates'
     mylookup = TemplateLookup(directories=[basedir])
-    myTemplate = mylookup.get_template('GeoPacketVisualizer.pyhtml')
+    myTemplate = mylookup.get_template('GeoPacketVisualizer.tmpl')
     buf = StringIO()
-    ctx = Context(buf, countries = dictionaryCountries, totalHosts = totalHosts, unknownCountries = unknownCountries, unknownCities = unknownCities, filename = os.path.basename(__file__))
+    ctx = Context(buf, countries = dictionaryCountries, totalHosts = totalHosts, unknownCountries = unknownCountries, 
+                  unknownCities = unknownCities, filename = os.path.basename(__file__))
     myTemplate.render_context(ctx)
     ntop.sendString(buf.getvalue())
 except:

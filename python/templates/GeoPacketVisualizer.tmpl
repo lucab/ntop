@@ -1,13 +1,14 @@
-﻿
+
 <script type="text/javascript" src="http://www.google.com/jsapi"></script>
 <script type="text/javascript">
 	google.load('visualization', '1', {'packages': ['geomap', 'table']});
 
 function drawVisualization() {
-	var data = new google.visualization.DataTable();
-	var array= new Array();
+	var data = new google.visualization.DataTable();		//main table that retain information on each
+	var array= new Array();						//associative array for countrycode->ObjTableCityForCountry
 
-	var emptyTable = new google.visualization.DataTable();
+	var emptyTable = new google.visualization.DataTable();	//empty table used for enabling the selection
+								//(and the zooming) of countries with no traffic recorded
 
 	emptyTable.addRows(1);
 	emptyTable.addColumn('number', 'LATITUDE', 'Latitude');
@@ -45,7 +46,7 @@ i=0
 	${cod}Table.addColumn('string', 'City', 'Hover');
 	${cod}Table.addRows(${len(dizCities)});
 
-	array['${cod}']=${cod}Table;
+	array['${cod}']=${cod}Table;//assigns countrycode to countrytable
 
 <%
 	j=0
@@ -76,13 +77,12 @@ i=0
 	var geomap = new google.visualization.GeoMap(document.getElementById('GeoMappa'));
 
 	var options={};
-	options['width'] = '640px';
-	options['height'] = '480px';
+	options['width'] = '900px';
+	options['height'] = '691px';
 	options['showLegend'] = true;
 	options['region'] = 'world';
 	options['dataMode'] = 'regions';
-
-	geomap.draw(data, options);
+	
 	var table = new google.visualization.Table(document.getElementById('table'));
 
 	var viewTable= new google.visualization.DataView(data);
@@ -93,14 +93,24 @@ i=0
 	google.visualization.events.addListener(geomap, 'zoomOut', zoomOut);
 	google.visualization.events.addListener(table, 'select', tableClick );
 	var table2 = new google.visualization.Table(document.getElementById('table2'));
-
+	
+	var codice = window.location.hash;
+	if(codice.length != 3){//if the length of the code passed is not 3 just draw the world map
+	  geomap.draw(data, options);
+	}else{//else if is exacly 3 get the countrycode and draw that particular region map
+	  var arrayAss=new Object();
+	  arrayAss['region']=codice.substr(1,2);
+	  clickHandler(arrayAss);
+	}
 function clickHandler(msg) {
+	
 	//alert('You selected the region ' +msg['region']);
 	options['region']= msg['region'];
 	options['showZoomOut']=true;
 	options['colors'] = [0x9999FF, 0x0000FF, 0x000066];
 	options['dataMode'] = 'markers';
-
+	
+	window.location.hash=msg['region'];//set the countrycode for enabling the refresh on this particular region
 	if(array[msg['region']]!= undefined){
 	var view= new google.visualization.DataView(array[msg['region']]);
 	view.setColumns([3, 2]);
@@ -111,19 +121,23 @@ function clickHandler(msg) {
 		}
 	table2.draw(view,null);
 	geomap.draw(countryV, options);
+	
+//	var str2='?countrySelected='+msg['region'];
+//	window.location.search=str2;
 	}else{
-	geomap.draw(emptyTable, options);
-	var temp=document.getElementById('table2');
-	temp.removeChild(temp.firstChild);
+	  geomap.draw(emptyTable, options);
+	  var temp=document.getElementById('table2');
+	  temp.removeChild(temp.firstChild);
 	}
-};
+
+}
 function tableClick() {
 	var temp=table.getSelection();
-	var arrayAss=new Object()
+	var arrayAss=new Object();
 	arrayAss['region']=data.getFormattedValue(temp[0].row, 0);
 	clickHandler(arrayAss);
-};
-function zoomOut(){
+}
+function zoomOut(){//puts back all the options for visualizing the world map again
 	options['region']= 'world';
 	options['showZoomOut']=false;
 	options['colors'] = [0xE0FFD4, 0xA5EF63, 0x50AA00, 0x267114];
@@ -133,8 +147,9 @@ function zoomOut(){
 	geomap.draw(data,options);
 	var temp=document.getElementById('table2');
 	temp.removeChild(temp.firstChild);
-};
-};
+	window.location.hash='WORLD';//this for enabling again the refresh of the world map
+}
+}
 
 	google.setOnLoadCallback(drawVisualization);
 </script>
@@ -145,7 +160,7 @@ function zoomOut(){
 <p>&nbsp;</p>
 <table cellspacing="5">
 	<tr>
-	<td colspan="2"><div id="GeoMappa" style="width: 700px; height: 480px;"></div>
+	<td colspan="2"><div id="GeoMappa" style="width: 920px; height: 720px;"></div>
 </td>
 	</tr>
 <tr>
