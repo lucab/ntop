@@ -160,7 +160,7 @@ while ntop.getNextHost(0):
     if city: 
         country.addCity(city, latitude, longitude, 1)          # insert the city found in the citiesDictionary of this nation object
 
-ntop.printHTMLHeader('Host Map: Region View')
+ntop.printHTMLHeader('Host Map: Region View', 1, 0)
 
 if totalHosts == 0:
     ntop.printFlagedWarning('No hosts have been detected by ntop yet')

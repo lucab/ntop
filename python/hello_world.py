@@ -12,7 +12,7 @@ form = cgi.FieldStorage();
 
 fingerprint = form.getvalue('fingerprint', default="fbquery")
 
-ntop.printHTMLHeader("Welcome to ntop+Python ["+ntop.getPreference("ntop.devices")+"]");
+ntop.printHTMLHeader("Welcome to ntop+Python ["+ntop.getPreference("ntop.devices")+"]", 1, 1);
 
 
 countries = {};

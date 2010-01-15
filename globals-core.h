@@ -77,6 +77,7 @@ extern void tokenizeCleanupAndAppend(char *userAgent, int userAgentLen, char *ti
 extern void extractAndAppend(char *userAgent, int userAgentLen, char *title, char *input);
 extern int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int bufLen);
 extern int processVersionFile(char *buf, int bufLen);
+extern void maximize_socket_buffer(int sock_fd, int buf_type);
 extern void setEmptySerial(HostSerial *a);
 extern FILE* checkForInputFile(char* logTag, char* descr, char* fileName, struct stat *dbStat,
                                u_char* compressedFormat);

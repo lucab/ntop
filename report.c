@@ -223,7 +223,6 @@ void printTrafficSummary (int revertOrder) {
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].activeDevice) {
       char buf1[128], custom_if_name[64];
-      NtopIfaceAddr *ifaddr;
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 		    "device.name.%s", myGlobals.device[i].name);
@@ -281,6 +280,8 @@ void printTrafficSummary (int revertOrder) {
 #ifdef INET6
       sendString("<TD ALIGN=LEFT>");
       if(myGlobals.device[i].v6Addrs > 0) {
+	NtopIfaceAddr *ifaddr;
+
 	for(ifaddr = myGlobals.device[i].v6Addrs;
 	    ifaddr != NULL; ifaddr = ifaddr->next) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%d<br>",
@@ -617,8 +618,6 @@ void printTrafficStatistics(int revertOrder) {
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].activeDevice) {
       char buf1[128], custom_if_name[64];
-      NtopIfaceAddr *ifaddr;
-
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 		    "device.name.%s", myGlobals.device[i].name);
       custom_if_name[0] = '\0';
@@ -673,6 +672,8 @@ void printTrafficStatistics(int revertOrder) {
 #ifdef INET6
       sendString("<TD ALIGN=LEFT>");
       if(myGlobals.device[i].v6Addrs > 0) {
+	NtopIfaceAddr *ifaddr;
+
 	for(ifaddr = myGlobals.device[i].v6Addrs;
 	    ifaddr != NULL; ifaddr = ifaddr->next) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%d<br>",

@@ -53,10 +53,17 @@ static PyObject* python_sendHTTPHeader(PyObject *self, PyObject *args) {
 static PyObject* python_printHTMLHeader(PyObject *self,
 				       PyObject *args) {
   char *title;
+  int sectionTitle, refresh;
+  int flags = 0;
 
   // traceEvent(CONST_TRACE_WARNING, "-%s-", "python_printHTMLHeader");
 
-  if(!PyArg_ParseTuple(args, "s", &title)) return NULL;
+  if(!PyArg_ParseTuple(args, "sii", &title,
+		       &sectionTitle, &refresh)) return NULL;
+
+
+  if(sectionTitle == 0) flags |= BITFLAG_HTML_NO_HEADING;
+  if(refresh == 0)      flags |= BITFLAG_HTML_NO_REFRESH;
 
   printHTMLheader(title, NULL, 0);
   return PyString_FromString("");
@@ -159,6 +166,28 @@ static PyObject* python_getPreference(PyObject *self,
 
 /* **************************************** */
 
+static PyObject* python_getDBPath(PyObject *self, PyObject *args) {
+  return PyString_FromString(myGlobals.dbPath);
+}
+
+static PyObject* python_getSpoolPath(PyObject *self, PyObject *args) {
+  return PyString_FromString(myGlobals.spoolPath);
+}
+
+/* **************************************** */
+
+static PyObject* python_setPreference(PyObject *self,
+				      PyObject *args) {
+  char *key, *value;
+
+  if(!PyArg_ParseTuple(args, "ss", &key, &value)) return NULL;
+
+  storePrefsValue(key, value);
+  return PyInt_FromLong(0);
+}
+
+/* **************************************** */
+
 static PyObject* python_getNextHost(PyObject *self,
 				    PyObject *args) {
   int actualDeviceId;
@@ -223,8 +252,7 @@ static PyObject* python_hostTrafficBucket(PyObject *self,
 				   PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
-  //return PyString_FromFormat((ntop_host && ntop_host->hostResolvedName) ? ntop_host->hostResolvedName : "");
-  return PyString_FromFormat("%u", ntop_host->hostTrafficBucket);
+  return PyLong_FromUnsignedLong(ntop_host->hostTrafficBucket);
 }
 
 /* **************************************** */
@@ -233,7 +261,7 @@ static PyObject* python_numHostSessions(PyObject *self,
 				   PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
-  return PyString_FromFormat("%u", ntop_host->numHostSessions);
+  return PyLong_FromUnsignedLong(ntop_host->numHostSessions);
 }
 
 /* **************************************** */
@@ -242,7 +270,7 @@ static PyObject* python_vlanId(PyObject *self,
 				   PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
-  return PyString_FromFormat("%u", ntop_host->vlanId);
+  return PyLong_FromUnsignedLong(ntop_host->vlanId);
 }
 
 /* **************************************** */
@@ -251,7 +279,7 @@ static PyObject* python_networkMask(PyObject *self,
 				   PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
-  return PyString_FromFormat("%u", ntop_host->network_mask);
+  return PyLong_FromUnsignedLong(ntop_host->network_mask);
 }
 
 /* **************************************** */
@@ -458,7 +486,7 @@ static PyObject* python_totContactedSentPeers(PyObject *self,
 				   PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
-  return PyString_FromFormat("%lu", (unsigned long)(ntop_host->totContactedSentPeers));
+  return PyLong_FromUnsignedLong((unsigned long)(unsigned long)(ntop_host->totContactedSentPeers));
 }
 
 /* **************************************** */
@@ -467,7 +495,7 @@ static PyObject* python_totContactedRcvdPeers(PyObject *self,
 				   PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
-  return PyString_FromFormat("%lu", (unsigned long)(ntop_host->totContactedRcvdPeers));
+  return PyLong_FromUnsignedLong((unsigned long)(unsigned long)(ntop_host->totContactedRcvdPeers));
 }
 
 /* **************************************** */
@@ -479,21 +507,21 @@ static PyObject* python_fingerprint(PyObject *self, PyObject *args) {
 /* **************************************** */
 
 static PyObject* python_pktsSent(PyObject *self, PyObject *args) {
-  return PyString_FromFormat("%lu", (unsigned long)(ntop_host->pktSent.value));
+  return PyLong_FromUnsignedLong((unsigned long)(unsigned long)(ntop_host->pktSent.value));
 }
 
 static PyObject* python_pktsRcvd(PyObject *self, PyObject *args) {
-  return PyString_FromFormat("%lu", (unsigned long)(ntop_host->pktRcvd.value));
+  return PyLong_FromUnsignedLong((unsigned long)(unsigned long)(ntop_host->pktRcvd.value));
 }
 
 /* **************************************** */
 
 static PyObject* python_bytesSent(PyObject *self, PyObject *args) {
-  return PyString_FromFormat("%lu", (unsigned long)(ntop_host->bytesSent.value));
+  return PyLong_FromUnsignedLong((unsigned long)(unsigned long)(ntop_host->bytesSent.value));
 }
 
 static PyObject* python_bytesRcvd(PyObject *self, PyObject *args) {
-  return PyString_FromFormat("%lu", (unsigned long)(ntop_host->bytesRcvd.value));
+  return PyLong_FromUnsignedLong((unsigned long)(unsigned long)(ntop_host->bytesRcvd.value));
 }
 
 /* **************************************** */
@@ -532,6 +560,386 @@ static PyObject* python_synPktsSent(PyObject *self,
 
 /* **************************************** */
 
+static PyObject* python_interface_numInterfaces(PyObject *self, PyObject *args) {
+  return PyInt_FromLong((long)myGlobals.numDevices);
+}
+
+static PyObject* python_interface_name(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;  
+  return PyString_FromFormat("%s", myGlobals.device[interfaceId].name);
+}
+
+static PyObject* python_interface_uniqueIfName(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+    return PyString_FromFormat("%s", myGlobals.device[interfaceId].uniqueIfName);
+}
+
+static PyObject* python_interface_humanFriendlyName(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  return PyString_FromFormat("%s", myGlobals.device[interfaceId].humanFriendlyName);
+}
+
+static PyObject* python_interface_ipv4Address(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  return PyString_FromString(myGlobals.device[interfaceId].ipdot ? myGlobals.device[interfaceId].ipdot : "");
+}
+
+static PyObject* python_interface_network(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+  char buf[32], buf1[32];
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  return PyString_FromFormat("%s/%s", 
+			     _intoa(myGlobals.device[interfaceId].network, buf, sizeof(buf)),
+			     _intoa(myGlobals.device[interfaceId].netmask, buf1, sizeof(buf1))
+			     );
+}
+
+static PyObject* python_interface_numHosts(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  
+  return PyLong_FromUnsignedLong(myGlobals.device[interfaceId].numHosts);
+}
+
+#ifdef INET6
+static PyObject* python_interface_ipv6Address(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+  char buf[64];
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  if(myGlobals.device[interfaceId].v6Addrs == NULL) return PyString_FromString("");
+
+  return PyString_FromFormat("%s/%d", 
+			     _intop(&myGlobals.device[interfaceId].v6Addrs->af.inet6.ifAddr, buf, sizeof(buf)),
+			     myGlobals.device[interfaceId].v6Addrs->af.inet6.prefixlen);
+}
+#endif
+
+static PyObject* python_interface_time(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+  PyObject *obj;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  if((obj = PyDict_New()) == NULL) return NULL;
+
+  PyDict_SetItem(obj, PyString_FromString("startTime"), PyLong_FromUnsignedLong((u_int)myGlobals.device[interfaceId].started));
+  PyDict_SetItem(obj, PyString_FromString("firstSeen"), PyLong_FromUnsignedLong((u_int)myGlobals.device[interfaceId].firstpkt));
+  PyDict_SetItem(obj, PyString_FromString("lastSeen"), PyLong_FromUnsignedLong((u_int)myGlobals.device[interfaceId].lastpkt));
+  return obj;
+}
+
+static PyObject* python_interface_virtual(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  
+  return PyInt_FromLong((long)myGlobals.device[interfaceId].virtualDevice);
+}
+
+static PyObject* python_interface_speed(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  
+  return PyLong_FromUnsignedLong(myGlobals.device[interfaceId].deviceSpeed);
+}
+
+static PyObject* python_interface_mtu(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  
+  return PyLong_FromUnsignedLong(myGlobals.device[interfaceId].mtuSize);
+}
+
+static PyObject* python_interface_bpf(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  
+  return PyString_FromString(myGlobals.device[interfaceId].filter ? myGlobals.device[interfaceId].filter : "");
+}
+
+static PyObject* python_interface_pktsStats(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+  PyObject *obj;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  if((obj = PyDict_New()) == NULL) return NULL;
+
+  PyDict_SetItem(obj, PyString_FromString("total"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].receivedPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("ntopDrops"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].droppedPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("pcapDrops"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].pcapDroppedPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("initialPcapDrops"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].initialPcapDroppedPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("ethernet"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].ethernetPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("broadcast"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].broadcastPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("multicast"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].multicastPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("ip"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].ipPkts.value));
+
+  return obj;
+}
+
+#ifdef ENABLE_FC
+
+static PyObject* python_interface_fcPktsStats(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+  PyObject *obj;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  if((obj = PyDict_New()) == NULL) return NULL;
+
+  PyDict_SetItem(obj, PyString_FromString("total"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].fcPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("eofa"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].fcEofaPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("eofAbnormal"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].fcEofAbnormalPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("abnormal"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].fcAbnormalPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("broadcast"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].fcBroadcastPkts.value));
+  return obj;
+}
+
+static PyObject* python_interface_fcBytesStats(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+  PyObject *obj;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  if((obj = PyDict_New()) == NULL) return NULL;
+
+  PyDict_SetItem(obj, PyString_FromString("total"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("fragmented"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fragmentedFcBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("fcp"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcFcpBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("ficon"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcFiconBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("ip"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcIpfcBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("swils"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcSwilsBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("dns"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcDnsBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("els"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcElsBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("other"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].otherFcBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("broadcast"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcBroadcastBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("class2"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].class2Bytes.value));
+  PyDict_SetItem(obj, PyString_FromString("class3"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].class3Bytes.value));
+  PyDict_SetItem(obj, PyString_FromString("classFb"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].classFBytes.value));
+  return obj;
+}
+
+#endif
+
+static PyObject* python_interface_bytesStats(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+  PyObject *obj;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  if((obj = PyDict_New()) == NULL) return NULL;
+
+  PyDict_SetItem(obj, PyString_FromString("total"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].ethernetBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("ipv4"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].ipv4Bytes.value));
+  PyDict_SetItem(obj, PyString_FromString("fragmented"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].fragmentedIpBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("tcp"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].tcpBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("udp"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].udpBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("otherIp"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].otherIpBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("icmp"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].icmpBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("dlc"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].dlcBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("ipx"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].ipxBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("stp"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].stpBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("ipsec"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].ipsecBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("netbios"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netbiosBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("arp_rarp"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].arpRarpBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("appletalk"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].atalkBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("egp"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].egpBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("gre"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].greBytes.value));
+  PyDict_SetItem(obj, PyString_FromString("ipv6"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].ipv6Bytes.value));
+  PyDict_SetItem(obj, PyString_FromString("icmp6"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].icmp6Bytes.value));
+  PyDict_SetItem(obj, PyString_FromString("other"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].otherBytes.value));
+  return(obj);
+}
+
+static PyObject* python_interface_throughputStats(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+  PyObject *obj;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  if((obj = PyDict_New()) == NULL) return NULL;
+
+  PyDict_SetItem(obj, PyString_FromString("peakPkts"), PyFloat_FromDouble(myGlobals.device[interfaceId].peakPacketThroughput));
+  PyDict_SetItem(obj, PyString_FromString("actualPkts"), PyFloat_FromDouble(myGlobals.device[interfaceId].actualPktsThpt));
+  PyDict_SetItem(obj, PyString_FromString("lastMinPkts"), PyFloat_FromDouble(myGlobals.device[interfaceId].lastMinPktsThpt));
+  PyDict_SetItem(obj, PyString_FromString("lastFiveMinsPkts"), PyFloat_FromDouble(myGlobals.device[interfaceId].lastFiveMinsPktsThpt));
+  PyDict_SetItem(obj, PyString_FromString("peakBytes"), PyFloat_FromDouble(myGlobals.device[interfaceId].peakThroughput));
+  PyDict_SetItem(obj, PyString_FromString("actualBytes"), PyFloat_FromDouble(myGlobals.device[interfaceId].actualPktsThpt));
+  PyDict_SetItem(obj, PyString_FromString("lastMinBytes"), PyFloat_FromDouble(myGlobals.device[interfaceId].lastMinPktsThpt));
+  PyDict_SetItem(obj, PyString_FromString("lastFiveMinsBytes"), PyFloat_FromDouble(myGlobals.device[interfaceId].lastFiveMinsPktsThpt));
+  return(obj);
+}
+
+static PyObject* python_interface_SimpleProtoTrafficInfo(SimpleProtoTrafficInfo *info) {
+  PyObject *obj;
+
+  if((obj = PyDict_New()) == NULL) return NULL;
+
+  PyDict_SetItem(obj, PyString_FromString("local"), PyLong_FromUnsignedLong((unsigned long)info->local.value));
+  PyDict_SetItem(obj, PyString_FromString("local2remote"), PyLong_FromUnsignedLong((unsigned long)info->local2remote.value));
+  PyDict_SetItem(obj, PyString_FromString("remote"), PyLong_FromUnsignedLong((unsigned long)info->remote.value));
+  PyDict_SetItem(obj, PyString_FromString("remote2local"), PyLong_FromUnsignedLong((unsigned long)info->remote2local.value));
+
+  return(obj);
+}
+
+static PyObject* python_interface_tcpStats(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  return(python_interface_SimpleProtoTrafficInfo(&myGlobals.device[interfaceId].tcpGlobalTrafficStats));
+}
+
+static PyObject* python_interface_udpStats(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  return(python_interface_SimpleProtoTrafficInfo(&myGlobals.device[interfaceId].udpGlobalTrafficStats));
+}
+
+static PyObject* python_interface_icmpStats(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  return(python_interface_SimpleProtoTrafficInfo(&myGlobals.device[interfaceId].icmpGlobalTrafficStats));
+}
+
+static PyObject* python_interface_ipStats(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  if(myGlobals.device[interfaceId].ipProtoStats == NULL) return NULL;
+  return(python_interface_SimpleProtoTrafficInfo(myGlobals.device[interfaceId].ipProtoStats));
+}
+
+static PyObject* python_interface_securityPkts(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+  PyObject *obj;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  if((obj = PyDict_New()) == NULL) return NULL;
+
+  PyDict_SetItem(obj, PyString_FromString("synPkts"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.synPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("rstPkts"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.rstPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("rstAckPkts"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.rstAckPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("synFinPkts"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.synFinPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("finPushUrgPkts"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.finPushUrgPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("nullPkts"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.nullPkts.value));
+  
+  PyDict_SetItem(obj, PyString_FromString("rejectedTCPConn"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.rejectedTCPConn.value));
+  PyDict_SetItem(obj, PyString_FromString("establishedTCPConn"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.establishedTCPConn.value));
+  PyDict_SetItem(obj, PyString_FromString("terminatedTCPConn"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.terminatedTCPConn.value));
+  PyDict_SetItem(obj, PyString_FromString("ackXmasFinSynNullScan"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.ackXmasFinSynNullScan.value));
+  PyDict_SetItem(obj, PyString_FromString("udpToClosedPort"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.udpToClosedPort.value));
+  PyDict_SetItem(obj, PyString_FromString("udpToDiagnosticPort"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.udpToDiagnosticPort.value));
+  PyDict_SetItem(obj, PyString_FromString("tcpToDiagnosticPort"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.tcpToDiagnosticPort.value));
+  PyDict_SetItem(obj, PyString_FromString("tinyFragment"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.tinyFragment.value));
+  PyDict_SetItem(obj, PyString_FromString("icmpFragment"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.icmpFragment.value));
+  PyDict_SetItem(obj, PyString_FromString("overlappingFragment"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.overlappingFragment.value));
+  PyDict_SetItem(obj, PyString_FromString("closedEmptyTCPConn"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.closedEmptyTCPConn.value));
+  PyDict_SetItem(obj, PyString_FromString("malformedPkts"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.malformedPkts.value));
+  PyDict_SetItem(obj, PyString_FromString("icmpPortUnreach"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.icmpPortUnreach.value));
+  PyDict_SetItem(obj, PyString_FromString("icmpHostNetUnreach"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.icmpHostNetUnreach.value));
+  PyDict_SetItem(obj, PyString_FromString("icmpProtocolUnreach"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.icmpProtocolUnreach.value));
+  PyDict_SetItem(obj, PyString_FromString("icmpAdminProhibited"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.icmpAdminProhibited.value));
+
+  return(obj);
+}
+
+static PyObject* python_interface_netflowStats(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+  PyObject *obj;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  if(myGlobals.device[interfaceId].netflowGlobals == NULL) return PyDict_New();
+  if((obj = PyDict_New()) == NULL) return NULL;
+
+  PyDict_SetItem(obj, PyString_FromString("totalPkts"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netflowGlobals->numNetFlowsPktsRcvd));
+  PyDict_SetItem(obj, PyString_FromString("v5flows"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netflowGlobals->numNetFlowsV5Rcvd));
+  PyDict_SetItem(obj, PyString_FromString("v1flows"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netflowGlobals->numNetFlowsV1Rcvd));
+  PyDict_SetItem(obj, PyString_FromString("v7flows"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netflowGlobals->numNetFlowsV7Rcvd));
+  PyDict_SetItem(obj, PyString_FromString("v9flows"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netflowGlobals->numNetFlowsV9Rcvd));
+  PyDict_SetItem(obj, PyString_FromString("flowsProcessed"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netflowGlobals->numNetFlowsProcessed));
+  PyDict_SetItem(obj, PyString_FromString("flowsReceived"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netflowGlobals->numNetFlowsRcvd));
+  PyDict_SetItem(obj, PyString_FromString("badVersion"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netflowGlobals->numBadNetFlowsVersionsRcvd));
+  PyDict_SetItem(obj, PyString_FromString("badFlows"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netflowGlobals->numBadFlowPkts));
+  PyDict_SetItem(obj, PyString_FromString("v9Templates"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netflowGlobals->numNetFlowsV9TemplRcvd));
+  PyDict_SetItem(obj, PyString_FromString("v9BadTemplates"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netflowGlobals->numNetFlowsV9BadTemplRcvd));
+  PyDict_SetItem(obj, PyString_FromString("v9UnknownTemplate"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd));
+  PyDict_SetItem(obj, PyString_FromString("v9OptionFlows"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netflowGlobals->numNetFlowsV9OptionFlowsRcvd));
+
+  return(obj);
+}
+
+static PyObject* python_interface_sflowStats(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+  PyObject *obj;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  if(myGlobals.device[interfaceId].sflowGlobals == NULL) return PyDict_New();
+  if((obj = PyDict_New()) == NULL) return NULL;
+
+  PyDict_SetItem(obj, PyString_FromString("pkts"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].sflowGlobals->numsFlowsPktsRcvd));
+  PyDict_SetItem(obj, PyString_FromString("v2Flows"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].sflowGlobals->numsFlowsV2Rcvd));
+  PyDict_SetItem(obj, PyString_FromString("v4Flows"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].sflowGlobals->numsFlowsV4Rcvd));
+  PyDict_SetItem(obj, PyString_FromString("v5Flows"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].sflowGlobals->numsFlowsV5Rcvd));
+  PyDict_SetItem(obj, PyString_FromString("totalProcessed"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].sflowGlobals->numsFlowsProcessed));
+  PyDict_SetItem(obj, PyString_FromString("samples"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].sflowGlobals->numsFlowsSamples));
+  PyDict_SetItem(obj, PyString_FromString("counterUpdates"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].sflowGlobals->numsFlowCounterUpdates));
+  PyDict_SetItem(obj, PyString_FromString("badVersion"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].sflowGlobals->numBadsFlowsVersionsRcvd));
+
+  return(obj);
+}
+
+
+static PyObject* python_interface_cpacketStats(PyObject *self, PyObject *args) {
+  u_int interfaceId;
+  PyObject *obj;
+
+  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
+  if(interfaceId >= myGlobals.numDevices) return NULL;
+  if(myGlobals.device[interfaceId].cpacketGlobals == NULL) return PyDict_New();
+  if((obj = PyDict_New()) == NULL) return NULL;
+
+  PyDict_SetItem(obj, PyString_FromString("total"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].cpacketGlobals->statsProcessed));
+
+  return(obj);
+}
+
+/* **************************************** */
+
 static PyMethodDef ntop_methods[] = {
   { "sendHTTPHeader", python_sendHTTPHeader, METH_VARARGS| METH_KEYWORDS, "" },
   { "printHTMLHeader", python_printHTMLHeader, METH_VARARGS, "" },
@@ -545,6 +953,46 @@ static PyMethodDef ntop_methods[] = {
   { "findHostByNumIP", python_findHostByNumIP, METH_VARARGS, "" },
 
   { "getPreference",      python_getPreference,      METH_VARARGS, "" },
+  { "setPreference",      python_setPreference,      METH_VARARGS, "" },
+
+  { "getDBPath",         python_getDBPath,      METH_VARARGS, "" },
+  { "getSpoolPath",      python_getSpoolPath,   METH_VARARGS, "" },
+  { NULL, NULL, 0, NULL }
+};
+
+/* **************************************** */
+
+static PyMethodDef interface_methods[] = {
+  { "numInterfaces", python_interface_numInterfaces, METH_VARARGS, "Get number of configured interfaces" },
+  { "name", python_interface_name, METH_VARARGS, "Get interface name" },
+  { "uniqueName", python_interface_uniqueIfName, METH_VARARGS, "Get unique interface name" },
+  { "humanName", python_interface_humanFriendlyName, METH_VARARGS, "Get human-friendly interface name" },
+  { "ipv4", python_interface_ipv4Address, METH_VARARGS, "Get interface address (IPv4)" },
+  { "network", python_interface_network, METH_VARARGS, "Get network and mask to which the interface belongs" },
+  { "numHosts", python_interface_numHosts, METH_VARARGS, "Get the number of hosts active on this interface" },
+#ifdef INET6
+  { "ipv6", python_interface_ipv6Address, METH_VARARGS, "Get interface address (IPv6)" },
+#endif
+  { "time", python_interface_time, METH_VARARGS, "Get interface time" },
+  { "virtual", python_interface_virtual, METH_VARARGS, "Check if this is a virtual interface" },
+  { "speed", python_interface_speed, METH_VARARGS, "Interface speed (0 if unknown)" },
+  { "mtu", python_interface_mtu, METH_VARARGS, "Get interface MTU size" },
+  { "bpf", python_interface_bpf, METH_VARARGS, "Get BPF filter set for this interface (if any)" },
+  { "pktsStats", python_interface_pktsStats, METH_VARARGS, "Get packet statistics " },
+#ifdef ENABLE_FC
+  { "fcPktsStats", python_interface_fcPktsStats, METH_VARARGS, "Get FC pkts stats" },
+  { "fcBytesStats", python_interface_fcBytesStats, METH_VARARGS, "Get FC byte stats" },
+#endif
+  { "bytesStats", python_interface_bytesStats, METH_VARARGS, "Get bytes statistics" },
+  { "throughputStats", python_interface_throughputStats, METH_VARARGS, "" },
+  { "tcpStats", python_interface_tcpStats, METH_VARARGS, "Get TCP stats" },
+  { "udpStats", python_interface_udpStats, METH_VARARGS, "Get UDP stats" },
+  { "icmpStats", python_interface_icmpStats, METH_VARARGS, "Get ICMP stats" },
+  { "ipStats", python_interface_ipStats, METH_VARARGS, "Get IP stats" },
+  { "securityPkts", python_interface_securityPkts, METH_VARARGS, "Get information about security packets" },
+  { "netflowStats", python_interface_netflowStats, METH_VARARGS, "Get NetFlow interface information" },
+  { "sflowStats", python_interface_sflowStats, METH_VARARGS, "Get sFlow interface information" },
+  { "cpacketStats", python_interface_cpacketStats, METH_VARARGS, "Get cPacket counter information" },
   { NULL, NULL, 0, NULL }
 };
 
@@ -601,6 +1049,7 @@ static void init_python_ntop(void) {
   pthread_mutex_init(&python_mutex, 0);
   Py_InitModule("ntop", ntop_methods);
   Py_InitModule("host", host_methods);
+  Py_InitModule("interface", interface_methods);
 }
 
 /* **************************************** */
@@ -690,7 +1139,8 @@ int handlePythonHTTPRequest(char *url) {
 
     /* See http://bugs.python.org/issue1159 */
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "import os\nos.environ['DOCUMENT_ROOT']='%s'\nos.environ['QUERY_STRING']='%s'",
+		  "import os\nos.environ['DOCUMENT_ROOT']='%s'\n"
+		  "os.environ['QUERY_STRING']='%s'\n",
 		  document_root, query_string);
     PyRun_SimpleString(buf);
     PyRun_SimpleFile(fd, python_path);

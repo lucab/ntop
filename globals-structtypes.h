@@ -1105,7 +1105,7 @@ typedef struct ntopIfaceaddr{
 #ifdef INET6
     NtopIfaceAddrInet6 inet6;
 #endif
-  }af;
+  } af;
 } NtopIfaceAddr;
 
 /* ************************************* */
