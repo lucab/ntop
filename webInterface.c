@@ -6394,7 +6394,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printFeatureConfigInfo(textPrintFlag, "GDBM version", gdbm_version);
 #endif
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), Py_GetVersion());
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", Py_GetVersion());
 
   printFeatureConfigInfo(textPrintFlag,
 			 "Embedded <A HREF=http://www.python.org>Python</A>",

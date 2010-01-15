@@ -31,7 +31,7 @@ except:
     ntop.printHTMLHeader('ntop Python Configuration Error')
     ntop.sendString("<b><center><font color=red>Please install <A HREF=http://www.makotemplates.org/>Mako</A> template engine</font> (sudo easy_install Mako)</center></b>")
     ntop.printHTMLFooter()    
-    os.exit(0)
+    sys.exit(0)
 
 # Fix encoding
 reload(sys)
