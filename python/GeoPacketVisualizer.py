@@ -28,8 +28,8 @@ try:
     from mako.lookup import TemplateLookup
     from mako import exceptions
 except:
-    ntop.printHTMLHeader('ntop Python Configuration Error')
-    ntop.sendString("<b><center><font color=red>Please install <A HREF=http://www.makotemplates.org/>Mako</A> template engine</font> (sudo easy_install Mako)</center></b>")
+    ntop.printHTMLHeader('ntop Python Configuration Error', 1, 1)
+    ntop.sendString("<b><center><font color=red>Please install <A HREF=http://www.makotemplates.org/>Mako</A> template engine</font><p></b><br>(1) 'sudo yum install python-setuptools' (on RedHat-like systems)<br>(2) 'sudo easy_install Mako'")
     ntop.printHTMLFooter()    
     sys.exit(0)
 

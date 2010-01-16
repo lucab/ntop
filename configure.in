@@ -45,12 +45,12 @@ dnl>   Edit the version # in the AC_INIT line to roll the version.
 dnl>   Edit NTOP_VERSION_EXTRA to put something extra (e.g. SourceForge rpm version"
 dnl>       into the stamp.
 dnl>
-AC_INIT([ntop],[3.4-pre])
+AC_INIT([ntop],[3.4-pre2])
 
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v3.4-pre-05-12-2009"
+SCRIPTVER="v3.4-pre2-16-01-2010"
 
 dnl>
 dnl> generate the config header
@@ -1525,9 +1525,20 @@ dnl> PYTHON
 dnl>
 dnl> if test ".${ac_disable_python}" != ".yes"; then
   AC_CHECK_TOOL(PYTHON, python-config)
-  if test "x$ac_cv_prog_ac_ct_PYTHON" = "xpython-config"; then
+  PYTHON_CONFIG=""
+
+  if test "x$ac_cv_prog_ac_ct_PYTHON" != "xpython-config"; then   
+    AC_CHECK_TOOL(PYTHON, python)
+    if test "x$ac_cv_prog_ac_ct_PYTHON" = "xpython"; then
+     PYTHON_CONFIG="./configureextra/python-config"
+   else
+     PYTHON_CONFIG="python-config"
+   fi
+  fi
+
+  if test "x$PYTHON_CONFIG" != "x"; then
     AC_DEFINE_UNQUOTED(HAVE_PYTHON, 1, [Python is supported])
-    PYTHON_LIBS="`python-config --libs`"
+    PYTHON_LIBS="`$PYTHON_CONFIG --libs`"
     if test "x$PYTHON_LIBS" = "x"; then
       AC_MSG_RESULT(Python[-devel] support is present but misconfigured)
       exit 1
@@ -1537,7 +1548,7 @@ dnl> if test ".${ac_disable_python}" != ".yes"; then
     LIBS="${LIBS} ${PYTHON_LIBS}"
 dnl remove unecessary path
     dnl line below workaround for OSX 10.6 (Snow Leopard)
-    PYTHON_INCS=`python-config --cflags | sed -e "s/-arch i386 -arch ppc -arch x86_64//"`
+    PYTHON_INCS=`$PYTHON_CONFIG --cflags | sed -e "s/-arch i386 -arch ppc -arch x86_64//"`
     INCS="${INCS} ${PYTHON_INCS}"
   else
     AC_MSG_RESULT(Python[-devel] support is not present)
