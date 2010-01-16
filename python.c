@@ -65,7 +65,7 @@ static PyObject* python_printHTMLHeader(PyObject *self,
   if(sectionTitle == 0) flags |= BITFLAG_HTML_NO_HEADING;
   if(refresh == 0)      flags |= BITFLAG_HTML_NO_REFRESH;
 
-  printHTMLheader(title, NULL, 0);
+  printHTMLheader(title, NULL, flags);
   return PyString_FromString("");
 }
 
