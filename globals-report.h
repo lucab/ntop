@@ -366,7 +366,7 @@ extern void drawVsanSwilsProtoDistribution(u_short vsanId);
 
 /* python.c */
 #ifdef HAVE_PYTHON
-extern int handlePythonHTTPRequest(char *url);
+extern int handlePythonHTTPRequest(char *url, u_int postLen);
 #endif
 
 /* map.c */

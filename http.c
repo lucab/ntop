@@ -2701,7 +2701,8 @@ static int returnHTTPPage(char* pageName,
       printTrailer = 0;
       
 #ifdef HAVE_PYTHON
-      if(handlePythonHTTPRequest(&pageName[strlen(CONST_EMBEDDED_PYTHON_HEADER)])) {
+      if(handlePythonHTTPRequest(&pageName[strlen(CONST_EMBEDDED_PYTHON_HEADER)], 
+				 isPostMethod ? postLen : 0)) {
 	;
       } else
 	return(FLAG_HTTP_INVALID_PAGE);
@@ -3662,7 +3663,7 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 /* ************************* */
 
 void handleHTTPrequest(HostAddr from) {
-  int rc, i, skipLeading, postLen, usedFork = 0, numLang = 0;
+  int rc, i, skipLeading, postLen = 0, usedFork = 0, numLang = 0;
   char requestedURL[MAX_LEN_URL], pw[64], agent[256], referer[256],
     workLanguage[256], ifModificedSince[48], *requestedURLCopy=NULL;
   struct timeval httpRequestedAt;
@@ -3804,47 +3805,47 @@ void handleHTTPrequest(HostAddr from) {
 	myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].count = 1;
       }
     }
-#endif
+ #endif
 
-    returnHTTPaccessForbidden();
-    free(requestedURLCopy);
-    return;
-  }
+     returnHTTPaccessForbidden();
+     free(requestedURLCopy);
+     return;
+   }
 
-  free(requestedURLCopy);
+   free(requestedURLCopy);
 
-  /*
-    Fix courtesy of
-    Michael Wescott <wescott@crosstor.com>
-  */
-  if((requestedURL[0] != '\0') && (requestedURL[0] != '/')) {
-    returnHTTPpageNotFound(NULL);
-    return;
-  }
+   /*
+     Fix courtesy of
+     Michael Wescott <wescott@crosstor.com>
+   */
+   if((requestedURL[0] != '\0') && (requestedURL[0] != '/')) {
+     returnHTTPpageNotFound(NULL);
+     return;
+   }
 
-  if(checkHTTPpassword(requestedURL, sizeof(requestedURL), pw, sizeof(pw) ) != 1) {
-    returnHTTPaccessDenied();
-    return;
-  }
+   if(checkHTTPpassword(requestedURL, sizeof(requestedURL), pw, sizeof(pw) ) != 1) {
+     returnHTTPaccessDenied();
+     return;
+   }
 
-  myGlobals.actTime = time(NULL); /* Don't forget this */
+   myGlobals.actTime = time(NULL); /* Don't forget this */
 
-  skipLeading = 0;
-  while (requestedURL[skipLeading] == '/') {
-    skipLeading++;
-  }
+   skipLeading = 0;
+   while (requestedURL[skipLeading] == '/') {
+     skipLeading++;
+   }
 
-  if(requestedURL[0] == '\0') {
-    returnHTTPpageNotFound(NULL);
-  }
+   if(requestedURL[0] == '\0') {
+     returnHTTPpageNotFound(NULL);
+   }
 
-#ifdef IDLE_PURGE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() accessMutex(purgeMutex)...calling");
-#endif
-  accessMutex(&myGlobals.purgeMutex, "returnHTTPPage");
-#ifdef IDLE_PURGE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() accessMutex(purgeMutex)...locked");
-#endif
+ #ifdef IDLE_PURGE_DEBUG
+   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() accessMutex(purgeMutex)...calling");
+ #endif
+   accessMutex(&myGlobals.purgeMutex, "returnHTTPPage");
+ #ifdef IDLE_PURGE_DEBUG
+   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() accessMutex(purgeMutex)...locked");
+ #endif
 
   rc = returnHTTPPage(&requestedURL[1], postLen,
 		      &from, &httpRequestedAt, &usedFork,

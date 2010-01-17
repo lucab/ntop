@@ -1084,7 +1084,7 @@ void term_python(void) {
 
 /* **************************************** */
 
-int handlePythonHTTPRequest(char *url) {
+int handlePythonHTTPRequest(char *url, u_int postLen) {
   int idx, found = 0;
   char python_path[256], *document_root = ".", buf[2048];
   struct stat statbuf;
@@ -1134,16 +1134,47 @@ int handlePythonHTTPRequest(char *url) {
   /* traceEvent(CONST_TRACE_INFO, "[PYTHON] Executing %s", python_path); */
 
   if((fd = fopen(python_path, "r")) != NULL) {
+    int old_stdin = dup(STDIN_FILENO), old_stdout = dup(STDOUT_FILENO);
+
     /* TODO: remove this mutex */
     pthread_mutex_lock(&python_mutex);
 
-    /* See http://bugs.python.org/issue1159 */
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "import os\nos.environ['DOCUMENT_ROOT']='%s'\n"
-		  "os.environ['QUERY_STRING']='%s'\n",
-		  document_root, query_string);
+   if(postLen == 0) {
+     /* HTTP GET */
+     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		   "import os\nos.environ['DOCUMENT_ROOT']='%s'\n"
+		   "os.environ['REQUEST_METHOD']='GET'\n"
+		   "os.environ['QUERY_STRING']='%s'\n",
+		   document_root, query_string);
+   } else {
+     /* HTTP POST */
+     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		   "import os\nos.environ['DOCUMENT_ROOT']='%s'\n"
+		   "os.environ['REQUEST_METHOD']='POST'\n"
+		   "os.environ['CONTENT_LENGTH']='%u'\n",
+		   document_root, postLen);
+   }
+
+   /* See http://bugs.python.org/issue1159 */
     PyRun_SimpleString(buf);
+
+    /* sys.stdin <=> myGlobals.newSock */
+
+    if(dup2(myGlobals.newSock, STDOUT_FILENO) == -1)
+      traceEvent(CONST_TRACE_WARNING, "Failed to redirect stdout");
+
+    if(dup2(myGlobals.newSock, STDIN_FILENO) == -1)
+      traceEvent(CONST_TRACE_WARNING, "Failed to redirect stdin");
+   
+    /* Run the actual program */
     PyRun_SimpleFile(fd, python_path);
+    
+    if(dup2(old_stdin, STDOUT_FILENO) == -1)
+      traceEvent(CONST_TRACE_WARNING, "Failed to restore stdout");
+
+    if(dup2(old_stdout, STDIN_FILENO) == -1)
+      traceEvent(CONST_TRACE_WARNING, "Failed to restore stdout");
+
     pthread_mutex_unlock(&python_mutex);
   }
 
