@@ -513,6 +513,7 @@ static void ssiMenu_Head(void) {
 
   memset(&buf, 0, sizeof(buf));
 
+  
   sendStringWOssi(
 		  "<link rel=\"stylesheet\" href=\"/theme.css\" TYPE=\"text/css\">\n"
 		  "<script type=\"text/javascript\" language=\"JavaScript\" src=\"/autosuggest.js\"></script>\n"
@@ -543,18 +544,23 @@ static void ssiMenu_Head(void) {
 		  "	  [null,'Show Configuration','/" CONST_INFO_NTOP_HTML "',null,null],\n"
 		  "	  ['<img src=\"/bug.png\">','Report a Problem','/" CONST_PROBLEMRPT_HTML "',null,null],\n"
 		  "	],\n"
-
 		  "	[null,'Summary',null,null,null,\n"
 		  "		[null,'Traffic','/" CONST_TRAFFIC_STATS_HTML "',null,null],\n"
 		  "		[null,'Hosts','/" CONST_HOSTS_INFO_HTML "',null,null],\n"
 		  "		[null,'Network Load','/" CONST_SORT_DATA_THPT_STATS_HTML "',null,null],\n"
 		  "		[null,'Traffic Maps',null,null,null,\n"
+		  );
+
 #ifdef HAVE_PYTHON
-		  "		       [null,'Region Map','/" CONST_REGION_MAP "',null,null],\n"
+		  sendStringWOssi("		       [null,'Region Map','/" CONST_REGION_MAP "',null,null],\n");
 #endif
+
+    sendStringWOssi(
 		  "		       [null,'Host Map','/" CONST_HOST_MAP "',null,null],\n"
 		  "          ],\n"
 		  );
+
+
   if(myGlobals.haveVLANs == TRUE)
     sendStringWOssi(
 		    "		[null,'VLAN Info','/" CONST_VLAN_LIST_HTML "',null,null],\n");
@@ -1263,7 +1269,8 @@ void printHTMLtrailer(void) {
 
   if(myGlobals.pcap_file_list == NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "[ntop uptime: %s]\n",
-		  formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
+		  formatSeconds((unsigned long)(time(NULL)-myGlobals.initialSniffTime), 
+						formatBuf, sizeof(formatBuf)));
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
 		  "[from file %s]\n",
@@ -1363,7 +1370,13 @@ void printHTMLtrailer(void) {
 void initAccessLog(void) {
 
   if(myGlobals.runningPref.accessLogFile) {
-    umask(0137);
+
+#ifdef WIN32
+	_umask(0137);
+#else
+	umask(0137);
+#endif
+
     myGlobals.accessLogFd = fopen(myGlobals.runningPref.accessLogFile, "a");
     if(myGlobals.accessLogFd == NULL) {
       traceEvent(CONST_TRACE_ERROR, "Unable to create file %s. Access log is disabled.",

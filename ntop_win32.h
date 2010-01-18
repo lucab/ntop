@@ -76,6 +76,10 @@ extern int getopt(int num, char *const *argv, const char *opts);
 #define unlink(a) _unlink(a)
 #define close(a) _close(a)
 
+/* USed by dup2() */
+#define STDIN_FILENO    0
+#define STDOUT_FILENO   1
+
 #if defined(__GNUC__)
 /* on mingw, struct timezone isn't defined so s/struct timezone/void/ - Scott Renfro <scott@renfro.org> */
 extern int gettimeofday(struct timeval*, void*);
@@ -96,6 +100,7 @@ extern ULONG GetHostIPAddr();
 #define HAVE_PCAP_FREEALLDEVS
 #define HAVE_MYSQL_H
 #define HAVE_PYTHON
+#define HAVE_GEOIP
 
 #if !defined(__GNUC__)
 #define INET6

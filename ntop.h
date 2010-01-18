@@ -419,6 +419,11 @@ ntop.h
  */
 #include "pcap.h"
 
+/* The WIN32 specific stuff */
+#ifdef WIN32
+#include "ntop_win32.h"
+#endif
+
 #ifdef HAVE_OPENSSL
 #include <openssl/rsa.h>
 #include <openssl/crypto.h>
@@ -470,7 +475,6 @@ ntop.h
 #include "rrd.h"
 
 #ifdef HAVE_PYTHON
-
 /* Suppress warnings */
 #undef _GNU_SOURCE
 #undef _POSIX_C_SOURCE
@@ -507,11 +511,6 @@ ntop.h
  * **************************************************************************************/
 #include "globals-defines.h"
 #include "globals-structtypes.h"
-
-/* The WIN32 specific stuff */
-#ifdef WIN32
-#include "ntop_win32.h"
-#endif
 
 /* Now the external functions, using the above... */
 #include "globals-core.h"

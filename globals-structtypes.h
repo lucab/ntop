@@ -306,10 +306,12 @@ typedef struct protocolsList {
 } ProtocolsList;
 
 #ifndef HAVE_RW_LOCK
+#ifndef WIN32
 #define pthread_rwlock_t       pthread_mutex_t
 #define pthread_rwlock_init    pthread_mutex_init
 #define pthread_rwlock_wrlock  pthread_mutex_lock
 #define pthread_rwlock_unlock  pthread_mutex_unlock
+#endif
 #endif
 
 #ifndef WIN32
@@ -2509,4 +2511,3 @@ typedef struct ntopGlobals {
   u_int32_t event_mask;
   char *event_log;
 } NtopGlobals;
-

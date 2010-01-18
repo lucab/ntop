@@ -33,7 +33,7 @@
 
 static HostTraffic *ntop_host = NULL;
 static char query_string[2048];
-static pthread_mutex_t python_mutex;
+static PthreadMutex python_mutex;
 
 /* **************************************** */
 
@@ -1046,7 +1046,7 @@ static PyMethodDef host_methods[] = {
 /* **************************************** */
 
 static void init_python_ntop(void) {
-  pthread_mutex_init(&python_mutex, 0);
+  createMutex(&python_mutex);
   Py_InitModule("ntop", ntop_methods);
   Py_InitModule("host", host_methods);
   Py_InitModule("interface", interface_methods);
@@ -1080,6 +1080,7 @@ void init_python(int argc, char *argv[]) {
 
 void term_python(void) {
   Py_Finalize();   /* Cleaning up the interpreter */
+  deleteMutex(&python_mutex);
 }
 
 /* **************************************** */
@@ -1088,7 +1089,7 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
   int idx, found = 0;
   char python_path[256], *document_root = ".", buf[2048];
   struct stat statbuf;
-  FILE *fd;
+  PyObject *fd;
   char *question_mark = strchr(url, '?');
 
   // traceEvent(CONST_TRACE_INFO, "Calling python... [%s]", url);
@@ -1133,11 +1134,12 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 
   /* traceEvent(CONST_TRACE_INFO, "[PYTHON] Executing %s", python_path); */
 
-  if((fd = fopen(python_path, "r")) != NULL) {
+  if((fd = PyFile_FromString(python_path, "r")) != NULL) {
+#ifndef WIN32
     int old_stdin = dup(STDIN_FILENO), old_stdout = dup(STDOUT_FILENO);
-
+#endif
     /* TODO: remove this mutex */
-    pthread_mutex_lock(&python_mutex);
+    accessMutex(&python_mutex, "exec python interpreter");
 
    if(postLen == 0) {
      /* HTTP GET */
@@ -1160,25 +1162,30 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 
     /* sys.stdin <=> myGlobals.newSock */
 
+#ifndef WIN32
     if(dup2(myGlobals.newSock, STDOUT_FILENO) == -1)
       traceEvent(CONST_TRACE_WARNING, "Failed to redirect stdout");
 
     if(dup2(myGlobals.newSock, STDIN_FILENO) == -1)
       traceEvent(CONST_TRACE_WARNING, "Failed to redirect stdin");
-   
+#endif
+
+
     /* Run the actual program */
-    PyRun_SimpleFile(fd, python_path);
+    PyRun_SimpleFile(PyFile_AsFile(fd), python_path);
     
+#ifndef WIN32
     if(dup2(old_stdin, STDOUT_FILENO) == -1)
       traceEvent(CONST_TRACE_WARNING, "Failed to restore stdout");
 
     if(dup2(old_stdout, STDIN_FILENO) == -1)
       traceEvent(CONST_TRACE_WARNING, "Failed to restore stdout");
+#endif
 
-    pthread_mutex_unlock(&python_mutex);
+    releaseMutex(&python_mutex);
   }
 
-  fclose(fd);
+  // fclose(fd);
 
   return(1);
 }

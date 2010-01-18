@@ -293,12 +293,15 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 
   WaitForSingleObject(mutexId->mutex, INFINITE);
 
+#ifdef MUTEX_DEBUG
+
   mutexId->numLocks++;
   mutexId->isLocked = 1;
   if(!myGlobals.runningPref.disableMutexExtraInfo) {
     memcpy(&(mutexId->lock), &(mutexId->attempt), sizeof(Holder));
     memset(&(mutexId->attempt), 0, sizeof(Holder));
   }
+#endif
 
   return(0);
 }
@@ -321,12 +324,15 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
   if(rc != WAIT_OBJECT_0 /* OK */)
     return(1);
   else {
+#ifdef MUTEX_DEBUG
+
     mutexId->numLocks++;
     mutexId->isLocked = 1;
     if(!myGlobals.runningPref.disableMutexExtraInfo) {
       memcpy(&(mutexId->lock), &(mutexId->attempt), sizeof(Holder));
       memset(&(mutexId->attempt), 0, sizeof(Holder));
     }
+#endif
 
     return(0);
   }
@@ -345,6 +351,7 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 #endif
   rc = ReleaseMutex(mutexId->mutex);
 
+#ifdef MUTEX_DEBUG
   if((rc == 0) && (fileName)) {
     traceEvent(CONST_TRACE_WARNING, "Unlock failed for 0x%X [%s:%d] (LastError=%d)",
 	       mutexId->mutex, fileName, fileLine, GetLastError());
@@ -353,7 +360,6 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   mutexId->numReleases++;
 
   if(!myGlobals.runningPref.disableMutexExtraInfo) {
-
     setHolder(mutexId->unlock);
     lockDuration = timeval_subtract(mutexId->unlock.time, mutexId->lock.time);
 
@@ -363,6 +369,7 @@ int _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
       mutexId->maxLockedDuration = lockDuration;
     }
   }
+#endif
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: semaphore 0x%X [%s:%d] locked for %d secs",
