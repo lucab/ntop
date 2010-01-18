@@ -59,7 +59,7 @@ i=0
 	${cod}Table.setValue(${j},0,${city.getLatitude()});
 	${cod}Table.setValue(${j},1,${city.getLongitude()});
 	${cod}Table.setValue(${j},2,${city.getTotalHosts()});
-	${cod}Table.setValue(${j},3,'${city.getName()}');
+	${cod}Table.setValue(${j},3,"${city.getName()}");
 	
 % if city.getName() == 'Unknown':
     ${cod}Table.setTableProperty('unk', ${j});
