@@ -1087,7 +1087,7 @@ void term_python(void) {
 
 int handlePythonHTTPRequest(char *url, u_int postLen) {
   int idx, found = 0;
-  char python_path[256], *document_root = ".", buf[2048];
+  char python_path[256], *document_root = strdup("."), buf[2048];
   struct stat statbuf;
   PyObject *fd;
   char *question_mark = strchr(url, '?');
@@ -1105,7 +1105,7 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 		  "%s/html", myGlobals.dataFileDirs[idx]);
     revertSlashIfWIN32(tmpStr, 0);
     if(stat(tmpStr, &statbuf) == 0) {
-      document_root = myGlobals.dataFileDirs[idx];
+      document_root = strdup(myGlobals.dataFileDirs[idx]);
       break;
     }
   }
@@ -1127,6 +1127,7 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 
   if(!found) {
     returnHTTPpageNotFound(NULL);
+	free(document_root);
     return(1);
   }
 
@@ -1141,6 +1142,8 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
     /* TODO: remove this mutex */
     accessMutex(&python_mutex, "exec python interpreter");
 
+	revertSlashIfWIN32(document_root, 1);
+
    if(postLen == 0) {
      /* HTTP GET */
      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
@@ -1150,11 +1153,24 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 		   document_root, query_string);
    } else {
      /* HTTP POST */
+
+#ifdef WIN32
+
+	   if((idx = readHTTPpostData(postLen, query_string, sizeof(query_string)-1)) >= 0) {
+		/* Emulate a POST with a GET on Windows */
+	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		   "import os\nos.environ['DOCUMENT_ROOT']='%s'\n"
+		   "os.environ['REQUEST_METHOD']='GET'\n"
+		   "os.environ['QUERY_STRING']='%s'\n",
+		   document_root, query_string);
+	   }
+#else
      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		   "import os\nos.environ['DOCUMENT_ROOT']='%s'\n"
 		   "os.environ['REQUEST_METHOD']='POST'\n"
 		   "os.environ['CONTENT_LENGTH']='%u'\n",
 		   document_root, postLen);
+#endif
    }
 
    /* See http://bugs.python.org/issue1159 */
@@ -1163,6 +1179,11 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
     /* sys.stdin <=> myGlobals.newSock */
 
 #ifndef WIN32
+	/* Forget file redirection on Windows without forking a process
+	
+	   http://tangentsoft.net/wskfaq/articles/bsd-compatibility.html
+	   http://stackoverflow.com/questions/7664/windows-c-how-can-i-redirect-stderr-for-calls-to-fprintf
+	*/
     if(dup2(myGlobals.newSock, STDOUT_FILENO) == -1)
       traceEvent(CONST_TRACE_WARNING, "Failed to redirect stdout");
 
@@ -1185,8 +1206,8 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
     releaseMutex(&python_mutex);
   }
 
-  // fclose(fd);
-
+  Py_DECREF(fd);
+	free(document_root);
   return(1);
 }
 
