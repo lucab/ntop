@@ -470,6 +470,12 @@ ntop.h
 #include "rrd.h"
 
 #ifdef HAVE_PYTHON
+
+/* Suppress warnings */
+#undef _GNU_SOURCE
+#undef _POSIX_C_SOURCE
+#undef _XOPEN_SOURCE
+
 #include "Python.h" 
 #endif
 
