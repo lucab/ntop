@@ -1523,7 +1523,6 @@ fi
 dnl>
 dnl> PYTHON
 dnl>
-dnl> if test ".${ac_disable_python}" != ".yes"; then
   AC_CHECK_TOOL(PYTHON, python-config)
   PYTHON_CONFIG=""
 
@@ -1534,6 +1533,8 @@ dnl> if test ".${ac_disable_python}" != ".yes"; then
    else
      PYTHON_CONFIG="python-config"
    fi
+  else
+     PYTHON_CONFIG="python-config"
   fi
 
   if test "x$PYTHON_CONFIG" != "x"; then
@@ -1554,7 +1555,6 @@ dnl remove unecessary path
     AC_MSG_RESULT(Python[-devel] support is not present)
     exit 1
   fi
-dnl> fi
 
 dnl>
 dnl> SCTP - RFC 3286
