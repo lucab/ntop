@@ -1527,12 +1527,19 @@ dnl>
   PYTHON_CONFIG=""
 
   if test "x$ac_cv_prog_ac_ct_PYTHON" != "xpython-config"; then   
-    AC_CHECK_TOOL(PYTHON, python)
-    if test "x$ac_cv_prog_ac_ct_PYTHON" = "xpython"; then
-     PYTHON_CONFIG="./configureextra/python-config"
-   else
-     PYTHON_CONFIG="python-config"
-   fi
+       if test -f "/etc/debian_version"; then
+       	   AC_MSG_RESULT(Please install python-dev and rerun configure)
+	   exit 1
+	else
+	AC_MSG_RESULT(>>>> Unable to locate python-config: using workaround <<<<)
+        dnl> Silly workaround for RedHat-like distro
+        AC_CHECK_TOOL(PYTHON, python)
+        if test "x$ac_cv_prog_ac_ct_PYTHON" = "xpython"; then
+          PYTHON_CONFIG="./configureextra/python-config"
+        else
+          PYTHON_CONFIG="python-config"
+        fi
+     fi
   else
      PYTHON_CONFIG="python-config"
   fi
