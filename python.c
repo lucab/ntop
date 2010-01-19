@@ -1063,7 +1063,10 @@ void init_python(int argc, char *argv[]) {
     _argv = argv;
   }
 
+traceEvent(CONST_TRACE_INFO, "-> %d", 1);
+
   if(argv) Py_SetProgramName(argv[0]);
+traceEvent(CONST_TRACE_INFO, "-> %d", 2);
 
   /* Initialize the Python interpreter.  Required. */
   Py_Initialize();

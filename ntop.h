@@ -480,6 +480,14 @@ ntop.h
 #undef _POSIX_C_SOURCE
 #undef _XOPEN_SOURCE
 
+#ifdef WIN32
+/*
+    NOTE
+
+	http://old.nabble.com/please-include-python26_d.lib-in-the-installer-td22737890.html
+*/
+#undef _DEBUG
+#endif
 #include "Python.h" 
 #endif
 
