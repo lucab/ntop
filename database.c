@@ -88,16 +88,27 @@ static char *get_last_db_error() {
 /* ***************************************************** */
 
 static void* scanDbLoop(void* notUsed _UNUSED_) {
+  char buf[32];
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DB: Database purge loop",
              pthread_self());
 
   for(;;) {    
+    if(fetchPrefsValue(NTOP_PREF_SQL_REC_LIFETIME, buf, sizeof(buf)) == -1) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u", 
+		    myGlobals.runningPref.sqlRecDaysLifetime);
+      storePrefsValue(NTOP_PREF_SQL_REC_LIFETIME, buf);
+    }
+
     ntopSleepWhileSameState(86400); /* 1 day */
 
     if((myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN)
        ||  (!mysql_initialized))
       break;
+
+    /* Read purge preference just in time it changed */
+    if(fetchPrefsValue(NTOP_PREF_SQL_REC_LIFETIME, buf, sizeof(buf)) != -1)
+      myGlobals.runningPref.sqlRecDaysLifetime = atoi(buf);    
 
     if(myGlobals.runningPref.sqlRecDaysLifetime > 0) {
       char sql[256];
@@ -391,7 +402,7 @@ int insert_flow_record(u_int16_t probeId,
 
 /* ***************************************************** */
 
-static void term_database() {
+static void term_database(void) {
   if(mysql_initialized) {
     mysql_close(&mysql);
     mysql_initialized = 0;

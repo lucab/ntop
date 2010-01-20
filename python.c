@@ -51,7 +51,7 @@ static PyObject* python_sendHTTPHeader(PyObject *self, PyObject *args) {
 /* **************************************** */
 
 static PyObject* python_printHTMLHeader(PyObject *self,
-				       PyObject *args) {
+					PyObject *args) {
   char *title;
   int sectionTitle, refresh;
   int flags = 0;
@@ -72,7 +72,7 @@ static PyObject* python_printHTMLHeader(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_printHTMLFooter(PyObject *self,
-				       PyObject *args) {
+					PyObject *args) {
 
   // traceEvent(CONST_TRACE_WARNING, "-%s-", "python_printHTMLFooter");
 
@@ -90,8 +90,8 @@ static PyObject* python_sendString(PyObject *self,
 
   /* parse the incoming arguments */
   if (!PyArg_ParseTuple(args, "s", &msg)) {
-      return NULL;
-    }
+    return NULL;
+  }
 
   sendString(msg);
   return PyString_FromString("");
@@ -105,9 +105,9 @@ static PyObject* python_printFlagedWarning(PyObject *self,
 
   /* parse the incoming arguments */
   if (!PyArg_ParseTuple(args, "s", &msg)) {
-      return NULL;
-    }
-  
+    return NULL;
+  }
+
   printFlagedWarning(msg);
   return PyString_FromString("");
 }
@@ -230,7 +230,7 @@ static PyObject* python_ethAddress(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_ipAddress(PyObject *self,
-				   PyObject *args) {
+				  PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyString_FromString((ntop_host && ntop_host->hostNumIpAddress) ? ntop_host->hostNumIpAddress : "");
@@ -240,7 +240,7 @@ static PyObject* python_ipAddress(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_hostResolvedName(PyObject *self,
-				   PyObject *args) {
+					 PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyString_FromString((ntop_host && ntop_host->hostResolvedName) ? ntop_host->hostResolvedName : "");
@@ -249,7 +249,7 @@ static PyObject* python_hostResolvedName(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_hostTrafficBucket(PyObject *self,
-				   PyObject *args) {
+					  PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyLong_FromUnsignedLong(ntop_host->hostTrafficBucket);
@@ -258,7 +258,7 @@ static PyObject* python_hostTrafficBucket(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_numHostSessions(PyObject *self,
-				   PyObject *args) {
+					PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyLong_FromUnsignedLong(ntop_host->numHostSessions);
@@ -267,7 +267,7 @@ static PyObject* python_numHostSessions(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_vlanId(PyObject *self,
-				   PyObject *args) {
+			       PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyLong_FromUnsignedLong(ntop_host->vlanId);
@@ -276,7 +276,7 @@ static PyObject* python_vlanId(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_networkMask(PyObject *self,
-				   PyObject *args) {
+				    PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyLong_FromUnsignedLong(ntop_host->network_mask);
@@ -285,7 +285,7 @@ static PyObject* python_networkMask(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_hwModel(PyObject *self,
-				   PyObject *args) {
+				PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyString_FromString((ntop_host && ntop_host->hwModel) ? ntop_host->hwModel : "");
@@ -294,7 +294,7 @@ static PyObject* python_hwModel(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isFTPhost(PyObject *self,
-				   PyObject *args) {
+				  PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isFTPhost(ntop_host));
@@ -303,7 +303,7 @@ static PyObject* python_isFTPhost(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isServer(PyObject *self,
-				   PyObject *args) {
+				 PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isServer(ntop_host));
@@ -312,7 +312,7 @@ static PyObject* python_isServer(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isWorkstation(PyObject *self,
-				   PyObject *args) {
+				      PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isWorkstation(ntop_host));
@@ -321,7 +321,7 @@ static PyObject* python_isWorkstation(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isMasterBrowser(PyObject *self,
-				   PyObject *args) {
+					PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isMasterBrowser(ntop_host));
@@ -330,7 +330,7 @@ static PyObject* python_isMasterBrowser(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isMultihomed(PyObject *self,
-				   PyObject *args) {
+				     PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isMultihomed(ntop_host));
@@ -339,7 +339,7 @@ static PyObject* python_isMultihomed(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isMultivlaned(PyObject *self,
-				   PyObject *args) {
+				      PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isMultivlaned(ntop_host));
@@ -348,7 +348,7 @@ static PyObject* python_isMultivlaned(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isPrinter(PyObject *self,
-				   PyObject *args) {
+				  PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isPrinter(ntop_host));
@@ -366,7 +366,7 @@ static PyObject* python_isSMTPhost(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isPOPhost(PyObject *self,
-				   PyObject *args) {
+				  PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isPOPhost(ntop_host));
@@ -384,7 +384,7 @@ static PyObject* python_isIMAPhost(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isDirectoryHost(PyObject *self,
-				   PyObject *args) {
+					PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isDirectoryHost(ntop_host));
@@ -411,7 +411,7 @@ static PyObject* python_isWINShost(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isBridgeHost(PyObject *self,
-				   PyObject *args) {
+				     PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isBridgeHost(ntop_host));
@@ -420,7 +420,7 @@ static PyObject* python_isBridgeHost(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isVoIPClient(PyObject *self,
-				   PyObject *args) {
+				     PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isVoIPClient(ntop_host));
@@ -429,7 +429,7 @@ static PyObject* python_isVoIPClient(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isVoIPGateway(PyObject *self,
-				   PyObject *args) {
+				      PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isVoIPGateway(ntop_host));
@@ -447,7 +447,7 @@ static PyObject* python_isVoIPHost(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isDHCPClient(PyObject *self,
-				   PyObject *args) {
+				     PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isDHCPClient(ntop_host));
@@ -456,7 +456,7 @@ static PyObject* python_isDHCPClient(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isDHCPServer(PyObject *self,
-				   PyObject *args) {
+				     PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isDHCPServer(ntop_host));
@@ -465,7 +465,7 @@ static PyObject* python_isDHCPServer(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isP2P(PyObject *self,
-				   PyObject *args) {
+			      PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isP2P(ntop_host));
@@ -474,7 +474,7 @@ static PyObject* python_isP2P(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_isNtpServer(PyObject *self,
-				   PyObject *args) {
+				    PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyBool_FromLong(isNtpServer(ntop_host));
@@ -483,7 +483,7 @@ static PyObject* python_isNtpServer(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_totContactedSentPeers(PyObject *self,
-				   PyObject *args) {
+					      PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyLong_FromUnsignedLong((unsigned long)(unsigned long)(ntop_host->totContactedSentPeers));
@@ -492,7 +492,7 @@ static PyObject* python_totContactedSentPeers(PyObject *self,
 /* **************************************** */
 
 static PyObject* python_totContactedRcvdPeers(PyObject *self,
-				   PyObject *args) {
+					      PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyLong_FromUnsignedLong((unsigned long)(unsigned long)(ntop_host->totContactedRcvdPeers));
@@ -550,7 +550,7 @@ static PyObject* python_getGeoIP(PyObject *self, PyObject *args) {
 /* **************************************** */
 
 static PyObject* python_synPktsSent(PyObject *self,
-				   PyObject *args) {
+				    PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
 
   return PyString_FromFormat("%lu",
@@ -568,7 +568,7 @@ static PyObject* python_interface_name(PyObject *self, PyObject *args) {
   u_int interfaceId;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
-  if(interfaceId >= myGlobals.numDevices) return NULL;  
+  if(interfaceId >= myGlobals.numDevices) return NULL;
   return PyString_FromFormat("%s", myGlobals.device[interfaceId].name);
 }
 
@@ -577,7 +577,7 @@ static PyObject* python_interface_uniqueIfName(PyObject *self, PyObject *args) {
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
-    return PyString_FromFormat("%s", myGlobals.device[interfaceId].uniqueIfName);
+  return PyString_FromFormat("%s", myGlobals.device[interfaceId].uniqueIfName);
 }
 
 static PyObject* python_interface_humanFriendlyName(PyObject *self, PyObject *args) {
@@ -602,7 +602,7 @@ static PyObject* python_interface_network(PyObject *self, PyObject *args) {
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
-  return PyString_FromFormat("%s/%s", 
+  return PyString_FromFormat("%s/%s",
 			     _intoa(myGlobals.device[interfaceId].network, buf, sizeof(buf)),
 			     _intoa(myGlobals.device[interfaceId].netmask, buf1, sizeof(buf1))
 			     );
@@ -613,7 +613,7 @@ static PyObject* python_interface_numHosts(PyObject *self, PyObject *args) {
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
-  
+
   return PyLong_FromUnsignedLong(myGlobals.device[interfaceId].numHosts);
 }
 
@@ -626,7 +626,7 @@ static PyObject* python_interface_ipv6Address(PyObject *self, PyObject *args) {
   if(interfaceId >= myGlobals.numDevices) return NULL;
   if(myGlobals.device[interfaceId].v6Addrs == NULL) return PyString_FromString("");
 
-  return PyString_FromFormat("%s/%d", 
+  return PyString_FromFormat("%s/%d",
 			     _intop(&myGlobals.device[interfaceId].v6Addrs->af.inet6.ifAddr, buf, sizeof(buf)),
 			     myGlobals.device[interfaceId].v6Addrs->af.inet6.prefixlen);
 }
@@ -651,7 +651,7 @@ static PyObject* python_interface_virtual(PyObject *self, PyObject *args) {
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
-  
+
   return PyInt_FromLong((long)myGlobals.device[interfaceId].virtualDevice);
 }
 
@@ -660,7 +660,7 @@ static PyObject* python_interface_speed(PyObject *self, PyObject *args) {
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
-  
+
   return PyLong_FromUnsignedLong(myGlobals.device[interfaceId].deviceSpeed);
 }
 
@@ -669,7 +669,7 @@ static PyObject* python_interface_mtu(PyObject *self, PyObject *args) {
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
-  
+
   return PyLong_FromUnsignedLong(myGlobals.device[interfaceId].mtuSize);
 }
 
@@ -678,7 +678,7 @@ static PyObject* python_interface_bpf(PyObject *self, PyObject *args) {
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
-  
+
   return PyString_FromString(myGlobals.device[interfaceId].filter ? myGlobals.device[interfaceId].filter : "");
 }
 
@@ -855,7 +855,7 @@ static PyObject* python_interface_securityPkts(PyObject *self, PyObject *args) {
   PyDict_SetItem(obj, PyString_FromString("synFinPkts"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.synFinPkts.value));
   PyDict_SetItem(obj, PyString_FromString("finPushUrgPkts"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.finPushUrgPkts.value));
   PyDict_SetItem(obj, PyString_FromString("nullPkts"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.nullPkts.value));
-  
+
   PyDict_SetItem(obj, PyString_FromString("rejectedTCPConn"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.rejectedTCPConn.value));
   PyDict_SetItem(obj, PyString_FromString("establishedTCPConn"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.establishedTCPConn.value));
   PyDict_SetItem(obj, PyString_FromString("terminatedTCPConn"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].securityPkts.terminatedTCPConn.value));
@@ -1063,10 +1063,7 @@ void init_python(int argc, char *argv[]) {
     _argv = argv;
   }
 
-traceEvent(CONST_TRACE_INFO, "-> %d", 1);
-
   if(argv) Py_SetProgramName(argv[0]);
-traceEvent(CONST_TRACE_INFO, "-> %d", 2);
 
   /* Initialize the Python interpreter.  Required. */
   Py_Initialize();
@@ -1130,7 +1127,7 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 
   if(!found) {
     returnHTTPpageNotFound(NULL);
-	free(document_root);
+    free(document_root);
     return(1);
   }
 
@@ -1145,48 +1142,48 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
     /* TODO: remove this mutex */
     accessMutex(&python_mutex, "exec python interpreter");
 
-	revertSlashIfWIN32(document_root, 1);
+    revertSlashIfWIN32(document_root, 1);
 
-   if(postLen == 0) {
-     /* HTTP GET */
-     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		   "import os\nos.environ['DOCUMENT_ROOT']='%s'\n"
-		   "os.environ['REQUEST_METHOD']='GET'\n"
-		   "os.environ['QUERY_STRING']='%s'\n",
-		   document_root, query_string);
-   } else {
-     /* HTTP POST */
+    if(postLen == 0) {
+      /* HTTP GET */
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "import os\nos.environ['DOCUMENT_ROOT']='%s'\n"
+		    "os.environ['REQUEST_METHOD']='GET'\n"
+		    "os.environ['QUERY_STRING']='%s'\n",
+		    document_root, query_string);
+    } else {
+      /* HTTP POST */
 
 #ifdef WIN32
 
-	   if((idx = readHTTPpostData(postLen, query_string, sizeof(query_string)-1)) >= 0) {
-		/* Emulate a POST with a GET on Windows */
-	   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		   "import os\nos.environ['DOCUMENT_ROOT']='%s'\n"
-		   "os.environ['REQUEST_METHOD']='GET'\n"
-		   "os.environ['QUERY_STRING']='%s'\n",
-		   document_root, query_string);
-	   }
+      if((idx = readHTTPpostData(postLen, query_string, sizeof(query_string)-1)) >= 0) {
+	/* Emulate a POST with a GET on Windows */
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "import os\nos.environ['DOCUMENT_ROOT']='%s'\n"
+		      "os.environ['REQUEST_METHOD']='GET'\n"
+		      "os.environ['QUERY_STRING']='%s'\n",
+		      document_root, query_string);
+      }
 #else
-     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		   "import os\nos.environ['DOCUMENT_ROOT']='%s'\n"
-		   "os.environ['REQUEST_METHOD']='POST'\n"
-		   "os.environ['CONTENT_LENGTH']='%u'\n",
-		   document_root, postLen);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "import os\nos.environ['DOCUMENT_ROOT']='%s'\n"
+		    "os.environ['REQUEST_METHOD']='POST'\n"
+		    "os.environ['CONTENT_LENGTH']='%u'\n",
+		    document_root, postLen);
 #endif
-   }
+    }
 
-   /* See http://bugs.python.org/issue1159 */
+    /* See http://bugs.python.org/issue1159 */
     PyRun_SimpleString(buf);
 
     /* sys.stdin <=> myGlobals.newSock */
 
 #ifndef WIN32
-	/* Forget file redirection on Windows without forking a process
-	
-	   http://tangentsoft.net/wskfaq/articles/bsd-compatibility.html
-	   http://stackoverflow.com/questions/7664/windows-c-how-can-i-redirect-stderr-for-calls-to-fprintf
-	*/
+    /* Forget file redirection on Windows without forking a process
+
+       http://tangentsoft.net/wskfaq/articles/bsd-compatibility.html
+       http://stackoverflow.com/questions/7664/windows-c-how-can-i-redirect-stderr-for-calls-to-fprintf
+    */
     if(dup2(myGlobals.newSock, STDOUT_FILENO) == -1)
       traceEvent(CONST_TRACE_WARNING, "Failed to redirect stdout");
 
@@ -1197,7 +1194,7 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 
     /* Run the actual program */
     PyRun_SimpleFile(PyFile_AsFile(fd), python_path);
-    
+
 #ifndef WIN32
     if(dup2(old_stdin, STDOUT_FILENO) == -1)
       traceEvent(CONST_TRACE_WARNING, "Failed to restore stdout");
@@ -1210,7 +1207,7 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
   }
 
   Py_DECREF(fd);
-	free(document_root);
+  free(document_root);
   return(1);
 }
 

@@ -190,11 +190,11 @@ void usage(FILE * fp) {
 static void verifyOptions (void) {
 
 #ifdef HAVE_OPENSSL
-    if((myGlobals.runningPref.webPort == 0) && (myGlobals.runningPref.sslPort == 0)) {
+  if((myGlobals.runningPref.webPort == 0) && (myGlobals.runningPref.sslPort == 0)) {
         printf("WARNING: both -W and -w are set to 0. The web interface will be disabled.\n");
 #else
         if(myGlobals.runningPref.webPort == 0) {
-            printf("WARNING: -w is set to 0. The web interface will be disabled.\n");
+	  printf("WARNING: -w is set to 0. The web interface will be disabled.\n");
 #endif
 
             traceEvent(CONST_TRACE_WARNING, "The web interface will be disabled");

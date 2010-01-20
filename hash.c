@@ -567,6 +567,32 @@ int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now,
 
 /* ************************************ */
 
+static void readSessionPurgeParams(u_int *sec_idle_with_no_sessions,
+				   u_int *sec_idle_with_sessions) {
+  char buf[32], *key;
+
+  key = "purge_host.seconds_idle_with_no_sessions";
+  if(fetchPrefsValue(key, buf, sizeof(buf)) == 0) {
+    *sec_idle_with_no_sessions = atoi(buf);
+  } else {
+    *sec_idle_with_no_sessions = PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES;
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u", *sec_idle_with_no_sessions);
+    storePrefsValue(key, buf);
+  }
+
+  key = "purge_host.seconds_idle_with_sessions";
+  if(fetchPrefsValue(key, buf, sizeof(buf)) == 0) {
+    *sec_idle_with_sessions = atoi(buf);
+  } else {
+    *sec_idle_with_sessions = PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES;
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u", *sec_idle_with_sessions);
+    storePrefsValue(key, buf);
+  }
+
+}
+
+/* ************************************ */
+
 int purgeIdleHosts(int actDevice) {
   u_int idx, numFreedBuckets=0, numHosts = 0;
   time_t now = time(NULL);
@@ -577,7 +603,8 @@ int purgeIdleHosts(int actDevice) {
   float hiresDeltaTime;
   struct timeval hiresTimeStart, hiresTimeEnd;
   HostTraffic *el, *prev, *next;
-  
+  u_int sec_idle_with_no_sessions, sec_idle_with_sessions;
+
   /* if(myGlobals.runningPref.rFileName != NULL) return; */
 
 #ifdef IDLE_PURGE_DEBUG
@@ -587,6 +614,9 @@ int purgeIdleHosts(int actDevice) {
   if(firstRun) {
     firstRun = 0;
     memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
+
+    /* Initialize the DB if config is not present */
+    readSessionPurgeParams(&sec_idle_with_no_sessions, &sec_idle_with_sessions);
   }
 
   gettimeofday(&hiresTimeStart, NULL);
@@ -616,6 +646,8 @@ int purgeIdleHosts(int actDevice) {
 
   accessMutex(&myGlobals.hostsHashLockMutex, "scanIdleLoop");
 
+  readSessionPurgeParams(&sec_idle_with_no_sessions, &sec_idle_with_sessions);
+
   for(idx=0; idx<myGlobals.device[actDevice].actualHashSize; idx++) {
     if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN) break;
 
@@ -624,8 +656,8 @@ int purgeIdleHosts(int actDevice) {
 
       while(el) {
 	if(is_host_ready_to_purge(actDevice, el, now, 
-				  PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES,
-				  PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES)) {
+				  sec_idle_with_no_sessions,
+				  sec_idle_with_sessions)) {
 	  if(!el->to_be_deleted) {
 	    el->to_be_deleted = 1; /* Delete it at the next run */
 
