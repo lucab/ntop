@@ -437,9 +437,9 @@ static void listResource(char *rrdPath, char *rrdTitle,
   sendString(buf);
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u%s\">Last 12h</option>\n", url, now - 12 * 3600, filter);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u%s\">Last 6h</option>\n", url, now - 6 * 86400, filter);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u%s\">Last 6h</option>\n", url, now - 6 * 3600, filter);
   sendString(buf);
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u%s\">Last Hour</option>\n", url, now - 86400, filter);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%s&start=%u%s\">Last Hour</option>\n", url, now - 3600, filter);
   sendString(buf);
   sendString("</select></form></td></tr>\n");
 
