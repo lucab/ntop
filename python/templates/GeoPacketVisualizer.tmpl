@@ -1,154 +1,146 @@
-
 <script type="text/javascript" src="http://www.google.com/jsapi"></script>
 <script type="text/javascript">
-	google.load('visualization', '1', {'packages': ['geomap', 'table']});
+	google.load('visualization', '1', {packages: ['geomap', 'table']});
 
 function drawVisualization() {
-	var data = new google.visualization.DataTable();		//main table that retain information on each
-	var array= new Array();						//associative array for countrycode->ObjTableCityForCountry
+	var firstRun=true;
+	function createCountryTable(){
+		var countryT = new google.visualization.DataTable();
+		
+		countryT.addColumn('number', 'LATITUDE', 'Latitude');
+		countryT.addColumn('number', 'LONGITUDE', 'Longitude');
+		countryT.addColumn('number', 'Num Hosts', 'Value');
+		countryT.addColumn('string', 'City', 'Hover');
+		return countryT;
+	}
+	
+	var data = new google.visualization.DataTable();	/*main table that retain information on each */
+	var array= [];						/*associative array for countrycode->ObjTableCityForCountry */
 
-	var emptyTable = new google.visualization.DataTable();	//empty table used for enabling the selection
-								//(and the zooming) of countries with no traffic recorded
-
-	emptyTable.addRows(1);
-	emptyTable.addColumn('number', 'LATITUDE', 'Latitude');
-	emptyTable.addColumn('number', 'LONGITUDE', 'Longitude');
-	emptyTable.addColumn('number', 'Num Hosts', 'Value');
-	emptyTable.addColumn('string', 'City', 'Hover');
-
-	emptyTable.setValue(0,0,0.000000);
-	emptyTable.setValue(0,1,0.000000);
-	emptyTable.setValue(0,2,0);
-	emptyTable.setValue(0,3,'None');
-
+	var emptyTable = createCountryTable();			/*empty table used for enabling the selection
+						 		*(and the zooming) of countries with no traffic recorded 
+						 		*/
+	emptyTable.addRow( [0.000000, 0.000000, 0, 'None'] );
+	
 	data.addColumn('string', 'Code');
 	data.addColumn('number', 'Num Hosts');
 	data.addColumn('string', 'Country');
-	data.addRows(${len(countries)});
-<%
-i=0
-%>
+	
 % for key in countries:
 <%
 	country = countries[key]
 	dizCities = country.getDictionaryCities()
 	cod = country.getCode()
-%>
+%>\
 
-	data.setValue(${i}, 0, '${cod}');
-	data.setValue(${i}, 1, ${country.getTotal()});
-	data.setValue(${i}, 2,'${country.getName()}');
-
-	var ${cod}Table = new google.visualization.DataTable();
-	${cod}Table.addColumn('number', 'LATITUDE', 'Latitude');
-	${cod}Table.addColumn('number', 'LONGITUDE', 'Longitude');
-	${cod}Table.addColumn('number', 'Num Hosts', 'Value');
-	${cod}Table.addColumn('string', 'City', 'Hover');
-	${cod}Table.addRows(${len(dizCities)});
-
-	array['${cod}']=${cod}Table;//assigns countrycode to countrytable
+	data.addRow( ['${cod}', ${country.getTotal()}, '${country.getName()}' ] );
 
 <%
 	j=0
-%>
+	found=False
+	x=0
+%>\
+	var ${cod}Table = createCountryTable();
+	${cod}Table.addRows([
 	  % for key2 in dizCities:
-<%
-		city=dizCities[key2]
-%>
-
-	${cod}Table.setValue(${j},0,${city.getLatitude()});
-	${cod}Table.setValue(${j},1,${city.getLongitude()});
-	${cod}Table.setValue(${j},2,${city.getTotalHosts()});
-	${cod}Table.setValue(${j},3,"${city.getName()}");
-	
-% if city.getName() == 'Unknown':
-    ${cod}Table.setTableProperty('unk', ${j});
+<%		city=dizCities[key2] %>\
+% if (j+1) != len(dizCities) :
+		[${city.getLatitude()}, ${city.getLongitude()}, ${city.getTotalHosts()}, '${city.getName()}'],\
+% else :
+		[${city.getLatitude()}, ${city.getLongitude()}, ${city.getTotalHosts()}, '${city.getName()}']\
 % endif
-
+% if city.getName() == 'Unknown' and (not found):
+<%
+	found=True
+	x=j
+%>\
+% endif
 <%
 	  j += 1
 %>
 	% endfor
-<%
-	i+=1
-%>
+	]);	
+% if found:
+
+    	${cod}Table.setTableProperty('unk', ${x});
+% endif
+
+	array.${cod}=${cod}Table;					//assigns countrycode to countrytable "${country.getName().upper()}"
+	
 % endfor
 
 	var geomap = new google.visualization.GeoMap(document.getElementById('GeoMappa'));
 
-	var options={};
-	options['width'] = '900px';
-	options['height'] = '691px';
-	options['showLegend'] = true;
-	options['region'] = 'world';
-	options['dataMode'] = 'regions';
+	var options={
+	width: '900px', 
+	height: '691px', 
+	showLegend: true, 
+	region: 'world', 
+	dataMode: 'regions'
+	};
 	
 	var table = new google.visualization.Table(document.getElementById('table'));
 
 	var viewTable= new google.visualization.DataView(data);
-	viewTable.setColumns([2,1,0]);
-	table.draw(viewTable, { sortColumn: 1, sortAscending: false} );
-
+	
+	
+	var table2 = new google.visualization.Table(document.getElementById('table2'));
+	
+	/*Called when clicking on the world map. Switch to the region and show table cities */
+	function clickHandler(msg) {
+		options.region = msg.region;
+		options.showZoomOut=true;
+		options.colors = [0x9999FF, 0x0000FF, 0x000066];
+		options.dataMode = 'markers';
+		
+		if(array[msg.region]){
+			var view= new google.visualization.DataView(array[msg.region]);
+			view.setColumns([3, 2]);
+			var countryV=new google.visualization.DataView(array[msg.region]);
+			var toHide=(array[msg.region]).getTableProperty('unk');
+			if(toHide!==null){
+				if(countryV.getNumberOfRows()===1){
+					countryV=emptyTable;			//FIX if just one row and unknown
+				}else{
+					countryV.hideRows([toHide]);
+				}
+			}
+		table2.draw(view,null);
+		geomap.draw(countryV, options);	
+		}else{
+		  geomap.draw(emptyTable, options);
+		  var temp=document.getElementById('table2');
+		  temp.removeChild(temp.firstChild);
+		}
+	}
+	/*Called when clicking on a table. recover the data from the row and call clickhandler*/
+	function tableClick() {
+		var temp=table.getSelection();
+		var arrayAss=[];
+		arrayAss.region=data.getFormattedValue(temp[0].row, 0);
+		clickHandler(arrayAss);
+	}
+	
+	/*puts back all the options for visualizing the world map again*/
+	function zoomOut(){
+		options.region= 'world';
+		options.showZoomOut=false;
+		options.colors = [0xE0FFD4, 0xA5EF63, 0x50AA00, 0x267114];
+		options.dataMode='regions';
+		table.setSelection();
+		geomap.setSelection();
+		geomap.draw(data,options);
+		var temp=document.getElementById('table2');
+		temp.removeChild(temp.firstChild);
+	}
 	google.visualization.events.addListener(geomap, 'regionClick', clickHandler);
 	google.visualization.events.addListener(geomap, 'zoomOut', zoomOut);
 	google.visualization.events.addListener(table, 'select', tableClick );
-	var table2 = new google.visualization.Table(document.getElementById('table2'));
 	
-	var codice = window.location.hash;
-	if(codice.length != 3){//if the length of the code passed is not 3 just draw the world map
-	  geomap.draw(data, options);
-	}else{//else if is exacly 3 get the countrycode and draw that particular region map
-	  var arrayAss=new Object();
-	  arrayAss['region']=codice.substr(1,2);
-	  clickHandler(arrayAss);
-	}
-function clickHandler(msg) {
-	
-	//alert('You selected the region ' +msg['region']);
-	options['region']= msg['region'];
-	options['showZoomOut']=true;
-	options['colors'] = [0x9999FF, 0x0000FF, 0x000066];
-	options['dataMode'] = 'markers';
-	
-	window.location.hash=msg['region'];//set the countrycode for enabling the refresh on this particular region
-	if(array[msg['region']]!= undefined){
-	var view= new google.visualization.DataView(array[msg['region']]);
-	view.setColumns([3, 2]);
-	var countryV=new google.visualization.DataView(array[msg['region']]);
-	var toHide=(array[msg['region']]).getTableProperty('unk');
-		if(toHide!=null){
-			countryV.hideRows([toHide]);
-		}
-	table2.draw(view,null);
-	geomap.draw(countryV, options);
-	
-//	var str2='?countrySelected='+msg['region'];
-//	window.location.search=str2;
-	}else{
-	  geomap.draw(emptyTable, options);
-	  var temp=document.getElementById('table2');
-	  temp.removeChild(temp.firstChild);
-	}
+	viewTable.setColumns([2,1,0]);
+	table.draw(viewTable, { sortColumn: 1, sortAscending: false} );
 
-}
-function tableClick() {
-	var temp=table.getSelection();
-	var arrayAss=new Object();
-	arrayAss['region']=data.getFormattedValue(temp[0].row, 0);
-	clickHandler(arrayAss);
-}
-function zoomOut(){//puts back all the options for visualizing the world map again
-	options['region']= 'world';
-	options['showZoomOut']=false;
-	options['colors'] = [0xE0FFD4, 0xA5EF63, 0x50AA00, 0x267114];
-	options['dataMode']='regions';
-	table.setSelection();
-	geomap.setSelection();
-	geomap.draw(data,options);
-	var temp=document.getElementById('table2');
-	temp.removeChild(temp.firstChild);
-	window.location.hash='WORLD';//this for enabling again the refresh of the world map
-}
+	geomap.draw(data, options);
 }
 
 	google.setOnLoadCallback(drawVisualization);
@@ -171,11 +163,12 @@ function zoomOut(){//puts back all the options for visualizing the world map aga
 	<td valign="top"><div id="table" style="width: 300px;"></div>
 	</td>
 
-	<td valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0">
+	<td valign="top">
+	<table width="100%" border="0" cellpadding="0" cellspacing="0">
 	<tr>
 	<td></td>
 	</tr>
-</table>
+	</table>
 
 <div id="table2" style="width: 220px;"> </div></td>
 </tr>
