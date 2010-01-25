@@ -124,7 +124,6 @@ form = cgi.FieldStorage();
 if form.getvalue('OP') == 'Change':
     flag = form.getvalue('countHosts', 's')
 
-
 while ntop.getNextHost(0):
     totalHosts += 1
     geo = host.geoIP()
@@ -160,6 +159,7 @@ while ntop.getNextHost(0):
     if city: 
         country.addCity(city, latitude, longitude, 1)          # insert the city found in the citiesDictionary of this nation object
 
+ntop.sendHTTPHeader(1) # 1 = HTML
 ntop.printHTMLHeader('Host Map: Region View', 1, 0)
 
 if totalHosts == 0:

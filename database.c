@@ -78,7 +78,7 @@ static int exec_sql_query(char *sql) {
 
 /* ***************************************************** */
 
-static char *get_last_db_error() {
+static char *get_last_db_error(void) {
   if(!mysql_initialized)
     return("");
   else

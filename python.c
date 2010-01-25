@@ -34,6 +34,7 @@
 static HostTraffic *ntop_host = NULL;
 static char query_string[2048];
 static PthreadMutex python_mutex;
+static u_int8_t header_sent;
 
 /* **************************************** */
 
@@ -45,6 +46,7 @@ static PyObject* python_sendHTTPHeader(PyObject *self, PyObject *args) {
   if(!PyArg_ParseTuple(args, "i", &mime_type)) return NULL;
 
   sendHTTPHeader(mime_type /* FLAG_HTTP_TYPE_HTML */, 0, 0);
+  header_sent = 1;
   return PyString_FromString("");
 }
 
@@ -61,9 +63,13 @@ static PyObject* python_printHTMLHeader(PyObject *self,
   if(!PyArg_ParseTuple(args, "sii", &title,
 		       &sectionTitle, &refresh)) return NULL;
 
-
   if(sectionTitle == 0) flags |= BITFLAG_HTML_NO_HEADING;
   if(refresh == 0)      flags |= BITFLAG_HTML_NO_REFRESH;
+
+  if(!header_sent) {
+    sendHTTPHeader(1 /* FLAG_HTTP_TYPE_HTML */, 0, 0);
+    header_sent = 1;
+  }
 
   printHTMLheader(title, NULL, flags);
   return PyString_FromString("");
@@ -172,6 +178,24 @@ static PyObject* python_getDBPath(PyObject *self, PyObject *args) {
 
 static PyObject* python_getSpoolPath(PyObject *self, PyObject *args) {
   return PyString_FromString(myGlobals.spoolPath);
+}
+
+/* **************************************** */
+
+static PyObject* python_ntopVersion(PyObject *self, PyObject *args) {
+  return PyString_FromString(version);
+}
+
+static PyObject* python_ntopOs(PyObject *self, PyObject *args) {
+  return PyString_FromString(osName);
+}
+
+static PyObject* python_ntopUptime(PyObject *self, PyObject *args) {
+  char formatBuf[256];
+
+  formatSeconds((unsigned long)(time(NULL)-myGlobals.initialSniffTime),
+		formatBuf, sizeof(formatBuf));
+  return PyString_FromString(formatBuf);
 }
 
 /* **************************************** */
@@ -952,6 +976,10 @@ static PyMethodDef ntop_methods[] = {
   { "getNextHost",     python_getNextHost,     METH_VARARGS, "" },
   { "findHostByNumIP", python_findHostByNumIP, METH_VARARGS, "" },
 
+  { "version", python_ntopVersion, METH_VARARGS, "" },
+  { "os", python_ntopOs, METH_VARARGS, "" },
+  { "uptime", python_ntopUptime, METH_VARARGS, "" },
+
   { "getPreference",      python_getPreference,      METH_VARARGS, "" },
   { "setPreference",      python_setPreference,      METH_VARARGS, "" },
 
@@ -1061,14 +1089,16 @@ void init_python(int argc, char *argv[]) {
   if(_argc == 0) {
     _argc = argc;
     _argv = argv;
+
+    if(!myGlobals.runningPref.debugMode) return;
   }
 
-  if(argv) Py_SetProgramName(argv[0]);
+  if(_argv) Py_SetProgramName(_argv[0]);
 
   /* Initialize the Python interpreter.  Required. */
   Py_Initialize();
 
-  if(argv) PySys_SetArgv(argc, argv);
+  if(_argv) PySys_SetArgv(_argc, _argv);
 
   /* Initialize thread support */
   PyEval_InitThreads();
@@ -1131,14 +1161,20 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
     return(1);
   }
 
+  if(!myGlobals.runningPref.debugMode)
+    init_python(0, NULL);
+
   /* ********************************* */
 
   /* traceEvent(CONST_TRACE_INFO, "[PYTHON] Executing %s", python_path); */
 
   if((fd = PyFile_FromString(python_path, "r")) != NULL) {
 #ifndef WIN32
-    int old_stdin = dup(STDIN_FILENO), old_stdout = dup(STDOUT_FILENO);
+    int old_stdin = 0, old_stdout = 0;
 #endif
+
+    header_sent = 0;
+
     /* TODO: remove this mutex */
     accessMutex(&python_mutex, "exec python interpreter");
 
@@ -1153,9 +1189,7 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 		    document_root, query_string);
     } else {
       /* HTTP POST */
-
 #ifdef WIN32
-
       if((idx = readHTTPpostData(postLen, query_string, sizeof(query_string)-1)) >= 0) {
 	/* Emulate a POST with a GET on Windows */
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
@@ -1179,35 +1213,44 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
     /* sys.stdin <=> myGlobals.newSock */
 
 #ifndef WIN32
-    /* Forget file redirection on Windows without forking a process
+    if(myGlobals.runningPref.debugMode) {
+      old_stdin = dup(STDIN_FILENO), old_stdout = dup(STDOUT_FILENO);
 
-       http://tangentsoft.net/wskfaq/articles/bsd-compatibility.html
-       http://stackoverflow.com/questions/7664/windows-c-how-can-i-redirect-stderr-for-calls-to-fprintf
-    */
-    if(dup2(myGlobals.newSock, STDOUT_FILENO) == -1)
-      traceEvent(CONST_TRACE_WARNING, "Failed to redirect stdout");
-
-    if(dup2(myGlobals.newSock, STDIN_FILENO) == -1)
-      traceEvent(CONST_TRACE_WARNING, "Failed to redirect stdin");
+      /* Forget file redirection on Windows without forking a process.
+	 
+	 http://tangentsoft.net/wskfaq/articles/bsd-compatibility.html
+	 http://stackoverflow.com/questions/7664/windows-c-how-can-i-redirect-stderr-for-calls-to-fprintf
+      */
+      if(dup2(myGlobals.newSock, STDOUT_FILENO) == -1)
+	traceEvent(CONST_TRACE_WARNING, "Failed to redirect stdout");
+      
+      if(dup2(myGlobals.newSock, STDIN_FILENO) == -1)
+	traceEvent(CONST_TRACE_WARNING, "Failed to redirect stdin");
+    }
 #endif
-
 
     /* Run the actual program */
     PyRun_SimpleFile(PyFile_AsFile(fd), python_path);
 
 #ifndef WIN32
-    if(dup2(old_stdin, STDOUT_FILENO) == -1)
-      traceEvent(CONST_TRACE_WARNING, "Failed to restore stdout");
-
-    if(dup2(old_stdout, STDIN_FILENO) == -1)
-      traceEvent(CONST_TRACE_WARNING, "Failed to restore stdout");
+    if(myGlobals.runningPref.debugMode) {
+      if(dup2(old_stdin, STDOUT_FILENO) == -1)
+	traceEvent(CONST_TRACE_WARNING, "Failed to restore stdout");
+      
+      if(dup2(old_stdout, STDIN_FILENO) == -1)
+	traceEvent(CONST_TRACE_WARNING, "Failed to restore stdout");
+    }
 #endif
 
     releaseMutex(&python_mutex);
   }
 
-  Py_DECREF(fd);
   free(document_root);
+
+  if(myGlobals.runningPref.debugMode) {
+    Py_DECREF(fd);
+  }
+
   return(1);
 }
 

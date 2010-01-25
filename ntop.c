@@ -1124,7 +1124,8 @@ RETSIGTYPE cleanup(int signo) {
   deleteMutex(&myGlobals.purgeMutex);
 
 #ifdef HAVE_PYTHON
-  term_python();
+  if(myGlobals.runningPref.debugMode)
+    term_python();
 #endif
 
   for(i=0; i<myGlobals.numDevices; i++) {

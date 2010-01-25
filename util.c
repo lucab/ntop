@@ -2847,16 +2847,21 @@ void traceEvent(int eventTraceLevel, char* file,
     } else {
       /* Skip over time - syslog() adds it automatically) */
       char *bufLog = &buf[strlen(bufTime)];
+      static u_int8_t already_open = 0;
 
 #ifdef FORPRENPTL
       accessMutex(&myGlobals.preNPTLlogMutex, "message");
 #endif
 
-      /* SYSLOG and set */
-      if(myGlobals.runningPref.instance != NULL)
-        openlog(myGlobals.runningPref.instance, LOG_PID, myGlobals.runningPref.useSyslog);
-      else
-        openlog(CONST_DAEMONNAME, LOG_PID, myGlobals.runningPref.useSyslog);
+      if(!already_open) {
+	/* SYSLOG and set */
+	if(myGlobals.runningPref.instance != NULL)
+	  openlog(myGlobals.runningPref.instance, LOG_PID, myGlobals.runningPref.useSyslog);
+	else
+	  openlog(CONST_DAEMONNAME, LOG_PID, myGlobals.runningPref.useSyslog);
+
+	already_open = 1;
+      }
 
       /* syslog(..) call fix courtesy of Peter Suschlik <peter@zilium.de> */
 #ifdef MAKE_WITH_LOG_XXXXXX
@@ -2878,7 +2883,8 @@ void traceEvent(int eventTraceLevel, char* file,
 #else
       syslog(LOG_ERR, "%s", bufLog);
 #endif
-      closelog();
+
+      // closelog();
 
 #ifdef FORPRENPTL
       releaseMutex(&myGlobals.preNPTLlogMutex);
