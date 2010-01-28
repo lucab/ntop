@@ -938,7 +938,8 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     numRuns++;
   } /* while */
 
-  if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+  if(locked_mutex) 
+    unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
 
   if((hostFound == 1) && (vlanId != NO_VLAN) && (el->vlanId != NO_VLAN)
      && (vlanId != el->vlanId) && (!isMultivlaned(el))) {
@@ -995,12 +996,12 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 		   myGlobals.runningPref.maxNumHashEntries);
       }
 
-      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }
         
     if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) {
-      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }
      
@@ -1018,7 +1019,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 
     len = (size_t)myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo**);
     if((el->ipProtosList = (ShortProtoTrafficInfo**)malloc(len)) == NULL) {
-      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }
     memset(el->ipProtosList, 0, len);
@@ -1026,7 +1027,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     /*
     len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**);
     if((el->protoIPTrafficInfos = (ProtoTrafficInfo**)malloc(len)) == NULL) {
-      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }
     memset(el->protoIPTrafficInfos, 0, len);   
@@ -1234,7 +1235,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   hashSanityCheck();
 #endif
 
-  if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+  if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
   
   return(el);
 }
@@ -1315,12 +1316,12 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 		   myGlobals.runningPref.maxNumHashEntries);
       }
 
-      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }
 
     if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) {
-      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }
 
@@ -1330,7 +1331,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     resetHostsVariables(el);
 
     if(allocFcScsiCounters(el) == NULL) {
-      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }
     el->l2Family = FLAG_HOST_TRAFFIC_AF_FC;
@@ -1387,7 +1388,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
   hashSanityCheck();
 #endif
 
-  if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
+  if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
   return(el);
 }
 #endif

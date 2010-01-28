@@ -2327,7 +2327,10 @@ int _unlockHostsHashMutex(HostTraffic *host, char *file, int line) {
     releaseMutex(&myGlobals.hostsHashLockMutex);
 #else
     _accessMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], "_unlockHostsHashMutex", file, line);
-    myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]--;
+    if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] > 0)
+      myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]--;
+    else
+      traceEvent(CONST_TRACE_WARNING, "NEgative decrement!");
     _releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], file, line);
 #endif
   } else {
