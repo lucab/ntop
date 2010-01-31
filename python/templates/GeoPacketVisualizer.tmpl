@@ -266,7 +266,7 @@ function drawVisualization() {
 	viewTable.setColumns([2,1,0]);
 	table.draw(viewTable, { sortColumn: 1, sortAscending: false} );
 	
-	geomap.draw(emptyTable, options);
+	geomap.draw(data, options);
 	window.setTimeout(sendData, refreshTime);
 }
 
