@@ -1,9 +1,23 @@
+<script type="text/javascript" src="/json2.js"></script>
 <script type="text/javascript" src="http://www.google.com/jsapi"></script>
 <script type="text/javascript">
 	google.load('visualization', '1', {packages: ['geomap', 'table']});
-
+	
+	/*var wait=function(millisec){
+		var date=new Date();
+		var curDate= null;
+		do{
+			curDate= new Date();
+			
+		}while(curDate-date < millisec);
+	
+	};*/
+	var refreshTime=180000;			//millisec time of the refresh here is set 3 minutes
+	
 function drawVisualization() {
-	var firstRun=true;
+	var updated=false;
+	var currentSelected=null;
+	
 	function createCountryTable(){
 		var countryT = new google.visualization.DataTable();
 		
@@ -14,17 +28,18 @@ function drawVisualization() {
 		return countryT;
 	}
 	
+		
 	var data = new google.visualization.DataTable();	/*main table that retain information on each */
-	var array= [];						/*associative array for countrycode->ObjTableCityForCountry */
+	var array= {};						/*associative array for countrycode->ObjTableCityForCountry */
 
 	var emptyTable = createCountryTable();			/*empty table used for enabling the selection
 						 		*(and the zooming) of countries with no traffic recorded 
 						 		*/
 	emptyTable.addRow( [0.000000, 0.000000, 0, 'None'] );
 	
-	data.addColumn('string', 'Code');
-	data.addColumn('number', 'Num Hosts');
-	data.addColumn('string', 'Country');
+	data.addColumn('string', 'Code', 'Code');
+	data.addColumn('number', 'Num Hosts', 'Num Hosts');
+	data.addColumn('string', 'Country', 'Country');
 	
 % for key in countries:
 <%
@@ -86,13 +101,123 @@ function drawVisualization() {
 	
 	var table2 = new google.visualization.Table(document.getElementById('table2'));
 	
+	// draw all the objects of the page with the new data
+	function paint(totalHosts, unkCountries, unkCities){
+		if(updated){
+			getElement('totalHosts').innerHTML=totalHosts;
+			getElement('unknownCountries').innerHTML=unkCountries;
+			getElement('unknownCities').innerHTML=unkCities;
+			//alert("PAINT "+data.toJSON());
+			var prop= table.getSortInfo();
+			var numColSort=prop.column;
+			var direction=prop.ascending;
+			var tmpViewTable= new google.visualization.DataView(data);
+			tmpViewTable.setColumns([2,1,0]);
+			
+			table.draw(tmpViewTable, { sortColumn: prop.column, sortAscending: prop.ascending} );			
+			
+			if(currentSelected){
+				if(!array[currentSelected]){ 
+				//there is no city table of the current selected region
+				//remove the table if there is one and draw the map empty
+					var temp=getElement('table2');
+					temp.removeChild(temp.firstChild);
+					
+					geomap.draw(new google.visualization.DataView(emptyTable), options);
+				}
+				else{
+					var tmpView= new google.visualization.DataView(array[currentSelected]);
+					
+					var toHide=(array[currentSelected]).getTableProperty('unk');
+					
+					if(toHide!==null){
+						if(tmpView.getNumberOfRows()===1){
+							tmpView=emptyTable;			//FIX if just one row and unknown
+						}else{
+							tmpView.hideRows([toHide]);
+						}
+					}
+					tmpView.setColumns([3, 2]);
+					prop=table2.getSortInfo();
+					
+					table2.draw(tmpView, { sortColumn: prop.column, sortAscending: prop.ascending});
+				
+					geomap.draw(new google.visualization.DataView(array[currentSelected]), options);
+				}
+				
+			}else{
+				geomap.draw(data, options);
+				}
+			updated=false;
+		}	
+	}
+	
+	/*update the objects data, array with the new jsonObj data received from ajax response */
+	var updateData=function(jsonObj){
+		if(jsonObj){
+			data=new google.visualization.DataTable({ cols:[ {id: 'Code', label: 'Code', type:'string'},
+			  												 {id: 'Num Hosts', label: 'Num Hosts', type:'number'},
+			  												 {id: 'Country', label: 'Country', type:'string'} ], 
+			  										  rows:jsonObj.rowsTCountries});
+			array= {};
+			listTCities=jsonObj.tablesCities;
+			var actual=null;
+			for(var i=0; i< listTCities.length; i++){
+				actual=listTCities[i];
+				array[actual.code]= new google.visualization.DataTable(	{cols: [	{id: 'Latitude', label: 'LATITUDE', type:'number'},
+																					{id: 'Longitude', label: 'LONGITUDE', type:'number'},
+																					{id: 'Value', label: 'Num Hosts', type:'number'},
+																					{id: 'Hover', label: 'City', type:'string'}	],
+																		 rows: actual.citiesRows.lista} );
+				if(actual.citiesRows.unknown != -1){
+					array[actual.code].setTableProperty('unk', actual.citiesRows.unknown);
+				}
+			}
+			updated=true;
+			paint(jsonObj['totalHosts'],jsonObj['unknownCountries'],jsonObj['unknownCities']);
+			
+		}
+		
+	};
+	
+	/*send a ajax post request with the json values of the table data in the page*/
+	var sendData=function (){	
+	    var request=getXMLHttpRequest();
+		var url=window.location.href;
+		
+		url=url+'?update=true';  //for now there is no need
+		
+		request.open("POST", url, true);
+		request.onreadystatechange= function (){
+		if(request.readyState === 4 && request.status=== 200){
+			var upData=null;
+			try{
+				//alert(request.responseText);
+				if(request.responseText==='false'){
+					throw "Updating problems on the serverside";
+					return;
+				}
+				upData=JSON.parse(request.responseText);
+				
+			}catch(e){
+				throw "Error parsing JSON update data! "+e;
+			}
+			updateData(upData);
+		}
+		}
+		request.setRequestHeader("Content-Type","application/jsonrequest");
+		request.send('requestUPDATE');
+		window.setTimeout(sendData, refreshTime);
+	};
+	
+	
 	/*Called when clicking on the world map. Switch to the region and show table cities */
 	function clickHandler(msg) {
 		options.region = msg.region;
 		options.showZoomOut=true;
 		options.colors = [0x9999FF, 0x0000FF, 0x000066];
 		options.dataMode = 'markers';
-		
+		currentSelected=msg.region;
 		if(array[msg.region]){
 			var view= new google.visualization.DataView(array[msg.region]);
 			view.setColumns([3, 2]);
@@ -116,13 +241,14 @@ function drawVisualization() {
 	/*Called when clicking on a table. recover the data from the row and call clickhandler*/
 	function tableClick() {
 		var temp=table.getSelection();
-		var arrayAss=[];
+		var arrayAss={};
 		arrayAss.region=data.getFormattedValue(temp[0].row, 0);
 		clickHandler(arrayAss);
 	}
 	
 	/*puts back all the options for visualizing the world map again*/
 	function zoomOut(){
+		currentSelected=null;
 		options.region= 'world';
 		options.showZoomOut=false;
 		options.colors = [0xE0FFD4, 0xA5EF63, 0x50AA00, 0x267114];
@@ -130,7 +256,7 @@ function drawVisualization() {
 		table.setSelection();
 		geomap.setSelection();
 		geomap.draw(data,options);
-		var temp=document.getElementById('table2');
+		var temp=getElement('table2');
 		temp.removeChild(temp.firstChild);
 	}
 	google.visualization.events.addListener(geomap, 'regionClick', clickHandler);
@@ -139,8 +265,9 @@ function drawVisualization() {
 	
 	viewTable.setColumns([2,1,0]);
 	table.draw(viewTable, { sortColumn: 1, sortAscending: false} );
-
-	geomap.draw(data, options);
+	
+	geomap.draw(emptyTable, options);
+	window.setTimeout(sendData, refreshTime);
 }
 
 	google.setOnLoadCallback(drawVisualization);
@@ -179,21 +306,19 @@ function drawVisualization() {
 </tr>
 <tr onMouseOver="this.bgColor = '#EDF3FE'" onMouseOut ="this.bgColor = '#FFFFFF'">
 	<th width="80%" scope="row" bgcolor="#FFFFFF" align="left">Hosts considered for analysis</td>
-	<td width="20%" align="right" scope="row">${totalHosts}</td>
+	<td width="20%" align="right" scope="row" id="totalHosts" >${totalHosts}</td>
 </tr>
-% if unknownCountries > 0:
+
 <tr onMouseOver="this.bgColor = '#EDF3FE'" onMouseOut ="this.bgColor = '#FFFFFF'">
 	<th width="80%" scope="row" bgcolor="#FFFFFF" align="left">Hosts located in unknown countries</td>
-	<td width="20%" align="right" scope="row">${unknownCountries}</td>
+	<td width="20%" align="right" scope="row" id="unknownCountries" >${unknownCountries}</td>
 </tr>
-%endif
 
-% if unknownCities > 0:
 <tr onMouseOver="this.bgColor = '#EDF3FE'" onMouseOut ="this.bgColor = '#FFFFFF'">
 	<th width="80%" scope="row" bgcolor="#FFFFFF" align="left">Hosts located in unknown cities</td>
-	<td width="20%" align="right" scope="row">${unknownCities}</td>
+	<td width="20%" align="right" scope="row" id="unknownCities" >${unknownCities}</td>
 </tr>
-%endif
+
 
 </table>
 	<p>&nbsp;</p>

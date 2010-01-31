@@ -15,7 +15,7 @@ import host
 import os.path
 import sys
 import pprint
-
+import json
 # Import modules for CGI handling
 import cgi, cgitb
 
@@ -50,7 +50,7 @@ class Town(object):
         '''
         Constructor
         '''
-        self.__name=name
+        self.__name=name.encode('utf-8')
         self.__latitudine=latitudine
         self.__longitudine=longitudine
         self.__totalHosts=numHosts
@@ -70,6 +70,9 @@ class Town(object):
     def addTotal(self, numHosts):
         self.__totalHosts+=numHosts
 
+    def getRow(self):
+        return {'c':[{'v':float(self.__latitudine)}, {'v':float(self.__longitudine)} , {'v':self.__totalHosts} , {'v':self.__name}]}
+
 class Country(object):
     '''
     classdocs
@@ -84,7 +87,8 @@ class Country(object):
         Constructor
         '''
         self.__code = code
-        self.__name = name
+        
+        self.__name = name.encode('utf-8')
         self.__total = numHosts
         self.__dictionaryTown = {}
 
@@ -109,6 +113,41 @@ class Country(object):
     def getDictionaryCities(self):
         return self.__dictionaryTown
 
+    def getRow(self):
+        
+        return {'c':[{'v':self.__code}, {'v':self.__total} , {'v':self.__name} ]}
+
+    def dictToList(self):
+        rows=[]
+        unk=-1
+        i=0
+        for x in self.__dictionaryTown :
+            if self.__dictionaryTown[x].getName() == 'Unknown' and unk == -1:
+                unk=i
+            rows.append(self.__dictionaryTown[x].getRow());
+            i=i+1
+        return {'lista':rows, 'unknown':unk}
+    
+'''
+Return a string of formatted json data for building the countries table and the cities table
+'''
+def getJsonData(dictionaryCountries, totalHosts,unknownCountries, unknownCities):
+    dataJ={'rowsTCountries': None, 'tablesCities': []}
+    mainRows=[]
+    for x in dictionaryCountries:
+        mainRows.append(dictionaryCountries[x].getRow())
+        dataJ['tablesCities'].append({'code':dictionaryCountries[x].getCode(), 'citiesRows': dictionaryCountries[x].dictToList()})
+    
+    dataJ['rowsTCountries']= mainRows
+    dataJ['totalHosts']= totalHosts
+    dataJ['unknownCountries']= unknownCountries
+    dataJ['unknownCities']= unknownCities
+    pprint.pprint(dataJ, sys.stderr)
+    try:
+        return json.dumps(dataJ, True)
+    except:
+        return 'false'
+    
 dictionaryCountries = {}
 
 totalHosts = 0
@@ -121,8 +160,10 @@ SIXDECIMAL = decimal.Decimal(10) ** -6      # decimals are all fixed to 6 es. 0.
 cgitb.enable();
 
 form = cgi.FieldStorage();
+
 if form.getvalue('OP') == 'Change':
     flag = form.getvalue('countHosts', 's')
+
 
 while ntop.getNextHost(0):
     totalHosts += 1
@@ -159,22 +200,30 @@ while ntop.getNextHost(0):
     if city: 
         country.addCity(city, latitude, longitude, 1)          # insert the city found in the citiesDictionary of this nation object
 
-ntop.sendHTTPHeader(1) # 1 = HTML
-ntop.printHTMLHeader('Host Map: Region View', 1, 0)
 
-if totalHosts == 0:
-    ntop.printFlagedWarning('No hosts have been detected by ntop yet')
+if os.getenv('REQUEST_METHOD', 'GET') == 'POST':
+    print>>sys.stderr, "POST"
+    ntop.sendHTTPHeader(12)
+    ntop.sendString(getJsonData(dictionaryCountries, totalHosts, unknownCountries, unknownCities))
 else:
-    try:
-        basedir =  os.getenv('DOCUMENT_ROOT', '.')+'/python/templates'
-        mylookup = TemplateLookup(directories=[basedir])
-        myTemplate = mylookup.get_template('GeoPacketVisualizer.tmpl')
-        buf = StringIO()
-        ctx = Context(buf, countries = dictionaryCountries, totalHosts = totalHosts, unknownCountries = unknownCountries, 
-                      unknownCities = unknownCities, filename = os.path.basename(__file__))
-        myTemplate.render_context(ctx)
-        ntop.sendString(buf.getvalue())
-    except:
-        ntop.sendString(exceptions.html_error_template().render())
-
-ntop.printHTMLFooter()
+    print>>sys.stderr, "GET"
+    ntop.printHTMLHeader('Host Map: Region View', 1, 0)
+    
+    if totalHosts == 0:
+        ntop.printFlagedWarning('No hosts have been detected by ntop yet')
+    elif len(dictionaryCountries) == 0:
+        ntop.printFlagedWarning('No hosts have been successfully geo-located by ntop yet')
+    else:
+        try:
+            basedir =  os.getenv('DOCUMENT_ROOT', '.')+'/python/templates'
+            mylookup = TemplateLookup(directories=[basedir])
+            myTemplate = mylookup.get_template('GeoPacketVisualizer.tmpl')
+            buf = StringIO()
+            ctx = Context(buf, countries = dictionaryCountries, totalHosts = totalHosts, unknownCountries = unknownCountries, 
+                          unknownCities = unknownCities, filename = os.path.basename(__file__))
+            myTemplate.render_context(ctx)
+            ntop.sendString(buf.getvalue())
+        except:
+            ntop.sendString(exceptions.html_error_template().render())
+    
+    ntop.printHTMLFooter()
