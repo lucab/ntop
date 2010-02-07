@@ -1,0 +1,154 @@
+<input type="hidden" id="refreshed" value="no">
+<script type="text/javascript" src="/json2.js"></script>
+
+<script type="text/javascript" src="/rrdAlarmConfig.js">
+</script>
+<script type="text/javascript">
+  var rows=[];	
+% for row in configRows:
+	rows.push([${row[0]}, '${row[1]}', '${row[2]}', '${row[3]}', '${row[4]}', '${row[5]}', '${row[6]}', '${row[7]}', '${row[8]}' ]);
+% endfor	
+
+	
+   	rrdAlarmConfig.setIdTBody('body');//where the rows will be appended
+   
+	rrdAlarmConfig.setRows(rows);
+	
+	var checkBack=function(){
+		//workaroud for the problem of the back browser and ajax
+		//on coming back reload the page
+			var e=getElement('refreshed');
+			if (e.value==='no'){
+				e.value='yes';
+			}else{
+				e.value='no';
+				location.reload();
+			}
+	}
+	addLoadEvent(checkBack);
+   	addLoadEvent(rrdAlarmConfig.initpage);
+    
+</script>
+<form action="">
+<table border="0" cellpadding="0" cellspacing="0">
+	<tr>
+		<td>
+<table border="1" cellpadding="5" cellspacing="0" >
+
+<tr onMouseOver="this.bgColor = '#EDF3FE'" onMouseOut ="this.bgColor = '#FFFFFF'" id="trToChange" title="The current rrdAlarmConfigurator File. Click to Edit!">
+	<th bgcolor="#f3f3f3" align="left">Configuration File</th>
+	<td  id="nameFile" style="padding:0;padding-left:5px;">${tempFilePath}<input type="text" name="configFile" id="configFile" size="20" style="text-indent:-1px;border-collapse:collapse;border-style:none;border-color:transparent;" value="${nameFileConfig}" />
+	</td>
+</tr>
+<tr onMouseOver="this.bgColor = '#EDF3FE'" onMouseOut ="this.bgColor = '#FFFFFF'" title="The path where the RRD files will be searched">
+	<th bgcolor="#f3f3f3" align="left">RRD files path</th>
+	<td >${pathRRDFiles}</td>
+	</tr>
+</table>
+</td>
+<td>
+	<table border="0" cellpadding="5" cellspacing="0">
+	<tr>
+	<td>
+	<input title="Load the current Configuration File" type="submit" id="submit" value="Load" onmouseup="rrdAlarmConfig.restoreText" style="visibility: hidden;" >
+	</td>
+	</tr>
+	<tr>
+	<td>&nbsp;</td>
+	</tr>
+	</table>
+</td>
+</tr>
+</table>
+</form>
+	<p>&nbsp;</p>
+	<p>Each row of the table represent a threshold periodically checked by the rrdAlarm script
+	</p>
+	<p>The changes made to the table have to be saved in order to be persistant!</p>
+    	<form id="formConfigurator" name="formConfigurator" action="">
+         <table cellspacing="0" cellpadding="5" border="1" id="configuration">
+            <thead>
+                <tr>
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center" title="Click to reIndex all the column">
+                        <a href="javascript:rrdAlarmConfig.normalizeTable();">ID</a>
+                    </th>
+					<th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+                        RRD File
+                    </th>
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+                        Type Threshold
+                    </th>
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+                        Value
+                    </th>
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+                        Num. Repetition
+                    </th>
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+                        Start Time
+                    </th>
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+                        End Time
+                    </th>
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+                        Action To Perform
+                    </th>
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+                        Time Before Next
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="body">
+                
+            </tbody>
+			
+			<tfoot id="foot" bgcolor="#f3f3f3">
+                    <tr>
+                        <td align="right" >
+                            <input name="uniqueId" type="text" id="uniqueId" size=1 readonly="true" style="text-align:right;" />
+                        </td>
+						<td align="left">
+                            <input type="text" name="rrdFile" id="rrdFile" size=24 />
+                        </td>
+                        <td align="left">
+                            <select name="typeThreshold" id="typeThreshold" style="display:table-cell;width:100%;">
+                                <option value="above">above</option>
+                                <option value="below">below</option>
+                            </select>
+                        </td>
+                        <td align="right">
+                            <input type="text" name="valueThreshold" id="valueThreshold" size=8 style="text-align:right;"/>
+                        </td>
+                        <td align="right">
+                            <input type="text" name="numberRepetition" id="numberRepetition" style="display:table-cell;width:100%;text-align:right;" value="0" />
+                        </td>
+                        <td align="right">
+                            <input type="text" name="startTime" id="startTime" size=6 style="text-align:right;"/>
+                        </td>
+                        <td align="right">
+                            <input type="text" name="endTime" id="endTime" size=6 style="text-align:right;"/>
+                        </td>
+                        <td align="left">
+                            <input type="text" name="actionToPerform" id="actionToPerform" style="display:table-cell;width:100%;" />
+                        </td>
+                        <td align="right">
+                            <input type="text" name="timeBeforeNext" id="timeBeforeNext" style="display:table-cell;width:100%;text-align:right;" value="0" />
+                        </td>
+                    </tr>
+        	<tr><td colspan=9 align="center">
+        		<table border="0" cellspacing="0" cellpadding="2">
+	  <tr>
+        <td><input type="button" id="update" value="Update" ></td>
+        <td><input type="button" id="clear" value="Reset"></td>
+        <td><input type="button" id="addRow" value="Add Row"></td>
+		<td><input type="button" id="removeRow" value="Remove Row"></td>
+      </tr>
+    </table>
+	    </td>
+	</tr>
+	</tfoot>
+        </table>
+		</form>
+		
+		<p><input title="Save the current configuration on disk" type="button" id="save" value="Save Config" onmouseup="rrdAlarmConfig.sendData();"></p>
+		<p><div id="result">&nbsp;</div></p>

@@ -1,6 +1,6 @@
 /***
 
-MochiKit.MochiKit 1.3.1
+MochiKit.MochiKit 1.4.2
 
 See <http://mochikit.com/> for documentation, downloads, license, etc.
 
@@ -13,19 +13,22 @@ if (typeof(MochiKit) == 'undefined') {
 }
 
 if (typeof(MochiKit.MochiKit) == 'undefined') {
+    /** @id MochiKit.MochiKit */
     MochiKit.MochiKit = {};
 }
 
 MochiKit.MochiKit.NAME = "MochiKit.MochiKit";
-MochiKit.MochiKit.VERSION = "1.3.1";
+MochiKit.MochiKit.VERSION = "1.4.2";
 MochiKit.MochiKit.__repr__ = function () {
     return "[" + this.NAME + " " + this.VERSION + "]";
 };
 
+/** @id MochiKit.MochiKit.toString */
 MochiKit.MochiKit.toString = function () {
     return this.__repr__();
 };
 
+/** @id MochiKit.MochiKit.SUBMODULES */
 MochiKit.MochiKit.SUBMODULES = [
     "Base",
     "Iter",
@@ -34,30 +37,32 @@ MochiKit.MochiKit.SUBMODULES = [
     "Format",
     "Async",
     "DOM",
+    "Selector",
+    "Style",
     "LoggingPane",
     "Color",
     "Signal",
-    "Visual"
+    "Position",
+    "Visual",
+    "DragAndDrop",
+    "Sortable"
 ];
 
 if (typeof(JSAN) != 'undefined' || typeof(dojo) != 'undefined') {
     if (typeof(dojo) != 'undefined') {
         dojo.provide('MochiKit.MochiKit');
-        dojo.require("MochiKit.*");
+        (function (lst) {
+            for (var i = 0; i < lst.length; i++) {
+                dojo.require("MochiKit." + lst[i]);
+            }
+        })(MochiKit.MochiKit.SUBMODULES);
     }
     if (typeof(JSAN) != 'undefined') {
-        // hopefully this makes it easier for static analysis?
-        JSAN.use("MochiKit.Base", []);
-        JSAN.use("MochiKit.Iter", []);
-        JSAN.use("MochiKit.Logging", []);
-        JSAN.use("MochiKit.DateTime", []);
-        JSAN.use("MochiKit.Format", []);
-        JSAN.use("MochiKit.Async", []);
-        JSAN.use("MochiKit.DOM", []);
-        JSAN.use("MochiKit.LoggingPane", []);
-        JSAN.use("MochiKit.Color", []);
-        JSAN.use("MochiKit.Signal", []);
-        JSAN.use("MochiKit.Visual", []);
+        (function (lst) {
+            for (var i = 0; i < lst.length; i++) {
+                JSAN.use("MochiKit." + lst[i], []);
+            }
+        })(MochiKit.MochiKit.SUBMODULES);
     }
     (function () {
         var extend = MochiKit.Base.extend;
@@ -88,25 +93,46 @@ if (typeof(JSAN) != 'undefined' || typeof(dojo) != 'undefined') {
         self.EXPORT_OK = EXPORT_OK;
         self.EXPORT_TAGS = EXPORT_TAGS;
     }());
-    
+
 } else {
     if (typeof(MochiKit.__compat__) == 'undefined') {
         MochiKit.__compat__ = true;
     }
     (function () {
+        if (typeof(document) == "undefined") {
+            return;
+        }
         var scripts = document.getElementsByTagName("script");
+        var kXHTMLNSURI = "http://www.w3.org/1999/xhtml";
+        var kSVGNSURI = "http://www.w3.org/2000/svg";
+        var kXLINKNSURI = "http://www.w3.org/1999/xlink";
         var kXULNSURI = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
         var base = null;
         var baseElem = null;
         var allScripts = {};
         var i;
+        var src;
         for (i = 0; i < scripts.length; i++) {
-            var src = scripts[i].getAttribute("src");
+            src = null;
+            switch (scripts[i].namespaceURI) {
+                case kSVGNSURI:
+                    src = scripts[i].getAttributeNS(kXLINKNSURI, "href");
+                    break;
+                /*
+                case null: // HTML
+                case '': // HTML
+                case kXHTMLNSURI:
+                case kXULNSURI:
+                */
+                default:
+                    src = scripts[i].getAttribute("src");
+                    break;
+            }
             if (!src) {
                 continue;
             }
             allScripts[src] = true;
-            if (src.match(/MochiKit.js$/)) {
+            if (src.match(/MochiKit.js(\?.*)?$/)) {
                 base = src.substring(0, src.lastIndexOf('MochiKit.js'));
                 baseElem = scripts[i];
             }
@@ -123,16 +149,26 @@ if (typeof(JSAN) != 'undefined' || typeof(dojo) != 'undefined') {
             if (uri in allScripts) {
                 continue;
             }
-            if (document.documentElement &&
-                document.documentElement.namespaceURI == kXULNSURI) {
-                // XUL
-                var s = document.createElementNS(kXULNSURI, 'script');
+            if (baseElem.namespaceURI == kSVGNSURI ||
+                baseElem.namespaceURI == kXULNSURI) {
+                // SVG, XUL
+                /*
+                    SVG does not support document.write, so if Safari wants to
+                    support SVG tests it should fix its deferred loading bug
+                    (see following below).
+
+                */
+                var s = document.createElementNS(baseElem.namespaceURI, 'script');
                 s.setAttribute("id", "MochiKit_" + base + modules[i]);
-                s.setAttribute("src", uri);
+                if (baseElem.namespaceURI == kSVGNSURI) {
+                    s.setAttributeNS(kXLINKNSURI, 'href', uri);
+                } else {
+                    s.setAttribute('src', uri);
+                }
                 s.setAttribute("type", "application/x-javascript");
                 baseElem.parentNode.appendChild(s);
             } else {
-                // HTML
+                // HTML, XHTML
                 /*
                     DOM can not be used here because Safari does
                     deferred loading of scripts unless they are
@@ -144,7 +180,7 @@ if (typeof(JSAN) != 'undefined' || typeof(dojo) != 'undefined') {
                     these document.write calls into your XHTML source)
 
                 */
-                document.write('<script src="' + uri +
+                document.write('<' + baseElem.nodeName + ' src="' + uri + 
                     '" type="text/javascript"></script>');
             }
         };

@@ -1,0 +1,129 @@
+
+<table border="1" align="center" cellpadding="5" cellspacing="0" >
+
+
+
+<tr onMouseOver="this.bgColor = '#EDF3FE'" onMouseOut ="this.bgColor = '#FFFFFF'" >
+
+	<th bgcolor="#f3f3f3" align="left">Script duration</th>
+
+	<td >${duration}&nbsp;sec.</td>
+
+</tr>
+
+<tr onMouseOver="this.bgColor = '#EDF3FE'" onMouseOut ="this.bgColor = '#FFFFFF'" >
+
+	<th bgcolor="#f3f3f3" align="left">Number of files checked</th>
+
+	<td >${checkedFiles}</td>
+
+  </tr>
+
+  <tr onMouseOver="this.bgColor = '#EDF3FE'" onMouseOut ="this.bgColor = '#FFFFFF'" >
+
+	<th bgcolor="#f3f3f3" align="left">Number of alarms fired</th>
+
+	<td >${alarmsFired}</td>
+
+  </tr>
+
+</table>
+
+	<p>&nbsp;</p>
+
+	<center>
+<%
+	time=((alarmsFired+checkedFiles)*0.0005)+0.8
+%>\
+      <p><font face="Helvetica, Arial, Sans Serif"><a href="javascript:toggle('results', 'blind',{'duration': 0.8});">Details</a></font></p>
+
+	</center>
+% if checkedFiles > 0:
+<div id="results">
+         <table border="1" align="center" cellpadding="5" cellspacing="0" id="configuration" >
+
+            <thead>
+
+                <tr>
+
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center" >
+
+                       ID
+
+                    </th>
+
+					<th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+
+                        File
+
+                    </th>
+					<th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+                        Value
+					</th>
+
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+
+                        Type
+
+                    </th>
+
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+
+                        Threshold
+
+                    </th>
+					<th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+
+                        Time</th>
+
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+
+                        Action
+
+                    </th>
+					<th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+					&nbsp;
+                    </th>
+
+
+                </tr>
+
+            </thead>
+
+            <tbody id="body">
+% for row in listRows:
+				
+				<tr onMouseOver="this.bgColor = '#EDF3FE'" onMouseOut ="this.bgColor = '#FFFFFF'">
+				<td align="right">${row[0]}</td>
+				<td align="left">${row[1]}</td>
+				<td align="right">${row[2]}</td>
+				<td align="left" nowrap='nowrap'>${row[3]}
+				% if row[3]== 'above':
+					<img class=tooltip src="/arrow_up.png" border="0">
+				% else:
+					<img class=tooltip src="/arrow_down.png" border="0">
+				% endif
+				</td>
+				<td align="right">${row[4]}</td>
+				<td align="right" title="${row[6]}">${row[5]}</td>
+				<td align="right">${row[7]}</td>
+				% if row[8] == 'OK' :
+				<td bgcolor="#CCFFCC" align="center">${row[8]}</td>
+				% else:
+				<td bgcolor="#FFB9B9" align="center">${row[8]}</td>
+				% endif
+</tr>      
+% endfor
+            </tbody>
+
+</table>
+
+</div>
+<script type="text/javascript">
+	setStyle('results', {display: 'none'});
+
+	</script>
+% endif
+<p>The IDs not present in this table do not refer to a proper rrd filename.
+Check your RRDAlarm configuration!
+</p>

@@ -1,6 +1,6 @@
 /***
 
-MochiKit.Color 1.3.1
+MochiKit.Color 1.4.2
 
 See <http://mochikit.com/> for documentation, downloads, license, etc.
 
@@ -8,29 +8,10 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
 
 ***/
 
-if (typeof(dojo) != 'undefined') {
-    dojo.provide('MochiKit.Color');
-    dojo.require('MochiKit.Base');
-}
-
-if (typeof(JSAN) != 'undefined') {
-    JSAN.use("MochiKit.Base", []);
-}
-
-try {
-    if (typeof(MochiKit.Base) == 'undefined') {
-        throw "";
-    }
-} catch (e) {
-    throw "MochiKit.Color depends on MochiKit.Base";
-}
-
-if (typeof(MochiKit.Color) == "undefined") {
-    MochiKit.Color = {};
-}
+MochiKit.Base._deps('Color', ['Base', 'DOM', 'Style']);
 
 MochiKit.Color.NAME = "MochiKit.Color";
-MochiKit.Color.VERSION = "1.3.1";
+MochiKit.Color.VERSION = "1.4.2";
 
 MochiKit.Color.__repr__ = function () {
     return "[" + this.NAME + " " + this.VERSION + "]";
@@ -41,6 +22,7 @@ MochiKit.Color.toString = function () {
 };
 
 
+/** @id MochiKit.Color.Color */
 MochiKit.Color.Color = function (red, green, blue, alpha) {
     if (typeof(alpha) == 'undefined' || alpha === null) {
         alpha = 1.0;
@@ -55,16 +37,19 @@ MochiKit.Color.Color = function (red, green, blue, alpha) {
 
 
 // Prototype methods
+
 MochiKit.Color.Color.prototype = {
 
     __class__: MochiKit.Color.Color,
 
+    /** @id MochiKit.Color.Color.prototype.colorWithAlpha */
     colorWithAlpha: function (alpha) {
         var rgb = this.rgb;
         var m = MochiKit.Color;
         return m.Color.fromRGB(rgb.r, rgb.g, rgb.b, alpha);
     },
 
+    /** @id MochiKit.Color.Color.prototype.colorWithHue */
     colorWithHue: function (hue) {
         // get an HSL model, and set the new hue...
         var hsl = this.asHSL();
@@ -74,6 +59,7 @@ MochiKit.Color.Color.prototype = {
         return m.Color.fromHSL(hsl);
     },
 
+    /** @id MochiKit.Color.Color.prototype.colorWithSaturation */
     colorWithSaturation: function (saturation) {
         // get an HSL model, and set the new hue...
         var hsl = this.asHSL();
@@ -83,6 +69,7 @@ MochiKit.Color.Color.prototype = {
         return m.Color.fromHSL(hsl);
     },
 
+    /** @id MochiKit.Color.Color.prototype.colorWithLightness */
     colorWithLightness: function (lightness) {
         // get an HSL model, and set the new hue...
         var hsl = this.asHSL();
@@ -92,6 +79,7 @@ MochiKit.Color.Color.prototype = {
         return m.Color.fromHSL(hsl);
     },
 
+    /** @id MochiKit.Color.Color.prototype.darkerColorWithLevel */
     darkerColorWithLevel: function (level) {
         var hsl  = this.asHSL();
         hsl.l = Math.max(hsl.l - level, 0);
@@ -99,6 +87,7 @@ MochiKit.Color.Color.prototype = {
         return m.Color.fromHSL(hsl);
     },
 
+    /** @id MochiKit.Color.Color.prototype.lighterColorWithLevel */
     lighterColorWithLevel: function (level) {
         var hsl  = this.asHSL();
         hsl.l = Math.min(hsl.l + level, 1);
@@ -106,6 +95,7 @@ MochiKit.Color.Color.prototype = {
         return m.Color.fromHSL(hsl);
     },
 
+    /** @id MochiKit.Color.Color.prototype.blendedColor */
     blendedColor: function (other, /* optional */ fraction) {
         if (typeof(fraction) == 'undefined' || fraction === null) {
             fraction = 0.5;
@@ -122,6 +112,7 @@ MochiKit.Color.Color.prototype = {
         );
     },
 
+    /** @id MochiKit.Color.Color.prototype.compareRGB */
     compareRGB: function (other) {
         var a = this.asRGB();
         var b = other.asRGB();
@@ -130,15 +121,18 @@ MochiKit.Color.Color.prototype = {
             [b.r, b.g, b.b, b.a]
         );
     },
-        
+
+    /** @id MochiKit.Color.Color.prototype.isLight */
     isLight: function () {
         return this.asHSL().b > 0.5;
     },
 
+    /** @id MochiKit.Color.Color.prototype.isDark */
     isDark: function () {
         return (!this.isLight());
     },
 
+    /** @id MochiKit.Color.Color.prototype.toHSLString */
     toHSLString: function () {
         var c = this.asHSL();
         var ccc = MochiKit.Color.clampColorComponent;
@@ -146,7 +140,7 @@ MochiKit.Color.Color.prototype = {
         if (!rval) {
             var mid = (
                 ccc(c.h, 360).toFixed(0)
-                + "," + ccc(c.s, 100).toPrecision(4) + "%" 
+                + "," + ccc(c.s, 100).toPrecision(4) + "%"
                 + "," + ccc(c.l, 100).toPrecision(4) + "%"
             );
             var a = c.a;
@@ -164,6 +158,7 @@ MochiKit.Color.Color.prototype = {
         return rval;
     },
 
+    /** @id MochiKit.Color.Color.prototype.toRGBString */
     toRGBString: function () {
         var c = this.rgb;
         var ccc = MochiKit.Color.clampColorComponent;
@@ -184,17 +179,19 @@ MochiKit.Color.Color.prototype = {
         return rval;
     },
 
+    /** @id MochiKit.Color.Color.prototype.asRGB */
     asRGB: function () {
         return MochiKit.Base.clone(this.rgb);
     },
 
+    /** @id MochiKit.Color.Color.prototype.toHexString */
     toHexString: function () {
         var m = MochiKit.Color;
         var c = this.rgb;
         var ccc = MochiKit.Color.clampColorComponent;
         var rval = this._hexString;
         if (!rval) {
-            rval = ("#" + 
+            rval = ("#" +
                 m.toColorPart(ccc(c.r, 255)) +
                 m.toColorPart(ccc(c.g, 255)) +
                 m.toColorPart(ccc(c.b, 255))
@@ -204,6 +201,7 @@ MochiKit.Color.Color.prototype = {
         return rval;
     },
 
+    /** @id MochiKit.Color.Color.prototype.asHSV */
     asHSV: function () {
         var hsv = this.hsv;
         var c = this.rgb;
@@ -214,6 +212,7 @@ MochiKit.Color.Color.prototype = {
         return MochiKit.Base.clone(hsv);
     },
 
+    /** @id MochiKit.Color.Color.prototype.asHSL */
     asHSL: function () {
         var hsl = this.hsl;
         var c = this.rgb;
@@ -224,10 +223,12 @@ MochiKit.Color.Color.prototype = {
         return MochiKit.Base.clone(hsl);
     },
 
+    /** @id MochiKit.Color.Color.prototype.toString */
     toString: function () {
         return this.toRGBString();
     },
 
+    /** @id MochiKit.Color.Color.prototype.repr */
     repr: function () {
         var c = this.rgb;
         var col = [c.r, c.g, c.b, c.a];
@@ -237,7 +238,9 @@ MochiKit.Color.Color.prototype = {
 };
 
 // Constructor methods
+
 MochiKit.Base.update(MochiKit.Color.Color, {
+    /** @id MochiKit.Color.Color.fromRGB */
     fromRGB: function (red, green, blue, alpha) {
         // designated initializer
         var Color = MochiKit.Color.Color;
@@ -255,16 +258,19 @@ MochiKit.Base.update(MochiKit.Color.Color, {
         return new Color(red, green, blue, alpha);
     },
 
+    /** @id MochiKit.Color.Color.fromHSL */
     fromHSL: function (hue, saturation, lightness, alpha) {
         var m = MochiKit.Color;
         return m.Color.fromRGB(m.hslToRGB.apply(m, arguments));
     },
 
+    /** @id MochiKit.Color.Color.fromHSV */
     fromHSV: function (hue, saturation, value, alpha) {
         var m = MochiKit.Color;
         return m.Color.fromRGB(m.hsvToRGB.apply(m, arguments));
     },
 
+    /** @id MochiKit.Color.Color.fromName */
     fromName: function (name) {
         var Color = MochiKit.Color.Color;
         // Opera 9 seems to "quote" named colors(?!)
@@ -280,6 +286,7 @@ MochiKit.Base.update(MochiKit.Color.Color, {
         return null;
     },
 
+    /** @id MochiKit.Color.Color.fromString */
     fromString: function (colorString) {
         var self = MochiKit.Color.Color;
         var three = colorString.substr(0, 3);
@@ -294,6 +301,7 @@ MochiKit.Base.update(MochiKit.Color.Color, {
     },
 
 
+    /** @id MochiKit.Color.Color.fromHexString */
     fromHexString: function (hexCode) {
         if (hexCode.charAt(0) == '#') {
             hexCode = hexCode.substring(1);
@@ -314,13 +322,13 @@ MochiKit.Base.update(MochiKit.Color.Color, {
         var Color = MochiKit.Color.Color;
         return Color.fromRGB.apply(Color, components);
     },
-        
+
 
     _fromColorString: function (pre, method, scales, colorCode) {
         // parses either HSL or RGB
         if (colorCode.indexOf(pre) === 0) {
             colorCode = colorCode.substring(colorCode.indexOf("(", 3) + 1, colorCode.length - 1);
-        } 
+        }
         var colorChunks = colorCode.split(/\s*,\s*/);
         var colorFloats = [];
         for (var i = 0; i < colorChunks.length; i++) {
@@ -340,12 +348,13 @@ MochiKit.Base.update(MochiKit.Color.Color, {
         }
         return this[method].apply(this, colorFloats);
     },
-    
-    fromComputedStyle: function (elem, style, mozillaEquivalentCSS) {
+
+    /** @id MochiKit.Color.Color.fromComputedStyle */
+    fromComputedStyle: function (elem, style) {
         var d = MochiKit.DOM;
         var cls = MochiKit.Color.Color;
         for (elem = d.getElement(elem); elem; elem = elem.parentNode) {
-            var actualColor = d.computedStyle.apply(d, arguments);
+            var actualColor = MochiKit.Style.getStyle.apply(d, arguments);
             if (!actualColor) {
                 continue;
             }
@@ -360,25 +369,31 @@ MochiKit.Base.update(MochiKit.Color.Color, {
         return null;
     },
 
+    /** @id MochiKit.Color.Color.fromBackground */
     fromBackground: function (elem) {
         var cls = MochiKit.Color.Color;
         return cls.fromComputedStyle(
             elem, "backgroundColor", "background-color") || cls.whiteColor();
     },
 
+    /** @id MochiKit.Color.Color.fromText */
     fromText: function (elem) {
         var cls = MochiKit.Color.Color;
         return cls.fromComputedStyle(
             elem, "color", "color") || cls.blackColor();
     },
 
+    /** @id MochiKit.Color.Color.namedColors */
     namedColors: function () {
         return MochiKit.Base.clone(MochiKit.Color.Color._namedColors);
     }
 });
 
+
 // Module level functions
+
 MochiKit.Base.update(MochiKit.Color, {
+    /** @id MochiKit.Color.clampColorComponent */
     clampColorComponent: function (v, scale) {
         v *= scale;
         if (v < 0) {
@@ -408,7 +423,8 @@ MochiKit.Base.update(MochiKit.Color, {
         }
         return val;
     },
-        
+
+    /** @id MochiKit.Color.hsvToRGB */
     hsvToRGB: function (hue, saturation, value, alpha) {
         if (arguments.length == 1) {
             var hsv = hue;
@@ -421,9 +437,9 @@ MochiKit.Base.update(MochiKit.Color, {
         var green;
         var blue;
         if (saturation === 0) {
-            red = 0;
-            green = 0;
-            blue = 0;
+            red = value;
+            green = value;
+            blue = value;
         } else {
             var i = Math.floor(hue * 6);
             var f = (hue * 6) - i;
@@ -448,6 +464,7 @@ MochiKit.Base.update(MochiKit.Color, {
         };
     },
 
+    /** @id MochiKit.Color.hslToRGB */
     hslToRGB: function (hue, saturation, lightness, alpha) {
         if (arguments.length == 1) {
             var hsl = hue;
@@ -485,6 +502,7 @@ MochiKit.Base.update(MochiKit.Color, {
         };
     },
 
+    /** @id MochiKit.Color.rgbToHSV */
     rgbToHSV: function (red, green, blue, alpha) {
         if (arguments.length == 1) {
             var rgb = red;
@@ -527,7 +545,8 @@ MochiKit.Base.update(MochiKit.Color, {
             a: alpha
         };
     },
-            
+
+    /** @id MochiKit.Color.rgbToHSL */
     rgbToHSL: function (red, green, blue, alpha) {
         if (arguments.length == 1) {
             var rgb = red;
@@ -565,7 +584,7 @@ MochiKit.Base.update(MochiKit.Color, {
             if (hue > 1) {
                 hue -= 1;
             }
-            
+
         }
         return {
             h: hue,
@@ -575,6 +594,7 @@ MochiKit.Base.update(MochiKit.Color, {
         };
     },
 
+    /** @id MochiKit.Color.toColorPart */
     toColorPart: function (num) {
         num = Math.round(num);
         var digits = num.toString(16);
@@ -586,32 +606,50 @@ MochiKit.Base.update(MochiKit.Color, {
 
     __new__: function () {
         var m = MochiKit.Base;
+        /** @id MochiKit.Color.fromRGBString */
         this.Color.fromRGBString = m.bind(
             this.Color._fromColorString, this.Color, "rgb", "fromRGB",
             [1.0/255.0, 1.0/255.0, 1.0/255.0, 1]
         );
+        /** @id MochiKit.Color.fromHSLString */
         this.Color.fromHSLString = m.bind(
             this.Color._fromColorString, this.Color, "hsl", "fromHSL",
             [1.0/360.0, 0.01, 0.01, 1]
         );
-        
+
         var third = 1.0 / 3.0;
+        /** @id MochiKit.Color.colors */
         var colors = {
             // NSColor colors plus transparent
+            /** @id MochiKit.Color.blackColor */
             black: [0, 0, 0],
+            /** @id MochiKit.Color.blueColor */
             blue: [0, 0, 1],
+            /** @id MochiKit.Color.brownColor */
             brown: [0.6, 0.4, 0.2],
+            /** @id MochiKit.Color.cyanColor */
             cyan: [0, 1, 1],
+            /** @id MochiKit.Color.darkGrayColor */
             darkGray: [third, third, third],
+            /** @id MochiKit.Color.grayColor */
             gray: [0.5, 0.5, 0.5],
+            /** @id MochiKit.Color.greenColor */
             green: [0, 1, 0],
+            /** @id MochiKit.Color.lightGrayColor */
             lightGray: [2 * third, 2 * third, 2 * third],
+            /** @id MochiKit.Color.magentaColor */
             magenta: [1, 0, 1],
+            /** @id MochiKit.Color.orangeColor */
             orange: [1, 0.5, 0],
+            /** @id MochiKit.Color.purpleColor */
             purple: [0.5, 0, 0.5],
+            /** @id MochiKit.Color.redColor */
             red: [1, 0, 0],
+            /** @id MochiKit.Color.transparentColor */
             transparent: [0, 0, 0, 0],
+            /** @id MochiKit.Color.whiteColor */
             white: [1, 1, 1],
+            /** @id MochiKit.Color.yellowColor */
             yellow: [1, 1, 0]
         };
 
@@ -632,7 +670,7 @@ MochiKit.Base.update(MochiKit.Color, {
 
         var isColor = function () {
             for (var i = 0; i < arguments.length; i++) {
-                if (!(arguments[i] instanceof Color)) {
+                if (!(arguments[i] instanceof MochiKit.Color.Color)) {
                     return false;
                 }
             }
@@ -646,7 +684,7 @@ MochiKit.Base.update(MochiKit.Color, {
         m.nameFunctions(this);
 
         m.registerComparator(this.Color.NAME, isColor, compareColor);
-            
+
         this.EXPORT_TAGS = {
             ":common": this.EXPORT,
             ":all": m.concat(this.EXPORT, this.EXPORT_OK)

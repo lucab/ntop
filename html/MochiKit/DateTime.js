@@ -1,6 +1,6 @@
 /***
 
-MochiKit.DateTime 1.3.1
+MochiKit.DateTime 1.4.2
 
 See <http://mochikit.com/> for documentation, downloads, license, etc.
 
@@ -8,20 +8,10 @@ See <http://mochikit.com/> for documentation, downloads, license, etc.
 
 ***/
 
-if (typeof(dojo) != 'undefined') {
-    dojo.provide('MochiKit.DateTime');
-}
-
-if (typeof(MochiKit) == 'undefined') {
-    MochiKit = {};
-}
-       
-if (typeof(MochiKit.DateTime) == 'undefined') {
-    MochiKit.DateTime = {};
-}
+MochiKit.Base._deps('DateTime', ['Base']);
 
 MochiKit.DateTime.NAME = "MochiKit.DateTime";
-MochiKit.DateTime.VERSION = "1.3.1";
+MochiKit.DateTime.VERSION = "1.4.2";
 MochiKit.DateTime.__repr__ = function () {
     return "[" + this.NAME + " " + this.VERSION + "]";
 };
@@ -29,6 +19,7 @@ MochiKit.DateTime.toString = function () {
     return this.__repr__();
 };
 
+/** @id MochiKit.DateTime.isoDate */
 MochiKit.DateTime.isoDate = function (str) {
     str = str + "";
     if (typeof(str) != "string" || str.length === 0) {
@@ -38,11 +29,16 @@ MochiKit.DateTime.isoDate = function (str) {
     if (iso.length === 0) {
         return null;
     }
-    return new Date(iso[0], iso[1] - 1, iso[2]);
+	var date = new Date(iso[0], iso[1] - 1, iso[2]);
+	date.setFullYear(iso[0]);
+	date.setMonth(iso[1] - 1);
+	date.setDate(iso[2]);
+    return date;
 };
 
 MochiKit.DateTime._isoRegexp = /(\d{4,})(?:-(\d{1,2})(?:-(\d{1,2})(?:[T ](\d{1,2}):(\d{1,2})(?::(\d{1,2})(?:\.(\d+))?)?(?:(Z)|([+-])(\d{1,2})(?::(\d{1,2}))?)?)?)?)?/;
 
+/** @id MochiKit.DateTime.isoTimestamp */
 MochiKit.DateTime.isoTimestamp = function (str) {
     str = str + "";
     if (typeof(str) != "string" || str.length === 0) {
@@ -88,6 +84,7 @@ MochiKit.DateTime.isoTimestamp = function (str) {
     return new Date(Date.UTC(year, month, day, hour, min, sec, msec) - ofs);
 };
 
+/** @id MochiKit.DateTime.toISOTime */
 MochiKit.DateTime.toISOTime = function (date, realISO/* = false */) {
     if (typeof(date) == "undefined" || date === null) {
         return null;
@@ -103,6 +100,7 @@ MochiKit.DateTime.toISOTime = function (date, realISO/* = false */) {
     return lst.join(":");
 };
 
+/** @id MochiKit.DateTime.toISOTimeStamp */
 MochiKit.DateTime.toISOTimestamp = function (date, realISO/* = false*/) {
     if (typeof(date) == "undefined" || date === null) {
         return null;
@@ -115,18 +113,21 @@ MochiKit.DateTime.toISOTimestamp = function (date, realISO/* = false*/) {
     return MochiKit.DateTime.toISODate(date) + sep + MochiKit.DateTime.toISOTime(date, realISO) + foot;
 };
 
+/** @id MochiKit.DateTime.toISODate */
 MochiKit.DateTime.toISODate = function (date) {
     if (typeof(date) == "undefined" || date === null) {
         return null;
     }
     var _padTwo = MochiKit.DateTime._padTwo;
+	var _padFour = MochiKit.DateTime._padFour;
     return [
-        date.getFullYear(),
+        _padFour(date.getFullYear()),
         _padTwo(date.getMonth() + 1),
         _padTwo(date.getDate())
     ].join("-");
 };
 
+/** @id MochiKit.DateTime.americanDate */
 MochiKit.DateTime.americanDate = function (d) {
     d = d + "";
     if (typeof(d) != "string" || d.length === 0) {
@@ -140,6 +141,18 @@ MochiKit.DateTime._padTwo = function (n) {
     return (n > 9) ? n : "0" + n;
 };
 
+MochiKit.DateTime._padFour = function(n) {
+	switch(n.toString().length) {
+		case 1: return "000" + n; break;
+		case 2: return "00" + n; break;
+		case 3: return "0" + n; break;
+		case 4:
+		default:
+			return n;
+	}
+};
+
+/** @id MochiKit.DateTime.toPaddedAmericanDate */
 MochiKit.DateTime.toPaddedAmericanDate = function (d) {
     if (typeof(d) == "undefined" || d === null) {
         return null;
@@ -152,6 +165,7 @@ MochiKit.DateTime.toPaddedAmericanDate = function (d) {
     ].join('/');
 };
 
+/** @id MochiKit.DateTime.toAmericanDate */
 MochiKit.DateTime.toAmericanDate = function (d) {
     if (typeof(d) == "undefined" || d === null) {
         return null;
@@ -187,7 +201,7 @@ MochiKit.DateTime.__new__ = function () {
             } catch (e) {
                 // pass
             }
-        }   
+        }
     }
 };
 
@@ -198,11 +212,11 @@ if (typeof(MochiKit.Base) != "undefined") {
 } else {
     (function (globals, module) {
         if ((typeof(JSAN) == 'undefined' && typeof(dojo) == 'undefined')
-            || (typeof(MochiKit.__compat__) == 'boolean' && MochiKit.__compat__)) {
+            || (MochiKit.__export__ === false)) {
             var all = module.EXPORT_TAGS[":all"];
             for (var i = 0; i < all.length; i++) {
-                globals[all[i]] = module[all[i]]; 
+                globals[all[i]] = module[all[i]];
             }
-        }   
-    })(this, MochiKit.DateTime);  
+        }
+    })(this, MochiKit.DateTime);
 }

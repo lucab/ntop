@@ -142,7 +142,7 @@ def getJsonData(dictionaryCountries, totalHosts,unknownCountries, unknownCities)
     dataJ['totalHosts']= totalHosts
     dataJ['unknownCountries']= unknownCountries
     dataJ['unknownCities']= unknownCities
-    pprint.pprint(dataJ, sys.stderr)
+    #pprint.pprint(dataJ, sys.stderr)
     try:
         return json.dumps(dataJ, True)
     except:
@@ -202,11 +202,11 @@ while ntop.getNextHost(0):
 
 
 if os.getenv('REQUEST_METHOD', 'GET') == 'POST':
-    print>>sys.stderr, "POST"
+    
     ntop.sendHTTPHeader(12)
     ntop.sendString(getJsonData(dictionaryCountries, totalHosts, unknownCountries, unknownCities))
 else:
-    print>>sys.stderr, "GET"
+    
     ntop.printHTMLHeader('Host Map: Region View', 1, 0)
     
     if totalHosts == 0:

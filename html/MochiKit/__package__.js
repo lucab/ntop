@@ -1,4 +1,4 @@
-dojo.hostenv.conditionalLoadModule({
+dojo.kwCompoundRequire({
     "common": [
         "MochiKit.Base",
         "MochiKit.Iter",
@@ -6,12 +6,13 @@ dojo.hostenv.conditionalLoadModule({
         "MochiKit.DateTime",
         "MochiKit.Format",
         "MochiKit.Async",
-        "MochiKit.Color"
-    ],
-    "browser": [
         "MochiKit.DOM",
+        "MochiKit.Style",
         "MochiKit.LoggingPane",
+        "MochiKit.Color",
+        "MochiKit.Signal",
+        "MochiKit.Position",
         "MochiKit.Visual"
     ]
 });
-dojo.hostenv.moduleLoaded("MochiKit.*");
+dojo.provide("MochiKit.*");
