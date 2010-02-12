@@ -3,7 +3,8 @@ Created on 28/gen/2010
 
 @author: Gianluca Medici
 '''
-import pickle, glob
+import pickle, glob, threading
+
 import ntop
 import host
 import os.path, sys, time, pprint
@@ -11,30 +12,16 @@ import os.path, sys, time, pprint
 # Import modules for CGI handling
 import cgi, cgitb
 
-# Imports for rrd
-try:
-    import rrdtool
-except:
-    ntop.printHTMLHeader('ntop Python Configuration Error',1,0)
-    ntop.sendString("<b><center><font color=red>Please install <A HREF=http://sourceforge.net/projects/py-rrdtool/>pyRRDTool/A></font> cd py_rrdTool_dir (sudo python setup.py install)</center></b>")
-    ntop.printHTMLFooter()
-    sys.exit(0)
+nameFileConfig=ntop.getSpoolPath()+'/rrdAlarmConfig.txt'
+tempFileName='rrdAlarmStart.tmp'
+rrdFilesPath=ntop.getDBPath()+'/rrd'
+rrdDuration=None
+rrdResults=None
 
-from StringIO import StringIO
+noFilesLine=[]
 
-
-# Imports for mako
-try:
-    from mako.template import Template
-    from mako.runtime import Context
-    from mako.lookup import TemplateLookup
-    from mako import exceptions
-except:
-    ntop.printHTMLHeader('ntop Python Configuration Error',1,0)
-    ntop.sendString("<b><center><font color=red>Please install <A HREF=http://www.makotemplates.org/>Mako</A> template engine</font> (sudo easy_install Mako)</center></b>")
-    ntop.printHTMLFooter()    
-    sys.exit(0)
-
+''' Class for object threshold that contains all the informations to check a list of rrdfiles and to trigger 
+    the alarm action if the threshold is exceeded'''
 class Threshold(object):
     '''
     classdocs
@@ -78,6 +65,7 @@ class Threshold(object):
             #print>>sys.stderr, 'No File Found'+path + '/' + listRowConfig[1]
             raise IOError('No File Found'+(path + '/' + listRowConfig[1]))
     
+    #not really used for now
     def printThis(self, separator):
         tmp = ''
         for x in self._filename:
@@ -122,6 +110,7 @@ class Threshold(object):
     def clearRepetition(self):
         self.__actualRepetition= 0
     
+    '''Returns true if the threshold exceed value passed '''
     def checkIfFire(self, value):
         if not self.__type:
             return False
@@ -159,12 +148,7 @@ class Threshold(object):
             self.clearRepetition()
 
 
-
-rrdFilesPath=ntop.getDBPath()+'/rrd'
-rrdDuration=None
-rrdResults=None
-
-#Check the existence of the rrd database files that maintain history of this script
+''' Check the existence of the rrd database files that maintain history of this script'''
 def updateDBS(time, resultsValue, durationValue):
     rrdAlarmDbPath=rrdFilesPath+'/rrdalarm/'
     if not os.path.exists(rrdAlarmDbPath) or not os.path.isdir(rrdAlarmDbPath):
@@ -193,10 +177,10 @@ def updateDBS(time, resultsValue, durationValue):
         
         rrdtool.create(rrdAlarmDbPath+nameResults, '--start', str(time), '--step', str(60), dataSources[0], archives[0], archives[1] )
         rrdtool.update(rrdAlarmDbPath+nameResults, 'N:'+str(resultsValue))
-    
-noFilesLine=[]
-#reads all the lines of filename and return a list 
-#of threshold object if all goes well
+
+
+''' Reads all the lines of filename and return a list 
+    of threshold object if all goes well'''
 def readConfigFile(fileName):
     print>>sys.stderr, ('Reading configuration for '+fileName)
     retList=[]
@@ -206,11 +190,10 @@ def readConfigFile(fileName):
             line=line.rstrip()
             if line[0] != '#':
             #line=line[1 ,-1]
-                print>>sys.stderr, line
                 try:
                     retList.append(Threshold(rrdFilesPath, line.split('\t')))
                 except IOError as e:
-                    print>>sys.stderr, e
+                    print>>sys.stderr, str(e)
                     noFilesLine.append(line)
         cFile.close()
         return retList
@@ -219,16 +202,14 @@ def readConfigFile(fileName):
         raise
         return retList
     
-#create a new empty configuration dictionary for the nameFileConf
+''' Create a new empty configuration dictionary for the nameFileConf'''
 def createNewConfiguration(nameFileConf, timeStart):
     return {'lastModified': os.path.getmtime(nameFileConf), 'timeStart' :timeStart,  'listThresholds':readConfigFile(nameFileConf)}#, 'lastAlarmsFired':[]}
     
-nameFileConfig=ntop.getSpoolPath()+'/rrdAlarmConfig.txt'
 
 
-tempFileName='rrdAlarmStart.tmp'
-
-
+''' Function that create or replace a tempFile containing the the persistance 
+    information for resuming this script status at next run '''
 def saveTempFile(configuration):
     #the changes was made to the configuration, will be saved in tempfile
     try:
@@ -240,17 +221,17 @@ def saveTempFile(configuration):
         return -1
     return 0
 
-def inizia():
+def begin():
     configuration= None
     timeStart=time.time()
     
     alarmsFired=0
     checkedFiles=0
     
-    #print>>sys.stderr, 'Attempting to access the tempfile '+tempFileName
+
     try:
         tempFile= open(ntop.getSpoolPath()+'/'+tempFileName, 'r')
-        
+        print>>sys.stderr,ntop.getSpoolPath()+'/'+tempFileName
         configuration=pickle.load(tempFile)
         tempFile.close()
         if configuration and (timeStart < float(configuration['timeStart'])+float(60)):
@@ -261,16 +242,16 @@ def inizia():
             return;#exit because the script was started less than one minute ago
         else:
             configuration['timeStart']=timeStart
-        #print>>sys.stderr, 'Success Open tempFile'
+
     except IOError:         #the tempFile does not exist or some other problem
         print>>sys.stderr, 'IOError while accessing tempfile '+tempFileName
         configuration=createNewConfiguration(nameFileConfig, timeStart)
     
     except pickle.PickleError, pickle.UnpicklingError: 
-        print>>sys.stderr,  "Problems during the UnPickling load"
+        print>>sys.stderr,  "Problems during the UnPickling load, tempFile Delete..."
+        os.remove(ntop.getSpoolPath()+'/'+tempFileName)
         return -1
     
-    print>>sys.stderr, 'Attempting to access the configuration file '+ nameFileConfig
     #print>>sys.stderr, str(os.path.getmtime(nameFileConfig))
     if configuration['lastModified'] != os.path.getmtime(nameFileConfig):
         #if the configuration file has been changed the temp file has to be rebuild and so the configuration dictionary 
@@ -294,7 +275,6 @@ def inizia():
             step=rrdObj[0][2]
             start=rrdObj[0][0]
             end=float(rrdObj[0][1])
-            #step=rrdObj[0][2]
             
             valueDataTuple=rrdObj[2]     #check this out, not sure witch data object is
             #for all the values returned check the threshold if alarm has to be fired
@@ -320,6 +300,7 @@ def inizia():
     
     form = cgi.FieldStorage();                  #get the parameter passed via the url 
     noHTML=bool(form.getvalue('noHTML'))
+    
     if not noHTML:                              #if this parameter was passed and is true send the response http empty        
         ntop.printHTMLHeader('RRD Alarm Report',1,0)
         try:
@@ -335,7 +316,7 @@ def inizia():
             ntop.sendString(exceptions.html_error_template().render())
         
         ntop.printHTMLFooter()
-    
+   
     print>>sys.stderr, 'Exit rrdAlarm'
     
     #rrdObj2=rrdtool.fetch(rrdFilesPath+'/rrdAlarm/results.rrd', 'AVERAGE', '--start', 'now-1h', '--end', 'now')
@@ -343,8 +324,62 @@ def inizia():
     return 0
 #procRRDAlarm=subprocess.Popen()
 #wait_timeout(procRRDAlarm, 60)
-inizia()
-'''ntop.sendHTTPHeader(1)
-ntop.printHTMLHeader('RRDAlarm done!',1,0)
-#ntop.sendString("<b><center><font color=red>Please install <A HREF=http://www.makotemplates.org/>Mako</A> template engine</font> (sudo easy_install Mako)</center></b>")
-ntop.printHTMLFooter()'''    
+
+def mainT():
+    # Imports for rrd
+    try:
+        import rrdtool
+    except:
+        ntop.printHTMLHeader('ntop Python Configuration Error',1,0)
+        ntop.sendString("<b><center><font color=red>Please install <A HREF=http://sourceforge.net/projects/py-rrdtool/>pyRRDTool/A></font> cd py_rrdTool_dir (sudo python setup.py install)</center></b>")
+        ntop.printHTMLFooter()
+        return
+    
+    from StringIO import StringIO
+    
+    
+    # Imports for mako
+    try:
+        from mako.template import Template
+        from mako.runtime import Context
+        from mako.lookup import TemplateLookup
+        from mako import exceptions
+    except:
+        ntop.printHTMLHeader('ntop Python Configuration Error',1,0)
+        ntop.sendString("<b><center><font color=red>Please install <A HREF=http://www.makotemplates.org/>Mako</A> template engine</font> (sudo easy_install Mako)</center></b>")
+        ntop.printHTMLFooter()    
+        return
+    
+    def wait_timeout(thread, seconds):
+        '''Wait for thread to finish, or terminate (and subsequently kill it) after timeout'''
+        start=time.time()
+        end=start+seconds
+        interval= min(seconds / 1000.0, .25)            #interval to that the main thread sleep before checking if control is finished
+    
+        while True:
+            result= thread.isAlive()
+            if not result: 
+                return 0                      # control thread finished
+            if time.time() >= end:
+                raise RuntimeError('The RRDAlarm script lasted more that %d seconds!' % seconds)
+            
+            time.sleep(interval)
+    
+    control=threading.Thread(target=begin)    #create the actual thread that performs the controls
+    control.start()                           
+    
+    wait_timeout(control, 50)                 #the main thread will wait seconds before terminating and killing the control thread, if the control finish before all is good and terminates successfully
+
+'''
+THE SCRIPT STARTS HERE
+'''    
+if os.getenv('REQUEST_METHOD', 'GET') == 'GET':             # The script can be called only by get method 
+    try:
+        mainT()
+    except RuntimeError as x:
+        ntop.sendHTTPHeader(1)
+        ntop.printHTMLHeader(str(x)+' Aborted.',1,0)
+        ntop.printHTMLFooter()
+    #print>>sys.stderr, 'Fine start'
+else:       #requested by a some other method rather that GET return not implemented
+    ntop.returnHTTPnotImplemented()

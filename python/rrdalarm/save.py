@@ -17,7 +17,8 @@ import cgi, cgitb
 reload(sys)
 sys.setdefaultencoding("latin1")
 
-#from StringIO import StringIO
+''' Check if the parameter passed contains unwanted characters and returns
+    a correct filename format '''
 def checkFileName(fileName):
     fileName=fileName.replace(' ', '')
     fileName=fileName.replace('/', '')
@@ -25,7 +26,7 @@ def checkFileName(fileName):
     while(fileName.startswith('.')):
         fileName=fileName[1,-1]
     return fileName
-#TODO
+'''TODO
 def checkIsFile(listFileName, path):
     isCheck=True;
     
@@ -34,8 +35,9 @@ def checkIsFile(listFileName, path):
             isCheck=False
     
     return isCheck
-#convert a list of any element into a string of element separated by
-#separator terminating with \n
+'''
+''' Convert a list of any element into a string of element separated by
+    separator terminating with \n'''
 def _stringyfy(listVal, separator):
     returnValue=''
     for x in listVal:
@@ -43,13 +45,13 @@ def _stringyfy(listVal, separator):
     
     return returnValue[0:-1]+'\n'
 
+'''HERE STARTS THE SCRIPT'''
 
 if os.getenv('REQUEST_METHOD', 'GET') == 'POST':                          #the get method is discarded. only POST
     
     cgitb.enable()
     
     form = cgi.FieldStorage()
-    
     
     form.type='application/jsonrequest'
     pathConfigFile=ntop.getSpoolPath()+'/'
@@ -71,10 +73,9 @@ if os.getenv('REQUEST_METHOD', 'GET') == 'POST':                          #the g
             cFile= open(pathConfigFile+nameFileConfig, 'w')
             cFile.write("#rrdAlarmConfig File. All the lines that starts with the '#' will be ignored! (just like this one)\n")
             for line in rows:   #save lines on cgFile. separator \t endofline \n
-                
-                #cFile.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7],line[8]))
                 cFile.write( _stringyfy(line, '\t'))
             cFile.close()
+            
         except IOError:
             #ntop.sendString(exceptions.html_error_template().render()) TODO
             print>>sys.stderr, "IOEXCEPTION writing file "+pathConfigFile+nameFileConfig
@@ -88,4 +89,5 @@ if os.getenv('REQUEST_METHOD', 'GET') == 'POST':                          #the g
         ntop.sendHTTPHeader(1)
         ntop.sendString(ack)
         print>>sys.stderr, "RRDAlarm configuration file: "+pathConfigFile+nameFileConfig+" Saved "
-#TODO return code 404 page not found
+else: #called by a some other method rather than POST return not implemented
+    ntop.returnHTTPnotImplemented()

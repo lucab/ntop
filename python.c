@@ -50,6 +50,15 @@ static PyObject* python_sendHTTPHeader(PyObject *self, PyObject *args) {
   return PyString_FromString("");
 }
 
+static PyObject* python_returnHTTPnotImplemented(PyObject *self, PyObject *args) {
+
+  // traceEvent(CONST_TRACE_WARNING, "-%s-", "python_returnHTTPnotImplemented");
+
+  returnHTTPnotImplemented();
+  header_sent = 1;
+  return PyString_FromString("");
+}
+
 /* **************************************** */
 
 static PyObject* python_printHTMLHeader(PyObject *self,
@@ -966,6 +975,7 @@ static PyObject* python_interface_cpacketStats(PyObject *self, PyObject *args) {
 
 static PyMethodDef ntop_methods[] = {
   { "sendHTTPHeader", python_sendHTTPHeader, METH_VARARGS| METH_KEYWORDS, "" },
+  { "returnHTTPnotImplemented", python_returnHTTPnotImplemented, METH_VARARGS, "" },
   { "printHTMLHeader", python_printHTMLHeader, METH_VARARGS, "" },
 
   { "printHTMLFooter", python_printHTMLFooter, METH_VARARGS, "" },
