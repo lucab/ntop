@@ -522,8 +522,8 @@ int main(int argc, char *argv[]) {
         free(cmdLineBuffer);
 	return(-1);
       }
-
-      printf("   Processing file %s for parameters...\n", &argv[i][1]);
+      
+      printf("Processing file %s for parameters...\n", &argv[i][1]);
 
       if(i > 1)
 	safe_strncat(cmdLineBuffer, LEN_CMDLINE_BUFFER, " '");
@@ -714,7 +714,7 @@ int main(int argc, char *argv[]) {
   /* ******************************* */
 
   addDefaultAdminUser();
-
+  readSessionPurgeParams();
   initReports();
 
   traceEvent(CONST_TRACE_NOISY, "MEMORY: Base interface structure (no hashes loaded) is %.2fMB each",

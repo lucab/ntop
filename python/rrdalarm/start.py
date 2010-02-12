@@ -331,7 +331,7 @@ def mainT():
         import rrdtool
     except:
         ntop.printHTMLHeader('ntop Python Configuration Error',1,0)
-        ntop.sendString("<b><center><font color=red>Please install <A HREF=http://sourceforge.net/projects/py-rrdtool/>pyRRDTool/A></font> cd py_rrdTool_dir (sudo python setup.py install)</center></b>")
+        ntop.sendString("<b><center><font color=red>Please install <A HREF='http://sourceforge.net/projects/py-rrdtool/'>pyRRDTool</A></font><br># cd py_rrdTool_dir<br># sudo python setup.py install</center></b>")
         ntop.printHTMLFooter()
         return
     

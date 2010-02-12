@@ -69,20 +69,20 @@
          <table cellspacing="0" cellpadding="5" border="1" id="configuration">
             <thead>
                 <tr>
-                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center" title="Click to reIndex all the column">
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center" title="Click to reIndex all columns">
                         <a href="javascript:rrdAlarmConfig.normalizeTable();">ID</a>
                     </th>
 					<th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
-                        RRD File
+                        RRD File Path
                     </th>
                     <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
-                        Type Threshold
+                        Threshold Type
                     </th>
                     <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
                         Value
                     </th>
                     <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
-                        Num. Repetition
+                        Num. Repetitions
                     </th>
                     <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
                         Start Time
@@ -94,7 +94,7 @@
                         Action To Perform
                     </th>
                     <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
-                        Time Before Next
+                        Time Before Next Check
                     </th>
                 </tr>
             </thead>
@@ -150,5 +150,6 @@
         </table>
 		</form>
 		
-		<p><input title="Save the current configuration on disk" type="button" id="save" value="Save Config" onmouseup="rrdAlarmConfig.sendData();"></p>
+		<p><input title="Save the current configuration on disk" type="button" id="save" value="Save Config" onmouseup="rrdAlarmConfig.sendData();"> 
+		[ <A HREF=start.py>Check Now<A> ] </p>
 		<p><div id="result">&nbsp;</div></p>

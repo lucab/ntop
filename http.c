@@ -642,6 +642,13 @@ static void ssiMenu_Head(void) {
 
   sendStringWOssi(
 		  "	[null,'Utils',null,null,null,\n"
+#ifdef HAVE_PYTHON
+		  "	[null,'RRD Alarm',null,null,null,\n"
+                  "                    [null,'Configure Thresholds','/python/rrdalarm/config.py',null,null],\n"
+                  "                    [null,'Check Now','/python/rrdalarm/start.py',null,null],\n"
+		  "     ],\n"
+#endif
+
 		  "		[null,'Data Dump','/dump.html',null,null],\n"
 		  "		[null,'View Log','/" CONST_VIEW_LOG_HTML "',null,null],\n"
 		  "		],\n");

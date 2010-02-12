@@ -896,7 +896,7 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 		     formatPkts(myGlobals.device[i].droppedPkts.value, buf2, sizeof(buf2)));
 
 	  /* signalCondvar(&myGlobals.device[i].queueCondvar); */
-	  pcap_close(myGlobals.device[i].pcapPtr);
+	  /* pcap_close(myGlobals.device[i].pcapPtr); */
 
 	  traceEvent(CONST_TRACE_INFO, "Joining thread NPS(%s) [t%lu]",
 		     myGlobals.device[i].humanFriendlyName,

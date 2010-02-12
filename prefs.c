@@ -950,6 +950,7 @@ static void storeGdbmValue(GDBM_FILE gdbmfile, char *key, char *value) {
 void storePrefsValue(char *key, char *value) {
   storeGdbmValue(myGlobals.prefsFile, key, value);
   checkCommunities(); /* Check if communities are defined */
+  readSessionPurgeParams(); /* Re-read if necessary */
 }
 
 /* ******************************** */
