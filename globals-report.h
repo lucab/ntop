@@ -180,6 +180,7 @@ extern char* printSSLError(int errorId);
 #endif /* HAVE_OPENSSL */
 extern int isAllowedCommunity(char *community_name);
 extern void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable);
+extern void returnHTTPnotImplemented(void);
 extern int readHTTPpostData(int len, char *buf, int buflen);
 
 /* report.c */

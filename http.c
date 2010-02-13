@@ -1485,7 +1485,7 @@ static void returnHTTPrequestTimedOut(void) {
 
 /* ************************* */
 
-static void returnHTTPnotImplemented(void) {
+void returnHTTPnotImplemented(void) {
   myGlobals.numUnsuccessfulInvalidmethod[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_501, NULL);
 }
