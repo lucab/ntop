@@ -61,15 +61,14 @@ var rrdAlarmConfig = function() {
 
 	/** * Private methods ** */
 	var checkNameFile=function(stringaNameFile){
-		
-		stringaNameFile=stringaNameFile.replace('\\', '');
-		stringaNameFile=stringaNameFile.replace('/', '');
-		stringaNameFile=stringaNameFile.strip;
-		while (stringaNameFile.startswith('.')){
-			stringaNameFile=stringaNameFile.substring(1,stringaNameFile.length);
-		
+		var retString=stringaNameFile;
+		retString=retString.replace('\\', '');
+		retString=retString.replace('/', '');
+		retString=retString.replace(' ', '');
+		while (retString[0]==='.'){
+			retString=retString.substring(1,retString.length);
 		}
-		return stringaNameFile;
+		return retString;
 		
 	}
 	var findFromEnd= function(stringa, chr){

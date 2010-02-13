@@ -69,12 +69,11 @@
          <table cellspacing="0" cellpadding="5" border="1" id="configuration">
             <thead>
                 <tr>
-                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center" title="Click to reIndex all columns">
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center" title="Click to reIndex this column">
                         <a href="javascript:rrdAlarmConfig.normalizeTable();">ID</a>
                     </th>
 					<th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
-                        RRD File Path
-                    </th>
+                        RRD File Path</th>
                     <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
                         Threshold Type
                     </th>
@@ -93,9 +92,8 @@
                     <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
                         Action To Perform
                     </th>
-                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
-                        Time Before Next Check
-                    </th>
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center" title="Time Before Next Action">
+                        TBNA</th>
                 </tr>
             </thead>
             <tbody id="body">
@@ -151,5 +149,7 @@
 		</form>
 		
 		<p><input title="Save the current configuration on disk" type="button" id="save" value="Save Config" onmouseup="rrdAlarmConfig.sendData();"> 
-		[ <A HREF=start.py>Check Now<A> ] </p>
+		&nbsp;[ <a HREF='./start.py'>Check Now</a> ]</p>
 		<p><div id="result">&nbsp;</div></p>
+		<p>&nbsp;</p>
+		<p>Do you require some <a href="./config.py?help=true" >help</a>?</p>

@@ -48,7 +48,8 @@ def begin():
     
     if help == 'true':
         #show help page
-        templateFilename='rrdAlarmConfigHelp.tmpl'
+        templateFilename='rrdAlarmConfiguratorHelp.tmpl'
+        ntop.printHTMLHeader('RRD Alarm Configurator Help', 1, 0)
     else:
         requestFileConfig=form.getvalue('configFile')
         if  requestFileConfig != None:
@@ -82,6 +83,7 @@ def begin():
             ctx = Context(buf)
         else:
             ctx = Context(buf, configRows=rows,tempFilePath=pathTempFile, nameFileConfig=nameFileConfig, pathRRDFiles=pathRRDFiles)
+        
         myTemplate.render_context(ctx)
         ntop.sendString(buf.getvalue())
     except:
