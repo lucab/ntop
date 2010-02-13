@@ -20,6 +20,15 @@ rrdResults=None
 
 noFilesLine=[]
 
+# Imports for rrd
+try:
+    import rrdtool
+except:
+    ntop.printHTMLHeader('ntop Python Configuration Error',1,0)
+    ntop.sendString("<b><center><font color=red>Please install <A HREF='http://sourceforge.net/projects/py-rrdtool/'>pyRRDTool</A></font><br># cd py_rrdTool_dir<br># sudo python setup.py install</center></b>")
+    ntop.printHTMLFooter()
+    sys.exit(0)
+
 ''' Class for object threshold that contains all the informations to check a list of rrdfiles and to trigger 
     the alarm action if the threshold is exceeded'''
 class Threshold(object):
@@ -326,14 +335,7 @@ def begin():
 #wait_timeout(procRRDAlarm, 60)
 
 def mainT():
-    # Imports for rrd
-    try:
-        import rrdtool
-    except:
-        ntop.printHTMLHeader('ntop Python Configuration Error',1,0)
-        ntop.sendString("<b><center><font color=red>Please install <A HREF='http://sourceforge.net/projects/py-rrdtool/'>pyRRDTool</A></font><br># cd py_rrdTool_dir<br># sudo python setup.py install</center></b>")
-        ntop.printHTMLFooter()
-        return
+
     
     from StringIO import StringIO
     
