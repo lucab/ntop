@@ -43,7 +43,7 @@ CCLD      = @CCLD@
 
 #AM_CFLAGS =
 #AM_LDFLAGS= 
-ACLOCAL_AMFLAGS=-l m4
+ACLOCAL_AMFLAGS=-I m4
 
 DISTCLEANFILES = trivialcompilemessage *.db #* *~ *.log
 CLEANFILES     = $(DISTCLEANFILES) stamp-h1
