@@ -48,6 +48,8 @@ var rrdAlarmConfig = function() {
 	var numIdEvent=undefined;					//	for removing document onclick
 	var onMouseUpIdEvent=undefined;
 	
+	var totalErrors=0; 							// the number of errors in the input field text
+	
 	var tdAttributes = {
 		align : 'right'
 	};
@@ -65,19 +67,19 @@ var rrdAlarmConfig = function() {
 		retString=retString.replace('\\', '');
 		retString=retString.replace('/', '');
 		retString=retString.replace(' ', '');
-		while (retString[0]==='.'){
+		while (retString.charAt(0)==='.'){
 			retString=retString.substring(1,retString.length);
 		}
 		return retString;
 		
 	}
-	var findFromEnd= function(stringa, chr){
+	/*var findFromEnd= function(stringa, chr){
 		
 		for(var len=stringa.length-1;len >0; lenn--){
 			if(stringa[len]===chr) return len;
 		}
 		return -1;
-	};
+	};*/
 	var colourRow = function() {
 		if (this !== rowSelected) {
 			this.style.backgroundColor = onMouseColor;
@@ -88,7 +90,140 @@ var rrdAlarmConfig = function() {
 			this.style.backgroundColor = '';
 		}
 	};
-	/** * Specific ge and set for the uniqueid textbox of the form** */
+	
+	var removeError=function(element){
+		var firstIndex=element.className.search('error');
+		
+		if(firstIndex != -1){	//there was an error
+			element.className=element.className.replace('error', '');//TODO CAMBIA IL REPLACE
+			try{
+				element.removeAttribute('title');
+				}
+			catch(error){//error no attribute
+				}
+			totalErrors--;
+			}
+		
+	};
+	
+	var setError=function(element, title){
+		element.className+= ' error';
+		element.title=title;
+		totalErrors++;
+	};
+	
+	/*	Method that control the input fields of the table form, and return 
+	 * 	the object containing their values or null if some error occurred,
+	 *  the fields in this case will be changed to className error and a proper title
+	 *  qill be inserted to explain the error*/
+	var validateAndGet=function(){
+		
+		var fields=getElement(idForm).elements;
+		var value=null;
+		var currentForm={index: null, data:[]};
+		
+		for(var i=0; i<fields.length;i++ ){
+			removeError(fields[i]);
+			if(fields[i].id===idUniqueNode ){
+				
+				value=parseInt(fields[i].value);
+				if(isNaN(value)){
+					setError(fields[i], 'The id provided is not a number! Check the config file loaded!');
+				}else{
+					currentForm.index=value;
+				}
+				continue;	
+			}
+			if(fields[i].id===idRrdFile){
+				value=fields[i].value;
+				if(!value){
+					setError(fields[i], 'Field Required!');
+				}else{
+					currentForm.data.push(value);
+				}
+				continue;
+			}
+			if(fields[i].id===idTypeThreshold){
+				value=fields[i].value;
+				if(!value){
+					setError(fields[i], 'Field Required!');
+				}else{
+					currentForm.data.push(value);
+				}
+				continue;
+			}
+			
+			if(fields[i].id === idValueThreshold){
+				value=fields[i].value;
+				
+				if(!value || isNaN(value)){
+					setError(fields[i], 'Must be a number!')
+				}else{
+					currentForm.data.push(value);
+				}
+				
+				continue;
+			}
+			if(fields[i].id === idNumberRepetition){
+				value=fields[i].value;
+				
+				if(!value ||isNaN(value)|| parseInt(value)< 0){
+					setError(fields[i], 'Must be a non negative integer!')
+				}else{
+					currentForm.data.push(parseInt(value));
+				}
+				
+				continue;
+			}
+			if(fields[i].id===idStartTime){
+				value=fields[i].value;
+				if(!value){
+					setError(fields[i], 'Field Required!');
+				}else{
+					currentForm.data.push(value);
+				}
+				continue;
+			}
+			if(fields[i].id===idEndTime){
+				value=fields[i].value;
+				if(!value){
+					setError(fields[i], 'Field Required!');
+				}else{
+					currentForm.data.push(value);
+				}
+				continue;
+			}
+			
+			if(fields[i].id===idActionToTake){
+				value=fields[i].value;
+				if(!value){
+					setError(fields[i], 'Field Required!');
+				}else{
+					currentForm.data.push(value);
+				}
+				continue;
+			}
+			if(fields[i].id === idTimeBeforeNext){
+				value=fields[i].value;
+				
+				if(!value || isNaN(value)|| parseInt(value)< 0){
+					setError(fields[i], 'Must be a non negative integer!')
+				}else{
+					currentForm.data.push(parseInt(value));
+				}
+				
+				continue;
+			}	
+		}
+		if (totalErrors === 0){
+			return currentForm;			//no errors found
+		}else{
+			return null;
+		}
+	};
+	
+	
+	/** * Specific get and set for the uniqueid textbox of the form** */
 	var setIdUnique = function(text) {
 		getElement(idUniqueNode).value = text;
 	};
@@ -98,11 +233,15 @@ var rrdAlarmConfig = function() {
 	/* Deselect the current row (if one) and clear all the texboxes on the form */
 	var clearForm = function() {
 
-		setIdUnique(' ');
+		//setIdUnique(' ');
 		getElement(idForm).reset();
+		
 		if (rowSelected) {
 			rowSelected.style.backgroundColor = '';
 			rowSelected = null;
+		}
+		if(totalErrors>0){
+			map(removeError, getElement(idForm).elements);
 		}
 	};
 	/** * generic get set for the input boxes of the form** */
@@ -138,7 +277,7 @@ var rrdAlarmConfig = function() {
 			clearForm();
 			return;
 		}
-		if (rowSelected !== null) {
+		if (rowSelected !== null || totalErrors>0) {
 			clearForm();
 		}
 		rowSelected = tmpRow;
@@ -147,9 +286,16 @@ var rrdAlarmConfig = function() {
 	};
 	/* Generate a populated tr row to be inserted in the tbody */
 	var makeTBodyRow = function(row) {
+		if(row[2]==='above'){//adding the icons to the type threshold cell
+			row[2]=[row[2], ' ', IMG({'class':'tooltip', src:"/arrow_up.png",  border:"0"})];
+		}
+		if(row[2]==='below'){
+		
+			row[2]=[row[2],' ',IMG( {'class':'tooltip', src:"/arrow_down.png", border:"0"})];
+		}
 		arrTd = map(partial(TD, tdAttributes), row);
 		arrTd[1].align = "left";// the numbers here refers to the colums
-		arrTd[2].align = "left";
+		arrTd[2].align = "center";
 		arrTd[7].align = "left";
 		var tmp = TR(null, arrTd);
 		connect(tmp, 'onclick', doMainClick);
@@ -180,10 +326,10 @@ var rrdAlarmConfig = function() {
 		return TBODY({
 					id : idTBody
 				}, map(makeTBodyRow, configuration.rows));
-	};
+	}; 
 	/*Read all the current values of the input text of the formConfigurator*/
-	var getCurrentForm = function() {
-		//TODO change these controls methods with a global one that change the colour ofthe unvalid fields
+	/*var getCurrentForm = function() {
+		//TODO change these controls methods with a global one that change the colour of the unvalid fields
 		
 		if(isNaN(getIdUnique())){
 			alert('The id provided is not a number! Check the config file loaded!');
@@ -213,7 +359,7 @@ var rrdAlarmConfig = function() {
 					getInputById(idActionToTake),
 					getInputById(idTimeBeforeNext)]
 		};
-	};
+	};*/
 	/* clear the textfield of the form pressing esc */
 	var escPressed = function(e) {
 		/*
@@ -229,16 +375,18 @@ var rrdAlarmConfig = function() {
 	 * what's on the texfields
 	 */
 	var updateRow = function() {
-		var rowToUPDT = getCurrentForm();
-		if (!isNaN(rowToUPDT.index)) { // the index is valid number
-			configuration.rows[(rowSelected.rowIndex-1)] = concat([rowToUPDT.index],rowToUPDT.data);
-			var newRow = makeTBodyRow(configuration.rows[(rowSelected.rowIndex-1)]);
-			swapDOM(getElement(idTBody).childNodes[(rowSelected.rowIndex-1)],
-					newRow);
-		} else {
-			alert("The current uniqueID is not a number or is not valid! Refresh and check the config file!");
-		}
+		var rowToUPDT = validateAndGet();//getCurrentForm();
+		if(	rowToUPDT){
+			if (!isNaN(rowToUPDT.index)) { // the index is valid number
+				configuration.rows[(rowSelected.rowIndex-1)] = concat([rowToUPDT.index],rowToUPDT.data);
+				var newRow = makeTBodyRow(configuration.rows[(rowSelected.rowIndex-1)]);
+				swapDOM(getElement(idTBody).childNodes[(rowSelected.rowIndex-1)],
+						newRow);
+			} else {
+				alert("The current uniqueID is not a number or is not valid! Refresh and check the config file!");
+			}
 		clearForm();
+		}
 
 	};
 	
@@ -259,11 +407,15 @@ var rrdAlarmConfig = function() {
 			clearForm();
 			return;
 		}
-		var newRow=concat([(lastUniqueId + 1)],getCurrentForm().data);
-		configuration.rows.push(newRow);
-		appendChildNodes(getElement(idTBody), [makeTBodyRow(configuration.rows[(configuration.rows.length-1)])]);
-		clearForm();
+		var currentForm=validateAndGet();
+		if (currentForm){
+			var newRow=concat([(lastUniqueId + 1)],currentForm.data);
+			configuration.rows.push(newRow);
+			appendChildNodes(getElement(idTBody), [makeTBodyRow(configuration.rows[(configuration.rows.length-1)])]);
+			clearForm();
+		}
 	};
+	
 	/* Update the uniqueID checkbox for an instant onmousedown */
 	var updateIndex = function() {
 		if(configuration.rows!= null ){
@@ -276,11 +428,12 @@ var rrdAlarmConfig = function() {
 	}
 	/* Remove the selected row from the array */
 	var removeRow = function() {
-
-		configuration.rows.splice((rowSelected.rowIndex - 1), 1);
-
-		removeElement(rowSelected); // remove the row from the page
-		clearForm();
+		if(rowSelected){
+			configuration.rows.splice((rowSelected.rowIndex - 1), 1);
+	
+			removeElement(rowSelected); // remove the row from the page
+			clearForm();
+		}
 	};
 	
 	/*hide the button load and connect the event to show it again*/
@@ -301,6 +454,8 @@ var rrdAlarmConfig = function() {
 			
 		}
 	};
+	
+	
 	/*Print a message on the result id*/
 	var printSendOK=function(){
 		getElement("result").innerHTML="New configuration sended!";

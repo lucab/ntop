@@ -161,7 +161,11 @@ div.niceTitle p
 	text-align: left;
 	-moz-opacity: 1;
 }
-
+/*Invalid value in an input field*/
+input.error {
+	border: 1px solid #CC0000;
+	background-color: #FFCCCC;
+}
 #header {
 	background: url(/bg_header.png) no-repeat left top;
 	padding-bottom: 18px;
