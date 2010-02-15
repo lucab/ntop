@@ -163,7 +163,7 @@ div.niceTitle p
 }
 /*Invalid value in an input field*/
 input.error {
-	border: 1px solid #CC0000;
+	border: 2px solid #CC0000;
 	background-color: #FFCCCC;
 }
 #header {

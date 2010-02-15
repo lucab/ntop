@@ -50,6 +50,7 @@ var rrdAlarmConfig = function() {
 	
 	var totalErrors=0; 							// the number of errors in the input field text
 	
+
 	var tdAttributes = {
 		align : 'right'
 	};
@@ -94,7 +95,7 @@ var rrdAlarmConfig = function() {
 	var removeError=function(element){
 		var firstIndex=element.className.search('error');
 		
-		if(firstIndex != -1){	//there was an error
+		if(firstIndex != -1){	//there was an error   && totalErrors>0
 			element.className=element.className.replace('error', '');//TODO CAMBIA IL REPLACE
 			try{
 				element.removeAttribute('title');
@@ -252,26 +253,35 @@ var rrdAlarmConfig = function() {
 		var elem = getElement(id).value;
 		return elem ? elem : " ";
 	};
+	
 	/* Whereever a row is selected the textbox field are accordingly updated */
 	var updateFormFields = function(rowSelected) {
-		var i = 0;
-		setIdUnique(rowSelected.cells[i++].innerHTML);
-		setInputById(idRrdFile, rowSelected.cells[i++].innerHTML);
-		setInputById(idTypeThreshold, rowSelected.cells[i++].innerHTML);
-		setInputById(idValueThreshold, rowSelected.cells[i++].innerHTML);
-		setInputById(idNumberRepetition, rowSelected.cells[i++].innerHTML);
-		setInputById(idStartTime, rowSelected.cells[i++].innerHTML);
-		setInputById(idEndTime, rowSelected.cells[i++].innerHTML);
-		setInputById(idActionToTake, rowSelected.cells[i++].innerHTML);
-		setInputById(idTimeBeforeNext, rowSelected.cells[i++].innerHTML);
-
+		if(rowSelected){
+			var Rindex=rowSelected.rowIndex-1;
+			var rowValues=configuration.rows[Rindex]
+			var i = 0;
+			setIdUnique(rowValues[i++]);
+			setInputById(idRrdFile, rowValues[i++]);
+			setInputById(idTypeThreshold, rowValues[i++]);
+			setInputById(idValueThreshold, rowValues[i++]);
+			setInputById(idNumberRepetition, rowValues[i++]);
+			setInputById(idStartTime, rowValues[i++]);
+			setInputById(idEndTime, rowValues[i++]);
+			setInputById(idActionToTake, rowValues[i++]);
+			setInputById(idTimeBeforeNext, rowValues[i++]);
+		}
 	};
 	/* Select the clicked row or deselect it */
 	var doMainClick = function(e) {
 		var tmpRow = e.target();
-		if (tmpRow.tagName.toLowerCase() === 'td') {
+		var tagN=tmpRow.tagName.toLowerCase();
+		if ( tagN=== 'td') {
 			// a cell was clicked get the parent as rowSelected
 			tmpRow = tmpRow.parentNode;
+		}
+		if(tagN === 'img'){
+			//an image inside a  cell was clicked get the parent of the parent as rowSelected		
+			tmpRow = tmpRow.parentNode.parentNode;
 		}
 		if (tmpRow === rowSelected) {
 			clearForm();
@@ -286,16 +296,18 @@ var rrdAlarmConfig = function() {
 	};
 	/* Generate a populated tr row to be inserted in the tbody */
 	var makeTBodyRow = function(row) {
-		if(row[2]==='above'){//adding the icons to the type threshold cell
-			row[2]=[row[2], ' ', IMG({'class':'tooltip', src:"/arrow_up.png",  border:"0"})];
-		}
-		if(row[2]==='below'){
 		
-			row[2]=[row[2],' ',IMG( {'class':'tooltip', src:"/arrow_down.png", border:"0"})];
-		}
 		arrTd = map(partial(TD, tdAttributes), row);
 		arrTd[1].align = "left";// the numbers here refers to the colums
 		arrTd[2].align = "center";
+		if(row[2]==='above'){//adding the icons to the type threshold cell
+			appendChildNodes(arrTd[2],[' ',IMG({'class':'tooltip', src:"/arrow_up.png",  border:"0"})]);
+		}
+		if(row[2]==='below'){
+		
+			appendChildNodes(arrTd[2],[' ',IMG({'class':'tooltip', src:"/arrow_down.png",  border:"0"})]);
+		}
+		
 		arrTd[7].align = "left";
 		var tmp = TR(null, arrTd);
 		connect(tmp, 'onclick', doMainClick);
@@ -386,6 +398,7 @@ var rrdAlarmConfig = function() {
 				alert("The current uniqueID is not a number or is not valid! Refresh and check the config file!");
 			}
 		clearForm();
+
 		}
 
 	};
@@ -413,6 +426,7 @@ var rrdAlarmConfig = function() {
 			configuration.rows.push(newRow);
 			appendChildNodes(getElement(idTBody), [makeTBodyRow(configuration.rows[(configuration.rows.length-1)])]);
 			clearForm();
+
 		}
 	};
 	
@@ -422,7 +436,7 @@ var rrdAlarmConfig = function() {
 			var i=parseInt(configuration.rows[configuration.rows.length-1][0]);
 			if(!isNaN(i)){
 				setIdUnique((i+1));
-			}	
+			}
 		}
 		
 	}
@@ -511,7 +525,6 @@ var rrdAlarmConfig = function() {
 		request.send('jsonString='+JSON.stringify({rows:rows})+'&configFile='+ escape(getElement('configFile').value));
 	};
 
-	
 	/** * End of Publics Methods ** */
 
 	return {
