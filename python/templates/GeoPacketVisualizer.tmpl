@@ -48,7 +48,7 @@ function drawVisualization() {
 	cod = country.getCode()
 %>\
 
-	data.addRow( ['${cod}', ${country.getTotal()}, '${country.getName()}' ] );
+	data.addRow( ['${cod}', ${country.getTotal()}, "${country.getName()|h}" ] );
 
 <%
 	j=0
@@ -60,9 +60,9 @@ function drawVisualization() {
 	  % for key2 in dizCities:
 <%		city=dizCities[key2] %>\
 % if (j+1) != len(dizCities) :
-		[${city.getLatitude()}, ${city.getLongitude()}, ${city.getTotalHosts()}, '${city.getName()}'],\
+		[${city.getLatitude()}, ${city.getLongitude()}, ${city.getTotalHosts()}, "${city.getName()|h}"],\
 % else :
-		[${city.getLatitude()}, ${city.getLongitude()}, ${city.getTotalHosts()}, '${city.getName()}']\
+		[${city.getLatitude()}, ${city.getLongitude()}, ${city.getTotalHosts()}, "${city.getName()|h}"]\
 % endif
 % if city.getName() == 'Unknown' and (not found):
 <%
