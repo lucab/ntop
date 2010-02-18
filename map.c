@@ -89,7 +89,7 @@ void create_host_map() {
 	showSymIp = 0;
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		    "map.addOverlay(createMarker(new GLatLng(%.2f, %.2f), '%s%s<A HREF=/%s.html>%s</A><br>%s<br>%s'));\n",
+		    "map.addOverlay(createMarker(new GLatLng(%.2f, %.2f), \"%s%s<A HREF=/%s.html>%s</A><br>%s<br>%s\"));\n",
 		    el->geo_ip->latitude, el->geo_ip->longitude,
 		    showSymIp ? escape_string(el->hostResolvedName, buf1, sizeof(buf1)) : "", 
 		    showSymIp ? "<br>" : "",
