@@ -339,20 +339,29 @@ void printTrafficSummary (int revertOrder) {
     revertSlashIfWIN32(buf, 0);
 
     if(stat(buf, &statbuf) != 0) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%u</TD></TR>\n", i);
-    } else
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Hosts</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT>[%u active] [%u total]</TD></TR>\n", i, myGlobals.device[myGlobals.actualReportDeviceId].hostsno);
+      sendString(buf);
+    } else {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Hosts</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>"
-		    "%u <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=knownHostsNum"
+		    "[%u active <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=activeHostSendersNum"
 		    "&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
-		    "<IMG valign=top class=tooltip SRC=/graph.gif border=0></A>"
-		    "</TD></TR>\n",
-		    i, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600),
+		    "<IMG valign=top class=tooltip SRC=/graph.gif border=0></A>]",
+		    i, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600), 
 		    (unsigned int)myGlobals.actTime, "Active+End+Nodes");
+      sendString(buf);
 
-
-    sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    " [%u total <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=knownHostsNum"
+		    "&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
+		    "<IMG valign=top class=tooltip SRC=/graph.gif border=0></A>]"
+		    "</TD></TR>\n",
+		    myGlobals.device[myGlobals.actualReportDeviceId].hostsno,
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, 
+		    (unsigned int)(myGlobals.actTime-3600), (unsigned int)myGlobals.actTime, "Total+Number+of+Hosts");
+      sendString(buf);
+    }
   }
 
   if((myGlobals.runningPref.currentFilterExpression != NULL)
@@ -730,19 +739,29 @@ void printTrafficStatistics(int revertOrder) {
     revertSlashIfWIN32(buf, 0);
 
     if(stat(buf, &statbuf) != 0) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%u</TD></TR>\n", i);
-    } else
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active End Nodes</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Hosts</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT>[%u active] [%u total]</TD></TR>\n", i, myGlobals.device[myGlobals.actualReportDeviceId].hostsno);
+      sendString(buf);
+    } else {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Hosts</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>"
-		    "%u <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=knownHostsNum&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
-		    "<IMG valign=top class=tooltip SRC=/graph.gif border=0></A>"
-		    "</TD></TR>\n",
-		    i, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600),
+		    "[%u active <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=activeHostSendersNum"
+		    "&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
+		    "<IMG valign=top class=tooltip SRC=/graph.gif border=0></A>]",
+		    i, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600), 
 		    (unsigned int)myGlobals.actTime, "Active+End+Nodes");
+      sendString(buf);
 
-
-    sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    " [%u total <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=knownHostsNum"
+		    "&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
+		    "<IMG valign=top class=tooltip SRC=/graph.gif border=0></A>]"
+		    "</TD></TR>\n",
+		    myGlobals.device[myGlobals.actualReportDeviceId].hostsno,
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, 
+		    (unsigned int)(myGlobals.actTime-3600), (unsigned int)myGlobals.actTime, "Total+Number+of+Hosts");
+      sendString(buf);
+    }
   }
 
   if((myGlobals.runningPref.currentFilterExpression != NULL)
