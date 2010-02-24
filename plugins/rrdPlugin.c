@@ -113,7 +113,7 @@ static void addRrdDelay(void);
 /* ************************************* */
 
 static ExtraPage rrdExtraPages[] = {
-  { NULL, CONST_RRD_STATISTICS_HTML, "Statistics" },
+  { NULL /* icon */, CONST_RRD_STATISTICS_HTML /* url */, "Statistics" /* descr */},
   { "graph.gif", CONST_RRD_ARBGRAPH_HTML, "Arbitrary Graphs" },
   { NULL, NULL, NULL }
 };
@@ -4603,8 +4603,8 @@ static void handleRRDHTTPrequest(char* url) {
   for(i=0; rrdExtraPages[i].url != NULL; i++) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<li><a href=\"/" CONST_PLUGINS_HEADER "%s/%s\">%s</a></li>\n",
-		  rrdPluginInfo->pluginURLname, rrd_width, rrd_height,
-		  rrdExtraPages[i].url,
+		  rrdPluginInfo->pluginURLname, 
+		  rrdExtraPages[i].url,		
 		  rrdExtraPages[i].descr);
     sendString(buf);
   }
