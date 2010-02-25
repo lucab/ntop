@@ -5665,7 +5665,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
   if(network_mode == AS_GRAPH_VIEW) {
     sendString("<center><TABLE BORDER=0 "TABLE_DEFAULTS">");
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<tr><td align=center>"
-		  "<IMG SRC=/plugins/rrdPlugin?action=interfaceSummary&amp;key=%s/AS/%s&amp;graphId=0\">\n",
+		  "<IMG SRC=\"/plugins/rrdPlugin?action=interfaceSummary&amp;key=%s/AS/%s&amp;graphId=0\">\n",
 		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, domain_network_name);
     sendString(buf);
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "</td><td valign=middle>"
@@ -5675,7 +5675,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
     sendString(buf);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<tr><td align=center>"
-		  "<IMG SRC=/plugins/rrdPlugin?action=interfaceSummary&amp;key=%s/AS/%s&amp;graphId=1\">\n",
+		  "<IMG SRC=\"/plugins/rrdPlugin?action=interfaceSummary&amp;key=%s/AS/%s&amp;graphId=1\">\n",
 		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, domain_network_name);
     sendString(buf);
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "</td><td valign=middle>"
@@ -5815,13 +5815,13 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	      keyValue = (keyValue+1) % maxHosts;
 	  }
 	} else {
-	  /* Community */
-	  u_char found = 0;
+	  int found;
 
+	  /* Community */
 	  if(el->hostIpAddress.hostFamily != AF_INET) continue;
 
-	  keyValue = 0;
 	all_hosts_community:
+	  keyValue = 0, found = 0;
 
 	  if(debug) traceEvent(CONST_TRACE_WARNING, "[keyValue=%d][totNumCommunities=%d]",
 			       keyValue, totNumCommunities);
@@ -6125,10 +6125,16 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		    formatBytes(statsEntry->icmp6Rcvd.value, 1, formatBuf9, sizeof(formatBuf9)));
       sendString(buf);
 
-      if(sym_as_name[0] != '\0')
+      if(sym_as_name[0] != '\0') {
+	if(network_mode == AS_VIEW)
+	  snprintf(sym_as_name, sizeof(sym_as_name), "%d", statsEntry->domainHost->hostAS);
+
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/AS/%s",
 		      myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		      sym_as_name);
+      }
+
+      // traceEvent (CONST_TRACE_WARNING, "--> [%s][%s]", sym_as_name, buf);
 
       if((sym_as_name[0] != '\0') && ((i = stat(buf, &statbuf)) == 0)) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),

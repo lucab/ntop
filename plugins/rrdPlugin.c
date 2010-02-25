@@ -1564,6 +1564,8 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
     }
   }
 
+  memset(argv, 0, sizeof(argv));
+
   argv[argc++] = "rrd_graph";
   argv[argc++] = fname;
   argv[argc++] = "--lazy";
@@ -1571,9 +1573,9 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
   argv[argc++] = "PNG";
   argv[argc++] = "--vertical-label";
   argv[argc++] = label;
-  argv[argc++] = "--title";
   argv[argc++] = "--watermark";
   argv[argc++] = NTOP_WATERMARK;
+  argv[argc++] = "--title";
   argv[argc++] = title;
   argv[argc++] = "--start";
   argv[argc++] = startTime;
