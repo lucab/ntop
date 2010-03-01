@@ -3,17 +3,38 @@ Created on 16/gen/2010
 
 @author: Gianluca Medici
 '''
-
 import ntop
 import host
 import os
 import sys
 #import pprint
 
+
 # Import modules for CGI handling
 import cgi, cgitb
 
 from StringIO import StringIO
+
+''' Function that provide a list of names of the scripts .py present in the scripts directory
+    the list returned does not contain the name of this module as well as the name of the __init__
+    module. The names provided in the returned list will be lacking of the trailing .py
+'''
+def readScriptsDir(pathScriptsDir):
+    import sys
+    import glob
+    directoryList=[]
+    try:
+        directoryList = glob.glob1(pathScriptsDir, '*.py')
+    
+    except:
+        raise
+        return []
+    
+    nameScriptList=[]
+    for scriptName in directoryList:
+        nameScriptList.append(scriptName[0:-3])             #remove the last 3 characters .py from the name of the script
+    
+    return nameScriptList
 
 def begin():
     
@@ -45,6 +66,7 @@ def begin():
                                                     #path+filename of the configfile to read
                                                     
     help=form.getvalue('help')
+    documentRoot=os.getenv('DOCUMENT_ROOT', '.')
     
     if help == 'true':
         #show help page
@@ -54,6 +76,9 @@ def begin():
         requestFileConfig=form.getvalue('configFile')
         if  requestFileConfig != None:
             nameFileConfig=requestFileConfig
+        
+        #get all the scripts in the scripts directory
+        listScripts=readScriptsDir(documentRoot+'/python/rrdalarm/scripts/')
         
         ntop.printHTMLHeader('RRD Alarm Configurator', 1, 0)
         
@@ -73,7 +98,6 @@ def begin():
                 ntop.sendString(exceptions.html_error_template().render())
     
     try:
-        documentRoot=os.getenv('DOCUMENT_ROOT', '.')
         basedir =  documentRoot+'/python/templates'
         mylookup = TemplateLookup(directories=[basedir])
         myTemplate = mylookup.get_template(templateFilename)
@@ -82,7 +106,7 @@ def begin():
         if(help =='true'):          #show help page
             ctx = Context(buf)
         else:
-            ctx = Context(buf, configRows=rows,tempFilePath=pathTempFile, nameFileConfig=nameFileConfig, pathRRDFiles=pathRRDFiles)
+            ctx = Context(buf, configRows=rows,tempFilePath=pathTempFile, nameFileConfig=nameFileConfig,listScripts=listScripts,  pathRRDFiles=pathRRDFiles)
         
         myTemplate.render_context(ctx)
         ntop.sendString(buf.getvalue())

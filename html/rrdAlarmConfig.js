@@ -38,6 +38,7 @@ var rrdAlarmConfig = function() {
 	var idActionToTake = 'actionToPerform';
 	var idTimeBeforeNext = 'timeBeforeNext';
 	var	 idTrToChange= 'trToChange';
+	var idActionParameter='actionParameter';
 	
 	var idTBody = 'body';						// id of the Tbody
 	var idForm = 'formConfigurator'; 			// id of the form
@@ -73,7 +74,7 @@ var rrdAlarmConfig = function() {
 		}
 		return retString;
 		
-	}
+	};
 	/*var findFromEnd= function(stringa, chr){
 		
 		for(var len=stringa.length-1;len >0; lenn--){
@@ -122,100 +123,112 @@ var rrdAlarmConfig = function() {
 		var fields=getElement(idForm).elements;
 		var value=null;
 		var currentForm={index: null, data:[]};
-		
-		for(var i=0; i<fields.length;i++ ){
-			removeError(fields[i]);
-			if(fields[i].id===idUniqueNode ){
-				
-				value=parseInt(fields[i].value);
+			
+			if(fields[0].id===idUniqueNode ){
+				removeError(fields[0]);	
+				value=parseInt(fields[0].value);
 				if(isNaN(value)){
-					setError(fields[i], 'The id provided is not a number! Check the config file loaded!');
+					setError(fields[0], 'The id provided is not a number! Check the config file loaded!');
 				}else{
 					currentForm.index=value;
 				}
-				continue;	
 			}
-			if(fields[i].id===idRrdFile){
-				value=fields[i].value;
+			if(fields[1].id===idRrdFile){
+				removeError(fields[1]);
+				value=fields[1].value;
 				if(!value){
-					setError(fields[i], 'Field Required!');
+					setError(fields[1], 'Field Required!');
 				}else{
 					currentForm.data.push(value);
 				}
-				continue;
 			}
-			if(fields[i].id===idTypeThreshold){
-				value=fields[i].value;
+			if(fields[2].id===idTypeThreshold){
+				removeError(fields[2]);
+				value=fields[2].value;
 				if(!value){
-					setError(fields[i], 'Field Required!');
+					setError(fields[2], 'Field Required!');
 				}else{
 					currentForm.data.push(value);
 				}
-				continue;
 			}
 			
-			if(fields[i].id === idValueThreshold){
-				value=fields[i].value;
+			if(fields[3].id === idValueThreshold){
+				removeError(fields[3]);
+				value=fields[3].value;
 				
 				if(!value || isNaN(value)){
-					setError(fields[i], 'Must be a number!')
+					setError(fields[3], 'Must be a number!')
 				}else{
 					currentForm.data.push(value);
 				}
 				
-				continue;
 			}
-			if(fields[i].id === idNumberRepetition){
-				value=fields[i].value;
+			if(fields[4].id === idNumberRepetition){
+				removeError(fields[4]);
+				value=fields[4].value;
 				
 				if(!value ||isNaN(value)|| parseInt(value)< 0){
-					setError(fields[i], 'Must be a non negative integer!')
+					setError(fields[4], 'Must be a non negative integer!')
 				}else{
 					currentForm.data.push(parseInt(value));
 				}
 				
-				continue;
 			}
-			if(fields[i].id===idStartTime){
-				value=fields[i].value;
+			if(fields[5].id===idStartTime){
+				removeError(fields[5]);
+				value=fields[5].value;
 				if(!value){
-					setError(fields[i], 'Field Required!');
+					setError(fields[5], 'Field Required!');
 				}else{
 					currentForm.data.push(value);
 				}
-				continue;
 			}
-			if(fields[i].id===idEndTime){
-				value=fields[i].value;
+			if(fields[6].id===idEndTime){
+				removeError(fields[6]);
+				value=fields[6].value;
 				if(!value){
-					setError(fields[i], 'Field Required!');
+					setError(fields[6], 'Field Required!');
 				}else{
 					currentForm.data.push(value);
 				}
-				continue;
 			}
 			
-			if(fields[i].id===idActionToTake){
-				value=fields[i].value;
-				if(!value){
-					setError(fields[i], 'Field Required!');
+			if(fields[7].id===idActionToTake){
+				removeError(fields[7]);
+				value=fields[7].value;
+				
+				if (!value) {
+					setError(fields[7], 'Field Required!');
 				}else{
 					currentForm.data.push(value);
-				}
-				continue;
+				}	
 			}
-			if(fields[i].id === idTimeBeforeNext){
-				value=fields[i].value;
+			
+			if(fields[8].id === idActionParameter){
+				removeError(fields[8]);
+				value=fields[8].value;
+				
+				if (!value) {
+					setError(fields[8], 'Field Required!');
+				}else{
+					if(fields[7].value.search('mail')!== -1 && value.search('@')=== -1){
+						setError(fields[8], 'The email address is not correct!');	
+					}else{
+						currentForm.data.push(value);
+					}
+				}
+			}
+			if(fields[9].id === idTimeBeforeNext){
+				removeError(fields[9]);
+				value=fields[9].value;
 				
 				if(!value || isNaN(value)|| parseInt(value)< 0){
-					setError(fields[i], 'Must be a non negative integer!')
+					setError(fields[9], 'Must be a non negative integer!')
 				}else{
 					currentForm.data.push(parseInt(value));
 				}
-				
-				continue;
 			}	
-		}
+		
 		if (totalErrors === 0){
 			return currentForm;			//no errors found
 		}else{
@@ -267,7 +280,10 @@ var rrdAlarmConfig = function() {
 			setInputById(idNumberRepetition, rowValues[i++]);
 			setInputById(idStartTime, rowValues[i++]);
 			setInputById(idEndTime, rowValues[i++]);
+			
 			setInputById(idActionToTake, rowValues[i++]);
+			setInputById(idActionParameter, rowValues[i++]);
+			
 			setInputById(idTimeBeforeNext, rowValues[i++]);
 		}
 	};
@@ -296,18 +312,21 @@ var rrdAlarmConfig = function() {
 	};
 	/* Generate a populated tr row to be inserted in the tbody */
 	var makeTBodyRow = function(row) {
+		var actionToTake=row[7]
 		
-		arrTd = map(partial(TD, tdAttributes), row);
+		var rowM=row.slice(0,7).concat(row.slice(8,10));				//remove the actiontotake because will not become a td
+		//rowM.concat(row.slice(8,10));
+		var arrTd = map(partial(TD, tdAttributes), rowM);
 		arrTd[1].align = "left";// the numbers here refers to the colums
 		arrTd[2].align = "center";
-		if(row[2]==='above'){//adding the icons to the type threshold cell
+		if(rowM[2]==='above'){//adding the icons to the type threshold cell
 			appendChildNodes(arrTd[2],[' ',IMG({'class':'tooltip', src:"/arrow_up.png",  border:"0"})]);
 		}
-		if(row[2]==='below'){
+		if(rowM[2]==='below'){
 		
 			appendChildNodes(arrTd[2],[' ',IMG({'class':'tooltip', src:"/arrow_down.png",  border:"0"})]);
 		}
-		
+		arrTd[7].title=actionToTake;					//set the title to signal the script that will be called
 		arrTd[7].align = "left";
 		var tmp = TR(null, arrTd);
 		connect(tmp, 'onclick', doMainClick);
@@ -433,7 +452,10 @@ var rrdAlarmConfig = function() {
 	/* Update the uniqueID checkbox for an instant onmousedown */
 	var updateIndex = function() {
 		if(configuration.rows!= null ){
-			var i=parseInt(configuration.rows[configuration.rows.length-1][0]);
+			var i=0
+			if(configuration.rows && configuration.rows.length>0){
+				i=parseInt(configuration.rows[configuration.rows.length-1][0]);
+				}
 			if(!isNaN(i)){
 				setIdUnique((i+1));
 			}

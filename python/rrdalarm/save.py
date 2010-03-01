@@ -73,6 +73,8 @@ if os.getenv('REQUEST_METHOD', 'GET') == 'POST':                          #the g
             cFile= open(pathConfigFile+nameFileConfig, 'w')
             cFile.write("#rrdAlarmConfig File. All the lines that starts with the '#' will be ignored! (just like this one)\n")
             for line in rows:   #save lines on cgFile. separator \t endofline \n
+                #pprint.pprint(line)
+                #pprint.pprint(sum(line, []))
                 cFile.write( _stringyfy(line, '\t'))
             cFile.close()
             

@@ -5,7 +5,7 @@ Created on 20 Dec 2009
 
 This module is made to show a page inside ntop summarizing the geoLocation of all
 host seen and visualize them on a world map. The map is interactive and shows in addiction
-the information regarding each nation's packet count (represented with different tonality of colours).
+the information regarding each nation's packets count (represented with different tonality of colours).
 Clicking on a region of a map or on a row of the country's table is possible to zoom to
 that particular nation and see the approximate position of the cities in witch the hosts are located.
 '''
