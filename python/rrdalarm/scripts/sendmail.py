@@ -5,7 +5,27 @@
 # this module: change me to reflect your machine names, sig, and preferences;
 ###############################################################################
 import sys
+#------------------------------------------------------------------------------
+# (required for send) SMTP email server machine name
+# see Python smtpd module for a SMTP server class to run locally;
+# note: your ISP may require that you be directly connected to their system:
+# I can email through Earthlink on dial-up, but cannot via Comcast cable
+#------------------------------------------------------------------------------
+smtpservername = ''     #REMEBER TO SET THIS PARAMETER TO YOUR LINKING or 'smtp.mindspring.com', 'localhost'
 
+#------------------------------------------------------------------------------
+# (may be required for send) SMTP user/password if authenticated
+# set user to None or '' if no login/authentication is required
+# set pswd to name of a file holding your SMTP password, or an
+# empty string to force programs to ask (in a console, or GUI)
+#------------------------------------------------------------------------------
+
+#smtpuser  = ''                           # per your ISP
+#smtppasswdfile  = ''                       # set to '' to be asked
+
+###############################################################################
+# send messages, add attachments (see __init__ for docs, test)
+###############################################################################
 
 #import mailconfig                                       # client's mailconfig
 import smtplib, os, mimetypes                              # mime: name to type
@@ -18,45 +38,31 @@ from email.MIMEImage     import MIMEImage
 from email.MIMEText      import MIMEText
 from email.MIMEBase      import MIMEBase
 
-
-#------------------------------------------------------------------------------
-# (required for send) SMTP email server machine name
-# see Python smtpd module for a SMTP server class to run locally;
-# note: your ISP may require that you be directly connected to their system:
-# I can email through Earthlink on dial-up, but cannot via Comcast cable
-#------------------------------------------------------------------------------
-smtpservername = ''     # or 'smtp.mindspring.com', 'localhost'
-
-#------------------------------------------------------------------------------
-# (may be required for send) SMTP user/password if authenticated
-# set user to None or '' if no login/authentication is required
-# set pswd to name of a file holding your SMTP password, or an
-# empty string to force programs to ask (in a console, or GUI)
-#------------------------------------------------------------------------------
-
-smtpuser  = ''                             # per your ISP
-smtppasswdfile  = ''                       # set to '' to be asked
-
-
-###############################################################################
-# send messages, add attachments (see __init__ for docs, test)
-###############################################################################
-
 class MailSender(object):
     """
     send mail: format message, interface with SMTP server
     works on any machine with Python+Inet, doesn't use cmdline mail
     a nonauthenticating client: see MailSenderAuth if login required
     """
-    global smtpservername#, smtpuser, smtppasswdfile
-    
+    global smtpservername, myaddress, mysignature, smtpuser, smtppasswdfile
     
     def __init__(self, smtpserver=None):
         self.smtpServerName  = smtpserver or smtpservername
 
     def sendMessage(self, From, To, Subj, extrahdrs, bodytext, attaches,
                                             saveMailSeparator=(('='*80)+'PY\n')):
+        """
+        format,send mail: blocks caller, thread me in a GUI
+        bodytext is main text part, attaches is list of filenames
+        extrahdrs is list of (name, value) tuples to be added
+        raises uncaught exception if send fails for any reason
+        saves sent message text in a local file if successful
 
+        assumes that To, Cc, Bcc hdr values are lists of 1 or more already
+        stripped addresses (possibly in full name+<addr> format); client
+        must split these on delimiters, parse, or use multiline input;
+        note that SMTP allows full name+<addr> format in recipients
+        """
         if not attaches:
             msg = Message( )
             msg.set_payload(bodytext)
@@ -81,9 +87,9 @@ class MailSender(object):
         # sendmail call raises except if all Tos failed,
         # or returns failed Tos dict for any that failed
 
-        print>>sys.stderr, 'Sending to...'+ str(recip)
-        #print>>sys.stderr, fullText[:256]
-        server = smtplib.SMTP(self.smtpServerName) #lib.SMTP(self.smtpServerName)           # this may fail too
+        print>>sys.stderr,'Sending to...'+ str(recip)
+        #print>>sys.stderr,fullText[:256]
+        server = smtplib.SMTP(self.smtpServerName,timeout=10) #lib.SMTP(self.smtpServerName)           # this may fail too
         #self.getPassword( )                                       # if srvr requires
         #self.authenticateServer(server)                      # login in subclass
         try:
@@ -94,7 +100,7 @@ class MailSender(object):
             class SomeAddrsFailed(Exception): pass
             raise SomeAddrsFailed('Failed addrs:%s\n' % failed)
         #self.saveSentMessage(fullText, saveMailSeparator)
-        print>>sys.stderr, 'Send exit'
+        print>>sys.stderr,'Send exit'
 
     def addAttachments(self, mainmsg, bodytext, attaches):
         # format a multipart message with attachments
@@ -108,7 +114,7 @@ class MailSender(object):
             contype, encoding = mimetypes.guess_type(filename)
             if contype is None or encoding is not None:  # no guess, compressed?
                 contype = 'application/octet-stream'     # use generic default
-            #print>>sys.stderr, 'Adding ' + contype
+            print>>sys.stderr,'Adding ' + contype
 
             # build sub-Message of appropriate kind
             maintype, subtype = contype.split('/', 1)
@@ -210,9 +216,8 @@ def main( ):
         print>>sys.stderr, 'USAGE %s -p <parameter> -t "<text>"' % sys.argv[0]
     else:
         sender = MailSender()
-        
+            
         try:
-            #From, To, Subj, text = inputmessage()
             From='rrdAlarm@noreply.org'
             To=sys.argv[2]
             

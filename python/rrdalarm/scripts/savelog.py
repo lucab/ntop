@@ -4,8 +4,11 @@ Created on 19/feb/2010
 @author: Gianluca Medici
 '''
 import sys, time
+#this parameter defines the directory in witch the log files will be placed
+pathFile='/tmp/'                '''Remember to set this parameter to your liking'''
+
 def begin():
-    pathFile='/home/gianluca/'
+    global pathFile
     if len(sys.argv)!=5 or sys.argv[1]!= '-p' or not sys.argv[2] or sys.argv[3]!= '-t' or not sys.argv[4]:
         print 'USAGE %s -p <parameter> -t <text>' % sys.argv[0]
     else:

@@ -46,7 +46,7 @@ def _stringyfy(listVal, separator):
     return returnValue[0:-1]+'\n'
 
 '''HERE STARTS THE SCRIPT'''
-
+import pprint
 if os.getenv('REQUEST_METHOD', 'GET') == 'POST':                          #the get method is discarded. only POST
     
     cgitb.enable()
@@ -58,12 +58,14 @@ if os.getenv('REQUEST_METHOD', 'GET') == 'POST':                          #the g
     nameFileConfig='rrdAlarmConfig.txt'              #default nameFileConfig
     #print>>sys.stderr , nameFileConfig
     jsonData=form.getvalue('jsonString', '{"rows":None}')                 #get the data from the body of the post request
-    userConfigFile=form.getvalue('configFile', None)
-    #print>>sys.stderr, userConfigFile
+    userConfigFile=form.getfirst('configFile', None)
+    pprint.pprint(form.getvalue('configFile', None), sys.stderr)
+    print>>sys.stderr, userConfigFile
     if userConfigFile != None:
         
         nameFileConfig=checkFileName(str(userConfigFile))
     
+    pprint.pprint(nameFileConfig, sys.stderr)
     #call ntop method to get post data. parse the json variable and store
     configData=json.loads(jsonData,'latin1')
         
