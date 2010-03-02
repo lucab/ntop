@@ -1199,7 +1199,7 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 		    document_root, query_string);
     } else {
       /* HTTP POST */
-#ifdef WIN32
+#if defined(WIN32)
       if((idx = readHTTPpostData(postLen, query_string, sizeof(query_string)-1)) >= 0) {
 	/* Emulate a POST with a GET on Windows */
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
@@ -1212,7 +1212,8 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "import os\nos.environ['DOCUMENT_ROOT']='%s'\n"
 		    "os.environ['REQUEST_METHOD']='POST'\n"
-		    "os.environ['CONTENT_LENGTH']='%u'\n",
+		    "os.environ['CONTENT_TYPE']='application/x-www-form-urlencoded'\n"
+		    "os.environ['CONTENT_LENGTH']='%u'\n",		    
 		    document_root, postLen);
 #endif
     }
@@ -1220,10 +1221,13 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
     /* See http://bugs.python.org/issue1159 */
     PyRun_SimpleString(buf);
 
+    traceEvent(CONST_TRACE_INFO, "[PYTHON] Executing %s", buf);
     /* sys.stdin <=> myGlobals.newSock */
 
 #ifndef WIN32
-    if(myGlobals.runningPref.debugMode) {
+    if(myGlobals.runningPref.debugMode /* -K */) {
+      traceEvent(CONST_TRACE_INFO, "[PYTHON] Redirecting file descriptors");
+      
       old_stdin = dup(STDIN_FILENO), old_stdout = dup(STDOUT_FILENO);
 
       /* Forget file redirection on Windows without forking a process.
@@ -1243,12 +1247,14 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
     PyRun_SimpleFile(PyFile_AsFile(fd), python_path);
 
 #ifndef WIN32
-    if(myGlobals.runningPref.debugMode) {
+    if(myGlobals.runningPref.debugMode /* -K */) {
       if(dup2(old_stdin, STDOUT_FILENO) == -1)
 	traceEvent(CONST_TRACE_WARNING, "Failed to restore stdout");
       
       if(dup2(old_stdout, STDIN_FILENO) == -1)
 	traceEvent(CONST_TRACE_WARNING, "Failed to restore stdout");
+
+      traceEvent(CONST_TRACE_INFO, "[PYTHON] Succesfully restored file descriptors");
     }
 #endif
 
