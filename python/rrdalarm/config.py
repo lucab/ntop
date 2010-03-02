@@ -28,9 +28,9 @@ def readScriptsDir(pathScriptsDir):
     
     except:
         raise
-        return []
+        return ['None']
     
-    nameScriptList=[]
+    nameScriptList=['None']
     for scriptName in directoryList:
         nameScriptList.append(scriptName[0:-3])             #remove the last 3 characters .py from the name of the script
     

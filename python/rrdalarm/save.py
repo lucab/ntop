@@ -47,51 +47,51 @@ def _stringyfy(listVal, separator):
 
 '''HERE STARTS THE SCRIPT'''
 import pprint
-if os.getenv('REQUEST_METHOD', 'GET') == 'POST':                          #the get method is discarded. only POST
+#if os.getenv('REQUEST_METHOD', 'GET') == 'POST':                          #the get method is discarded. only POST
     
-    cgitb.enable()
+cgitb.enable()
+
+form = cgi.FieldStorage()
+
+form.type='application/jsonrequest'
+pathConfigFile=ntop.getSpoolPath()+'/'
+nameFileConfig='rrdAlarmConfig.txt'              #default nameFileConfig
+#print>>sys.stderr , nameFileConfig
+jsonData=form.getvalue('jsonString', '{"rows":None}')                 #get the data from the body of the post request
+userConfigFile=form.getfirst('configFile', None)
+pprint.pprint(form.getvalue('configFile', None), sys.stderr)
+print>>sys.stderr, userConfigFile
+if userConfigFile != None:
     
-    form = cgi.FieldStorage()
-    
-    form.type='application/jsonrequest'
-    pathConfigFile=ntop.getSpoolPath()+'/'
-    nameFileConfig='rrdAlarmConfig.txt'              #default nameFileConfig
-    #print>>sys.stderr , nameFileConfig
-    jsonData=form.getvalue('jsonString', '{"rows":None}')                 #get the data from the body of the post request
-    userConfigFile=form.getfirst('configFile', None)
-    pprint.pprint(form.getvalue('configFile', None), sys.stderr)
-    print>>sys.stderr, userConfigFile
-    if userConfigFile != None:
+    nameFileConfig=checkFileName(str(userConfigFile))
+
+#pprint.pprint(nameFileConfig, sys.stderr)
+#call ntop method to get post data. parse the json variable and store
+configData=json.loads(jsonData,'latin1')
+
+rows=configData['rows']
+if rows != None:
+    try:
+        cFile= open(pathConfigFile+nameFileConfig, 'w')
+        cFile.write("#rrdAlarmConfig File. All the lines that starts with the '#' will be ignored! (just like this one)\n")
+        for line in rows:   #save lines on cgFile. separator \t endofline \n
+            #pprint.pprint(line)
+            #pprint.pprint(sum(line, []))
+            cFile.write( _stringyfy(line, '\t'))
+        cFile.close()
         
-        nameFileConfig=checkFileName(str(userConfigFile))
-    
-    pprint.pprint(nameFileConfig, sys.stderr)
-    #call ntop method to get post data. parse the json variable and store
-    configData=json.loads(jsonData,'latin1')
-        
-    rows=configData['rows']
-    if rows != None:
-        try:
-            cFile= open(pathConfigFile+nameFileConfig, 'w')
-            cFile.write("#rrdAlarmConfig File. All the lines that starts with the '#' will be ignored! (just like this one)\n")
-            for line in rows:   #save lines on cgFile. separator \t endofline \n
-                #pprint.pprint(line)
-                #pprint.pprint(sum(line, []))
-                cFile.write( _stringyfy(line, '\t'))
-            cFile.close()
-            
-        except IOError:
-            #ntop.sendString(exceptions.html_error_template().render()) TODO
-            print>>sys.stderr, "IOEXCEPTION writing file "+pathConfigFile+nameFileConfig
-            ack='Problems writing file <b>'+pathConfigFile+nameFileConfig+'</b> operation aborted.'
-            #cgi.escape(ack, True)
-            ntop.sendHTTPHeader(1)
-            ntop.sendString(ack)
-        
-        ack='Configuration file <b>'+pathConfigFile+nameFileConfig+'</b> successfully saved.'
+    except IOError:
+        #ntop.sendString(exceptions.html_error_template().render()) TODO
+        print>>sys.stderr, "IOEXCEPTION writing file "+pathConfigFile+nameFileConfig
+        ack='Problems writing file <b>'+pathConfigFile+nameFileConfig+'</b> operation aborted.'
         #cgi.escape(ack, True)
         ntop.sendHTTPHeader(1)
         ntop.sendString(ack)
-        print>>sys.stderr, "RRDAlarm configuration file: "+pathConfigFile+nameFileConfig+" Saved "
-else: #called by a some other method rather than POST return not implemented
-    ntop.returnHTTPnotImplemented()
+    
+    ack='Configuration file <b>'+pathConfigFile+nameFileConfig+'</b> successfully saved.'
+    #cgi.escape(ack, True)
+    ntop.sendHTTPHeader(1)
+    ntop.sendString(ack)
+    print>>sys.stderr, "RRDAlarm configuration file: "+pathConfigFile+nameFileConfig+" Saved "
+#else: #called by a some other method rather than POST return not implemented
+#    ntop.returnHTTPnotImplemented()

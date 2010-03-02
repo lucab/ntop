@@ -228,10 +228,11 @@ def performActions(parameterDict):
     if len(parameterDict) >0:
         try:
             for key in parameterDict.keys():
-                scriptName=str(parameterDict[key]['actionToPerform'])+'.py'
-                command='python %s/python/rrdalarm/scripts/%s -p "%s" -t "%s"' % (documentRoot,scriptName,str(key),str(parameterDict[key]['textAlarm']))
-                #print>>sys.stderr, command
-                os.system(command)
+                if str(parameterDict[key]['actionToPerform']) == 'None':
+                    scriptName=str(parameterDict[key]['actionToPerform'])+'.py'
+                    command='python %s/python/rrdalarm/scripts/%s -p "%s" -t "%s"' % (documentRoot,scriptName,str(key),str(parameterDict[key]['textAlarm']))
+                    #print>>sys.stderr, command
+                    os.system(command)
         except:
             raise
             #print>>sys.stderr, 'Python probably bug 1731717, the alarm was performed anyway'
@@ -296,11 +297,17 @@ def begin():
                 #rrd_argv=[fileN,'AVERAGE', '--start', threshold.getStartTime(), '--end', threshold.getStartTime()]
                 #Return :((start, end, step), (name1, name2, ...), [(data1, data2, ..), ...])
                 
-                #print>>sys.stderr, '\nGUARDA QUI'+threshold.getStartTime()+' '+str(type(threshold.getEndTime()))
+                print>>sys.stderr, '\nGUARDA QUI'+str(threshold.getStartTime())+' '+str(threshold.getEndTime())+' '+str(fileN)
                 rrdObj=rrdtool.fetch(fileN, 'AVERAGE', '--start', threshold.getStartTime(), '--end', threshold.getEndTime())
                 
                 #print>>sys.stderr, '\nRRDFETCH RETURNED:'
-                #pprint.pprint(rrdObj, sys.stderr) #print object for debug purpose only
+                pprint.pprint(rrdObj, sys.stderr) #print object for debug purpose only
+         
+                rrdObj=rrdtool.fetch(fileN, 'AVERAGE', '--start', threshold.getStartTime(), '--end', threshold.getEndTime())
+                
+                #print>>sys.stderr, '\nRRDFETCH RETURNED:'
+                pprint.pprint(rrdObj, sys.stderr) #print object for debug purpose only
+         
                 step=rrdObj[0][2]
                 start=rrdObj[0][0]
                 end=float(rrdObj[0][1])
@@ -381,13 +388,13 @@ THE SCRIPT STARTS HERE
 
 from StringIO import StringIO
 
-if os.getenv('REQUEST_METHOD', 'GET') == 'GET':             # The script can be called only by get method
-    
-    try:
-        mainT()        
-    except RuntimeError as x:
-        ntop.sendHTTPHeader(1)
-        ntop.printHTMLHeader(str(x)+' Aborted.',1,0)
-        ntop.printHTMLFooter()
-else:       #script called by some other method rather that GET, return not implemented
-    ntop.returnHTTPnotImplemented()
+#if os.getenv('REQUEST_METHOD', 'GET') == 'GET':             # The script can be called only by get method
+
+try:
+    begin()        
+except RuntimeError as x:
+    ntop.sendHTTPHeader(1)
+    ntop.printHTMLHeader(str(x)+' Aborted.',1,0)
+    ntop.printHTMLFooter()
+#else:       #script called by some other method rather that GET, return not implemented
+#    ntop.returnHTTPnotImplemented()
