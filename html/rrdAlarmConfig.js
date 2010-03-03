@@ -124,7 +124,7 @@ var rrdAlarmConfig = function() {
 		var value=null;
 		var currentForm={index: null, data:[]};
 			
-			if(fields[0].id===idUniqueNode ){
+			/*if(fields[0].id===idUniqueNode ){
 				removeError(fields[0]);	
 				value=parseInt(fields[0].value);
 				if(isNaN(value)){
@@ -132,8 +132,17 @@ var rrdAlarmConfig = function() {
 				}else{
 					currentForm.index=value;
 				}
+			}*/
+			if(fields[0].id===idRrdFile){
+				removeError(fields[0]);
+				value=fields[0].value;
+				if(!value){
+					setError(fields[0], 'Field Required!');
+				}else{
+					currentForm.data.push(value);
+				}
 			}
-			if(fields[1].id===idRrdFile){
+			if(fields[1].id===idTypeThreshold){
 				removeError(fields[1]);
 				value=fields[1].value;
 				if(!value){
@@ -142,39 +151,39 @@ var rrdAlarmConfig = function() {
 					currentForm.data.push(value);
 				}
 			}
-			if(fields[2].id===idTypeThreshold){
+			
+			if(fields[2].id === idValueThreshold){
 				removeError(fields[2]);
 				value=fields[2].value;
-				if(!value){
-					setError(fields[2], 'Field Required!');
+				
+				if(!value || isNaN(value)){
+					setError(fields[2], 'Must be a number!')
 				}else{
 					currentForm.data.push(value);
 				}
+				
 			}
-			
-			if(fields[3].id === idValueThreshold){
+			if(fields[3].id === idNumberRepetition){
 				removeError(fields[3]);
 				value=fields[3].value;
 				
-				if(!value || isNaN(value)){
-					setError(fields[3], 'Must be a number!')
-				}else{
-					currentForm.data.push(value);
-				}
-				
-			}
-			if(fields[4].id === idNumberRepetition){
-				removeError(fields[4]);
-				value=fields[4].value;
-				
 				if(!value ||isNaN(value)|| parseInt(value)< 0){
-					setError(fields[4], 'Must be a non negative integer!')
+					setError(fields[3], 'Must be a non negative integer!')
 				}else{
 					currentForm.data.push(parseInt(value));
 				}
 				
 			}
-			if(fields[5].id===idStartTime){
+			if(fields[4].id===idStartTime){
+				removeError(fields[4]);
+				value=fields[4].value;
+				if(!value){
+					setError(fields[4], 'Field Required!');
+				}else{
+					currentForm.data.push(value);
+				}
+			}
+			if(fields[5].id===idEndTime){
 				removeError(fields[5]);
 				value=fields[5].value;
 				if(!value){
@@ -183,47 +192,43 @@ var rrdAlarmConfig = function() {
 					currentForm.data.push(value);
 				}
 			}
-			if(fields[6].id===idEndTime){
+			
+			if(fields[6].id===idActionToTake){
 				removeError(fields[6]);
 				value=fields[6].value;
-				if(!value){
+				
+				if (!value) {
 					setError(fields[6], 'Field Required!');
 				}else{
 					currentForm.data.push(value);
 				}
-			}
-			
-			if(fields[7].id===idActionToTake){
-				removeError(fields[7]);
-				value=fields[7].value;
-				
-				if (!value) {
-					setError(fields[7], 'Field Required!');
+				if(fields[6].value!=='None'){
+					if(fields[7].id === idActionParameter){
+						removeError(fields[7]);
+						value=fields[7].value;
+						
+						if (!value) {
+							setError(fields[7], 'Field Required!');
+						}else{
+							if(fields[6].value.search('mail')!== -1 && value.search('@')=== -1){
+								setError(fields[7], 'The email address is not correct!');	
+							}else{
+								currentForm.data.push(value);
+							}
+						}
+					}
 				}else{
-					currentForm.data.push(value);
-				}	
+					fields[7].value=' ';
+					currentForm.data.push(fields[7].value);
+				}
 			}
 			
-			if(fields[8].id === idActionParameter){
+			if(fields[8].id === idTimeBeforeNext){
 				removeError(fields[8]);
 				value=fields[8].value;
 				
-				if (!value) {
-					setError(fields[8], 'Field Required!');
-				}else{
-					if(fields[7].value.search('mail')!== -1 && value.search('@')=== -1){
-						setError(fields[8], 'The email address is not correct!');	
-					}else{
-						currentForm.data.push(value);
-					}
-				}
-			}
-			if(fields[9].id === idTimeBeforeNext){
-				removeError(fields[9]);
-				value=fields[9].value;
-				
 				if(!value || isNaN(value)|| parseInt(value)< 0){
-					setError(fields[9], 'Must be a non negative integer!')
+					setError(fields[8], 'Must be a non negative integer!')
 				}else{
 					currentForm.data.push(parseInt(value));
 				}
@@ -239,14 +244,15 @@ var rrdAlarmConfig = function() {
 	
 	/** * Specific get and set for the uniqueid textbox of the form** */
 	var setIdUnique = function(text) {
-		getElement(idUniqueNode).value = text;
+		getElement(idUniqueNode).innerHTML = text;
+		
 	};
 	var getIdUnique = function() {
-		return parseInt(getElement(idUniqueNode).value);
+		return parseInt(getElement(idUniqueNode).innerHTML);
 	};
 	/* Deselect the current row (if one) and clear all the texboxes on the form */
 	var clearForm = function() {
-
+		setIdUnique(' ');
 		//setIdUnique(' ');
 		getElement(idForm).reset();
 		
@@ -316,6 +322,11 @@ var rrdAlarmConfig = function() {
 		
 		var rowM=row.slice(0,7).concat(row.slice(8,10));				//remove the actiontotake because will not become a td
 		//rowM.concat(row.slice(8,10));
+		if(row[7]!=='None'){
+			rowM[7]=[STRONG(null,row[7]),':',rowM[7]];
+		}else{
+			rowM[7]=STRONG(null,row[7]);
+		}
 		var arrTd = map(partial(TD, tdAttributes), rowM);
 		arrTd[1].align = "left";// the numbers here refers to the colums
 		arrTd[2].align = "center";
@@ -406,6 +417,10 @@ var rrdAlarmConfig = function() {
 	 * what's on the texfields
 	 */
 	var updateRow = function() {
+		if(!rowSelected){
+			addRow();
+			return;
+		}
 		var rowToUPDT = validateAndGet();//getCurrentForm();
 		if(	rowToUPDT){
 			if (!isNaN(rowToUPDT.index)) { // the index is valid number
@@ -451,7 +466,7 @@ var rrdAlarmConfig = function() {
 	
 	/* Update the uniqueID checkbox for an instant onmousedown */
 	var updateIndex = function() {
-		if(configuration.rows!= null ){
+		if(configuration.rows!= null &&!rowSelected){
 			var i=0
 			if(configuration.rows && configuration.rows.length>0){
 				i=parseInt(configuration.rows[configuration.rows.length-1][0]);
@@ -512,7 +527,7 @@ var rrdAlarmConfig = function() {
 		connect('update', 'onmouseup', updateRow);
 		connect('clear', 'onmouseup', clearForm);
 		connect('addRow', 'onmouseup', addRow);
-		connect('addRow', 'onmousedown', updateIndex);
+		connect('update', 'onmousedown', updateIndex);
 		connect('removeRow', 'onmouseup', removeRow);
 		onMouseUpIdEvent=connect(idTrToChange, 'onmouseup', createInput);
 	};
@@ -545,6 +560,7 @@ var rrdAlarmConfig = function() {
 		}
 		request.setRequestHeader("Content-Type","application/jsonrequest");
 		request.send('jsonString='+JSON.stringify({rows:rows})+'&configFile='+ escape(getElement('configFile').value));
+		getElement("result").innerHTML='Waiting for confirmation...';
 	};
 
 	/** * End of Publics Methods ** */

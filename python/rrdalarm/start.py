@@ -24,6 +24,7 @@ noFilesLine=[]                              #list of all the lines with no rrd f
 try:
     import rrdtool
 except:
+    raise
     ntop.printHTMLHeader('ntop Python Configuration Error',1,0)
     ntop.sendString("<b><center><font color=red>Please install <A HREF='http://sourceforge.net/projects/py-rrdtool/'>pyRRDTool</A></font><br># cd py_rrdTool_dir<br># sudo python setup.py install</center></b>")
     ntop.printHTMLFooter()
@@ -228,7 +229,7 @@ def performActions(parameterDict):
     if len(parameterDict) >0:
         try:
             for key in parameterDict.keys():
-                if str(parameterDict[key]['actionToPerform']) == 'None':
+                if str(parameterDict[key]['actionToPerform']) != 'None':
                     scriptName=str(parameterDict[key]['actionToPerform'])+'.py'
                     command='python %s/python/rrdalarm/scripts/%s -p "%s" -t "%s"' % (documentRoot,scriptName,str(key),str(parameterDict[key]['textAlarm']))
                     #print>>sys.stderr, command
@@ -297,28 +298,28 @@ def begin():
                 #rrd_argv=[fileN,'AVERAGE', '--start', threshold.getStartTime(), '--end', threshold.getStartTime()]
                 #Return :((start, end, step), (name1, name2, ...), [(data1, data2, ..), ...])
                 
-                print>>sys.stderr, '\nGUARDA QUI'+str(threshold.getStartTime())+' '+str(threshold.getEndTime())+' '+str(fileN)
+                #print>>sys.stderr, '\nGUARDA QUI'+str(threshold.getStartTime())+' '+str(threshold.getEndTime())+' '+str(fileN)
                 rrdObj=rrdtool.fetch(fileN, 'AVERAGE', '--start', threshold.getStartTime(), '--end', threshold.getEndTime())
                 
                 #print>>sys.stderr, '\nRRDFETCH RETURNED:'
-                pprint.pprint(rrdObj, sys.stderr) #print object for debug purpose only
-         
-                rrdObj=rrdtool.fetch(fileN, 'AVERAGE', '--start', threshold.getStartTime(), '--end', threshold.getEndTime())
+                #pprint.pprint(rrdObj, sys.stderr) #print object for debug purpose only
                 
-                #print>>sys.stderr, '\nRRDFETCH RETURNED:'
-                pprint.pprint(rrdObj, sys.stderr) #print object for debug purpose only
-         
                 step=rrdObj[0][2]
-                start=rrdObj[0][0]
+                start=float(rrdObj[0][0])
                 end=float(rrdObj[0][1])
                 
                 valueDataTuple=rrdObj[2]                        #check this out, not sure witch data object is
                 #for all the values returned check the threshold if alarm has to be fired
-                i=0
-                for value in valueDataTuple:
-                    i=i+1
-                    
+                i=len(valueDataTuple)
+                #print>>sys.stderr, str('is ')+str((step*i)+start)
+                #print>>sys.stderr, str('start ')+str(start)
+                #print>>sys.stderr, str('end ')+str(end)
+                while i>0:
+                #for value in valueDataTuple:
                     timeA= (step*i)+start
+                    i=i-1
+                    value=valueDataTuple[i]
+                    
                     if threshold.checkIfFire(value[0]):         #controls if the threshold was exceeded  
                         notFired=False
                         alarmsFired=alarmsFired+1
@@ -391,7 +392,7 @@ from StringIO import StringIO
 #if os.getenv('REQUEST_METHOD', 'GET') == 'GET':             # The script can be called only by get method
 
 try:
-    begin()        
+    mainT()        
 except RuntimeError as x:
     ntop.sendHTTPHeader(1)
     ntop.printHTMLHeader(str(x)+' Aborted.',1,0)

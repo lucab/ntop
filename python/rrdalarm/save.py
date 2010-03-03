@@ -59,7 +59,7 @@ nameFileConfig='rrdAlarmConfig.txt'              #default nameFileConfig
 #print>>sys.stderr , nameFileConfig
 jsonData=form.getvalue('jsonString', '{"rows":None}')                 #get the data from the body of the post request
 userConfigFile=form.getfirst('configFile', None)
-pprint.pprint(form.getvalue('configFile', None), sys.stderr)
+#pprint.pprint(form.getvalue('configFile', None), sys.stderr)
 print>>sys.stderr, userConfigFile
 if userConfigFile != None:
     

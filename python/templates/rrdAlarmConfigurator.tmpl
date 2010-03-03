@@ -78,14 +78,14 @@
                     </th>
 					<th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
                         RRD File Path</th>
-                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
-                        Threshold Type
+                    <th bgcolor="#f3f3f3" align="center">
+                        Threshold<br>Type
                     </th>
                     <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
                         Value
                     </th>
-                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
-                        Num. Repetitions
+                    <th bgcolor="#f3f3f3" align="center">
+                        Num.<br>Repetitions
                     </th>
                     <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
                         Start Time
@@ -96,8 +96,8 @@
                     <th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
                         Action To Perform
                     </th>
-                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center" title="Time Before Next Action">
-                        TBNA</th>
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center" title="Time Before Next Action (seconds)">
+                        Time before<br>next action</th>
                 </tr>
             </thead>
             <tbody id="body">
@@ -106,14 +106,14 @@
 			
 			<tfoot id="foot" bgcolor="#f3f3f3">
                     <tr>
-                        <td align="right" >
-                            <input name="uniqueId" type="text" id="uniqueId" size=1 readonly="true" style="text-align:right;" />
+                        <td align="right" id="uniqueId" style="text-align:right;" >
+                            &nbsp;
                         </td>
 						<td align="left">
                             <input type="text" name="rrdFile" id="rrdFile" size=24 />
                         </td>
                         <td align="left">
-                            <select name="typeThreshold" id="typeThreshold" style="text-align:center; display:table-cell; width:100%;">
+                            <select name="typeThreshold" id="typeThreshold" style="text-align:center; display:table-cell; width:5.5em;">
                                 <option value="above">above</option>
                                 <option value="below">below</option>
                             </select>
@@ -122,7 +122,7 @@
                             <input type="text" name="valueThreshold" id="valueThreshold" size=8 style="text-align:right;"/>
                         </td>
                         <td align="right">
-                            <input type="text" name="numberRepetition" id="numberRepetition" style="display:table-cell; width:100%;text-align:right;" value="0" />
+                            <input type="text" name="numberRepetition" id="numberRepetition" size=5 style="display:table-cell; text-align:right;" value="0" />
                         </td>
                         <td align="right">
                             <input type="text" name="startTime" id="startTime" size=6 style="text-align:right;"/>
@@ -161,4 +161,4 @@
 		&nbsp;[ <a HREF='javascript: startAlarmCheck();'>Check Now</a> ]</p>
 		<p><div id="result"></div>&nbsp;</p>
 		<p>&nbsp;</p>
-		<p>Do you require some <a href="./config.py?help=true" >help</a>?</p>
+		<p>Do you need any <a href="./config.py?help=true" >help</a>?</p>

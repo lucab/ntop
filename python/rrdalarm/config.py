@@ -60,7 +60,7 @@ def begin():
     pathRRDFiles=ntop.getDBPath()+'/'
     nameFileConfig='rrdAlarmConfig.txt'              #default nameFileConfig
     pathTempFile=ntop.getSpoolPath()+'/'
-    #nameFileConfig='/home/gianluca/rrdAlarmConfig.txt'
+    
     
     form = cgi.FieldStorage();                      #get  from the url the parameter configfile that contains the 
                                                     #path+filename of the configfile to read
