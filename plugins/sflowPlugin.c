@@ -29,7 +29,7 @@
 
 static void* sflowMainLoop(void* _deviceId);
 
-/* #define DEBUG_FLOWS */
+/* #define DEBUG_FLOWS  */
 
 /* ********************************* */
 
@@ -1263,7 +1263,7 @@ static PluginInfo sflowPluginInfo[] = {
     "Note that ntop.org is a member of the <A HREF=http://www.sflow.org/organization/>sFlow consortium</A>.<br>"
     "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
     "reports.<br><em>Remember to <A HREF=/switch.html>switch</A> the reporting NIC.</em>",
-    "2.99a", /* version */
+    "3.0", /* version */
     "<A HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "sFlow", /* http://<host>:<port>/plugins/sFlow */
     0, /* Active by default */
@@ -1419,7 +1419,7 @@ static void handleSflowSample(SFSample *sample, int deviceId) {
   pkthdr.ts.tv_sec = time(NULL);
   pkthdr.ts.tv_usec = 0;
   pkthdr.caplen = sample->headerLen;
-  pkthdr.len = sample->sampledPacketSize;
+  pkthdr.len = sample->sampledPacketSize+sample->meanSkipCount /* Scale data */;
 
   /* Needed to avoid silly (for sFlow) warning */
   myGlobals.runningPref.disableMutexExtraInfo = 1;

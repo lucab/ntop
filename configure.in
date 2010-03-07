@@ -6,7 +6,7 @@ dnl>   Solaris 8 -- libgcc_s -- need test
 
 dnl> -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 dnl>
-dnl> Copyright (c) 1998 - 2009 Luca Deri <deri@ntop.org>
+dnl> Copyright (c) 1998 - 2010 Luca Deri <deri@ntop.org>
 dnl>                           Rocco Carbone <rocco@ntop.org>
 dnl>                       and Burton M. Strauss III <burton@ntopsupport.com>
 dnl>
@@ -45,12 +45,12 @@ dnl>   Edit the version # in the AC_INIT line to roll the version.
 dnl>   Edit NTOP_VERSION_EXTRA to put something extra (e.g. SourceForge rpm version"
 dnl>       into the stamp.
 dnl>
-AC_INIT([ntop],[3.4-pre2])
+AC_INIT([ntop],[3.4-pre3])
 
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v3.4-pre2-16-01-2010"
+SCRIPTVER="v3.4-pre3-07-03-2010"
 
 dnl>
 dnl> generate the config header
@@ -65,7 +65,7 @@ NTOP_VERSION_EXTRA=""
 
 echo
 echo "Welcome to $PACKAGE_NAME, Version $PACKAGE_VERSION $NTOP_VERSION_EXTRA"
-echo "  copyright (c) 1998-2009 Luca Deri <deri@ntop.org>"
+echo "  copyright (c) 1998-2010 Luca Deri <deri@ntop.org>"
 echo
 echo          "Configuration script version $SCRIPTVER"
 echo

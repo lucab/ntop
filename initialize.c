@@ -316,7 +316,6 @@ void resetDevice(int devIdx, short fullReset) {
   myGlobals.device[devIdx].last60MinutesThptIdx = 0;
   myGlobals.device[devIdx].last24HoursThptIdx = 0;
   myGlobals.device[devIdx].last30daysThptIdx = 0;
-  myGlobals.device[devIdx].hostsno = 0;
 
   if(myGlobals.pcap_file_list == NULL) {
     myGlobals.device[devIdx].lastThptUpdate = myGlobals.device[devIdx].lastMinThptUpdate =
