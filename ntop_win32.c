@@ -88,7 +88,7 @@ void initWinsock32() {
     osName = "Win95/98/ME";
     strcpy(_wdir, ".");
   } else {
-    osName = "WinNT/2K/XP";
+    osName = "WinNT/2K/XP/Vista/Win7";
 
     // Get the full path and filename of this program
     if(GetModuleFileName( NULL, _wdir, sizeof(_wdir) ) == 0 ) {

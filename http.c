@@ -640,16 +640,15 @@ static void ssiMenu_Head(void) {
   }
 #endif
 
-  sendStringWOssi(
-		  "	[null,'Utils',null,null,null,\n"
+  sendStringWOssi("	[null,'Utils',null,null,null,\n");
 #ifdef HAVE_PYTHON
-		  "	[null,'RRD Alarm',null,null,null,\n"
+  sendStringWOssi("	[null,'RRD Alarm',null,null,null,\n"
                   "                    [null,'Configure Thresholds','/python/rrdalarm/config.py',null,null],\n"
                   "                    [null,'Check Now','/python/rrdalarm/start.py',null,null],\n"
-		  "     ],\n"
+		  "     ],\n");
 #endif
 
-		  "		[null,'Data Dump','/dump.html',null,null],\n"
+  sendStringWOssi("		[null,'Data Dump','/dump.html',null,null],\n"
 		  "		[null,'View Log','/" CONST_VIEW_LOG_HTML "',null,null],\n"
 		  "		],\n");
 
@@ -1351,7 +1350,7 @@ void printHTMLtrailer(void) {
   if ((myGlobals.runningPref.currentFilterExpression != NULL) &&
       (*myGlobals.runningPref.currentFilterExpression != '\0')) {
     safe_snprintf(__FILE__, __LINE__, &buf[len], LEN_GENERAL_WORK_BUFFER-len,
-		  "with kernel (libpcap) filtering expression </b>\"%s\"<b><br>\n",
+		  "with kernel (libpcap) filtering expression </b>\"%s\"<br>\n",
 		  myGlobals.runningPref.currentFilterExpression);
   } else {
     safe_snprintf(__FILE__, __LINE__, &buf[len], LEN_GENERAL_WORK_BUFFER-len,
@@ -1369,7 +1368,7 @@ void printHTMLtrailer(void) {
     sendString("Web reports include all interfaces (merged)");
   }
 
-  sendString("</b></div></div>\n</body>\n</html>\n");
+  sendString("</div></div>\n</body>\n</html>\n");
 }
 
 /* ******************************* */

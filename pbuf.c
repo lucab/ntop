@@ -2522,8 +2522,10 @@ void queuePacket(u_char *_deviceId,
 
     if(h->caplen >= MAX_PACKET_LEN) {
       if(h->caplen > myGlobals.device[deviceId].mtuSize) {
+#ifndef WIN32
 	traceEvent(CONST_TRACE_WARNING, "packet truncated (%d->%d)",
 		   h->len, MAX_PACKET_LEN);
+#endif
       }
 
       ((struct pcap_pkthdr*)h)->caplen = len = MAX_PACKET_LEN-1;

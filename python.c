@@ -1221,7 +1221,7 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
     /* See http://bugs.python.org/issue1159 */
     PyRun_SimpleString(buf);
 
-    traceEvent(CONST_TRACE_INFO, "[PYTHON] Executing %s", buf);
+    /* traceEvent(CONST_TRACE_INFO, "[PYTHON] Executing %s", buf); */
     /* sys.stdin <=> myGlobals.newSock */
 
 #ifndef WIN32

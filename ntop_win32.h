@@ -99,7 +99,7 @@ extern ULONG GetHostIPAddr();
 #define HAVE_DIRENT_H
 #define HAVE_PCAP_FREEALLDEVS
 #define HAVE_MYSQL_H
-#define HAVE_PYTHON
+#define HAVE_PYTHON 1
 #define HAVE_GEOIP
 
 #if !defined(__GNUC__)
