@@ -76,10 +76,10 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 
 	if(strlen(symbolic) >= (MAX_LEN_SYM_HOST_NAME-1))
 	  symbolic[MAX_LEN_SYM_HOST_NAME-2] = '\0';
-	
+
 	/* Really needed ? */
 	for(i=0; i<strlen(symbolic); i++) symbolic[i] = tolower(symbolic[i]);
-	
+
 	/* traceEvent(CONST_TRACE_INFO, "[%s] --> %s", el->hostResolvedName, symbolic); */
 
 	setResolvedName(el, symbolic, type);
@@ -111,7 +111,7 @@ static void queueAddress(HostAddr elem) {
   int i;
   HostAddrList *cloned = NULL;
 
-  if(myGlobals.runningPref.numericFlag     
+  if(myGlobals.runningPref.numericFlag
      || (myGlobals.runningPref.trackOnlyLocalHosts
 	 && (!_pseudoLocalAddress(&elem, NULL, NULL))))
     return;
@@ -121,26 +121,26 @@ static void queueAddress(HostAddr elem) {
   for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
     if(memcmp(&lastResolvedAddr[i], &elem, sizeof(HostAddr)) == 0) {
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_ERROR, "queueAddress(%s): already been resolved", 
+      traceEvent(CONST_TRACE_ERROR, "queueAddress(%s): already been resolved",
 		 addrtostr(&elem));
-#endif     
+#endif
       releaseAddrResMutex();
       return;
     }
   }
 
-  if(myGlobals.addressQueuedCurrent > 16384) {   
+  if(myGlobals.addressQueuedCurrent > 16384) {
     myGlobals.addressUnresolvedDrops++;
   } else {
     /* First check if the address we want to resolve is already in queue */
     HostAddrList *head = hostAddrList_head;
-    
+
     while(head != NULL) {
-      if(memcmp(&head->addr, &elem, sizeof(elem)) == 0) {	
+      if(memcmp(&head->addr, &elem, sizeof(elem)) == 0) {
 	releaseAddrResMutex();
 	return;
       }
-      
+
       head = head->next;
     }
 
@@ -152,13 +152,13 @@ static void queueAddress(HostAddr elem) {
       memcpy(&cloned->addr, &elem, sizeof(HostAddr));
       cloned->next = hostAddrList_head;
       hostAddrList_head = cloned;
-      signalCondvar(&myGlobals.queueAddressCondvar);  
+      signalCondvar(&myGlobals.queueAddressCondvar);
       myGlobals.addressQueuedCurrent++;
       if(myGlobals.addressQueuedCurrent > myGlobals.addressQueuedMax)
 	myGlobals.addressQueuedMax = myGlobals.addressQueuedCurrent;
     }
   }
-  
+
   releaseAddrResMutex();
 }
 
@@ -167,10 +167,10 @@ static void queueAddress(HostAddr elem) {
 void* dequeueAddress(void *_i) {
   int dqaIndex = (int)((long)_i);
 
-  traceEvent(CONST_TRACE_INFO, 
+  traceEvent(CONST_TRACE_INFO,
 	     "THREADMGMT[t%lu]: DNSAR(%d): Address resolution thread running",
              (long unsigned int)pthread_self(), dqaIndex+1);
-  
+
   while(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Waiting for address to resolve...");
@@ -209,13 +209,11 @@ void* dequeueAddress(void *_i) {
 	char theAddr[64];
 #if defined(HAVE_GETHOSTBYADDR_R)
 	struct hostent _hp, *__hp;
-	char buffer[512];	
+	char buffer[4096]; /* It MUST be 4096 as otherwise on Linux will fail */
 #endif
 
 	memset(theAddr, 0, sizeof(theAddr));
 	addrget(&elem->addr, theAddr, &family, &size);
-
-	/* traceEvent(CONST_TRACE_INFO, "About to resolve %s", addrtostr(&elem->addr)); */
 
 #if defined(HAVE_GETHOSTBYADDR_R)
 #ifdef SOLARIS
@@ -224,10 +222,14 @@ void* dequeueAddress(void *_i) {
 			     buffer, sizeof(buffer),
 			     &h_errno);
 #else
+#if 0
+	traceEvent(CONST_TRACE_INFO, "About to resolve %s [family=%d][size=%d]", addrtostr(&elem->addr), family, size);
+#endif
 	if(gethostbyaddr_r((const char*)theAddr, size,
 			   family, &_hp,
 			   buffer, sizeof(buffer),
 			   &__hp, &h_errno) == 0) {
+
 	  if(h_errno == 0)
 	    he = &_hp;
 	  else
@@ -243,7 +245,9 @@ void* dequeueAddress(void *_i) {
 	  updateHostNameInfo(elem->addr, he->h_name, FLAG_HOST_SYM_ADDR_TYPE_NAME);
 	  accessAddrResMutex("dequeueAddress"); myGlobals.resolvedAddresses++; releaseAddrResMutex();
 	} else {
-	  /* traceEvent(CONST_TRACE_ERROR, "Address resolution failure [%d][%s]", h_errno, hstrerror(h_errno)); */
+#if 0
+	  traceEvent(CONST_TRACE_ERROR, "Address resolution failure [%d][%s]", h_errno, hstrerror(h_errno));
+#endif
 	  accessAddrResMutex("dequeueAddress"); myGlobals.failedResolvedAddresses++; releaseAddrResMutex();
 	}
 
@@ -252,11 +256,11 @@ void* dequeueAddress(void *_i) {
       }
     } /* while */
   } /* endless loop */
-  
+
   myGlobals.dequeueAddressThreadId[dqaIndex] = 0;
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Address resolution thread terminated [p%d]",
-             (long unsigned int)pthread_self(), dqaIndex+1, 
+             (long unsigned int)pthread_self(), dqaIndex+1,
 #ifndef WIN32
 			 getpid()
 #else
@@ -394,7 +398,7 @@ char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen) {
 /* ******************************* */
 
 /* This function automatically updates the instance name */
-void ipaddr2str(HostTraffic *el, HostAddr hostIpAddress, 
+void ipaddr2str(HostTraffic *el, HostAddr hostIpAddress,
 		short vlanId, u_int actualDeviceId) {
   HostTraffic *h;
 
@@ -421,7 +425,7 @@ void ipaddr2str(HostTraffic *el, HostAddr hostIpAddress,
 /* ************************************ */
 
 char* etheraddr_string(const u_char *ep, char *buf) {
-  sprintf(buf, "%02X:%02X:%02X:%02X:%02X:%02X", 
+  sprintf(buf, "%02X:%02X:%02X:%02X:%02X:%02X",
 	  ep[0] & 0xFF, ep[1] & 0xFF,
 	  ep[2] & 0xFF, ep[3] & 0xFF,
 	  ep[3] & 0xFF, ep[5] & 0xFF);
@@ -934,7 +938,7 @@ static void handleMdnsName(HostTraffic *srcHost, u_short sport, u_char *mdns_nam
 	/* Sharing name under MacOS */
 	setHostName(srcHost, name);
       } else if(!strcmp(appl, "workstation")) {
-	/* Host name under MacOS */	
+	/* Host name under MacOS */
 	setHostName(srcHost, strtok(name, "["));
       } else if(!strcmp(appl, "http")) {
 	/* HTTP server */
@@ -1317,16 +1321,16 @@ void checkSpoofing(HostTraffic *hostToCheck, int actualDeviceId) {
 char* subnetId2networkName(int8_t known_subnet_id, char *buf, u_short buf_len) {
   struct in_addr addr;
   char buf1[64];
-      
+
   if((known_subnet_id == UNKNOWN_SUBNET_ID)
      || (known_subnet_id < 0)
      || (known_subnet_id >= myGlobals.numKnownSubnets))
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "0.0.0.0/0");
   else {
     addr.s_addr = myGlobals.subnetStats[known_subnet_id].address[CONST_NETWORK_ENTRY];
-    
+
     safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s/%d",
-		  _intoa(addr, buf1, sizeof(buf1)), 
+		  _intoa(addr, buf1, sizeof(buf1)),
 		  myGlobals.subnetStats[known_subnet_id].address[CONST_NETMASK_V6_ENTRY]);
   }
 
@@ -1352,7 +1356,7 @@ char* host2networkName(HostTraffic *el, char *buf, u_short buf_len) {
 		    el->network_mask);
     }
   }
-  
+
   return(buf);
 }
 
