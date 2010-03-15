@@ -428,7 +428,7 @@ char* etheraddr_string(const u_char *ep, char *buf) {
   sprintf(buf, "%02X:%02X:%02X:%02X:%02X:%02X",
 	  ep[0] & 0xFF, ep[1] & 0xFF,
 	  ep[2] & 0xFF, ep[3] & 0xFF,
-	  ep[3] & 0xFF, ep[5] & 0xFF);
+	  ep[4] & 0xFF, ep[5] & 0xFF);
   return (buf);
 }
 
