@@ -1242,7 +1242,7 @@ void printHTMLtrailer(void) {
 	     "json:true,"
 	     "callback: function (obj) { document.myform.action =obj.info; document.myform.submit(); }"
 	     "};"
-	     "var as_json = new AutoSuggest('testinput', options);"
+	     "var as_json = new bsn.AutoSuggest('testinput', options);"
 	     "</script>"
 	     );
 
