@@ -14,7 +14,13 @@
    	rrdAlarmConfig.setIdTBody('body');//where the rows will be appended
    
 	rrdAlarmConfig.setRows(rows);
-	
+<%doc>
+	var optDirs=[];
+% for dir in rrdDirs:	
+	optDirs.push(OPTION({value: "${dir}"},"${dir}"));
+% endfor
+	var dirList=SELECT({id: 'rrdDir'}, optDirs);
+</%doc>
 	var checkBack=function(){
 		//workaroud for the problem of the back browser and ajax
 		//on coming back reload the page
@@ -29,8 +35,53 @@
 	var startAlarmCheck=function(){
 		var loc=window.location.href.substring(0, window.location.href.lastIndexOf('/')+1)
 		window.location.assign(loc+"start.py?configFile="+escape(getElement('configFile').value));
-	}
-	
+	};
+<%doc>
+	var stateC=false;
+	var toggleCombo=function(){
+		
+		if (optDirs.length <= 0) {
+			return;
+		}
+		var rrdFileTd=getElement('rrdFileTd');
+		if (stateC) {
+			rrdFileTd.removeChild(rrdFileTd.lastChild);
+			rrdFileTd.removeChild(rrdFileTd.lastChild);
+			stateC = false;
+		}
+		else {
+		
+			rrdFileTd.appendChild(BR(null, {}));
+			rrdFileTd.appendChild(dirList);
+			stateC = true;
+		}
+	};
+</%doc>
+	backKeyPress=null;
+	bakKeyDown=null;
+	var toggleAutoComplete=function(){
+		var rrdField=getElement('rrdFile');
+		if (backKeyPress && bakKeyDown) {
+			
+			
+			rrdField.onkeypress = backKeyPress;
+			rrdField.onkeyup = bakKeyDown;
+			
+			backKeyPress=null;
+			bakKeyDown=null;
+			rrdField.onkeyup('32');
+			
+			getElement('infoI').innerHTML="AutoComplete On. Type * to expand.";
+		}
+		else {
+			backKeyPress=rrdField.onkeypress ;
+			bakKeyDown=rrdField.onkeyup;
+			
+			rrdField.onkeypress = null;
+			rrdField.onkeyup = null;
+			getElement('infoI').innerHTML="";	
+		}
+	};
 	addLoadEvent(checkBack);
    	addLoadEvent(rrdAlarmConfig.initpage);
 </script>
@@ -105,31 +156,34 @@
 			
 			<tfoot id="foot" bgcolor="#f3f3f3">
                     <tr>
-                        <td align="right" id="uniqueId" style="text-align:right;" >
+                        <td align="right" valign="top" id="uniqueId" style="text-align:right; padding-top:1em;" >
                             &nbsp;
                         </td>
-						<td align="left">
-                            <input type="text" name="rrdFile" id="rrdFile" size=24 />
+						<td align="left" valign="top" id="rrdFileTd" nowrap="nowrap">
+                            <input type="text" name="rrdFile" id="rrdFile" size=24 autocomplete="off"/><a href="javascript: toggleAutoComplete();"  onmousedown="getElement('lens').src='/graph_zoomDOWN.gif'" onmouseup="getElement('lens').src='/graph_zoomUP.gif'"><img id="lens" border="0" src="/graph_zoomUP.gif"/></a>
+							<div id="infoI" ></div>
                         </td>
-                        <td align="left">
+                        <td align="left" valign="top">
                             <select name="typeThreshold" id="typeThreshold" style="text-align:center; display:table-cell; width:5.5em;">
                                 <option value="above">above</option>
                                 <option value="below">below</option>
                             </select>
                         </td>
-                        <td align="right">
+                        <td align="right" valign="top">
                             <input type="text" name="valueThreshold" id="valueThreshold" size=8 style="text-align:right;"/>
                         </td>
-                        <td align="right">
+                        <td align="right" valign="top">
                             <input type="text" name="numberRepetition" id="numberRepetition" size=5 style="display:table-cell; text-align:right;" value="0" />
                         </td>
-                        <td align="right">
+                        <td align="right" valign="top" nowrap="nowrap">
                             <input type="text" name="startTime" id="startTime" size=6 style="text-align:right;"/>
+							<br>Es. now-3h
                         </td>
-                        <td align="right">
+                        <td align="right" valign="top" nowrap="nowrap">
                             <input type="text" name="endTime" id="endTime" size=6 style="text-align:right;"/>
+							<br>Es. now
                         </td>
-                        <td align="left">
+                        <td align="left" valign="top">
                         	<select name="actionToPerform" id="actionToPerform" style="display:table-cell; width:100%;" onchange="getElement('actionParameter').value='';">
                                 % for script in listScripts:
 								<option value="${script|h}">${script|h}</option>
@@ -137,17 +191,17 @@
                             </select><br>
                             <input type="text" name="actionParameter" id="actionParameter" style="display:table-cell;width:100%;" />
                         </td>
-                        <td align="right">
+                        <td align="right" valign="top">
                             <input type="text" name="timeBeforeNext" id="timeBeforeNext" style="display:table-cell;width:100%;text-align:right;" value="0" />
                         </td>
                     </tr>
         	<tr><td colspan=9 align="center">
         		<table border="0" cellspacing="0" cellpadding="2">
 	  <tr>
-        <td><input type="button" id="update" value="Update" ></td>
+        <td><input type="button" id="update" value="Update" disabled="true"></td>
         <td><input type="button" id="clear" value="Reset"></td>
         <td><input type="button" id="addRow" value="Add Row"></td>
-		<td><input type="button" id="removeRow" value="Remove Row"></td>
+		<td><input type="button" id="removeRow" value="Remove Row" disabled="true"></td>
       </tr>
     </table>
 	    </td>
@@ -162,3 +216,8 @@
 				<p>Do you need any <a href="./config.py?help=true" >help</a>?</p>
 
 </center>
+
+<script type="text/javascript">
+	var options2 = {script: function(input){return "config.py?pathRRDS=${pathRRDFiles|u}"+input;},json:true,timeout:10000,cache:false,callback: function (obj) { getElement('rrdFile').value =obj.info; }};
+	var rrdas_json = new bsn.AutoSuggest("rrdFile", options2);
+	toggleAutoComplete();</script>

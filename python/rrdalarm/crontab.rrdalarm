@@ -1,0 +1,5 @@
+#every minute curl performs an HTTP GET to the address of the rrdAlarm strat.py script
+#if you want to define another configFile for the start script simply add &configFile=<nameOfFileinNtopPath> after true
+#in the line above, example: * * * * *	curl http://localhost:3000/python/rrdalarm/start.py?noHTML=true&configFile=myconfigFile.txt >/dev/null 2>&1 
+#IMPORTANT no more that one start.py can run at the same time!
+* * * * *	curl http://localhost:3000/python/rrdalarm/start.py?noHTML=true >/dev/null 2>&1

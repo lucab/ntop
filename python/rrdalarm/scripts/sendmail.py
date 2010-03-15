@@ -11,7 +11,7 @@ import sys
 # note: your ISP may require that you be directly connected to their system:
 # I can email through Earthlink on dial-up, but cannot via Comcast cable
 #------------------------------------------------------------------------------
-smtpservername = ''     #REMEBER TO SET THIS PARAMETER TO YOUR LINKING or 'smtp.mindspring.com', 'localhost'
+smtpservername = ''     #REMEBER TO SET THIS PARAMETER TO YOUR LINKING es. 'smtp.mindspring.com', 'localhost'
 
 #------------------------------------------------------------------------------
 # (may be required for send) SMTP user/password if authenticated

@@ -3,9 +3,9 @@ Created on 19/feb/2010
 
 @author: Gianluca Medici
 '''
-import sys, time
+import sys, time, os.path
 #this parameter defines the directory in witch the log files will be placed
-pathFile='/tmp/'                '''Remember to set this parameter to your liking'''
+pathFile='tmp/'                #Remember to set this parameter to your liking
 
 def begin():
     global pathFile
@@ -20,13 +20,13 @@ def begin():
         st=time.strftime(fmt, gmt)
         
         try:
-            logFile= open(pathFile+filename, 'a')
+            logFile= open(os.path.join(pathFile,filename), 'a')
             logFile.write("Last Update time: %s\n" % st)
             
             logFile.write(text)
             logFile.close()
         except IOError:
-            print>>sys.stderr,  "IOEXCEPTION writing file "+pathFile+filename
+            print>>sys.stderr,  "IOEXCEPTION writing file "+os.path.join(pathFile,filename)
             return 1
         return 0
     

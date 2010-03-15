@@ -39,6 +39,8 @@ var rrdAlarmConfig = function() {
 	var idTimeBeforeNext = 'timeBeforeNext';
 	var	 idTrToChange= 'trToChange';
 	var idActionParameter='actionParameter';
+	var idUpdateButton='update';
+	var idRemoveRowButton='removeRow';
 	
 	var idTBody = 'body';						// id of the Tbody
 	var idForm = 'formConfigurator'; 			// id of the form
@@ -50,8 +52,9 @@ var rrdAlarmConfig = function() {
 	var onMouseUpIdEvent=undefined;
 	
 	var totalErrors=0; 							// the number of errors in the input field text
-	
-
+	//var regTime2= /^\d+$|^(now)([\+-]\d+[dhms]$)?$/ig;
+	//var regTime3= /((^\d+$)|(^(now)([\+-]\d+[dhms])?$))/ig;
+	var regTime= /(^\d+$|^(now)([\+-]\d+[dhms])?$)/;
 	var tdAttributes = {
 		align : 'right'
 	};
@@ -114,16 +117,20 @@ var rrdAlarmConfig = function() {
 		totalErrors++;
 	};
 	
-	/*	Method that control the input fields of the table form, and return 
+	/*	Method that controls the input fields of the table form, and return 
 	 * 	the object containing their values or null if some error occurred,
 	 *  the fields in this case will be changed to className error and a proper title
-	 *  qill be inserted to explain the error*/
+	 *  will be inserted to explain it*/
 	var validateAndGet=function(){
 		
 		var fields=getElement(idForm).elements;
 		var value=null;
 		var currentForm={index: null, data:[]};
-			
+		var indx=getElement(idUniqueNode);
+		if(indx && indx.innerHTML){
+			currentForm.index=indx.innerHTML;
+		}
+		
 			/*if(fields[0].id===idUniqueNode ){
 				removeError(fields[0]);	
 				value=parseInt(fields[0].value);
@@ -180,7 +187,11 @@ var rrdAlarmConfig = function() {
 				if(!value){
 					setError(fields[4], 'Field Required!');
 				}else{
-					currentForm.data.push(value);
+					if(regTime.test(value)){
+						currentForm.data.push(value);
+					}else{
+						setError(fields[4], 'Format Inexact!Check Help.');
+					}
 				}
 			}
 			if(fields[5].id===idEndTime){
@@ -189,7 +200,11 @@ var rrdAlarmConfig = function() {
 				if(!value){
 					setError(fields[5], 'Field Required!');
 				}else{
-					currentForm.data.push(value);
+					if(regTime.test(value)){
+						currentForm.data.push(value);
+					}else{
+						setError(fields[5], 'Format Inexact!Check Help.');
+					}
 				}
 			}
 			
@@ -233,7 +248,7 @@ var rrdAlarmConfig = function() {
 					currentForm.data.push(parseInt(value));
 				}
 			}	
-		
+		value=null;
 		if (totalErrors === 0){
 			return currentForm;			//no errors found
 		}else{
@@ -241,6 +256,21 @@ var rrdAlarmConfig = function() {
 		}
 	};
 	
+	/** Enable buttons associated with a selected row **/
+	var enableButtons = function(){
+		//enable the update button
+		getElement(idUpdateButton).disabled=false;
+		//enable the removeRow button
+		getElement(idRemoveRowButton).disabled=false;
+		
+	};
+	/** disable buttons associated with a selected row **/	
+	var disableButtons = function(){
+		//disable the update button
+		getElement(idUpdateButton).disabled=true;
+		//disable the remove row button
+		getElement(idRemoveRowButton).disabled=true;
+	};
 	
 	/** * Specific get and set for the uniqueid textbox of the form** */
 	var setIdUnique = function(text) {
@@ -255,7 +285,7 @@ var rrdAlarmConfig = function() {
 		setIdUnique(' ');
 		//setIdUnique(' ');
 		getElement(idForm).reset();
-		
+		disableButtons();
 		if (rowSelected) {
 			rowSelected.style.backgroundColor = '';
 			rowSelected = null;
@@ -301,7 +331,7 @@ var rrdAlarmConfig = function() {
 			// a cell was clicked get the parent as rowSelected
 			tmpRow = tmpRow.parentNode;
 		}
-		if(tagN === 'img'){
+		if(tagN === 'img'|| tagN === 'strong'){
 			//an image inside a  cell was clicked get the parent of the parent as rowSelected		
 			tmpRow = tmpRow.parentNode.parentNode;
 		}
@@ -314,6 +344,7 @@ var rrdAlarmConfig = function() {
 		}
 		rowSelected = tmpRow;
 		rowSelected.style.backgroundColor = highlightColour;
+		enableButtons();
 		updateFormFields(rowSelected);
 	};
 	/* Generate a populated tr row to be inserted in the tbody */
@@ -424,7 +455,7 @@ var rrdAlarmConfig = function() {
 		var rowToUPDT = validateAndGet();//getCurrentForm();
 		if(	rowToUPDT){
 			if (!isNaN(rowToUPDT.index)) { // the index is valid number
-				configuration.rows[(rowSelected.rowIndex-1)] = concat([rowToUPDT.index],rowToUPDT.data);
+				configuration.rows[(rowSelected.rowIndex-1)] = [rowToUPDT.index].concat(rowToUPDT.data);
 				var newRow = makeTBodyRow(configuration.rows[(rowSelected.rowIndex-1)]);
 				swapDOM(getElement(idTBody).childNodes[(rowSelected.rowIndex-1)],
 						newRow);
@@ -466,7 +497,7 @@ var rrdAlarmConfig = function() {
 	
 	/* Update the uniqueID checkbox for an instant onmousedown */
 	var updateIndex = function() {
-		if(configuration.rows!= null &&!rowSelected){
+		if(configuration.rows!== null &&!rowSelected){
 			var i=0
 			if(configuration.rows && configuration.rows.length>0){
 				i=parseInt(configuration.rows[configuration.rows.length-1][0]);
@@ -527,7 +558,7 @@ var rrdAlarmConfig = function() {
 		connect('update', 'onmouseup', updateRow);
 		connect('clear', 'onmouseup', clearForm);
 		connect('addRow', 'onmouseup', addRow);
-		connect('update', 'onmousedown', updateIndex);
+		//connect('addRow', 'onmousedown', updateIndex);
 		connect('removeRow', 'onmouseup', removeRow);
 		onMouseUpIdEvent=connect(idTrToChange, 'onmouseup', createInput);
 	};
