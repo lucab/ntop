@@ -19,7 +19,7 @@
  * 
  * --Have Fun!--
  * 
- * --NOTE-- Make sure to have MochKit >1.4 installed (required base, DOM , Async and signal)
+ * --NOTE-- Make sure to have MochKit > 1.4 installed (required base, DOM , Async and signal)
  *  
  * 
  * If you need a grid check extJs or jedit!
