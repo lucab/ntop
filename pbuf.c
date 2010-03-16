@@ -66,8 +66,8 @@ static const u_char *p_save;
 static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
 static u_char lowMemoryMsgShown = 0;
 
-static void	updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
-				u_int16_t dst_as_id, u_int octets);
+static void updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
+			    u_int16_t dst_as_id, u_int octets);
 
 /* ******************************* */
 
@@ -77,7 +77,7 @@ static u_int32_t getFcProtocol (u_int8_t r_ctl, u_int8_t type) {
   case FC_RCTL_DEV_DATA:
     switch (type) {
     case FC_TYPE_SWILS:
-      if ((r_ctl == 0x2) || (r_ctl == 0x3))
+      if((r_ctl == 0x2) || (r_ctl == 0x3))
 	return FC_FTYPE_SWILS;
       else
 	return FC_FTYPE_UNDEF;
@@ -95,7 +95,7 @@ static u_int32_t getFcProtocol (u_int8_t r_ctl, u_int8_t type) {
     }
     break;
   case FC_RCTL_ELS:
-    if (((r_ctl & 0x0F) == 0x2) || ((r_ctl & 0x0F) == 0x3))
+    if(((r_ctl & 0x0F) == 0x2) || ((r_ctl & 0x0F) == 0x3))
       return FC_FTYPE_ELS;
     else
       return FC_FTYPE_UNDEF;
@@ -107,7 +107,7 @@ static u_int32_t getFcProtocol (u_int8_t r_ctl, u_int8_t type) {
     return FC_FTYPE_VDO;
     break;
   case FC_RCTL_BLS:
-    if (type == 0)
+    if(type == 0)
       return FC_FTYPE_BLS;
     else
       return FC_FTYPE_UNDEF;
@@ -387,7 +387,7 @@ static void addContactedPeers(HostTraffic *sender, HostAddr *srcAddr,
 			      HostTraffic *receiver, HostAddr *dstAddr,
 			      int actualDeviceId) {
   if((sender == NULL) || (receiver == NULL) || (sender == receiver)) {
-    if ((sender != NULL) && (sender->l2Family == FLAG_HOST_TRAFFIC_AF_FC)
+    if((sender != NULL) && (sender->l2Family == FLAG_HOST_TRAFFIC_AF_FC)
 #ifdef ENABLE_FC
 	&& (strncasecmp(sender->fcCounters->hostNumFcAddress, FC_FAB_CTLR_ADDR, strlen(FC_FAB_CTLR_ADDR)) == 0)
 #endif
@@ -713,17 +713,17 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
   }
 
   updateASTraffic(actualDeviceId, srcHost->hostAS, dstHost->hostAS, bytes.value);
-
-  if (!myGlobals.runningPref.printIpOnly) {
-    if (srcHost == dstHost) {
+  
+  if(!myGlobals.runningPref.printIpOnly) {
+    if(srcHost == dstHost) {
 #ifdef ENABLE_FC
       /* Fabric controllers exchange link messages where the S_ID & D_ID
        * are equal. A lot of control traffic is exchanged using these
        * addresses and so we must track this as an exception to the case of
        * S_ID == D_ID.
        */
-      if (srcHost->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
-	if (strncasecmp (srcHost->fcCounters->hostNumFcAddress, FC_FAB_CTLR_ADDR,
+      if(srcHost->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
+	if(strncasecmp (srcHost->fcCounters->hostNumFcAddress, FC_FAB_CTLR_ADDR,
 			 strlen (FC_FAB_CTLR_ADDR)) != 0) {
 	  return;
 	}
@@ -734,12 +734,12 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
 	  return;
 	}
     }
-    else if ((srcHost == myGlobals.otherHostEntry)
+    else if((srcHost == myGlobals.otherHostEntry)
 	     && (dstHost == myGlobals.otherHostEntry)) {
       return;
     }
   }
-  else if (srcHost == dstHost)
+  else if(srcHost == dstHost)
     return;
 
 
@@ -1102,6 +1102,7 @@ static void updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
 
   releaseMutex(&myGlobals.device[actualDeviceId].asMutex);
 
+  /* We created the AS entry so we now need to update the AS information */
   updateASTraffic(actualDeviceId, src_as_id, dst_as_id, octets);
 }
 
@@ -2513,7 +2514,7 @@ void queuePacket(u_char *_deviceId,
     myGlobals.receivedPacketsProcessed++;
 
     len = h->caplen;
-    if (myGlobals.runningPref.printIpOnly) {
+    if(myGlobals.runningPref.printIpOnly) {
       /* When we do Fibre Channel, the end of the packet contains EOF
        * information and so truncating it isn't a good idea.
        */
@@ -2649,7 +2650,7 @@ void* dequeuePacket(void* _deviceId) {
        && (myGlobals.runningPref.enablePacketDecoding /* Courtesy of Ken Beaty <ken@ait.com> */))
       traceEvent (CONST_TRACE_WARNING, "dequeuePacket: caplen %d != len %d\n", h.caplen, h.len);
 
-    if (myGlobals.runningPref.printIpOnly)
+    if(myGlobals.runningPref.printIpOnly)
       memcpy(p, myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueTail].p, DEFAULT_SNAPLEN);
     else
       memcpy(p, myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueTail].p, MAX_PACKET_LEN);
@@ -3726,7 +3727,7 @@ void processPacket(u_char *_deviceId,
 	  }
 	}
 #ifdef ENABLE_FC
-      } else if (((eth_type == ETHERTYPE_MDSHDR) || (eth_type == ETHERTYPE_BRDWLK) ||
+      } else if(((eth_type == ETHERTYPE_MDSHDR) || (eth_type == ETHERTYPE_BRDWLK) ||
                   (eth_type == ETHERTYPE_UNKNOWN) || (eth_type == ETHERTYPE_BRDWLK_OLD)) &&
                  (!myGlobals.runningPref.printIpOnly)) {
 	/* An FC packet can be captured as Ethernet for three different
@@ -3961,8 +3962,8 @@ void processPacket(u_char *_deviceId,
   }
 #endif
 
-  if (myGlobals.pcap_file_list != NULL) {
-    if (myGlobals.actTime > (lastUpdateThptTime + PARM_THROUGHPUT_REFRESH_INTERVAL)) {
+  if(myGlobals.pcap_file_list != NULL) {
+    if(myGlobals.actTime > (lastUpdateThptTime + PARM_THROUGHPUT_REFRESH_INTERVAL)) {
       updateThpt (1);
       lastUpdateThptTime = myGlobals.actTime;
     }
@@ -4032,7 +4033,7 @@ static void processFcPkt(const u_char *bp,
   u_int16_t nsOpcode;
 
   /* Deal with Vegas Header or Boardwalk Header based on ethertype */
-  if ((ethertype == ETHERTYPE_BRDWLK) ||
+  if((ethertype == ETHERTYPE_BRDWLK) ||
       (ethertype == ETHERTYPE_BRDWLK_OLD)) {
     sof = (bp[offset] & 0xF0) >> 4;
     vsanId = ntohs (*(u_int16_t *)&bp[offset]) & 0x0FFF;
@@ -4040,19 +4041,19 @@ static void processFcPkt(const u_char *bp,
     error = bp[totlen-2];
     offset += 2;            /* skip the brdwlk hdr field */
 
-    if ((error & 0x8) && (error & 0x1)) {
+    if((error & 0x8) && (error & 0x1)) {
       /* This indicates that Boardwalk carries the original FC
        * length even though the frame is truncated */
       payload_len = ntohl (*(u_int32_t *)&bp[payload_len+14-8]);
       payload_len *= 4;
     }
     /* If VSAN is not 0, there is an EISL header; skip it */
-    if (vsanId) {
+    if(vsanId) {
       offset += 8;
       payload_len -= 8;
     }
 
-    if ((error & 0x8) && (error & 0x1)) {
+    if((error & 0x8) && (error & 0x1)) {
       fcFrameLen = payload_len;
       /* Skip CRC incl payload len */
       payload_len -= (FC_HDR_SIZE + 4);
@@ -4063,7 +4064,7 @@ static void processFcPkt(const u_char *bp,
       payload_len -= (FC_HDR_SIZE + 6); /* TBD: Handle optional headers */
     }
   }
-  else if ((ethertype == ETHERTYPE_UNKNOWN) || (ethertype == ETHERTYPE_MDSHDR)) {
+  else if((ethertype == ETHERTYPE_UNKNOWN) || (ethertype == ETHERTYPE_MDSHDR)) {
 #if CFG_LITTLE_ENDIAN
     sof = (bp[offset+1] & 0x0F);
     fcFrameLen = ntohs (*((u_int16_t *)&bp[offset+2]));
@@ -4101,13 +4102,13 @@ static void processFcPkt(const u_char *bp,
   isXchgOrig = (bp[offset+9] & 0x80) ? 0 : 1;
 
   /* Unless a frame is truncated by libpcap, we should have valid EOF */
-  if ((actLen == h->len) && (eof != MDSHDR_EOFn) && (eof != MDSHDR_EOFt)) {
+  if((actLen == h->len) && (eof != MDSHDR_EOFn) && (eof != MDSHDR_EOFt)) {
     incrementTrafficCounter (&myGlobals.device[actualDeviceId].rcvdFcPktStats.badCRC, 1);
-    if (myGlobals.runningPref.enableSuspiciousPacketDump) {
+    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
       traceEvent(CONST_TRACE_WARNING, "Bad EOF Frame Received");
       dumpSuspiciousPacket(actualDeviceId);
     }
-    if (eof == MDSHDR_EOFa) {
+    if(eof == MDSHDR_EOFa) {
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcEofaPkts, 1);
     }
     else {
@@ -4135,7 +4136,7 @@ static void processFcPkt(const u_char *bp,
     return;
   }
 
-  if (strncasecmp (dstHost->fcCounters->hostNumFcAddress, FC_BROADCAST_ADDR,
+  if(strncasecmp (dstHost->fcCounters->hostNumFcAddress, FC_BROADCAST_ADDR,
 		   strlen (FC_BROADCAST_ADDR)) == 0) {
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcBroadcastPkts, 1);
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcBroadcastBytes, fcFrameLen);
@@ -4158,17 +4159,17 @@ static void processFcPkt(const u_char *bp,
   incrementHostTrafficCounter(dstHost, fcCounters->fcPktsRcvd, 1);
 
   /* Class-Based Stats */
-  if ((sof == MDSHDR_SOFi3) || (sof == MDSHDR_SOFn3)) {
+  if((sof == MDSHDR_SOFi3) || (sof == MDSHDR_SOFn3)) {
     incrementHostTrafficCounter(srcHost, fcCounters->class3Sent, fcFrameLen);
     incrementHostTrafficCounter(dstHost, fcCounters->class3Rcvd, fcFrameLen);
     incrementTrafficCounter (&myGlobals.device[actualDeviceId].class2Bytes, fcFrameLen);
   }
-  else if ((sof == MDSHDR_SOFi2) || (sof == MDSHDR_SOFn2)) {
+  else if((sof == MDSHDR_SOFi2) || (sof == MDSHDR_SOFn2)) {
     incrementHostTrafficCounter(srcHost, fcCounters->class2Sent, fcFrameLen);
     incrementHostTrafficCounter(dstHost, fcCounters->class2Rcvd, fcFrameLen);
     incrementTrafficCounter (&myGlobals.device[actualDeviceId].class3Bytes, fcFrameLen);
   }
-  else if (sof == MDSHDR_SOFf) {
+  else if(sof == MDSHDR_SOFf) {
     incrementHostTrafficCounter(srcHost, fcCounters->classFSent, fcFrameLen);
     incrementHostTrafficCounter(dstHost, fcCounters->classFRcvd, fcFrameLen);
     incrementTrafficCounter (&myGlobals.device[actualDeviceId].classFBytes, fcFrameLen);
@@ -4176,13 +4177,13 @@ static void processFcPkt(const u_char *bp,
 
   isFragment = isFirstFrame && !(isLastFrame);
 
-  if (isFragment) {
+  if(isFragment) {
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].fragmentedFcBytes, fcFrameLen);
   }
 
   protocol = getFcProtocol (fchdr.r_ctl, fchdr.type);
 
-  if (protocol <= FC_FTYPE_UNDEF) {
+  if(protocol <= FC_FTYPE_UNDEF) {
     proto = fcProtocolStrings[protocol];
   }
 
@@ -4203,13 +4204,13 @@ static void processFcPkt(const u_char *bp,
     incrementHostTrafficCounter(dstHost, fcCounters->fcFcpBytesRcvd, fcFrameLen);
     incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcFcpBytes, fcFrameLen);
 
-    if ((fchdr.r_ctl & 0xF) == FCP_IU_CMD) {
+    if((fchdr.r_ctl & 0xF) == FCP_IU_CMD) {
       /* We deal with command frames only for now */
       fillFcpInfo (&bp[offset+24], srcHost, dstHost);
     }
     break;
   case FC_FTYPE_ELS:
-    if (isPlogi (fchdr.r_ctl, fchdr.type, bp[offset+24])) {
+    if(isPlogi (fchdr.r_ctl, fchdr.type, bp[offset+24])) {
       fillFcHostInfo (&bp[offset+24], srcHost);
     }
     incrementHostTrafficCounter(srcHost, fcCounters->fcElsBytesSent, fcFrameLen);
@@ -4217,7 +4218,7 @@ static void processFcPkt(const u_char *bp,
     incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcElsBytes, fcFrameLen);
 
     /* Count RSCNs separately */
-    if (isRscn (fchdr.r_ctl, fchdr.type, bp[offset+24])) {
+    if(isRscn (fchdr.r_ctl, fchdr.type, bp[offset+24])) {
       incrementHostTrafficCounter(dstHost, fcCounters->fcRscnsRcvd, fcFrameLen);
     }
 
@@ -4226,7 +4227,7 @@ static void processFcPkt(const u_char *bp,
     gs_type = bp[offset+24+4];
     gs_stype = bp[offset+24+5];
 
-    if (((gs_type == FCCT_GSTYPE_DIRSVC) && (gs_stype == FCCT_GSSUBTYPE_DNS)) ||
+    if(((gs_type == FCCT_GSTYPE_DIRSVC) && (gs_stype == FCCT_GSSUBTYPE_DNS)) ||
 	((gs_type == FCCT_GSTYPE_MGMTSVC) && (gs_stype == FCCT_GSSUBTYPE_UNS))) {
       nsOpcode = ntohs (*(u_int16_t *)&bp[offset+24+8]);
 

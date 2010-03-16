@@ -3266,6 +3266,16 @@ static void arbitraryAction(char *rrdName,
     startTime = endTime;
   }
 
+  if(strstr(rrdName, "knownHostsNum") 
+     || strstr(rrdName, "activeHostSenders")) {
+    if(!dumpInterfaces) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+      printHTMLheader("ntop RRD Graph", NULL, 0);
+      printFlagedWarning("<I>In order to graph this counter you need to enable Interfaces data dump on the <A HREF=\"/plugins/rrdPlugin\">RRD plugin</A>");
+      return;
+    }
+  }
+
   if(!strcmp(mode, "zoom")) {
     char buf1[LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
 
@@ -5423,7 +5433,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     if(dumpInterfaces) {
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
-
 	if((myGlobals.device[devIdx].virtualDevice
 	    && (!myGlobals.device[devIdx].sflowGlobals)
 	    && (!myGlobals.device[devIdx].netflowGlobals))
