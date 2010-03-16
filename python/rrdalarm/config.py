@@ -125,6 +125,7 @@ def begin():
         
             
         try:
+            
             configFile= open(os.path.join(pathTempFile,nameFileConfig), 'rt')
             
             for line in configFile:
@@ -133,15 +134,19 @@ def begin():
                     rows.append(line.split('\t'))
             
             configFile.close()
-        except IOError:
-            if requestFileConfig != None :                 #if the nameFileConfig was specified by user show error
-                try:
-                    open(os.path.join(pathTempFile,nameFileConfig), 'w')
-                except:
-                    raise
-            else:
-                nameFileConfig='rrdAlarmConfig.txt'
-                ntop.sendString(exceptions.html_error_template().render())
+        except:
+            print>>sys.stderr, "RRDAlarm: Error reading configFile "+os.path.join(pathTempFile,nameFileConfig)
+            raise
+        #the elaboration will continue but no data will be displayed.
+        
+            #if requestFileConfig != None :                 #if the nameFileConfig was specified by user show error
+            #try:
+            #    open(os.path.join(pathTempFile,nameFileConfig), 'w')
+            #except:
+            #    raise
+            #else:
+            #nameFileConfig='rrdAlarmConfig.txt'
+            #ntop.sendString(exceptions.html_error_template().render())
     
     try:
         #pprint.pprint(listAllDirs(pathRRDFiles+'rrd/'), sys.stderr)
