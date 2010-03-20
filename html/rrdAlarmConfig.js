@@ -117,6 +117,8 @@ var rrdAlarmConfig = function() {
 		totalErrors++;
 	};
 	
+	
+	
 	/*	Method that controls the input fields of the table form, and return 
 	 * 	the object containing their values or null if some error occurred,
 	 *  the fields in this case will be changed to className error and a proper title
@@ -593,6 +595,7 @@ var rrdAlarmConfig = function() {
 		request.send('jsonString='+JSON.stringify({rows:rows})+'&configFile='+ escape(getElement('configFile').value));
 		getElement("result").innerHTML='Waiting for confirmation...';
 	};
+
 
 	/** * End of Publics Methods ** */
 

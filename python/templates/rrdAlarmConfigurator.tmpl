@@ -21,6 +21,7 @@
 % endfor
 	var dirList=SELECT({id: 'rrdDir'}, optDirs);
 </%doc>
+
 	var checkBack=function(){
 		//workaroud for the problem of the back browser and ajax
 		//on coming back reload the page
@@ -32,9 +33,10 @@
 				location.reload();
 			}
 	};
+	
 	var startAlarmCheck=function(){
 		var loc=window.location.href.substring(0, window.location.href.lastIndexOf('/')+1)
-		window.location.assign(loc+"start.py?configFile="+escape(getElement('configFile').value));
+		window.location.assign(loc+"start.py?configFile="+getElement('configFile').value);
 	};
 <%doc>
 	var stateC=false;
@@ -57,30 +59,53 @@
 		}
 	};
 </%doc>
+
 	backKeyPress=null;
-	bakKeyDown=null;
+	backKeyDown=null;
+	
+	/*activate/disable autocomplete feature on rrdFile field*/
 	var toggleAutoComplete=function(){
 		var rrdField=getElement('rrdFile');
-		if (backKeyPress && bakKeyDown) {
+		if (backKeyPress && backKeyDown) {
 			
 			
 			rrdField.onkeypress = backKeyPress;
-			rrdField.onkeyup = bakKeyDown;
+			rrdField.onkeyup = backKeyDown;
 			
 			backKeyPress=null;
-			bakKeyDown=null;
+			backKeyDown=null;
 			rrdField.onkeyup('32');
 			
 			getElement('infoI').innerHTML="AutoComplete On. Type * to expand.";
+			if(rrdField.value.lenght >0){
+				
+				bns.getSuggestions(rrdField.value);
+			}
 		}
 		else {
 			backKeyPress=rrdField.onkeypress ;
-			bakKeyDown=rrdField.onkeyup;
+			backKeyDown=rrdField.onkeyup;
 			
 			rrdField.onkeypress = null;
 			rrdField.onkeyup = null;
 			getElement('infoI').innerHTML="";	
 		}
+	};
+	
+	/*used to clear the input of the parameter field and remove the errors*/
+	var clearInput=function(){
+		var tmp =getElement('actionParameter');
+		if (tmp) {
+			tmp.value = '';
+			tmp.className=tmp.className.replace('error', '');
+		}
+	};
+	
+	
+	var removeStartingDots=function(input){
+		
+		return input.replace(/\.(?!rrd)/g, "");
+		
 	};
 	addLoadEvent(checkBack);
    	addLoadEvent(rrdAlarmConfig.initpage);
@@ -119,7 +144,7 @@
 </form>
 	<p>Each table row represents a threshold that is periodically checked by the rrdAlarm script.
 	<br>Changes applied to the table must be saved in order to be persistent!</p>
-    	<form id="formConfigurator" name="formConfigurator" action="">
+    	<form id="formConfigurator" name="formConfigurator"  action="" onsubmit="return false;">
          <table cellspacing="0" cellpadding="5" border="1" id="configuration">
             <thead>
                 <tr>
@@ -184,7 +209,7 @@
 							<br>Es. now
                         </td>
                         <td align="left" valign="top">
-                        	<select name="actionToPerform" id="actionToPerform" style="display:table-cell; width:100%;" onchange="getElement('actionParameter').value='';">
+                        	<select name="actionToPerform" id="actionToPerform" style="display:table-cell; width:100%;" onchange="clearInput();">
                                 % for script in listScripts:
 								<option value="${script|h}">${script|h}</option>
 								% endfor
@@ -218,6 +243,6 @@
 </center>
 
 <script type="text/javascript">
-	var options2 = {script: function(input){return "config.py?pathRRDS=${pathRRDFiles|u}"+input;},json:true,timeout:10000,cache:false,callback: function (obj) { getElement('rrdFile').value =obj.info; }};
+	var options2 = {script: function(input){return "config.py?pathRRDS="+removeStartingDots(input);},json:true,timeout:10000,cache:false,callback: function (obj) { getElement('rrdFile').value =obj.info; }};
 	var rrdas_json = new bsn.AutoSuggest("rrdFile", options2);
 	toggleAutoComplete();</script>

@@ -18,7 +18,7 @@ from StringIO import StringIO
 def jsonListFileInPath(path, ntopSuffix):
     jsonList={'results':[]}
     
-    listFile = glob.glob(str(path)+'*')   #expand the * and ? into a list of files
+    listFile = glob.glob(os.path.join(ntopSuffix,path)+'*')   #expand the * and ? into a list of files
     i=1
     if len(listFile)==1 and os.path.isdir(listFile[0]):
         listFile=listFile+glob.glob(os.path.join(listFile[0],'*'))
