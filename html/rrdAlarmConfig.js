@@ -577,23 +577,29 @@ var rrdAlarmConfig = function() {
 		disconnect(onMouseUpIdEvent);
 		numIdEvent=connect(document,'onclick',chooseIfRestore);
 	};
-	
+	var writeSaveResult=function(text){
+		getElement("result").innerHTML=text;
+	};
 	/*send a ajax post request with the json values of the table data in the page*/
 	var sendData=function (){	
 	    var request=getXMLHttpRequest();
 		var url=window.location.href;//'http://localhost:3000/python/rrdalarm/save.py';
 		var pos=url.lastIndexOf('/');
-		
+		var t=null;
 		url=url.substring(0, pos)+'/save.py';
 		request.open("POST", url, true);
 		request.onreadystatechange= function(){//printSendOK;
 			if(request.readyState === 4 && request.status=== 200){
-				getElement("result").innerHTML=request.responseText;
+				writeSaveResult(request.responseText);
 			}//else no response
+			if(t){
+				clearTimeout(t);
+			}
 		}
 		request.setRequestHeader("Content-Type","application/jsonrequest");
 		request.send('jsonString='+JSON.stringify({rows:rows})+'&configFile='+ escape(getElement('configFile').value));
-		getElement("result").innerHTML='Waiting for confirmation...';
+		t=setTimeout(writeSaveResult,1000,'Some error occurred no response from "save.py" after 1 second!');
+		writeSaveResult('Waiting for confirmation...');
 	};
 
 
@@ -607,6 +613,7 @@ var rrdAlarmConfig = function() {
 		normalizeTable : normalizeTable,
 		createInput: createInput,
 		restoreText: restoreText,
+		writeSaveResult: writeSaveResult,
 		sendData: sendData
 	};
 }();
