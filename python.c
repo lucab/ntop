@@ -31,6 +31,10 @@
 
 #ifdef HAVE_PYTHON
 
+#ifdef HAVE_FASTBIT
+#include <capi.h>
+#endif
+
 static HostTraffic *ntop_host = NULL;
 static char query_string[2048];
 static PthreadMutex python_mutex;
@@ -559,6 +563,73 @@ static PyObject* python_bytesRcvd(PyObject *self, PyObject *args) {
 
 /* **************************************** */
 
+#ifdef HAVE_FASTBIT
+static PyObject* python_fastbit_query(PyObject *self, PyObject *args) {
+  PyObject *obj = NULL;
+  char *select_clause, *where, *partition;
+  int limit, nres;
+  FastBitQueryHandle qh;
+  FastBitResultSetHandle rh;
+  
+  if(!PyArg_ParseTuple(args, "sssi", &partition, &select_clause, &where, &limit)) return NULL;
+
+  qh = fastbit_build_query(select_clause, partition, where);
+  if(qh == NULL) {
+    traceEvent(CONST_TRACE_WARNING, "Error while executing SELECT %s FROM %s WHERE %s", 
+	       select_clause, partition, where);
+    return NULL;
+  }
+  
+  if((nres = fastbit_get_result_rows(qh)) > 0) {
+    rh = fastbit_build_result_set(qh);
+    if(rh != NULL) {
+      int ncols = fastbit_get_result_columns(qh), n;
+      PyObject *list;
+      char *header = strdup((char*)fastbit_get_select_clause(qh)), *elem, *state;
+
+      obj = PyDict_New();
+      elem = strtok_r(header, ",", &state);
+      list = PyList_New(ncols), n = 0;
+
+      while(elem != NULL) {
+	PyList_SetItem(list, n++, PyString_FromString(elem));
+	elem = strtok_r(NULL, ",", &state);
+      }
+      PyDict_SetItem(obj, PyString_FromString("columns"), list);
+
+      if(nres > limit) nres = limit;
+      list = PyList_New(nres);
+
+      if(list != NULL) {
+	n = 0;
+	
+	while((nres > 0) && (fastbit_result_set_next(rh) == 0)) {
+	  int i;
+	  PyObject *elem = PyList_New(ncols);
+	  
+	  if(!elem) break;
+	  
+	  for (i = 0; i < ncols; ++ i)
+	    PyList_SetItem(elem, i, PyInt_FromLong(fastbit_result_set_getUnsigned(rh, i)));
+	  
+	  PyList_SetItem(list, n++, elem);
+	  nres--;
+	}
+
+	PyDict_SetItem(obj, PyString_FromString("values"), list);
+      }
+
+      fastbit_destroy_result_set(rh);      
+    }
+  }
+
+  return obj;
+}
+
+#endif
+
+/* **************************************** */
+
 #ifdef HAVE_GEOIP
 
 #define VAL(a) ((a != NULL) ? a : "")
@@ -1083,11 +1154,23 @@ static PyMethodDef host_methods[] = {
 
 /* **************************************** */
 
+#ifdef HAVE_FASTBIT
+static PyMethodDef fastbit_methods[] = {
+  { "query", python_fastbit_query, METH_VARARGS, "Exec a fastbit query using ntop" },
+  { NULL, NULL, 0, NULL }
+};
+#endif
+
+/* **************************************** */
+
 static void init_python_ntop(void) {
   createMutex(&python_mutex);
   Py_InitModule("ntop", ntop_methods);
   Py_InitModule("host", host_methods);
   Py_InitModule("interface", interface_methods);
+#ifdef HAVE_FASTBIT
+  Py_InitModule("fastbit", fastbit_methods);
+#endif
 }
 
 /* **************************************** */
@@ -1114,12 +1197,20 @@ void init_python(int argc, char *argv[]) {
   PyEval_InitThreads();
 
   init_python_ntop();
+
+#ifdef HAVE_FASTBIT
+  fastbit_init(NULL);
+  fastbit_set_verbose_level(-1);
+#endif
 }
 
 /* **************************************** */
 
 void term_python(void) {
   Py_Finalize();   /* Cleaning up the interpreter */
+#ifdef HAVE_FASTBIT
+  fastbit_cleanup();
+#endif
   deleteMutex(&python_mutex);
 }
 

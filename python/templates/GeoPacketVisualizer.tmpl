@@ -165,10 +165,10 @@ function drawVisualization() {
 			for(var i=0; i< listTCities.length; i++){
 				actual=listTCities[i];
 				array[actual.code]= new google.visualization.DataTable(	{cols: [	{id: 'Latitude', label: 'LATITUDE', type:'number'},
-																					{id: 'Longitude', label: 'LONGITUDE', type:'number'},
-																					{id: 'Value', label: 'Num Hosts', type:'number'},
-																					{id: 'Hover', label: 'City', type:'string'}	],
-																		 rows: actual.citiesRows.lista} );
+							{id: 'Longitude', label: 'LONGITUDE', type:'number'},
+							{id: 'Value', label: 'Num Hosts', type:'number'},
+							{id: 'Hover', label: 'City', type:'string'}	],
+							 rows: actual.citiesRows.lista} );
 				if(actual.citiesRows.unknown != -1){
 					array[actual.code].setTableProperty('unk', actual.citiesRows.unknown);
 				}
