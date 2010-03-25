@@ -903,6 +903,11 @@ if test -d "$RRD_HOME"; then
    AC_MSG_RESULT(checking for RRD home... yes)
 else
    RRD_HOME=/usr/local/rrdtool
+   if test -d "$RRD_HOME"; then
+      AC_MSG_RESULT(Checking rrdtool in $RRD_HOME)
+   else
+      RRD_HOME=/usr/local
+   fi
 fi
 
 RRD_LIB="-L${RRD_HOME}/lib -lrrd_th"
