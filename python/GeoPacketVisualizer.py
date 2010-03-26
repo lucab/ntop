@@ -217,8 +217,10 @@ if exceptions_so_far == 0:
     
         if totalHosts == 0:
             ntop.printFlagedWarning('No hosts have been detected by ntop yet')
+            break
         elif len(dictionaryCountries) == 0:
             ntop.printFlagedWarning('No hosts have been successfully geo-located by ntop yet')
+            break
         else:
             try:
                 basedir =  os.getenv('DOCUMENT_ROOT', '.')+'/python/templates'

@@ -135,8 +135,9 @@ def begin():
         
             
         try:
-            
-            configFile= open(os.path.join(pathTempFile,nameFileConfig), 'rt')
+            file_name = os.path.join(pathTempFile,nameFileConfig)
+            open(file_name, 'w').close()  # Create an empty file if missing
+            configFile= open(file_name, 'rt')
             
             for line in configFile:
                 line=line.rstrip()                      #drop the \n at the end

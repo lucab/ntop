@@ -1556,7 +1556,7 @@ int cmpFctn(const void *_a, const void *_b) {
       if(columnProtoId <= 0) {
         a_ = b_ = 0;
       } else {
-	if((*a)->protoIPTrafficInfos[columnProtoId-1])
+	if((*a)->protoIPTrafficInfos && (*a)->protoIPTrafficInfos[columnProtoId-1])
 	  a_ = (*a)->protoIPTrafficInfos[columnProtoId-1]->rcvdLoc.value+
 	    (*a)->protoIPTrafficInfos[columnProtoId-1]->rcvdFromRem.value+
 	    (*a)->protoIPTrafficInfos[columnProtoId-1]->sentLoc.value+
@@ -1564,7 +1564,7 @@ int cmpFctn(const void *_a, const void *_b) {
 	else
 	  a_ = 0;
 
-	if((*b)->protoIPTrafficInfos[columnProtoId-1])
+	if((*b)->protoIPTrafficInfos && (*b)->protoIPTrafficInfos[columnProtoId-1])
 	  b_ = (*b)->protoIPTrafficInfos[columnProtoId-1]->rcvdLoc.value+
 	    (*b)->protoIPTrafficInfos[columnProtoId-1]->rcvdFromRem.value+
 	    (*b)->protoIPTrafficInfos[columnProtoId-1]->sentLoc.value+
