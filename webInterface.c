@@ -6017,7 +6017,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     }
   }
 
-  printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.tcpdump.org>libpcap</A> Version", (char *)pcap_lib_version());
+  printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.tcpdump.org>libpcap</A> Version", "??");
 
   snprintf(buf, sizeof(buf), "%1.4f", rrd_version());
   printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.rrdtool.org/>RRD</A> Version", buf);

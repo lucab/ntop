@@ -2497,7 +2497,12 @@ int name_interpret(char *in, char *out, int numBytes) {
 /* ******************************* */
 
 char* getNwInterfaceType(int i) {
+  /* Do we have a reasonably modern libpcap */
+#ifdef HAVE_PCAP_NEXT_EX
   return((char*)pcap_datalink_val_to_description(myGlobals.device[i].datalink));
+#else
+  return("");
+#endif
 }
 
 /* ************************************ */
@@ -5297,7 +5302,10 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
   tokenizeCleanupAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "config", configure_parameters);
   tokenizeCleanupAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "run", myGlobals.startedAs);
 
+  /* Do we have a reasonably modern libpcap */
+#ifdef HAVE_PCAP_NEXT_EX
   extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "libpcap", (char*)pcap_lib_version());
+#endif
 
 #if defined(WIN32) && defined(__GNUC__)
   /* on mingw, gdbm_version not exported by library */
@@ -5867,7 +5875,7 @@ static void updateGeoIP(HostTraffic *el) {
 	else {
 #ifdef INET6
 #ifndef WIN32
-	  rsp = GeoIP_name_by_ipnum_v6(myGlobals.geo_ip_asn_db, el->hostIpAddress.Ip6Address);
+	  //rsp = GeoIP_name_by_ipnum_v6(myGlobals.geo_ip_asn_db, el->hostIpAddress.Ip6Address);
 #endif
 #endif
 	}

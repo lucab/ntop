@@ -1793,6 +1793,7 @@ fi
 
 dnl> GeoIP (http://www.maxmind.com/)
 AC_CHECK_LIB([GeoIP], [GeoIP_record_by_ipnum], AC_DEFINE_UNQUOTED(HAVE_GEOIP, 1, [GeoIP support is present]))
+AC_CHECK_LIB([GeoIP], [GeoIP_name_by_ipnum_v6], AC_DEFINE_UNQUOTED(HAVE_GEOIP_V6_SUPPORT, 1, [GeoIP V6 support is present]))
 
 if test ".${ac_cv_lib_GeoIP_GeoIP_record_by_ipnum}" = ".yes"; then
 LIBS="$LIBS -lGeoIP"

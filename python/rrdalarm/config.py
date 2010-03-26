@@ -8,7 +8,17 @@ import host
 import os, os.path
 import sys
 #import pprint
-import glob, json
+import glob
+
+exceptions_so_far = 0
+
+try:
+    import json
+except:
+    ntop.printHTMLHeader('ntop Python Configuration Error', 1, 1)
+    ntop.sendString("<b><center><font color=red>Please install JSON support in python</font><p></b><br>E.g. 'sudo apt-get install python-json' (on Debian-like systems)</font></center>")
+    ntop.printHTMLFooter()    
+    exceptions_so_far=1
 
 # Import modules for CGI handling
 import cgi, cgitb
@@ -170,4 +180,5 @@ def begin():
 
 '''Here starts the script'''
 
-begin()
+if exceptions_so_far == 0:
+    begin()

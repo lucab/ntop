@@ -15,23 +15,32 @@ import host
 import os.path
 import sys
 import pprint
-import json
 # Import modules for CGI handling
 import cgi, cgitb
 
 from StringIO import StringIO
 
-# Imports for mako
+exceptions_so_far=0
+
 try:
-    from mako.template import Template
-    from mako.runtime import Context
-    from mako.lookup import TemplateLookup
-    from mako import exceptions
+    import json
+
+    # Imports for mako
+    try:
+        from mako.template import Template
+        from mako.runtime import Context
+        from mako.lookup import TemplateLookup
+        from mako import exceptions
+    except:
+        ntop.printHTMLHeader('ntop Python Configuration Error', 1, 1)
+        ntop.sendString("<b><center><font color=red>Please install <A HREF=http://www.makotemplates.org/>Mako</A> template engine</font><p></b><br>(1) 'sudo yum install python-setuptools' (on RedHat-like systems)<br>(2) 'sudo easy_install Mako'</font></center>")
+        ntop.printHTMLFooter()    
+        exceptions_so_far=1
 except:
     ntop.printHTMLHeader('ntop Python Configuration Error', 1, 1)
-    ntop.sendString("<b><center><font color=red>Please install <A HREF=http://www.makotemplates.org/>Mako</A> template engine</font><p></b><br>(1) 'sudo yum install python-setuptools' (on RedHat-like systems)<br>(2) 'sudo easy_install Mako'")
+    ntop.sendString("<b><center><font color=red>Please install JSON support in python</font><p></b><br>E.g. 'sudo apt-get install python-json' (on Debian-like systems)</font></center>")
     ntop.printHTMLFooter()    
-    sys.exit(0)
+    exceptions_so_far=1
 
 # Fix encoding
 reload(sys)
@@ -147,83 +156,80 @@ def getJsonData(dictionaryCountries, totalHosts,unknownCountries, unknownCities)
         return json.dumps(dataJ, True)
     except:
         return 'false'
-    
-dictionaryCountries = {}
 
-totalHosts = 0
-unknownCountries = 0
-unknownCities = 0
-flag = 's'                                  # s (default) for sent packets r for received, b for both
-SIXDECIMAL = decimal.Decimal(10) ** -6      # decimals are all fixed to 6 es. 0.000000
+if exceptions_so_far == 0:
+    dictionaryCountries = {}
 
-# Parse URL
-cgitb.enable();
+    totalHosts = 0
+    unknownCountries = 0
+    unknownCities = 0
+    flag = 's'                                  # s (default) for sent packets r for received, b for both
+    SIXDECIMAL = decimal.Decimal(10) ** -6      # decimals are all fixed to 6 es. 0.000000
 
-form = cgi.FieldStorage();
+    # Parse URL
+    cgitb.enable();
 
-if form.getvalue('OP') == 'Change':
-    flag = form.getvalue('countHosts', 's')
+    form = cgi.FieldStorage();
 
+    if form.getvalue('OP') == 'Change':
+        flag = form.getvalue('countHosts', 's')
 
-while ntop.getNextHost(0):
-    totalHosts += 1
-    geo = host.geoIP()
+    while ntop.getNextHost(0):
+        totalHosts += 1
+        geo = host.geoIP()
 
-    countryCode = geo.get('country_code', '')
-    countryName = geo.get('country_name', '')
-    city = geo.get('city', '')
+        countryCode = geo.get('country_code', '')
+        countryName = geo.get('country_name', '')
+        city = geo.get('city', '')
+        
+        lat = str(geo.get('latitude', '0.000000'))
+        lon = str(geo.get('longitude', '0.000000'))
 
-    lat = str(geo.get('latitude', '0.000000'))
-    lon = str(geo.get('longitude', '0.000000'))
+        latitude = decimal.Decimal(lat).quantize(SIXDECIMAL)
+        longitude = decimal.Decimal(lon).quantize(SIXDECIMAL)
 
-    latitude = decimal.Decimal(lat).quantize(SIXDECIMAL)
-    longitude = decimal.Decimal(lon).quantize(SIXDECIMAL)
+        if not countryCode or countryCode == 'EU' or countryCode == 'AP' :      # the country was not found therefore the city was not found, everything in the object is set accordingly
+            countryCode = ''
+            city = ''
+            unknownCountries += 1
+        elif not city :   
+            unknownCities += 1                                     # the country was found but not the city, to list this case the city name is set to Unknown
+            city = 'Unknown'
+            latitude = decimal.Decimal('0.000000')
+            longitude = decimal.Decimal('0.000000')
 
-    if not countryCode or countryCode == 'EU' or countryCode == 'AP' :      # the country was not found therefore the city was not found, everything in the object is set accordingly
-        countryCode = ''
-        city = ''
-        unknownCountries += 1
-    elif not city :   
-        unknownCities += 1                                     # the country was found but not the city, to list this case the city name is set to Unknown
-        city = 'Unknown'
-        latitude = decimal.Decimal('0.000000')
-        longitude = decimal.Decimal('0.000000')
+        if countryCode :
+            if dictionaryCountries.has_key(countryCode):           # the dictionary of nations already has the nationCode listed 
+                country = dictionaryCountries[countryCode]
+                country.addTotal(1)
+            else:
+                country = Country(countryCode, countryName, 1)
+                dictionaryCountries[countryCode] = country
 
-    if countryCode :
-        if dictionaryCountries.has_key(countryCode):           # the dictionary of nations already has the nationCode listed 
-            country = dictionaryCountries[countryCode]
-            country.addTotal(1)
+        if city: 
+            country.addCity(city, latitude, longitude, 1)          # insert the city found in the citiesDictionary of this nation object
+
+        if os.getenv('REQUEST_METHOD', 'GET') == 'POST':    
+            ntop.sendHTTPHeader(12)
+            ntop.sendString(getJsonData(dictionaryCountries, totalHosts, unknownCountries, unknownCities))
         else:
-            country = Country(countryCode, countryName, 1)
-            dictionaryCountries[countryCode] = country
-
-    if city: 
-        country.addCity(city, latitude, longitude, 1)          # insert the city found in the citiesDictionary of this nation object
-
-
-if os.getenv('REQUEST_METHOD', 'GET') == 'POST':
+            ntop.printHTMLHeader('Host Map: Region View', 1, 0)
     
-    ntop.sendHTTPHeader(12)
-    ntop.sendString(getJsonData(dictionaryCountries, totalHosts, unknownCountries, unknownCities))
-else:
+        if totalHosts == 0:
+            ntop.printFlagedWarning('No hosts have been detected by ntop yet')
+        elif len(dictionaryCountries) == 0:
+            ntop.printFlagedWarning('No hosts have been successfully geo-located by ntop yet')
+        else:
+            try:
+                basedir =  os.getenv('DOCUMENT_ROOT', '.')+'/python/templates'
+                mylookup = TemplateLookup(directories=[basedir])
+                myTemplate = mylookup.get_template('GeoPacketVisualizer.tmpl')
+                buf = StringIO()
+                ctx = Context(buf, countries = dictionaryCountries, totalHosts = totalHosts, unknownCountries = unknownCountries, 
+                              unknownCities = unknownCities, filename = os.path.basename(__file__))
+                myTemplate.render_context(ctx)
+                ntop.sendString(buf.getvalue())
+            except:
+                ntop.sendString(exceptions.html_error_template().render())
     
-    ntop.printHTMLHeader('Host Map: Region View', 1, 0)
-    
-    if totalHosts == 0:
-        ntop.printFlagedWarning('No hosts have been detected by ntop yet')
-    elif len(dictionaryCountries) == 0:
-        ntop.printFlagedWarning('No hosts have been successfully geo-located by ntop yet')
-    else:
-        try:
-            basedir =  os.getenv('DOCUMENT_ROOT', '.')+'/python/templates'
-            mylookup = TemplateLookup(directories=[basedir])
-            myTemplate = mylookup.get_template('GeoPacketVisualizer.tmpl')
-            buf = StringIO()
-            ctx = Context(buf, countries = dictionaryCountries, totalHosts = totalHosts, unknownCountries = unknownCountries, 
-                          unknownCities = unknownCities, filename = os.path.basename(__file__))
-            myTemplate.render_context(ctx)
-            ntop.sendString(buf.getvalue())
-        except:
-            ntop.sendString(exceptions.html_error_template().render())
-    
-    ntop.printHTMLFooter()
+            ntop.printHTMLFooter()
