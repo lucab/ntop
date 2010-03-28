@@ -1,0 +1,233 @@
+<script type="text/javascript">
+    var updateQueryF = function(){
+        var query = getElement('history').value;
+
+		var sfw=/SELECT (.+) FROM (.+) WHERE (.+)/
+		var sf=/SELECT (.+) FROM (.+)/
+		
+		var objMatch=query.match(sfw);
+		if (objMatch) {
+			getElement('select').value = objMatch[1];
+			getElement('from').value = objMatch[2];
+			getElement('where').value = objMatch[3];
+		}
+		else {
+			objMatch = query.match(sf);
+			if (objMatch) {
+				getElement('select').value = objMatch[1];
+				getElement('from').value = objMatch[2];
+			}else{
+				//in this case the string was not formatted correctly
+				//print a message
+				getElement('error').innerHTML="The select string was not formatted correctly!";
+				
+			}
+		}
+    };
+	button=null;
+	
+	function getSelectionStart(o) {
+	if (o.createTextRange) {
+		var r = document.selection.createRange().duplicate();
+		r.moveEnd('character', o.value.length);
+		if (r.text === '') {
+			return o.value.length;
+		}
+		else {
+			return o.value.lastIndexOf(r.text);
+		}
+	}
+	else {
+		return o.selectionStart;
+	}
+}
+
+</script>
+<center>
+	
+    % if queryHistory != None and len(queryHistory)>0:
+	<p>Last 
+	% if len(queryHistory)==1:
+	query:
+	% else:
+	${len(queryHistory)} queries:
+	% endif
+	</p>
+    <select id="history" onchange="updateQueryF();" >
+        % for x in queryHistory:
+		<option value="${x}">${x}</option>
+        % endfor
+    </select>
+    % endif
+	<p>&nbsp;</p>
+	<div style="color:#FF0000;" id="error"></div>
+    <form name=input id="queryForm" action="" method=get onsubmit="if(!button) return false;">
+        <table align="center">
+            <tr>
+                <th align="left">
+                    SELECT
+                </th>
+                <td>
+                    <input type="text" name="select" id="select" size=40 autocomplete="off" value="${queryPar[0]}">
+                </td>
+            </tr>
+            <tr>
+                <th align="left">
+                    FROM
+                </th>
+                <td>
+                    <input type="text" name="from" size=40 id="from" autocomplete="off" value="${queryPar[1]}">
+                </td>
+            </tr>
+            <tr>
+                <th align="left">
+                    WHERE
+                </th>
+                <td>
+                    <input type="text" name="where" id="where" size=40 value="${queryPar[2]}">
+                </td>
+            </tr><input type=hidden name=output value=PLAIN><input type=hidden name=submit value=yes>
+			<tr>
+				<th align="left">
+                    LIMIT
+                </th>
+                <td>
+                    <input type="text" name="limit" id="limit" size=40 value="${queryPar[3]}">
+                </td>
+				
+			</tr>
+            <tr>
+                <td colspan=2 align=center>
+                    <input type="submit" value="Execute Query" onmousedown="button='exec';">
+                </td>
+            </tr>
+        </table>
+    </form>
+	
+<script type="text/javascript">
+	var selectOptions = {script: function(input){
+		var lru = "fastbit.py?selectAuto=" + input;
+		var tmpF=getElement('from').value;
+		if (tmpF && tmpF.replace(' ', '').length>0) {
+			lru+='&fromAuto='+tmpF;
+		}
+		try{
+			var carPosition=getSelectionStart(getElement('select'));
+			if(carPosition>0){
+				lru+='&carPosition='+carPosition;
+			}
+		}catch(err){}
+		
+		return lru;
+	},json:true,timeout:10000,cache:false,callback: function (obj) { getElement('select').value =obj.value; }};
+	var select_json = new bsn.AutoSuggest("select", selectOptions);
+	var fromOptions={script: function(input2){return "fastbit.py?fromAuto="+input2} ,json:true,timeout:10000,cache:false,callback: function (obj) { getElement('from').value =obj.value; }};
+	var from_json = new bsn.AutoSuggest("from", fromOptions);
+	</script>
+
+
+<p style="font-size:larger;">
+% if columns != None:
+<b>
+
+	% if len(columns)==0:
+		No results!
+	% else:
+    	Query Results:
+	% endif
+</b>
+% endif
+</p>
+
+
+% if columns != None and len(columns)>0:
+	<table border="1" align="center" cellpadding="5" cellspacing="0" id="results" >
+
+            <thead>
+
+                <tr>
+                	<th nowrap="nowrap" bgcolor="#f3f3f3" align="center">
+						Row number
+                    </th>
+% for col in columns:
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center" >
+                       ${col}
+                    </th>
+%endfor
+                </tr>
+
+            </thead>
+
+            <tbody id="body">
+<% 
+numRow=1
+%>\
+% for row in values:
+				
+				<tr onMouseOver="this.bgColor = '#EDF3FE'" onMouseOut ="this.bgColor = '#FFFFFF'">
+				<td align="center"><b>${numRow}</b></td>
+				% for field in row:
+				<td align="center">${field}</td>
+				%endfor
+				</tr>
+<% 
+	numRow=numRow+1
+%>\
+% endfor
+            </tbody>
+</table>
+% else:
+    <br>
+    <p>
+        How to submit a query:
+    </p>
+    <br>
+    <table border=1 cellspacing=0 cellpadding=2>
+        <tr>
+            <th align=center bgcolor=#f3f3f3>
+                Field
+            </th>
+            <th align=center bgcolor=#f3f3f3>
+                Value
+            </th>
+            <th align=center bgcolor=#f3f3f3>
+                Example
+            </th>
+        </tr>
+        <tr>
+            <th align=left bgcolor=#f3f3f3>
+                SELECT
+            </th>
+            <td align=left bgcolor=white>
+                Comma separated column names
+            </td>
+            <td align=left bgcolor=white>
+                IPV4_SRC_ADDR,L4_SRC_PORT,L4_DST_PORT
+            </td>
+        </tr>
+        <tr>
+            <th align=left bgcolor=#f3f3f3>
+                FROM
+            </th>
+            <td align=left bgcolor=white>
+                RELATIVE (CHECK THE CODE FOR NOW) pathname of Fastbit directory to query
+            </td>
+            <td align=left bgcolor=white>
+                (/tmp/)2010/03/09/15/29
+            </td>
+        </tr>
+        <tr>
+            <th align=left bgcolor=#f3f3f3>
+                WHERE
+            </th>
+            <td align=left bgcolor=white>
+                Query conditions to satisfy [mandatory] (the == does not work for now)
+            </td>
+            <td align=left bgcolor=white>
+                L4_SRC_PORT>80
+            </td>
+        </tr>
+    </table>
+% endif
+
+<p class="footrow" align="left">Fastbit Query by <a class="mailto" href="mailto:&#103;&#109;&#101;&#100;&#105;&#99;&#105;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;">Gianluca Medici</a>.</p>
