@@ -45,6 +45,8 @@ static u_int8_t header_sent;
 #define PyString_FromFormat    PyUnicode_FromFormat
 #define PyInt_FromLong(a)      PyLong_FromLong(a)
 #define Py_InitModule(a, b)    PyModule_Create(&_##b)
+#else
+#define wchar_t                char
 #endif
 
 /* **************************************** */
