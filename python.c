@@ -40,6 +40,13 @@ static char query_string[2048];
 static PthreadMutex python_mutex;
 static u_int8_t header_sent;
 
+#if (PY_MAJOR_VERSION > 2)
+#define PyString_FromString(a) PyUnicode_FromString(a)
+#define PyString_FromFormat    PyUnicode_FromFormat
+#define PyInt_FromLong(a)      PyLong_FromLong(a)
+#define Py_InitModule(a, b)    PyModule_Create(&_##b)
+#endif
+
 /* **************************************** */
 
 static PyObject* python_sendHTTPHeader(PyObject *self, PyObject *args) {
@@ -585,7 +592,7 @@ static PyObject* python_fastbit_query(PyObject *self, PyObject *args) {
     if(rh != NULL) {
       int ncols = fastbit_get_result_columns(qh), n;
       PyObject *list;
-      char *header = strdup((char*)fastbit_get_select_clause(qh)), *elem, *state;
+      char *header = strdup((char*)fastbit_get_select_clause(qh)), *elem, *state = NULL;
 
       obj = PyDict_New();
       elem = strtok_r(header, ",", &state);
@@ -605,14 +612,14 @@ static PyObject* python_fastbit_query(PyObject *self, PyObject *args) {
 	
 	while((nres > 0) && (fastbit_result_set_next(rh) == 0)) {
 	  int i;
-	  PyObject *elem = PyList_New(ncols);
+	  PyObject *list_elem = PyList_New(ncols);
 	  
-	  if(!elem) break;
+	  if(!list_elem) break;
 	  
 	  for (i = 0; i < ncols; ++ i)
-	    PyList_SetItem(elem, i, PyInt_FromLong(fastbit_result_set_getUnsigned(rh, i)));
+	    PyList_SetItem(list_elem, i, PyInt_FromLong(fastbit_result_set_getUnsigned(rh, i)));
 	  
-	  PyList_SetItem(list, n++, elem);
+	  PyList_SetItem(list, n++, list_elem);
 	  nres--;
 	}
 
@@ -1163,11 +1170,29 @@ static PyMethodDef fastbit_methods[] = {
 
 /* **************************************** */
 
+#if PY_MAJOR_VERSION >= 3
+
+struct module_state { PyObject *error; };
+#define GETSTATE(m)            ((struct module_state*)PyModule_GetState(m))
+
+static int myextension_traverse(PyObject *m, visitproc visit, void *arg) { Py_VISIT(GETSTATE(m)->error); return 0; }
+static int myextension_clear(PyObject *m) { Py_CLEAR(GETSTATE(m)->error); return 0; }
+
+static struct PyModuleDef _ntop_methods = { PyModuleDef_HEAD_INIT, "ntop", NULL, sizeof(struct module_state), ntop_methods, NULL, myextension_traverse, myextension_clear, NULL };
+static struct PyModuleDef _interface_methods = { PyModuleDef_HEAD_INIT, "interface", NULL, sizeof(struct module_state), interface_methods, NULL, myextension_traverse, myextension_clear, NULL };
+static struct PyModuleDef _host_methods = { PyModuleDef_HEAD_INIT, "host", NULL, sizeof(struct module_state), host_methods, NULL, myextension_traverse, myextension_clear, NULL };
+#ifdef HAVE_FASTBIT
+static struct PyModuleDef _fastbit_methods = { PyModuleDef_HEAD_INIT, "fastbit", NULL, sizeof(struct module_state), fastbit_methods, NULL, myextension_traverse, myextension_clear, NULL };
+#endif
+#endif
+
+/* **************************************** */
+
 static void init_python_ntop(void) {
   createMutex(&python_mutex);
   Py_InitModule("ntop", ntop_methods);
-  Py_InitModule("host", host_methods);
   Py_InitModule("interface", interface_methods);
+  Py_InitModule("host", host_methods);
 #ifdef HAVE_FASTBIT
   Py_InitModule("fastbit", fastbit_methods);
 #endif
@@ -1186,12 +1211,12 @@ void init_python(int argc, char *argv[]) {
     if(!myGlobals.runningPref.debugMode) return;
   }
 
-  if(_argv) Py_SetProgramName(_argv[0]);
+  if(_argv) Py_SetProgramName((wchar_t*)_argv[0]);
 
   /* Initialize the Python interpreter.  Required. */
   Py_Initialize();
 
-  if(_argv) PySys_SetArgv(_argc, _argv);
+  if(_argv) PySys_SetArgv(_argc, (wchar_t**)_argv);
 
   /* Initialize thread support */
   PyEval_InitThreads();
@@ -1220,7 +1245,7 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
   int idx, found = 0;
   char python_path[256], *document_root = strdup("."), buf[2048];
   struct stat statbuf;
-  PyObject *fd;
+  FILE *fd;
   char *question_mark = strchr(url, '?');
 
   // traceEvent(CONST_TRACE_INFO, "Calling python... [%s]", url);
@@ -1269,7 +1294,7 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 
   /* traceEvent(CONST_TRACE_INFO, "[PYTHON] Executing %s", python_path); */
 
-  if((fd = PyFile_FromString(python_path, "r")) != NULL) {
+  if((fd = fopen(python_path, "r")) != NULL) {
 #ifndef WIN32
     int old_stdin = 0, old_stdout = 0;
 #endif
@@ -1335,7 +1360,7 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 #endif
 
     /* Run the actual program */
-    PyRun_SimpleFile(PyFile_AsFile(fd), python_path);
+    PyRun_SimpleFile(fd, python_path);
 
 #ifndef WIN32
     if(myGlobals.runningPref.debugMode /* -K */) {
@@ -1350,6 +1375,7 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 #endif
 
     releaseMutex(&python_mutex);
+    fclose(fd);
   }
 
   free(document_root);

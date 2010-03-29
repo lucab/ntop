@@ -6255,12 +6255,12 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
 /* ************************************ */
 
 static char x2c(char *what) {
-  char digit;
+  char the_digit;
 
-  digit = (what[0] >= 'A' ? ((what[0] & 0xdf) - 'A')+10 : (what[0] - '0'));
-  digit *= 16;
-  digit += (what[1] >= 'A' ? ((what[1] & 0xdf) - 'A')+10 : (what[1] - '0'));
-  return(digit);
+  the_digit = (what[0] >= 'A' ? ((what[0] & 0xdf) - 'A')+10 : (what[0] - '0'));
+  the_digit *= 16;
+  the_digit += (what[1] >= 'A' ? ((what[1] & 0xdf) - 'A')+10 : (what[1] - '0'));
+  return(the_digit);
 }
 
 /* ******************************* */
