@@ -20,6 +20,30 @@ import cgi, cgitb
 
 from StringIO import StringIO
 
+ok = 1
+
+# Imports for rrd
+try:
+    import rrdtool
+except:
+    ntop.printHTMLHeader('ntop Python Configuration Error',1,0)
+    ntop.sendString("<b><center><font color=red>Please install <A HREF='http://sourceforge.net/projects/py-rrdtool/'>pyRRDTool</A></font><br># cd py_rrdTool_dir<br># sudo python setup.py install</center></b>")
+    ntop.printHTMLFooter()
+    ok = 0
+
+# Imports for mako
+try:
+    from mako.template import Template
+    from mako.runtime import Context
+    from mako.lookup import TemplateLookup
+    from mako import exceptions
+except:
+    ntop.printHTMLHeader('ntop Python Configuration Error',1,0)
+    ntop.sendString("<b><center><font color=red>Please install <A HREF=http://www.makotemplates.org/>Mako</A> template engine</font> (sudo easy_install Mako)</center></b>")
+    ntop.printHTMLFooter()
+    ok = 0
+
+
 noFilesLine=[]                                          #list of all the lines with no rrd file name found
 
 ''' Class for object threshold that contains all the informations to check a list of rrdfiles and to trigger 
@@ -193,29 +217,7 @@ def performActions(parameterDict, documentRoot):
 
 def begin():
     rrdFilesPath=os.path.join(ntop.getDBPath(),'rrd')
-    
-    # Imports for rrd
-    try:
-        import rrdtool
-    except:
-        raise
-        ntop.printHTMLHeader('ntop Python Configuration Error',1,0)
-        ntop.sendString("<b><center><font color=red>Please install <A HREF='http://sourceforge.net/projects/py-rrdtool/'>pyRRDTool</A></font><br># cd py_rrdTool_dir<br># sudo python setup.py install</center></b>")
-        ntop.printHTMLFooter()
-        return 1
-
-    # Imports for mako
-    try:
-        from mako.template import Template
-        from mako.runtime import Context
-        from mako.lookup import TemplateLookup
-        from mako import exceptions
-    except:
-        ntop.printHTMLHeader('ntop Python Configuration Error',1,0)
-        ntop.sendString("<b><center><font color=red>Please install <A HREF=http://www.makotemplates.org/>Mako</A> template engine</font> (sudo easy_install Mako)</center></b>")
-        ntop.printHTMLFooter()
-        return 1
-    
+        
     ''' Check the existence of the rrd database files that maintain history of this script'''
     def updateDBS(time, resultsValue, durationValue):
         #global rrdFilesPath
@@ -397,7 +399,8 @@ THE SCRIPT STARTS HERE
 '''    
 
 #if os.getenv('REQUEST_METHOD', 'GET') == 'GET':             # The script can be called only by get method
-begin()        
+if(ok == 1):
+    begin()        
 
 #else:       #script called by some other method rather that GET, return not implemented
 #    ntop.returnHTTPnotImplemented()
