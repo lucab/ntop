@@ -1,4 +1,3 @@
-# coding: utf-8
 import ntop
 import fastbit
 #import pprint
