@@ -1,3 +1,4 @@
+# coding: latin-1
 '''
 Created on 20 Dec 2009
 
@@ -43,8 +44,8 @@ except:
     exceptions_so_far=1
 
 # Fix encoding
-reload(sys)
-sys.setdefaultencoding("latin1")
+#reload(sys)
+#sys.setdefaultencoding("latin1")
 
 class Town(object):
     '''
@@ -59,7 +60,7 @@ class Town(object):
         '''
         Constructor
         '''
-        self.__name=name.encode('utf-8')
+        self.__name=name.encode('latin1')
         self.__latitudine=latitudine
         self.__longitudine=longitudine
         self.__totalHosts=numHosts
