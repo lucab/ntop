@@ -1,4 +1,4 @@
-# coding: latin-1
+# coding: utf-8
 '''
 Created on 20 Dec 2009
 
@@ -14,8 +14,8 @@ import decimal
 import ntop
 import host
 import os.path
-import sys
-import pprint
+#import sys
+#import pprint
 # Import modules for CGI handling
 import cgi, cgitb
 
@@ -60,7 +60,7 @@ class Town(object):
         '''
         Constructor
         '''
-        self.__name=name.encode('latin1')
+        self.__name=name.encode('utf-8')
         self.__latitudine=latitudine
         self.__longitudine=longitudine
         self.__totalHosts=numHosts
@@ -223,7 +223,7 @@ if exceptions_so_far == 0:
         else:
             try:
                 basedir =  os.getenv('DOCUMENT_ROOT', '.')+'/python/templates'
-                mylookup = TemplateLookup(directories=[basedir])
+                mylookup = TemplateLookup(directories=[basedir], default_filters=['decode.utf8'])
                 myTemplate = mylookup.get_template('GeoPacketVisualizer.tmpl')
                 buf = StringIO()
                 ctx = Context(buf, countries = dictionaryCountries, totalHosts = totalHosts, unknownCountries = unknownCountries, 
