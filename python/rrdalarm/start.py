@@ -345,7 +345,7 @@ def begin():
         documentRoot=os.getenv('DOCUMENT_ROOT', '.')
         performActions(parameterDic, documentRoot)                 #performs all the actions for the alarms fired (if any)
         
-        duration=decimal.Decimal(str(time.time()-timeStart)).quantize(TWODECIMAL)
+        duration=decimal.Decimal(str(time.time()-timeStart)).quantize(TWODECIMAL, decimal.ROUND_CEILING)
         updateDBS(int(timeStart), alarmsFired, duration)           #update rrds that trace the history of this script  TODO check where to place this
        
         ntop.sendHTTPHeader(1)

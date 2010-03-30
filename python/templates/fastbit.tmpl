@@ -1,7 +1,14 @@
 <script type="text/javascript">
     var updateQueryF = function(){
         var query = getElement('history').value;
-
+		
+		if (query.length===0) {//clear all the fields (initial value)
+			getElement('select').value = "";
+			getElement('from').value = "";
+			getElement('where').value = "";
+			return;
+		}
+		
 		var sfw=/SELECT (.+) FROM (.+) WHERE (.+)/
 		var sf=/SELECT (.+) FROM (.+)/
 		
@@ -47,18 +54,20 @@
 	
     % if queryHistory != None and len(queryHistory)>0:
 	<p>Last 
-	% if len(queryHistory)==1:
+		% if len(queryHistory)==1:
 	query:
-	% else:
+		% else:
 	${len(queryHistory)} queries:
-	% endif
+		% endif
 	</p>
     <select id="history" onchange="updateQueryF();" >
+    	<option value=""></option>
         % for x in queryHistory:
 		<option value="${x}">${x}</option>
         % endfor
     </select>
     % endif
+	
 	<p>&nbsp;</p>
 	<div style="color:#FF0000;" id="error"></div>
     <form name=input id="queryForm" action="" method=get onsubmit="if(!button) return false;">
