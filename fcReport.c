@@ -4424,7 +4424,7 @@ void printFcTrafficMatrix (u_short vsanId, u_char sent)
   TrafficEntry *entry;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].fcTrafficMatrix == NULL) {
-    printFlagedWarning("<I>Traffic matrix is not available for the selected network interface</I>");
+    printFlagedWarning("<I>FC Traffic matrix is not available for the selected network interface</I>");
     return;
   }
 

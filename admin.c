@@ -1098,6 +1098,8 @@ static void addKeyIfMissing(char* key, char* value,
 /* *******************************/
 
 void setAdminPassword(char* pass) {
+  traceEvent(CONST_TRACE_INFO, "Setting administrator password...");
+  
   if (pass == NULL)
     addKeyIfMissing("1admin", NULL, 1, 1, CONST_ADMINPW_QUESTION);
   else

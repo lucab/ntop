@@ -1233,6 +1233,8 @@ typedef struct _SFSample {
 /* ********************************* */
 
 /* Forward */
+static void setSflowInterfaceMatrix(int);
+static void freeSflowMatrixMemory(int);
 static int setsFlowInSocket(int);
 static void setPluginStatus(char * status);
 static int initsFlowFunct(void);
@@ -3894,6 +3896,7 @@ static int createsFlowDevice(int sflowDeviceId) {
     myGlobals.device[deviceId].activeDevice = 1;
     myGlobals.device[deviceId].sflowGlobals->sflowDeviceId = sflowDeviceId;
     initsFlowDevice(deviceId);
+    setSflowInterfaceMatrix(deviceId);
     createDeviceIpProtosList(deviceId);
 
     if(fetchPrefsValue(sfValue(deviceId, "humanFriendlyName", 1), value, sizeof(value)) != -1) {
@@ -4217,12 +4220,14 @@ static void handlesFlowHTTPrequest(char* _url) {
 	      myGlobals.device[deviceId].sflowGlobals->sflowIfAddress.s_addr = (a << 24) +(b << 16) +(c << 8) + d;
 	      myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr    = (a1 << 24) +(b1 << 16) +(c1 << 8) + d1;
 	      storePrefsValue(sfValue(deviceId, "ifNetMask", 1), value);
+	      freeSflowMatrixMemory(deviceId); setSflowInterfaceMatrix(deviceId);  
 	    } else if(sscanf(value, "%d.%d.%d.%d/%d", &a, &b, &c, &d, &a1) == 5) {
 	      myGlobals.device[deviceId].sflowGlobals->sflowIfAddress.s_addr = (a << 24) +(b << 16) +(c << 8) + d;
 	      myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr    = 0xffffffff >> a1;
 	      myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr =~
 		myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr;
 	      storePrefsValue(sfValue(deviceId, "ifNetMask", 1), value);
+	      freeSflowMatrixMemory(deviceId); setSflowInterfaceMatrix(deviceId);  
 	    } else
 	      traceEvent(CONST_TRACE_ERROR, "SFLOW: HTTP request netmask parse error (%s)", value);
 	  }
@@ -4747,3 +4752,57 @@ static void setPluginStatus(char * status)
     sflowPluginInfo->pluginStatusMessage = strdup(status);
   }
 }
+
+/* ************************************************** */
+
+static void setSflowInterfaceMatrix(int deviceId) {
+  if((!myGlobals.device[deviceId].activeDevice)
+     || (deviceId == -1))
+    return;
+
+  myGlobals.device[deviceId].numHosts       = 0xFFFFFFFF - myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr+1;
+  myGlobals.device[deviceId].ifAddr.s_addr  = myGlobals.device[deviceId].sflowGlobals->sflowIfAddress.s_addr;
+  myGlobals.device[deviceId].network.s_addr = myGlobals.device[deviceId].sflowGlobals->sflowIfAddress.s_addr;
+  myGlobals.device[deviceId].netmask.s_addr = myGlobals.device[deviceId].sflowGlobals->sflowIfMask.s_addr;
+
+  if(myGlobals.device[deviceId].numHosts > MAX_SUBNET_HOSTS) {
+    myGlobals.device[deviceId].numHosts = MAX_SUBNET_HOSTS;
+    traceEvent(CONST_TRACE_WARNING, "SFLOW: Truncated network size(device %s) to %d hosts(real netmask %s).",
+	       myGlobals.device[deviceId].name, myGlobals.device[deviceId].numHosts,
+	       intoa(myGlobals.device[deviceId].netmask));
+  }
+
+  myGlobals.device[deviceId].ipTrafficMatrix =
+    (TrafficEntry**)calloc(myGlobals.device[deviceId].numHosts*
+			   myGlobals.device[deviceId].numHosts,
+			   sizeof(TrafficEntry*));
+  myGlobals.device[deviceId].ipTrafficMatrixHosts =
+    (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
+				 myGlobals.device[deviceId].numHosts);
+}
+
+/* ****************************** */
+
+static void freeSflowMatrixMemory(int deviceId) {
+  /*
+    NOTE: wee need to lock something here(TBD)
+  */
+
+  if((!myGlobals.device[deviceId].activeDevice) ||(deviceId == -1)) return;
+
+  if(myGlobals.device[deviceId].ipTrafficMatrix != NULL) {
+    int j;
+
+    /* Courtesy of Wies-Software <wies@wiessoft.de> */
+    for(j=0; j<(myGlobals.device[deviceId].numHosts *
+		myGlobals.device[deviceId].numHosts); j++)
+      if(myGlobals.device[deviceId].ipTrafficMatrix[j] != NULL)
+	free(myGlobals.device[deviceId].ipTrafficMatrix[j]);
+
+    free(myGlobals.device[deviceId].ipTrafficMatrix);
+  }
+
+  if(myGlobals.device[deviceId].ipTrafficMatrixHosts != NULL)
+    free(myGlobals.device[deviceId].ipTrafficMatrixHosts);
+}
+

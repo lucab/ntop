@@ -60,17 +60,26 @@ static char*  short_options = "46a:bce:f:ghi:jl:m:nop:qr:st:w:x:zAB:C:D:F:M"
 #ifdef ENABLE_FC
   "N:"
 #endif
+#if defined(DARWIN) && (!defined(TIGER))
+  "v"
+#endif
   "O:P:Q:S:U:VX:W:";
 #elif defined(MAKE_WITH_SYSLOG)
 static char*  short_options = "46a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKLM" 
 #ifdef ENABLE_FC
   "N:"
 #endif
+#if defined(DARWIN) && (!defined(TIGER))
+  "v"
+#endif
   "O:P:Q:S:U:VX:W:";
 #else
 static char*  short_options = "46a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKM"
 #ifdef ENABLE_FC
   "N:"
+#endif
+#if defined(DARWIN) && (!defined(TIGER))
+  "v"
 #endif
   "O:P:Q:S:U:VX:W:";
 #endif
@@ -105,6 +114,10 @@ static struct option const long_options[] = {
 
 #ifndef WIN32
   { "user",                             required_argument, NULL, 'u' },
+#endif
+
+#if defined(DARWIN) && (!defined(TIGER))
+  { "osx-daemon",                       required_argument, NULL, 'v' },
 #endif
 
   { "http-server",                      required_argument, NULL, 'w' },
@@ -191,6 +204,7 @@ void loadPrefs(int argc, char* argv[]) {
 
   traceEvent(CONST_TRACE_NOISY, "NOTE: Processing parameters (pass1)");
   opt_index = 0, optind = 0;
+    
   while ((opt = getopt_long(argc, argv, short_options, long_options, &opt_index)) != EOF) {
     switch (opt) {
     case 'h': /* help */
@@ -384,6 +398,7 @@ int parseOptions(int argc, char* argv[]) {
 #ifndef WIN32
     case 'd':
       myGlobals.runningPref.daemonMode = 1;
+      traceEvent(CONST_TRACE_ERROR, "++++ DEMON MODE=%d\n", myGlobals.runningPref.daemonMode);
       break;
 #endif
 
@@ -480,6 +495,12 @@ int parseOptions(int argc, char* argv[]) {
       userSpecified = 1;
       break;
 #endif /* WIN32 */
+
+#if defined(DARWIN) && (!defined(TIGER))
+    case 'v':
+      myGlobals.runningPref.daemonMode = 1;
+      break;
+#endif
 
     case 'w':
       stringSanityCheck(optarg, "-w | --http-server");
@@ -785,11 +806,33 @@ int parseOptions(int argc, char* argv[]) {
 
   /* *********************** */
 
+  traceEvent(CONST_TRACE_ERROR, "**** DAEMON MODE=%d\n", myGlobals.runningPref.daemonMode);
+
+  if(myGlobals.runningPref.daemonMode) {
+    /* 
+       In order to avoid ntop fail to start when running in daemon mode
+       we check if the admin password has been set and if not we set 
+       the default password. This way we can avoid ntop startup fail 
+    */
+    setAdminPw = 1; /* NOTE: the password is not overwritten if already present */
+    if(adminPw == NULL) adminPw = "admin";
+    
+    traceEvent(CONST_TRACE_ERROR, "**** ADMIN=%s\n", adminPw);
+  }
+
   if(setAdminPw) {
     setAdminPassword(adminPw);
-    termGdbm();
-    exit(0);
+
+    if(!myGlobals.runningPref.daemonMode) {
+      termGdbm();
+      exit(0);
+    }
   }
+
+#if defined(DARWIN) && (!defined(TIGER))
+  /* Trick for OSX: search check_osx_daemonization */
+  myGlobals.runningPref.daemonMode = 0;
+#endif
 
 #ifndef WIN32
   /* Handle any unrecognized options, such as a nested @filename */

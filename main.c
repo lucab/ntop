@@ -161,7 +161,7 @@ void usage(FILE * fp) {
   fprintf(fp, "    [--no-invalid-lun]                                    %sDon't display Invalid LUN information\n", newLine);
 #endif
 
-  fprintf(fp, "    [--instance]                                          %sSet log name for this ntop instance\n", newLine);
+  fprintf(fp, "    [--instance <name>]                                   %sSet log name for this ntop instance\n", newLine);
   fprintf(fp, "    [--p3p-cp]                                            %sSet return value for p3p compact policy, header\n", newLine);
   fprintf(fp, "    [--p3p-uri]                                           %sSet return value for p3p policyref header\n", newLine);
   fprintf(fp, "    [--skip-version-check]                                %sSkip ntop version check\n", newLine);
@@ -348,6 +348,7 @@ static void abortfn(enum mcheck_status status) {
      char **     args;
      char        execPath[PATH_MAX];
      uint32_t    execPathSize;
+     static char *osx_daemon = "--osx-daemon";
 
      // ... process any pre-daemonization arguments ...
 
@@ -374,6 +375,8 @@ static void abortfn(enum mcheck_status status) {
      for(j = 1, i=1; i<argc; i++) {
        if(strcmp(argv[i], "-d"))
 	 args[j++] = argv[i];
+       else
+	 args[j++] = osx_daemon;
      }
 
      // Daemonize ourself.
