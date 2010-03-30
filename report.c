@@ -5820,8 +5820,10 @@ void printDomainStats(char* domain_network_name, int network_mode,
 	  /* Community */
 	  if(el->hostIpAddress.hostFamily != AF_INET) continue;
 
-	all_hosts_community:
-	  keyValue = 0, found = 0;
+	  /*fixed label position courtesy of Philip Clark*/
+	  keyValue = 0;
+	  all_hosts_community:
+	  found = 0;
 
 	  if(debug) traceEvent(CONST_TRACE_WARNING, "[keyValue=%d][totNumCommunities=%d]",
 			       keyValue, totNumCommunities);

@@ -52,7 +52,7 @@
 </script>
 <center>
 	
-    % if queryHistory != None and len(queryHistory)>0:
+    % if queryHistory is not None and len(queryHistory)>0:
 	<p>Last 
 		% if len(queryHistory)==1:
 	query:
@@ -136,7 +136,7 @@
 
 
 <p style="font-size:larger;">
-% if columns != None:
+% if columns is not None:
 <b>
 
 	% if len(columns)==0:
@@ -149,7 +149,7 @@
 </p>
 
 
-% if columns != None and len(columns)>0:
+% if columns is not None and len(columns)>0:
 	<table border="1" align="center" cellpadding="5" cellspacing="0" id="results" >
 
             <thead>

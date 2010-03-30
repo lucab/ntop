@@ -108,7 +108,7 @@ class Threshold(object):
     def checkIfFire(self, value):
         if not self.__type:
             return False
-        if value== None:
+        if value is None:
             return False
         
         #check if value exceed above the threshold    or below the threshold

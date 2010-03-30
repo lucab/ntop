@@ -122,7 +122,7 @@ def getFirstDirWithNoDir(path):
         filePath=os.path.join(path,file)
         if os.path.isdir(filePath) and os.access(filePath, os.R_OK):
             temp =getFirstDirWithNoDir(filePath+os.sep)
-            if temp==None:
+            if temp is None:
                 return filePath
             else: 
                 return temp;
@@ -184,7 +184,7 @@ def expandQuery(query):
         #take the first directory in the fastbitDir and expand its fields (assumption there all the same in all the directories)
         allTheFiles=os.listdir(pathFastbit)
         firstDir=getFirstDirWithNoDir(pathFastbit)
-        if firstDir !=None:#to complete
+        if firstDir is not None:#to complete
             jsonList['results']=expandTableFields(string, firstDir)
             
     
@@ -292,8 +292,8 @@ def begin():
         return
     
      # Fix encoding
-    reload(sys)
-    sys.setdefaultencoding("latin1")
+    #reload(sys)
+    #sys.setdefaultencoding("latin1")
     ntopSpoolPath=ntop.getSpoolPath()
     tempQueryHistory="fbQueryHistory"
     
@@ -306,7 +306,7 @@ def begin():
     fb_DB = '/tmp/'               #ntop.getPreference ("fastbitDB");    #default location of the fastbit DB
     
     
-    if fb_DB != None:
+    if fb_DB is not None:
         databasePath=fb_DB
     pathFastBit=os.path.join(databasePath,'fastbit'+os.path.sep)
         
@@ -370,7 +370,7 @@ def begin():
             except:
                 print>>sys.stderr, 'ERROR Executing query: '+("SELECT %s FROM %s WHERE %s LIMIT %i" %(selectArg,os.path.join(pathFastBit, fromArg),  whereArg, limit))
                 res = {}
-            if res != None and 'columns' in res:
+            if res is not None and 'columns' in res:
                 cols=res['columns']
                 #control if the history list has reach the limit
                 if len(history['history'])>=historyLimit:
@@ -380,7 +380,7 @@ def begin():
                 saveTempFile(history,os.path.join(ntopSpoolPath,tempQueryHistory))
             else:
                 cols=[]
-            if res !=None and 'values' in res:
+            if res is not None and 'values' in res:
                 
                 toFormat=getAddrCols(selectArg) #get a list of addr column numbers
                 

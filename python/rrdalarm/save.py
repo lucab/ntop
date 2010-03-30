@@ -1,3 +1,4 @@
+# coding: utf-8
 '''
 Created on 17/gen/2010
 
@@ -14,8 +15,8 @@ import glob
 import cgi, cgitb
 
 # Fix encoding
-reload(sys)
-sys.setdefaultencoding("latin1")
+#reload(sys)
+#sys.setdefaultencoding("latin1")
 
 ''' Check if the parameter passed contains unwanted characters and returns
     a correct filename format '''
@@ -52,7 +53,7 @@ jsonData=form.getvalue('jsonString', '{"rows":None}')                 #get the d
 userConfigFile=form.getfirst('configFile', None)
 #pprint.pprint(form.getvalue('configFile', None), sys.stderr)
 #print>>sys.stderr, userConfigFile
-if userConfigFile != None:
+if userConfigFile is not None:
     
     nameFileConfig=checkFileName(str(userConfigFile))
 
@@ -61,7 +62,7 @@ if userConfigFile != None:
 configData=json.loads(jsonData,'latin1')
 
 rows=configData['rows']
-if rows != None:
+if rows is not None:
     try:
         cFile= open(os.path.join(pathConfigFile,nameFileConfig), 'w')
         cFile.write("#rrdAlarmConfig File. All the lines that starts with the '#' will be ignored! (just like this one)\n")

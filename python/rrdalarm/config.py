@@ -1,3 +1,4 @@
+# coding: utf-8
 '''
 Created on 16/gen/2010
 
@@ -95,8 +96,8 @@ def begin():
         return
     
     # Fix encoding
-    reload(sys)
-    sys.setdefaultencoding("latin1")
+    #reload(sys)
+    #sys.setdefaultencoding("latin1")
     
     
     rows=[]
@@ -125,7 +126,7 @@ def begin():
     else:
         #normal operation
         requestFileConfig=form.getvalue('configFile')
-        if  requestFileConfig != None:
+        if requestFileConfig is not None:
             nameFileConfig=requestFileConfig
         
         #get all the scripts in the scripts directory
@@ -156,7 +157,7 @@ def begin():
             raise
         #the elaboration will continue but no data will be displayed.
         
-            #if requestFileConfig != None :                 #if the nameFileConfig was specified by user show error
+            #if requestFileConfig is not None:                 #if the nameFileConfig was specified by user show error
             #try:
             #    open(os.path.join(pathTempFile,nameFileConfig), 'w')
             #except:
