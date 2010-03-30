@@ -97,7 +97,8 @@
 		var tmp =getElement('actionParameter');
 		if (tmp) {
 			tmp.value = '';
-			tmp.className=tmp.className.replace('error', '');
+			//tmp.className=tmp.className.replace('error', '');
+			rrdAlarmConfig.removeError(tmp);
 		}
 	};
 	

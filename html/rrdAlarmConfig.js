@@ -96,20 +96,7 @@ var rrdAlarmConfig = function() {
 		}
 	};
 	
-	var removeError=function(element){
-		var firstIndex=element.className.search('error');
-		
-		if(firstIndex != -1){	//there was an error   && totalErrors>0
-			element.className=element.className.replace('error', '');//TODO CAMBIA IL REPLACE
-			try{
-				element.removeAttribute('title');
-				}
-			catch(error){//error no attribute
-				}
-			totalErrors--;
-			}
-		
-	};
+	
 	
 	var setError=function(element, title){
 		element.className+= ' error';
@@ -212,6 +199,7 @@ var rrdAlarmConfig = function() {
 			
 			if(fields[6].id===idActionToTake){
 				removeError(fields[6]);
+				
 				value=fields[6].value;
 				
 				if (!value) {
@@ -221,7 +209,7 @@ var rrdAlarmConfig = function() {
 				}
 				if(fields[6].value!=='None'){
 					if(fields[7].id === idActionParameter){
-						removeError(fields[7]);
+						removeError(fields[7]);						
 						value=fields[7].value;
 						
 						if (!value) {
@@ -602,7 +590,20 @@ var rrdAlarmConfig = function() {
 		writeSaveResult('Waiting for confirmation...');
 	};
 
-
+	var removeError=function(element){
+		var firstIndex=element.className.search('error');
+		
+		if(firstIndex != -1){	//there was an error   && totalErrors>0
+			element.className=element.className.replace('error', '');//TODO CAMBIA IL REPLACE
+			try{
+				element.removeAttribute('title');
+				}
+			catch(error){//error no attribute
+				}
+			totalErrors--;
+			}
+		
+	};
 	/** * End of Publics Methods ** */
 
 	return {
@@ -614,6 +615,7 @@ var rrdAlarmConfig = function() {
 		createInput: createInput,
 		restoreText: restoreText,
 		writeSaveResult: writeSaveResult,
-		sendData: sendData
+		sendData: sendData,
+		removeError: removeError
 	};
 }();

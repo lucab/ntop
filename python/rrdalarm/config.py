@@ -133,10 +133,9 @@ def begin():
         
         ntop.printHTMLHeader('RRD Alarm Configurator', 1, 0)
         
-            
-        try:
-            file_name = os.path.join(pathTempFile,nameFileConfig)
-            open(file_name, 'w').close()  # Create an empty file if missing
+        file_name = os.path.join(pathTempFile,nameFileConfig)
+        
+        try:    
             configFile= open(file_name, 'rt')
             
             for line in configFile:
@@ -145,6 +144,13 @@ def begin():
                     rows.append(line.split('\t'))
             
             configFile.close()
+            
+        except IOError:
+            try:
+                open(file_name, 'w').close()  # Create an empty file if missing
+            except:
+                pass
+            print>>sys.stderr, "RRDAlarm: empty configFile created "+file_name
         except:
             print>>sys.stderr, "RRDAlarm: Error reading configFile "+os.path.join(pathTempFile,nameFileConfig)
             raise

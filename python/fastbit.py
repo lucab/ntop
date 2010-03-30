@@ -1,3 +1,4 @@
+# coding: utf-8
 import ntop
 import fastbit
 #import pprint
@@ -153,8 +154,8 @@ def expandQuery(query):
     if matchObj:
         #the string is almost complete the user have to set the where conditions
         selectArg=matchObj.group(0)
-        selectArg=selectArg.rstrip()     #remove the white spaces at the end
-        if(selectArg[-1]== ','):        #autocomplete only for trailing , in the select
+        selectArg=selectArg.rstrip()        #remove the white spaces at the end
+        if(selectArg[-1]== ','):            #autocomplete only for trailing , in the select
             index=matchObj.end(0)
             results=[]
             listNameFields=expandTableFields('', pathFastbitDirTable)
@@ -167,7 +168,7 @@ def expandQuery(query):
     matchObj=selectFrom.match(query)
     if matchObj:
         fromArg=matchObj.group(1)
-        fromArg=fromArg.rstrip()     #remove the white spaces at the end
+        fromArg=fromArg.rstrip()            #remove the white spaces at the end
         listTables=expandTables(fromArg, pathFastbitDir)
         index=matchObj.start(1)
         results=[]
@@ -211,17 +212,17 @@ def expandSelect(selectArg, pathFastbit, dir):
     else:
         lastArg=selectArg
         ind=selectArg.rfind(',')
-        if ind != -1:           #there are other columns before
+        if ind != -1:               #there are other columns before
             lastArg=selectArg[ind+1:].lstrip()
         
         listNameFields=expandTableFields(lastArg, dir)
         i=0
         for filename in listNameFields:
-            if ind!= -1:    #concatenate with the columns before
+            if ind!= -1:            #concatenate with the columns before
                 n=selectArg[0:ind+1]+' '+filename
                 results.append({'id': i , 'value':n})
             else:
-                           #first column just list the results
+                                    #first column just list the results
                 results.append({'id': i , 'value':filename})
             i=i+1
     jsonList['results']=results
@@ -231,10 +232,10 @@ def expandSelect(selectArg, pathFastbit, dir):
 '''Return a json object for the from field autocomplete'''
 def expandFrom(fromArg, pathFastBit):
     jsonList={'results':[]}
-    fromArg=fromArg.rstrip()     #remove the white spaces at the end
+    fromArg=fromArg.rstrip()        #remove the white spaces at the end
     fromArg=fromArg.upper()
     results=[]
-    if(fromArg[-1]== ','):        #autocomplete only for trailing , in the select
+    if(fromArg[-1]== ','):          #autocomplete only for trailing , in the select
         
         listDirs=expandTables('', pathFastBit)
         i=0
@@ -245,16 +246,16 @@ def expandFrom(fromArg, pathFastBit):
     else:
         lastArg=fromArg
         ind=fromArg.rfind(',')
-        if ind != -1:           #there are other columns before
+        if ind != -1:               #there are other columns before
             lastArg=fromArg[ind+1:]
         listDirs=expandTables(lastArg, pathFastBit)
         i=0
         for dir in listDirs:
-            if ind!= -1:    #concatenate with the table before
+            if ind!= -1:            #concatenate with the table before
                 n=fromArg[0:ind]+' '+dir
                 results.append({'id': i , 'value':n})
             else:
-                            #first table just list the results
+                                    #first table just list the results
                 results.append({'id': i , 'value':dir})
             i=i+1
     jsonList['results']=results

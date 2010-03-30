@@ -159,35 +159,35 @@ def getJsonData(dictionaryCountries, totalHosts,unknownCountries, unknownCities)
 
 if exceptions_so_far == 0:
     dictionaryCountries = {}
-
+    
     totalHosts = 0
     unknownCountries = 0
     unknownCities = 0
     flag = 's'                                  # s (default) for sent packets r for received, b for both
     SIXDECIMAL = decimal.Decimal(10) ** -6      # decimals are all fixed to 6 es. 0.000000
-
+    
     # Parse URL
     cgitb.enable();
-
+    
     form = cgi.FieldStorage();
-
+    
     if form.getvalue('OP') == 'Change':
         flag = form.getvalue('countHosts', 's')
-
+    
     while ntop.getNextHost(0):
         totalHosts += 1
         geo = host.geoIP()
-
+        
         countryCode = geo.get('country_code', '')
         countryName = geo.get('country_name', '')
         city = geo.get('city', '')
         
         lat = str(geo.get('latitude', '0.000000'))
         lon = str(geo.get('longitude', '0.000000'))
-
+        
         latitude = decimal.Decimal(lat).quantize(SIXDECIMAL)
         longitude = decimal.Decimal(lon).quantize(SIXDECIMAL)
-
+        
         if not countryCode or countryCode == 'EU' or countryCode == 'AP' :      # the country was not found therefore the city was not found, everything in the object is set accordingly
             countryCode = ''
             city = ''
@@ -208,19 +208,17 @@ if exceptions_so_far == 0:
 
         if city: 
             country.addCity(city, latitude, longitude, 1)          # insert the city found in the citiesDictionary of this nation object
-
-        if os.getenv('REQUEST_METHOD', 'GET') == 'POST':    
-            ntop.sendHTTPHeader(12)
-            ntop.sendString(getJsonData(dictionaryCountries, totalHosts, unknownCountries, unknownCities))
-        else:
-            ntop.printHTMLHeader('Host Map: Region View', 1, 0)
     
+    if os.getenv('REQUEST_METHOD', 'GET') == 'POST':    
+        ntop.sendHTTPHeader(12)
+        ntop.sendString(getJsonData(dictionaryCountries, totalHosts, unknownCountries, unknownCities))
+    else:
+        ntop.printHTMLHeader('Host Map: Region View', 1, 0)
+        
         if totalHosts == 0:
             ntop.printFlagedWarning('No hosts have been detected by ntop yet')
-            break
         elif len(dictionaryCountries) == 0:
             ntop.printFlagedWarning('No hosts have been successfully geo-located by ntop yet')
-            break
         else:
             try:
                 basedir =  os.getenv('DOCUMENT_ROOT', '.')+'/python/templates'
@@ -233,5 +231,5 @@ if exceptions_so_far == 0:
                 ntop.sendString(buf.getvalue())
             except:
                 ntop.sendString(exceptions.html_error_template().render())
-    
-            ntop.printHTMLFooter()
+        
+        ntop.printHTMLFooter()
