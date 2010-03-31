@@ -162,7 +162,7 @@ EOF
 
     rm -f *~
 
-    exit 1
+    exit 0
   ;;
   esac
 done
