@@ -1,4 +1,4 @@
-# coding: utf-8
+
 '''
 Created on 20 Dec 2009
 
@@ -14,7 +14,7 @@ import decimal
 import ntop
 import host
 import os.path
-#import sys
+import sys
 #import pprint
 # Import modules for CGI handling
 import cgi, cgitb
@@ -44,8 +44,8 @@ except:
     exceptions_so_far=1
 
 # Fix encoding
-#reload(sys)
-#sys.setdefaultencoding("latin1")
+reload(sys)
+sys.setdefaultencoding("latin1")
 
 class Town(object):
     '''
@@ -60,7 +60,7 @@ class Town(object):
         '''
         Constructor
         '''
-        self.__name=name.encode('utf-8')
+        self.__name=name.decode('latin1')
         self.__latitudine=latitudine
         self.__longitudine=longitudine
         self.__totalHosts=numHosts
@@ -98,7 +98,7 @@ class Country(object):
         '''
         self.__code = code
         
-        self.__name = name.encode('utf-8')
+        self.__name = name.decode('latin1')
         self.__total = numHosts
         self.__dictionaryTown = {}
 
@@ -223,7 +223,7 @@ if exceptions_so_far == 0:
         else:
             try:
                 basedir =  os.getenv('DOCUMENT_ROOT', '.')+'/python/templates'
-                mylookup = TemplateLookup(directories=[basedir], default_filters=['decode.utf8'])
+                mylookup = TemplateLookup(directories=[basedir],output_encoding='utf-8', input_encoding='latin1',encoding_errors='replace', default_filters=['decode.utf8'])
                 myTemplate = mylookup.get_template('GeoPacketVisualizer.tmpl')
                 buf = StringIO()
                 ctx = Context(buf, countries = dictionaryCountries, totalHosts = totalHosts, unknownCountries = unknownCountries, 
