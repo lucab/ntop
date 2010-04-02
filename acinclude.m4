@@ -872,8 +872,8 @@ _LT_CONFIG_SAVE_COMMANDS([
     fi
 
     cfgfile="${ofile}T"
-    trap "$RM -f \"$cfgfile\"; exit 1" 1 2 15
-    $RM -f "$cfgfile"
+    trap "$RM \"$cfgfile\"; exit 1" 1 2 15
+    $RM "$cfgfile"
 
     cat <<_LT_EOF >> "$cfgfile"
 #! $SHELL
@@ -1065,7 +1065,7 @@ ac_outfile=conftest.$ac_objext
 echo "$lt_simple_compile_test_code" >conftest.$ac_ext
 eval "$ac_compile" 2>&1 >/dev/null | $SED '/^$/d; /^ *+/d' >conftest.err
 _lt_compiler_boilerplate=`cat conftest.err`
-$RM -r conftest*
+$RM conftest*
 ])# _LT_COMPILER_BOILERPLATE
 
 
@@ -1622,7 +1622,7 @@ AC_CACHE_CHECK([$1], [$2],
        $2=yes
      fi
    fi
-   $RM -r conftest*
+   $RM conftest*
 ])
 
 if test x"[$]$2" = xyes; then
@@ -2081,14 +2081,14 @@ AC_CACHE_CHECK([if $compiler supports -c -o file.$ac_objext],
      fi
    fi
    chmod u+w . 2>&AS_MESSAGE_LOG_FD
-   $RM -r conftest*
+   $RM conftest*
    # SGI C++ compiler will create directory out/ii_files/ for
    # template instantiation
    test -d out/ii_files && $RM out/ii_files/* && rmdir out/ii_files
    $RM out/* && rmdir out
    cd ..
    $RM -r conftest
-   $RM -r conftest*
+   $RM conftest*
 ])
 _LT_TAGDECL([compiler_c_o], [lt_cv_prog_compiler_c_o], [1],
 	[Does compiler simultaneously support -c and -o options?])
@@ -2108,7 +2108,7 @@ if test "$_LT_TAGVAR(lt_cv_prog_compiler_c_o, $1)" = no && test "$need_locks" !=
   # do not overwrite the value of need_locks provided by the user
   AC_MSG_CHECKING([if we can lock with hard links])
   hard_links=yes
-  $RM -r conftest*
+  $RM conftest*
   ln conftest.a conftest.b 2>/dev/null && hard_links=no
   touch conftest.a
   ln conftest.a conftest.b 2>&5 || hard_links=no
@@ -2462,7 +2462,7 @@ darwin* | rhapsody*)
   version_type=darwin
   need_lib_prefix=no
   need_version=no
-  library_names_spec='${libname}${release}${major}$shared_ext ${libname}$shared_ext ${libname}${release}${versuffix}$shared_ext'
+  library_names_spec='${libname}${release}${major}$shared_ext ${libname}$shared_ext'
   soname_spec='${libname}${release}${major}$shared_ext'
   shlibpath_overrides_runpath=yes
   shlibpath_var=DYLD_LIBRARY_PATH
@@ -2678,6 +2678,18 @@ linux* | k*bsd*-gnu)
   # people can always --disable-shared, the test was removed, and we
   # assume the GNU/Linux dynamic linker is in use.
   dynamic_linker='GNU/Linux ld.so'
+  ;;
+
+netbsdelf*-gnu)
+  version_type=linux
+  need_lib_prefix=no
+  need_version=no
+  library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext}$major ${libname}${shared_ext}'
+  soname_spec='${libname}${release}${shared_ext}$major'
+  shlibpath_var=LD_LIBRARY_PATH
+  shlibpath_overrides_runpath=no
+  hardcode_into_libs=yes
+  dynamic_linker='NetBSD ld.elf_so'
   ;;
 
 netbsd*)
@@ -3264,7 +3276,7 @@ linux* | k*bsd*-gnu)
   lt_cv_deplibs_check_method=pass_all
   ;;
 
-netbsd*)
+netbsd* | netbsdelf*-gnu)
   if echo __ELF__ | $CC -E - | $GREP __ELF__ > /dev/null; then
     lt_cv_deplibs_check_method='match_pattern /lib[[^/]]+(\.so\.[[0-9]]+\.[[0-9]]+|_pic\.a)$'
   else
@@ -3426,7 +3438,7 @@ AC_CACHE_CHECK([the name lister ($NM) interface], [lt_cv_nm_interface],
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
   fi
-  rm -r -f conftest*])
+  rm -f conftest*])
 ])# LT_PATH_NM
 
 # Old names:
@@ -3597,7 +3609,7 @@ for ac_symprfx in "" "_"; do
   # Check to see that the pipe works correctly.
   pipe_works=no
 
-  rm -r -f conftest*
+  rm -f conftest*
   cat > conftest.$ac_ext <<_LT_EOF
 #ifdef __cplusplus
 extern "C" {
@@ -3937,7 +3949,7 @@ m4_if([$1], [CXX], [
 	    ;;
 	esac
 	;;
-      netbsd*)
+      netbsd* | netbsdelf*-gnu)
 	;;
       *qnx* | *nto*)
         # QNX uses GNU C++, but need to define -shared option too, otherwise
@@ -4347,6 +4359,9 @@ m4_if([$1], [CXX], [
   cygwin* | mingw*)
     _LT_TAGVAR(export_symbols_cmds, $1)='$NM $libobjs $convenience | $global_symbol_pipe | $SED -e '\''/^[[BCDGRS]][[ ]]/s/.*[[ ]]\([[^ ]]*\)/\1 DATA/;/^.*[[ ]]__nm__/s/^.*[[ ]]__nm__\([[^ ]]*\)[[ ]][[^ ]]*/\1 DATA/;/^I[[ ]]/d;/^[[AITW]][[ ]]/s/.* //'\'' | sort | uniq > $export_symbols'
   ;;
+  linux* | k*bsd*-gnu)
+    _LT_TAGVAR(link_all_deplibs, $1)=no
+  ;;
   *)
     _LT_TAGVAR(export_symbols_cmds, $1)='$NM $libobjs $convenience | $global_symbol_pipe | $SED '\''s/.* //'\'' | sort | uniq > $export_symbols'
   ;;
@@ -4590,7 +4605,7 @@ _LT_EOF
       fi
       ;;
 
-    netbsd*)
+    netbsd* | netbsdelf*-gnu)
       if echo __ELF__ | $CC -E - | $GREP __ELF__ >/dev/null; then
 	_LT_TAGVAR(archive_cmds, $1)='$LD -Bshareable $libobjs $deplibs $linker_flags -o $lib'
 	wlarc=
@@ -4765,6 +4780,7 @@ _LT_EOF
 	if test "$aix_use_runtimelinking" = yes; then
 	  shared_flag="$shared_flag "'${wl}-G'
 	fi
+	_LT_TAGVAR(link_all_deplibs, $1)=no
       else
 	# not using gcc
 	if test "$host_cpu" = ia64; then
@@ -5002,7 +5018,7 @@ _LT_EOF
       _LT_TAGVAR(link_all_deplibs, $1)=yes
       ;;
 
-    netbsd*)
+    netbsd* | netbsdelf*-gnu)
       if echo __ELF__ | $CC -E - | $GREP __ELF__ >/dev/null; then
 	_LT_TAGVAR(archive_cmds, $1)='$LD -Bshareable -o $lib $libobjs $deplibs $linker_flags'  # a.out
       else
@@ -5273,7 +5289,7 @@ x|xyes)
       # systems, -lgcc has to come before -lc. If gcc already passes -lc
       # to ld, don't add -lc before -lgcc.
       AC_MSG_CHECKING([whether -lc should be explicitly linked in])
-      $RM -r conftest*
+      $RM conftest*
       echo "$lt_simple_compile_test_code" > conftest.$ac_ext
 
       if AC_TRY_EVAL(ac_compile) 2>conftest.err; then
@@ -5300,7 +5316,7 @@ x|xyes)
       else
         cat conftest.err 1>&5
       fi
-      $RM -r conftest*
+      $RM conftest*
       AC_MSG_RESULT([$_LT_TAGVAR(archive_cmds_need_lc, $1)])
       ;;
     esac

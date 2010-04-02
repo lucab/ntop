@@ -1525,6 +1525,10 @@ dnl remove unecessary path
   fi
 fi
 
+SAVED_INCS=$INCS
+SAVED_CFLAGS=$CFLAGS
+SAVED_LIBS=$LIBS
+
 dnl>
 dnl> PYTHON
 dnl>
@@ -1550,12 +1554,11 @@ dnl>
   fi
 
   if test "x$PYTHON_CONFIG" != "x"; then
-    AC_DEFINE_UNQUOTED(HAVE_PYTHON, 1, [Python is supported])
     PYTHON_LIBS="`$PYTHON_CONFIG --libs`"
     if test "x$PYTHON_LIBS" = "x"; then
-      AC_MSG_RESULT(Python[-devel] support is present but misconfigured)
-      exit 1
-    fi
+      AC_MSG_RESULT(Python[-devel] support is present but misconfigured)     
+    else
+    
 
     dnl echo "Python libs: ${PYTHON_LIBS}"
     LIBS="${LIBS} ${PYTHON_LIBS}"
@@ -1573,20 +1576,22 @@ AC_TRY_COMPILE([ #include <Python.h> ],
 	  #error "Your python is too old"
 	  #endif
 	  ],
-        AC_MSG_RESULT(Python 2.6 or newer is available),
-        AC_MSG_RESULT(Old python installed); echo ""; echo "Please install python 2.6 or newer" ; echo ""; exit 1)
+        AC_MSG_RESULT(Python 2.6 or newer is available) ; AC_DEFINE_UNQUOTED(HAVE_PYTHON, 1, [Python is supported]),
+        AC_MSG_RESULT(Old python installed); echo ""; echo "Please install python 2.6 or newer. Python support disabled")
+fi
 
-dnl # Restore
-CFLAGS=$OLD_CFLAGS
+   dnl # Restore
+   CFLAGS=$SAVED_CFLAGS
+   INCS=$SAVED_INCS
+   LIBS=$SAVED_LIBS
 
-dnl# TO add to packages
-chmod gou+w /dev/null
-
-
-  else
+    dnl# TO add to packages
+    chmod gou+w /dev/null
+else
     AC_MSG_RESULT(Python[-devel] support is not present)
-    exit 1
-  fi
+    CFLAGS=$SAVED_CFLAGS
+    INCS=$SAVED_INCS
+fi
 
 dnl>
 dnl> SCTP - RFC 3286
