@@ -1584,9 +1584,6 @@ fi
    CFLAGS=$SAVED_CFLAGS
    INCS=$SAVED_INCS
    LIBS=$SAVED_LIBS
-
-    dnl# TO add to packages
-    chmod gou+w /dev/null
 else
     AC_MSG_RESULT(Python[-devel] support is not present)
     CFLAGS=$SAVED_CFLAGS
