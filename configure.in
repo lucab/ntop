@@ -1577,13 +1577,9 @@ AC_TRY_COMPILE([ #include <Python.h> ],
 	  #endif
 	  ],
         [ AC_MSG_RESULT(Python 2.6 or newer is available) ; AC_DEFINE_UNQUOTED(HAVE_PYTHON, 1, [Python is supported])] ,
-	[ AC_MSG_RESULT(Old python installed); echo ""; echo "Please install python 2.6 or newer. Python support disabled"])
+	[ AC_MSG_RESULT(Old python installed); echo ""; echo "Please install python 2.6 or newer. Python support disabled"; CFLAGS=$SAVED_CFLAGS; INCS=$SAVED_INCS; LIBS=$SAVED_LIBS])
 fi
 
-   dnl # Restore
-   CFLAGS=$SAVED_CFLAGS
-   INCS=$SAVED_INCS
-   LIBS=$SAVED_LIBS
 else
     AC_MSG_RESULT(Python[-devel] support is not present)
     CFLAGS=$SAVED_CFLAGS
