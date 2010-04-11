@@ -148,7 +148,7 @@ int _iwtan_process_radiotap(const u_char* radiotapData, unsigned int radioTapSiz
   Validate a 802.11 radiotap packet pointed by body of length len, checking its CRC.
   Returns 1 if the packet is a valid radiotap header or 0 otherwise. 
 */
-int _iwtan_validate_radiotap(const u_char* body, bpf_u_int32 len){
+int _iwtan_validate_radiotap(const u_char* body, bpf_uint32 len){
   //  ieee_802_11_header* pkt (ieee_802_11_header*) ;
   //TODO:implement
   return 1;
@@ -164,7 +164,7 @@ int _iwtan_validate_radiotap(const u_char* body, bpf_u_int32 len){
   Set stationIP6 to the station IP6 address if the frame contained an IPv6 packet with a single destination (not broadcast).
   All the extracted data is allocated separetly and should be freed when no longer needed.
 */
-int _iwtan_process_802_11(const u_char* body, bpf_u_int32 len, mac_address** ap_mac, mac_address** st_mac, mac_address** bssId, char** essid, ip4_address* stationIP4, ip6_address* stationIP6){
+int _iwtan_process_802_11(const u_char* body, bpf_uint32 len, mac_address** ap_mac, mac_address** st_mac, mac_address** bssId, char** essid, ip4_address* stationIP4, ip6_address* stationIP6){
   ieee_802_11_header* frm = (ieee_802_11_header*) body;
   switch (_iwtan_le_to_host(frm->control)){
   case 0x0208: //Frame contains data from a DS to a station via an access point. This means that MAC 1 is the destination (station) address, MAC2 is the BSS id, MAC3 is the source (AP) address
@@ -201,7 +201,7 @@ int _iwtan_process_802_11(const u_char* body, bpf_u_int32 len, mac_address** ap_
   Process a 802.11 management frame, extracting the ESSID.
   The ESSID is allocated as a string whose pointer is stored in *essid.
 */
-int _iwtan_process_802_11_mng(const u_char* body, bpf_u_int32 len, char** essid){
+int _iwtan_process_802_11_mng(const u_char* body, bpf_uint32 len, char** essid){
   ieee_802_11_mng_fixed_begin* begin = (ieee_802_11_mng_fixed_begin*) body;
   ieee_802_11_mng_tag* tag;
   u_char* tagByte = (u_char*)(body + sizeof(ieee_802_11_mng_fixed_begin));
@@ -223,7 +223,7 @@ int _iwtan_process_802_11_mng(const u_char* body, bpf_u_int32 len, char** essid)
   The addresses are allocated in the heap and should be freed when no longer needed.
   The addresses are stored in the pointers given by argument only if their value is not NULL.
 */
-int _iwtan_process_802_llc(const u_char* body, bpf_u_int32 len, ip4_address* fromIp4, ip4_address* toIp4, ip6_address* fromIp6, ip4_address* toIp6){
+int _iwtan_process_802_llc(const u_char* body, bpf_uint32 len, ip4_address* fromIp4, ip4_address* toIp4, ip6_address* fromIp6, ip4_address* toIp6){
   ieee_802_11_llc* llc = (ieee_802_11_llc*) body;
   switch (_iwtan_be_to_host(llc->type)){
   case 0x0800: //llc contains an IPv4 packet
@@ -241,7 +241,7 @@ int _iwtan_process_802_llc(const u_char* body, bpf_u_int32 len, ip4_address* fro
   The addresses are allocated in the heap and should be freed when no longer needed.
   The addresses are stored in the pointers given by argument only if their value is not NULL.
 */
-/*int _iwtan_process_ethernet(const u_char* body, bpf_u_int32 len, mac_address** sourceMac, mac_address** destMac, ip4_address* srcIp4, ip6_address* srcIp6, ip4_address* destIp4, ip6_address* destIp6){
+/*int _iwtan_process_ethernet(const u_char* body, bpf_uint32 len, mac_address** sourceMac, mac_address** destMac, ip4_address* srcIp4, ip6_address* srcIp6, ip4_address* destIp4, ip6_address* destIp6){
   ethernet_hdr* eth = (ethernet_hdr*) body;
   *sourceMac =  _iwtan_mac_is_broadcast((mac_address*)eth->source)? NULL : _iwtan_copy_mac_by_array(eth->source);
   *destMac =  _iwtan_mac_is_broadcast((mac_address*)eth->destination)? NULL : _iwtan_copy_mac_by_array(eth->destination);
@@ -264,7 +264,7 @@ int _iwtan_process_802_llc(const u_char* body, bpf_u_int32 len, ip4_address* fro
   The addresses are allocated in the heap and should be freed when no longer needed.
   The addresses are stored in the pointers given by argument only if their value is not NULL.
 */
-int _iwtan_process_ip4(const u_char* body, bpf_u_int32 len, ip4_address* fromIp4, ip4_address* toIp4){
+int _iwtan_process_ip4(const u_char* body, bpf_uint32 len, ip4_address* fromIp4, ip4_address* toIp4){
   ip4_hdr* ip = (ip4_hdr*) body;
   switch (ip->version){
   case 0x45: //version: IPv4, header length:20
@@ -283,7 +283,7 @@ int _iwtan_process_ip4(const u_char* body, bpf_u_int32 len, ip4_address* fromIp4
   Writes (a pointer to) the source and destination addresses in the given addresses pointers, if they are not NULL.
   A value of NULL is stored in these pointers if the addresses are broadcasts.
 */
-int _iwtan_process_ip6(const u_char* body, bpf_u_int32 len, ip6_address* fromIp6, ip6_address* toIp6){
+int _iwtan_process_ip6(const u_char* body, bpf_uint32 len, ip6_address* fromIp6, ip6_address* toIp6){
   ip6_hdr* ip = (ip6_hdr*) body;
   switch (ip->firstByte / 0x10){
   case 0x6: //version: IPv6

@@ -209,7 +209,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
 			       char *label, char* label_1,
 			       char* label_2, float total,
 			       float percentage,
-			       u_int showFlows, Counter flows) {
+			       uint showFlows, Counter flows) {
   int int_perc;
   char formatBuf[32], flowBuf[64], tmpBuf[32];
 
@@ -410,7 +410,7 @@ void printFooter(int reportType) {
 
 /* ******************************* */
 
-void printHeader(int reportType, int revertOrder, u_int column,
+void printHeader(int reportType, int revertOrder, uint column,
 		 HostsDisplayPolicy showHostsMode,
 		 LocalityDisplayPolicy showLocalityMode, 
 		 char *vlanList, u_short vlanId) {
@@ -1738,7 +1738,7 @@ static char* getBgPctgColor(float pctg) {
 
 /* ******************************* */
 
-void printHostThtpShort(HostTraffic *el, int reportType, u_int hourId)
+void printHostThtpShort(HostTraffic *el, int reportType, uint hourId)
 {
   int i, j;
   Counter tc;
@@ -1806,8 +1806,8 @@ int cmpHostsFctn(const void *_a, const void *_b) {
   case 2: /* IP Address */
 #ifdef ENABLE_FC
     if(isFcHost((*a)) && isFcHost((*b))) {
-      return(memcmp(((u_int8_t *)&(*a)->fcCounters->hostFcAddress), 
-		    ((u_int8_t *)&(*b)->fcCounters->hostFcAddress),
+      return(memcmp(((uint8_t *)&(*a)->fcCounters->hostFcAddress), 
+		    ((uint8_t *)&(*b)->fcCounters->hostFcAddress),
 		    LEN_FC_ADDRESS));
     }
     else
@@ -2346,7 +2346,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 
 /* ************************************ */
 
-static char* sap2name(u_int16_t proto, char *sap, int sap_len) {
+static char* sap2name(uint16_t proto, char *sap, int sap_len) {
   switch(proto) {
   case SAP_NULL:
     safe_snprintf(__FILE__, __LINE__, sap, sap_len, "NULL LSAP");
@@ -3071,8 +3071,8 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
   }
 #ifdef ENABLE_FC
   else if (theSerial.serialType == SERIAL_FC) {
-    memcpy ((u_int8_t *)&el->fcCounters->hostFcAddress,
-            (u_int8_t *)&theSerial.value.fcSerial.fcAddress,
+    memcpy ((uint8_t *)&el->fcCounters->hostFcAddress,
+            (uint8_t *)&theSerial.value.fcSerial.fcAddress,
             LEN_FC_ADDRESS);
     safe_snprintf (__FILE__, __LINE__, el->fcCounters->hostNumFcAddress, sizeof(el->fcCounters->hostNumFcAddress), 
 		   "%02x.%02x.%02x", el->fcCounters->hostFcAddress.domain,
@@ -3096,7 +3096,7 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
 	  else {
 	    setResolvedName(el, (char*)fcnsEntry->pWWN.str, FLAG_HOST_SYM_ADDR_TYPE_FC_WWN);
 	  }
-	  memcpy((u_int8_t *)el->fcCounters->pWWN.str, (u_int8_t *)fcnsEntry->pWWN.str,
+	  memcpy((uint8_t *)el->fcCounters->pWWN.str, (uint8_t *)fcnsEntry->pWWN.str,
 		  LEN_WWN_ADDRESS);
         }
     }
@@ -3121,7 +3121,7 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
 /* ************************************ */
 
 void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
-  u_int i, titleSent = 0;
+  uint i, titleSent = 0;
   char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
   HostTraffic tmpEl;
 
@@ -4395,8 +4395,8 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
 void printTableEntry(char *buf, int bufLen,
 		     char *label, char* color,
 		     float total, float percentage,
-		     u_int showFlows, Counter flows,
-		     u_int showRRD) {
+		     uint showFlows, Counter flows,
+		     uint showRRD) {
   int int_perc;
   char formatBuf[32], flowBuf[64], tmpBuf[32], rrdBuf[768];
   struct stat statbuf;
@@ -4633,7 +4633,7 @@ void printSectionTitle(char *text) {
 /* ******************************** */
 
 void printHostsCharacterization(void) {
-  u_int a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0, i=0, l=0, unhealthy=0, totHosts=0;
+  uint a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0, i=0, l=0, unhealthy=0, totHosts=0;
   HostTraffic *el;
   char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER], headerSent = 0;
 
@@ -4886,7 +4886,7 @@ static void printFingerprintCounts(int countScanned, int countWithoutFP, int cou
 /* ******************************** */
 
 void printHostsStats(int fingerprintRemote) {
-  u_int idx, numEntries=0, maxHosts;
+  uint idx, numEntries=0, maxHosts;
   HostTraffic *el, **tmpTable;
   OsNumInfo theOSs[MAX_NUM_OS];
   int i, 
@@ -5228,7 +5228,7 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
 /* ************************************************ */
 
 #ifdef ENABLE_FC
-void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, char *url) {
+void printFcHeader(int reportType, int revertOrder, uint column, uint hourId, char *url) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   char *sign, *arrowGif, *arrow[48], *theAnchor[48];
   char htmlAnchor[64], htmlAnchor1[64];

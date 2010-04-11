@@ -466,7 +466,7 @@ void initCounters(void) {
 /* ******************************* */
 
 void resetStats(int deviceId) {
-  u_int j;
+  uint j;
 #ifdef ENABLE_FC
   int i;
   FCSession *session;
@@ -1095,7 +1095,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
   /* ********************************************* */
 
   if(!(myGlobals.device[deviceId].dummyDevice || myGlobals.device[deviceId].virtualDevice)){
-    u_int8_t netmask_v6;
+    uint8_t netmask_v6;
     
     getLocalHostAddress(&myGlobals.device[deviceId].ifAddr, &netmask_v6, myGlobals.device[deviceId].name);
 #ifdef INET6
@@ -1144,7 +1144,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
        && strcmp(myGlobals.device[deviceId].name, "none")) {
       traceEvent(CONST_TRACE_INFO, "Checking %s for additional devices", myGlobals.device[deviceId].name);
       for(k=0; k<=MAX_NUM_DEVICES_VIRTUAL; k++) {
-	u_int8_t netmask_v6;
+	uint8_t netmask_v6;
 	
 	safe_snprintf(__FILE__, __LINE__, tmpDeviceName, sizeof(tmpDeviceName), "%s:%d", myGlobals.device[deviceId].name, k);
 
@@ -1549,11 +1549,11 @@ void startSniffer(void) {
 
 /* ***************************** */
 
-u_int createDummyInterface(char *ifName) {
+uint createDummyInterface(char *ifName) {
 #ifdef NOT_YET
-  u_int mallocLen;
+  uint mallocLen;
 #endif
-  u_int deviceId = myGlobals.numDevices;
+  uint deviceId = myGlobals.numDevices;
   int i;
 
   traceEvent(CONST_TRACE_INFO, "Creating dummy interface, '%s'", ifName);

@@ -487,7 +487,7 @@ static char *any(char *cp, char *match) {
 
 /* ************************************ */
 
-u_int32_t inet_network(const char *cp) {
+uint32_t inet_network(const char *cp) {
   register u_long val, base, n;
   register char c;
   u_long parts[4], *pp = parts;
@@ -2414,7 +2414,7 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size) {
    */
   char tmp[64], *tp;
   struct { int base, len; } best, cur;
-  u_int words[NS_IN6ADDRSZ / NS_INT16SZ];
+  uint words[NS_IN6ADDRSZ / NS_INT16SZ];
   int i;
 
   memset(tmp, 0, sizeof(tmp));

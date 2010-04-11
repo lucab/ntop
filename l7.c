@@ -40,7 +40,7 @@ struct proto_info {
 };
 
 static struct proto_info *proto_root = NULL;
-static u_int num_patterns;
+static uint num_patterns;
 
 #define CONST_PATTERN_EXTENSION   ".pat"
 
@@ -184,7 +184,7 @@ static char* protocolMatch(u_char *payload, int payloadLen) {
 /* ******************************************* */
 
 void l7SessionProtoDetection(IPSession *theSession, 
-			     u_int packetDataLength, 
+			     uint packetDataLength, 
 			     u_char* packetData) {
 
   if((theSession== NULL) 

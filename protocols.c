@@ -47,11 +47,11 @@ void handleBootp(HostTraffic *srcHost,
 		 HostTraffic *dstHost,
 		 u_short sport,
 		 u_short dport,
-		 u_int packetDataLength,
+		 uint packetDataLength,
 		 u_char* packetData,
 		 int actualDeviceId) {
   BootProtocol bootProto;
-  u_int len;
+  uint len;
   int rc;
   /* Courtesy of Axel Thimm <Axel.Thimm+ntop@physik.fu-berlin.de> */
   char savechar;
@@ -116,7 +116,7 @@ void handleBootp(HostTraffic *srcHost,
 	      for recognising DHCP packets encapsulated
 	      in BOOTP packets.
 	    */
-	    u_int idx = 4;
+	    uint idx = 4;
 	    struct in_addr hostIpAddress;
 	    HostTraffic *trafficHost, *realDstHost;
 	    /*
@@ -590,15 +590,15 @@ void handleBootp(HostTraffic *srcHost,
 
 /* ************************************ */
 
-u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
+uint16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
 			   const u_char *packetData,
-			   u_int length,
+			   uint length,
 			   short *isRequest,
 			   short *positiveReply) {
   DNSHostInfo hostPtr;
   datum key_data, data_data;
   char tmpBuf[96];
-  u_int16_t transactionId = 0;
+  uint16_t transactionId = 0;
   int i, queryNameLength;
 
   memset(tmpBuf, 0, sizeof(tmpBuf)); /* quiet Valgrind */
@@ -690,10 +690,10 @@ void handleNetbios(HostTraffic *srcHost,
 		   HostTraffic *dstHost,
 		   u_short sport,
 		   u_short dport,
-		   u_int packetDataLength,
+		   uint packetDataLength,
 		   const u_char* packetData,
-		   u_int length,
-		   u_int hlen) {
+		   uint length,
+		   uint hlen) {
   u_char *data, *name, *p;
   int nodeType, i, udpDataLen;
   char *tmpdata = (char*)packetData + (hlen + sizeof(struct udphdr));
@@ -710,7 +710,7 @@ void handleNetbios(HostTraffic *srcHost,
   if(dport == 137 /*  NetBIOS */) {
     if(udpDataLen > 32) {
       /* 32 bytes or less is not enough */
-      u_int8_t opcode;
+      uint8_t opcode;
 
       opcode = (tmpdata[2] >> 3) & 0x0F;
 
@@ -743,7 +743,7 @@ void handleNetbios(HostTraffic *srcHost,
       }
 
       if(!notEnoughData) {      
-	u_int8_t doDecode = 0;
+	uint8_t doDecode = 0;
 	nodeType = name_interpret((char*)name, nbName, udpDataLen-displ);
 
 	switch(opcode) {

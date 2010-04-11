@@ -597,7 +597,7 @@
 #ifdef MEMORY_DEBUG
 #define MAX_PER_DEVICE_HASH_LIST           256
 #else
-#define MAX_PER_DEVICE_HASH_LIST           ((u_int16_t)-1) /* Static hash size */
+#define MAX_PER_DEVICE_HASH_LIST           ((uint16_t)-1) /* Static hash size */
 #endif
 
 #define MAX_NUM_PURGED_SESSIONS            512
@@ -1976,8 +1976,8 @@
 
 /* -O and -P are special, see globals-core.h */
 
-#define DEFAULT_NTOP_MAX_HASH_ENTRIES       (u_int)8192  /* -x */
-#define DEFAULT_NTOP_MAX_NUM_SESSIONS       (u_int)32768 /* -X */
+#define DEFAULT_NTOP_MAX_HASH_ENTRIES       (uint)8192  /* -x */
+#define DEFAULT_NTOP_MAX_NUM_SESSIONS       (uint)32768 /* -X */
 
 #define DEFAULT_NTOP_SQL_DB_CONFIG               "localhost:root:" /* MySQL */
 #define DEFAULT_NTOP_SQL_REC_DAYS_LIFETIME       7 /* days */
@@ -2517,11 +2517,11 @@
 
 /* ******************************** */
 
-#define NO_VLAN       (u_int16_t)-1
+#define NO_VLAN       (uint16_t)-1
 #define MAX_VLAN      4096
 
-#define NO_INTERFACE  (u_int16_t)-1
-#define MAX_INTERFACE (u_int16_t)-1
+#define NO_INTERFACE  (uint16_t)-1
+#define MAX_INTERFACE (uint16_t)-1
 
 /* ******************************** */
 
@@ -2603,13 +2603,13 @@ struct ip6_hdr
       {
 	struct ip6_hdrctl
 	  {
-	    u_int32_t ip6_un1_flow;   /* 4 bits version, 8 bits TC,
+	    uint32_t ip6_un1_flow;   /* 4 bits version, 8 bits TC,
 					20 bits flow-ID */
-	    u_int16_t ip6_un1_plen;   /* payload length */
-	    u_int8_t  ip6_un1_nxt;    /* next header */
-	    u_int8_t  ip6_un1_hlim;   /* hop limit */
+	    uint16_t ip6_un1_plen;   /* payload length */
+	    uint8_t  ip6_un1_nxt;    /* next header */
+	    uint8_t  ip6_un1_hlim;   /* hop limit */
 	  } ip6_un1;
-		u_int8_t ip6_un2_vfc;       /* 4 bits version, top 4 bits tclass */
+		uint8_t ip6_un2_vfc;       /* 4 bits version, top 4 bits tclass */
       } ip6_ctlun;
     struct in6_addr ip6_src;      /* source address */
     struct in6_addr ip6_dst;      /* destination address */

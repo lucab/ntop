@@ -29,14 +29,14 @@ static void hashSanityCheck();
 static void hostHashSanityCheck(HostTraffic *host);
 #endif
 
-static u_int sec_idle_with_no_sessions, sec_idle_with_sessions;
+static uint sec_idle_with_no_sessions, sec_idle_with_sessions;
 
 /* ******************************* */
 
-u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
+uint hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 	       short* useIPAddressForSearching, HostTraffic **el,
 	       int actualDeviceId) {
-  u_int idx = 0;
+  uint idx = 0;
   *el = NULL;
 
   if(myGlobals.runningPref.dontTrustMACaddr)  /* MAC addresses don't make sense here */
@@ -73,7 +73,7 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
     return(BROADCAST_HOSTS_ENTRY);
   } else if((hostIpAddress == NULL) 
 	    || isPseudoLocalAddress(hostIpAddress, actualDeviceId, NULL, NULL)) {
-    memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(u_int)], sizeof(u_int));
+    memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(uint)], sizeof(uint));
     (*useIPAddressForSearching) = 0;
   } else if(isBroadcastAddress(hostIpAddress, NULL, NULL)) {
     *el = myGlobals.broadcastEntry;
@@ -113,10 +113,10 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 /* ************************************ */
 
 #ifdef ENABLE_FC
-u_int hashFcHost(FcAddress *fcaddr, u_short vsanId, HostTraffic **el,
+uint hashFcHost(FcAddress *fcaddr, u_short vsanId, HostTraffic **el,
 		 int actualDeviceId)
 {
-  u_int idx = 0;
+  uint idx = 0;
 
   *el = NULL;
 
@@ -261,7 +261,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 /* **************************************** */
 
 void freeHostInfo(HostTraffic *host, int actualDeviceId) {
-  u_int i, deleteAddressFromCache = 1;
+  uint i, deleteAddressFromCache = 1;
 
   if(host == NULL) {
     traceEvent(CONST_TRACE_WARNING, "Attempting to call freeHostInfo(NULL)");
@@ -490,7 +490,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   cleanup when ntop shutsdown
 */
 void freeHostInstances(int actualDeviceId) {
-  u_int idx, i, max, num=0;
+  uint idx, i, max, num=0;
 
   if(myGlobals.runningPref.mergeInterfaces)
     max = 1;
@@ -592,12 +592,12 @@ int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now) {
 /* ************************************ */
 
 int purgeIdleHosts(int actDevice) {
-  u_int idx, numFreedBuckets=0, numHosts = 0;
+  uint idx, numFreedBuckets=0, numHosts = 0;
   time_t now = time(NULL);
   static time_t lastPurgeTime[MAX_NUM_DEVICES];
   static char firstRun = 1;
   HostTraffic **theFlaggedHosts = NULL;
-  u_int maxHosts, scannedHosts=0;
+  uint maxHosts, scannedHosts=0;
   float hiresDeltaTime;
   struct timeval hiresTimeStart, hiresTimeEnd;
   HostTraffic *el, *prev, *next;
@@ -782,19 +782,19 @@ void setHostSerial(HostTraffic *el) {
   Searches a host and returns it. If the host is not
   present in the hash a new bucket is created
 */
-HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t vlanId,
+HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, uint16_t vlanId,
 			 u_char checkForMultihoming, u_char forceUsingIPaddress,
 			 int actualDeviceId, char *file, int line) {
-  u_int idx, isMultihomed = 0;
+  uint idx, isMultihomed = 0;
   HostTraffic *el=NULL;
   char buf[MAX_LEN_SYM_HOST_NAME_HTML];
   short useIPAddressForSearching = forceUsingIPaddress;
   char* symEthName = NULL, *ethAddr;
   u_char setSpoofingFlag = 0, locked_mutex = 0;
   u_short numRuns=0;
-  u_int hostFound = 0;
-  u_int updateIPinfo = 0;
-  u_int32_t the_local_network, the_local_network_mask;
+  uint hostFound = 0;
+  uint updateIPinfo = 0;
+  uint32_t the_local_network, the_local_network_mask;
 
   if((hostIpAddress == NULL) && (ether_addr == NULL)) {
     traceEvent(CONST_TRACE_WARNING, 
@@ -1233,12 +1233,12 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 #ifdef ENABLE_FC
 HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
                            int actualDeviceId) {
-  u_int idx;
+  uint idx;
   HostTraffic *el=NULL;
   FcNameServerCacheEntry *fcnsEntry;
   u_char locked_mutex = 0;
   u_short numRuns=0;
-  u_int hostFound = 0;
+  uint hostFound = 0;
 
   if(hostFcAddress == NULL) {
     traceEvent(CONST_TRACE_ERROR, "lookupFcHost: Call invoked with NULL"
@@ -1279,7 +1279,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     }
 
     if((el->fcCounters != NULL) &&
-       (memcmp((u_int8_t *)&(el->fcCounters->hostFcAddress), hostFcAddress, LEN_FC_ADDRESS) == 0)) {
+       (memcmp((uint8_t *)&(el->fcCounters->hostFcAddress), hostFcAddress, LEN_FC_ADDRESS) == 0)) {
       hostFound = 1;
       break;
     }
@@ -1336,7 +1336,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     el->fcCounters->hostFcAddress.port = hostFcAddress->port;
     safe_snprintf(__FILE__, __LINE__, el->fcCounters->hostNumFcAddress, 
 		  sizeof(el->fcCounters->hostNumFcAddress),
-                  fc_to_str ((u_int8_t *)hostFcAddress));
+                  fc_to_str ((uint8_t *)hostFcAddress));
     /* TBD: Resolve FC_ID to WWN */
     el->fcCounters->vsanId = vsanId;
 

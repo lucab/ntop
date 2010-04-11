@@ -65,7 +65,7 @@ static void stopcap(void) {
 void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   void *thePtr;
 #ifdef COUNT_MALLOCS
-  static u_int num_allocs = 0, tot_allocs = 0;
+  static uint num_allocs = 0, tot_allocs = 0;
 #endif
 
 #ifdef DEBUG

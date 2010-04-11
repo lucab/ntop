@@ -1425,7 +1425,7 @@ void printFcHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       sendString(buf);
 
       if(el->fcCounters->hostNumFcAddress[0] != '\0') {
-	strncpy (linkName, fc_to_str ((u_int8_t *)&el->fcCounters->hostFcAddress), sizeof (linkName));
+	strncpy (linkName, fc_to_str ((uint8_t *)&el->fcCounters->hostFcAddress), sizeof (linkName));
       }
 
       if(totalSent > 0) {
@@ -1434,7 +1434,7 @@ void printFcHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 		      "<iframe frameborder=0 SRC=hostFcTrafficDistrib-%s"CHART_FORMAT"?1 "
 		      "ALT=\"Sent Traffic Distribution for %s\" width=400 height=250></iframe></TD>",
 		      linkName,
-		      fc_to_str ((u_int8_t *)&el->fcCounters->hostFcAddress));
+		      fc_to_str ((uint8_t *)&el->fcCounters->hostFcAddress));
 	sendString(buf);
       } else {
 	sendString("<TD width=250 "TD_BG" ALIGN=RIGHT COLSPAN=2 WIDTH=250>&nbsp;</TD>");
@@ -1445,7 +1445,7 @@ void printFcHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white><IMG SRC=hostFcTrafficDistrib-"
 		      "%s"CHART_FORMAT" ALT=\"Received Traffic Distribution for %s\"></TD>",
 		      linkName,
-		      fc_to_str ((u_int8_t *)&el->fcCounters->hostFcAddress));
+		      fc_to_str ((uint8_t *)&el->fcCounters->hostFcAddress));
 	sendString(buf);
       } else {
 	sendString("<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 WIDTH=250>&nbsp;</TD>");
@@ -1493,7 +1493,7 @@ void printFcHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
 void printFcHostContactedPeers(HostTraffic *el, int actualDeviceId)
 {
-  u_int i, titleSent = 0;
+  uint i, titleSent = 0;
   char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   HostTraffic tmpEl;
 
@@ -1647,7 +1647,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s%s</TD></TR>\n",
 		  getRowColor(), "Port&nbsp;WWN",
-		  fcwwn_to_str ((u_int8_t *)&el->fcCounters->pWWN),
+		  fcwwn_to_str ((uint8_t *)&el->fcCounters->pWWN),
 		  myGlobals.separator /* it avoids empty cells not to be rendered */);
     sendString(buf);
   }
@@ -1656,7 +1656,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s%s</TD></TR>\n",
 		  getRowColor(), "Node&nbsp;WWN",
-		  fcwwn_to_str ((u_int8_t *)&el->fcCounters->nWWN),
+		  fcwwn_to_str ((uint8_t *)&el->fcCounters->nWWN),
 		  myGlobals.separator /* it avoids empty cells not to be rendered */);
     sendString(buf);
   }
@@ -1872,7 +1872,7 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
                         int revertOrder, int pageNum, char *url)
 {
 
-  u_int idx, numEntries, skipEntries = 0;
+  uint idx, numEntries, skipEntries = 0;
   int printedEntries=0;
   int duration;
   LunStatsSortedEntry sortedLunTbl[MAX_LUNS_SUPPORTED];
@@ -2119,13 +2119,13 @@ void printScsiLunGraphs (HostTraffic *el, int actualDeviceId)
   sendString(buf);
 }
 
-void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
+void printVsanDetailedInfo (uint vsanId, int actualDeviceId)
 {
   char buf[LEN_GENERAL_WORK_BUFFER], buf1[64];
   char formatBuf[32], formatBuf1[32];
   int i;
   char *vendorName;
-  u_int idx;
+  uint idx;
   FcFabricElementHash *hash, **theHash;
   FcDomainList *domListEntry;
 
@@ -2226,7 +2226,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
 		      "<TD "TD_BG" align=right>%s</TD><TD "TD_BG" align=right>%s</TD>"
 		      "<TD "TD_BG" align=right>%s</TD><TD "TD_BG" align=right>%s</TD>",
 		      getRowColor(), domListEntry->domainId,
-		      fcwwn_to_str ((u_int8_t *)&domListEntry->switchWWN.str),
+		      fcwwn_to_str ((uint8_t *)&domListEntry->switchWWN.str),
 		      getVendorInfo (&domListEntry->switchWWN.str[2], 1),
 		      formatBytes (hash->domainStats[domListEntry->domainId].sentBytes.value, 1,
 				   formatBuf, sizeof (formatBuf)),
@@ -2381,7 +2381,7 @@ void dumpFcFabricElementHash (FcFabricElementHash **theHash, char* label,
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR><TH "TH_BG" ALIGN=LEFT NOWRAP>%s\">%d</a></TH>\n"
 		    "<TD>%s</TD>\n<TD>%s</TD>\n<TD>%s</TD>\n<TD>%s</TD>\n",
 		    makeVsanLink (i, FLAG_HOSTLINK_TEXT_FORMAT, vsanBuf, sizeof (vsanBuf)), i,
-		    fcwwn_to_str ((u_int8_t *)&theHash[i]->principalSwitch.str),
+		    fcwwn_to_str ((uint8_t *)&theHash[i]->principalSwitch.str),
 		    formatFcElementData(theHash[i], 1, buf1, sizeof(buf1)),
 		    formatFcElementData(theHash[i], 0, buf3, sizeof(buf3)),
 		    formatTime(&theHash[i]->fabricConfStartTime,
@@ -2489,7 +2489,7 @@ void printVsanProtocolStats (FcFabricElementHash *hash, int actualDeviceId)
 
 void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, int vsanId)
 {
-  u_int idx, numEntries, maxHosts;
+  uint idx, numEntries, maxHosts;
   int printedEntries=0, i;
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
   struct hostTraffic *el;
@@ -2680,7 +2680,7 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBy
     if(el != NULL) {
       char *tmpName1, *tmpName2;
 
-      strncpy (tmpbuf, fc_to_str ((u_int8_t *)&el->fcCounters->hostFcAddress),
+      strncpy (tmpbuf, fc_to_str ((uint8_t *)&el->fcCounters->hostFcAddress),
 	       LEN_FC_ADDRESS_DISPLAY);
       tmpName1 = tmpbuf;
 
@@ -2751,7 +2751,7 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBy
 
 void printFcAccounting(int remoteToLocal, int sortedColumn,
 		       int revertOrder, int pageNum) {
-  u_int idx, numEntries = 0, maxHosts, i;
+  uint idx, numEntries = 0, maxHosts, i;
   int printedEntries=0;
   HostTraffic *el, **tmpTable;
   char buf[LEN_GENERAL_WORK_BUFFER], *sign;

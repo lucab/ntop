@@ -195,7 +195,7 @@ struct	ether_header {
 
 /* on mingw, tcp_seq is defined - Scott Renfro <scott@renfro.org> */
 #if defined (WIN32) && !defined (tcp_seq)
-typedef	u_int	tcp_seq;
+typedef	uint	tcp_seq;
 #endif
 
 /*
@@ -284,8 +284,8 @@ typedef struct _FRAMEETH
 
 struct icmp_ra_addr
 {
-  u_int32_t ira_addr;
-  u_int32_t ira_preference;
+  uint32_t ira_addr;
+  uint32_t ira_preference;
 };
 
 /*                                                                                                                                                                        
@@ -293,32 +293,32 @@ struct icmp_ra_addr
  */
 struct icmp
 {
-  u_int8_t  icmp_type;  /* type of message, see below */
-  u_int8_t  icmp_code;  /* type sub code */
-  u_int16_t icmp_cksum; /* ones complement checksum of struct */
+  uint8_t  icmp_type;  /* type of message, see below */
+  uint8_t  icmp_code;  /* type sub code */
+  uint16_t icmp_cksum; /* ones complement checksum of struct */
   union
   {
     u_char ih_pptr;             /* ICMP_PARAMPROB */
     struct in_addr ih_gwaddr;   /* gateway address */
     struct ih_idseq             /* echo datagram */
     {
-      u_int16_t icd_id;
-      u_int16_t icd_seq;
+      uint16_t icd_id;
+      uint16_t icd_seq;
     } ih_idseq;
-    u_int32_t ih_void;
+    uint32_t ih_void;
 
     /* ICMP_UNREACH_NEEDFRAG -- Path MTU Discovery (RFC1191) */
     struct ih_pmtu
     {
-      u_int16_t ipm_void;
-      u_int16_t ipm_nextmtu;
+      uint16_t ipm_void;
+      uint16_t ipm_nextmtu;
     } ih_pmtu;
 
     struct ih_rtradv
     {
-      u_int8_t irt_num_addrs;
-      u_int8_t irt_wpa;
-      u_int16_t irt_lifetime;
+      uint8_t irt_num_addrs;
+      uint8_t irt_wpa;
+      uint16_t irt_lifetime;
     } ih_rtradv;
   } icmp_hun;
 #define icmp_pptr       icmp_hun.ih_pptr
@@ -335,9 +335,9 @@ struct icmp
   {
     struct
     {
-      u_int32_t its_otime;
-      u_int32_t its_rtime;
-      u_int32_t its_ttime;
+      uint32_t its_otime;
+      uint32_t its_rtime;
+      uint32_t its_ttime;
     } id_ts;
     struct
     {
@@ -345,8 +345,8 @@ struct icmp
       /* options and then 64 bits of data */
     } id_ip;
     struct icmp_ra_addr id_radv;
-    u_int32_t   id_mask;
-    u_int8_t    id_data[1];
+    uint32_t   id_mask;
+    uint8_t    id_data[1];
   } icmp_dun;
 #define icmp_otime      icmp_dun.id_ts.its_otime
 #define icmp_rtime      icmp_dun.id_ts.its_rtime
@@ -432,10 +432,10 @@ struct	arphdr {
 
 struct	ether_arp {
 	struct	arphdr ea_hdr;		/* fixed-size header */
-	u_int8_t arp_sha[ETH_ALEN];	/* sender hardware address */
-	u_int8_t arp_spa[4];		/* sender protocol address */
-	u_int8_t arp_tha[ETH_ALEN];	/* target hardware address */
-	u_int8_t arp_tpa[4];		/* target protocol address */
+	uint8_t arp_sha[ETH_ALEN];	/* sender hardware address */
+	uint8_t arp_spa[4];		/* sender protocol address */
+	uint8_t arp_tha[ETH_ALEN];	/* target hardware address */
+	uint8_t arp_tpa[4];		/* target protocol address */
 };
 #define	arp_hrd	ea_hdr.ar_hrd
 #define	arp_pro	ea_hdr.ar_pro

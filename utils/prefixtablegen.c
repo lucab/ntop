@@ -56,7 +56,7 @@ int OptOnlyTest=0;
 
 /* ************************************************************************* */
 
-int imaxblock(u_int32_t ip, int prefix)
+int imaxblock(uint32_t ip, int prefix)
 {
   while (prefix>0) {
     if ((ip & PREFIX2MASK(prefix-1)) != ip)
@@ -68,7 +68,7 @@ int imaxblock(u_int32_t ip, int prefix)
 
 /* ************************************************************************* */
 
-void recursiveDump(FILE *fp, IPNode *p, u_int32_t ip, int prefix)
+void recursiveDump(FILE *fp, IPNode *p, uint32_t ip, int prefix)
 {
   int i;
   static char ips[32];
@@ -83,7 +83,7 @@ void recursiveDump(FILE *fp, IPNode *p, u_int32_t ip, int prefix)
 
 /* ************************************************************************* */
 
-void printInfo(char *msg, char *country, u_int32_t ip, int prefix)
+void printInfo(char *msg, char *country, uint32_t ip, int prefix)
 {
   char ips[32];
 
@@ -136,7 +136,7 @@ IPNode *consolidateTree(IPNode *p, char *country)
 
 /* ************************************************************************* */
 
-void addNodeInternal(u_int32_t ip, int prefix, char *country, int fnum)
+void addNodeInternal(uint32_t ip, int prefix, char *country, int fnum)
 {
   IPNode *p1=Head;
   IPNode *p2;
@@ -190,9 +190,9 @@ void addNodeInternal(u_int32_t ip, int prefix, char *country, int fnum)
 
 /* ************************************************************************* */
 
-void addNode(u_int32_t ip, int range, char *country, int fnum) 
+void addNode(uint32_t ip, int range, char *country, int fnum) 
 {
-  u_int32_t ip1, ip2;
+  uint32_t ip1, ip2;
   int maxsize, maxdiff;
 
   if (range<1)

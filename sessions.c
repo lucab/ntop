@@ -30,7 +30,7 @@
 
 /* ************************************ */
 
-u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line) {
+uint _checkSessionIdx(uint idx, int actualDeviceId, char* file, int line) {
   if(idx > myGlobals.device[actualDeviceId].actualHashSize) {
     traceEvent(CONST_TRACE_ERROR, "Index error idx=%u/deviceId=%d:0-%d @ [%s:%d]",
 	       idx, actualDeviceId,
@@ -171,7 +171,7 @@ void updateUsedPorts(HostTraffic *srcHost,
 		     HostTraffic *dstHost,
 		     u_short sport,
 		     u_short dport,
-		     u_int length) {
+		     uint length) {
   if(length > 0) {
     u_short clientPort, serverPort;
     PortUsage *ports;
@@ -421,8 +421,8 @@ void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
 /* #define DEBUG */
 
 void scanTimedoutTCPSessions(int actualDeviceId) {
-  u_int _idx, freeSessionCount=0, purgeLimit;
-  static u_int idx = 0;
+  uint _idx, freeSessionCount=0, purgeLimit;
+  static uint idx = 0;
 
   /* Patch below courtesy of "Kouprie, Robbert" <R.Kouprie@DTO.TUDelft.NL> */
      if((!myGlobals.runningPref.enableSessionHandling)
@@ -524,7 +524,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 static void handleFTPSession(const struct pcap_pkthdr *h,
 			     HostTraffic *srcHost, u_short sport,
 			     HostTraffic *dstHost, u_short dport,
-			     u_int packetDataLength, u_char* packetData,
+			     uint packetDataLength, u_char* packetData,
 			     IPSession *theSession,
 			     int actualDeviceId) {
   char *rcStr;
@@ -569,7 +569,7 @@ static void handleFTPSession(const struct pcap_pkthdr *h,
 static void handleSMTPSession (const struct pcap_pkthdr *h,
                                HostTraffic *srcHost, u_short sport,
                                HostTraffic *dstHost, u_short dport,
-                               u_int packetDataLength, u_char* packetData,
+                               uint packetDataLength, u_char* packetData,
                                IPSession *theSession, int actualDeviceId) {
   char *rcStr;
 
@@ -632,7 +632,7 @@ static void handleSMTPSession (const struct pcap_pkthdr *h,
 static void handlePOPSession (const struct pcap_pkthdr *h,
                               HostTraffic *srcHost, u_short sport,
                               HostTraffic *dstHost, u_short dport,
-                              u_int packetDataLength, u_char* packetData,
+                              uint packetDataLength, u_char* packetData,
                               IPSession *theSession, int actualDeviceId) {
   char *rcStr;
 
@@ -676,7 +676,7 @@ static void handlePOPSession (const struct pcap_pkthdr *h,
 static void handleIMAPSession (const struct pcap_pkthdr *h,
                                HostTraffic *srcHost, u_short sport,
                                HostTraffic *dstHost, u_short dport,
-                               u_int packetDataLength, u_char* packetData,
+                               uint packetDataLength, u_char* packetData,
                                IPSession *theSession, int actualDeviceId) {
   char *rcStr;
 
@@ -728,17 +728,17 @@ static void handleIMAPSession (const struct pcap_pkthdr *h,
 /* *********************************** */
 
 typedef struct {
-  u_int16_t src_call, dst_call; /* Together they form the callId */
-  u_int32_t timestamp;
-  u_int8_t outbound_seq_num, inbound_seq_num;
-  u_int8_t frame_class /* 2 = voice */, frame_subclass;
+  uint16_t src_call, dst_call; /* Together they form the callId */
+  uint32_t timestamp;
+  uint8_t outbound_seq_num, inbound_seq_num;
+  uint8_t frame_class /* 2 = voice */, frame_subclass;
   /* Payload */
 } IAX2Header;
 
 #define IAX2_STR_LEN   32
 
 typedef struct {
-  u_int8_t element_id, element_len;
+  uint8_t element_id, element_len;
   char element_data[IAX2_STR_LEN];
 } IAX2PayloadElement;
 
@@ -747,13 +747,13 @@ typedef struct {
 static void handleAsteriskSession(const struct pcap_pkthdr *h,
 				  HostTraffic *srcHost, u_short sport,
 				  HostTraffic *dstHost, u_short dport,
-				  u_int packetDataLength, u_char* packetData,
+				  uint packetDataLength, u_char* packetData,
 				  IPSession *theSession, int actualDeviceId) {
   u_char debug = 0;
 
   if(packetDataLength > sizeof(IAX2Header)) {
     IAX2Header *header = (IAX2Header*)packetData;
-    u_int16_t pkt_shift;
+    uint16_t pkt_shift;
 
     if(debug) {
       traceEvent(CONST_TRACE_WARNING, "-------------------------");
@@ -835,7 +835,7 @@ static void handleAsteriskSession(const struct pcap_pkthdr *h,
 static void handleSIPSession(const struct pcap_pkthdr *h,
 			     HostTraffic *srcHost, u_short sport,
 			     HostTraffic *dstHost, u_short dport,
-			     u_int packetDataLength, u_char* packetData,
+			     uint packetDataLength, u_char* packetData,
 			     IPSession *theSession, int actualDeviceId) {
   char *rcStr;
 
@@ -938,12 +938,12 @@ static void handleSIPSession(const struct pcap_pkthdr *h,
 static void handleSCCPSession(const struct pcap_pkthdr *h,
 			      HostTraffic *srcHost, u_short sport,
 			      HostTraffic *dstHost, u_short dport,
-			      u_int packetDataLength, u_char* packetData,
+			      uint packetDataLength, u_char* packetData,
 			      IPSession *theSession, int actualDeviceId) {
   char *rcStr;
 
   if(packetDataLength > 64) {
-    u_int16_t message_id;
+    uint16_t message_id;
     /* NOTE: message_id is coded in little endian */
     memcpy(&message_id, &packetData[8], sizeof(message_id));
 #ifdef CFG_BIG_ENDIAN
@@ -1016,7 +1016,7 @@ static void handleSCCPSession(const struct pcap_pkthdr *h,
 static void handleMsnMsgrSession (const struct pcap_pkthdr *h,
                                   HostTraffic *srcHost, u_short sport,
                                   HostTraffic *dstHost, u_short dport,
-                                  u_int packetDataLength, u_char* packetData,
+                                  uint packetDataLength, u_char* packetData,
                                   IPSession *theSession, int actualDeviceId) {
   u_char *rcStr;
   char *row;
@@ -1056,7 +1056,7 @@ static void handleMsnMsgrSession (const struct pcap_pkthdr *h,
 static void handleHTTPSession(const struct pcap_pkthdr *h,
                               HostTraffic *srcHost, u_short sport,
                               HostTraffic *dstHost, u_short dport,
-                              u_int packetDataLength, u_char* packetData,
+                              uint packetDataLength, u_char* packetData,
                               IPSession *theSession, int actualDeviceId) {
   char *rcStr, tmpStr[256] = { '\0' };
   struct timeval tvstrct;
@@ -1073,7 +1073,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
       int rc;
       time_t microSecTimeDiff;
 
-      u_int16_t transactionId = computeTransId(&srcHost->hostIpAddress,
+      uint16_t transactionId = computeTransId(&srcHost->hostIpAddress,
 					       &dstHost->hostIpAddress,
 					       sport,dport);
 
@@ -1159,7 +1159,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
       if(isInitialHttpData(rcStr)) {
 	char *strtokState, *row;
 
-	u_int16_t transactionId = computeTransId(&srcHost->hostIpAddress,
+	uint16_t transactionId = computeTransId(&srcHost->hostIpAddress,
 						 &dstHost->hostIpAddress,
 						 sport,dport);
 	/* to be 64bit-proof we have to copy the elements */
@@ -1296,7 +1296,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
 				     HostTraffic *dstHost,
 				     u_short dport,
 				     struct tcphdr *tp,
-				     u_int packetDataLength,
+				     uint packetDataLength,
 				     u_char* packetData,
 				     u_short addedNewEntry,
 				     IPSession *theSession,
@@ -1601,7 +1601,7 @@ static void timeval_diff(struct timeval *begin,
 /* *********************************** */
 
 static void updateNetworkDelay(NetworkDelay *delayStats,
-			       HostSerial *peer, u_int16_t peer_port,
+			       HostSerial *peer, uint16_t peer_port,
 			       struct timeval *delay,
 			       struct timeval *when,
 			       int port_idx) {
@@ -1637,7 +1637,7 @@ static void updateNetworkDelay(NetworkDelay *delayStats,
 
 void updatePeersDelayStats(HostTraffic *peer_a,
 			   HostSerial *peer_b_serial,
-			   u_int16_t port,
+			   uint16_t port,
 			   struct timeval *nwDelay,
 			   struct timeval *synAckTime,
 			   struct timeval *ackTime,
@@ -1721,15 +1721,15 @@ void updateSessionDelayStats(IPSession* session) {
 /* *********************************** */
 
 static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
-                                   u_short fragmentedData, u_int tcpWin,
+                                   u_short fragmentedData, uint tcpWin,
                                    HostTraffic *srcHost, u_short sport,
                                    HostTraffic *dstHost, u_short dport,
-				   u_int sent_length, u_int rcvd_length /* Always 0 except for NetFlow v9 */,
+				   uint sent_length, uint rcvd_length /* Always 0 except for NetFlow v9 */,
 				   struct tcphdr *tp,
-                                   u_int packetDataLength, u_char* packetData,
+                                   uint packetDataLength, u_char* packetData,
                                    int actualDeviceId, u_short *newSession) {
   IPSession *prevSession;
-  u_int idx;
+  uint idx;
   IPSession *theSession = NULL;
   short flowDirection = FLAG_CLIENT_TO_SERVER;
   char addedNewEntry = 0;
@@ -2281,7 +2281,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
    *
    */
   if(theSession->lastFlags & TH_FIN) {
-    u_int32_t fin = ntohl(tp->th_seq);
+    uint32_t fin = ntohl(tp->th_seq);
 
     if(sport < dport) /* Server->Client */
       check = (fin != theSession->lastSCFin);
@@ -2324,7 +2324,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 #endif
     }
   } else if(theSession->lastFlags == TH_ACK) {
-    u_int32_t ack = ntohl(tp->th_ack);
+    uint32_t ack = ntohl(tp->th_ack);
 
     if((ack == theSession->lastAckIdI2R) && (ack == theSession->lastAckIdR2I)) {
       if(theSession->initiator == srcHost) {
@@ -2486,7 +2486,7 @@ static void handleUDPSession(const struct pcap_pkthdr *h,
                              u_short fragmentedData, HostTraffic *srcHost,
                              u_short sport, HostTraffic *dstHost,
                              u_short dport,
-			     u_int sent_length, u_int rcvd_length /* Always 0 except for NetFlow v9 */,
+			     uint sent_length, uint rcvd_length /* Always 0 except for NetFlow v9 */,
                              u_char* packetData,
 			     int actualDeviceId, u_short *newSession) {
   /*
@@ -2506,12 +2506,12 @@ static void handleUDPSession(const struct pcap_pkthdr *h,
 /* ************************************ */
 
 IPSession* handleSession(const struct pcap_pkthdr *h,
-                         u_short fragmentedData, u_int tcpWin,
+                         u_short fragmentedData, uint tcpWin,
                          HostTraffic *srcHost, u_short sport,
                          HostTraffic *dstHost, u_short dport,
-                         u_int sent_length, u_int rcvd_length /* Always 0 except for NetFlow v9 */,
+                         uint sent_length, uint rcvd_length /* Always 0 except for NetFlow v9 */,
 			 struct tcphdr *tp,
-                         u_int packetDataLength, u_char* packetData,
+                         uint packetDataLength, u_char* packetData,
                          int actualDeviceId, u_short *newSession,
 			 u_char real_session /* vs. faked/netflow-session */) {
   IPSession *theSession = NULL;
@@ -2674,7 +2674,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 /* ******************* */
 
 #ifdef ENABLE_FC
-static int getScsiCmdType(u_char scsiCmd, u_int32_t *ioSize, const u_char *bp) {
+static int getScsiCmdType(u_char scsiCmd, uint32_t *ioSize, const u_char *bp) {
   int cmdType;
 
   *ioSize = 0;
@@ -2682,7 +2682,7 @@ static int getScsiCmdType(u_char scsiCmd, u_int32_t *ioSize, const u_char *bp) {
   switch (scsiCmd) {
   case SCSI_SBC2_READ6:
     cmdType = SCSI_READ_CMD;
-    *ioSize = (u_int32_t)bp[16];
+    *ioSize = (uint32_t)bp[16];
     break;
   case SCSI_SBC2_READ10:
     cmdType = SCSI_READ_CMD;
@@ -2690,15 +2690,15 @@ static int getScsiCmdType(u_char scsiCmd, u_int32_t *ioSize, const u_char *bp) {
     break;
   case SCSI_SBC2_READ12:
     cmdType = SCSI_READ_CMD;
-    *ioSize = ntohl (*(u_int32_t *)&bp[18]);
+    *ioSize = ntohl (*(uint32_t *)&bp[18]);
     break;
   case SCSI_SBC2_READ16:
     cmdType = SCSI_READ_CMD;
-    *ioSize = ntohl (*(u_int32_t *)&bp[22]);
+    *ioSize = ntohl (*(uint32_t *)&bp[22]);
     break;
   case SCSI_SBC2_WRITE6:
     cmdType = SCSI_WR_CMD;
-    *ioSize = (u_int32_t)bp[16];
+    *ioSize = (uint32_t)bp[16];
     break;
   case SCSI_SBC2_WRITE10:
     cmdType = SCSI_WR_CMD;
@@ -2706,11 +2706,11 @@ static int getScsiCmdType(u_char scsiCmd, u_int32_t *ioSize, const u_char *bp) {
     break;
   case SCSI_SBC2_WRITE12:
     cmdType = SCSI_WR_CMD;
-    *ioSize = ntohl (*(u_int32_t *)&bp[18]);
+    *ioSize = ntohl (*(uint32_t *)&bp[18]);
     break;
   case SCSI_SBC2_WRITE16:
     cmdType = SCSI_WR_CMD;
-    *ioSize = ntohl (*(u_int32_t *)&bp[22]);
+    *ioSize = ntohl (*(uint32_t *)&bp[22]);
     break;
   default:
     cmdType = SCSI_NONRDWR_CMD;
@@ -2720,10 +2720,10 @@ static int getScsiCmdType(u_char scsiCmd, u_int32_t *ioSize, const u_char *bp) {
   return (cmdType);
 }
 
-static int getScsiLunCmdInfo (FCSession *theSession, u_int16_t *lun,
-                              u_char *cmd, u_int16_t oxid)
+static int getScsiLunCmdInfo (FCSession *theSession, uint16_t *lun,
+                              u_char *cmd, uint16_t oxid)
 {
-  u_int16_t i;
+  uint16_t i;
 
   if (theSession->lastScsiOxid == oxid) {
     /* simple match */
@@ -2776,15 +2776,15 @@ static void scsiSetMinMaxRTT (struct timeval *rtt, struct timeval *minRTT,
 
 static void processScsiPkt(const struct pcap_pkthdr *h,
                            HostTraffic *srcHost, HostTraffic *dstHost,
-                           u_int length, u_int payload_len, u_short oxid,
+                           uint length, uint payload_len, u_short oxid,
                            u_short rxid, u_char rCtl, u_char isXchgOrig,
                            const u_char *bp, FCSession *theSession,
                            int actualDeviceId)
 {
   u_char cmd = 0, status, task_mgmt;
   struct timeval rtt;
-  u_int16_t lun;
-  u_int32_t xferRdySize, ioSize, duration = 0, hostDur = 0, iops;
+  uint16_t lun;
+  uint32_t xferRdySize, ioSize, duration = 0, hostDur = 0, iops;
   int iocmdType;
   ScsiLunTrafficInfo *lunStats = NULL,
     *hostLunStats = NULL;
@@ -2886,11 +2886,11 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
 	return;
       }
       else {
-	lun = ntohs (*(u_int16_t *)&bp[0]);
+	lun = ntohs (*(uint16_t *)&bp[0]);
       }
     }
     else {
-      lun = (u_int16_t)bp[1]; /* 2nd byte alone has LUN info */
+      lun = (uint16_t)bp[1]; /* 2nd byte alone has LUN info */
     }
 
     if (lun > MAX_LUNS_SUPPORTED) {
@@ -3258,7 +3258,7 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
 
     break;
   case FCP_IU_XFER_RDY:
-    xferRdySize = ntohl (*(u_int32_t *)&bp[4]);
+    xferRdySize = ntohl (*(uint32_t *)&bp[4]);
 
     if (xferRdySize > lunStats->maxXferRdySize) {
       lunStats->maxXferRdySize = xferRdySize;
@@ -3382,9 +3382,9 @@ static void processSwRscn (const u_char *bp, u_short vsanId, int actualDeviceId)
   u_char event;
   FcAddress affectedId;
   HostTraffic *affectedHost;
-  u_int detectFn;
+  uint detectFn;
 
-  if ((detectFn = ntohl (*(u_int32_t *)&bp[8])) == FC_SW_RSCN_FABRIC_DETECT) {
+  if ((detectFn = ntohl (*(uint32_t *)&bp[8])) == FC_SW_RSCN_FABRIC_DETECT) {
     /* Only fabric-detected events have online/offline events */
     event = bp[4] & 0xF0;
 
@@ -3413,12 +3413,12 @@ static void processSwRscn (const u_char *bp, u_short vsanId, int actualDeviceId)
 FCSession* handleFcSession(const struct pcap_pkthdr *h,
 			   u_short fragmentedData,
 			   HostTraffic *srcHost, HostTraffic *dstHost,
-			   u_int length, u_int payload_len, u_short oxid,
+			   uint length, uint payload_len, u_short oxid,
 			   u_short rxid, u_short protocol, u_char rCtl,
 			   u_char isXchgOrig, const u_char *bp,
 			   int actualDeviceId)
 {
-  u_int idx;
+  uint idx;
   FCSession *theSession = NULL, *prevSession;
   char addedNewEntry = 0;
   u_short found=0;
@@ -3445,8 +3445,8 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
    * The hash key has to be calculated such that its value has to be the same
    * regardless of the flow direction.
    */
-  idx = (u_int)(((*(u_int32_t *)&srcHost->fcCounters->hostFcAddress) +
-		 (*(u_int32_t *)&dstHost->fcCounters->hostFcAddress)) +
+  idx = (uint)(((*(uint32_t *)&srcHost->fcCounters->hostFcAddress) +
+		 (*(uint32_t *)&dstHost->fcCounters->hostFcAddress)) +
 		srcHost->fcCounters->vsanId + dstHost->fcCounters->vsanId);
 
   idx %= MAX_TOT_NUM_SESSIONS;

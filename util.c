@@ -53,8 +53,8 @@ static char *versionSite[]   = {
 
 /* ************************************ */
 
-static HostTraffic* __getFirstHost(u_int actualDeviceId, u_int beginIdx, char *file, int line) {
-  u_int idx;
+static HostTraffic* __getFirstHost(uint actualDeviceId, uint beginIdx, char *file, int line) {
+  uint idx;
 
   accessMutex(&myGlobals.hostsHashLockMutex, "__getFirstHost");
 
@@ -90,14 +90,14 @@ static HostTraffic* __getFirstHost(u_int actualDeviceId, u_int beginIdx, char *f
 
 /* ************************************ */
 
-HostTraffic* _getFirstHost(u_int actualDeviceId, char *file, int line) {
+HostTraffic* _getFirstHost(uint actualDeviceId, char *file, int line) {
   return(__getFirstHost(actualDeviceId, 0 /* FIRST_HOSTS_ENTRY */, file, line));
 }
 
 /* ************************************ */
 
-HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, int line) {
-  u_int nextIdx;
+HostTraffic* _getNextHost(uint actualDeviceId, HostTraffic *host, char *file, int line) {
+  uint nextIdx;
   time_t now = time(NULL);
 
   accessMutex(&myGlobals.hostsHashLockMutex, "getNextHost");
@@ -134,10 +134,10 @@ HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, i
 
 /* ************************************ */
 
-HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualDeviceId) {
+HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, uint actualDeviceId) {
   HostTraffic *el;
   short dummyShort=1;
-  u_int idx = hashHost(&hostIpAddress, NULL, &dummyShort, &el, actualDeviceId);
+  uint idx = hashHost(&hostIpAddress, NULL, &dummyShort, &el, actualDeviceId);
 
   if(el != NULL)
     return(el); /* Found */
@@ -203,7 +203,7 @@ void str2serial(HostSerial *theSerial, char *buf, int buf_len) {
     u_char *ptr = (u_char*)theSerial;
 
     for(i=0, j=0; j<sizeof(HostSerial); j++) {
-	  u_int c;
+	  uint c;
 
       tmpStr[0] = buf[i++];
       tmpStr[1] = buf[i++];
@@ -212,7 +212,7 @@ void str2serial(HostSerial *theSerial, char *buf, int buf_len) {
 	  ptr[j] = c & 0xFF;
 
 	  /*
-	   ptr[j] = ((u_int8_t)buf[i]) * 16 + ((u_int8_t)buf[i+1]);
+	   ptr[j] = ((uint8_t)buf[i]) * 16 + ((uint8_t)buf[i+1]);
 	   i += 2;
 	   */
     }
@@ -221,7 +221,7 @@ void str2serial(HostSerial *theSerial, char *buf, int buf_len) {
 
 /* ************************************ */
 
-HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
+HostTraffic* findHostBySerial(HostSerial theSerial, uint actualDeviceId) {
   if(emptySerial(&theSerial)) return(NULL);
   if(theSerial.serialType == SERIAL_IPV4 || theSerial.serialType == SERIAL_IPV6) {
     return(findHostByNumIP(theSerial.value.ipSerial.ipAddress,
@@ -243,10 +243,10 @@ HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
 
 /* ************************************ */
 
-HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId) {
+HostTraffic* findHostByMAC(char* macAddr, short vlanId, uint actualDeviceId) {
   HostTraffic *el;
   short dummyShort = 0;
-  u_int idx = hashHost(NULL, (u_char*)macAddr, &dummyShort, &el, actualDeviceId);
+  uint idx = hashHost(NULL, (u_char*)macAddr, &dummyShort, &el, actualDeviceId);
 
   if(el != NULL)
     return(el); /* Found */
@@ -294,11 +294,11 @@ unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int d
      * Patch on the line below courtesy of
      * Paul Chapman <pchapman@fury.bio.dfo.ca>
      */
-    idx = (u_int)(dstAddr->Ip4Address.s_addr+srcAddr->Ip4Address.s_addr+sport+dport);
+    idx = (uint)(dstAddr->Ip4Address.s_addr+srcAddr->Ip4Address.s_addr+sport+dport);
     break;
 #ifdef INET6
   case AF_INET6:
-    idx = (u_int)(dstAddr->Ip6Address.s6_addr[0] +
+    idx = (uint)(dstAddr->Ip6Address.s6_addr[0] +
 		  dstAddr->Ip6Address.s6_addr[0] +
 		  srcAddr->Ip6Address.s6_addr[0] +
 		  srcAddr->Ip6Address.s6_addr[0] + sport +! dport);
@@ -310,19 +310,19 @@ unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int d
 
 /* ******************************************** */
 
-u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport) {
-  u_int16_t transactionId = 0;
+uint16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport) {
+  uint16_t transactionId = 0;
 
   if (srcAddr->hostFamily != dstAddr->hostFamily)
     return -1;
   switch (srcAddr->hostFamily) {
   case AF_INET:
-    transactionId = (u_int16_t)(3*srcAddr->Ip4Address.s_addr+
+    transactionId = (uint16_t)(3*srcAddr->Ip4Address.s_addr+
 				dstAddr->Ip4Address.s_addr+5*dport+7*sport);
     break;
 #ifdef INET6
   case AF_INET6:
-    transactionId = (u_int16_t)(3*srcAddr->Ip6Address.s6_addr[0]+
+    transactionId = (uint16_t)(3*srcAddr->Ip6Address.s6_addr[0]+
 				dstAddr->Ip6Address.s6_addr[0]+5*dport+7*sport);
     break;
 #endif
@@ -573,7 +573,7 @@ NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
  */
 char* copy_argv(register char **argv) {
   register char **p;
-  register u_int len = 0;
+  register uint len = 0;
   char *buf;
   char *src, *dst;
 
@@ -606,8 +606,8 @@ char* copy_argv(register char **argv) {
 
 #ifdef INET6
 unsigned short isLinkLocalAddress(struct in6_addr *addr,
-				  u_int32_t *the_local_network,
-				  u_int32_t *the_local_network_mask) {
+				  uint32_t *the_local_network,
+				  uint32_t *the_local_network_mask) {
   int i;
 
   if(the_local_network && the_local_network_mask)
@@ -634,8 +634,8 @@ unsigned short isLinkLocalAddress(struct in6_addr *addr,
 
 #ifdef INET6
 unsigned short in6_isMulticastAddress(struct in6_addr *addr,
-				      u_int32_t *the_local_network,
-				      u_int32_t *the_local_network_mask) {
+				      uint32_t *the_local_network,
+				      uint32_t *the_local_network_mask) {
 
   if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
@@ -654,9 +654,9 @@ unsigned short in6_isMulticastAddress(struct in6_addr *addr,
 /*******************************************/
 
 #ifdef INET6
-unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId,
-				  u_int32_t *the_local_network,
-				  u_int32_t *the_local_network_mask) {
+unsigned short in6_isLocalAddress(struct in6_addr *addr, uint deviceId,
+				  uint32_t *the_local_network,
+				  uint32_t *the_local_network_mask) {
 
   if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
@@ -687,8 +687,8 @@ unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId,
 /* ******************************************* */
 
 unsigned short in6_isPrivateAddress(struct in6_addr *addr,
-				    u_int32_t *the_local_network,
-				    u_int32_t *the_local_network_mask) {
+				    uint32_t *the_local_network,
+				    uint32_t *the_local_network_mask) {
   /* IPv6 have private addresses ?*/
 
   if(the_local_network && the_local_network_mask)
@@ -701,8 +701,8 @@ unsigned short in6_isPrivateAddress(struct in6_addr *addr,
 /* ********************************* */
 
 unsigned short in_isBroadcastAddress(struct in_addr *addr,
-				     u_int32_t *the_local_network,
-				     u_int32_t *the_local_network_mask) {
+				     uint32_t *the_local_network,
+				     uint32_t *the_local_network_mask) {
   int i;
 
   if(the_local_network && the_local_network_mask)
@@ -743,8 +743,8 @@ unsigned short in_isBroadcastAddress(struct in_addr *addr,
 /* ********************************* */
 
 unsigned short in_isMulticastAddress(struct in_addr *addr,
-				     u_int32_t *the_local_network,
-				     u_int32_t *the_local_network_mask) {
+				     uint32_t *the_local_network,
+				     uint32_t *the_local_network_mask) {
 
   if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
@@ -764,8 +764,8 @@ unsigned short in_isMulticastAddress(struct in_addr *addr,
 
 /* ********************************* */
 
-u_int8_t num_network_bits(u_int32_t addr) {
-  u_int8_t i, j, bits = 0, fields[4];
+uint8_t num_network_bits(uint32_t addr) {
+  uint8_t i, j, bits = 0, fields[4];
 
   memcpy(fields, &addr, 4);
 
@@ -778,9 +778,9 @@ u_int8_t num_network_bits(u_int32_t addr) {
 
 /* ********************************* */
 
-unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId,
-				 u_int32_t *the_local_network,
-				 u_int32_t *the_local_network_mask) {
+unsigned short in_isLocalAddress(struct in_addr *addr, uint deviceId,
+				 uint32_t *the_local_network,
+				 uint32_t *the_local_network_mask) {
 
   if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
@@ -835,8 +835,8 @@ unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId,
 /* ********************************* */
 
 unsigned short in_isPrivateAddress(struct in_addr *addr,
-				   u_int32_t *the_local_network,
-				   u_int32_t *the_local_network_mask) {
+				   uint32_t *the_local_network,
+				   uint32_t *the_local_network_mask) {
   /* See http://www.isi.edu/in-notes/rfc1918.txt */
 
   if(the_local_network && the_local_network_mask)
@@ -856,8 +856,8 @@ unsigned short in_isPrivateAddress(struct in_addr *addr,
 /***************************************/
 
 unsigned short isBroadcastAddress(HostAddr *addr,
-				  u_int32_t *the_local_network,
-				  u_int32_t *the_local_network_mask) {
+				  uint32_t *the_local_network,
+				  uint32_t *the_local_network_mask) {
   if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
@@ -875,8 +875,8 @@ unsigned short isBroadcastAddress(HostAddr *addr,
 /* ******************************************** */
 
 unsigned short isMulticastAddress(HostAddr *addr,
-				  u_int32_t *the_local_network,
-				  u_int32_t *the_local_network_mask) {
+				  uint32_t *the_local_network,
+				  uint32_t *the_local_network_mask) {
   if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
@@ -893,9 +893,9 @@ unsigned short isMulticastAddress(HostAddr *addr,
 
 /* ************************************************* */
 
-unsigned short isLocalAddress(HostAddr *addr, u_int deviceId,
-			      u_int32_t *the_local_network,
-			      u_int32_t *the_local_network_mask) {
+unsigned short isLocalAddress(HostAddr *addr, uint deviceId,
+			      uint32_t *the_local_network,
+			      uint32_t *the_local_network_mask) {
   if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
@@ -913,8 +913,8 @@ unsigned short isLocalAddress(HostAddr *addr, u_int deviceId,
 /* ************************************************** */
 
 unsigned short isPrivateAddress(HostAddr *addr,
-				u_int32_t *the_local_network,
-				u_int32_t *the_local_network_mask) {
+				uint32_t *the_local_network,
+				uint32_t *the_local_network_mask) {
   if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
@@ -975,7 +975,7 @@ void handleAddressLists(char* addresses, NetworkStats theNetworks[MAX_NUM_NETWOR
   address = strtok_r(addresses, ",", &strtokState);
 
   while(address != NULL) {
-    u_int32_t network, networkMask, broadcast;
+    uint32_t network, networkMask, broadcast;
     int bits, a, b, c, d;
     char *mask = strchr(address, '/');
     char *equal = strchr(address, '=');
@@ -1163,7 +1163,7 @@ void handleLocalAddresses(char* addresses) {
 
 /* ********************************* */
 
-char* read_file(char* path, char* buf, u_int buf_len) {
+char* read_file(char* path, char* buf, uint buf_len) {
   FILE *fd = fopen(&path[1], "r");
 
   if(fd == NULL) {
@@ -1226,8 +1226,8 @@ void handleKnownAddresses(char* addresses) {
 
 #ifdef INET6
 unsigned short in6_pseudoLocalAddress(struct in6_addr *addr,
-				      u_int32_t *the_local_network,
-				      u_int32_t *the_local_network_mask) {
+				      uint32_t *the_local_network,
+				      uint32_t *the_local_network_mask) {
   int i;
 
   for(i=0; i<myGlobals.numDevices; i++) {
@@ -1244,8 +1244,8 @@ unsigned short in6_pseudoLocalAddress(struct in6_addr *addr,
 unsigned short __pseudoLocalAddress(struct in_addr *addr,
 				    NetworkStats theNetworks[MAX_NUM_NETWORKS],
 				    u_short numNetworks,
-				    u_int32_t *the_local_network,
-				    u_int32_t *the_local_network_mask) {
+				    uint32_t *the_local_network,
+				    uint32_t *the_local_network_mask) {
   int i;
 
   if(the_local_network && the_local_network_mask)
@@ -1286,8 +1286,8 @@ unsigned short __pseudoLocalAddress(struct in_addr *addr,
 /* ********************************* */
 
 unsigned short in_pseudoLocalAddress(struct in_addr *addr,
-				     u_int32_t *the_local_network,
-				     u_int32_t *the_local_network_mask) {
+				     uint32_t *the_local_network,
+				     uint32_t *the_local_network_mask) {
   return(__pseudoLocalAddress(addr, myGlobals.localNetworks, myGlobals.numLocalNetworks,
 			      the_local_network, the_local_network_mask));
 }
@@ -1295,9 +1295,9 @@ unsigned short in_pseudoLocalAddress(struct in_addr *addr,
 /* ********************************* */
 
 #ifdef INET6
-unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId,
-				      u_int32_t *the_local_network,
-				      u_int32_t *the_local_network_mask) {
+unsigned short in6_deviceLocalAddress(struct in6_addr *addr, uint deviceId,
+				      uint32_t *the_local_network,
+				      uint32_t *the_local_network_mask) {
   int rc;
 
   if(addrlookup(addr,myGlobals.device[deviceId].v6Addrs))
@@ -1311,9 +1311,9 @@ unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId,
 
 /* ********************************* */
 
-unsigned short in_deviceLocalAddress(struct in_addr *addr, u_int deviceId,
-				     u_int32_t *the_local_network,
-				     u_int32_t *the_local_network_mask) {
+unsigned short in_deviceLocalAddress(struct in_addr *addr, uint deviceId,
+				     uint32_t *the_local_network,
+				     uint32_t *the_local_network_mask) {
   int rc;
 
   if((addr->s_addr & myGlobals.device[deviceId].netmask.s_addr) == myGlobals.device[deviceId].network.s_addr)
@@ -1336,9 +1336,9 @@ unsigned short in_deviceLocalAddress(struct in_addr *addr, u_int deviceId,
 /* ********************************* */
 
 #ifdef INET6
-unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId,
-					u_int32_t *the_local_network,
-					u_int32_t *the_local_network_mask) {
+unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, uint deviceId,
+					uint32_t *the_local_network,
+					uint32_t *the_local_network_mask) {
   int i;
 
   i = in6_isLocalAddress(addr, deviceId, the_local_network, the_local_network_mask);
@@ -1373,9 +1373,9 @@ unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId,
 
 /* This function returns true when a host is considered local
    as specified using the 'm' flag */
-unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId,
-				       u_int32_t *the_local_network,
-				       u_int32_t *the_local_network_mask) {
+unsigned short in_isPseudoLocalAddress(struct in_addr *addr, uint deviceId,
+				       uint32_t *the_local_network,
+				       uint32_t *the_local_network_mask) {
   int i;
 
   /* FIX */
@@ -1413,8 +1413,8 @@ unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId,
    for the specified (-m flag subnets */
 
 unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr,
-					   u_int32_t *the_local_network,
-					   u_int32_t *the_local_network_mask) {
+					   uint32_t *the_local_network,
+					   uint32_t *the_local_network_mask) {
   int i;
 
 #ifdef ADDRESS_DEBUG
@@ -1439,9 +1439,9 @@ unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr,
 
 /*************************************/
 
-unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId,
-				  u_int32_t *the_local_network,
-				  u_int32_t *the_local_network_mask) {
+unsigned short deviceLocalAddress(HostAddr *addr, uint deviceId,
+				  uint32_t *the_local_network,
+				  uint32_t *the_local_network_mask) {
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_deviceLocalAddress(&addr->Ip4Address, deviceId, the_local_network, the_local_network_mask));
@@ -1455,9 +1455,9 @@ unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId,
 
 /* ********************************* */
 
-unsigned short isPseudoLocalAddress(HostAddr *addr, u_int deviceId,
-				    u_int32_t *the_local_network,
-				    u_int32_t *the_local_network_mask) {
+unsigned short isPseudoLocalAddress(HostAddr *addr, uint deviceId,
+				    uint32_t *the_local_network,
+				    uint32_t *the_local_network_mask) {
 
   if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
@@ -1476,8 +1476,8 @@ unsigned short isPseudoLocalAddress(HostAddr *addr, u_int deviceId,
 /* ********************************* */
 
 unsigned short isPseudoBroadcastAddress(HostAddr *addr,
-					u_int32_t *the_local_network,
-					u_int32_t *the_local_network_mask) {
+					uint32_t *the_local_network,
+					uint32_t *the_local_network_mask) {
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_isPseudoBroadcastAddress(&addr->Ip4Address, the_local_network, the_local_network_mask));
@@ -1492,8 +1492,8 @@ unsigned short isPseudoBroadcastAddress(HostAddr *addr,
 /* ********************************* */
 
 unsigned short _pseudoLocalAddress(HostAddr *addr,
-				   u_int32_t *the_local_network,
-				   u_int32_t *the_local_network_mask) {
+				   uint32_t *the_local_network,
+				   uint32_t *the_local_network_mask) {
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_pseudoLocalAddress(&addr->Ip4Address, the_local_network, the_local_network_mask));
@@ -1697,7 +1697,7 @@ void handleFlowsSpecs(void) {
 
 /* ********************************* */
 
-int getLocalHostAddress(struct in_addr *hostAddress, u_int8_t *netmask_v6, char* device) {
+int getLocalHostAddress(struct in_addr *hostAddress, uint8_t *netmask_v6, char* device) {
   int rc = 0;
 #ifdef WIN32
   hostAddress->s_addr = GetHostIPAddr();
@@ -2507,7 +2507,7 @@ char* getNwInterfaceType(int i) {
 
 /* ************************************ */
 
-int getActualInterface(u_int deviceId) {
+int getActualInterface(uint deviceId) {
   if(myGlobals.runningPref.mergeInterfaces) {
     return(myGlobals.device[0].dummyDevice == 0 ? 0 : deviceId);
   } else
@@ -2611,10 +2611,10 @@ u_short in_cksum(const u_short *addr, int len, u_short csum) {
 
 /* ****************** */
 
-void addTimeMapping(u_int16_t transactionId,
+void addTimeMapping(uint16_t transactionId,
 		    struct timeval theTime) {
 
-  u_int idx = transactionId % CONST_NUM_TRANSACTION_ENTRIES;
+  uint idx = transactionId % CONST_NUM_TRANSACTION_ENTRIES;
   int i=0;
 
 #ifdef DEBUG
@@ -2661,10 +2661,10 @@ long delta_time (struct timeval * now,
 
 /* ****************** */
 
-time_t getTimeMapping(u_int16_t transactionId,
+time_t getTimeMapping(uint16_t transactionId,
 		      struct timeval theTime) {
 
-  u_int idx = transactionId % CONST_NUM_TRANSACTION_ENTRIES;
+  uint idx = transactionId % CONST_NUM_TRANSACTION_ENTRIES;
   int i=0;
 
 #ifdef DEBUG
@@ -2851,7 +2851,7 @@ void traceEvent(int eventTraceLevel, char* file,
     } else {
       /* Skip over time - syslog() adds it automatically) */
       char *bufLog = &buf[strlen(bufTime)];
-      static u_int8_t already_open = 0;
+      static uint8_t already_open = 0;
 
 #ifdef FORPRENPTL
       accessMutex(&myGlobals.preNPTLlogMutex, "message");
@@ -3479,7 +3479,7 @@ int _safe_strncat(char* file, int line,
 /* ************************ */
 
 void fillDomainName(HostTraffic *el) {
-  u_int i;
+  uint i;
 
   if(theDomainHasBeenComputed(el))
     return;
@@ -4003,7 +4003,7 @@ char* mapIcmpType(int icmpType) {
 int _incrementUsageCounter(UsageCounter *counter,
 			   HostTraffic *theHost, int actualDeviceId,
 			   char* file, int line) {
-  u_int i, found=0;
+  uint i, found=0;
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: incrementUsageCounter() @ %s:%d", file, line);
@@ -4323,8 +4323,8 @@ void allocateElementHash(int deviceId, u_short hashType) {
 
 /* *************************************************** */
 
-u_int numActiveSenders(u_int deviceId) {
-  u_int numSenders = 0;
+uint numActiveSenders(uint deviceId) {
+  uint numSenders = 0;
   HostTraffic *el;
 
   for(el=getFirstHost(deviceId);
@@ -4346,9 +4346,9 @@ u_int numActiveSenders(u_int deviceId) {
 /* *************************************************** */
 
 #ifdef ENABLE_FC
-u_int numActiveVsans(u_int deviceId)
+uint numActiveVsans(uint deviceId)
 {
-  u_int numVsans = 0, i;
+  uint numVsans = 0, i;
   FcFabricElementHash **theHash;
 
   if ((theHash = myGlobals.device[deviceId].vsanHash) == NULL) {
@@ -4371,8 +4371,8 @@ u_int numActiveVsans(u_int deviceId)
 
 /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 
-u_int32_t xaton(char *s) {
-  u_int32_t a, b, c, d;
+uint32_t xaton(char *s) {
+  uint32_t a, b, c, d;
 
   if(4!=sscanf(s, "%d.%d.%d.%d", &a, &b, &c, &d))
     return 0;
@@ -4559,7 +4559,7 @@ void handleWhiteBlackListAddresses(char* addresses,
  *  For them, 1=PseudoLocal, which means it's in the set
  *  So we have to flip the whitelist code
  */
-unsigned short isOKtoSave(u_int32_t addr,
+unsigned short isOKtoSave(uint32_t addr,
 			  NetworkStats whiteNetworks[MAX_NUM_NETWORKS],
 			  NetworkStats blackNetworks[MAX_NUM_NETWORKS],
 			  u_short numWhiteNets, u_short numBlackNets) {
@@ -4634,7 +4634,7 @@ int setSpecifiedUser(void) {
 
 /* ************************************ */
 
-u_int16_t getHostAS(HostTraffic *el) {
+uint16_t getHostAS(HostTraffic *el) {
   return (el->hostAS);
 }
 
@@ -4731,12 +4731,12 @@ void removeNtopPid(void) {
 #ifdef ENABLE_FC
 /* The following two routines have been extracted from Ethereal */
 static char *
-bytestring_to_str(const u_int8_t *ad, u_int32_t len, char punct) {
+bytestring_to_str(const uint8_t *ad, uint32_t len, char punct) {
   static char  str[3][32];
   static char *cur;
   char        *p;
   int          i;
-  u_int32_t   octet;
+  uint32_t   octet;
   /* At least one version of Apple's C compiler/linker is buggy, causing
      a complaint from the linker about the "literal C string section"
      not ending with '\0' if we initialize a 16-element "char" array with
@@ -4777,14 +4777,14 @@ bytestring_to_str(const u_int8_t *ad, u_int32_t len, char punct) {
   return p;
 }
 
-char* fc_to_str(const u_int8_t *ad)
+char* fc_to_str(const uint8_t *ad)
 {
   return bytestring_to_str (ad, 3, '.');
 }
 
-char* fcwwn_to_str (const u_int8_t *ad)
+char* fcwwn_to_str (const uint8_t *ad)
 {
-  u_int8_t zero_wwn[LEN_WWN_ADDRESS] = {0,0,0,0,0,0,0,0};
+  uint8_t zero_wwn[LEN_WWN_ADDRESS] = {0,0,0,0,0,0,0,0};
 
   if (!memcmp (ad, zero_wwn, LEN_WWN_ADDRESS)) {
     return ("N/A");
@@ -4808,8 +4808,8 @@ int ntop_conditional_sched_yield(void) {
 
 /* *************************************************** */
 
-u_int numActiveNxPorts (u_int deviceId) {
-  u_int numSenders = 0;
+uint numActiveNxPorts (uint deviceId) {
+  uint numSenders = 0;
   HostTraffic *el;
 
   for(el=getFirstHost(deviceId);
@@ -4825,9 +4825,9 @@ u_int numActiveNxPorts (u_int deviceId) {
 
 /* *************************************** */
 
-HostTraffic* findHostByFcAddress (FcAddress *fcAddr, u_short vsanId, u_int actualDeviceId) {
+HostTraffic* findHostByFcAddress (FcAddress *fcAddr, u_short vsanId, uint actualDeviceId) {
   HostTraffic *el;
-  u_int idx = hashFcHost(fcAddr, vsanId, &el, actualDeviceId);
+  uint idx = hashFcHost(fcAddr, vsanId, &el, actualDeviceId);
 
   if(el != NULL)
     return(el); /* Found */
@@ -4853,13 +4853,13 @@ HostTraffic* findHostByFcAddress (FcAddress *fcAddr, u_short vsanId, u_int actua
 FcNameServerCacheEntry *findFcHostNSCacheEntry(FcAddress *fcAddr, u_short vsanId) {
   FcNameServerCacheEntry *entry = NULL;
   HostTraffic *el = NULL;
-  u_int hashIdx = hashFcHost(fcAddr, vsanId, &el, -1);
+  uint hashIdx = hashFcHost(fcAddr, vsanId, &el, -1);
 
   entry = myGlobals.fcnsCacheHash[hashIdx];
 
   while (entry != NULL) {
     if ((entry->vsanId == vsanId) &&
-	(memcmp ((u_int8_t *)fcAddr, (u_int8_t *)&entry->fcAddress,
+	(memcmp ((uint8_t *)fcAddr, (uint8_t *)&entry->fcAddress,
 		 LEN_FC_ADDRESS) == 0))
       return (entry);
 
@@ -5928,7 +5928,7 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
     if (updateType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN) {
       safe_snprintf(__FILE__, __LINE__, el->hostResolvedName,
 		    sizeof(el->hostResolvedName),
-		    fcwwn_to_str ((u_int8_t*)updateValue));
+		    fcwwn_to_str ((uint8_t*)updateValue));
       el->hostResolvedName[LEN_WWN_ADDRESS_DISPLAY] = '\0';
     } else 
 #endif
@@ -6374,7 +6374,7 @@ static PortUsage* allocatePortUsage(void) {
  * 2. (not found and createIfNecessary), allocate new one and insert
  *    into chain, thus keeping the list sorted.
  */
-PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary) {
+PortUsage* getPortsUsage(HostTraffic *el, uint portIdx, int createIfNecessary) {
   PortUsage *ports, *prev = NULL, *newPort;
 
   accessMutex(&myGlobals.portsMutex, "getPortsUsage");
@@ -6436,7 +6436,7 @@ void clearHostFlag(int flag_value, HostTraffic *host) {
 
 /* *************************************************** */
 
-char* vlan2name(u_int16_t vlanId, char *buf, int buf_len) {
+char* vlan2name(uint16_t vlanId, char *buf, int buf_len) {
   char key[64];
 
   snprintf(key, sizeof(key), "vlan.%d", vlanId);

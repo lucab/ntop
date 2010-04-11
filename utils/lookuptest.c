@@ -40,7 +40,7 @@ char *OptTableFilename="./p2c.opt.table";
 
 /* ************************************************************************* */
 
-void addNodeInternal(u_int32_t ip, int prefix, char *country)
+void addNodeInternal(uint32_t ip, int prefix, char *country)
 {
   IPNode *p1=Head;
   IPNode *p2;
@@ -103,7 +103,7 @@ void initIPCountryTable(void)
 
 /* ************************************************************************* */
 
-char *ip2CountryCode(u_int32_t ip)
+char *ip2CountryCode(uint32_t ip)
 {
   IPNode *p=Head;
   int i, b;

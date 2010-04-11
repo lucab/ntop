@@ -24,7 +24,7 @@
 static char hex[] = "0123456789ABCDEF";
 
 /* Forward */
-static u_int _ns_get16(const u_char *src);
+static uint _ns_get16(const u_char *src);
 static int _ns_name_ntop(const u_char *src,
 			 char *dst, size_t dstsiz);
 static int _dn_skipname(const u_char *ptr, const u_char *eom); /* forward */
@@ -305,7 +305,7 @@ char* intop(struct in6_addr *addr) {
  */
 char* _intoa(struct in_addr addr, char* buf, u_short bufLen) {
   char *cp, *retStr;
-  u_int byte;
+  uint byte;
   int n;
 
   cp = &buf[bufLen];
@@ -399,7 +399,7 @@ char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen) {
 
 /* This function automatically updates the instance name */
 void ipaddr2str(HostTraffic *el, HostAddr hostIpAddress,
-		short vlanId, u_int actualDeviceId) {
+		short vlanId, uint actualDeviceId) {
   HostTraffic *h;
 
   if(((hostIpAddress.hostFamily == AF_INET) && (hostIpAddress.addr._hostIp4Address.s_addr == 0))
@@ -503,8 +503,8 @@ void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc, char *fdst)
 
 /* ************************************ */
 
-static u_int _ns_get16(const u_char *src) {
-  u_int dst;
+static uint _ns_get16(const u_char *src) {
+  uint dst;
 
   NS_GET16(dst, src);
   return (dst);
@@ -540,7 +540,7 @@ static int _ns_name_ntop(const u_char *src,
   const u_char *cp;
   char *dn, *eom;
   u_char c;
-  u_int n;
+  uint n;
   static char digits[] = "0123456789";
 
   cp = src;
@@ -728,7 +728,7 @@ static int _ns_name_uncompress(const u_char *msg,
 
 static int _ns_name_skip(const u_char **ptrptr, const u_char *eom) {
   const u_char *cp;
-  u_int n;
+  uint n;
 
   cp = *ptrptr;
   while (cp < eom && (n = *cp++) != 0) {
@@ -961,7 +961,7 @@ static void handleMdnsName(HostTraffic *srcHost, u_short sport, u_char *mdns_nam
    as it does not check boundaries (see ** below)
 */
 
-u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
+uint16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
 			  const u_char *ipPtr,
 			  DNSHostInfo *hostPtr,
 			  short length,
@@ -987,7 +987,7 @@ u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
   int   host_aliases_len[MAX_ALIASES], n;
   u_char  hostbuf[4096];
   char *addr_list[MAX_ADDRESSES + 1];
-  u_int16_t transactionId, flags;
+  uint16_t transactionId, flags;
 
   /* Never forget to copy the buffer !!!!! */
   cp = (u_char*)(ipPtr);
@@ -1185,14 +1185,14 @@ u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
       memcpy(hostPtr->name, bp, len);
     }
 
-/* Align bp on u_int32_t boundary */
+/* Align bp on uint32_t boundary */
 #if 0
-    bp += (((u_int32_t)bp) % sizeof(u_int32_t));
+    bp += (((uint32_t)bp) % sizeof(uint32_t));
 #else
     {
-      u_int32_t     padding;
+      uint32_t     padding;
 
-      padding=((u_int32_t)((long)bp)) % sizeof(u_int32_t);
+      padding=((uint32_t)((long)bp)) % sizeof(uint32_t);
       bp += padding;
       buflen -= padding;
     }

@@ -26,7 +26,7 @@
 
 #ifdef ENABLE_FC
 static void processFcPkt(const u_char *bp, const struct pcap_pkthdr *h,
-			 u_int16_t ethertype, int actualDeviceId);
+			 uint16_t ethertype, int actualDeviceId);
 
 static char *fcProtocolStrings[] = {
   "", "SW_ILS", "IP", "SCSI", "BLS", "ELS", "FCCT", "LinkData",
@@ -41,22 +41,22 @@ static char *fcProtocolStrings[] = {
 /* Extracted and modified from the Linux header for other systems - BMS Mar2003 */
 /* And for Linux systems without if_pppox.h - BMS Apr2003 */
 struct pppoe_tag {
-  u_int16_t tag_type;
-  u_int16_t tag_len;
+  uint16_t tag_type;
+  uint16_t tag_len;
   char tag_data;
 };
 
 struct pppoe_hdr {
 #ifdef CFG_LITTLE_ENDIAN
-  u_int8_t ver : 4;
-  u_int8_t type : 4;
+  uint8_t ver : 4;
+  uint8_t type : 4;
 #else
-  u_int8_t type : 4;
-  u_int8_t ver : 4;
+  uint8_t type : 4;
+  uint8_t ver : 4;
 #endif
-  u_int8_t code;
-  u_int16_t sid;
-  u_int16_t length;
+  uint8_t code;
+  uint16_t sid;
+  uint16_t length;
   struct pppoe_tag tag;
 };
 #endif
@@ -66,13 +66,13 @@ static const u_char *p_save;
 static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
 static u_char lowMemoryMsgShown = 0;
 
-static void updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
-			    u_int16_t dst_as_id, u_int octets);
+static void updateASTraffic(int actualDeviceId, uint16_t src_as_id,
+			    uint16_t dst_as_id, uint octets);
 
 /* ******************************* */
 
 #ifdef ENABLE_FC
-static u_int32_t getFcProtocol (u_int8_t r_ctl, u_int8_t type) {
+static uint32_t getFcProtocol (uint8_t r_ctl, uint8_t type) {
   switch (r_ctl & 0xF0) {
   case FC_RCTL_DEV_DATA:
     switch (type) {
@@ -153,8 +153,8 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
 /* ************************************ */
 
-u_int computeEfficiency(u_int pktLen) {
-  u_int pktEfficiency;
+uint computeEfficiency(uint pktLen) {
+  uint pktEfficiency;
 
   if(myGlobals.cellLength == 0)
     pktEfficiency = 0;
@@ -168,12 +168,12 @@ u_int computeEfficiency(u_int pktLen) {
 /* ************************************ */
 
 int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
-	     const u_int numPkts, const u_int _length, u_short isPassiveSess,
+	     const uint numPkts, const uint _length, u_short isPassiveSess,
 	     u_short isVoipSess,
 	     u_short p2pSessionIdx, int actualDeviceId,
 	     u_short newSession,
-	     u_int efficiencySent /* 0 = unknown */,
-	     u_int efficiencyRcvd /* 0 = unknown */) {
+	     uint efficiencySent /* 0 = unknown */,
+	     uint efficiencyRcvd /* 0 = unknown */) {
   int idx;
 #ifdef ENABLE_EFFICIENCY
   Counter pkt_efficiency = 0;
@@ -349,10 +349,10 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 
 #ifdef ENABLE_EFFICIENCY
 void updateGreEfficiency(HostTraffic *srcHost, HostTraffic *dstHost,
-			 u_int numPkts, u_int numBytes,
+			 uint numPkts, uint numBytes,
 			 int actualDeviceId) {
   if(myGlobals.runningPref.calculateEfficiency && (numPkts > 0)) {
-    u_int pkt_efficiency = computeEfficiency(numBytes/numPkts)*numPkts;
+    uint pkt_efficiency = computeEfficiency(numBytes/numPkts)*numPkts;
 
     incrementHostTrafficCounter(srcHost, greEfficiencySent, pkt_efficiency);
     incrementHostTrafficCounter(srcHost, efficiencySent, pkt_efficiency);    
@@ -366,10 +366,10 @@ void updateGreEfficiency(HostTraffic *srcHost, HostTraffic *dstHost,
 /* ************************************ */
 
 void updateIpsecEfficiency(HostTraffic *srcHost, HostTraffic *dstHost,
-			   u_int numPkts, u_int numBytes,
+			   uint numPkts, uint numBytes,
 			   int actualDeviceId) {
   if(myGlobals.runningPref.calculateEfficiency && (numPkts > 0)) {
-    u_int pkt_efficiency = computeEfficiency(numBytes/numPkts)*numPkts;
+    uint pkt_efficiency = computeEfficiency(numBytes/numPkts)*numPkts;
 
     incrementHostTrafficCounter(srcHost, ipsecEfficiencySent, pkt_efficiency);
     incrementHostTrafficCounter(srcHost, efficiencySent, pkt_efficiency);    
@@ -469,7 +469,7 @@ static void dumpFragmentData(IpFragment *fragment) {
 
 static IpFragment *searchFragment(HostTraffic *srcHost,
 				  HostTraffic *dstHost,
-				  u_int fragmentId,
+				  uint fragmentId,
 				  int actualDeviceId) {
   IpFragment *fragment = myGlobals.device[actualDeviceId].fragmentList;
 
@@ -500,8 +500,8 @@ void deleteFragment(IpFragment *fragment, int actualDeviceId) {
 static void checkFragmentOverlap(HostTraffic *srcHost,
                                  HostTraffic *dstHost,
                                  IpFragment *fragment,
-                                 u_int fragmentOffset,
-                                 u_int dataLength,
+                                 uint fragmentOffset,
+                                 uint dataLength,
 				 int actualDeviceId) {
   if(fragment->fragmentOrder == FLAG_UNKNOWN_FRAGMENT_ORDER) {
     if(fragment->lastOffset > fragmentOffset)
@@ -539,17 +539,17 @@ static void checkFragmentOverlap(HostTraffic *srcHost,
 
 /* ************************************ */
 
-static u_int handleFragment(HostTraffic *srcHost,
+static uint handleFragment(HostTraffic *srcHost,
                             HostTraffic *dstHost,
                             u_short *sport,
                             u_short *dport,
-                            u_int fragmentId,
-                            u_int off,
-                            u_int packetLength,
-                            u_int dataLength,
+                            uint fragmentId,
+                            uint off,
+                            uint packetLength,
+                            uint dataLength,
 			    int actualDeviceId) {
   IpFragment *fragment;
-  u_int fragmentOffset, length;
+  uint fragmentOffset, length;
 
   if(!myGlobals.enableFragmentHandling)
     return(0);
@@ -614,7 +614,7 @@ static u_int handleFragment(HostTraffic *srcHost,
 
 void purgeOldFragmentEntries(int actualDeviceId) {
   IpFragment *fragment, *next;
-  u_int fragcnt=0, expcnt=0;
+  uint fragcnt=0, expcnt=0;
 
   fragment = myGlobals.device[actualDeviceId].fragmentList;
 
@@ -835,7 +835,7 @@ void updateHostName(HostTraffic *el) {
 
 /* ************************************ */
 
-static void updateDevicePacketTTLStats(u_int ttl, int actualDeviceId) {
+static void updateDevicePacketTTLStats(uint ttl, int actualDeviceId) {
   if(ttl <= 32)       incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo32, 1);
   else if(ttl <= 64)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo64, 1);
   else if(ttl <= 96)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktTTLStats.upTo96, 1);
@@ -848,7 +848,7 @@ static void updateDevicePacketTTLStats(u_int ttl, int actualDeviceId) {
 
 /* ************************************ */
 
-void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_int length) {
+void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, uint length) {
   if((sport >= MAX_IP_PORT) || (dport >= MAX_IP_PORT) || (length == 0))
     return;
 
@@ -912,9 +912,9 @@ static u_char TTL_PREDICTOR(u_char x)		/* coded by awgn <awgn@antifork.org> */
 
 void incrementUnknownProto(HostTraffic *host,
 			   int direction,
-			   u_int16_t eth_type,
-			   u_int16_t dsap,  u_int16_t ssap,
-			   u_int16_t ipProto) {
+			   uint16_t eth_type,
+			   uint16_t dsap,  uint16_t ssap,
+			   uint16_t ipProto) {
   int i;
 
   if(host->nonIPTraffic == NULL) {
@@ -994,7 +994,7 @@ void incrementUnknownProto(HostTraffic *host,
 
 /* ************************************ */
 
-static AsStats* allocASStats(u_int16_t as_id) {
+static AsStats* allocASStats(uint16_t as_id) {
   AsStats *asStats = (AsStats*)malloc(sizeof(AsStats));
 
   if(0) traceEvent(CONST_TRACE_WARNING, "Allocating stats for AS %d", as_id);
@@ -1015,8 +1015,8 @@ static AsStats* allocASStats(u_int16_t as_id) {
 
 /* ************************************ */
 
-static void updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
-			    u_int16_t dst_as_id, u_int octets) {
+static void updateASTraffic(int actualDeviceId, uint16_t src_as_id,
+			    uint16_t dst_as_id, uint octets) {
   AsStats *stats, *prev_stats = NULL;
   u_char found_src = 0, found_dst = 0;
 
@@ -1110,7 +1110,7 @@ static void updateASTraffic(int actualDeviceId, u_int16_t src_as_id,
 
 static void processIpPkt(const u_char *bp,
 			 const struct pcap_pkthdr *h,
-			 u_int length,
+			 uint length,
 			 u_char *ether_src,
 			 u_char *ether_dst,
 			 int actualDeviceId,
@@ -1121,17 +1121,17 @@ static void processIpPkt(const u_char *bp,
 #ifdef INET6
   struct ip6_hdr *ip6;
   struct icmp6_hdr icmp6Pkt;
-  u_int advance = 0;
+  uint advance = 0;
   u_char *cp = NULL;
   u_char *snapend = NULL;
-  u_int icmp6len = 0;
+  uint icmp6len = 0;
 #endif
-  u_int nh;
+  uint nh;
   int fragmented = 0;
   struct tcphdr tp;
   struct udphdr up;
   struct icmp icmpPkt;
-  u_int hlen, ip_len,tcpDataLength, udpDataLength, off=0, tcpUdpLen, idx;
+  uint hlen, ip_len,tcpDataLength, udpDataLength, off=0, tcpUdpLen, idx;
   char *proto;
   HostTraffic *srcHost=NULL, *dstHost=NULL;
   HostAddr srcAddr, dstAddr; /* Protocol Independent addresses */
@@ -1164,7 +1164,7 @@ static void processIpPkt(const u_char *bp,
     hlen = sizeof(struct ip6_hdr);
   else
 #endif
-    hlen = (u_int)ip.ip_hl * 4;
+    hlen = (uint)ip.ip_hl * 4;
 
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipPkts, 1);
 #ifdef INET6
@@ -1207,13 +1207,13 @@ static void processIpPkt(const u_char *bp,
 
 	if(ntohs(pppTHeader.protocol) == 0x21 /* IP */) {
 	  memcpy(&ip, bp+hlen+sizeof(GreTunnel)+sizeof(PPPTunnelHeader), sizeof(struct ip));
-	  hlen = (u_int)ip.ip_hl * 4;
+	  hlen = (uint)ip.ip_hl * 4;
 	  ether_src = NULL, ether_dst = NULL;
 	}
 	break;
       case ETHERTYPE_IP:
 	memcpy(&ip, bp+hlen+4 /* 4 is the size of the GRE header */, sizeof(struct ip));
-	hlen = (u_int)ip.ip_hl * 4;
+	hlen = (uint)ip.ip_hl * 4;
 	ether_src = NULL, ether_dst = NULL;
 	break;
       }
@@ -1774,7 +1774,7 @@ static void processIpPkt(const u_char *bp,
 	if(((sport == 53) || (dport == 53) /* domain */)
 	   || ((sport == 5353) && (dport == 5353)) /* Multicast DNS */) {
 	  short isRequest = 0, positiveReply = 0;
-	  u_int16_t transactionId = 0;
+	  uint16_t transactionId = 0;
 
 	  if(myGlobals.runningPref.enablePacketDecoding
 	     && (bp != NULL) /* packet long enough */) {
@@ -2607,7 +2607,7 @@ void cleanupPacketQueue(void) {
 /* ************************************ */
 
 void* dequeuePacket(void* _deviceId) {
-  u_int deviceId = (u_int)((long)_deviceId);
+  uint deviceId = (uint)((long)_deviceId);
   struct pcap_pkthdr h;
   u_char p[MAX_PACKET_LEN];
 
@@ -2706,7 +2706,7 @@ static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p, int devic
 #ifdef DEBUG
       {
         struct ether_header *ep;
-        u_int16_t et=0, et8021q=0;
+        uint16_t et=0, et8021q=0;
         ep = (struct ether_header *)p;
         et = ntohs(ep->ether_type);
         if(et == ETHERTYPE_802_1Q) {
@@ -2748,8 +2748,8 @@ static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p, int devic
 
 /* ************************************ */
 
-static void addNonIpTrafficInfo(HostTraffic *el, u_int16_t proto,
-				u_short len, u_int direction) {
+static void addNonIpTrafficInfo(HostTraffic *el, uint16_t proto,
+				u_short len, uint direction) {
   NonIpProtoTrafficInfo *nonIp;
   int numIterations;
 
@@ -2790,7 +2790,7 @@ static void addNonIpTrafficInfo(HostTraffic *el, u_int16_t proto,
 
 /* ************************************ */
 
-void updateDevicePacketStats(u_int length, int actualDeviceId) {
+void updateDevicePacketStats(uint length, int actualDeviceId) {
   if(length <= 64)        incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo64, 1);
   else if(length <= 128)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo128, 1);
   else if(length <= 256)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.upTo256, 1);
@@ -2845,8 +2845,8 @@ void processPacket(u_char *_deviceId,
   struct ether_header ehdr;
   struct tokenRing_header *trp;
   struct fddi_header *fddip;
-  u_int hlen, caplen = h->caplen;
-  u_int headerDisplacement = 0, length = h->len;
+  uint hlen, caplen = h->caplen;
+  uint headerDisplacement = 0, length = h->len;
   const u_char *orig_p = p, *p1;
   u_char *ether_src=NULL, *ether_dst=NULL;
   u_short eth_type=0;
@@ -2854,7 +2854,7 @@ void processPacket(u_char *_deviceId,
   struct tokenRing_llc *trllc;
   unsigned char ipxBuffer[128];
   int deviceId, actualDeviceId;
-  u_int16_t vlanId=NO_VLAN;
+  uint16_t vlanId=NO_VLAN;
   static time_t lastUpdateThptTime = 0;
 #ifdef LINUX
   AnyHeader *anyHeader;
@@ -3385,8 +3385,8 @@ void processPacket(u_char *_deviceId,
 	      if(cdp[cdp_idx] == 0x02) {
 		/* CDP v2 */
 		struct cdp_element {
-		  u_int16_t cdp_type;
-		  u_int16_t cdp_len;
+		  uint16_t cdp_type;
+		  uint16_t cdp_len;
 		  // u_char cdp_content[255];
 		};
 
@@ -3483,7 +3483,7 @@ void processPacket(u_char *_deviceId,
 		 && (ipxBuffer[17] == 0x52) /* SAP (Service Advertising Protocol) (byte 1) */
 		 && (ipxBuffer[30] == 0x0)  /* SAP Response (byte 0) */
 		 && (ipxBuffer[31] == 0x02) /* SAP Response (byte 1) */) {
-		u_int16_t serverType;
+		uint16_t serverType;
 		char serverName[MAX_LEN_SYM_HOST_NAME];
 		int i, found;
 
@@ -3599,7 +3599,7 @@ void processPacket(u_char *_deviceId,
 	      setHostFlag(FLAG_HOST_TYPE_PRINTER, dstHost);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].dlcBytes, length);
 	    } else if(sap_type == 0xAA /* SNAP */) {
-	      u_int16_t snapType;
+	      uint16_t snapType;
 
 	      p1 = (u_char*)(p1+sizeof(llcHeader));
 	      memcpy(&snapType, p1, sizeof(snapType));
@@ -3743,13 +3743,13 @@ void processPacket(u_char *_deviceId,
 	}
       } else if(eth_type == 0xDEAD) /* Agilent */ {
 	typedef struct {
-	  u_int8_t  version;        /* Protocol Version */
-	  u_int8_t  response_pdu;   /* 0=Request, 1=Response */
-	  u_int8_t  fragment_id;    /* Fragment Id (Only for
+	  uint8_t  version;        /* Protocol Version */
+	  uint8_t  response_pdu;   /* 0=Request, 1=Response */
+	  uint8_t  fragment_id;    /* Fragment Id (Only for
 				       fragmented FORWARD responses) */
-	  u_int8_t  pdu_type;       /* See sgbic_pdu_type */
-	  u_int16_t pdu_id;         /* Unique (serial) PDU identifier */
-	  u_int16_t pdu_len;        /* length (bytes) of the PDU (not
+	  uint8_t  pdu_type;       /* See sgbic_pdu_type */
+	  uint16_t pdu_id;         /* Unique (serial) PDU identifier */
+	  uint16_t pdu_len;        /* length (bytes) of the PDU (not
 				       including this header) */
 	  u_char    digest[16];     /* MD5 digest */
 	} sgbic_header_v1;
@@ -3982,7 +3982,7 @@ void processPacket(u_char *_deviceId,
 /* ************************************ */
 
 #ifdef ENABLE_FC
-void updateFcDevicePacketStats(u_int length, int actualDeviceId) {
+void updateFcDevicePacketStats(uint length, int actualDeviceId) {
   if(length <= 36)       incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdFcPktStats.upTo36, 1);
   else if(length <= 48)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdFcPktStats.upTo48, 1);
   else if(length <= 52)  incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdFcPktStats.upTo52, 1);
@@ -4005,38 +4005,38 @@ void updateFcDevicePacketStats(u_int length, int actualDeviceId) {
 
 static void processFcPkt(const u_char *bp,
 			 const struct pcap_pkthdr *h,
-			 u_int16_t ethertype,
+			 uint16_t ethertype,
 			 int actualDeviceId)
 {
   FcHeaderAlign *hdralign;
   FcHeader fchdr;
   FcAddress srcFcAddr, dstFcAddr;
   u_char *hdrBytes;
-  u_int16_t payload_len = h->len - 14; /* FC length = pkt len - arpa hdr len */
-  u_int16_t totlen = h->len;
-  u_int16_t actLen = h->caplen; /* Used when pcap truncates frames  */
+  uint16_t payload_len = h->len - 14; /* FC length = pkt len - arpa hdr len */
+  uint16_t totlen = h->len;
+  uint16_t actLen = h->caplen; /* Used when pcap truncates frames  */
   char *proto;
   u_short protocol;
   HostTraffic *srcHost=NULL, *dstHost=NULL;
   TrafficCounter ctr;
-  u_int32_t offset = 14;      /* start past the ethernet header */
-  u_int16_t vsanId = 0,
+  uint32_t offset = 14;      /* start past the ethernet header */
+  uint16_t vsanId = 0,
     fcFrameLen = 0;
-  u_int8_t sof = 0, eof = 0, error = 0;
+  uint8_t sof = 0, eof = 0, error = 0;
 #if CFG_LITTLE_ENDIAN
-  u_int16_t didx;        /* source & dest port indices on MDS */
+  uint16_t didx;        /* source & dest port indices on MDS */
 #endif
   u_char isFirstFrame = FALSE,
     isLastFrame = FALSE,
     isFragment = FALSE;
   u_char gs_type, gs_stype, isXchgOrig;
-  u_int16_t nsOpcode;
+  uint16_t nsOpcode;
 
   /* Deal with Vegas Header or Boardwalk Header based on ethertype */
   if((ethertype == ETHERTYPE_BRDWLK) ||
       (ethertype == ETHERTYPE_BRDWLK_OLD)) {
     sof = (bp[offset] & 0xF0) >> 4;
-    vsanId = ntohs (*(u_int16_t *)&bp[offset]) & 0x0FFF;
+    vsanId = ntohs (*(uint16_t *)&bp[offset]) & 0x0FFF;
     eof = bp[totlen-1];
     error = bp[totlen-2];
     offset += 2;            /* skip the brdwlk hdr field */
@@ -4044,7 +4044,7 @@ static void processFcPkt(const u_char *bp,
     if((error & 0x8) && (error & 0x1)) {
       /* This indicates that Boardwalk carries the original FC
        * length even though the frame is truncated */
-      payload_len = ntohl (*(u_int32_t *)&bp[payload_len+14-8]);
+      payload_len = ntohl (*(uint32_t *)&bp[payload_len+14-8]);
       payload_len *= 4;
     }
     /* If VSAN is not 0, there is an EISL header; skip it */
@@ -4067,13 +4067,13 @@ static void processFcPkt(const u_char *bp,
   else if((ethertype == ETHERTYPE_UNKNOWN) || (ethertype == ETHERTYPE_MDSHDR)) {
 #if CFG_LITTLE_ENDIAN
     sof = (bp[offset+1] & 0x0F);
-    fcFrameLen = ntohs (*((u_int16_t *)&bp[offset+2]));
-    vsanId = ntohs (*(u_int16_t *)&bp[offset+14] & 0x0FFF);
-    didx =   ntohs (*((u_int16_t *)&bp[offset+6]) & 0x1FF8) >> 3;
+    fcFrameLen = ntohs (*((uint16_t *)&bp[offset+2]));
+    vsanId = ntohs (*(uint16_t *)&bp[offset+14] & 0x0FFF);
+    didx =   ntohs (*((uint16_t *)&bp[offset+6]) & 0x1FF8) >> 3;
 #else
     sof = bp[offset+1] & 0x0F;
-    fcFrameLen = ntohs ((*(u_int16_t *)&bp[offset+3]) & 0x1FFF);
-    vsanId = ntohs ((*(u_int16_t *)&bp[offset+14]) & 0x0FFF);
+    fcFrameLen = ntohs ((*(uint16_t *)&bp[offset+3]) & 0x1FFF);
+    vsanId = ntohs ((*(uint16_t *)&bp[offset+14]) & 0x0FFF);
 #endif
     eof = bp[offset+MDSHDR_HEADER_SIZE+fcFrameLen-MDSHDR_TRAILER_SIZE];
 
@@ -4229,7 +4229,7 @@ static void processFcPkt(const u_char *bp,
 
     if(((gs_type == FCCT_GSTYPE_DIRSVC) && (gs_stype == FCCT_GSSUBTYPE_DNS)) ||
 	((gs_type == FCCT_GSTYPE_MGMTSVC) && (gs_stype == FCCT_GSSUBTYPE_UNS))) {
-      nsOpcode = ntohs (*(u_int16_t *)&bp[offset+24+8]);
+      nsOpcode = ntohs (*(uint16_t *)&bp[offset+24+8]);
 
       /* Use registration information to save more information about
        * device.

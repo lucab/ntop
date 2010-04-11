@@ -38,7 +38,7 @@
 static HostTraffic *ntop_host = NULL;
 static char query_string[2048];
 static PthreadMutex python_mutex;
-static u_int8_t header_sent;
+static uint8_t header_sent;
 
 #if (PY_MAJOR_VERSION > 2)
 #define PyString_FromString(a) PyUnicode_FromString(a)
@@ -678,7 +678,7 @@ static PyObject* python_interface_numInterfaces(PyObject *self, PyObject *args) 
 }
 
 static PyObject* python_interface_name(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
@@ -686,7 +686,7 @@ static PyObject* python_interface_name(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_uniqueIfName(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
@@ -694,7 +694,7 @@ static PyObject* python_interface_uniqueIfName(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_humanFriendlyName(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
@@ -702,7 +702,7 @@ static PyObject* python_interface_humanFriendlyName(PyObject *self, PyObject *ar
 }
 
 static PyObject* python_interface_ipv4Address(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
@@ -710,7 +710,7 @@ static PyObject* python_interface_ipv4Address(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_network(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
   char buf[32], buf1[32];
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
@@ -722,7 +722,7 @@ static PyObject* python_interface_network(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_numHosts(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
@@ -732,7 +732,7 @@ static PyObject* python_interface_numHosts(PyObject *self, PyObject *args) {
 
 #ifdef INET6
 static PyObject* python_interface_ipv6Address(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
   char buf[64];
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
@@ -746,21 +746,21 @@ static PyObject* python_interface_ipv6Address(PyObject *self, PyObject *args) {
 #endif
 
 static PyObject* python_interface_time(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
   PyObject *obj;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
   if((obj = PyDict_New()) == NULL) return NULL;
 
-  PyDict_SetItem(obj, PyString_FromString("startTime"), PyLong_FromUnsignedLong((u_int)myGlobals.device[interfaceId].started));
-  PyDict_SetItem(obj, PyString_FromString("firstSeen"), PyLong_FromUnsignedLong((u_int)myGlobals.device[interfaceId].firstpkt));
-  PyDict_SetItem(obj, PyString_FromString("lastSeen"), PyLong_FromUnsignedLong((u_int)myGlobals.device[interfaceId].lastpkt));
+  PyDict_SetItem(obj, PyString_FromString("startTime"), PyLong_FromUnsignedLong((uint)myGlobals.device[interfaceId].started));
+  PyDict_SetItem(obj, PyString_FromString("firstSeen"), PyLong_FromUnsignedLong((uint)myGlobals.device[interfaceId].firstpkt));
+  PyDict_SetItem(obj, PyString_FromString("lastSeen"), PyLong_FromUnsignedLong((uint)myGlobals.device[interfaceId].lastpkt));
   return obj;
 }
 
 static PyObject* python_interface_virtual(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
@@ -769,7 +769,7 @@ static PyObject* python_interface_virtual(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_speed(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
@@ -778,7 +778,7 @@ static PyObject* python_interface_speed(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_mtu(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
@@ -787,7 +787,7 @@ static PyObject* python_interface_mtu(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_bpf(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
@@ -796,7 +796,7 @@ static PyObject* python_interface_bpf(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_pktsStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
   PyObject *obj;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
@@ -818,7 +818,7 @@ static PyObject* python_interface_pktsStats(PyObject *self, PyObject *args) {
 #ifdef ENABLE_FC
 
 static PyObject* python_interface_fcPktsStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
   PyObject *obj;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
@@ -834,7 +834,7 @@ static PyObject* python_interface_fcPktsStats(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_fcBytesStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
   PyObject *obj;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
@@ -860,7 +860,7 @@ static PyObject* python_interface_fcBytesStats(PyObject *self, PyObject *args) {
 #endif
 
 static PyObject* python_interface_bytesStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
   PyObject *obj;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
@@ -890,7 +890,7 @@ static PyObject* python_interface_bytesStats(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_throughputStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
   PyObject *obj;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
@@ -922,7 +922,7 @@ static PyObject* python_interface_SimpleProtoTrafficInfo(SimpleProtoTrafficInfo 
 }
 
 static PyObject* python_interface_tcpStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
@@ -930,7 +930,7 @@ static PyObject* python_interface_tcpStats(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_udpStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
@@ -938,7 +938,7 @@ static PyObject* python_interface_udpStats(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_icmpStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
@@ -946,7 +946,7 @@ static PyObject* python_interface_icmpStats(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_ipStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
@@ -955,7 +955,7 @@ static PyObject* python_interface_ipStats(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_securityPkts(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
   PyObject *obj;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
@@ -990,7 +990,7 @@ static PyObject* python_interface_securityPkts(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_netflowStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
   PyObject *obj;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
@@ -1016,7 +1016,7 @@ static PyObject* python_interface_netflowStats(PyObject *self, PyObject *args) {
 }
 
 static PyObject* python_interface_sflowStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
   PyObject *obj;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
@@ -1038,7 +1038,7 @@ static PyObject* python_interface_sflowStats(PyObject *self, PyObject *args) {
 
 
 static PyObject* python_interface_cpacketStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
+  uint interfaceId;
   PyObject *obj;
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
@@ -1243,7 +1243,7 @@ void term_python(void) {
 
 /* **************************************** */
 
-int handlePythonHTTPRequest(char *url, u_int postLen) {
+int handlePythonHTTPRequest(char *url, uint postLen) {
   int idx, found = 0;
   char python_path[256], *document_root = strdup("."), buf[2048];
   struct stat statbuf;

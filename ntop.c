@@ -382,7 +382,7 @@ static int handleProtocolList(char* protoName, char *protocolList) {
 
 /* **************************************** */
 
-void addNewIpProtocolToHandle(char* name, u_int16_t id, u_int16_t idAlias) {
+void addNewIpProtocolToHandle(char* name, uint16_t id, uint16_t idAlias) {
   ProtocolsList *proto = myGlobals.ipProtosList;
   int i;
 

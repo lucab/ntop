@@ -20,7 +20,7 @@
 
 #include "ntop.h"
 
-static u_int8_t are_communities_defined = 0;
+static uint8_t are_communities_defined = 0;
 
 void updateFcTrafficMatrix(HostTraffic *srcHost, HostTraffic *dstHost,
                            TrafficCounter length, int actualDeviceId);
@@ -563,7 +563,7 @@ unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash) {
       hash = host->hostIp4Address.s_addr;
 #ifdef INET6
     else if (host->hostIpAddress.hostFamily == AF_INET6)
-      hash = *(u_int32_t *)&host->hostIp6Address.s6_addr[0];
+      hash = *(uint32_t *)&host->hostIp6Address.s6_addr[0];
 #endif
   }
 #ifdef ENABLE_FC
@@ -764,7 +764,7 @@ void checkCommunities() {
 
 /* ********************************** */
 
-char* findHostCommunity(u_int32_t host_ip, char *buf, u_short buf_len) {
+char* findHostCommunity(uint32_t host_ip, char *buf, u_short buf_len) {
   if(are_communities_defined) {
     datum key, nextkey;
     int len = strlen(COMMUNITY_PREFIX);

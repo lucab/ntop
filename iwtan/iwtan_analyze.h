@@ -112,12 +112,12 @@ int iwtan_refresh_data(unsigned int length, const u_char* pktBody, int packetTyp
 
 /* Internal datalink type processing and validating functions */
 int _iwtan_process_radiotap(const u_char* radiotapData, unsigned int radioTapSize, short* WEPped, unsigned int* dataRate, short* antenna, unsigned int* frequency, short* type, short* signal, mac_address** stMac, mac_address** apMac, mac_address** bssId, char** essid, ip4_address* stIp4, ip6_address* stIp6);
-int _iwtan_validate_radiotap(const u_char* body, bpf_u_int32 len);
-int _iwtan_process_802_11(const u_char* body, bpf_u_int32 len, mac_address** ap_mac, mac_address** st_mac, mac_address** bssId, char** essid, ip4_address* stationIP4, ip6_address* stationIP6);
-int _iwtan_process_802_11_mng(const u_char* body, bpf_u_int32 len, char** essid);
-int _iwtan_process_802_llc(const u_char* body, bpf_u_int32 len, ip4_address* fromIp4, ip4_address* toIp4, ip6_address* fromIp6, ip4_address* toIp6);
-int _iwtan_process_ip4(const u_char* body, bpf_u_int32 len, ip4_address* fromIp4, ip4_address* toIp4);
-int _iwtan_process_ip6(const u_char* body, bpf_u_int32 len, ip6_address* fromIp6, ip6_address* toIp6);
+int _iwtan_validate_radiotap(const u_char* body, bpf_uint32 len);
+int _iwtan_process_802_11(const u_char* body, bpf_uint32 len, mac_address** ap_mac, mac_address** st_mac, mac_address** bssId, char** essid, ip4_address* stationIP4, ip6_address* stationIP6);
+int _iwtan_process_802_11_mng(const u_char* body, bpf_uint32 len, char** essid);
+int _iwtan_process_802_llc(const u_char* body, bpf_uint32 len, ip4_address* fromIp4, ip4_address* toIp4, ip6_address* fromIp6, ip4_address* toIp6);
+int _iwtan_process_ip4(const u_char* body, bpf_uint32 len, ip4_address* fromIp4, ip4_address* toIp4);
+int _iwtan_process_ip6(const u_char* body, bpf_uint32 len, ip6_address* fromIp6, ip6_address* toIp6);
 
 /* Internal utility functions (bits) */
 uint16_t _iwtan_le_to_host(uint16_t leData);

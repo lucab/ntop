@@ -32,7 +32,7 @@
 
 /* **************************************** */
 
-int isFlogiAcc (FcAddress *fcAddress, u_int8_t r_ctl, u_int8_t type, u_int8_t cmd)
+int isFlogiAcc (FcAddress *fcAddress, uint8_t r_ctl, uint8_t type, uint8_t cmd)
 {
   if (((fcAddress->domain == 0xFF) && (fcAddress->area == 0xFF) && (fcAddress->port == 0xFE)) && 
       ((r_ctl & 0xF0) == FC_RCTL_ELS) && (type == FC_TYPE_ELS) &&
@@ -64,7 +64,7 @@ int fillFcHostInfo (const u_char *bp, HostTraffic *srcHost)
 /* **************************************** */
 
 /* Routine to extract WWN from PLOGI frame */
-int isPlogi (u_int8_t r_ctl, u_int8_t type, u_int8_t cmd)
+int isPlogi (uint8_t r_ctl, uint8_t type, uint8_t cmd)
 {
   if (((r_ctl & 0xF0) == FC_RCTL_ELS) && (type == FC_TYPE_ELS) &&
       (cmd == FC_ELS_CMD_PLOGI)) {
@@ -77,7 +77,7 @@ int isPlogi (u_int8_t r_ctl, u_int8_t type, u_int8_t cmd)
 
 /* **************************************** */
 
-int isLogout (u_int8_t r_ctl, u_int8_t type, u_int8_t cmd)
+int isLogout (uint8_t r_ctl, uint8_t type, uint8_t cmd)
 {
   if (((r_ctl & 0xF0) == FC_RCTL_ELS) && (type == FC_TYPE_ELS) &&
       (cmd == FC_ELS_CMD_LOGO)) {
@@ -90,7 +90,7 @@ int isLogout (u_int8_t r_ctl, u_int8_t type, u_int8_t cmd)
 
 /* **************************************** */
 
-int isRscn (u_int8_t r_ctl, u_int8_t type, u_int8_t cmd)
+int isRscn (uint8_t r_ctl, uint8_t type, uint8_t cmd)
 {
   if (((r_ctl & 0xF0) == FC_RCTL_ELS) && (type == FC_TYPE_ELS) &&
       (cmd == FC_ELS_CMD_RSCN)) {
@@ -121,7 +121,7 @@ HostTraffic *allocFcScsiCounters(HostTraffic *host) {
 int fillFcpInfo (const u_char *bp, HostTraffic *srcHost, HostTraffic *dstHost)
 {
   int offset = 0;
-  u_int32_t fcpDl;
+  uint32_t fcpDl;
     
   assert (bp != NULL);
   assert (srcHost != NULL);
@@ -131,7 +131,7 @@ int fillFcpInfo (const u_char *bp, HostTraffic *srcHost, HostTraffic *dstHost)
     /* This is a single-level LUN */
   }
 
-  fcpDl = ntohl (*(u_int32_t *)&bp[offset+28]);
+  fcpDl = ntohl (*(uint32_t *)&bp[offset+28]);
 
   if(allocFcScsiCounters(srcHost) == NULL) return(0);
   if(allocFcScsiCounters(dstHost) == NULL) return(0);
@@ -153,7 +153,7 @@ int fillFcpInfo (const u_char *bp, HostTraffic *srcHost, HostTraffic *dstHost)
 FcFabricElementHash *getFcFabricElementHash (u_short vsanId, int actualDeviceId)
 {
   FcFabricElementHash **theHash;
-  u_int myIdx = 0, idx;
+  uint myIdx = 0, idx;
 
   idx = vsanId % MAX_ELEMENT_HASH;
   theHash = myGlobals.device[actualDeviceId].vsanHash;    
@@ -193,13 +193,13 @@ int isValidFcNxPort (FcAddress *fcAddress)
 
 int updateFcFabricElementHash (FcFabricElementHash **theHash, u_short vsanId,
                                const u_char *bp, FcAddress *srcAddr, FcAddress *dstAddr,
-                               u_short protocol, u_char r_ctl, u_int32_t pktlen)
+                               u_short protocol, u_char r_ctl, uint32_t pktlen)
 {
-  u_int myIdx = 0, idx;
+  uint myIdx = 0, idx;
   FcFabricElementHash *hash;
-  u_int8_t cmd, srcDomain, dstDomain;
+  uint8_t cmd, srcDomain, dstDomain;
   u_short payload_len;
-  u_int8_t gs_type, gs_stype;
+  uint8_t gs_type, gs_stype;
 
   idx = vsanId % MAX_ELEMENT_HASH;
     
@@ -500,7 +500,7 @@ void processFcNSCacheFile(char *filename) {
   FcNameServerCacheEntry *entry;
   HostTraffic *el;
   FcAddress fcid;
-  u_int32_t vsanId, domain, area, port, tgtType, i, j;
+  uint32_t vsanId, domain, area, port, tgtType, i, j;
   wwn_t pWWN, nWWN;
   char alias[MAX_LEN_SYM_HOST_NAME];
   FILE *fd;
@@ -632,7 +632,7 @@ void processFcNSCacheFile(char *filename) {
 
     entryFound = 0;
     while (entry != NULL) {
-      if (memcmp ((u_int8_t *)&(entry->fcAddress), (u_int8_t *)&fcid,
+      if (memcmp ((uint8_t *)&(entry->fcAddress), (uint8_t *)&fcid,
 		  LEN_FC_ADDRESS) == 0) {
 	entryFound = 1;
 	break;

@@ -45,7 +45,7 @@ void init_maps() {
 
 /* ************************************************** */
 
-static char* escape_string(char *in, char *out, u_int out_len) {
+static char* escape_string(char *in, char *out, uint out_len) {
   int i, i_max=strlen(in), j;
 
   for(i=0, j=0; i<i_max; i++) {

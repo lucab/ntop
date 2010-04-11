@@ -37,7 +37,7 @@ void convert2Table(void)
   char buff[256];
   int flags=0;
   char ip1s[32], ip2s[32], country[4];
-  u_int32_t ip1, ip2;
+  uint32_t ip1, ip2;
   
   while (!feof(stdin)) {
     if (fgets(buff, sizeof(buff), stdin)==NULL)

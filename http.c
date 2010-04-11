@@ -107,7 +107,7 @@ struct _HTTPstatus HTTPstatus[] = {
 
 #define MAX_NUM_COMMUNITIES    32
 
-static u_int httpBytesSent;
+static uint httpBytesSent;
 char httpRequestedURL[512], theHttpUser[32], theLastHttpUser[32];
 char allowedCommunities[256], *listAllowedCommunities[MAX_NUM_COMMUNITIES];
 static HostAddr *requestFrom;
@@ -136,7 +136,7 @@ static int returnHTTPPage(char* pageName,
 
 static int generateNewInternalPages(char* pageName);
 static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize);
-static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent);
+static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, uint gzipBytesSent);
 static void returnHTTPspecialStatusCode(int statusIdx, char *additionalText);
 static int checkURLsecurity(char *url);
 static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_, char* thePw, int thePwLen);
@@ -144,7 +144,7 @@ static char compressedFilePath[256];
 static short compressFile = 0, acceptGzEncoding;
 static FILE *compressFileFd=NULL;
 #ifdef MAKE_WITH_ZLIB
-static void compressAndSendData(u_int*);
+static void compressAndSendData(uint*);
 #endif
 
 /* ************************* */
@@ -401,7 +401,7 @@ static int readHTTPheader(char* theRequestedURL,
 
 /* ************************* */
 
-char* encodeString(char* in, char* out, u_int out_len) {
+char* encodeString(char* in, char* out, uint out_len) {
   int i, out_idx;
 
   out[0] = '\0';
@@ -1400,7 +1400,7 @@ void termAccessLog(void) {
 
 /* ******************************* */
 
-static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent) {
+static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, uint gzipBytesSent) {
   char theDate[48], myUser[64], buf[24];
   struct timeval loggingAt;
   unsigned long msSpent;
@@ -2161,7 +2161,7 @@ static int returnHTTPPage(char* pageName,
       } else if(strncmp(tkn, "key=", 4) == 0) {
 	db_key = strdup(&tkn[4]);
       } else if(strncmp(tkn, "val=", 4) == 0) {
-	u_int val = 0;
+	uint val = 0;
 	
 	if(db_val != NULL) {
 	  if(db_key && (!strcmp(db_key, EVENTS_MASK)))
@@ -3385,7 +3385,7 @@ static int returnHTTPPage(char* pageName,
 
 #if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
   if(*usedFork) {
-    u_int gzipBytesSent = 0;
+    uint gzipBytesSent = 0;
 
 #ifdef MAKE_WITH_ZLIB
     if(compressFile)
@@ -3633,7 +3633,7 @@ static int checkHTTPpassword(char *theRequestedURL,
 
 #ifdef MAKE_WITH_ZLIB
 
-static void compressAndSendData(u_int *gzipBytesSent) {
+static void compressAndSendData(uint *gzipBytesSent) {
   FILE *fd;
   int len;
   char tmpStr[256];
@@ -3686,7 +3686,7 @@ void handleHTTPrequest(HostAddr from) {
   char requestedURL[MAX_LEN_URL], pw[64], agent[256], referer[256],
     workLanguage[256], ifModificedSince[48], *requestedURLCopy=NULL;
   struct timeval httpRequestedAt;
-  u_int gzipBytesSent = 0;
+  uint gzipBytesSent = 0;
   char *requestedLanguage[MAX_LANGUAGES_REQUESTED];
 
   char tmpStr[512];
