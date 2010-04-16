@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 Created on 28/gen/2010
 
@@ -288,7 +289,7 @@ def begin():
     
         except IOError:                                        #the tempFile does not exist or some other problem
             print>>sys.stderr, 'RRDAlarm: IOError while accessing tempfile '+tempFileName
-            configuration=createNewConfiguration(rrdFilesPath, os.path.join(ntopSpoolPath+nameFileConfig), timeStart)
+            configuration=createNewConfiguration(rrdFilesPath, os.path.join(ntopSpoolPath,nameFileConfig), timeStart)
         
         except pickle.PickleError, pickle.UnpicklingError: 
             print>>sys.stderr, "RRDAlarm: Problems during the UnPickling load, tempFile Delete..."
