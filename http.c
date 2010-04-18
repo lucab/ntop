@@ -100,6 +100,7 @@ struct _HTTPstatus HTTPstatus[] = {
 #define BITFLAG_HTTP_STATUS_403	(18<<8)
 #define BITFLAG_HTTP_STATUS_404	(19<<8)
 #define BITFLAG_HTTP_STATUS_408	(23<<8)
+#define BITFLAG_HTTP_STATUS_500	(31<<8)
 #define BITFLAG_HTTP_STATUS_501	(32<<8)
 #define BITFLAG_HTTP_STATUS_505	(36<<8)
 
@@ -1212,8 +1213,8 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   sendString("<script type=\"text/javascript\" language=\"javascript\">var domTT_styleClass = 'niceTitle';</script>\n");
 
   /* ******************************************************* */
-
-  //sendString("<link rel=\"stylesheet\" href=\"/style.css\" TYPE=\"text/css\">\n");//there should be no need to include the style again
+  /*there should be no need to include the style again*/
+  /*sendString("<link rel=\"stylesheet\" href=\"/style.css\" TYPE=\"text/css\">\n");*/
   ssiMenu_Head();
   sendString("</head>");
 
@@ -1495,7 +1496,12 @@ static void returnHTTPversionNotSupported(void) {
   myGlobals.numUnsuccessfulInvalidversion[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_505, NULL);
 }
+/* ************************* */
 
+void returnHTTPversionServerError(void) {
+
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_500, NULL);
+}
 /* ************************* */
 
 void returnHTTPpageBadCommunity(void) {
