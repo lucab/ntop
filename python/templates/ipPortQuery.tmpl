@@ -1,0 +1,107 @@
+<script type="text/javascript">
+	var totalErrors=0;
+	var button=null;
+var removeError=function(element){
+	var firstIndex=element.className.search('error');
+	
+	if(firstIndex != -1){	//there was an error   && totalErrors>0
+		element.className=element.className.replace('error', '');
+		try{
+			element.removeAttribute('title');
+			}
+		catch(error){//error no attribute
+			}
+		totalErrors--;
+		}
+	
+};
+var setError=function(element, title){
+	element.className+= ' error';
+	element.title=title;
+	totalErrors++;
+};
+
+//function to control if the inserted parameters are correct
+var check=function(){
+	if(!button) return false;
+	
+	var ipType= new RegExp(/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/);
+	var portType=new RegExp(/^\d{1,5}$/);
+	var tmpEl=getElement('ipSrc');
+	var value=tmpEl.value;
+	if(value && !ipType.test(value)){
+		setError(tmpEl, 'IpV4 dotted format required!');
+	}
+	
+	tmpEl=getElement('portSrc');
+	value=tmpEl.value;
+	removeError(tmpEl);
+	if(value && !portType.test(value)){
+		setError(tmpEl, 'Number required!');
+	}
+	
+	tmpEl=getElement('ipDst');
+	value=tmpEl.value;
+	removeError(tmpEl);
+	if(value && !ipType.test(value)){
+		setError(tmpEl, 'IpV4 dotted format required!');
+	}
+	
+	tmpEl=getElement('portDst');
+	value=tmpEl.value;
+	removeError(tmpEl);
+	if(value && !portType.test(value)){
+		setError(tmpEl, 'Number required!');
+	}
+	
+	tmpEl=getElement('partition');
+	value=tmpEl.value;
+	removeError(tmpEl);
+	if(!value){
+		setError(tmpEl, 'This field is required!<br>Use the autocomplete feature to insert a valid partition.');
+	}
+	if(totalErrors>0){
+		return false;
+	}else{
+		return true;
+	}
+};
+	
+
+</script>
+
+% if results is None or 'values' not in results or len(results['values'])==0:
+	<form name=input id="queryForm" action="" method="get" onsubmit="return check();">
+		<center><table border="1" cellpadding="2" cellspacing="0" align="center">
+			<thead>
+				<tr><th  bgcolor="#f3f3f3" colspan="2">Source</th><th  bgcolor="#f3f3f3" colspan="2">Destination</th><th  bgcolor="#f3f3f3" >&nbsp;</th></tr>
+				<tr> 
+				
+					<th bgcolor="#f3f3f3">IP Address</th><th bgcolor="#f3f3f3">Port</th><th bgcolor="#f3f3f3">IP Address</th><th bgcolor="#f3f3f3">Port</th><th bgcolor="#f3f3f3">Partition</th>
+					</tr>
+			</thead>
+			<tbody>
+			<tr><td><input type="text" size="14" id="ipSrc" name="ipSrc"/></td>
+				<td><input type="text" size="6" maxlength="5" id="portSrc" name="portSrc" /></td>
+				<td><input type="text" size="15" id="ipDst" name="ipDst"/></td>
+				<td><input type="text" size="6" maxlength="5" id="portDst" name="portDst" /></td>
+				<td><input type="text" id="partition" name="partition" size="16" /></td>
+			</tr>
+			</tbody>
+			</table>
+			<input type="submit" value="Execute Query" onmousedown="button='exec';" style="margin-top: 10px;"></center>
+	</form>
+	<script type="text/javascript">
+	var fromOptions={script: function(input2){return "ipPortQuery.py?fromAuto="+input2} ,json:true,timeout:10000,cache:false,callback: function (obj) { getElement('partition').value =obj.value; }};
+	var from_json = new bsn.AutoSuggest("partition", fromOptions);
+	</script>
+	
+	%if results is not None:
+	<p><b>No results for inserted parameters.</b></p>
+	%endif
+% else:
+<%include file="queryResults.tmpl" args="results=results" />
+
+% endif
+<p>&nbsp;</p>
+<p class="footrow" align="left">Fastbit Query by <a class="mailto" href="mailto:&#103;&#109;&#101;&#100;&#105;&#99;&#105;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;">Gianluca Medici</a>.</p>	

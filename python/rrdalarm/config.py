@@ -40,7 +40,7 @@ def jsonListFileInPath(path, ntopSuffix):
         
         #print>>sys.stderr, file
         file=file[len(ntopSuffix):]
-        jsonList['results'].append({'id': i , 'value':file, 'info':file})
+        jsonList['results'].append({'id': i , 'value':file})
     return json.dumps(jsonList)
         
 def listAllDirs(dirPath):
@@ -65,7 +65,6 @@ def readScriptsDir(pathScriptsDir):
     directoryList=[]
     try:
         directoryList = glob.glob1(pathScriptsDir, '*')
-    
     except:
         raise
         return ['None']
@@ -109,7 +108,7 @@ def begin():
                                                     #path+filename of the configfile to read
     jsonPathRRD=form.getvalue('pathRRDS')
     
-                                                    
+    
     help=form.getvalue('help')
     documentRoot=os.getenv('DOCUMENT_ROOT', '.')
     

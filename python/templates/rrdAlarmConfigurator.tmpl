@@ -244,6 +244,6 @@
 </center>
 
 <script type="text/javascript">
-	var options2 = {script: function(input){return "config.py?pathRRDS="+removeStartingDots(input);},json:true,timeout:10000,cache:false,callback: function (obj) { getElement('rrdFile').value =obj.info; }};
+	var options2 = {script: function(input){return "config.py?pathRRDS="+removeStartingDots(input);},json:true,timeout:10000,cache:false,callback: function (obj) { getElement('rrdFile').value =obj.value; }};
 	var rrdas_json = new bsn.AutoSuggest("rrdFile", options2);
 	toggleAutoComplete();</script>

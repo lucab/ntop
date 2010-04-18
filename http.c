@@ -1213,7 +1213,7 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
 
   /* ******************************************************* */
 
-  sendString("<link rel=\"stylesheet\" href=\"/style.css\" TYPE=\"text/css\">\n");
+  //sendString("<link rel=\"stylesheet\" href=\"/style.css\" TYPE=\"text/css\">\n");//there should be no need to include the style again
   ssiMenu_Head();
   sendString("</head>");
 

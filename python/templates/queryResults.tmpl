@@ -1,0 +1,48 @@
+% if results is not None and 'columns' in results and 'values' in results :
+<link rel="stylesheet" href="/sorterStyle.css" />
+	<table border="1" align="center" cellpadding="5" cellspacing="0" id="results" class="sortable" >
+
+            <thead>
+
+                <tr>
+                	
+	% for col in results['columns']:
+                    <th nowrap="nowrap" bgcolor="#f3f3f3" align="center" >
+                    	<h3>
+                       ${col}
+					   </h3>
+                    </th>
+	%endfor
+                </tr>
+
+            </thead>
+
+            <tbody id="body">
+
+	% for row in results['values']:
+				
+				<tr onMouseOver="this.bgColor = '#EDF3FE'" onMouseOut ="this.bgColor = '#FFFFFF'">
+				% for field in row:
+				<td align="center">${field}</td>
+				%endfor
+				</tr>
+	% endfor
+            </tbody>
+</table>
+
+<script type="text/javascript" src="/sorterScript.js"></script>
+	<script type="text/javascript">
+  var sorter = new TINY.table.sorter("sorter");
+	sorter.head = "head";
+	sorter.asc = "asc";
+	sorter.desc = "desc";
+	sorter.even = "evenrow";
+	sorter.odd = "oddrow";
+	sorter.evensel = "evenselected";
+	sorter.oddsel = "oddselected";
+	sorter.paginate = false;
+	//sorter.currentid = "currentpage";
+	//sorter.limitid = "pagelimit";
+	sorter.init("results",1);
+  </script>
+%endif

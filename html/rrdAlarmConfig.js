@@ -43,7 +43,7 @@ var rrdAlarmConfig = function() {
 	var idRemoveRowButton='removeRow';
 	
 	var idTBody = 'body';						// id of the Tbody
-	var idForm = 'formConfigurator'; 			// id of the form
+	var idForm = 'formConfigurator';			// id of the form
 	var rowSelected = null;
 	var highlightColour = '#ffff99';
 	var onMouseColor = '#edf3fe';
@@ -51,10 +51,10 @@ var rrdAlarmConfig = function() {
 	var numIdEvent=undefined;					//	for removing document onclick
 	var onMouseUpIdEvent=undefined;
 	
-	var totalErrors=0; 							// the number of errors in the input field text
-	//var regTime2= /^\d+$|^(now)([\+-]\d+[dhms]$)?$/ig;
-	//var regTime3= /((^\d+$)|(^(now)([\+-]\d+[dhms])?$))/ig;
-	var regTime= /(^\d+$|^(now)([\+-]\d+[dhms])?$)/;
+	var totalErrors=0;							// the number of errors in the input field text
+	//var regTime2= /^\d+$|^(now)([\+\-]\d+[dhms]$)?$/ig;
+	//var regTime3= /((^\d+$)|(^(now)([\+\-]\d+[dhms])?$))/ig;
+	var regTime= new RegExp(/(^\d+$|^(now)([\+\-]\d+[dhms])?$)/);
 	var tdAttributes = {
 		align : 'right'
 	};
@@ -122,7 +122,7 @@ var rrdAlarmConfig = function() {
 		
 			/*if(fields[0].id===idUniqueNode ){
 				removeError(fields[0]);	
-				value=parseInt(fields[0].value);
+				value=parseInt(fields[0].value, 10);
 				if(isNaN(value)){
 					setError(fields[0], 'The id provided is not a number! Check the config file loaded!');
 				}else{
@@ -153,7 +153,7 @@ var rrdAlarmConfig = function() {
 				value=fields[2].value;
 				
 				if(!value || isNaN(value)){
-					setError(fields[2], 'Must be a number!')
+					setError(fields[2], 'Must be a number!');
 				}else{
 					currentForm.data.push(value);
 				}
@@ -163,10 +163,10 @@ var rrdAlarmConfig = function() {
 				removeError(fields[3]);
 				value=fields[3].value;
 				
-				if(!value ||isNaN(value)|| parseInt(value)< 0){
-					setError(fields[3], 'Must be a non negative integer!')
+				if(!value ||isNaN(value)|| parseInt(value,10)< 0){
+					setError(fields[3], 'Must be a non negative integer!');
 				}else{
-					currentForm.data.push(parseInt(value));
+					currentForm.data.push(parseInt(value,10));
 				}
 				
 			}
@@ -232,10 +232,10 @@ var rrdAlarmConfig = function() {
 				removeError(fields[8]);
 				value=fields[8].value;
 				
-				if(!value || isNaN(value)|| parseInt(value)< 0){
-					setError(fields[8], 'Must be a non negative integer!')
+				if(!value || isNaN(value)|| parseInt(value,10)< 0){
+					setError(fields[8], 'Must be a non negative integer!');
 				}else{
-					currentForm.data.push(parseInt(value));
+					currentForm.data.push(parseInt(value,10));
 				}
 			}	
 		value=null;
@@ -268,11 +268,11 @@ var rrdAlarmConfig = function() {
 		
 	};
 	var getIdUnique = function() {
-		return parseInt(getElement(idUniqueNode).innerHTML);
+		return parseInt(getElement(idUniqueNode).innerHTML,10);
 	};
 	/* Deselect the current row (if one) and clear all the texboxes on the form */
 	var clearForm = function() {
-		setIdUnique(' ');
+		setIdUnique('&nbsp;');
 		//setIdUnique(' ');
 		getElement(idForm).reset();
 		disableButtons();
@@ -297,7 +297,7 @@ var rrdAlarmConfig = function() {
 	var updateFormFields = function(rowSelected) {
 		if(rowSelected){
 			var Rindex=rowSelected.rowIndex-1;
-			var rowValues=configuration.rows[Rindex]
+			var rowValues=configuration.rows[Rindex];
 			var i = 0;
 			setIdUnique(rowValues[i++]);
 			setInputById(idRrdFile, rowValues[i++]);
@@ -339,7 +339,7 @@ var rrdAlarmConfig = function() {
 	};
 	/* Generate a populated tr row to be inserted in the tbody */
 	var makeTBodyRow = function(row) {
-		var actionToTake=row[7]
+		var actionToTake=row[7];
 		
 		var rowM=row.slice(0,7).concat(row.slice(8,10));				//remove the actiontotake because will not become a td
 		//rowM.concat(row.slice(8,10));
@@ -377,12 +377,12 @@ var rrdAlarmConfig = function() {
 	};
 	/*reIndex all the rows of the table and print it again */
     var normalizeTable = function(){
-    	reIndexRows(configuration.rows);
-    	
-    	var newTable = makeTBody();
+		reIndexRows(configuration.rows);
+
+		var newTable = makeTBody();
 
 		swapDOM(idTBody, newTable);
-    }
+    };
 	/* Generatea populated tbody tag */
 	var makeTBody = function() {
 		//var indexedRows = reIndexRows(configuration.rows);
@@ -430,8 +430,9 @@ var rrdAlarmConfig = function() {
 		 * e.keyCode; var Esc = (window.event) ? 27 : e.DOM_VK_ESCAPE; // MSIE :
 		 * Firefox
 		 */
-		if (e.key().code === 27 /* && toClear */)
+		if (e.key().code === 27 /* && toClear */){
 			clearForm();
+			}
 	};
 	/*
 	 * Update the content of the current selected row, picking the data from
@@ -467,7 +468,7 @@ var rrdAlarmConfig = function() {
 		var lastUniqueId=0;
 		if(lastArrayIndex>0){
 			lastArrayIndex=lastArrayIndex-1;
-			lastUniqueId = parseInt(configuration.rows[lastArrayIndex][0]);
+			lastUniqueId = parseInt(configuration.rows[lastArrayIndex][0],10);
 		}
 		
 		if(isNaN(lastUniqueId)){
@@ -488,16 +489,16 @@ var rrdAlarmConfig = function() {
 	/* Update the uniqueID checkbox for an instant onmousedown */
 	var updateIndex = function() {
 		if(configuration.rows!== null &&!rowSelected){
-			var i=0
+			var i=0;
 			if(configuration.rows && configuration.rows.length>0){
-				i=parseInt(configuration.rows[configuration.rows.length-1][0]);
+				i=parseInt(configuration.rows[configuration.rows.length-1][0],10);
 				}
 			if(!isNaN(i)){
 				setIdUnique((i+1));
 			}
 		}
 		
-	}
+	};
 	/* Remove the selected row from the array */
 	var removeRow = function() {
 		if(rowSelected){
@@ -583,7 +584,7 @@ var rrdAlarmConfig = function() {
 			if(t){
 				clearTimeout(t);
 			}
-		}
+		};
 		request.setRequestHeader("Content-Type","application/jsonrequest");
 		request.send('jsonString='+JSON.stringify({rows:rows})+'&configFile='+ escape(getElement('configFile').value));
 		t=setTimeout(writeSaveResult,1000,'Some error occurred no response from "save.py" after 1 second!');

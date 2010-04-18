@@ -1,0 +1,12 @@
+.sortable th { text-align:center; height: 30px;}
+.sortable th h3 { font-size:12px; padding:8px;}
+.sortable td {padding:4px 6px 6px; }
+.sortable .head h3 {background-position:right; background-repeat:no-repeat; display:inline; cursor:pointer;}
+.sortable .desc, .sortable .asc {background-color:#d3e0f3;}
+.sortable .desc h3{padding:8px 20px 8px 8px; background: url(/arrow_up.png) 100% center no-repeat; display:inline; cursor:pointer;}
+.sortable .asc h3{padding:8px 20px 8px 8px; background:url(/arrow_down.png) 100% center no-repeat; display:inline; cursor:pointer;}
+.sortable .head:hover, .sortable .desc:hover, .sortable .asc:hover {color:#fff}
+.sortable .evenrow td {background:#fff}
+.sortable .oddrow td {background:#ecf2f6}
+.sortable td.evenselected {background:#ecf2f6}
+.sortable td.oddselected {background:#dce6ee}
