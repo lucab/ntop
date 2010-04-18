@@ -182,6 +182,8 @@ extern int isAllowedCommunity(char *community_name);
 extern void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable);
 extern void returnHTTPnotImplemented(void);
 extern int readHTTPpostData(int len, char *buf, int buflen);
+extern void returnHTTPversionServerError(void);
+extern void returnHTTPpageBadCommunity(void);
 
 /* report.c */
 extern void printBandwidthFooter(void);

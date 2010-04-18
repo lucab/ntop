@@ -6,7 +6,7 @@
  *             Copyright (C) 2010 Luca Deri <deri@ntop.org>
  *                                Daniele Sgandurra <sgandurra@ntop.org>
  *                                Jaime Blasco <jaime.blasco@alienvault.com>
- *                                Gianluca Medici <medici@ntop.org>
+ *                                Gianluca Medici <gmedici@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -68,6 +68,14 @@ static PyObject* python_returnHTTPnotImplemented(PyObject *self, PyObject *args)
   // traceEvent(CONST_TRACE_WARNING, "-%s-", "python_returnHTTPnotImplemented");
 
   returnHTTPnotImplemented();
+  header_sent = 1;
+  return PyString_FromString("");
+}
+
+/* **************************************** */
+
+static PyObject* python_returnHTTPversionServerError(PyObject *self, PyObject *args) {
+  returnHTTPversionServerError();
   header_sent = 1;
   return PyString_FromString("");
 }
@@ -339,6 +347,18 @@ static PyObject* python_hwModel(PyObject *self,
 
 /* **************************************** */
 
+static PyObject* python_isHostResolvedNameType(PyObject *self,
+					       PyObject *args) {
+  int type;
+  //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_isHostResolvedNameType");
+  /* parse the incoming arguments */
+  if(!PyArg_ParseTuple(args, "i", &type))
+    return NULL;
+  return PyBool_FromLong(ntop_host && (ntop_host->hostResolvedNameType==type));
+}
+
+/* **************************************** */
+
 static PyObject* python_isFTPhost(PyObject *self,
 				  PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
@@ -572,6 +592,34 @@ static PyObject* python_bytesRcvd(PyObject *self, PyObject *args) {
 
 /* **************************************** */
 
+static PyObject* python_sendThpt(PyObject *self, PyObject *args) {
+  PyObject *obj = PyDict_New();
+
+  if(obj) {
+    PyDict_SetItem(obj, PyString_FromString("actual"), PyFloat_FromDouble((double)(ntop_host->actualSentThpt)));
+    PyDict_SetItem(obj, PyString_FromString("average"), PyFloat_FromDouble((double)(ntop_host->averageSentThpt)));
+    PyDict_SetItem(obj, PyString_FromString("peak"), PyFloat_FromDouble((double)(ntop_host->peakSentThpt)));
+  }
+
+  return(obj);
+}
+
+/* **************************************** */
+
+static PyObject* python_receiveThpt(PyObject *self, PyObject *args) {
+  PyObject *obj = PyDict_New();
+
+  if(obj) {
+    PyDict_SetItem(obj, PyString_FromString("actual"), PyFloat_FromDouble((double)(ntop_host->actualRcvdThpt)));
+    PyDict_SetItem(obj, PyString_FromString("average"), PyFloat_FromDouble((double)(ntop_host->averageRcvdThpt)));
+    PyDict_SetItem(obj, PyString_FromString("peak"), PyFloat_FromDouble((double)(ntop_host->peakRcvdThpt)));
+  }
+
+  return(obj);
+}
+
+/* **************************************** */
+
 #ifdef HAVE_FASTBIT
 static PyObject* python_fastbit_query(PyObject *self, PyObject *args) {
   PyObject *obj = NULL;
@@ -579,16 +627,16 @@ static PyObject* python_fastbit_query(PyObject *self, PyObject *args) {
   int limit, nres;
   FastBitQueryHandle qh;
   FastBitResultSetHandle rh;
-  
+
   if(!PyArg_ParseTuple(args, "sssi", &partition, &select_clause, &where, &limit)) return NULL;
 
   qh = fastbit_build_query(select_clause, partition, where);
   if(qh == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Error while executing SELECT %s FROM %s WHERE %s", 
+    traceEvent(CONST_TRACE_WARNING, "Error while executing SELECT %s FROM %s WHERE %s",
 	       select_clause, partition, where);
     return NULL;
   }
-  
+
   if((nres = fastbit_get_result_rows(qh)) > 0) {
     rh = fastbit_build_result_set(qh);
     if(rh != NULL) {
@@ -611,16 +659,16 @@ static PyObject* python_fastbit_query(PyObject *self, PyObject *args) {
 
       if(list != NULL) {
 	n = 0;
-	
+
 	while((nres > 0) && (fastbit_result_set_next(rh) == 0)) {
 	  int i;
 	  PyObject *list_elem = PyList_New(ncols);
-	  
+
 	  if(!list_elem) break;
-	  
+
 	  for (i = 0; i < ncols; ++ i)
 	    PyList_SetItem(list_elem, i, PyInt_FromLong(fastbit_result_set_getUnsigned(rh, i)));
-	  
+
 	  PyList_SetItem(list, n++, list_elem);
 	  nres--;
 	}
@@ -628,7 +676,7 @@ static PyObject* python_fastbit_query(PyObject *self, PyObject *args) {
 	PyDict_SetItem(obj, PyString_FromString("values"), list);
       }
 
-      fastbit_destroy_result_set(rh);      
+      fastbit_destroy_result_set(rh);
     }
   }
 
@@ -1056,8 +1104,8 @@ static PyObject* python_interface_cpacketStats(PyObject *self, PyObject *args) {
 static PyMethodDef ntop_methods[] = {
   { "sendHTTPHeader", python_sendHTTPHeader, METH_VARARGS| METH_KEYWORDS, "" },
   { "returnHTTPnotImplemented", python_returnHTTPnotImplemented, METH_VARARGS, "" },
+  { "returnHTTPversionServerError", python_returnHTTPversionServerError, METH_VARARGS, "" },
   { "printHTMLHeader", python_printHTMLHeader, METH_VARARGS, "" },
-
   { "printHTMLFooter", python_printHTMLFooter, METH_VARARGS, "" },
   { "sendString",      python_sendString,      METH_VARARGS, "" },
   { "printFlagedWarning",      python_printFlagedWarning,      METH_VARARGS, "" },
@@ -1126,6 +1174,7 @@ static PyMethodDef host_methods[] = {
   { "vlanId",  python_vlanId, METH_NOARGS, "Get vlanId" },
   { "network_mask",  python_networkMask, METH_NOARGS, "Get network_mask" },
   { "hwModel",  python_hwModel, METH_NOARGS, "Get hwModel" },
+  { "isHostResolvedNameType", python_isHostResolvedNameType, METH_VARARGS, "Check if the host matches the specified type" },
   { "isFTPhost",  python_isFTPhost, METH_NOARGS, "Check FTP Host" },
   { "isServer",  python_isServer, METH_NOARGS, "Check isServer" },
   { "isWorkstation",  python_isWorkstation, METH_NOARGS, "Check isWorkstation Host" },
@@ -1155,6 +1204,8 @@ static PyMethodDef host_methods[] = {
   { "pktRcvd",  python_pktsRcvd, METH_NOARGS, "Return the number of packets rcvd by this host" },
   { "bytesSent",  python_bytesSent, METH_NOARGS, "Return the number of bytes sent by this host" },
   { "bytesRcvd",  python_bytesRcvd, METH_NOARGS, "Return the number of bytes rcvd by this host" },
+  { "sendThpt",   python_sendThpt, METH_NOARGS, "Return the send throughput" },
+  { "receiveThpt", python_receiveThpt, METH_NOARGS, "Return the receive throughput" },
 #ifdef HAVE_GEOIP
   { "geoIP",  python_getGeoIP, METH_NOARGS, "Read geoLocalization info" },
 #endif
@@ -1331,7 +1382,7 @@ int handlePythonHTTPRequest(char *url, uint postLen) {
 		    "import os\nos.environ['DOCUMENT_ROOT']='%s'\n"
 		    "os.environ['REQUEST_METHOD']='POST'\n"
 		    "os.environ['CONTENT_TYPE']='application/x-www-form-urlencoded'\n"
-		    "os.environ['CONTENT_LENGTH']='%u'\n",		    
+		    "os.environ['CONTENT_LENGTH']='%u'\n",
 		    document_root, postLen);
 #endif
     }
@@ -1345,17 +1396,17 @@ int handlePythonHTTPRequest(char *url, uint postLen) {
 #ifndef WIN32
     if(myGlobals.runningPref.debugMode /* -K */) {
       traceEvent(CONST_TRACE_INFO, "[PYTHON] Redirecting file descriptors");
-      
+
       old_stdin = dup(STDIN_FILENO), old_stdout = dup(STDOUT_FILENO);
 
       /* Forget file redirection on Windows without forking a process.
-	 
+
 	 http://tangentsoft.net/wskfaq/articles/bsd-compatibility.html
 	 http://stackoverflow.com/questions/7664/windows-c-how-can-i-redirect-stderr-for-calls-to-fprintf
       */
       if(dup2(myGlobals.newSock, STDOUT_FILENO) == -1)
 	traceEvent(CONST_TRACE_WARNING, "Failed to redirect stdout");
-      
+
       if(dup2(myGlobals.newSock, STDIN_FILENO) == -1)
 	traceEvent(CONST_TRACE_WARNING, "Failed to redirect stdin");
     }
@@ -1368,7 +1419,7 @@ int handlePythonHTTPRequest(char *url, uint postLen) {
     if(myGlobals.runningPref.debugMode /* -K */) {
       if(dup2(old_stdin, STDOUT_FILENO) == -1)
 	traceEvent(CONST_TRACE_WARNING, "Failed to restore stdout");
-      
+
       if(dup2(old_stdout, STDIN_FILENO) == -1)
 	traceEvent(CONST_TRACE_WARNING, "Failed to restore stdout");
 
@@ -1388,6 +1439,5 @@ int handlePythonHTTPRequest(char *url, uint postLen) {
 
   return(1);
 }
-
 
 #endif /* HAVE_PYTHON */
