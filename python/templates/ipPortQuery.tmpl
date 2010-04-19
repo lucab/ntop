@@ -29,6 +29,7 @@ var check=function(){
 	var portType=new RegExp(/^\d{1,5}$/);
 	var tmpEl=getElement('ipSrc');
 	var value=tmpEl.value;
+	removeError(tmpEl);
 	if(value && !ipType.test(value)){
 		setError(tmpEl, 'IpV4 dotted format required!');
 	}
