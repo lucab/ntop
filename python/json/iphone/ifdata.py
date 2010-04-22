@@ -14,6 +14,8 @@ cgitb.enable();
 form = cgi.FieldStorage();
 
 ifname = form.getvalue('if', default="")
+topic = form.getvalue('topic', default="")
+
 
 rsp = {}
 
@@ -117,7 +119,20 @@ except Exception as inst:
     print inst.args      # arguments stored in .args
     print inst           # __str__ allows args to printed directly
 
+data = {}
+
+if (ifname in rsp):
+	
+	data = rsp.get(ifname)
+	
+	if (len(topic) > 0):
+		
+		if (topic in data):
+			data = data.get(topic)
+		else:
+			data = {}
+
 ntop.sendHTTPHeader(1) # 1 = HTML    
 ntop.sendString("<pre>")
-ntop.sendString(json.dumps(rsp, sort_keys=False, indent=4))
+ntop.sendString(json.dumps(data, sort_keys=False, indent=4))
 ntop.sendString("</pre>")
