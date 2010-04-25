@@ -704,12 +704,6 @@ AC_CHECK_HEADERS([capi.h])
  fi
 fi
 
-
-dnl> Pattern matching
-dnl>
-AC_CHECK_LIB(pcre, pcre_refcount)
-
-
 dnl> Define the arguments we accept...
 dnl>
 dnl>   In this version of the configure file, we use AC_ARG_WITH for whole external

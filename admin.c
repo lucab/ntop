@@ -1806,13 +1806,6 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		       NTOP_PREF_MERGEIF, pref->mergeInterfaces,
 		       "Yes = merge data from all interfaces (if possible), No = do not merge data from all interfaces");
 
-#ifdef HAVE_LIBPCRE
-    CONFIG_RADIO_ENTRY(DARK_BG, "Enable Protocol Guessing",
-		       NTOP_PREF_ENABLE_L7PROTO, pref->enableL7,
-		       "Enabling patterm matching, ntop will be able to guess the protocol being used. "
-		       "Neverthelss this practice has a little performance penalty.");
-#endif
-
     CONFIG_RADIO_ENTRY(DARK_BG, "No Instant Session Purge",
 		       NTOP_PREF_NO_ISESS_PURGE,
 		       pref->disableInstantSessionPurge,

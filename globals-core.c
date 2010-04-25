@@ -548,13 +548,6 @@ void initNtop(char *devices) {
   if(myGlobals.numIpProtosToMonitor == 0)
     addDefaultProtocols();
 
-#if defined(HAVE_LIBPCRE) && defined(HAVE_PCRE_H)
-  if(myGlobals.runningPref.enableL7)
-    initl7();
-  else
-    traceEvent(CONST_TRACE_INFO, "No patterns to load: protocol guessing disabled.");
-#endif
-
   /*
    * initialize memory and data.
    */
