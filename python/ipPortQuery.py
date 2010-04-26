@@ -50,9 +50,16 @@ def expandTables(string, pathFastbitDir):
     for file in directoryList:
         #filePath=os.path.join(pathFastbitDir,file)
         #remove all the files in the fastbit directory that are not a directory or of witch I don't have read privileges
-        if os.path.isdir(file) and os.access(file, os.R_OK):
+        if os.path.isdir(file) and not os.path.islink(file) and os.access(file, os.R_OK):
             retList.append(file[len(pathFastbitDir):])
-    retList.sort()
+    if len(retList) <=0 and len(directoryList)>0: #if no directory was found take the father
+        
+        tmpDir=os.path.dirname(directoryList[0])
+        print>>sys.stderr, "ECCO "+tmpDir
+        if tmpDir!=pathFastbitDir:
+            retList.append(tmpDir[len(pathFastbitDir):])
+    else:
+        retList.sort()
     return retList
 
 '''Return a json object for the from field autocomplete'''
@@ -194,7 +201,7 @@ def begin():
         ntop.printHTMLFooter()
         return
     
-    pathFastBit=os.path.join(databasePath,'fastbit'+os.path.sep)
+    #pathFastBit=os.path.join(databasePath,'fastbit'+os.path.sep)
         
     
     form = cgi.FieldStorage();                      #get from the url the parameter configfile that contains the 
@@ -202,8 +209,10 @@ def begin():
     fromAuto=form.getvalue('fromAuto')
     
     if fromAuto:
+        print>>sys.stderr, "AJAX REQUEST FOR PARTITION IN  "+databasePath+" "+fromAuto
+        jsonString=expandFrom(fromAuto, os.path.join(databasePath, "") )
         ntop.sendHTTPHeader(12)
-        ntop.sendString(expandFrom(fromAuto, pathFastBit))
+        ntop.sendString(jsonString)
         return
     
     
@@ -257,15 +266,15 @@ def begin():
                 formatErrorString=formatErrorString+'Destination Port format invalid! Number required. '
         try:
             #pipe = subprocess.Popen (['ntop.getPreference ("fastbit.fbquery")', "-c", selectArg, "-d", fromArg, "-q", whereArg, "-P", "-L", limit],
-            #print>>sys.stderr, "Query passed: SELECT %s FROM %s WHERE %s LIMIT %i" %(selectArg,os.path.join(pathFastBit, fromArg),  whereArg, limit)
+            #print>>sys.stderr, "Query passed: SELECT %s FROM %s WHERE %s LIMIT %i" %(selectArg,os.path.join(databasePath, fromArg),  whereArg, limit)
             if formatErrorString=='':
-                res = fastbit.query(os.path.join(pathFastBit, fromArg), selectArg, whereArg, limit)
+                res = fastbit.query(os.path.join(databasePath, fromArg), selectArg, whereArg, limit)
             else:
                 print>>sys.stderr, 'ipPortQuery: ERROR '+formatErrorString
                 ntop.sendString('<center><font color=red>%s</font></center>'%formatErrorString)
             #print>>sys.stderr, 'Number of records: %i' % len(res['values'])
         except:
-            print>>sys.stderr, 'ERROR Executing query: '+("SELECT %s FROM %s WHERE %s LIMIT %i" %(selectArg,os.path.join(pathFastBit, fromArg),  whereArg, limit))
+            print>>sys.stderr, 'ERROR Executing query: '+("SELECT %s FROM %s WHERE %s LIMIT %i" %(selectArg,os.path.join(databasePath, fromArg),  whereArg, limit))
             res = {}
         if res is not None and 'columns' in res and 'values' in res:
             
