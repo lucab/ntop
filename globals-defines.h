@@ -2801,7 +2801,7 @@ struct ip6_hdr
       myGlobals.device[actualDeviceId].networkHost[_a_->known_subnet_id]._b_ = calloc(_c_, 1); \
     if(_a_->_b_ == NULL) \
       _a_->_b_ = calloc(_c_, 1); \
-    quickUnock(_a_, actualDeviceId); \
+    quickUnlock(_a_, actualDeviceId); \
   }
 
 /* *************************** */
