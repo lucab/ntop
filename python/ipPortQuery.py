@@ -55,7 +55,6 @@ def expandTables(string, pathFastbitDir):
     if len(retList) <=0 and len(directoryList)>0: #if no directory was found take the father
         
         tmpDir=os.path.dirname(directoryList[0])
-        print>>sys.stderr, "ECCO "+tmpDir
         if tmpDir!=pathFastbitDir:
             retList.append(tmpDir[len(pathFastbitDir):])
     else:
@@ -209,7 +208,7 @@ def begin():
     fromAuto=form.getvalue('fromAuto')
     
     if fromAuto:
-        print>>sys.stderr, "AJAX REQUEST FOR PARTITION IN  "+databasePath+" "+fromAuto
+        #print>>sys.stderr, "AJAX REQUEST FOR PARTITION IN  "+databasePath+" "+fromAuto
         jsonString=expandFrom(fromAuto, os.path.join(databasePath, "") )
         ntop.sendHTTPHeader(12)
         ntop.sendString(jsonString)
