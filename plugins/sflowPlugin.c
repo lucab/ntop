@@ -1973,7 +1973,7 @@ static void readExtendedGateway_v2(SFSample *sample, int deviceId)
   sample->dst_as_path_len = getData32(sample, deviceId);
   /* just point at the dst_as_path array */
   if(sample->dst_as_path_len > 0) {
-    sample->dst_as_path = sample->datap;
+    sample->dst_as_path = (uint32_t*)sample->datap;
     /* and skip over it in the input */
     skipBytes(sample, sample->dst_as_path_len * 4);
     // fill in the dst and dst_peer fields too
@@ -2062,7 +2062,7 @@ static void readExtendedGateway(SFSample *sample, int deviceId)
 
   sample->communities_len = getData32(sample, deviceId);
   /* just point at the communities array */
-  if(sample->communities_len > 0) sample->communities = sample->datap;
+  if(sample->communities_len > 0) sample->communities = (uint32_t*)sample->datap;
   /* and skip over it in the input */
   skipBytes(sample, sample->communities_len * 4);
 
@@ -2143,7 +2143,11 @@ static void mplsLabelStack(SFSample *sample, char *fieldName, int deviceId)
   uint32_t lab;
   lstk.depth = getData32(sample, deviceId);
   /* just point at the lablelstack array */
-  if(lstk.depth > 0) lstk.stack = (uint32_t *)sample->datap;
+  if(lstk.depth > 0) 
+    lstk.stack = (uint32_t *)sample->datap;
+  else
+    return;
+
   /* and skip over it in the input */
   skipBytes(sample, lstk.depth * 4);
 
@@ -3150,7 +3154,7 @@ static void* sflowMainLoop(void* _deviceId) {
 	sample.rawSample = buffer;
 	sample.rawSampleLen = rc;
 	sample.sourceIP = fromHost.sin_addr;
-	sample.datap = (uint32_t *)sample.rawSample;
+	sample.datap = (u_char *)sample.rawSample;
 	sample.endp = (u_char *)sample.rawSample + sample.rawSampleLen;
 
 	dissectFlow(&sample, deviceId);

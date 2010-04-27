@@ -186,7 +186,8 @@ static char *rrdNames[] = {
 /* RRD_DEBUG controls debug messages in rrdPlugin.c.  See the definition in globals-defines.h,
  * where you really should set it, so the util.c calls get enabled.
  */
-#define RRD_DEBUG 3
+//#define RRD_DEBUG 3
+#undef RRD_DEBUG
 
 /*
  * Optional: Set a default font for the rrd generated graphs

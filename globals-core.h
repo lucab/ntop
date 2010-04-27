@@ -96,6 +96,13 @@ extern void revertSlashIfWIN32(char *str, int mode);
 extern void revertDoubleColumnIfWIN32(char *str);
 extern void checkUserIdentity(int userSpecified);
 
+/* RRD */
+typedef int (*updateRRDPtr)(char *hostPath, char *key, Counter value, int isCounter, char short_step);
+extern time_t rrdTime;
+extern void setUpdateRRDCallback(updateRRDPtr ptr);
+extern int updateCounter(char *hostPath, char *key, Counter value, char short_step);
+extern int updateGauge(char *hostPath, char *key, Counter value, char short_step);
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
    Work-arounds.  Instead of cluttering ntop with a bunch of #ifdef logic,
    * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

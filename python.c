@@ -212,6 +212,55 @@ static PyObject* python_getSpoolPath(PyObject *self, PyObject *args) {
 
 /* **************************************** */
 
+static PyObject* python_updateRRD(PyObject *self, PyObject *args, u_char is_counter) {
+  char *path, *key, real_path[256];
+  long value;
+  int step, rc;
+
+  if(!PyArg_ParseTuple(args, "ssli", &path, &key, &value, &step)) return NULL;
+
+  snprintf(real_path, sizeof(real_path), "%s%c%s%c",
+	   (path[0] == CONST_PATH_SEP) ? path : myGlobals.rrdPath,
+	   CONST_PATH_SEP, path, CONST_PATH_SEP);
+
+  //traceEvent(CONST_TRACE_WARNING, "%s(%s/%s,%d)", "python_updateRRD", real_path, key, (int)value);
+
+  mkdir_p("pythonRRD", real_path, 0777);
+
+  myGlobals.rrdTime = time(NULL); /* Legacy crap I need to update */
+
+  if(is_counter)
+    rc = updateCounter(real_path, key, value, step);
+  else
+    rc = updateGauge(real_path, key, value, step);
+
+  return Py_BuildValue("i", rc);
+}
+
+/* **************************************** */
+
+static PyObject* python_updateRRDCounter(PyObject *self, PyObject *args) {
+  return(python_updateRRD(self, args, 1));
+}
+
+/* **************************************** */
+
+static PyObject* python_updateRRDGauge(PyObject *self, PyObject *args) {
+  return(python_updateRRD(self, args, 0));
+}
+
+/* **************************************** */
+
+#if 0
+/* rrd_fetch(<path>, <funzione>, <inizio>, <fine>) */
+static PyObject* python_rrd_fetch(PyObject *self, PyObject *args) {
+  
+  return PyString_FromString(myGlobals.dbPath);
+}
+#endif
+
+/* **************************************** */
+
 static PyObject* python_ntopVersion(PyObject *self, PyObject *args) {
   return PyString_FromString(version);
 }
@@ -1123,6 +1172,11 @@ static PyMethodDef ntop_methods[] = {
 
   { "getDBPath",         python_getDBPath,      METH_VARARGS, "" },
   { "getSpoolPath",      python_getSpoolPath,   METH_VARARGS, "" },
+
+  { "updateRRDCounter",  python_updateRRDCounter,   METH_VARARGS, "" },
+  { "updateRRDGauge",    python_updateRRDGauge,   METH_VARARGS, "" },
+
+
   { NULL, NULL, 0, NULL }
 };
 

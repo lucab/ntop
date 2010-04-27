@@ -39,7 +39,7 @@ static char *rrdd_sock_path = NULL;
 static char* rrdVolatilePath;
 #endif
 
-#if defined(RRD_DEBUG) && (RRD_DEBUG > 0)
+#if defined(RRD_DEBUG)
 #define traceEventRRDebug(level, ...) { if(RRD_DEBUG >= level)				\
       traceEvent(CONST_TRACE_NOISY, "RRD_DEBUG: " __VA_ARGS__); 			\
   }
@@ -51,11 +51,7 @@ static char* rrdVolatilePath;
       }											\
     }											\
   }
-#else
-#define traceEventRRDebug
-#define traceEventRRDebugARGV
 #endif
-
 
 /* ******************************************** */
 
@@ -77,7 +73,7 @@ static Counter numRRDUpdates = 0, numTotalRRDUpdates = 0;
 static unsigned long numRuns = 0, numRRDerrors = 0, lastRRDupdateNum = 0,
   numRRDCycles=0;
 static float rrdcmaxDuration = 0, lastRRDupdateDuration = 0, maxRRDupdateDuration = 0;
-static time_t start_tm, end_tm, rrdTime;
+static time_t start_tm, end_tm;
 
 static u_short dumpDomains, dumpFlows, dumpHosts, dumpSubnets,
   dumpInterfaces, dumpASs, enableAberrant, dumpMatrix, shownCreate=0;
@@ -99,8 +95,6 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startTime, char* endTime, char* rrdPrefix, char *mode);
 static void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix, char *mode);
 static void interfaceSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix, char *mode);
-static void updateCounter(char *hostPath, char *key, Counter value, char short_step);
-static void updateGauge(char *hostPath, char *key, Counter value, char short_step);
 static void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter, char short_step);
 char x2c(char *what);
 static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
@@ -985,7 +979,9 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
       sendFile(fname, 0);
       unlink(fname);
     } else {
+#if defined(RRD_DEBUG)
       traceEventRRDebugARGV(0);
+#endif
 
       if(++graphErrCount < 50) {
         traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s",
@@ -1323,7 +1319,9 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
     sendFile(fname, 0);
     unlink(fname);
   } else {
+#if defined(RRD_DEBUG)
     traceEventRRDebugARGV(3);
+#endif
 
     if(++graphErrCount < 50) {
       traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s",
@@ -1648,7 +1646,9 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
     }
   }
 
-  /* traceEventRRDebugARGV(0);  */
+#if defined(RRD_DEBUG)
+  traceEventRRDebugARGV(0);
+#endif
 
   if(debug_rrd_graph) {
     int j;
@@ -1666,7 +1666,9 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
   addRrdDelay();
   rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL, &ymin, &ymax);
 
-  // traceEventRRDebugARGV(3); // FIX
+#if defined(RRD_DEBUG)
+  traceEventRRDebugARGV(3);
+#endif
 
   calfree();
 
@@ -1675,7 +1677,9 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
     sendFile(fname, 0);
     unlink(fname);
   } else {
+#if defined(RRD_DEBUG)
     traceEventRRDebugARGV(3);
+#endif
 
     if(++graphErrCount < 50) {
       traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error() ? rrd_get_error() : "");
@@ -2489,7 +2493,9 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
     sendFile(fname, 0);
     unlink(fname);
   } else {
+#if defined(RRD_DEBUG)
     traceEventRRDebugARGV(3);
+#endif
 
     if(++graphErrCount < 50) {
       traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error() ? rrd_get_error() : "");
@@ -2561,14 +2567,14 @@ static void deleteRRD(char *basePath, char *key) {
 
 /* ******************************* */
 
-static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, char short_step) {
+static int updateRRD(char *hostPath, char *key, Counter value, int isCounter, char short_step) {
   char path[512], *argv[32], cmd[64];
-    struct stat statbuf;
-    int argc = 0, rc, createdCounter = 0, i;
-    struct timeval rrdStartOfProcessing, rrdEndOfProcessing;
-    float elapsed;
-
-    if(value == 0) return;
+  struct stat statbuf;
+  int argc = 0, rc = 0, createdCounter = 0, i;
+  struct timeval rrdStartOfProcessing, rrdEndOfProcessing;
+  float elapsed;
+  
+    if(value == 0) return(0);
 
     gettimeofday(&rrdStartOfProcessing, NULL);
 
@@ -2607,7 +2613,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
       argv[argc++] = path;
       argv[argc++] = "--start";
       safe_snprintf(__FILE__, __LINE__, startStr, sizeof(startStr), "%u",
-		    rrdTime-1 /* -1 avoids subsequent rrd_update call problems */);
+		    myGlobals.rrdTime-1 /* -1 avoids subsequent rrd_update call problems */);
       argv[argc++] = startStr;
 
       argv[argc++] = "--step";
@@ -2696,7 +2702,9 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 
       if(rrd_test_error()) {
 	char *err = rrd_get_error();
+#if defined(RRD_DEBUG)
 	traceEventRRDebugARGV(3);
+#endif
 
 	traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s",
 		   path, err ? err : "");
@@ -2710,9 +2718,9 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
       createdCounter = 1;
     }
 
-#if RRD_DEBUG > 0
+#if RRD_DEBUG
     {
-      if(checkLast(path) >= rrdTime)
+      if(checkLast(path) >= myGlobals.rrdTime)
 	traceEventRRDebug(0, "WARNING rrd_update not performed (RRD already updated)");
     }
 #endif
@@ -2766,7 +2774,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
     argv[argc++] = path;
 
     safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%llu",
-		  (unsigned int)rrdTime, (unsigned long long)value);
+		  (unsigned int)myGlobals.rrdTime, (unsigned long long)value);
     argv[argc++] = cmd;
 
     accessMutex(&rrdMutex, "rrd_update");
@@ -2785,7 +2793,9 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
       int x;
       char *rrdError;
 
+#if defined(RRD_DEBUG)
       traceEventRRDebugARGV(3);
+#endif
 
       numRRDerrors++;
       rrdError = rrd_get_error();
@@ -2800,13 +2810,13 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 	  struct tm workT;
 	  time_t rrdLast = checkLast(path);
 	  strftime(errTimeBuf1, sizeof(errTimeBuf1), CONST_LOCALE_TIMESPEC, localtime_r(&myGlobals.actTime, &workT));
-	  strftime(errTimeBuf2, sizeof(errTimeBuf2), CONST_LOCALE_TIMESPEC, localtime_r(&rrdTime, &workT));
+	  strftime(errTimeBuf2, sizeof(errTimeBuf2), CONST_LOCALE_TIMESPEC, localtime_r(&myGlobals.rrdTime, &workT));
 	  strftime(errTimeBuf3, sizeof(errTimeBuf3), CONST_LOCALE_TIMESPEC, localtime_r(&rrdLast, &workT));
 	  traceEvent(CONST_TRACE_WARNING,
-		     "RRD: actTime = %d(%s), rrdTime %d(%s), lastUpd %d(%s)",
+		     "RRD: actTime = %d(%s), myGlobals.rrdTime %d(%s), lastUpd %d(%s)",
 		     (int)myGlobals.actTime,
 		     errTimeBuf1,
-		     (int)rrdTime,
+		     (int)myGlobals.rrdTime,
 		     errTimeBuf2,
 		     (int)rrdLast,
 		     rrdLast == -1 ? "rrdlast ERROR" : errTimeBuf3);
@@ -2826,7 +2836,9 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 
 	rrd_clear_error();
       } else {
+#if defined(RRD_DEBUG)
 	traceEventRRDebug(0, "rrd_update(%s, %s, %s)=%d", hostPath, key, cmd, rc);
+#endif
       }
     } else if(0) {
 
@@ -2835,7 +2847,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
       char          **ds_namv, time_buf[32];
       time_t        start,end;
 
-      safe_snprintf(__FILE__, __LINE__, time_buf, sizeof(time_buf), "%u", rrdTime);
+      safe_snprintf(__FILE__, __LINE__, time_buf, sizeof(time_buf), "%u", myGlobals.rrdTime);
 
       argc = 0;
       argv[argc++] = "rrd_fetch";
@@ -2879,7 +2891,6 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
 
     releaseMutex(&rrdMutex);
 
-
     gettimeofday(&rrdEndOfProcessing, NULL);
     lastRRDupdateDuration = elapsed = timeval_subtract(rrdEndOfProcessing, rrdStartOfProcessing);
     if(lastRRDupdateDuration > maxRRDupdateDuration)
@@ -2891,20 +2902,8 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter, c
     if(elapsed > rrdpmaxDelay)
       rrdpmaxDelay = elapsed;
 #endif
-}
 
-/* ******************************* */
-
-static void updateCounter(char *hostPath, char *key, Counter value, char short_step) {
-  /* traceEvent(CONST_TRACE_INFO, "updateCounter: [%s][%s]", hostPath, key); */
-  updateRRD(hostPath, key, value, 1, short_step);
-}
-
-/* ******************************* */
-
-static void updateGauge(char *hostPath, char *key, Counter value, char short_step) {
-  // traceEvent(CONST_TRACE_INFO, "RRD: %s = %u", key, (unsigned long)value);
-  updateRRD(hostPath, key, value, 0, short_step);
+    return(rc);
 }
 
 /* ******************************* */
@@ -3534,7 +3533,10 @@ static void arbitraryAction(char *rrdName,
     releaseMutex(&rrdMutex);
 
     if(rc == -1) {
+#if defined(RRD_DEBUG)
       traceEventRRDebugARGV(3);
+#endif
+
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "%sError retrieving rrd data, %s%s\n",
                     rrd_get_error() ? rrd_get_error() : "",
@@ -4760,7 +4762,9 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, uint8_t is_subnet_
 		  adjHostName);
     mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
-    /* traceEventRRDebug(2, "Updating %s [%s/%s]", hostKey, el->hostNumIpAddress, el->ethAddressString); */
+#if defined(RRD_DEBUG)
+    traceEventRRDebug(2, "Updating %s [%s/%s]", hostKey, el->hostNumIpAddress, el->ethAddressString);
+#endif
 
     updateTrafficCounter(rrdPath, "pktSent", &el->pktSent, 0);
     updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd, 0);
@@ -4917,7 +4921,9 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, uint8_t is_subnet_
       updateCounter(rrdPath, "totPeersRcvd", el->totContactedRcvdPeers, 0);
 
       if(el->protoIPTrafficInfos) {
-	/* traceEventRRDebug(0, "Updating %s %s", is_subnet_host ? "subnet" : "hosts", hostKey); */
+#if defined(RRD_DEBUG)
+	traceEventRRDebug(0, "Updating %s %s", is_subnet_host ? "subnet" : "hosts", hostKey); 
+#endif
 
 	safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/%s/%s/IP_",
 		      myGlobals.rrdPath,
@@ -5014,7 +5020,9 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
 		  adjHostName);
     mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
+#if defined(RRD_DEBUG)
     traceEventRRDebug(2, "Updating %s [%s/%d]", hostKey, el->fcCounters->hostNumFcAddress, el->fcCounters->vsanId);
+#endif
 
     updateTrafficCounter(rrdPath, "pktSent", &el->pktSent, 0);
     updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd, 0);
@@ -5086,7 +5094,7 @@ static void* rrdTrafficThreadLoop(void* notUsed _UNUSED_) {
       break;
     }
 
-    rrdTime =  time(NULL);
+    myGlobals.rrdTime =  time(NULL);
 
     for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
       if((myGlobals.device[devIdx].virtualDevice
@@ -5226,8 +5234,11 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     sleep_tm = end_tm - start_tm;
     strftime(endTime, sizeof(endTime), CONST_LOCALE_TIMESPEC, localtime_r(&end_tm, &workT));
+
+#if defined(RRD_DEBUG)
     traceEventRRDebug(0, "Sleeping for %d seconds (interval %d, end at %s)",
 		      sleep_tm, dumpInterval, endTime);
+#endif
 
     ntopSleepWhileSameState(sleep_tm);
     if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_STOPCAP) {
@@ -5244,7 +5255,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     numRRDUpdates = 0;
     numRuns++;
-    rrdTime = time(NULL);
+    myGlobals.rrdTime = time(NULL);
 
     /* ****************************************************** */
 
@@ -5323,7 +5334,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    memset(statsEntry, 0, sizeof(DomainStats));
 	    statsEntry->domainHost = el;
 	    stats[keyValue] = statsEntry;
+#if defined(RRD_DEBUG)
 	    traceEventRRDebug(2, "[%d] %s", numEntries, el->dnsDomainValue);
+#endif
 	  }
 
 	  /* count this host's stats in the domain stats */
@@ -5359,8 +5372,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 			  statsEntry->domainHost->dnsDomainValue);
 	    mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
 
+#if defined(RRD_DEBUG)
 	    traceEventRRDebug(2, "Updating %s", rrdPath);
-
+#endif
 	    updateCounter(rrdPath, "bytesSent", statsEntry->bytesSent.value, 0);
 	    updateCounter(rrdPath, "bytesRcvd", statsEntry->bytesRcvd.value, 0);
 
@@ -5823,6 +5837,7 @@ static int initRRDfunct(void) {
 
   fflush(stdout);
   numTotalRRDUpdates = 0;
+  setUpdateRRDCallback(updateRRD);
 
   return(0);
 }
@@ -5831,6 +5846,8 @@ static int initRRDfunct(void) {
 
 static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
   int count=0, rc;
+
+  setUpdateRRDCallback(NULL);
 
   /* Hold until rrd is finished or 15s elapsed... */
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Shutting down, locking mutex (may block for a little while)");

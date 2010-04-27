@@ -6498,6 +6498,36 @@ void mkdir_p(char *tag, char *path, int permission) {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+static updateRRDPtr updateRRDHook = NULL;
+
+void setUpdateRRDCallback(updateRRDPtr ptr) {
+  updateRRDHook = ptr;
+}
+
+/* ******************************* */
+
+int updateCounter(char *hostPath, char *key, Counter value, char short_step) {
+  /* traceEvent(CONST_TRACE_INFO, "updateCounter: [%s][%s]", hostPath, key); */
+
+  if(updateRRDHook)
+    return(updateRRDHook(hostPath, key, value, 1, short_step));
+  else
+    return(-1);
+}
+
+/* ******************************* */
+
+int updateGauge(char *hostPath, char *key, Counter value, char short_step) {
+  // traceEvent(CONST_TRACE_INFO, "RRD: %s = %u", key, (unsigned long)value);
+
+  if(updateRRDHook)
+    return(updateRRDHook(hostPath, key, value, 0, short_step));
+  else
+    return(-1);
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 /* * * * * * * * * * * * * * * * * * */
 
 #if !defined(WIN32)

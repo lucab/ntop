@@ -2510,4 +2510,7 @@ typedef struct ntopGlobals {
   /* Event Handling */
   uint32_t event_mask;
   char *event_log;
+
+  /* RRD */
+  time_t rrdTime;
 } NtopGlobals;
