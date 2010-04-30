@@ -1,109 +1,191 @@
 import ntop
 import json
 import host
-import pprint
 import interface
 # Import modules for CGI handling
-import cgi, cgitb
+import cgi
+import sys
 
-# Parse URL
-cgitb.enable();
+def identify_interface_index(ifname):
+	"""Identifies the interface index for the given interface name.
+	This is used in order to extract hosts from teh correct interface.
+	if ifname is nil it returns 0
+	"""
+	if ifname == '': return 0
+	
+	for i in range(interface.numInterfaces()):
+		if (interface.name(i).lower() == ifname.lower()):
+			return i
+			
+	return 0
 
+	
+def insort_rightReversed(a, x, lo=0, hi=None):
+	"""Insert item x in list a, and keep it sorted assuming a is sorted.
+    If x is already in a, insert it to the right of the rightmost x.
+    Optional args lo (default 0) and hi (default len(a)) bound the
+    slice of a to be searched.
+	"""
+	if lo < 0:
+		raise ValueError('lo must be non-negative')
+	if hi is None:
+		hi = len(a)
+	while lo < hi:
+		mid = (lo+hi)//2
+		if x[0] > a[mid][0]: hi = mid
+		else: lo = mid+1
+	a.insert(lo, x)
+	# returns insert position
+	return lo
+
+def insort_leftReversed(a, x, lo=0, hi=None):
+	"""Insert item x in list a, and keep it sorted assuming a is sorted.
+    If x is already in a, insert it to the left of the leftmost x.
+    Optional args lo (default 0) and hi (default len(a)) bound the
+    slice of a to be searched.
+	"""
+	if lo < 0:
+		raise ValueError('lo must be non-negative')
+	if hi is None:
+		hi = len(a)
+	while lo < hi:
+		mid = (lo+hi)//2
+		if a[mid][0] > x[0]: lo = mid+1
+		else: hi = mid
+	a.insert(lo, x)
+	# returns insert position
+	return lo
+
+__P2P__ = 2
+__VOIP__ = 4
+__PRINTER__ = 8
+__DIRECTORY__ = 16
+__WORKSTATION__ = 32
+__HTTPHOST__ = 64
+
+# form management
 form = cgi.FieldStorage();
 
-fingerprint = form.getvalue('fingerprint', default="fbquery")
+# How many top hosts?
+topN = form.getvalue('max', default=10)
+topN = int(topN)
+# Top hosts for which interface?
 selectedif = form.getvalue('if', default="")
-"""
-ntop.printHTMLHeader("Welcome to ntop+Python ["+ntop.getPreference("ntop.devices")+"]", 1, 1);
+
+# Want to order by download (0) or upload (1) ?
+direction = form.getvalue('direction', default=0)
+direction = int(direction)
+# how many hosts on this interface?
+totalHosts = 0
+
+listTopHost=[]
+topHostsByPeakThroughput = []
+topHostsByAverageThroughput = []
+topHostsByActualThroughput = []
+topHostsByTransferedBytes = []
+topHostsByTransferedPackets = []
 
 
+ifIndex = identify_interface_index(selectedif)
 
-countries = {};
+topHostsByPeakThroughputMetadata = {'type':'updowntable','mode':'gauge','unit':'bps','title':'Top Hosts by Throughput Peak'}
+topHostsByAverageThroughputMetadata = {'type':'updowntable','mode':'gauge','unit':'bps','title':'Top Hosts by Throughput Average'}
+topHostsByActualThroughputMetadata = {'type':'updowntable','mode':'gauge','unit':'bps','title':'Top Hosts by Actual Throughput'}
+topHostsByTransferedBytesMetadata = {'type':'updowntable','mode':'counter','unit':'bytes','title':'Top Hosts by Bytes'}
+topHostsByTransferedPacketsMetadata = {'type':'updowntable','mode':'counter','unit':'packets','title':'Top Hosts by Packet Number'}
 
-while ntop.getNextHost(0):
-    geo = host.geoIP()
-    country = geo.get('country_name', '')
+topHostsByPeakThroughputData = {}
+topHostsByAverageThroughputData = {}
+topHostsByActualThroughputData = {}
+topHostsByTransferedBytesData = {}
+topHostsByTransferedPacketsData = {}
 
-    if country != "":
-        if(countries.get(country, '') == ''):
-            countries[country] = 1
-        else:
-            countries[country] = countries.get(country, '')+1
+while ntop.getNextHost(ifIndex):
+	
+	if host.ipAddress()=="":
+		 #drop host with no throughput or no ip
+		continue 
+		
+	geo = host.geoIP()
+	country = geo.get('country_name', '')
+	countryCode = geo.get('country_code', '')
+	hostType = 0 + __P2P__*host.isP2P() + __VOIP__*(host.isVoIPHost()|host.isVoIPClient()|host.isVoIPGateway()) + __PRINTER__*host.isPrinter() + __DIRECTORY__*host.isDirectoryHost() + __WORKSTATION__*host.isWorkstation() + __HTTPHOST__*host.isHTTPhost()
 
-if(len(countries) > 0):
-    ntop.sendString(" <script type=\'text/javascript\' src=\'http://www.google.com/jsapi\'></script>\n")
-    ntop.sendString("  <script type=\'text/javascript\'>\n")
-    ntop.sendString("   google.load(\'visualization\', \'1\', {\'packages\': [\'geomap\']});\n")
-    ntop.sendString("   google.setOnLoadCallback(drawMap);\n")
-    
-    ntop.sendString("    function drawMap() {\n")
-    ntop.sendString("      var data = new google.visualization.DataTable();\n")
-    ntop.sendString("      data.addRows("+str(len(countries))+");\n")
-    ntop.sendString("      data.addColumn(\'string\', \'Country\');\n")
-    ntop.sendString("      data.addColumn(\'number\', \'Host(s)\');\n")
-    
-    i = 0;
-    for key in countries:
-        ntop.sendString(" data.setValue("+str(i)+", 0, \'"+key+"\');\n")
-        ntop.sendString(" data.setValue("+str(i)+", 1, "+str(countries[key])+");\n")
-        i = i+1
+	thpSent=host.sendThpt()
+	thpRcvd=host.receiveThpt()
+	
+	# set peak throughput
+	# according to direction ( Bps )
+	thpPeakSent = thpSent['peak']
+	thpPeakRcvd = thpRcvd['peak']
+	thpPeak = thpPeakSent
+	if (direction == 1): thpPeak = thpPeakRcvd
+	
+	# set average throughput
+	# according to direction
+	thpAvgSent = thpSent['average']
+	thpAvgRcvd = thpRcvd['average']
+	thpAvg = thpAvgSent
+	if (direction == 1): thpAvg = thpAvgRcvd
+	
+	# set actual throughput
+	# according to direction
+	thpActSent = thpSent['actual']
+	thpActRcvd = thpRcvd['actual']
+	thpAct = thpActSent
+	if (direction == 1): thpAct = thpActRcvd
+	
+	# bytes sent/received
+	bytesSent = host.bytesSent()
+	bytesRcvd = host.bytesRcvd()
+	
+	bytes = bytesSent
+	if (direction == 1): bytes = bytesRcvd
+	
+	packetsSent = host.pktSent()
+	packetsRcvd = host.pktRcvd()
 
-    ntop.sendString("      var options = {};\n")
-    ntop.sendString("      options[\'dataMode\'] = \'regions\';\n")
-    ntop.sendString("      var container = document.getElementById(\'map_canvas\');\n")
-    ntop.sendString("      var geomap = new google.visualization.GeoMap(container);\n")
-    ntop.sendString("      geomap.draw(data, options);\n")
-    ntop.sendString("  };\n")
-    ntop.sendString("  </script>\n")
-    ntop.sendString("<center><div id=\'map_canvas\'></div></center><p>\n")
+	packets = packetsSent
+	if (direction == 1): packets = packetsRcvd    
 
-ntop.sendString("<center><table border>\n");
-ntop.sendString("<tr><th>MAC Address</th><th>IP Address</th><th>Name</th><th># Sessions</th><th># Contacted Peers</th><th>Fingerprint</th><th>Serial</th><th nowrap>GeoIP</th></tr>\n");
+	#INSERT into the list using the bisect costs only O(logN)
+	# might be cpu consuming
+	insort_rightReversed(topHostsByPeakThroughput,  (thpPeak*8, {'hostname':host.hostResolvedName(), 'type':hostType, 'ip':host.ipAddress(), 'up':thpPeakSent, 'down':thpPeakRcvd, 'country':countryCode, 'direction':direction}))
+	insort_rightReversed(topHostsByAverageThroughput,  (thpAvg*8, {'hostname':host.hostResolvedName(), 'type':hostType, 'ip':host.ipAddress(), 'up':thpAvgSent, 'down':thpAvgRcvd, 'country':countryCode, 'direction':direction}))
+	insort_rightReversed(topHostsByActualThroughput,  (thpPeak*8, {'hostname':host.hostResolvedName(), 'type':hostType, 'ip':host.ipAddress(), 'up':thpActSent, 'down':thpActRcvd, 'country':countryCode, 'direction':direction}))
+	insort_rightReversed(topHostsByTransferedBytes,  (bytes, {'hostname':host.hostResolvedName(), 'type':hostType, 'ip':host.ipAddress(), 'up':bytesSent, 'down':bytesRcvd, 'country':countryCode, 'direction':direction}))
+	insort_rightReversed(topHostsByTransferedPackets,  (packets, {'hostname':host.hostResolvedName(), 'type':hostType, 'ip':host.ipAddress(), 'up':packetsSent, 'down':packetsRcvd, 'country':countryCode, 'direction':direction}))
+	
+	
+# cut lists
+if len(topHostsByPeakThroughput)>topN and topN>0:
+	topHostsByPeakThroughput=topHostsByPeakThroughput[:topN]
+if len(topHostsByAverageThroughput)>topN and topN>0:
+	topHostsByAverageThroughput=topHostsByAverageThroughput[:topN]
+if len(topHostsByActualThroughput)>topN and topN>0:
+	topHostsByActualThroughput=topHostsByActualThroughput[:topN]
+if len(topHostsByTransferedBytes)>topN and topN>0:
+	topHostsByTransferedBytes=topHostsByTransferedBytes[:topN]
+if len(topHostsByTransferedPackets)>topN and topN>0:
+	topHostsByTransferedPackets=topHostsByTransferedPackets[:topN]
 
-interfaceId = 0
-while ntop.getNextHost(interfaceId):
-    geo = host.geoIP()
-    country = geo.get('country_name', '')
-    city = geo.get('city', '')
-
-    ntop.sendString("<tr><td align=right>"+host.ethAddress()+"</td>"
-                    +"<td align=right>"+host.ipAddress()+"</td>"
-                    +"<td align=right>"+host.hostResolvedName()+"</td>"
-                    +"<td align=center>"+str(host.numHostSessions())+"</td>"
-                    +"<td align=center>"+str(host.totContactedSentPeers())+"</td>"
-                    +"<td align=right>"+host.fingerprint()+"</td>"
-                    +"<td align=center>"+host.serial()+"</td>"
-                    +"<td align=center nowrap>"+city+" "+country+"</td>"
-                    +"</tr>\n");
-    
-ntop.sendString("</table></center>\n");
-
-ntop.printHTMLFooter();
-"""
-
-ifnames = []
-selecetedifIdx = -1;
-
-try:
-	for i in range(interface.numInterfaces()):
-		ifnames.append(interface.name(i))
-		if (interface.name(i).lower() == selectedif.lower()):
-			selecetedifIdx = i
-
-except Exception as inst:
-    print type(inst)     # the exception instance
-    print inst.args      # arguments stored in .args
-    print inst           # __str__ allows args to printed directly
-
-tophosts = []
-
-#did we specify an interface?
-if (selecetedifIdx >= 0 || ):
-	selectedif = ifnames[selecetedifIdx]
+# incapsulate for consistency with other topics
+topHostsByPeakThroughputData = {'hostlist':[el[1] for el in topHostsByPeakThroughput]}
+topHostsByAverageThroughputData = {'hostlist':[el[1] for el in topHostsByAverageThroughput]}
+topHostsByActualThroughputData = {'hostlist':[el[1] for el in topHostsByActualThroughput]}
+topHostsByTransferedBytesData = {'hostlist':[el[1] for el in topHostsByTransferedBytes]}
+topHostsByTransferedPacketsData = {'hostlist':[el[1] for el in topHostsByTransferedPackets]}
 
 
+# build json array of pages to send to the iphone.
+topHostsByPeakThroughputPage = {'metadata':topHostsByPeakThroughputMetadata, 'data': topHostsByPeakThroughputData}
+topHostsByAverageThroughputPage = {'metadata':topHostsByAverageThroughputMetadata, 'data': topHostsByAverageThroughputData}
+topHostsByActualThroughputPage = {'metadata':topHostsByActualThroughputMetadata, 'data': topHostsByActualThroughputData}
+topHostsByTransferedBytesPage = {'metadata':topHostsByTransferedBytesMetadata, 'data': topHostsByTransferedBytesData}
+topHostsByTransferedPacketsPage = {'metadata':topHostsByTransferedPacketsMetadata, 'data': topHostsByTransferedPacketsData}
+
+#pages
+pages = [topHostsByPeakThroughputPage, topHostsByAverageThroughputPage, topHostsByActualThroughputPage, topHostsByTransferedBytesPage, topHostsByTransferedPacketsPage]
 
 ntop.sendHTTPHeader(1) # 1 = HTML
-ntop.sendString("<PRE>")
-ntop.sendString(json.dumps(tophosts, sort_keys=True, indent=4))
-ntop.sendString("</PRE>")
+ntop.sendString(json.dumps({'tophosts':pages}, sort_keys=False, indent=4))

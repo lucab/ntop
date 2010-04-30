@@ -143,6 +143,4 @@ if (ifname in rsp):
 			data = {}
 
 ntop.sendHTTPHeader(1) # 1 = HTML    
-ntop.sendString("<pre>")
 ntop.sendString(json.dumps(data, sort_keys=False, indent=4))
-ntop.sendString("</pre>")

@@ -25,6 +25,4 @@ except Exception as inst:
     print inst           # __str__ allows args to printed directly
 
 ntop.sendHTTPHeader(1) # 1 = HTML
-ntop.sendString("<PRE>")
 ntop.sendString(json.dumps(ifnames, sort_keys=True, indent=4))
-ntop.sendString("</PRE>")
