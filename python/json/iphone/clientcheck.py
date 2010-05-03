@@ -34,4 +34,4 @@ if __IPHONECLIENTTYPE__ == clientType and __MINIPHONEALLOWEDCLIENTVERSION__ <= v
 	allowed = 1
 
 ntop.sendHTTPHeader(1) # 1 = HTTP
-ntop.sendString(json.dumps(allowed, sort_keys=False, indent=4))
+ntop.sendString(json.dumps({"allowed":allowed}, sort_keys=False, indent=4))
