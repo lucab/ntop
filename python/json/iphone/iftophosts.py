@@ -120,22 +120,22 @@ while ntop.getNextHost(ifIndex):
 	
 	# set peak throughput
 	# according to direction ( kBps )
-	thpPeakSent = thpSent['peak']/1000
-	thpPeakRcvd = thpRcvd['peak']/1000
+	thpPeakSent = (thpSent['peak']*8)/1000
+	thpPeakRcvd = (thpRcvd['peak']*8)/1000
 	thpPeak = thpPeakSent
 	if (direction == 1): thpPeak = thpPeakRcvd
 	
 	# set average throughput
 	# according to direction
-	thpAvgSent = thpSent['average']/1000
-	thpAvgRcvd = thpRcvd['average']/1000
+	thpAvgSent = (thpSent['average']*8)/1000
+	thpAvgRcvd = (thpRcvd['average']*8)/1000
 	thpAvg = thpAvgSent
 	if (direction == 1): thpAvg = thpAvgRcvd
 	
 	# set actual throughput
 	# according to direction
-	thpActSent = thpSent['actual']/1000
-	thpActRcvd = thpRcvd['actual']/1000
+	thpActSent = (thpSent['actual']*8)/1000
+	thpActRcvd = (thpRcvd['actual']*8)/1000
 	thpAct = thpActSent
 	if (direction == 1): thpAct = thpActRcvd
 	
