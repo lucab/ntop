@@ -1179,6 +1179,8 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   if(0) sendString((myGlobals.runningPref.w3c == TRUE) ? CONST_W3C_CHARTYPE_LINE "\n" : "\n"); /* FIX */
 
   if(title != NULL) {
+    sendString("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"ntop RSS Feed\" href=\"http://www.ntop.org/blog/?feed=rss2\" />\n");
+
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TITLE>%s</TITLE>\n", title);
     sendString(buf);
   } else if(myGlobals.runningPref.w3c == TRUE)
