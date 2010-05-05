@@ -62,6 +62,10 @@ __PRINTER__ = 8
 __DIRECTORY__ = 16
 __WORKSTATION__ = 32
 __HTTPHOST__ = 64
+__FTPHOST__ = 128
+__SERVER__ = 256
+__MAILSERVER__ = 512
+__DHCP__ = 1024
 
 # form management
 form = cgi.FieldStorage();
@@ -88,10 +92,10 @@ topHostsByTransferedPackets = []
 
 ifIndex = identify_interface_index(selectedif)
 
-topHostsByPeakThroughputMetadata = {'type':'updowntable','mode':'gauge','unit':'bps','title':'Top Hosts by Throughput Peak'}
-topHostsByAverageThroughputMetadata = {'type':'updowntable','mode':'gauge','unit':'bps','title':'Top Hosts by Throughput Average'}
-topHostsByActualThroughputMetadata = {'type':'updowntable','mode':'gauge','unit':'bps','title':'Top Hosts by Actual Throughput'}
-topHostsByTransferedBytesMetadata = {'type':'updowntable','mode':'counter','unit':'bytes','title':'Top Hosts by Bytes'}
+topHostsByPeakThroughputMetadata = {'type':'updowntable','mode':'gauge','unit':'kbps','title':'Top Hosts by Throughput Peak'}
+topHostsByAverageThroughputMetadata = {'type':'updowntable','mode':'gauge','unit':'kbps','title':'Top Hosts by Throughput Average'}
+topHostsByActualThroughputMetadata = {'type':'updowntable','mode':'gauge','unit':'kbps','title':'Top Hosts by Actual Throughput'}
+topHostsByTransferedBytesMetadata = {'type':'updowntable','mode':'counter','unit':'kB','title':'Top Hosts by Bytes'}
 topHostsByTransferedPacketsMetadata = {'type':'updowntable','mode':'counter','unit':'packets','title':'Top Hosts by Packet Number'}
 
 topHostsByPeakThroughputData = {}
@@ -109,35 +113,36 @@ while ntop.getNextHost(ifIndex):
 	geo = host.geoIP()
 	country = geo.get('country_name', '')
 	countryCode = geo.get('country_code', '')
-	hostType = 0 + __P2P__*host.isP2P() + __VOIP__*(host.isVoIPHost()|host.isVoIPClient()|host.isVoIPGateway()) + __PRINTER__*host.isPrinter() + __DIRECTORY__*host.isDirectoryHost() + __WORKSTATION__*host.isWorkstation() + __HTTPHOST__*host.isHTTPhost()
+	hostType = 0 + __P2P__*host.isP2P() + __VOIP__*(host.isVoIPHost()|host.isVoIPClient()|host.isVoIPGateway()) + __PRINTER__*host.isPrinter() + __DIRECTORY__*host.isDirectoryHost() + __WORKSTATION__*host.isWorkstation() + __HTTPHOST__*host.isHTTPhost() + __FTPHOST__*host.isFTPhost() + __SERVER__*host.isServer() + __MAILSERVER__*(host.isSMTPhost()|host.isPOPhost()|host.isIMAPhost()) + __DHCP__*(host.isDHCPClient()|host.isDHCPServer())
 
 	thpSent=host.sendThpt()
 	thpRcvd=host.receiveThpt()
 	
 	# set peak throughput
-	# according to direction ( Bps )
-	thpPeakSent = thpSent['peak']
-	thpPeakRcvd = thpRcvd['peak']
+	# according to direction ( kBps )
+	thpPeakSent = thpSent['peak']/1000
+	thpPeakRcvd = thpRcvd['peak']/1000
 	thpPeak = thpPeakSent
 	if (direction == 1): thpPeak = thpPeakRcvd
 	
 	# set average throughput
 	# according to direction
-	thpAvgSent = thpSent['average']
-	thpAvgRcvd = thpRcvd['average']
+	thpAvgSent = thpSent['average']/1000
+	thpAvgRcvd = thpRcvd['average']/1000
 	thpAvg = thpAvgSent
 	if (direction == 1): thpAvg = thpAvgRcvd
 	
 	# set actual throughput
 	# according to direction
-	thpActSent = thpSent['actual']
-	thpActRcvd = thpRcvd['actual']
+	thpActSent = thpSent['actual']/1000
+	thpActRcvd = thpRcvd['actual']/1000
 	thpAct = thpActSent
 	if (direction == 1): thpAct = thpActRcvd
 	
 	# bytes sent/received
-	bytesSent = host.bytesSent()
-	bytesRcvd = host.bytesRcvd()
+	# to kbytes
+	bytesSent = host.bytesSent()/1000
+	bytesRcvd = host.bytesRcvd()/1000
 	
 	bytes = bytesSent
 	if (direction == 1): bytes = bytesRcvd
@@ -150,11 +155,11 @@ while ntop.getNextHost(ifIndex):
 
 	#INSERT into the list using the bisect costs only O(logN)
 	# might be cpu consuming
-	insort_rightReversed(topHostsByPeakThroughput,  (thpPeak*8, {'hostname':host.hostResolvedName(), 'type':hostType, 'ip':host.ipAddress(), 'up':thpPeakSent, 'down':thpPeakRcvd, 'country':countryCode, 'direction':direction}))
-	insort_rightReversed(topHostsByAverageThroughput,  (thpAvg*8, {'hostname':host.hostResolvedName(), 'type':hostType, 'ip':host.ipAddress(), 'up':thpAvgSent, 'down':thpAvgRcvd, 'country':countryCode, 'direction':direction}))
-	insort_rightReversed(topHostsByActualThroughput,  (thpPeak*8, {'hostname':host.hostResolvedName(), 'type':hostType, 'ip':host.ipAddress(), 'up':thpActSent, 'down':thpActRcvd, 'country':countryCode, 'direction':direction}))
-	insort_rightReversed(topHostsByTransferedBytes,  (bytes, {'hostname':host.hostResolvedName(), 'type':hostType, 'ip':host.ipAddress(), 'up':bytesSent, 'down':bytesRcvd, 'country':countryCode, 'direction':direction}))
-	insort_rightReversed(topHostsByTransferedPackets,  (packets, {'hostname':host.hostResolvedName(), 'type':hostType, 'ip':host.ipAddress(), 'up':packetsSent, 'down':packetsRcvd, 'country':countryCode, 'direction':direction}))
+	insort_rightReversed(topHostsByPeakThroughput,  (thpPeak, {'hostname':host.hostResolvedName(),'macaddress':host.ethAddress(),'hardware':host.hwModel(), 'type':hostType, 'ip':host.ipAddress(), 'up':thpPeakSent, 'down':thpPeakRcvd, 'country':countryCode, 'direction':direction}))
+	insort_rightReversed(topHostsByAverageThroughput,  (thpAvg, {'hostname':host.hostResolvedName(),'macaddress':host.ethAddress(),'hardware':host.hwModel(), 'type':hostType, 'ip':host.ipAddress(), 'up':thpAvgSent, 'down':thpAvgRcvd, 'country':countryCode, 'direction':direction}))
+	insort_rightReversed(topHostsByActualThroughput,  (thpPeak, {'hostname':host.hostResolvedName(),'macaddress':host.ethAddress(),'hardware':host.hwModel(), 'type':hostType, 'ip':host.ipAddress(), 'up':thpActSent, 'down':thpActRcvd, 'country':countryCode, 'direction':direction}))
+	insort_rightReversed(topHostsByTransferedBytes,  (bytes, {'hostname':host.hostResolvedName(),'macaddress':host.ethAddress(),'hardware':host.hwModel(), 'type':hostType, 'ip':host.ipAddress(), 'up':bytesSent, 'down':bytesRcvd, 'country':countryCode, 'direction':direction}))
+	insort_rightReversed(topHostsByTransferedPackets,  (packets, {'hostname':host.hostResolvedName(),'macaddress':host.ethAddress(),'hardware':host.hwModel(), 'type':hostType, 'ip':host.ipAddress(), 'up':packetsSent, 'down':packetsRcvd, 'country':countryCode, 'direction':direction}))
 	
 	
 # cut lists
