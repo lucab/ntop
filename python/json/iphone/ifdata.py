@@ -84,9 +84,9 @@ try:
 				adapter['peak'] = {'packets': rs.pop('peakPkts',''), 'bytes': rs.pop('peakBytes','')}
 				adapter['last minute'] = {'packets': rs.pop('lastMinPkts',''), 'bytes': rs.pop('lastMinBytes','')}
 				adapter['last 5 minutes'] = {'packets': rs.pop('lastFiveMinsPkts',''), 'bytes': rs.pop('lastFiveMinsBytes','')}
-				adapter['other'] = rs
+				if (len(rs) > 0) adapter['other'] = rs
 				
-				throughputStats = { "metadata": { "type":"grouped", "title":"Interface Throughput", "unit": "bps", "mode" : "gauge", "total": total }, "data" : adapter }
+				throughputStats = { "metadata": { "type":"groupedtable", "title":"Interface Throughput", "unit": "bps", "mode" : "gauge", "total": total }, "data" : adapter }
 			
 				rs = interface.securityPkts(i)
 				total = rs.pop('total',sum(rs.values()))
