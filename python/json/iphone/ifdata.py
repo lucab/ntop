@@ -44,20 +44,21 @@ try:
 				if_info['bpf'] = interface.bpf(i)
 
 				# Add interface info to interface data.
-				info['info'] = if_info
+				info['generic info'] = if_info
 
 				# add time info to interface data
-				info['time'] = interface.time(i)
+				# this is a dictionary
+				info['interface time'] = interface.time(i)
 
 				# Interface address info
 				if_addr = {}
-				if_addr['ipv4'] = interface.ipv4(i)
+				if_addr['ipv4 address'] = interface.ipv4(i)
+				if_addr['ipv6 address'] = interface.ipv6(i)
 				if_addr['network'] = interface.network(i)
-				if_addr['numHosts'] = interface.numHosts(i)
-				if_addr['ipv6'] = interface.ipv6(i)
-
+				if_addr['n.hosts'] = interface.numHosts(i)
+				
 				# Add address info to interface data
-				info['address'] = if_addr
+				info['interface address'] = if_addr
 			
 				ifdata = [{"data" : info, "metadata" : info_metadata}]
 				
@@ -72,11 +73,20 @@ try:
 			
 				rs = interface.bytesStats(i)
 				total = rs.pop('total',sum(rs.values()))
+
 				bytesStats = { "metadata": { "type":"piechart", "title":"Bytes Statistics", "unit": "bytes", "mode" : "counter", "total": total }, "data" : rs }
 
 				rs = interface.throughputStats(i)
 				total = rs.pop('total',sum(rs.values()))
-				throughputStats = { "metadata": { "type":"table", "title":"Throughput Statistics", "unit": "bytes/sec", "mode" : "gauge", "total": total }, "data" : rs }
+				
+				adapter = {}
+				adapter['actual'] = {'packets': rs.pop('actualPkts',''), 'bytes': rs.pop('actualBytes','')}
+				adapter['peak'] = {'packets': rs.pop('peakPkts',''), 'bytes': rs.pop('peakBytes','')}
+				adapter['last minute'] = {'packets': rs.pop('lastMinPkts',''), 'bytes': rs.pop('lastMinBytes','')}
+				adapter['last 5 minutes'] = {'packets': rs.pop('lastFiveMinsPkts',''), 'bytes': rs.pop('lastFiveMinsBytes','')}
+				adapter['other'] = rs
+				
+				throughputStats = { "metadata": { "type":"grouped", "title":"Interface Throughput", "unit": "bps", "mode" : "gauge", "total": total }, "data" : adapter }
 			
 				rs = interface.securityPkts(i)
 				total = rs.pop('total',sum(rs.values()))
