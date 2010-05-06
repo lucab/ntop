@@ -845,7 +845,7 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 
   /* traceEvent(CONST_TRACE_INFO, "--> '%s'", path);  */
 
-  if(endsWith(rrdName, "Bytes")) label = "Bytes/s";
+  if(endsWith(rrdName, "Bytes") || endsWith(rrdName, "Octets")) label = "Bytes/s";
   else if(endsWith(rrdName, "Pkts")) label = "Pkt/s";
   else if(strstr(rrdName, "knownHostsNum")) label = "Number of Peers";
   else label = capitalizeInitial(rrdName);
@@ -2373,7 +2373,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
 	filename = (graphId == 98) ? rrd_hosts[j] : rrds[i];
 
-	if(strcasestr(filename, "Bytes")) multiplier = 8;
+	if(strcasestr(filename, "Bytes") || strcasestr(filename, "Octets")) multiplier = 8;
 
 	if(upside_down && (i == 1)) {
 	  safe_snprintf(__FILE__, __LINE__, buf0[entryId], 2*MAX_BUF_LEN,
