@@ -538,6 +538,9 @@ static void ssiMenu_Head(void) {
 
 		  "  [null,'Online Documentation',null,null,null,\n"
 		  "		[null,'Man Page','/" CONST_MAN_NTOP_HTML "',null,null],\n"
+#ifdef HAVE_PYTHON
+		  "		[ '<img src=/icon_python.png>','Python API','/docs/python/index.html', '_blank',null],\n"
+#endif
 		  "		['<img src=\"/help.png\">','Help','/ntop" CONST_NTOP_HELP_HTML "',null,null],\n"
 		  "		[null,'FAQ','/faq.html',null,null],\n"
 		  "		['<img src=\"/Risk_high.gif\">','Risk Flags','/" CONST_NTOP_HELP_HTML "',null,null],\n"
