@@ -3105,7 +3105,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
       struct in_addr addr;
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "%s/interfaces/%s/NetFlow/%d_%u:%u/ifInOctets.rrd",
+		    "%s/interfaces/%s/NetFlow/%d_%u_%u/ifInOctets.rrd",
 		    myGlobals.rrdPath, myGlobals.device[deviceId].uniqueIfName,
 		    ifStats->interface_id, ifStats->netflow_device_ip, ifStats->netflow_device_port);
       revertSlashIfWIN32(buf, 0);
@@ -3113,9 +3113,9 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
       if(!stat(buf, &statbuf))
 	found = 1;
       else {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/NetFlow/%d/ifOutOctets.rrd",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/NetFlow/%d_%u_%u/ifOutOctets.rrd",
 		      myGlobals.rrdPath, myGlobals.device[deviceId].uniqueIfName,
-		      ifStats->interface_id);
+		      ifStats->interface_id, ifStats->netflow_device_ip, ifStats->netflow_device_port);
 	revertSlashIfWIN32(buf, 0);
 	if(!stat(buf, &statbuf)) found = 1;
       }
@@ -3129,12 +3129,12 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
       } else {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TR " TR_ON ">\n<TD " TD_BG " ALIGN=\"CENTER\">"
-		      "<IMG SRC=\"/plugins/rrdPlugin?action=netflowIfSummary&key=%s/NetFlow/%d&graphId=0\">"
-		      "<A HREF=\"/plugins/rrdPlugin?action=netflowIfSummary&key=%s/NetFlow/%d&graphId=0&mode=zoom\">"
+		      "<IMG SRC=\"/plugins/rrdPlugin?action=netflowIfSummary&key=%s/NetFlow/%d_%u_%u&graphId=0\">"
+		      "<A HREF=\"/plugins/rrdPlugin?action=netflowIfSummary&key=%s/NetFlow/%d_%u_%u&graphId=0&mode=zoom\">"
 		      "<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A>"
 		      "</td>\n",
-		      myGlobals.device[deviceId].uniqueIfName, ifStats->interface_id,
-		      myGlobals.device[deviceId].uniqueIfName, ifStats->interface_id);
+		      myGlobals.device[deviceId].uniqueIfName, ifStats->interface_id, ifStats->netflow_device_ip, ifStats->netflow_device_port,
+		      myGlobals.device[deviceId].uniqueIfName, ifStats->interface_id, ifStats->netflow_device_ip, ifStats->netflow_device_port);
 	sendString(buf);
       }
 

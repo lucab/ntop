@@ -5666,7 +5666,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    char rrdIfPath[512];
 
 	    safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
-			  "%s/interfaces/%s/NetFlow/%d_%u:%u/", myGlobals.rrdPath,
+			  "%s/interfaces/%s/NetFlow/%d_%u_%u/", myGlobals.rrdPath,
 			  myGlobals.device[devIdx].uniqueIfName, 
 			  ifStats->interface_id, ifStats->netflow_device_ip, ifStats->netflow_device_port);
 	    mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
