@@ -1487,10 +1487,6 @@ int handlePythonHTTPRequest(char *url, uint postLen) {
 
   free(document_root);
 
-  if(myGlobals.runningPref.debugMode) {
-    Py_DECREF(fd);
-  }
-
   return(1);
 }
 
