@@ -4199,6 +4199,7 @@ static void handlesFlowHTTPrequest(char* _url) {
 	  revertSlashIfWIN32(old_name, 0);
 	  
 	  free(myGlobals.device[deviceId].humanFriendlyName);
+	  web_sanitize(value);
 	  myGlobals.device[deviceId].humanFriendlyName = strdup(value);
 	  storePrefsValue(sfValue(deviceId, "humanFriendlyName", 1), value);
 

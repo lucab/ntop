@@ -830,6 +830,7 @@ extern char* read_file(char* path, char* buf, uint buf_len);
 /* Formatting for %.2f ... */
 #define xvertDOT00MB(v)(((float)(v)/(float)(1024.0*1024.0))+0.005)
 #define xvertDOT00KB(v) (((float)(v)/(float)(1024.0))+0.005)
+void web_sanitize(char *value);
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);

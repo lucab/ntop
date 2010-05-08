@@ -3104,9 +3104,10 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
       int found = 0;
       struct in_addr addr;
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/NetFlow/%d/ifInOctets.rrd",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "%s/interfaces/%s/NetFlow/%d_%u:%u/ifInOctets.rrd",
 		    myGlobals.rrdPath, myGlobals.device[deviceId].uniqueIfName,
-		    ifStats->interface_id);
+		    ifStats->interface_id, ifStats->netflow_device_ip, ifStats->netflow_device_port);
       revertSlashIfWIN32(buf, 0);
 
       if(!stat(buf, &statbuf))
@@ -3610,6 +3611,7 @@ static void handleNetflowHTTPrequest(char* _url) {
 	  revertSlashIfWIN32(old_name, 0);
 
 	  free(myGlobals.device[deviceId].humanFriendlyName);
+	  web_sanitize(value);
 	  myGlobals.device[deviceId].humanFriendlyName = strdup(value);
 	  storePrefsValue(nfValue(deviceId, "humanFriendlyName", 1), value);
 	  calculateUniqueInterfaceName(deviceId);

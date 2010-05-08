@@ -6592,3 +6592,18 @@ strcasestr (char *haystack, char *needle)
   return 0;
 }
 #endif
+
+void web_sanitize(char *value) {
+  int i;
+  
+  /* Make sure the name does not contain silly chars */
+
+  for(i=0; value[i] != '\0'; i++)
+    switch(value[i]) {
+    case '+':
+    case '%':
+    case '&':
+      value[i] = '_';
+      break;
+    }
+}
