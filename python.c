@@ -1448,7 +1448,7 @@ int handlePythonHTTPRequest(char *url, uint postLen) {
     /* sys.stdin <=> myGlobals.newSock */
 
 #ifndef WIN32
-    /* if(myGlobals.runningPref.debugMode /* -K */) */
+    /* if(myGlobals.runningPref.debugMode) */ /* -K */
     {
       traceEvent(CONST_TRACE_INFO, "[PYTHON] Redirecting file descriptors");
 
@@ -1471,7 +1471,7 @@ int handlePythonHTTPRequest(char *url, uint postLen) {
     PyRun_SimpleFile(fd, python_path);
 
 #ifndef WIN32
-    /*   if(myGlobals.runningPref.debugMode /* -K */) */
+    /* if(myGlobals.runningPref.debugMode) */ /* -K */
     {
       if(dup2(old_stdin, STDOUT_FILENO) == -1)
 	traceEvent(CONST_TRACE_WARNING, "Failed to restore stdout");
