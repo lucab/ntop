@@ -2771,6 +2771,13 @@ static int updateRRD(char *hostPath, char *key, Counter value, int isCounter, ch
 
     argc = 0;
     argv[argc++] = "rrd_update";
+    
+    if(rrdd_sock_path && (rrdd_sock_path[0] != '\0')) {
+      /* --daemon unix:/tmp/rrdd.sock  */
+      argv[argc++] = "--daemon";
+      argv[argc++] = rrdd_sock_path;
+    }
+    
     argv[argc++] = path;
 
     safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%llu",
