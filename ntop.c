@@ -232,9 +232,12 @@ void detachFromTerminalUnderUnix(int doChdir) {
 
   setsid();  /* detach from the terminal */
 
+#if 0
+  /* Don't close streams as python libs might get confused */
   fclose(stdin);
   fclose(stdout);
   /* fclose(stderr); */
+#endif
 
   /*
    * clear any inherited file mode creation mask
