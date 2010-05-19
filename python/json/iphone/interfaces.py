@@ -357,7 +357,7 @@ for i in range(interface.numInterfaces()):
 			if (widgetId.lower() == "tophoststhroughput"):
 				topHosts = []
 				while ntop.getNextHost(i):
-					if (len(search) > 0 and search.lower() not in host.hostResolvedName() and search.lower() not in host.ethAddress() and search.lower() not in host.ipAddress()):
+					if (len(search) > 0 and  host.hostResolvedName().lower().find(search.lower()) == -1 and host.ethAddress().lower().find(search.lower()) == -1 and host.ipAddress().lower().find(search.lower()) == -1):
 						continue
 					if host.ipAddress()=="":
 						 #drop host with no throughput or no ip
