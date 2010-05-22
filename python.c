@@ -28,6 +28,7 @@
 
 #include "ntop.h"
 #include "globals-report.h"
+#include <rrd.h>
 
 #ifdef HAVE_PYTHON
 
@@ -251,13 +252,94 @@ static PyObject* python_updateRRDGauge(PyObject *self, PyObject *args) {
 
 /* **************************************** */
 
-#if 0
-/* rrd_fetch(<path>, <funzione>, <inizio>, <fine>) */
+
 static PyObject* python_rrd_fetch(PyObject *self, PyObject *args) {
-  
-  return PyString_FromString(myGlobals.dbPath);
+	PyObject *r;
+	rrd_value_t *data, *datai;
+	unsigned long step, ds_cnt;
+	time_t    start, end;
+	int       argc=0, rc=0;
+	char     **ds_namv;
+	char *argv[7], *pPathFilename, *pFunction, *pStart, *pEnd;
+
+	/* parse the incoming arguments */
+	  if(!PyArg_ParseTuple(args, "ssss", &pPathFilename, &pFunction, &pStart, &pEnd))
+	    return NULL;
+
+
+    argv[argc++] = "rrd_fetch";
+    argv[argc++] = pPathFilename;
+    argv[argc++] = pFunction;
+    argv[argc++] = "--start";
+    argv[argc++] = pStart;
+    argv[argc++] = "--end";
+    argv[argc++] = pEnd;
+
+
+    optind=0; /* reset gnu getopt */
+    opterr=0; /* no error messages */
+    rrd_clear_error();
+
+    rc = rrd_fetch(argc, argv, &start, &end, &step, &ds_cnt, &ds_namv, &data);
+
+	//Inspired by rrdtoolmodule.c (pyrrdtool) from Hye-Shik Chang <perky@fallin.lv>
+	if (rc == -1) {
+		//traceEvent(CONST_TRACE_ERROR, "%s - (%s) <%s-%s-%s-%s> ", "python_RRD_fetch", rrd_get_error(),pPathFilename, pFunction, pStart, pEnd);//TODO
+		PyErr_SetString(PyErr_NewException("rrdtool.error", NULL, NULL), rrd_get_error());
+		rrd_clear_error();
+		r = NULL;
+	} else {
+		/* Return :
+		   ((start, end, step), (name1, name2, ...), [(data1, data2, ..), ...]) */
+		PyObject *range_tup, *dsnam_tup, *data_list, *t;
+		unsigned long i, j, row;
+		rrd_value_t dv;
+
+		row = (end - start) / step;
+
+		r = PyTuple_New(3);
+		range_tup = PyTuple_New(3);
+		dsnam_tup = PyTuple_New(ds_cnt);
+		data_list = PyList_New(row);
+		PyTuple_SET_ITEM(r, 0, range_tup);
+		PyTuple_SET_ITEM(r, 1, dsnam_tup);
+		PyTuple_SET_ITEM(r, 2, data_list);
+
+		datai = data;
+
+		PyTuple_SET_ITEM(range_tup, 0, PyInt_FromLong((long) start));
+		PyTuple_SET_ITEM(range_tup, 1, PyInt_FromLong((long) end));
+		PyTuple_SET_ITEM(range_tup, 2, PyInt_FromLong((long) step));
+
+		for (i = 0; i < ds_cnt; i++)
+			PyTuple_SET_ITEM(dsnam_tup, i, PyString_FromString(ds_namv[i]));
+
+		for (i = 0; i < row; i++) {
+			t = PyTuple_New(ds_cnt);
+			PyList_SET_ITEM(data_list, i, t);
+
+			for (j = 0; j < ds_cnt; j++) {
+				dv = *(datai++);
+				if (isnan(dv)) {
+					PyTuple_SET_ITEM(t, j, Py_None);
+					Py_INCREF(Py_None);
+				} else {
+					PyTuple_SET_ITEM(t, j, PyFloat_FromDouble((double) dv));
+				}
+			}
+		}
+
+		for (i = 0; i < ds_cnt; i++){
+			rrd_freemem(ds_namv[i]);
+		}
+		rrd_freemem(ds_namv);
+		rrd_freemem(data);
+	}
+
+
+	return r;
 }
-#endif
+
 
 /* **************************************** */
 
@@ -1175,7 +1257,7 @@ static PyMethodDef ntop_methods[] = {
 
   { "updateRRDCounter",  python_updateRRDCounter,   METH_VARARGS, "" },
   { "updateRRDGauge",    python_updateRRDGauge,   METH_VARARGS, "" },
-
+  { "rrd_fetch",    python_rrd_fetch,   METH_VARARGS, "Fetch values from RRA" },
 
   { NULL, NULL, 0, NULL }
 };

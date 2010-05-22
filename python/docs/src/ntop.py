@@ -144,13 +144,41 @@ def getSpoolPath():
     """
     pass
 
-def updateRRDCounter():
+def updateRRDCounter(path, key, value, step):
     """
-    update the counter of the RRDDatabase specified with the value passed
+    update the counter of the RRDDatabase (specified by path and key) with the value passed
+    @type path: string
+    @type key: string
+    @type value: number
+    @type step: int
+    @rtype: int
+    @return: int on success, -1 on failure
     """
     pass
-def updateRRDGauge():
+def updateRRDGauge(path, key, value, step):
     """
-    update the gauge of the RRDDatabase specified with the value passed
+    update the gauge of the RRDDatabase (specified by path and key) with the value passed
+    @type path: string
+    @type key: string
+    @type value: number
+    @type step: int
+    @rtype: int
+    @return: int on success, -1 on failure
+    """
+    pass
+
+def rrd_fetch(pathFilename, function, start, end):
+    """
+    fetch data from the pathFilename RRA acrhive pecified
+    @type pathFilename: string
+    @param pathFilename: the path and filename of the RRA from witch to fetch data
+    @type function: string
+    @param function: the name of the consolidation function to use (AVERAGE, MIN, MAX, LAST)
+    @type start: string
+    @param start: the start time from witch to fetch
+    @type end: string
+    @param end: the end time to stop fetching
+    @rtype : tuple ((start, end, step), (name1, name2, ...), [(data1, data2, ..), ...])
+    @return the tuple containing the values fetched from the RRA pathFilename passed, on failure rrdtool.error exception is raised 
     """
     pass

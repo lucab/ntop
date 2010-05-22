@@ -71,7 +71,7 @@ def readScriptsDir(pathScriptsDir):
     
     nameScriptList=['None']
     for scriptName in directoryList:
-        if os.access(os.path.join(pathScriptsDir,scriptName), os.X_OK):
+        if os.access(os.path.join(pathScriptsDir,scriptName), os.X_OK) or scriptName[-3:]=='.py':
             justName=scriptName.partition('.')[0]
             if justName and len(justName)>0:
                 nameScriptList.append(justName)             #remove the last 3 characters .py from the name of the script

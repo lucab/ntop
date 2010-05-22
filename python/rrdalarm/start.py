@@ -24,6 +24,7 @@ from StringIO import StringIO
 ok = 1
 
 # Imports for rrd
+'''
 try:
     import rrdtool
 except:
@@ -31,7 +32,7 @@ except:
     ntop.sendString("<b><center><font color=red>Please install <A HREF='http://sourceforge.net/projects/py-rrdtool/'>pyRRDTool</A></font><br># cd py_rrdTool_dir<br># sudo python setup.py install</center></b>")
     ntop.printHTMLFooter()
     ok = 0
-
+'''
 # Imports for mako
 try:
     from mako.template import Template
@@ -226,12 +227,15 @@ def begin():
         if not os.path.exists(rrdAlarmDbPath) or not os.path.isdir(rrdAlarmDbPath):
             os.mkdir(rrdAlarmDbPath)
         
-        nameDuration="duration.rrd"
-        nameResults="results.rrd"
-        archives=['RRA:AVERAGE:0.5:1:60', 
-                  'RRA:AVERAGE:0.5:30:6']#1 hour and 3 hours data
+        nameDuration="duration"
+        nameResults="results"
+        #nameDuration="duration.rrd"
+        #nameResults="results.rrd"
+        #archives=['RRA:AVERAGE:0.5:1:60', 
+        #         'RRA:AVERAGE:0.5:30:6']#1 hour and 3 hours data
         try:
-            rrdtool.update(os.path.join(rrdAlarmDbPath,nameDuration), 'N:'+str(durationValue))
+            #rrdtool.update(os.path.join(rrdAlarmDbPath,nameDuration), 'N:'+str(durationValue))
+            ntop.updateRRDGauge(rrdAlarmDbPath,nameDuration, durationValue, 0)
         #print>>sys.stderr, 'Updating'+str(durationValue)
         except:
             print>>sys.stderr, 'RRDAlarm: Error Updating rrdDB '+nameDuration
@@ -241,7 +245,8 @@ def begin():
             rrdtool.update(rrdAlarmDbPath+nameDuration,'N:'+str(durationValue))'''
         
         try:
-            rrdtool.update(os.path.join(rrdAlarmDbPath,nameResults), 'N:'+str(resultsValue))
+            #rrdtool.update(os.path.join(rrdAlarmDbPath,nameResults), 'N:'+str(resultsValue))
+            ntop.updateRRDGauge(rrdAlarmDbPath,nameResults, resultsValue, 0)
         except:
             print>>sys.stderr, 'RRDAlarm: Error Updating rrdDB '+nameResults
             '''
@@ -312,13 +317,18 @@ def begin():
                 #Return :((start, end, step), (name1, name2, ...), [(data1, data2, ..), ...])
                 
                 #print>>sys.stderr, '\nLOOK for the parameters '+str(threshold.getStartTime())+' '+str(threshold.getEndTime())+' '+str(fileN)
-                rrdObj=rrdtool.fetch(fileN, 'AVERAGE', '--start', threshold.getStartTime(), '--end', threshold.getEndTime())
-                
+                rrdObj=((0 ,0, 0),(),[])   #empty object
+                try:
+                    #rrdObj=rrdtool.fetch(fileN, 'AVERAGE', '--start', threshold.getStartTime(), '--end', threshold.getEndTime())
+                    rrdObj=ntop.rrd_fetch(fileN, 'AVERAGE', threshold.getStartTime(),threshold.getEndTime())
+                except Exception as e:
+                    print>>sys.stderr, 'start.py PyRRDTool exception '+str(e)
+                    
                 step=rrdObj[0][2]
                 start=float(rrdObj[0][0])
                 end=float(rrdObj[0][1])
                 
-                valueDataTuple=rrdObj[2]                        #check this out, not sure witch data object is
+                valueDataTuple=rrdObj[2]
                 #for all the values returned check the threshold (from the end) if alarm has to be fired
                 i=len(valueDataTuple)
                

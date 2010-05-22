@@ -31,6 +31,43 @@ def expandTables(string, pathFastbitDir):
     
     try:
         tempList=None
+        #tempList = glob.glob(os.path.join(pathFastbitDir, string)+'*')
+        while not tempList or len(tempList)==1:
+            tempList = glob.glob(os.path.join(pathFastbitDir, string)+'*')
+            
+            if tempList and len(tempList)==1: #if found just one result
+                string=tempList[0][len(pathFastbitDir):]+os.sep
+            else: #more than one results stops the cicle
+                break
+        
+        if tempList:
+            directoryList=tempList
+        else:
+            return []
+    except:
+        raise
+        return []
+    retList=[]
+    for file in directoryList:
+        #filePath=os.path.join(pathFastbitDir,file)
+        #remove all the files in the fastbit directory that are not a directory or of witch I don't have read privileges
+        if os.path.isdir(file) and not os.path.islink(file) and os.access(file, os.R_OK):
+            retList.append(file[len(pathFastbitDir):])
+    if len(retList) <=0 and len(directoryList)>0: #if no directory was found take the father
+        
+        tmpDir=os.path.dirname(directoryList[0])
+        if tmpDir!=pathFastbitDir:
+            retList.append(tmpDir[len(pathFastbitDir):])
+    else:
+        retList.sort()
+    return retList
+
+'''
+def expandTablesOLD(string, pathFastbitDir):
+    directoryList=[]
+    
+    try:
+        tempList=None
         while not tempList or len(tempList)==1:
             tempList = glob.glob(os.path.join(pathFastbitDir, string)+'*')
             
@@ -60,6 +97,7 @@ def expandTables(string, pathFastbitDir):
     else:
         retList.sort()
     return retList
+'''
 
 '''Return a json object for the from field autocomplete'''
 def expandFrom(fromArg, pathFastBit):
