@@ -539,7 +539,10 @@ static void ssiMenu_Head(void) {
 		  "  [null,'Online Documentation',null,null,null,\n"
 		  "		[null,'Man Page','/" CONST_MAN_NTOP_HTML "',null,null],\n"
 #ifdef HAVE_PYTHON
-		  "		[ '<img src=/icon_python.png>','Python API','/docs/python/index.html', '_blank',null],\n"
+		  "             ['<img src=/icon_python.png>','Python ntop Engine',null,null,null,\n"
+		  "		    [ null,'Python API','/docs/python/index.html', '_blank',null],\n"
+		  "		    [ null,'Tutorial','http://www.ntop.org/blog/?p=112', '_blank',null],\n"
+		  "             ],\n"
 #endif
 		  "		['<img src=\"/help.png\">','Help','/ntop" CONST_NTOP_HELP_HTML "',null,null],\n"
 		  "		[null,'FAQ','/faq.html',null,null],\n"
