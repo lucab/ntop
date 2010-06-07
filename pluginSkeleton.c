@@ -61,19 +61,23 @@ static void handlePluginHTTPrequest(char* url) {
 /* ****************************** */
 
 static PluginInfo pluginInfo[] = {
-  { "put here the plugin name as it will appere",
+  { 
+    VERSION, /* current ntop version */
+    "put here the plugin name as it will appere",
     "describe what this plugin does",
     "1.0", /* plugin version */
     "Put here the author name", 
     "shortPluginName", /* http://<host>:<port>/plugins/shortPluginName */
     0, /* Active by default */
+    ViewConfigure,
     1, /* Inactive setup */
     initFunction, /* InitFunc   */
     termFunction, /* TermFunc   */
     handlePacket, /* PluginFunc */
     handlePluginHTTPrequest,
     "<BPF filter>", /* BPF filter */
-    NULL  /* no status */
+    NULL , /* no status */
+    NULL  /* no extra pages */
   }
 };
 
