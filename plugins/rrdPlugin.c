@@ -4100,7 +4100,7 @@ static void handleRRDHTTPrequest(char* url) {
   if((url != NULL) && (url[0] != '\0')) {
     unescape_url(url);
 
-    /* traceEvent(CONST_TRACE_INFO, "RRD: URL=%s", url); */
+    /* traceEvent(CONST_TRACE_INFO, "RRD: URL=%s", url);  */
 
     urlPiece = strtok_r(url, "&", &mainState);
 
@@ -4109,11 +4109,11 @@ static void handleRRDHTTPrequest(char* url) {
 
       key = strtok_r(urlPiece, "=", &strtokState);
       if(key != NULL) value = strtok_r(NULL, "=", &strtokState); else value = NULL;
+      if((!value) || (!strcmp(value, "(null)"))) value = "";
 
-      /* traceEvent(CONST_TRACE_INFO, "RRD: key(%s)=%s", key, value);  */
+      /* traceEvent(CONST_TRACE_INFO, "RRD: key(%s)=%s", key, value);   */
 
       if(value && key) {
-
 	if(strcmp(key, "action") == 0) {
 	  if(strcmp(value, "graph") == 0)     action = FLAG_RRD_ACTION_GRAPH;
 	  else if(strcmp(value, CONST_ARBITRARY_RRDREQUEST) == 0) action = FLAG_RRD_ACTION_ARBITRARY;
@@ -4309,7 +4309,7 @@ static void handleRRDHTTPrequest(char* url) {
       storePrefsValue("rrd.dataDumpDays", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpMonths);
       storePrefsValue("rrd.dataDumpMonths", buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", rrdd_sock_path);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", rrdd_sock_path ? rrdd_sock_path : "");
       storePrefsValue("rrd.rrdcSockPath", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDomains);
       storePrefsValue("rrd.dataDumpDomains", buf);
