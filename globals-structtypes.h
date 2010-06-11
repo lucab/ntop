@@ -1279,8 +1279,19 @@ typedef struct single_flow_ver7_rec {
 
 /* NetFlow v9/IPFIX */
 
+typedef struct ipfix_flow_set {
+  u_int16_t templateId;
+  u_int16_t fieldCount;
+} IPFIXFlowSet;
+
+typedef struct flow_ipfix_template_field {
+  u_int16_t fieldType;
+  u_int16_t fieldLen;
+  u_int8_t  isPenField;
+} V9V10TemplateField;
+
 typedef struct flow_ver9_hdr {
-  uint16_t version;         /* Current version=9*/
+  uint16_t version;         /* Current version=9 */
   uint16_t count;           /* The number of records in PDU. */
   uint32_t sysUptime;       /* Current time in msecs since router booted */
   uint32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
@@ -1317,7 +1328,7 @@ typedef struct flow_ver9_templateids {
 
 typedef struct flowSetV9 {
   V9Template templateInfo;
-  V9TemplateField *fields;
+  V9V10TemplateField *fields;
   struct flowSetV9 *next;
 } FlowSetV9;
 

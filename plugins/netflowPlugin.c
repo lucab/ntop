@@ -32,9 +32,10 @@ static void* netflowUtilsLoop(void* _deviceId);
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
+#define NTOP_BASE_ID 57472
+
 #define valueOf(a) (a == NULL ? "" : a)
 #define isEmpty(a) ((a == NULL) || (a[0] == '\0') ? 1 : 0)
-
 
 #define SWAP8(a,b)  { uint8_t  c = a; a = b; b = c; }
 #define SWAP16(a,b) { uint16_t c = a; a = b; b = c; }
@@ -118,7 +119,7 @@ static PluginInfo netflowPluginInfo[] = {
     "V1/V5/V7/V9 and <A HREF=http://ipfix.doit.wisc.edu/>IPFIX</A> (draft) data.<br>"
     "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
     "reports.<br><em>Remember to <A HREF=/switch.html>switch</A> the reporting NIC.</em>",
-    "4.1", /* version */
+    "4.2", /* version */
     "<a href=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     0, /* Active by default */
@@ -365,7 +366,7 @@ static void updateNetFlowIfStats(uint32_t netflow_device_ip,
     ifStats = myGlobals.device[deviceId].netflowGlobals->ifStats;
 
     while(ifStats != NULL) {
-      if((ifStats->interface_id == ifId) 
+      if((ifStats->interface_id == ifId)
 	 && (ifStats->netflow_device_ip == netflow_device_ip)
 	 && (ifStats->netflow_device_port == netflow_device_port)
 	 ) {
@@ -387,7 +388,7 @@ static void updateNetFlowIfStats(uint32_t netflow_device_ip,
       }
 
       memset(ifStats, 0, sizeof(InterfaceStats));
-      ifStats->netflow_device_ip = netflow_device_ip, 
+      ifStats->netflow_device_ip = netflow_device_ip,
 	ifStats->netflow_device_port = netflow_device_port,
 	ifStats->interface_id = ifId;
       resetTrafficCounter(&ifStats->outBytes);
@@ -502,7 +503,8 @@ static int handleGenericFlow(uint32_t netflow_device_ip,
 			     uint16_t netflow_device_port,
 			     time_t recordActTime, time_t recordSysUpTime,
 			     struct generic_netflow_record *record,
-			     int deviceId, time_t *firstSeen, time_t *lastSeen) {
+			     int deviceId, time_t *firstSeen, time_t *lastSeen,
+			     u_char deEndianize) {
   int actualDeviceId;
   char theFlags[256], srcPseudoLocal, dstPseudoLocal;
   uint16_t srcAS, dstAS;
@@ -521,7 +523,7 @@ static int handleGenericFlow(uint32_t netflow_device_ip,
   time_t initTime;
   Counter total_pkts, total_bytes;
   uint total_flows, ratio;
-#ifdef ENABLE_EFFICIENCY  
+#ifdef ENABLE_EFFICIENCY
   Counter pkt_efficiency;
 #endif
 
@@ -532,6 +534,8 @@ static int handleGenericFlow(uint32_t netflow_device_ip,
 
   gettimeofday(&netflowStartOfFlowProcessing, NULL);
 #endif
+
+  if(deEndianize) de_endianFlow(record);
 
 #ifdef DEBUG_FLOWS
   if(debug) traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: handleGenericFlow() called");
@@ -580,7 +584,7 @@ static int handleGenericFlow(uint32_t netflow_device_ip,
   dstAS    = record->dst_as;
 
 #ifdef DEBUG_FLOWS
-  if(0) {
+  if(1) {
     char buf1[256], buf[256];
 
     traceEvent(CONST_TRACE_INFO,
@@ -1113,13 +1117,13 @@ static int handleGenericFlow(uint32_t netflow_device_ip,
 
 #ifdef DEBUG_FLOWS
     if(1)
-      traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [diff=%d]"
+      traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [diff=%u]"
 		 "[recordActTime=%d][last-first=%d]",
 		 srcHost->hostNumIpAddress, sport,
 		 dstHost->hostNumIpAddress, dport,
-		 timeDiff, recordActTime, (int)(*lastSeen - *firstSeen));
+		 timeDiff, recordActTime, (unsigned int)(*lastSeen - *firstSeen));
 #endif
-    
+
     if(
        ((record->client_nw_latency_sec > 0)
 	|| (record->client_nw_latency_usec > 0)
@@ -1141,7 +1145,7 @@ static int handleGenericFlow(uint32_t netflow_device_ip,
     }
   } else {
     /* The session has been discarded (e.g. the NetFlow plugins might has
-       been configured to discard sessions) so in case we have network delay 
+       been configured to discard sessions) so in case we have network delay
        we need to handle it directly */
     struct timeval clientNwDelay, serverNwDelay, when;
     int port, port_idx;
@@ -1164,7 +1168,7 @@ static int handleGenericFlow(uint32_t netflow_device_ip,
 			  &clientNwDelay,
 			  &when,
 			  NULL, 1 /* client */, port_idx);
-    
+
     updatePeersDelayStats(dstHost,
 			  &srcHost->hostSerial,
 			  port,
@@ -1279,15 +1283,15 @@ static char* nf_hex_dump(char *buf, u_short len) {
 /* ********************************************************* */
 
 
-static void updateSenderFlowSequence(int deviceId, int probeId, 
+static void updateSenderFlowSequence(int deviceId, int probeId,
 				     int numFlows, uint32_t flowSequence, uint32_t flowVersion) {
 
-  /*with V5/7 totNumflows and lostFlows mean flows, in V9 mean packets*/ 
+  /*with V5/7 totNumflows and lostFlows mean flows, in V9 mean packets*/
   int resetParam = 3;
   int reset = 0;
 
   if(0)
-    traceEvent(CONST_TRACE_INFO, 
+    traceEvent(CONST_TRACE_INFO,
 	       "updateSenderFlowSequence(deviceId=%d, probeId=%d, numFlows=%d, flowSequence=%u, version=%u)",
 	       deviceId, probeId, numFlows, flowSequence, flowVersion);
 
@@ -1315,13 +1319,13 @@ static void updateSenderFlowSequence(int deviceId, int probeId,
       myGlobals.device[deviceId].netflowGlobals->probeList[probeId].totNumFlows += numFlows;
       myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lastSequenceNumber = flowSequence;
       if(flowSequence > myGlobals.device[deviceId].netflowGlobals->probeList[probeId].highestSequenceNumber)
-	myGlobals.device[deviceId].netflowGlobals->probeList[probeId].highestSequenceNumber = flowSequence;  
+	myGlobals.device[deviceId].netflowGlobals->probeList[probeId].highestSequenceNumber = flowSequence;
       if(flowSequence < myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lowestSequenceNumber)
 	myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lowestSequenceNumber = flowSequence;
 
       /*check if the code is the same for v5/9*/
-      myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lostFlows = 
-	(((myGlobals.device[deviceId].netflowGlobals->probeList[probeId].highestSequenceNumber - 
+      myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lostFlows =
+	(((myGlobals.device[deviceId].netflowGlobals->probeList[probeId].highestSequenceNumber -
 	   myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lowestSequenceNumber) + numFlows) -
 	 myGlobals.device[deviceId].netflowGlobals->probeList[probeId].totNumFlows);
     }
@@ -1330,6 +1334,695 @@ static void updateSenderFlowSequence(int deviceId, int probeId,
 /* ********************************************************* */
 
 static void dissectFlow(uint32_t netflow_device_ip,
+			uint16_t netflow_device_port,
+			int probeId,
+			char *buffer, int bufferLen, int deviceId) {
+  NetFlow5Record the5Record;
+  int flowVersion, numFlows = 0;
+  time_t recordActTime = 0, recordSysUpTime = 0;
+  struct generic_netflow_record record;
+  time_t firstSeen, lastSeen;
+  uint32_t flowSequence = 0;
+
+  memcpy(&the5Record, buffer, bufferLen > sizeof(the5Record) ? sizeof(the5Record): bufferLen);
+  flowVersion = ntohs(the5Record.flowHeader.version);
+
+#ifdef DEBUG_FLOWS
+  if(1)
+    traceEvent(CONST_TRACE_INFO, "NETFLOW: +++++++ version=%d",  flowVersion);
+#endif
+
+  /*
+    Convert V7 flows into V5 flows in order to make ntop
+    able to handle V7 flows.
+
+    Courtesy of Bernd Ziller <bziller@ba-stuttgart.de>
+  */
+  if((flowVersion == 1) || (flowVersion == 7)) {
+    int i;
+    NetFlow1Record the1Record;
+    NetFlow7Record the7Record;
+
+    if(flowVersion == 1) {
+      memcpy(&the1Record, buffer, bufferLen > sizeof(the1Record) ?
+	     sizeof(the1Record): bufferLen);
+      numFlows = ntohs(the1Record.flowHeader.count);
+      if(numFlows > CONST_V1FLOWS_PER_PAK) numFlows = CONST_V1FLOWS_PER_PAK;
+      recordActTime   = ntohl(the1Record.flowHeader.unix_secs);
+      recordSysUpTime = ntohl(the1Record.flowHeader.sysUptime);
+    } else {
+      memcpy(&the7Record, buffer, bufferLen > sizeof(the7Record) ?
+	     sizeof(the7Record): bufferLen);
+      numFlows = ntohs(the7Record.flowHeader.count);
+      flowSequence = ntohl(the7Record.flowHeader.flow_sequence);
+      if(numFlows > CONST_V7FLOWS_PER_PAK) numFlows = CONST_V7FLOWS_PER_PAK;
+      recordActTime   = ntohl(the7Record.flowHeader.unix_secs);
+      recordSysUpTime = ntohl(the7Record.flowHeader.sysUptime);
+    }
+
+#ifdef DEBUG_FLOWS
+    if(1)
+      traceEvent(CONST_TRACE_INFO, "NETFLOW: +++++++ flows=%d",  numFlows);
+#endif
+
+    the5Record.flowHeader.version = htons(5);
+    the5Record.flowHeader.count = htons(numFlows);
+
+    /* rest of flowHeader will not be used */
+    for(i=0; i<numFlows; i++) {
+      if(flowVersion == 7) {
+	the5Record.flowRecord[i].srcaddr   = the7Record.flowRecord[i].srcaddr;
+	the5Record.flowRecord[i].dstaddr   = the7Record.flowRecord[i].dstaddr;
+	the5Record.flowRecord[i].srcport   = the7Record.flowRecord[i].srcport;
+	the5Record.flowRecord[i].dstport   = the7Record.flowRecord[i].dstport;
+	the5Record.flowRecord[i].dPkts     = the7Record.flowRecord[i].dPkts;
+	the5Record.flowRecord[i].dOctets   = the7Record.flowRecord[i].dOctets;
+	the5Record.flowRecord[i].proto     = the7Record.flowRecord[i].proto;
+	the5Record.flowRecord[i].tos       = the7Record.flowRecord[i].tos;
+	the5Record.flowRecord[i].first     = the7Record.flowRecord[i].first;
+	the5Record.flowRecord[i].last      = the7Record.flowRecord[i].last;
+	the5Record.flowRecord[i].tcp_flags = the7Record.flowRecord[i].tcp_flags;
+	/* rest of flowRecord will not be used */
+      } else {
+	/*
+	  Some NetFlow v1 implementations (e.g. Extreme Networks) are
+	  limited and most of the NetFlow fields are empty. In particular
+	  the following fields are empty:
+	  - input
+	  - output
+	  - dOctets
+	  - first
+	  - last
+	  - tos
+	  - tcp_flags
+
+	  In this case we add a patch for filling some of the fields
+	  in order to let ntop digest this flow.
+	*/
+
+	the5Record.flowRecord[i].srcaddr   = the1Record.flowRecord[i].srcaddr;
+	the5Record.flowRecord[i].dstaddr   = the1Record.flowRecord[i].dstaddr;
+	the5Record.flowRecord[i].srcport   = the1Record.flowRecord[i].srcport;
+	the5Record.flowRecord[i].dstport   = the1Record.flowRecord[i].dstport;
+	the5Record.flowRecord[i].dPkts     = the1Record.flowRecord[i].dPkts;
+
+	if(ntohl(the1Record.flowRecord[i].dOctets) == 0) {
+	  /* We assume that all packets are 512 bytes long */
+	  u_int32_t tmp = ntohl(the1Record.flowRecord[i].dPkts);
+	  the5Record.flowRecord[i].dOctets = htonl(tmp*512);
+	} else
+	  the5Record.flowRecord[i].dOctets = the1Record.flowRecord[i].dOctets;
+
+	the5Record.flowRecord[i].proto     = the1Record.flowRecord[i].proto;
+	the5Record.flowRecord[i].tos       = the1Record.flowRecord[i].tos;
+	the5Record.flowRecord[i].first     = the1Record.flowRecord[i].first;
+	the5Record.flowRecord[i].last      = the1Record.flowRecord[i].last;
+	/* rest of flowRecord will not be used */
+      }
+    }
+  }  /* DON'T ADD a else here ! */
+
+  flowSequence = ntohl(the5Record.flowHeader.flow_sequence);
+
+  if((the5Record.flowHeader.version == htons(9))
+     || (the5Record.flowHeader.version == htons(10))) {
+    /* NetFlowV9/IPFIX Record */
+    u_char foundRecord = 0, done = 0;
+    u_short numEntries, displ;
+    V9Template template;
+    IPFIXFlowSet ipfix_template;
+    int i;
+    u_char handle_ipfix;
+    V9V10TemplateField *fields = NULL;
+
+    if(the5Record.flowHeader.version == htons(9)) handle_ipfix = 0; else handle_ipfix = 1;
+    numFlows = 1;
+
+    if(handle_ipfix) {
+      numEntries = ntohs(the5Record.flowHeader.count), displ = sizeof(V9FlowHeader)-4; // FIX
+#ifdef DEBUG_FLOWS
+      traceEvent(CONST_TRACE_INFO, "IPFIX Length: %d", numEntries);
+#endif
+    } else {
+      numEntries = ntohs(the5Record.flowHeader.count), displ = sizeof(V9FlowHeader);
+    }
+
+    recordActTime = ntohl(the5Record.flowHeader.unix_secs);
+    recordSysUpTime = ntohl(the5Record.flowHeader.sysUptime);
+    /*     NTOHL(recordActTime); NTOHL(recordSysUpTime); */
+
+    for(i=0; (!done) && (displ < bufferLen) && (i < numEntries); i++) {
+      u_char isOptionTemplate;
+      u_int16_t flowsetLen;
+
+      /* 1st byte */
+#ifdef DEBUG_FLOWS
+      traceEvent(CONST_TRACE_INFO, "[displ=%d][%02X %02X %02X]",
+		 displ, buffer[displ] & 0xFF,
+		 buffer[displ+1] & 0xFF,
+		 buffer[displ+2] & 0xFF);
+#endif
+
+      if(buffer[displ] == 0) {
+	isOptionTemplate = (u_char)buffer[displ+1];
+
+	/* Template */
+#ifdef DEBUG_FLOWS
+	traceEvent(CONST_TRACE_INFO, "Found Template [displ=%d]", displ);
+	traceEvent(CONST_TRACE_INFO, "Found Template Type: %d", isOptionTemplate);
+#endif
+
+	myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9TemplRcvd++;
+
+	if(handle_ipfix && (isOptionTemplate == 2)) isOptionTemplate = 0;
+
+	if(handle_ipfix) {
+	  displ += 2;
+	  memcpy(&flowsetLen, &buffer[displ], sizeof(flowsetLen));
+	  flowsetLen = htons(flowsetLen);
+	  displ += 2;
+	}
+
+	if(bufferLen > (displ+sizeof(V9Template))) {
+	  FlowSetV9 *cursor = myGlobals.device[deviceId].netflowGlobals->templates;
+	  u_char found = 0;
+	  u_short len;
+	  int fieldId;
+
+	  if(!isOptionTemplate) {
+	    u_char goodTemplate = 0;
+
+	    if(handle_ipfix) {
+	      memcpy(&ipfix_template, &buffer[displ], sizeof(ipfix_template));
+	      ipfix_template.templateId = htons(ipfix_template.templateId);
+	      ipfix_template.fieldCount = htons(ipfix_template.fieldCount);
+	      template.templateId = ipfix_template.templateId;
+	      template.fieldCount = ipfix_template.fieldCount;
+
+	      fields = (V9V10TemplateField*)malloc(ipfix_template.fieldCount * sizeof(V9V10TemplateField));
+	      if(fields == NULL) {
+		traceEvent(CONST_TRACE_WARNING, "Not enough memory");
+		break;
+	      }
+
+	      if(((ipfix_template.fieldCount * 4) + sizeof(IPFIXFlowSet) + 4 /* templateFlowSet + FlowsetLen */) >  flowsetLen) {
+		traceEvent(CONST_TRACE_WARNING, "Bad length [expected=%d][real=%lu]",
+			   ipfix_template.fieldCount * 4,
+			   numEntries + sizeof(IPFIXFlowSet));
+	      } else {
+		goodTemplate = 1;
+		len = sizeof(ipfix_template);
+
+		/* Check the template before to handle it */
+		for(fieldId=0; fieldId < template.fieldCount; fieldId++) {
+		  u_int8_t pen_len = 0, is_enterprise_specific = (buffer[displ+len] & 0x80) ? 1 : 0;
+		  V9FlowSet *set = (V9FlowSet*)&buffer[displ+len];
+
+		  len += 4; /* Field Type (2) + Field Length (2) */
+
+		  if(is_enterprise_specific)
+		    pen_len = 4, len += 4; /* PEN (Private Enterprise Number) */
+
+		  fields[fieldId].fieldType = htons(set->templateId) & 0x7F;
+		  fields[fieldId].fieldLen = htons(set->flowsetLen);
+		  fields[fieldId].isPenField = is_enterprise_specific;
+
+#ifdef DEBUG_FLOWS
+		  traceEvent(CONST_TRACE_INFO, "[%d] fieldType=%d/PEN=%d/len=%d [tot=%d]",
+			     1+fieldId, fields[fieldId].fieldType,
+			     is_enterprise_specific, pen_len+fields[fieldId].fieldLen, len);
+#endif
+		}
+
+		template.flowsetLen = len;
+	      }
+	    } else {
+	      /* NetFlow */
+	      len = sizeof(V9Template);
+	      memcpy(&template, &buffer[displ], sizeof(V9Template));
+
+	      template.templateId = ntohs(template.templateId);
+	      template.fieldCount = ntohs(template.fieldCount);
+	      template.flowsetLen = ntohs(template.flowsetLen);
+
+	      fields = (V9V10TemplateField*)malloc(template.fieldCount * sizeof(V9V10TemplateField));
+	      if(fields == NULL) {
+		traceEvent(CONST_TRACE_WARNING, "Not enough memory");
+		break;
+	      }
+
+#ifdef DEBUG_FLOWS
+	      if(1)
+		traceEvent(CONST_TRACE_INFO, "Template [id=%d] fields: %d [len=%d]",
+			   template.templateId, template.fieldCount, template.flowsetLen);
+#endif
+
+	      goodTemplate = 1;
+
+	      /* Check the template before handling it */
+	      for(fieldId=0; (fieldId < template.fieldCount) && (len < template.flowsetLen); fieldId++) {
+		V9FlowSet *set = (V9FlowSet*)&buffer[displ+sizeof(V9Template)+fieldId*sizeof(V9FlowSet)];
+
+		fields[fieldId].fieldType = htons(set->templateId);
+		fields[fieldId].fieldLen  = htons(set->flowsetLen);
+		fields[fieldId].isPenField = (fields[fieldId].fieldType >= NTOP_BASE_ID) ? 1 : 0;
+		len += 4; /* Field Type (2) + Field Length (2) */
+#ifdef DEBUG_FLOWS
+		if(1)
+		  traceEvent(CONST_TRACE_INFO, "[%d] fieldLen=%d/len=%d",
+			     1+fieldId, template.flowsetLen, len);
+#endif
+	      }
+
+	      if(len > template.flowsetLen) {
+		static u_short lastBadTemplate = 0;
+
+		if(template.templateId != lastBadTemplate) {
+		  traceEvent(CONST_TRACE_WARNING, "Template %d has wrong size [actual=%d/expected=%d]: skipped",
+			     template.templateId, len, template.flowsetLen);
+		  lastBadTemplate = template.templateId;
+		}
+
+		myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9BadTemplRcvd++;
+		goodTemplate = 0;
+	      }
+	    }
+
+	    if(goodTemplate) {
+	      while(cursor != NULL) {
+		if(cursor->templateInfo.templateId == template.templateId) {
+		  found = 1;
+		  break;
+		} else
+		  cursor = cursor->next;
+	      }
+
+	      if(found) {
+#ifdef DEBUG_FLOWS
+		traceEvent(CONST_TRACE_INFO, ">>>>> Redefined existing template [id=%d]",
+			   template.templateId);
+#endif
+
+		free(cursor->fields);
+	      } else {
+#ifdef DEBUG_FLOWS
+		traceEvent(CONST_TRACE_INFO, ">>>>> Found new flow template definition [id=%d]",
+			   template.templateId);
+#endif
+
+		cursor = (FlowSetV9*)malloc(sizeof(FlowSetV9));
+		cursor->next = myGlobals.device[deviceId].netflowGlobals->templates;
+		myGlobals.device[deviceId].netflowGlobals->templates = cursor;
+	      }
+
+	      if(handle_ipfix) {
+		cursor->templateInfo.templateFlowset = 0;
+		cursor->templateInfo.flowsetLen = len + sizeof(ipfix_template);
+		cursor->templateInfo.templateId = ipfix_template.templateId;
+		cursor->templateInfo.fieldCount = ipfix_template.fieldCount;
+
+		cursor->fields = fields;
+	      } else {
+		memcpy(&cursor->templateInfo, &buffer[displ], sizeof(V9Template));
+		cursor->templateInfo.flowsetLen = ntohs(cursor->templateInfo.flowsetLen);
+		cursor->templateInfo.templateId = ntohs(cursor->templateInfo.templateId);
+		cursor->templateInfo.fieldCount = ntohs(cursor->templateInfo.fieldCount);
+		cursor->fields = fields;
+	      }
+	    } else {
+#ifdef DEBUG_FLOWS
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Skipping bad template [id=%d]", template.templateId);
+#endif
+	    }
+	  } else {
+	    if(handle_ipfix) {
+	      template.flowsetLen = flowsetLen;
+	      displ -= 4 /* 4 bytes have been accounted already */;
+	    } else {
+	      u_short move_ahead;
+
+	      memcpy(&move_ahead, &buffer[displ+2], 2);
+	      template.flowsetLen = ntohs(move_ahead);
+	    }
+	  }
+
+	  /* Skip template definition */
+	  displ += template.flowsetLen;
+
+#ifdef DEBUG_FLOWS
+	  traceEvent(CONST_TRACE_INFO, "Moving ahead of %d bytes: new offset is %d",
+		     template.flowsetLen, displ);
+#endif
+	} else
+	  done = 1;
+      } else {
+#ifdef DEBUG_FLOWS
+	traceEvent(CONST_TRACE_INFO, "Found FlowSet [displ=%d]", displ);
+#endif
+	foundRecord = 1;
+      }
+
+      if(foundRecord) {
+	V9FlowSet fs;
+
+	if(bufferLen > (displ+sizeof(V9FlowSet))) {
+	  FlowSetV9 *cursor = myGlobals.device[deviceId].netflowGlobals->templates;
+	  u_short tot_len = 4;  /* 4 bytes header */
+
+	  memcpy(&fs, &buffer[displ], sizeof(V9FlowSet));
+
+	  fs.flowsetLen = ntohs(fs.flowsetLen);
+	  fs.templateId = ntohs(fs.templateId);
+
+	  while(cursor != NULL) {
+	    if(cursor->templateInfo.templateId == fs.templateId) {
+	      break;
+	    } else
+	      cursor = cursor->next;
+	  }
+
+	  if(cursor != NULL) {
+	    /* Template found */
+	    int fieldId, init_displ;
+
+	    fields = cursor->fields;
+	    init_displ = displ;
+	    displ += sizeof(V9FlowSet);
+
+#ifdef DEBUG_FLOWS
+	    if(1)
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d [%d...%d]",
+			 fs.templateId, displ, fs.flowsetLen);
+#endif
+
+	    while(displ < (init_displ + fs.flowsetLen)) {
+	      u_short accum_len = 0;
+
+	      if(((init_displ + fs.flowsetLen)-displ) <= 4) break;
+
+	      /* Defaults */
+	      memset(&record, 0, sizeof(record));
+	      record.vlanId = NO_VLAN; /* No VLAN */
+	      record.client_nw_latency_sec = record.client_nw_latency_usec = htonl(0);
+	      record.server_nw_latency_sec = record.server_nw_latency_usec = htonl(0);
+	      record.appl_latency_sec = record.appl_latency_usec = htonl(0);
+
+#ifdef DEBUG_FLOWS
+	      if(1)
+		traceEvent(CONST_TRACE_INFO, ">>>>> Stats [%d...%d]", displ, (init_displ + fs.flowsetLen));
+#endif
+
+	      for(fieldId=0; fieldId<cursor->templateInfo.fieldCount; fieldId++) {
+		if(!(displ < (init_displ + fs.flowsetLen))) break; /* Flow too short */
+
+#ifdef DEBUG_FLOWS
+		if(1)
+		  traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting flow field "
+			     "[displ=%d/%d][template=%d][fieldType=%d][fieldLen=%d][isPenField=%d][field=%d/%d] [%d...%d]" /* "[%s]" */,
+			     displ, fs.flowsetLen,
+			     fs.templateId, fields[fieldId].fieldType,
+			     fields[fieldId].fieldLen,
+			     fields[fieldId].isPenField,
+			     fieldId, cursor->templateInfo.fieldCount,
+			     displ, (init_displ + fs.flowsetLen)
+			     /* ,nf_hex_dump(&buffer[displ], ntohs(fields[fieldId].fieldLen)) */);
+#endif
+
+		if(fields[fieldId].isPenField == 0) {
+		  switch(fields[fieldId].fieldType) {
+		  case 1: /* IN_BYTES */
+		    memcpy(&record.rcvdOctets, &buffer[displ], 4);
+		    break;
+		  case 2: /* IN_PKTS */
+		    memcpy(&record.rcvdPkts, &buffer[displ], 4);
+		    break;
+		  case 4: /* PROT */
+		    memcpy(&record.proto, &buffer[displ], 1);
+		    break;
+		  case 5: /* TOS */
+		    memcpy(&record.tos, &buffer[displ], 1);
+		    break;
+		  case 6: /* TCP_FLAGS */
+		    memcpy(&record.tcp_flags, &buffer[displ], 1);
+		    break;
+		  case 7: /* L4_SRC_PORT */
+		    memcpy(&record.srcport, &buffer[displ], 2);
+		    break;
+		  case 8: /* IP_SRC_ADDR */
+		    memcpy(&record.srcaddr, &buffer[displ], 4);
+		    break;
+		  case 9: /* SRC_MASK */
+		    memcpy(&record.src_mask, &buffer[displ], 1);
+		    break;
+		  case 10: /* INPUT SNMP */
+		    memcpy(&record.input, &buffer[displ], 2);
+		    break;
+		  case 11: /* L4_DST_PORT */
+		    memcpy(&record.dstport, &buffer[displ], 2);
+		    break;
+		  case 12: /* IP_DST_ADDR */
+		    memcpy(&record.dstaddr, &buffer[displ], 4);
+		    break;
+		  case 13: /* DST_MASK */
+		    memcpy(&record.dst_mask, &buffer[displ], 1);
+		    break;
+		  case 14: /* OUTPUT SNMP */
+		    memcpy(&record.output, &buffer[displ], 2);
+		    break;
+		  case 15: /* IP_NEXT_HOP */
+		    memcpy(&record.nexthop, &buffer[displ], 4);
+		    break;
+		  case 16: /* SRC_AS */
+		    /* Fix for handling 16+32 AS numbers */
+		    if(fields[fieldId].fieldLen == 2) {
+		      u_int16_t sixteen;
+		      u_int32_t thirtytwo;
+
+		      memcpy(&sixteen, &buffer[displ], 2);
+		      thirtytwo = ntohs(sixteen);
+		      record.src_as = htonl(thirtytwo);
+		    } else
+		      memcpy(&record.src_as, &buffer[displ], 4);
+		    break;
+		  case 17: /* DST_AS */
+		    /* Fix for handling 16+32 AS numbers */
+		    if(fields[fieldId].fieldLen == 2) {
+		      u_int16_t sixteen;
+		      u_int32_t thirtytwo;
+
+		      memcpy(&sixteen, &buffer[displ], 2);
+		      thirtytwo = ntohs(sixteen);
+		      record.src_as = htonl(thirtytwo);
+		    } else
+		      memcpy(&record.dst_as, &buffer[displ], 4);
+		    break;
+		  case 21: /* LAST_SWITCHED */
+		    memcpy(&record.last, &buffer[displ], 4);
+		    break;
+		  case 22: /* FIRST SWITCHED */
+		    memcpy(&record.first, &buffer[displ], 4);
+		    break;
+		  case 23: /* OUT_BYTES */
+		    memcpy(&record.sentOctets, &buffer[displ], 4);
+		    break;
+		  case 24: /* OUT_PKTS */
+		    memcpy(&record.sentPkts, &buffer[displ], 4);
+		    break;
+		  case 58: /* SRC_VLAN */
+		  case 59: /* DST_VLAN */
+		    memcpy(&record.vlanId, &buffer[displ], 2);
+		    record.vlanId = ntohs(record.vlanId);
+		    break;
+		  }
+		} else {
+		  /* PEN fields */
+		  switch(fields[fieldId].fieldType) {
+		  case NTOP_BASE_ID+82: /* CLIENT_NW_LATENCY_SEC */
+		    memcpy(&record.client_nw_latency_sec, &buffer[displ], 4);
+		    break;
+		  case NTOP_BASE_ID+83: /* CLIENT_NW_LATENCY_USEC */
+		    memcpy(&record.client_nw_latency_usec, &buffer[displ], 4);
+		    break;
+		  case NTOP_BASE_ID+84: /* SERVER_NW_LATENCY_SEC */
+		    memcpy(&record.server_nw_latency_sec, &buffer[displ], 4);
+		    break;
+		  case NTOP_BASE_ID+85: /* SERVER_NW_LATENCY_USEC */
+		    memcpy(&record.server_nw_latency_usec, &buffer[displ], 4);
+		    break;
+		  case NTOP_BASE_ID+86: /* APPL_LATENCY_SEC */
+		    memcpy(&record.appl_latency_sec, &buffer[displ], 4);
+		    break;
+		  case NTOP_BASE_ID+87: /* APPL_LATENCY_USEC */
+		    memcpy(&record.appl_latency_usec, &buffer[displ], 4);
+		    break;
+
+		    /* VoIP Extensions */
+		  case NTOP_BASE_ID+130: /* SIP_CALL_ID */
+		    memcpy(&record.sip_call_id, &buffer[displ], 50);
+#ifdef DEBUG_FLOWS
+		    traceEvent(CONST_TRACE_INFO, "SIP: sip_call_id=%s", record.sip_call_id);
+#endif
+		    break;
+		  case NTOP_BASE_ID+131: /* SIP_CALLING_PARTY */
+		    memcpy(&record.sip_calling_party, &buffer[displ], 50);
+#ifdef DEBUG_FLOWS
+		    traceEvent(CONST_TRACE_INFO, "SIP: sip_calling_party=%s", record.sip_calling_party);
+#endif
+		    break;
+		  case NTOP_BASE_ID+132: /* SIP_CALLED_PARTY */
+		    memcpy(&record.sip_called_party, &buffer[displ], 50);
+#ifdef DEBUG_FLOWS
+		    traceEvent(CONST_TRACE_INFO, "SIP: sip_called_party=%s", record.sip_called_party);
+#endif
+		    break;
+		  }
+		}
+
+		if((handle_ipfix) && (fields[fieldId].fieldLen == 65535)) {
+		  /* IPFIX Variable lenght field */
+		  u_int8_t len8 = buffer[displ];
+
+		  if(len8 < 255)
+		    accum_len += len8+1, displ += len8+1;
+		  else {
+		    u_int16_t len16;
+
+		    memcpy(&len16, &buffer[displ+1], 2);
+		    len16 = ntohs(len16);
+		    len16 += 1 /* 255 */ + 2 /* len */;
+		    accum_len += len16, displ += len16;
+		  }
+		} else
+		  accum_len += fields[fieldId].fieldLen, displ += fields[fieldId].fieldLen;
+	      }
+
+	      /*
+		IMPORTANT NOTE
+
+		handleGenericFlow handles monodirectional flows, whereas
+		v9 flows and bidirectional. This means that if there's some
+		bidirectional traffic, handleGenericFlow is called twice.
+	      */
+	      handleGenericFlow(netflow_device_ip, netflow_device_port, recordActTime,
+				recordSysUpTime, &record, deviceId, &firstSeen, &lastSeen, 1);
+	      myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd++;
+
+#ifdef DEBUG_FLOWS
+	      if(1)
+		traceEvent(CONST_TRACE_INFO,
+			   ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d]", accum_len);
+#endif
+
+	      tot_len += accum_len;
+
+	      if(record.rcvdPkts > 0) {
+		u_int32_t tmp;
+
+		record.sentPkts   = record.rcvdPkts;
+		record.sentOctets = record.rcvdOctets;
+
+		tmp = record.srcaddr;
+		record.srcaddr = record.dstaddr;
+		record.dstaddr = tmp;
+		tmp = record.srcport;
+		record.srcport = record.dstport;
+		record.dstport = tmp;
+
+		handleGenericFlow(netflow_device_ip, netflow_device_port, recordActTime, recordSysUpTime,
+				  &record, deviceId, &firstSeen, &lastSeen, 0);
+	      }
+	    }
+
+	    if(tot_len < fs.flowsetLen) {
+	      u_short padding = fs.flowsetLen - tot_len;
+
+	      if(padding > 4) {
+		traceEvent(CONST_TRACE_WARNING, "Template len mismatch [tot_len=%d][flow_len=%d][padding=%d]",
+			   tot_len, fs.flowsetLen, padding);
+	      } else {
+#ifdef DEBUG_FLOWS
+		traceEvent(CONST_TRACE_INFO, ">>>>> %d bytes padding [tot_len=%d][flow_len=%d]",
+			   padding, tot_len, fs.flowsetLen);
+#endif
+		displ += padding;
+	      }
+	    }
+	  } else {
+#ifdef DEBUG_FLOWS
+	    traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with UNKNOWN template %d [displ=%d][len=%d]",
+		       fs.templateId, displ, fs.flowsetLen);
+#endif
+	    displ += fs.flowsetLen;
+	  }
+	}
+      }
+    } /* for */
+  } else if(the5Record.flowHeader.version == htons(5)) {
+    int i;
+
+    numFlows = ntohs(the5Record.flowHeader.count);
+    recordActTime   = ntohl(the5Record.flowHeader.unix_secs);
+    recordSysUpTime = ntohl(the5Record.flowHeader.sysUptime);
+
+    if(numFlows > CONST_V5FLOWS_PER_PAK) numFlows = CONST_V5FLOWS_PER_PAK;
+
+#ifdef DEBUG_FLOWS
+    if(1) traceEvent(CONST_TRACE_INFO, "dissectNetFlow(%d flows)", numFlows);
+#endif
+
+    /* Lock white/black lists for duration of this flow packet */
+    accessMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex, "flowPacket");
+
+    /*
+      Reset the record so that fields that are not contained
+      into v5 records are set to zero
+    */
+    memset(&record, 0, sizeof(record));
+    record.vlanId = NO_VLAN; /* No VLAN */
+    record.client_nw_latency_sec = record.client_nw_latency_usec = htonl(0);
+    record.server_nw_latency_sec = record.server_nw_latency_usec = htonl(0);
+    record.appl_latency_sec = record.appl_latency_usec = htonl(0);
+
+    for(i=0; i<numFlows; i++) {
+      record.srcaddr    = the5Record.flowRecord[i].srcaddr;
+      record.dstaddr    = the5Record.flowRecord[i].dstaddr;
+      record.nexthop    = the5Record.flowRecord[i].nexthop;
+      record.input      = the5Record.flowRecord[i].input;
+      record.output     = the5Record.flowRecord[i].output;
+      record.sentPkts   = the5Record.flowRecord[i].dPkts;
+      record.sentOctets = the5Record.flowRecord[i].dOctets;
+      record.first      = the5Record.flowRecord[i].first;
+      record.last       = the5Record.flowRecord[i].last;
+      record.srcport    = the5Record.flowRecord[i].srcport;
+      record.dstport    = the5Record.flowRecord[i].dstport;
+      record.tcp_flags  = the5Record.flowRecord[i].tcp_flags;
+      record.proto      = the5Record.flowRecord[i].proto;
+      record.dst_as     = htonl(ntohs(the5Record.flowRecord[i].dst_as));
+      record.src_as     = htonl(ntohs(the5Record.flowRecord[i].src_as));
+      record.dst_mask   = the5Record.flowRecord[i].dst_mask;
+      record.src_mask   = the5Record.flowRecord[i].src_mask;
+
+      handleGenericFlow(netflow_device_ip, netflow_device_port,
+			recordActTime, recordSysUpTime, &record, deviceId, &firstSeen, &lastSeen, 1);
+    }
+
+    if(flowVersion == 5) /* Skip converted V1/V7 flows */
+      myGlobals.device[deviceId].netflowGlobals->numNetFlowsV5Rcvd += numFlows;
+
+    releaseMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex);
+  } else
+    myGlobals.device[deviceId].netflowGlobals->numBadNetFlowsVersionsRcvd++; /* CHANGE */
+
+  if((flowVersion != 1) && (probeId != -1)) {
+    /* NetFlow v1 does not have the flow sequence */
+    updateSenderFlowSequence(deviceId, probeId, numFlows, flowSequence, flowVersion);
+  }
+}
+
+/* ********************************************************* */
+
+#if 0
+static void _dissectFlow(uint32_t netflow_device_ip,
 			uint16_t netflow_device_port,
 			int probeId,
 			char *buffer, int bufferLen, int deviceId) {
@@ -1377,7 +2070,7 @@ static void dissectFlow(uint32_t netflow_device_ip,
     if(flowVersion == 1) {
       memcpy(&the1Record, buffer, bufferLen > sizeof(the1Record) ?
 	     sizeof(the1Record): bufferLen);
-      numFlows = ntohs(the1Record.flowHeader.count);      
+      numFlows = ntohs(the1Record.flowHeader.count);
       if(numFlows > CONST_V1FLOWS_PER_PAK) numFlows = CONST_V1FLOWS_PER_PAK;
       myGlobals.device[deviceId].netflowGlobals->numNetFlowsV1Rcvd += numFlows;
       recordActTime   = the1Record.flowHeader.unix_secs;
@@ -1468,13 +2161,13 @@ static void dissectFlow(uint32_t netflow_device_ip,
 
     memcpy(&v9hdr, buffer, sizeof(V9FlowHeader));
     numFlows = 1;
-    
+
     if(the5Record.flowHeader.version == htons(9)) handle_ipfix = 0; else handle_ipfix = 1;
 
     flowSequence = ntohl(v9hdr.flow_sequence);
 
     if(handle_ipfix) {
-      numEntries = ntohs(v9hdr.count), displ = sizeof(V9FlowHeader);
+      numEntries = ntohs(v9hdr.count), displ = sizeof(V9FlowHeader)-4;
 #ifdef DEBUG_FLOWS
       traceEvent(CONST_TRACE_INFO, "Num IPFIX Entries: %d", numEntries);
 #endif
@@ -1588,7 +2281,7 @@ static void dissectFlow(uint32_t netflow_device_ip,
 		     cursor->templateInfo.flowsetLen-sizeof(V9Template));
 	    }
 	  } else {
-	    OptionTemplate *optionCursor = myGlobals.device[deviceId].netflowGlobals->optionTemplates;	   
+	    OptionTemplate *optionCursor = myGlobals.device[deviceId].netflowGlobals->optionTemplates;
 	    u_short move_ahead;
 
 	    /* traceEvent(CONST_TRACE_INFO, "Received option templateId %d", template.templateId); */
@@ -1603,12 +2296,14 @@ static void dissectFlow(uint32_t netflow_device_ip,
 
 	      if(!found) {
 		OptionTemplate *oTemplate = (OptionTemplate*)malloc(sizeof(OptionTemplate));
-		
+
 		if(oTemplate) {
 		  oTemplate->templateId = template.templateId;
 		  oTemplate->next = myGlobals.device[deviceId].netflowGlobals->optionTemplates;
 		  myGlobals.device[deviceId].netflowGlobals->optionTemplates = oTemplate;
-		}
+		  myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9OptionFlowsRcvd++;
+		} else
+		  myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd++;
 	      }
 
 	    memcpy(&move_ahead, &buffer[displ+2], 2);
@@ -1838,16 +2533,16 @@ static void dissectFlow(uint32_t netflow_device_ip,
 		de_endianFlow(&record);
 
 		// if(record.sentPkts > 0)
-		  handleGenericFlow(netflow_device_ip, netflow_device_port, recordActTime,
-				    recordSysUpTime, &record,
-				    deviceId, &firstSeen, &lastSeen);
+		handleGenericFlow(netflow_device_ip, netflow_device_port, recordActTime,
+				  recordSysUpTime, &record,
+				  deviceId, &firstSeen, &lastSeen, 1);
 
 		tot_len += accum_len;
 		myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd++;
 
 		if(tot_len < fs.flowsetLen) {
 		  u_short padding = fs.flowsetLen - tot_len;
-		  
+
 		  if(padding >= 4) {
 		    traceEvent(CONST_TRACE_WARNING, "Template len mismatch [tot_len=%d][flow_len=%d]",
 			       tot_len, fs.flowsetLen);
@@ -1863,7 +2558,7 @@ static void dissectFlow(uint32_t netflow_device_ip,
 	      }
 	    }
 	  } else {
-	    OptionTemplate *optionCursor = myGlobals.device[deviceId].netflowGlobals->optionTemplates;	   
+	    OptionTemplate *optionCursor = myGlobals.device[deviceId].netflowGlobals->optionTemplates;
 
 #ifdef DEBUG_FLOWS
 	    if(debug)
@@ -1877,7 +2572,7 @@ static void dissectFlow(uint32_t netflow_device_ip,
 	      } else
 		optionCursor = optionCursor->next;
 	    }
-	    
+
 	    if(optionCursor) {
 	      /* Found */
 	      myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9OptionFlowsRcvd++;
@@ -1887,7 +2582,7 @@ static void dissectFlow(uint32_t netflow_device_ip,
 	    displ += fs.flowsetLen;
 	  }
 	}
-      }      
+      }
     } /* for */
   } else if(the5Record.flowHeader.version == htons(5)) {
     int i;
@@ -1942,7 +2637,7 @@ static void dissectFlow(uint32_t netflow_device_ip,
       de_endianFlow(&record);
       handleGenericFlow(netflow_device_ip, netflow_device_port, recordActTime,
 			recordSysUpTime, &record,
-			deviceId, &firstSeen, &lastSeen);
+			deviceId, &firstSeen, &lastSeen, 1);
     }
 
     if(flowVersion == 5) /* Skip converted V1/V7 flows */
@@ -1957,6 +2652,8 @@ static void dissectFlow(uint32_t netflow_device_ip,
     updateSenderFlowSequence(deviceId, probeId, numFlows, flowSequence, flowVersion);
   }
 }
+
+#endif
 
 /* ****************************** */
 
@@ -2186,11 +2883,11 @@ static void* netflowMainLoop(void* _deviceId) {
 	    break;
 	  }
 	}
-	
-	dissectFlow(fromHost.sin_addr.s_addr,  
+
+	dissectFlow(fromHost.sin_addr.s_addr,
 		    fromHost.sin_port, probeId,
 		    (char*)buffer, rc, deviceId);
-	
+
 #ifdef MAX_NETFLOW_PACKET_BUFFER
         gettimeofday(&netflowEndOfRecordProcessing, NULL);
         elapsed = timeval_subtract(netflowEndOfRecordProcessing, netflowStartOfRecordProcessing);
@@ -2218,7 +2915,7 @@ static void* netflowMainLoop(void* _deviceId) {
   myGlobals.device[deviceId].activeDevice = 0;
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread terminated [p%d][netFlowDeviceId=%d]",
-	     (long unsigned int)pthread_self(), getpid(), 
+	     (long unsigned int)pthread_self(), getpid(),
 	     myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
 
   return(NULL);
@@ -3180,26 +3877,26 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
              "<th " TH_BG " align=\"left\" "DARK_BG " colspan=2>Flow Senders</th>\n"
              "<td width=\"20%\" colspan=3>");
 
-  sendString("<table border=\"1\" "TABLE_DEFAULTS" width=100% valign=top>");  
+  sendString("<table border=\"1\" "TABLE_DEFAULTS" width=100% valign=top>");
   sendString("<tr><th " DARK_BG ">Sender</th><th " DARK_BG ">Pkts</th>"
 	     "<th " DARK_BG ">Flows</th><th " DARK_BG ">Lost</th></tr>");
 
   for(i=0; i<MAX_NUM_PROBES; i++) {
     if(myGlobals.device[deviceId].netflowGlobals->probeList[i].probeAddr.s_addr == 0) break;
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<tr><td align=right>%s:%d</td>"
 		  "<td align=right>%s</td>"
 		  "<td align=right>%s</td>"
 		  "<td align=right>%s%s%s</td></tr>\n",
 		  _intoa(myGlobals.device[deviceId].netflowGlobals->probeList[i].probeAddr, buf, sizeof(buf)),
 		  myGlobals.device[deviceId].netflowGlobals->probeList[i].probePort,
-		  formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].pkts, 
+		  formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].pkts,
 			     formatBuf, sizeof(formatBuf)),
-		  formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].totNumFlows, 
-			     formatBuf2, sizeof(formatBuf2)), 
+		  formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].totNumFlows,
+			     formatBuf2, sizeof(formatBuf2)),
 		  (myGlobals.device[deviceId].netflowGlobals->probeList[i].lostFlows > 0) ? "<b><FONT color=red>" : "",
-		  formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].lostFlows, 
+		  formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].lostFlows,
 			     formatBuf3, sizeof(formatBuf3)),
 		  (myGlobals.device[deviceId].netflowGlobals->probeList[i].lostFlows > 0) ? "</FONT></b>" : "");
     sendString(buf);
@@ -3211,7 +3908,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 		"<th " TH_BG " align=\"left\" "DARK_BG " colspan=2>Packets Received</th>\n"
 		"<td " TD_BG " align=\"right\" colspan=3>%s</td>\n"
 		"</tr>\n",
-		formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd, 
+		formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd,
 			   formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
@@ -3220,7 +3917,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 		"<th " TH_BG " align=\"left\" "DARK_BG " colspan=2>Packets with Bad Version</th>\n"
 		"<td " TD_BG " align=\"right\" colspan=3>%s</td>\n"
 		"</tr>\n",
-		formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadNetFlowsVersionsRcvd, 
+		formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadNetFlowsVersionsRcvd,
 			   formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
@@ -3230,7 +3927,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 		"<td " TD_BG " align=\"right\" colspan=3>%s</td>\n"
 		"</tr>\n",
 		formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd -
-			   myGlobals.device[deviceId].netflowGlobals->numBadNetFlowsVersionsRcvd, 
+			   myGlobals.device[deviceId].netflowGlobals->numBadNetFlowsVersionsRcvd,
 			   formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
@@ -3239,7 +3936,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 		"<th " TH_BG " align=\"left\" "DARK_BG " colspan=2>Valid Flows Received</th>\n"
 		"<td " TD_BG " align=\"right\" colspan=3>%s</td>\n"
 		"</tr>\n",
-		formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsRcvd, 
+		formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsRcvd,
 			   formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
@@ -4082,7 +4779,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 
 #ifdef DEBUG_FLOWS
 	    if(debug)
-	      traceEvent(CONST_TRACE_INFO, "Rcvd from from %s [netflowGlobals=%x]", 
+	      traceEvent(CONST_TRACE_INFO, "Rcvd from from %s [netflowGlobals=%x]",
 			 intoa(ip.ip_src),
 			 (void*)myGlobals.device[deviceId].netflowGlobals);
 #endif
