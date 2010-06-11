@@ -187,7 +187,7 @@ void usage(FILE * fp) {
 
 /* *********************************** */
 
-static void verifyOptions (void) {
+static void verifyOptions (void){
 
 #ifdef HAVE_OPENSSL
   if((myGlobals.runningPref.webPort == 0) && (myGlobals.runningPref.sslPort == 0)) {
@@ -367,7 +367,7 @@ static void abortfn(enum mcheck_status status) {
      // path.
 
      execPathSize = sizeof(execPath);
-     (void) _NSGetExecutablePath(execPath, &execPathSize);
+     (void)_NSGetExecutablePath(execPath, &execPathSize);
 
      args = calloc(argc, sizeof(char *));
      args[0] = execPath;
@@ -379,11 +379,17 @@ static void abortfn(enum mcheck_status status) {
 	 args[j++] = osx_daemon;
      }
 
+     if(0) {
+       printf("--------------------\n");
+       for(i=0; i<j; i++) printf("%s\n", args[i]);
+       printf("--------------------\n");
+     }
+
      // Daemonize ourself.
-     (void) daemon(0, 0);
+     (void)daemon(0, 0);
 
      // exec ourself.
-     (void) execve(execPath, args, environ);
+     (void)execve(execPath, args, environ);
      exit(0);
    }
  }

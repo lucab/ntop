@@ -212,7 +212,7 @@ void daemonizeUnderUnix(void) {
 
 /* **************************************** */
 
-void detachFromTerminalUnderUnix(int doChdir) {
+void detachFromTerminalUnderUnix(int doChdir /* if doChdir=1 ntop becomes a daemon */) {
 #ifndef WIN32
 #ifdef MAKE_WITH_SYSLOG
   /* Child processes must log to syslog.
@@ -232,17 +232,17 @@ void detachFromTerminalUnderUnix(int doChdir) {
 
   setsid();  /* detach from the terminal */
 
-#if 0
-  /* Don't close streams as python libs might get confused */
-  fclose(stdin);
-  fclose(stdout);
-  /* fclose(stderr); */
-#endif
+  if(doChdir) {
+    /* Don't close streams as python libs might get confused */
+    fclose(stdin);
+    fclose(stdout);
+    fclose(stderr);
+  }
 
   /*
    * clear any inherited file mode creation mask
    */
-  umask (0);
+  umask(0);
 
   /*
    * Use line buffered stdout

@@ -27,7 +27,7 @@ static void encodeWebFormURL(char *in, char *buf, int buflen);
 static void decodeWebFormURL(char *buf);
 static int processNtopConfigData (char *buf, int savePref);
 
-/* *******************************/
+/* ****************************** */
 
 void showUsers(void) {
   uint numUsers=0;
@@ -88,7 +88,7 @@ void showUsers(void) {
   sendMenuFooter(1, 2);
 }
 
-/* *******************************/
+/* ****************************** */
 
 void clearUserUrlList(void) {
   int i;
@@ -113,7 +113,7 @@ void clearUserUrlList(void) {
     releaseMutex(&myGlobals.securityItemsMutex);
 }
 
-/* *******************************/
+/* ****************************** */
 
 void addUser(char* user) {
   char tmpStr[128];
@@ -231,7 +231,7 @@ void addUser(char* user) {
   sendMenuFooter(0, 2);
 }
 
-/* *******************************/
+/* ****************************** */
 
 void deleteUser(char* user) {
   if(user == NULL) {
@@ -269,7 +269,7 @@ void deleteUser(char* user) {
   sendMenuFooter(1, 2);
   printHTMLtrailer();
 }
-/* *******************************/
+/* ****************************** */
 
 #define MAX_NUM_COMMUNITIES     32
 
@@ -456,7 +456,7 @@ void showURLs(void) {
   sendMenuFooter(3, 0);
 }
 
-/* *******************************/
+/* ****************************** */
 
 void addURL(char* url) {
   int i, numUsers=0;
@@ -570,7 +570,7 @@ void addURL(char* url) {
   sendMenuFooter(0, 2);
 }
 
-/* *******************************/
+/* ****************************** */
 
 void deleteURL(char* url) {
 
@@ -610,7 +610,7 @@ void deleteURL(char* url) {
   printHTMLtrailer();
 }
 
-/* *******************************/
+/* ****************************** */
 
 void doAddURL(int len) {
   char *err=NULL;
@@ -790,7 +790,7 @@ void setPcapFilter(char* filters, int device_id) {
   }
 }
 
-/* *******************************/
+/* ****************************** */
 
 /* Courtesy of Michael Weidel <michael.weidel@gmx.de> */
 
@@ -912,7 +912,7 @@ void changeFilter(void) {
   sendString("<BR><B></FONT>\n");
 }
 
-/* *******************************/
+/* ****************************** */
 
 struct _menuData {
   char	*text, *anchor;
@@ -925,7 +925,7 @@ static struct _menuData menuItem[] = {
   { "Add URL",    CONST_ADD_URLS_HTML }
 };
 
-/* *******************************/
+/* ****************************** */
 
 static void sendMenuFooter(int itm1Idx, int itm2Idx) {
   char	buf[128];
@@ -940,7 +940,7 @@ static void sendMenuFooter(int itm1Idx, int itm2Idx) {
   sendString("</FONT>\n</CENTER>\n");
 }
 
-/* *******************************/
+/* ****************************** */
 
 static void encodeWebFormURL(char *in, char *buf, int buflen) {
   int i, j, c, d;
@@ -962,7 +962,7 @@ static void encodeWebFormURL(char *in, char *buf, int buflen) {
   buf[j] = '\0';
 }
 
-/* *******************************/
+/* ****************************** */
 
 static void decodeWebFormURL(char *buf) {
   int i, j;
@@ -1094,7 +1094,7 @@ static void addKeyIfMissing(char* key, char* value,
     free(return_data.dptr);
 }
 
-/* *******************************/
+/* ****************************** */
 
 void setAdminPassword(char* pass) {
   traceEvent(CONST_TRACE_INFO, "Setting administrator password...");
@@ -1103,9 +1103,11 @@ void setAdminPassword(char* pass) {
     addKeyIfMissing("1admin", NULL, 1, CONST_ADMINPW_QUESTION);
   else
     addKeyIfMissing("1admin", pass, 1, NULL);
+
+  traceEvent(CONST_TRACE_INFO, "Admin password set...");
 }
 
-/* *******************************/
+/* ****************************** */
 
 void addDefaultAdminUser(void) {
   /* Add user 'admin' and ask for password if not existing */

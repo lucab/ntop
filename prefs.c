@@ -117,7 +117,7 @@ static struct option const long_options[] = {
 #endif
 
 #if defined(DARWIN) && (!defined(TIGER))
-  { "osx-daemon",                       required_argument, NULL, 'v' },
+  { "osx-daemon",                       no_argument,       NULL, 'v' },
 #endif
 
   { "http-server",                      required_argument, NULL, 'w' },
@@ -806,8 +806,6 @@ int parseOptions(int argc, char* argv[]) {
 
   /* *********************** */
 
-  traceEvent(CONST_TRACE_ERROR, "**** DAEMON MODE=%d\n", myGlobals.runningPref.daemonMode);
-
   if(myGlobals.runningPref.daemonMode) {
     /* 
        In order to avoid ntop fail to start when running in daemon mode
@@ -816,8 +814,6 @@ int parseOptions(int argc, char* argv[]) {
     */
     setAdminPw = 1; /* NOTE: the password is not overwritten if already present */
     if(adminPw == NULL) adminPw = "admin";
-    
-    traceEvent(CONST_TRACE_ERROR, "**** ADMIN=%s\n", adminPw);
   }
 
   if(setAdminPw) {
@@ -894,8 +890,6 @@ int parseOptions(int argc, char* argv[]) {
     }
   }
 #endif
-
-  
 
   return(userSpecified);
 }
