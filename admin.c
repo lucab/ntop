@@ -987,8 +987,7 @@ static void decodeWebFormURL(char *buf) {
   C C Magnus Gustavsson <magnus@gustavsson.se>
 */
 static void addKeyIfMissing(char* key, char* value,
-			    int encryptValue, int existingOK,
-			    char *userQuestion) {
+			    int encryptValue, char *userQuestion) {
   datum key_data, return_data, data_data;
 #ifndef WIN32
  /* 14 is ok for traditional crypt, but the enhanced crypt() in FreeBSD
@@ -1004,7 +1003,7 @@ static void addKeyIfMissing(char* key, char* value,
 
   return_data = gdbm_fetch(myGlobals.pwFile, key_data);
 
-  if((return_data.dptr == NULL) || (existingOK != 0)) {
+  if(return_data.dptr == NULL) {
     char *thePw, pw1[16], pw2[16];
     /* If not existing, then add user 'admin' and ask for password  */
 
@@ -1101,28 +1100,28 @@ void setAdminPassword(char* pass) {
   traceEvent(CONST_TRACE_INFO, "Setting administrator password...");
   
   if (pass == NULL)
-    addKeyIfMissing("1admin", NULL, 1, 1, CONST_ADMINPW_QUESTION);
+    addKeyIfMissing("1admin", NULL, 1, CONST_ADMINPW_QUESTION);
   else
-    addKeyIfMissing("1admin", pass, 1, 1, NULL);
+    addKeyIfMissing("1admin", pass, 1, NULL);
 }
 
 /* *******************************/
 
 void addDefaultAdminUser(void) {
   /* Add user 'admin' and ask for password if not existing */
-  addKeyIfMissing("1admin", NULL, 1, 0, CONST_ADMINPW_QUESTION);
+  addKeyIfMissing("1admin", NULL, 1, CONST_ADMINPW_QUESTION);
 
   /* Add user 'admin' for URL 'show...' if not existing */
-  addKeyIfMissing("2showU",      "users=1admin", 0, 0, NULL);
-  addKeyIfMissing("2modifyU",    "users=1admin", 0, 0, NULL);
-  addKeyIfMissing("2deleteU",    "users=1admin", 0, 0, NULL);
-  addKeyIfMissing("2shut",       "users=1admin", 0, 0, NULL);
-  addKeyIfMissing("2resetStats", "users=1admin", 0, 0, NULL);
-  addKeyIfMissing("2chang",      "users=1admin", 0, 0, NULL);
-  addKeyIfMissing("2configNtop", "users=1admin", 0, 0, NULL);
-  addKeyIfMissing("2privacyFlag","users=1admin", 0, 0, NULL);
-  addKeyIfMissing("2"CONST_EDIT_PREFS,"users=1admin", 0, 0, NULL);
-  addKeyIfMissing("2"CONST_PURGE_HOST,"users=1admin", 0, 0, NULL);
+  addKeyIfMissing("2showU",      "users=1admin", 0, NULL);
+  addKeyIfMissing("2modifyU",    "users=1admin", 0, NULL);
+  addKeyIfMissing("2deleteU",    "users=1admin", 0, NULL);
+  addKeyIfMissing("2shut",       "users=1admin", 0, NULL);
+  addKeyIfMissing("2resetStats", "users=1admin", 0, NULL);
+  addKeyIfMissing("2chang",      "users=1admin", 0, NULL);
+  addKeyIfMissing("2configNtop", "users=1admin", 0, NULL);
+  addKeyIfMissing("2privacyFlag","users=1admin", 0, NULL);
+  addKeyIfMissing("2"CONST_EDIT_PREFS,"users=1admin", 0, NULL);
+  addKeyIfMissing("2"CONST_PURGE_HOST,"users=1admin", 0, NULL);
 }
 
 /* ************************************ */
