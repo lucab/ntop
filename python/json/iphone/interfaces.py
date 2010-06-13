@@ -2,11 +2,16 @@ import ntop
 import json
 import host
 import interface
-# Import modules for CGI handling
 import cgi
 import sys
 
 class Layout:
+	"""Layout Class for iphone client layout management
+	This gathers up a number of containers each containing
+	a number of widgets.
+	dump method simply returns the internal dictionary of containers
+	the way the iphone API are expected to receive them, once JSON-ized
+	"""
 	def __init__(self):
 		self.data = {}
 		self.data['layout'] = []
@@ -17,7 +22,18 @@ class Layout:
 		return self.data
 
 class WidgetContainer:
-	
+	"""Widget Container Class
+	Just collects a number of Widget Objects and sets a number
+	of container parameters so that the container is correctly
+	handled by the iphone api.
+	In the details:
+	- id = identifier for the container. It's unique.
+	  Using this ID the iphone clients look for an image with the same name
+	  and creates a tab icon accordingly.
+	- label = the label shown under the tab icon on the iphone client.
+	- type = container type. As of now only __WidgetContainerTypeHorizontalScrolling__ is supported.
+	- widgets = array of widget objects dump data ( dictionaries )
+	"""
 	__WidgetContainerTypeHorizontalScrolling__ = 0
 	
 	def __init__(self, properties = {}):
@@ -40,8 +56,34 @@ class WidgetContainer:
 		self.data[key] = value
 
 class Widget:
-	
-	__WidgetTypeUndefined = 0
+	""" The Widget Object
+	Can be any of the constantized values here below.
+	As long as it's one of these kinds you can push whatever data on them, 
+	it will be correctly displayed.
+	Obviously, every kind of widget accepts its own data format.
+	__WidgetTypePieChart__ Accepts a dictionary of <String> keys with <float> values
+	__WidgetTypeBarChart__ As Above.
+	__WidgetTypeGraph__ Currently unsupported as of iphone client 1.0
+	__WidgetTypeMultiGraph__ Currently unsupported as of iphone client 1.0
+	__WidgetTypeTable__ Accepts a dictionary of <String> keys with <String> values.
+	                    Values can also be numeric here, they'll be 
+	                    automatically formatted if the case.
+	__WidgetTypeGroupedTable__ Accepts a dictionary of <String> keys and <Dictionary> values.
+	                           Values here are <String> key and <String/Numeric> value dictionaries.
+	__WidgetTypeTopHosts__ Accepts an array of Dictionaries, Dictionaries are a collection of values.
+	                       As of now these values will be correctly displayed clientside:
+	                       -'hostname' = the resolved name of the host, where possible.
+	                       -'macaddress' = the ethernet mac address
+	                       -'hardware'= hardware type ( currently unsupported )
+	                       -'type' = type of the host ( will be iconized clientside if an image with the same name is found)
+	                       -'ip' = ip of the host
+	                       -'up' = sent stream value
+	                       -'down' = received stream value
+	                       -'country' = 3 char country code.
+	                       -'direction' = 0/1 tells the direction of the data (sent/received)
+	__WidgetTypeSearchableTopHosts__ As above but the list is searchable.
+	"""
+	__WidgetTypeUndefined__ = 0
 	__WidgetTypePieChart__ = 1
 	__WidgetTypeBarChart__ = 2
 	__WidgetTypeGraph__ = 3
@@ -121,6 +163,15 @@ def insort_leftReversed(a, x, lo=0, hi=None):
 	a.insert(lo, x)
 	# returns insert position
 	return lo
+	
+def filter_dict(data, predicate=lambda k, v: True):
+	if (data == None or len(data) <= 0):
+		return {}
+	returnData = {}
+	for k, v in data.items():
+		if predicate(k, v):
+			returnData[k] = v
+	return returnData
 
 __P2P__ = 2
 __VOIP__ = 4
@@ -132,6 +183,7 @@ __FTPHOST__ = 128
 __SERVER__ = 256
 __MAILSERVER__ = 512
 __DHCP__ = 1024
+__NTP__ = 2048
 
 # Traffic direction in host coordinates
 __DIRECTION_SENT__ = 0
@@ -190,8 +242,8 @@ for i in range(interface.numInterfaces()):
 			container = WidgetContainer({'type':WidgetContainer.__WidgetContainerTypeHorizontalScrolling__,'id':'tophosts','label':'tophosts'})
 			# put widgets in it
 			container.addWidget( Widget({'type':Widget.__WidgetTypeSearchableTopHosts__,'id':'tophoststhroughput','title':'Top Hosts by Throughput','choices':['peak','average','actual'],'unit':'kbps'}) )
-			container.addWidget( Widget({'type':Widget.__WidgetTypeSearchableTopHosts__,'id':'tophostspackets','title':'Top Hosts by Packet Rate','unit':'pkts'}) )
-			container.addWidget( Widget({'type':Widget.__WidgetTypeSearchableTopHosts__,'id':'tophostsbytes','title':'Top Hosts by Byte Rate','unit':'bytes'}) )
+			container.addWidget( Widget({'type':Widget.__WidgetTypeSearchableTopHosts__,'id':'tophostspackets','title':'Top Hosts by Packet Rate','unit':'pps'}) )
+			container.addWidget( Widget({'type':Widget.__WidgetTypeSearchableTopHosts__,'id':'tophostsbytes','title':'Top Hosts by Byte Rate','unit':'byte'}) )
 			# add the container to the layout
 			layout.addContainer(container)
 			# ==============================
@@ -218,7 +270,7 @@ for i in range(interface.numInterfaces()):
 			# ========================
 			# A Container for ip data
 			# ========================
-			container = WidgetContainer({'type':WidgetContainer.__WidgetContainerTypeHorizontalScrolling__,'id':'ip','label':'ip'})
+			container = WidgetContainer({'type':WidgetContainer.__WidgetContainerTypeHorizontalScrolling__,'id':'directions','label':'directions'})
 			# put widgets in it
 			container.addWidget( Widget({'type':Widget.__WidgetTypePieChart__,'id':'ipstats','title':'IP Statistics','mode':'counter','unit':'bytes'}) )
 			container.addWidget( Widget({'type':Widget.__WidgetTypePieChart__,'id':'tcpstats','title':'TCP Statistics','mode':'counter','unit':'bytes'}) )
@@ -252,18 +304,19 @@ for i in range(interface.numInterfaces()):
 				widget.setKeyAndValue('generic info', 
 					{'name':interface.name(i), 
 					 'human name':interface.humanName(i), 
-					 'virtual':interface.virtual(i), 
-					 'speed':interface.speed(i), 
+					 'virtual':'Yes' if interface.virtual(i) else 'No', 
+					 'speed':interface.speed(i) if interface.speed(i) else 'Unknown' , 
 					 'mtu':interface.mtu(i), 
-					 'bpf':interface.bpf(i)})
+					 'bpf filter':interface.bpf(i) or 'none'})
 				# interface time group
-				widget.setKeyAndValue('interface time', interface.time(i))
+				# suspended at the moment
+				# widget.setKeyAndValue('interface time', interface.time(i))
 				# interface address info 
 				widget.setKeyAndValue('interface address', 
-					{'ipv4 address': interface.ipv4(i), 
-					 'ipv6 address': interface.ipv6(i), 
+					{'IPv4 address': interface.ipv4(i), 
+					 'IPv6 address': interface.ipv6(i), 
 					 'network': interface.network(i), 
-					 'n.hosts': interface.numHosts(i)})
+					 'active host number': interface.numHosts(i)})
 			# ===============================
 			# IP Statistics Widget Data
 			# ===============================
@@ -293,21 +346,27 @@ for i in range(interface.numInterfaces()):
 			# ===============================
 			if (widgetId.lower() == "protocolbytes"):
 				# pie chart is a serie of key-value pairs
-				widget.setProperties(interface.bytesStats(i))
+				wdata = interface.bytesStats(i)
+				wdata = filter_dict(wdata, lambda k,v: v > 0)
+				widget.setProperties(wdata)
 				widget.removeKey('total')
 			# ===============================
 			# Protocol Packets Widget Data
 			# ===============================
 			if (widgetId.lower() == "protocolpackets"):
 				# pie chart is a serie of key-value pairs
-				widget.setProperties(interface.pktsStats(i))
+				wdata = interface.pktsStats(i)
+				wdata = filter_dict(wdata, lambda k,v: v > 0)
+				widget.setProperties(wdata)
 				widget.removeKey('total')
 			# ===============================
 			# Security Packets Widget Data
 			# ===============================
 			if (widgetId.lower() == "securitypackets"):
 				# table is a serie of key-value pairs
-				widget.setProperties(interface.securityPkts(i))
+				wdata = interface.securityPkts(i)
+				wdata = filter_dict(wdata, lambda k,v: v > 0)
+				widget.setProperties(wdata)
 				widget.removeKey('total')
 			# ===============================
 			# NetFlow Widget Data
@@ -365,7 +424,7 @@ for i in range(interface.numInterfaces()):
 					geo = host.geoIP()
 					country = geo.get('country_name', '')
 					countryCode = geo.get('country_code', '')
-					hostType = 0 + __P2P__*host.isP2P() + __VOIP__*(host.isVoIPHost()|host.isVoIPClient()|host.isVoIPGateway()) + __PRINTER__*host.isPrinter() + __DIRECTORY__*host.isDirectoryHost() + __WORKSTATION__*host.isWorkstation() + __HTTPHOST__*host.isHTTPhost() + __FTPHOST__*host.isFTPhost() + __SERVER__*host.isServer() + __MAILSERVER__*(host.isSMTPhost()|host.isPOPhost()|host.isIMAPhost()) + __DHCP__*(host.isDHCPClient()|host.isDHCPServer())
+					hostType = 0 + __P2P__*host.isP2P() + __VOIP__*(host.isVoIPHost()|host.isVoIPClient()|host.isVoIPGateway()) + __PRINTER__*host.isPrinter() + __DIRECTORY__*host.isDirectoryHost() + __WORKSTATION__*host.isWorkstation() + __HTTPHOST__*host.isHTTPhost() + __FTPHOST__*host.isFTPhost() + __SERVER__*host.isServer() + __MAILSERVER__*(host.isSMTPhost()|host.isPOPhost()|host.isIMAPhost()) + __DHCP__*(host.isDHCPClient()|host.isDHCPServer()) + __NTP__*(host.isNtpServer())
 
 					thpSent=host.sendThpt()
 					thpRcvd=host.receiveThpt()
@@ -400,7 +459,7 @@ for i in range(interface.numInterfaces()):
 					geo = host.geoIP()
 					country = geo.get('country_name', '')
 					countryCode = geo.get('country_code', '')
-					hostType = 0 + __P2P__*host.isP2P() + __VOIP__*(host.isVoIPHost()|host.isVoIPClient()|host.isVoIPGateway()) + __PRINTER__*host.isPrinter() + __DIRECTORY__*host.isDirectoryHost() + __WORKSTATION__*host.isWorkstation() + __HTTPHOST__*host.isHTTPhost() + __FTPHOST__*host.isFTPhost() + __SERVER__*host.isServer() + __MAILSERVER__*(host.isSMTPhost()|host.isPOPhost()|host.isIMAPhost()) + __DHCP__*(host.isDHCPClient()|host.isDHCPServer())
+					hostType = 0 + __P2P__*host.isP2P() + __VOIP__*(host.isVoIPHost()|host.isVoIPClient()|host.isVoIPGateway()) + __PRINTER__*host.isPrinter() + __DIRECTORY__*host.isDirectoryHost() + __WORKSTATION__*host.isWorkstation() + __HTTPHOST__*host.isHTTPhost() + __FTPHOST__*host.isFTPhost() + __SERVER__*host.isServer() + __MAILSERVER__*(host.isSMTPhost()|host.isPOPhost()|host.isIMAPhost()) + __DHCP__*(host.isDHCPClient()|host.isDHCPServer()) + __NTP__*(host.isNtpServer())
 					
 					packetsSent = host.pktSent()
 					packetsRcvd = host.pktRcvd()
@@ -429,7 +488,7 @@ for i in range(interface.numInterfaces()):
 					geo = host.geoIP()
 					country = geo.get('country_name', '')
 					countryCode = geo.get('country_code', '')
-					hostType = 0 + __P2P__*host.isP2P() + __VOIP__*(host.isVoIPHost()|host.isVoIPClient()|host.isVoIPGateway()) + __PRINTER__*host.isPrinter() + __DIRECTORY__*host.isDirectoryHost() + __WORKSTATION__*host.isWorkstation() + __HTTPHOST__*host.isHTTPhost() + __FTPHOST__*host.isFTPhost() + __SERVER__*host.isServer() + __MAILSERVER__*(host.isSMTPhost()|host.isPOPhost()|host.isIMAPhost()) + __DHCP__*(host.isDHCPClient()|host.isDHCPServer())
+					hostType = 0 + __P2P__*host.isP2P() + __VOIP__*(host.isVoIPHost()|host.isVoIPClient()|host.isVoIPGateway()) + __PRINTER__*host.isPrinter() + __DIRECTORY__*host.isDirectoryHost() + __WORKSTATION__*host.isWorkstation() + __HTTPHOST__*host.isHTTPhost() + __FTPHOST__*host.isFTPhost() + __SERVER__*host.isServer() + __MAILSERVER__*(host.isSMTPhost()|host.isPOPhost()|host.isIMAPhost()) + __DHCP__*(host.isDHCPClient()|host.isDHCPServer()) + __NTP__*(host.isNtpServer())
 
 					# bytes sent/received
 					# to kbytes
@@ -451,8 +510,6 @@ for i in range(interface.numInterfaces()):
 			if ('hostlist' in tobesent):
 				tobesent = tobesent.get('hostlist',[])
 			data['widget'] = tobesent
-print>>sys.stderr, 'data:'
-print>>sys.stderr,data
 
 ntop.sendHTTPHeader(1) # 1 = HTML
 #ntop.sendString('<PRE>')

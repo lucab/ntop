@@ -6,7 +6,6 @@ import interface
 import cgi
 import sys
 
-
 # form management
 form = cgi.FieldStorage()
 
@@ -21,10 +20,6 @@ client = form.getvalue('client', default="")
 version = form.getvalue('version', default=0)
 version = float(version)
 
-print>>sys.stderr,'query:'+query
-print>>sys.stderr, 'client:'+client
-print>>sys.stderr, 'version:'+str(version)
-
 data={}
 if ('check' == query.lower()):
 	data['check'] = version >= 1.0 and client.lower() == "iphone"
@@ -36,10 +31,6 @@ if ('interfaces' == query.lower()):
 	data['interfaces'] = interfaces
 if ('host' == query.lower()):
 	data['host'] = {'version': ntop.version(),'os': ntop.os(),'uptime': ntop.uptime()}
-
-
-print>>sys.stderr, 'data:'
-print>>sys.stderr,data
 
 ntop.sendHTTPHeader(1) # 1 = HTML
 ntop.sendString(json.dumps(data, sort_keys=False, indent=4))
