@@ -1279,10 +1279,10 @@ typedef struct single_flow_ver7_rec {
 
 /* NetFlow v9/IPFIX */
 
-typedef struct ipfix_flow_set {
+typedef struct flow_set {
   u_int16_t templateId;
   u_int16_t fieldCount;
-} IPFIXFlowSet;
+} FlowSet;
 
 typedef struct flow_ipfix_template_field {
   u_int16_t fieldType;
@@ -1328,6 +1328,7 @@ typedef struct flow_ver9_templateids {
 
 typedef struct flowSetV9 {
   V9Template templateInfo;
+  u_int16_t flowLen; /* Real flow length */
   V9V10TemplateField *fields;
   struct flowSetV9 *next;
 } FlowSetV9;
