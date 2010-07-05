@@ -1319,14 +1319,14 @@ static void updateSenderFlowSequence(int deviceId, int probeId,
       reset = 1;
   }
 
+ do_reset:
   if(reset) {
     myGlobals.device[deviceId].netflowGlobals->probeList[probeId].pkts = 1;
     myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lastSequenceNumber = flowSequence;
     myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lowestSequenceNumber = flowSequence;
     myGlobals.device[deviceId].netflowGlobals->probeList[probeId].highestSequenceNumber = flowSequence;
     myGlobals.device[deviceId].netflowGlobals->probeList[probeId].totNumFlows = numFlows;
-  }
-  else {
+  } else {
     myGlobals.device[deviceId].netflowGlobals->probeList[probeId].totNumFlows += numFlows;
     myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lastSequenceNumber = flowSequence;
     if(flowSequence > myGlobals.device[deviceId].netflowGlobals->probeList[probeId].highestSequenceNumber)
@@ -1339,6 +1339,12 @@ static void updateSenderFlowSequence(int deviceId, int probeId,
       (((myGlobals.device[deviceId].netflowGlobals->probeList[probeId].highestSequenceNumber -
 	 myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lowestSequenceNumber) + numFlows) -
        myGlobals.device[deviceId].netflowGlobals->probeList[probeId].totNumFlows);
+   
+    if(myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lostFlows 
+       >  myGlobals.device[deviceId].netflowGlobals->probeList[probeId].totNumFlows) {
+      reset = 1; /* Somethign wrong: let's reset */
+      goto do_reset;
+    }
   }
 }
 
@@ -3247,7 +3253,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 
   sendString("<table border=\"1\" "TABLE_DEFAULTS" width=100% valign=top>");
   sendString("<tr><th " DARK_BG ">Sender</th><th " DARK_BG ">Pkts</th>"
-	     "<th " DARK_BG ">Flows</th><th " DARK_BG ">Lost</th></tr>");
+	     "<th " DARK_BG ">Flows</th><th " DARK_BG ">Lost Flows</th></tr>");
 
   for(i=0; i<MAX_NUM_PROBES; i++) {
     if(myGlobals.device[deviceId].netflowGlobals->probeList[i].probeAddr.s_addr == 0) break;
