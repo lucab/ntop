@@ -782,11 +782,6 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	wrtFloatItm(fDescr, lang, "\t", "peakTPktThpt", el->peakTPktThpt, ',', numEntries);
     }
 
-    if(checkFilter(filter, "ipv4BytesSent"))
-      wrtLlongItm(fDescr, lang, "\t", "ipv4BytesSent", el->ipv4BytesSent, ',', numEntries);
-    if(checkFilter(filter, "ipv4BytesRcvd"))
-      wrtLlongItm(fDescr, lang, "\t", "ipv4BytesRcvd", el->ipv4BytesRcvd, ',', numEntries);
-
     if(checkFilter(filter, "ipv6BytesSent"))
       wrtLlongItm(fDescr, lang, "\t", "ipv6BytesSent", el->ipv6BytesSent, ',', numEntries);
     if(checkFilter(filter, "ipv6BytesRcvd"))
