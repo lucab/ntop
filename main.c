@@ -347,7 +347,7 @@ static void abortfn(enum mcheck_status status) {
    if(is_daemon) {
      char **     args;
      char        execPath[PATH_MAX];
-     uint32_t    execPathSize;
+     u_int32_t    execPathSize;
      static char *osx_daemon = "--osx-daemon";
 
      // ... process any pre-daemonization arguments ...

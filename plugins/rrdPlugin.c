@@ -239,7 +239,7 @@ static void fetch_graph_size(char rrd_height[], char rrd_width[]) {
 
 static int createMultihostGraph(char *rrdName,
 				HostTraffic *rrdHosts[MAX_NUM_NETWORKS],
-				uint32_t numRrdHosts,
+				u_int32_t numRrdHosts,
 				char *startTime, char* endTime) {
   char buf[1024], hosts[512] = { '\0' };
   int i, maxRRDhosts = 10;
@@ -287,7 +287,7 @@ static void expandRRDList(char *rrdName,
 			  NetworkStats localNetworks[MAX_NUM_NETWORKS], /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
 			  u_short numLocalNetworks, char *startTime, char* endTime) {
   char path[256], rrdName_copy[64], debug=0;
-  uint32_t numRrdHosts = 0, i;
+  u_int32_t numRrdHosts = 0, i;
   HostTraffic *rrdHosts[MAX_NUM_NETWORKS];
 
   if(debug) traceEvent(CONST_TRACE_WARNING, "RRD: expandRRDList(%s)", rrdName);
@@ -299,7 +299,7 @@ static void expandRRDList(char *rrdName,
     struct stat statbuf;
     HostTraffic *el;
     HostAddr ha;
-    uint j, num_hosts, offset;
+    u_int j, num_hosts, offset;
     char addr_buf[32], *str;
 
     ha.hostFamily = AF_INET;
@@ -635,7 +635,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
     for(i=0; i<numLocalNetworks; i++) {
       HostTraffic *el;
       HostAddr ha;
-      uint j, num_hosts, offset;
+      u_int j, num_hosts, offset;
       char addr_buf[32], *str;
 
       ha.hostFamily = AF_INET;
@@ -1996,7 +1996,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   char *rrd_custom[MAX_NUM_RRD_ENTRIES], *rrd_hosts_path[MAX_NUM_RRD_HOSTS],
     *rrd_hosts[MAX_NUM_RRD_HOSTS], file_a[32], file_b[32], *upside;
   double ymin,ymax;
-  uint8_t upside_down = 0, no_mem = 0;
+  u_int8_t upside_down = 0, no_mem = 0;
   u_char titleAlreadySent = 0;
 
   // if((!active) || (!initialized)) return;
@@ -3093,8 +3093,8 @@ static void commonRRDinit(void) {
     value[0] = '\0';
     for(i=0; i<myGlobals.numLocalNetworks; i++) {
       char buf[64];
-      uint32_t network = myGlobals.localNetworks[i].address[CONST_NETWORK_ENTRY];
-      uint32_t netmask = myGlobals.localNetworks[i].address[CONST_NETMASK_ENTRY];
+      u_int32_t network = myGlobals.localNetworks[i].address[CONST_NETWORK_ENTRY];
+      u_int32_t netmask = myGlobals.localNetworks[i].address[CONST_NETMASK_ENTRY];
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "%d.%d.%d.%d/%d.%d.%d.%d",
@@ -3264,7 +3264,7 @@ static void arbitraryAction(char *rrdName,
   startTime = _startTime, endTime = _endTime;
 
   if(atol(endTime) == 0) {
-    snprintf(time_buf, sizeof(time_buf), "%u", (uint)time(NULL));
+    snprintf(time_buf, sizeof(time_buf), "%u", (u_int)time(NULL));
     endTime = time_buf;
   }
 
@@ -4701,7 +4701,7 @@ RETSIGTYPE rrdcleanup(int signo) {
 
 /* ****************************** */
 
-static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, uint8_t is_subnet_host) {
+static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet_host) {
   char value[512 /* leave it big for hosts filter */], subnet_buf[32], buf1[64];
   NetworkStats networks[32];
   u_short numLocalNets;
@@ -5276,14 +5276,14 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     if(dumpDomains) {
       DomainStats **stats, *tmpStats, *statsEntry = NULL;
-      uint maxHosts = 0;
+      u_int maxHosts = 0;
       Counter totBytesSent = 0;
       Counter totBytesRcvd = 0;
       HostTraffic *el;
       u_short keyValue=0;
 
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
-        uint numEntries = 0;
+        u_int numEntries = 0;
 
 
 	if(!strcmp(myGlobals.device[devIdx].name, "pcap-file")) continue;
@@ -5614,7 +5614,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	if(myGlobals.device[devIdx].asStats) {
 	  AsStats *asStats;
-	  uint totAS = 0;
+	  u_int totAS = 0;
 	  char rrdIfPath[512];
 
 	  accessMutex(&myGlobals.device[devIdx].asMutex, "rrdPluginAS");

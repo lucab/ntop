@@ -83,7 +83,7 @@ sendString("]\n"
 
 /**********************************************************/
 
-static void send_graph_footer(char *the_type, uint width, uint height) {
+static void send_graph_footer(char *the_type, u_int width, u_int height) {
   char buf[256];
 
   sendString("];\n"
@@ -119,7 +119,7 @@ sendString(the_type);
 /**********************************************************/
 
 static void build_chart(u_char is_pie, char *the_type, int num, float *p, 
-			char **lbl, uint width, uint height) {
+			char **lbl, u_int width, u_int height) {
   int i, num_printed;
   char buf[64];
 

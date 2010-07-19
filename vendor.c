@@ -177,8 +177,8 @@ IPXSAPInfo* ipxSAPhash[MAX_IPXSAP_NAME_HASH];
 
 static int addIPXSAPTableEntry(IPXSAPInfo* theMacHash[],
                                IPXSAPInfo* entry,
-                               uint tableLen) {
-  uint idx;
+                               u_int tableLen) {
+  u_int idx;
   unsigned long ipxsapValue;
   int hashLoadCollisions=0;
 
@@ -187,9 +187,9 @@ static int addIPXSAPTableEntry(IPXSAPInfo* theMacHash[],
     + 256*(unsigned long)((entry->ipxsapId >> 8) & 0xff)
     + (unsigned long)((entry->ipxsapId >> 16) & 0xff);
 #else
-  idx = (uint)(entry->ipxsapId % tableLen);
+  idx = (u_int)(entry->ipxsapId % tableLen);
 #endif
-  idx = (uint)((uint)ipxsapValue % tableLen);
+  idx = (u_int)((u_int)ipxsapValue % tableLen);
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: addIPXSAPTableEntry(%06x, %s) gives %ld (mod %d = %d)",
@@ -222,12 +222,12 @@ static int addIPXSAPTableEntry(IPXSAPInfo* theMacHash[],
 
 /* *********************************** */
 
-char* getSAPInfo(uint16_t sapInfo, short encodeString) {
-  uint idx;
+char* getSAPInfo(u_int16_t sapInfo, short encodeString) {
+  u_int idx;
   unsigned long ipxsapValue = (unsigned long)sapInfo;
   IPXSAPInfo* cursor;
 
-  idx = (uint)((uint)sapInfo % MAX_IPXSAP_NAME_HASH);
+  idx = (u_int)((u_int)sapInfo % MAX_IPXSAP_NAME_HASH);
 
   for(;;) {
     cursor = ipxSAPhash[idx];

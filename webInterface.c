@@ -2596,8 +2596,8 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "HAVE_UINT64_T",
-#ifdef HAVE_UINT64_T
+  printFeatureConfigInfo(textPrintFlag, "HAVE_u_int64_T",
+#ifdef HAVE_u_int64_T
                          "yes"
 #else
                          "no"

@@ -137,7 +137,7 @@ extern void initAddressResolution(void);
 extern int printable(int ch);
 extern void cleanupAddressQueue(void);
 extern void* dequeueAddress(void* notUsed);
-extern void purgeQueuedV4HostAddress(uint32_t addr);
+extern void purgeQueuedV4HostAddress(u_int32_t addr);
 #ifdef INET6
 extern char* _intop(struct in6_addr *addr,char *buf, u_short buflen);
 extern char* intop(struct in6_addr *addr);
@@ -149,12 +149,12 @@ extern char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen);
 extern char * addrtostr(HostAddr *addr);
 extern int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type);
 extern void ipaddr2str(HostTraffic *el, HostAddr hostIpAddress, 
-		       short vlanId, uint actualDeviceId);
+		       short vlanId, u_int actualDeviceId);
 extern char* etheraddr_string(const u_char *ep, char *buf);
 extern char* llcsap_string(u_char sap);
 extern void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc,
                                char *fdst);
-extern uint16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
+extern u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
 				 const u_char *ipPtr,
                                  DNSHostInfo *hostPtr, short length,
                                  short *isRequest, short *positiveReply);
@@ -208,10 +208,10 @@ extern void term_python(void);
 #endif
 
 /* hash.c */
-extern uint hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
+extern u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 		      short* useIPAddressForSearching, HostTraffic **el, int actualDeviceId);
 #ifdef ENABLE_FC
-extern uint hashFcHost(FcAddress *fcAddress, u_short vsanId,
+extern u_int hashFcHost(FcAddress *fcAddress, u_short vsanId,
 			HostTraffic **el, int actualDeviceId);
 #endif
 extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
@@ -221,7 +221,7 @@ extern int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now);
 extern int purgeIdleHosts(int devId);
 extern void setHostSerial(HostTraffic *el);
 extern HostTraffic * _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, 
-				 uint16_t vlanId, u_char checkForMultihoming, 
+				 u_int16_t vlanId, u_char checkForMultihoming, 
 				 u_char forceUsingIPaddress, int actualDeviceId,
 				 char *file, int line);
 #define lookupHost(a, b, c, d, e, f) _lookupHost(a, b, c, d, e, f, __FILE__, __LINE__)
@@ -258,7 +258,7 @@ extern int safe_snprintf(char* file, int line,
 extern int _safe_strncat(char* file, int line,
                          char* dest, size_t sizeofdest,
                          char* src);
-extern uint createDummyInterface(char *ifName);
+extern u_int createDummyInterface(char *ifName);
 extern void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 			   int doUnlink, struct stat *statbuf);
 extern void initGdbm(char *prefDirectory, char *spoolDirectory, int initPrefsOnly);
@@ -397,48 +397,48 @@ extern RETSIGTYPE cleanup(int signo);
 /* pbuf.c */
 extern void allocateSecurityHostPkts(HostTraffic *srcHost);
 extern int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
-		    const uint numPkts, const uint _length,
+		    const u_int numPkts, const u_int _length,
 		    u_short isPassiveSess, u_short isVoipSess,
 		    u_short p2pSessionIdx, int actualDeviceId, u_short newSession,
-		    uint efficiencySent /* 0 = unknown */,
-		    uint efficiencyRcvd /* 0 = unknown */);
+		    u_int efficiencySent /* 0 = unknown */,
+		    u_int efficiencyRcvd /* 0 = unknown */);
 extern void deleteFragment(IpFragment *fragment, int actualDeviceId);
 extern void purgeOldFragmentEntries(int actualDeviceId);
 extern void updateHostName(HostTraffic *el);
-extern void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, uint length);
-extern void incrementUnknownProto(HostTraffic *host, int direction, uint16_t eth_type,
-				  uint16_t dsap, uint16_t ssap, uint16_t ipProto);
+extern void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_int length);
+extern void incrementUnknownProto(HostTraffic *host, int direction, u_int16_t eth_type,
+				  u_int16_t dsap, u_int16_t ssap, u_int16_t ipProto);
 extern void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
 			      HostTraffic *dstHost, HostAddr *dstAddr,
 			      TrafficCounter length, Counter numPkts,
 			      int actualDeviceId);
-extern uint computeEfficiency(uint pktLen);
+extern u_int computeEfficiency(u_int pktLen);
 extern void updateGreEfficiency(HostTraffic *srcHost, HostTraffic *dstHost,
-				uint numPkts, uint numBytes, int actualDeviceId);
+				u_int numPkts, u_int numBytes, int actualDeviceId);
 extern void updateIpsecEfficiency(HostTraffic *srcHost, HostTraffic *dstHost,
-				  uint numPkts, uint numBytes, int actualDeviceId);
+				  u_int numPkts, u_int numBytes, int actualDeviceId);
 extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h, const u_char *p);
 extern void cleanupPacketQueue(void);
 extern void *dequeuePacket(void* notUsed);
-extern void updateDevicePacketStats(uint length, int actualDeviceId);
-extern void updateFcDevicePacketStats(uint length, int actualDeviceId);
+extern void updateDevicePacketStats(u_int length, int actualDeviceId);
+extern void updateFcDevicePacketStats(u_int length, int actualDeviceId);
 extern void dumpSuspiciousPacket(int actualDeviceId);
 extern void dumpOtherPacket(int actualDeviceId);
 extern void processPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
                           const u_char *p);
-extern void addNewIpProtocolToHandle(char* name, uint16_t id, uint16_t idAlias);
+extern void addNewIpProtocolToHandle(char* name, u_int16_t id, u_int16_t idAlias);
 
 /* protocols.c */
 extern void handleBootp(HostTraffic *srcHost, HostTraffic *dstHost,
 			u_short sport, u_short dport,
-			uint packetDataLength, u_char* packetData, int actualDeviceId);
-extern uint16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
-				  const u_char *bp, uint length,
+			u_int packetDataLength, u_char* packetData, int actualDeviceId);
+extern u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
+				  const u_char *bp, u_int length,
 				  short *isRequest, short *positiveReply);
 extern void handleNetbios(HostTraffic *srcHost, HostTraffic *dstHost,
 			  u_short sport, u_short dport,
-			  uint packetDataLength, const u_char* bp,
-			  uint length, uint hlen);
+			  u_int packetDataLength, const u_char* bp,
+			  u_int length, u_int hlen);
 
 /* plugin.c */
 extern int handlePluginHTTPRequest(char* url);
@@ -478,7 +478,7 @@ extern void updateDbHostsTraffic(int deviceToUpdate);
 extern int isInitialHttpData(char* packetData);
 extern int isInitialSshData(char* packetData);
 extern int isInitialFtpData(char* packetData);
-extern char* findHostCommunity(uint32_t host_ip, char *buf, u_short buf_len);
+extern char* findHostCommunity(u_int32_t host_ip, char *buf, u_short buf_len);
 extern void setHostCommunity(HostTraffic *el);
 extern void updateDeviceThpt(int deviceToUpdate, int quickUpdate);
 extern void checkCommunities(void);
@@ -508,21 +508,21 @@ extern void initPassiveSessions(void);
 extern void termPassiveSessions(void);
 extern void incrementTrafficCounter(TrafficCounter *ctr, Counter value);
 extern void resetTrafficCounter(TrafficCounter *ctr);
-extern HostTraffic* _getFirstHost(uint actualDeviceId, char *file, int line);
+extern HostTraffic* _getFirstHost(u_int actualDeviceId, char *file, int line);
 #define getFirstHost(a) _getFirstHost(a, __FILE__, __LINE__)
-extern HostTraffic* _getNextHost(uint actualDeviceId, HostTraffic *host, char *file, int line);
+extern HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, int line);
 #define getNextHost(a, b) _getNextHost(a, b, __FILE__, __LINE__)
 extern char* serial2str(HostSerial theSerial, char *buf, int buf_len);
 extern void str2serial(HostSerial *theSerial, char *buf, int buf_len);
 extern int ntop_conditional_sched_yield(void);
-extern HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, uint actualDeviceId);
-extern HostTraffic* findHostBySerial(HostSerial serial, uint actualDeviceId);
-extern HostTraffic* findHostByMAC(char* macAddr, short vlanId, uint actualDeviceId);
+extern HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualDeviceId);
+extern HostTraffic* findHostBySerial(HostSerial serial, u_int actualDeviceId);
+extern HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId);
 #ifdef ENABLE_FC
-extern HostTraffic* findHostByFcAddress(FcAddress *fcAddr, u_short vsanId, uint actualDeviceId);
+extern HostTraffic* findHostByFcAddress(FcAddress *fcAddr, u_short vsanId, u_int actualDeviceId);
 extern FcNameServerCacheEntry *findFcHostNSCacheEntry(FcAddress *fcAddr, u_short vsanId);
-extern char* fc_to_str(const uint8_t *ad);
-extern char* fcwwn_to_str(const uint8_t *ad);
+extern char* fc_to_str(const u_int8_t *ad);
+extern char* fcwwn_to_str(const u_int8_t *ad);
 #endif
 #ifdef INET6
 extern unsigned long in6_hash(struct in6_addr *addr);
@@ -532,91 +532,91 @@ extern unsigned short addrlookup(struct in6_addr *addr,  NtopIfaceAddr *addrs);
 extern NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
 extern void maximize_socket_buffer(int sock_fd, int buf_type); 
 extern unsigned short isLinkLocalAddress(struct in6_addr *addr,
-					 uint32_t *the_local_network, 
-					 uint32_t *the_local_network_mask);
+					 u_int32_t *the_local_network, 
+					 u_int32_t *the_local_network_mask);
 extern unsigned short in6_isMulticastAddress(struct in6_addr *addr,
-					     uint32_t *the_local_network, 
-					     uint32_t *the_local_network_mask);
-extern unsigned short in6_isLocalAddress(struct in6_addr *addr, uint deviceId,
-					 uint32_t *the_local_network, 
-					 uint32_t *the_local_network_mask);
+					     u_int32_t *the_local_network, 
+					     u_int32_t *the_local_network_mask);
+extern unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId,
+					 u_int32_t *the_local_network, 
+					 u_int32_t *the_local_network_mask);
 extern unsigned short in6_pseudoLocalAddress(struct in6_addr *addr,
-					     uint32_t *the_local_network, 
-					     uint32_t *the_local_network_mask);
-extern unsigned short in6_deviceLocalAddress(struct in6_addr *addr, uint deviceId,
-					     uint32_t *the_local_network, 
-					     uint32_t *the_local_network_mask);
-extern unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, uint deviceId,
-					       uint32_t *the_local_network, 
-					       uint32_t *the_local_network_mask);
+					     u_int32_t *the_local_network, 
+					     u_int32_t *the_local_network_mask);
+extern unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId,
+					     u_int32_t *the_local_network, 
+					     u_int32_t *the_local_network_mask);
+extern unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId,
+					       u_int32_t *the_local_network, 
+					       u_int32_t *the_local_network_mask);
 extern unsigned short in6_isPrivateAddress(struct in6_addr *addr,
-					   uint32_t *the_local_network, 
-					   uint32_t *the_local_network_mask);
+					   u_int32_t *the_local_network, 
+					   u_int32_t *the_local_network_mask);
 #endif
 extern unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport);
-extern uint16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport);
+extern u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport);
 extern unsigned short in_isBroadcastAddress(struct in_addr *addr,
-					    uint32_t *the_local_network, 
-					    uint32_t *the_local_network_mask);
+					    u_int32_t *the_local_network, 
+					    u_int32_t *the_local_network_mask);
 extern unsigned short in_isMulticastAddress(struct in_addr *addr,
-					    uint32_t *the_local_network, 
-					    uint32_t *the_local_network_mask);
-extern uint8_t num_network_bits(uint32_t addr);
-extern unsigned short in_isLocalAddress(struct in_addr *addr, uint deviceId,
-					uint32_t *the_local_network, 
-					uint32_t *the_local_network_mask);
+					    u_int32_t *the_local_network, 
+					    u_int32_t *the_local_network_mask);
+extern u_int8_t num_network_bits(u_int32_t addr);
+extern unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId,
+					u_int32_t *the_local_network, 
+					u_int32_t *the_local_network_mask);
 extern unsigned short in_isPrivateAddress(struct in_addr *addr,
-					  uint32_t *the_local_network, 
-					  uint32_t *the_local_network_mask);
-extern unsigned short in_deviceLocalAddress(struct in_addr *addr, uint deviceId,
-					    uint32_t *the_local_network, 
-					    uint32_t *the_local_network_mask);
+					  u_int32_t *the_local_network, 
+					  u_int32_t *the_local_network_mask);
+extern unsigned short in_deviceLocalAddress(struct in_addr *addr, u_int deviceId,
+					    u_int32_t *the_local_network, 
+					    u_int32_t *the_local_network_mask);
 extern unsigned short in_pseudoLocalAddress(struct in_addr *addr,
-					    uint32_t *the_local_network, 
-					    uint32_t *the_local_network_mask);
-extern unsigned short in_isPseudoLocalAddress(struct in_addr *addr, uint deviceId,
-					      uint32_t *the_local_network, 
-					      uint32_t *the_local_network_mask);
+					    u_int32_t *the_local_network, 
+					    u_int32_t *the_local_network_mask);
+extern unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId,
+					      u_int32_t *the_local_network, 
+					      u_int32_t *the_local_network_mask);
 extern unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr,
-						  uint32_t *the_local_network, 
-						  uint32_t *the_local_network_mask);
+						  u_int32_t *the_local_network, 
+						  u_int32_t *the_local_network_mask);
 extern char* copy_argv(register char **argv);
 extern unsigned short isPrivateAddress(HostAddr *addr,
-				       uint32_t *the_local_network, 
-				       uint32_t *the_local_network_mask);
+				       u_int32_t *the_local_network, 
+				       u_int32_t *the_local_network_mask);
 extern unsigned short isBroadcastAddress(HostAddr *addr,
-					 uint32_t *the_local_network, 
-					 uint32_t *the_local_network_mask);
+					 u_int32_t *the_local_network, 
+					 u_int32_t *the_local_network_mask);
 extern unsigned short isMulticastAddress(HostAddr *addr,
-					 uint32_t *the_local_network, 
-					 uint32_t *the_local_network_mask);
-extern unsigned short isLocalAddress(HostAddr *addr, uint actualDeviceId,
-				     uint32_t *the_local_network, 
-				     uint32_t *the_local_network_mask);
+					 u_int32_t *the_local_network, 
+					 u_int32_t *the_local_network_mask);
+extern unsigned short isLocalAddress(HostAddr *addr, u_int actualDeviceId,
+				     u_int32_t *the_local_network, 
+				     u_int32_t *the_local_network_mask);
 extern int dotted2bits(char *mask);
 extern void handleLocalAddresses(char* addresses);
 extern void handleKnownAddresses(char* addresses);
-extern unsigned short isPseudoLocalAddress(HostAddr *addr, uint actualDeviceId,
-					   uint32_t *the_local_network, 
-					   uint32_t *the_local_network_mask);
+extern unsigned short isPseudoLocalAddress(HostAddr *addr, u_int actualDeviceId,
+					   u_int32_t *the_local_network, 
+					   u_int32_t *the_local_network_mask);
 extern unsigned short _pseudoLocalAddress(HostAddr *addr,
-					  uint32_t *the_local_network, 
-					  uint32_t *the_local_network_mask);
+					  u_int32_t *the_local_network, 
+					  u_int32_t *the_local_network_mask);
 extern unsigned short __pseudoLocalAddress(struct in_addr *addr,
 					   NetworkStats theNetworks[MAX_NUM_NETWORKS],
 					   u_short numNetworks,
-					   uint32_t *the_local_network, 
-					   uint32_t *the_local_network_mask);
-extern unsigned short deviceLocalAddress(HostAddr *addr, uint deviceId,
-					 uint32_t *the_local_network, 
-					 uint32_t *the_local_network_mask);
+					   u_int32_t *the_local_network, 
+					   u_int32_t *the_local_network_mask);
+extern unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId,
+					 u_int32_t *the_local_network, 
+					 u_int32_t *the_local_network_mask);
 extern unsigned short isPseudoBroadcastAddress(HostAddr *addr,
-					       uint32_t *the_local_network, 
-					       uint32_t *the_local_network_mask);
+					       u_int32_t *the_local_network, 
+					       u_int32_t *the_local_network_mask);
 extern void printLogTime(void);
 extern int32_t gmt2local(time_t t);
 extern char *dotToSlash(char *name, char *buf, int buf_len);
-extern int getLocalHostAddress(struct in_addr *hostIpAddress, uint8_t *netmask_v6, char* device);
+extern int getLocalHostAddress(struct in_addr *hostIpAddress, u_int8_t *netmask_v6, char* device);
 extern NtopIfaceAddr * getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
 extern void fillDomainName(HostTraffic *el);
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *), char* userParm);
@@ -687,14 +687,14 @@ extern int name_interpret(char *in, char *out, int in_len);
 
 extern char *getNwInterfaceType(int i);
 
-extern int getActualInterface(uint);
+extern int getActualInterface(u_int);
 extern void storeHostTrafficInstance(HostTraffic *el);
 extern void resetHostsVariables(HostTraffic* el);
 extern HostTraffic *resurrectHostTrafficInstance(char *key);
 extern u_short in_cksum(const u_short *addr, int len, u_short csum);
-extern void addTimeMapping(uint16_t transactionId, struct timeval theTime);
+extern void addTimeMapping(u_int16_t transactionId, struct timeval theTime);
 extern long delta_time(struct timeval * now, struct timeval * before);
-extern time_t getTimeMapping(uint16_t transactionId,
+extern time_t getTimeMapping(u_int16_t transactionId,
                              struct timeval theTime);
 extern void traceEvent(int eventTraceLevel, char* file,
                        int line, char * format, ...)
@@ -742,11 +742,11 @@ extern void escape(char *dest, int destLen, char *in);
 
 extern void allocateElementHash(int deviceId, u_short hashType);
 
-extern uint numActiveSenders(uint deviceId);
-extern uint numActiveNxPorts(uint deviceId);
-extern uint numActiveVsans(uint deviceId);
-extern uint32_t xaton(char *s);
-extern void* addNodeInternal(uint32_t ip, int prefix, char *country, int as);
+extern u_int numActiveSenders(u_int deviceId);
+extern u_int numActiveNxPorts(u_int deviceId);
+extern u_int numActiveVsans(u_int deviceId);
+extern u_int32_t xaton(char *s);
+extern void* addNodeInternal(u_int32_t ip, int prefix, char *country, int as);
 extern short addrcmp(HostAddr *addr1, HostAddr *addr2);
 extern HostAddr     * addrcpy(HostAddr *dst, HostAddr *src);
 extern int            addrinit(HostAddr *addr);
@@ -758,10 +758,10 @@ extern unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs,
 				   int size);
 extern unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr,
 				 int sport, int dport);
-extern uint16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr,
+extern u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr,
 				int sport, int dport);
 extern int setSpecifiedUser(void);
-extern uint16_t getHostAS(HostTraffic *el);
+extern u_int16_t getHostAS(HostTraffic *el);
 extern int emptySerial(HostSerial *a);
 extern int cmpSerial(HostSerial *a, HostSerial *b);
 extern int copySerial(HostSerial *a, HostSerial *b);
@@ -782,19 +782,19 @@ extern int snprintf(char *str, size_t n, const char *fmt, ...);
   Courtesy of http://ettercap.sourceforge.net/
 */
 #ifndef CFG_LITTLE_ENDIAN
-#define ptohs(x) ( (uint16_t)				\
-		   ((uint16_t)*((uint8_t *)x+1)<<8|	\
-		    (uint16_t)*((uint8_t *)x+0)<<0)   \
+#define ptohs(x) ( (u_int16_t)				\
+		   ((u_int16_t)*((u_int8_t *)x+1)<<8|	\
+		    (u_int16_t)*((u_int8_t *)x+0)<<0)   \
 		   )
 
-#define ptohl(x) ( (uint32)*((uint8_t *)x+3)<<24|	\
-		   (uint32)*((uint8_t *)x+2)<<16|	\
-		   (uint32)*((uint8_t *)x+1)<<8|	\
-		   (uint32)*((uint8_t *)x+0)<<0	\
+#define ptohl(x) ( (u_int32)*((u_int8_t *)x+3)<<24|	\
+		   (u_int32)*((u_int8_t *)x+2)<<16|	\
+		   (u_int32)*((u_int8_t *)x+1)<<8|	\
+		   (u_int32)*((u_int8_t *)x+0)<<0	\
 		   )
 #else
-#define ptohs(x) (*(uint16_t *)(x))
-#define ptohl(x) (*(uint32 *)(x))
+#define ptohs(x) (*(u_int16_t *)(x))
+#define ptohl(x) (*(u_int32 *)(x))
 #endif
 
 /* Conditional utility functions - code in util.c, activated if it's not already in some library */
@@ -815,18 +815,18 @@ extern void handleWhiteBlackListAddresses(char* addresses,
 					  NetworkStats theNetworks[MAX_NUM_NETWORKS],
 					  u_short *numNets, char* outAddresses,
 					  int outAddressesLen);
-extern unsigned short isOKtoSave(uint32_t addr,
+extern unsigned short isOKtoSave(u_int32_t addr,
 				 NetworkStats whiteNetworks[MAX_NUM_NETWORKS],
 				 NetworkStats blackNetworks[MAX_NUM_NETWORKS],
 				 u_short numWhiteNets, u_short numBlackNets);
 extern float timeval_subtract(struct timeval x, struct timeval y);
 extern void freePortsUsage(HostTraffic *el);
-extern PortUsage* getPortsUsage(HostTraffic *el, uint portIdx, int createIfNecessary);
+extern PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary);
 extern void setHostFlag(int flag_value, HostTraffic *host);
 extern void clearHostFlag(int flag_value, HostTraffic *host);
-extern char* vlan2name(uint16_t vlanId, char *buf, int buf_len);
+extern char* vlan2name(u_int16_t vlanId, char *buf, int buf_len);
 extern void mkdir_p(char *tag, char *path, int permission);
-extern char* read_file(char* path, char* buf, uint buf_len);
+extern char* read_file(char* path, char* buf, u_int buf_len);
 /* Formatting for %.2f ... */
 #define xvertDOT00MB(v)(((float)(v)/(float)(1024.0*1024.0))+0.005)
 #define xvertDOT00KB(v) (((float)(v)/(float)(1024.0))+0.005)
@@ -834,19 +834,19 @@ void web_sanitize(char *value);
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);
-extern char* getSAPInfo(uint16_t sapInfo, short encodeString);
+extern char* getSAPInfo(u_int16_t sapInfo, short encodeString);
 extern char* getSpecialMacInfo(HostTraffic* el, short encodeString);
 extern void createVendorTable(struct stat *statbuf);
 
 /* l7.c */
 extern void initl7(void);
 extern void l7SessionProtoDetection(IPSession *theSession, 
-				    uint packetDataLength, 
+				    u_int packetDataLength, 
 				    u_char* packetData);
 
 /* sessions.c */
 #define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)
-extern uint _checkSessionIdx(uint idx, int actualDeviceId, char* file, int line);
+extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);
 extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, 
 			u_char allocateMemoryIfNeeded, u_char lockMutex);
 #ifdef ENABLE_FC
@@ -855,21 +855,21 @@ extern void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
 #endif
 extern void scanTimedoutTCPSessions(int actualDeviceId);
 extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
-			    u_short sport, u_short dport, uint length);
+			    u_short sport, u_short dport, u_int length);
 extern void updatePortList(HostTraffic *theHost, int clientPort, int serverPort);
 extern IPSession* handleSession(const struct pcap_pkthdr *h,
-                                u_short fragmentedData, uint tcpWin,
+                                u_short fragmentedData, u_int tcpWin,
                                 HostTraffic *srcHost, u_short sport,
                                 HostTraffic *dstHost, u_short dport,
-                                uint sent_length, uint rcvd_length /* Always 0 except for NetFlow v9 */,
+                                u_int sent_length, u_int rcvd_length /* Always 0 except for NetFlow v9 */,
 				struct tcphdr *tp,
-                                uint tcpDataLength, u_char* packetData,
+                                u_int tcpDataLength, u_char* packetData,
                                 int actualDeviceId, u_short *newSession,
 				u_char real_session /* vs. faked/netflow-session */);
 extern void updateHostUsers(char *userName, int userType, HostTraffic *theHost);
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
 extern void updatePeersDelayStats(HostTraffic *peer_a, HostSerial *peer_b_serial,
-				  uint16_t port,
+				  u_int16_t port,
 				  struct timeval *nwDelay,
 				  struct timeval *synAckTime, 
 				  struct timeval *ackTime,
@@ -880,7 +880,7 @@ extern void updateSessionDelayStats(IPSession* session);
 extern FCSession* handleFcSession(const struct pcap_pkthdr *h,
 				  u_short fragmentedData,
 				  HostTraffic *srcHost, HostTraffic *dstHost,
-				  uint length, uint payload_len, u_short oxid,
+				  u_int length, u_int payload_len, u_short oxid,
 				  u_short rxid, u_short protocol, u_char rCtl,
 				  u_char isXchgOrig, const u_char *bp,
 				  int actualDeviceId);
@@ -893,11 +893,11 @@ extern void init_events(void);
 
 #ifdef ENABLE_FC
 /* fcUtils.c */
-extern int isFlogiAcc(FcAddress *fcAddress, uint8_t r_ctl, uint8_t type, uint8_t cmd);
+extern int isFlogiAcc(FcAddress *fcAddress, u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
 extern int fillFcHostInfo(const u_char *bp, HostTraffic *srcHost);
-extern int isPlogi(uint8_t r_ctl, uint8_t type, uint8_t cmd);
-extern int isLogout(uint8_t r_ctl, uint8_t type, uint8_t cmd);
-extern int isRscn(uint8_t r_ctl, uint8_t type, uint8_t cmd);
+extern int isPlogi(u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
+extern int isLogout(u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
+extern int isRscn(u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
 extern int fillFcpInfo(const u_char *bp, HostTraffic *srcHost,
 		       HostTraffic *dstHost);
 extern FcFabricElementHash *getFcFabricElementHash(u_short vsanId,
@@ -907,23 +907,23 @@ extern int updateFcFabricElementHash(FcFabricElementHash **theHash, u_short vsan
 				     const u_char *bp, FcAddress *srcAddr,
 				     FcAddress *dstAddr,
 				     u_short protocol, u_char r_ctl,
-				     uint32_t pktlen);
+				     u_int32_t pktlen);
 extern void processFcNSCacheFile(char *filename);
 #endif
 
-extern uint32_t num_db_insert, num_db_insert_failed;
+extern u_int32_t num_db_insert, num_db_insert_failed;
 extern int is_db_enabled(void);
 extern void initDB(void);
 extern void termDB(void);
 extern int dump_session_to_db(IPSession *sess);
-extern int insert_flow_record(uint16_t probeId,
-			      uint32_t srcAddr, uint32_t dstAddr,
-			      uint16_t input, uint16_t output,
-			      uint32_t sentPkts, uint32_t sentOctets,
-			      uint32_t rcvdPkts, uint32_t rcvdOctets,
-			      uint32_t first, uint32_t last,
-			      uint16_t srcPort, uint16_t dstPort, uint8_t tcpFlags,
-			      uint8_t proto, uint8_t tos, uint16_t vlanId);
+extern int insert_flow_record(u_int16_t probeId,
+			      u_int32_t srcAddr, u_int32_t dstAddr,
+			      u_int16_t input, u_int16_t output,
+			      u_int32_t sentPkts, u_int32_t sentOctets,
+			      u_int32_t rcvdPkts, u_int32_t rcvdOctets,
+			      u_int32_t first, u_int32_t last,
+			      u_int16_t srcPort, u_int16_t dstPort, u_int8_t tcpFlags,
+			      u_int8_t proto, u_int8_t tos, u_int16_t vlanId);
 
 /* Pseudo-functions.
  *   We use these as if they were real functions, but they expand to
@@ -966,21 +966,21 @@ extern int insert_flow_record(uint16_t probeId,
   ((u_short)*((u_char *)(p) + 0) << 8 |		\
    (u_short)*((u_char *)(p) + 1))
 #define EXTRACT_32BITS(p)			\
-  ((uint32_t)*((u_char *)(p) + 0) << 24 |	\
-   (uint32_t)*((u_char *)(p) + 1) << 16 |	\
-   (uint32_t)*((u_char *)(p) + 2) << 8 |	\
-   (uint32_t)*((u_char *)(p) + 3))
+  ((u_int32_t)*((u_char *)(p) + 0) << 24 |	\
+   (u_int32_t)*((u_char *)(p) + 1) << 16 |	\
+   (u_int32_t)*((u_char *)(p) + 2) << 8 |	\
+   (u_int32_t)*((u_char *)(p) + 3))
 #else
 #define EXTRACT_16BITS(p)			\
   ((u_short)ntohs(*(u_short *)(p)))
 #define EXTRACT_32BITS(p)			\
-  ((uint32_t)ntohl(*(uint32_t *)(p)))
+  ((u_int32_t)ntohl(*(u_int32_t *)(p)))
 #endif
 
 #define EXTRACT_24BITS(p)			\
-  ((uint32_t)*((u_char *)(p) + 0) << 16 |	\
-   (uint32_t)*((u_char *)(p) + 1) << 8 |	\
-   (uint32_t)*((u_char *)(p) + 2))
+  ((u_int32_t)*((u_char *)(p) + 0) << 16 |	\
+   (u_int32_t)*((u_char *)(p) + 1) << 8 |	\
+   (u_int32_t)*((u_char *)(p) + 2))
 
 #define incrementUsageCounter(a, b, c) _incrementUsageCounter(a, b, c, __FILE__, __LINE__)
 
@@ -1007,8 +1007,8 @@ Code "inherited" from nslookup
 #ifndef NS_GET16
 #define NS_GET16(s, cp) {			\
     u_char *t_cp = (u_char *)(cp);		\
-    (s) = ((uint16_t)t_cp[0] << 8)		\
-      | ((uint16_t)t_cp[1])			\
+    (s) = ((u_int16_t)t_cp[0] << 8)		\
+      | ((u_int16_t)t_cp[1])			\
       ;						\
     (cp) += NS_INT16SZ;				\
   }
@@ -1071,12 +1071,12 @@ Code "inherited" from nslookup
 
 
 #ifndef IN6_IS_ADDR_MULTICAST
-#define IN6_IS_ADDR_MULTICAST(a) (((uint8_t *) (a))[0] == 0xff)
+#define IN6_IS_ADDR_MULTICAST(a) (((u_int8_t *) (a))[0] == 0xff)
 #endif
 
 #ifndef IN6_IS_ADDR_LINKLOCAL
 #define IN6_IS_ADDR_LINKLOCAL(a)		\
-  ((((uint32_t *) (a))[0] & htonl (0xffc00000))	\
+  ((((u_int32_t *) (a))[0] & htonl (0xffc00000))	\
    == htonl (0xfe800000))
 #endif
 

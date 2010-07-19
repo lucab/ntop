@@ -33,9 +33,9 @@ static void* cpacketMainLoop(void* _deviceId);
 #define isEmpty(a) ((a == NULL) || (a[0] == '\0') ? 1 : 0)
 
 
-#define SWAP8(a,b)  { uint8_t  c = a; a = b; b = c; }
-#define SWAP16(a,b) { uint16_t c = a; a = b; b = c; }
-#define SWAP32(a,b) { uint32_t c = a; a = b; b = c; }
+#define SWAP8(a,b)  { u_int8_t  c = a; a = b; b = c; }
+#define SWAP16(a,b) { u_int16_t c = a; a = b; b = c; }
+#define SWAP32(a,b) { u_int32_t c = a; a = b; b = c; }
 
 /* ********************************* */
 
@@ -210,7 +210,7 @@ static void updateCtapCounter(int deviceId, char *name,
 
 /* ********************************************************* */
 
-static void dissectPacket(uint32_t cpacket_device_ip,
+static void dissectPacket(u_int32_t cpacket_device_ip,
 			  char *buffer, int bufferLen, int deviceId) {
   char *tokbuf, *row;
 
@@ -1183,10 +1183,10 @@ static void handlecPacketPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
   if(myGlobals.runningPref.rFileName != NULL) {
     /* ntop is reading packets from a file */
     struct ether_header ehdr;
-    uint caplen = h->caplen;
-    uint length = h->len;
+    u_int caplen = h->caplen;
+    u_int length = h->len;
     unsigned short eth_type;
-    uint8_t flags = 0, debug = 0;
+    u_int8_t flags = 0, debug = 0;
     struct ip ip;
 
     deviceId = 1; /* Dummy value */
@@ -1208,7 +1208,7 @@ static void handlecPacketPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
       eth_type = ntohs(ehdr.ether_type);
 
       if(eth_type == ETHERTYPE_IP) {
-	uint plen, hlen;
+	u_int plen, hlen;
 	u_short sport, dport;
 
 #ifdef DEBUG_FLOWS
@@ -1217,7 +1217,7 @@ static void handlecPacketPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 #endif
 
 	memcpy(&ip, p+sizeof(struct ether_header), sizeof(struct ip));
-	hlen =(uint)ip.ip_hl * 4;
+	hlen =(u_int)ip.ip_hl * 4;
 	NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
 
 	plen = length-sizeof(struct ether_header);

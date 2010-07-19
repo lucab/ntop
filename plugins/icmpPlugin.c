@@ -42,15 +42,15 @@ struct ih_rdiscovery {
 };
 
 struct id_rdiscovery {
-  uint32_t ird_addr;
-  uint32_t ird_pref;
+  u_int32_t ird_addr;
+  u_int32_t ird_pref;
 };
 
 /* F o r w a r d */
 
 static void termIcmpFunct(u_char);
 static void handleIcmpWatchHTTPrequest(char* url);
-static void printICMPdata(int icmpColumnSort, uint revertOrder, uint num, HostTraffic **hosts);
+static void printICMPdata(int icmpColumnSort, u_int revertOrder, u_int num, HostTraffic **hosts);
 
 
 /* ******************************
@@ -488,15 +488,15 @@ static void formatSentRcvd(Counter sent, Counter rcvd) {
 
 /* ******************************* */
 
-static void printICMPdata(int icmpColumnSort, uint revertOrder,
-                   uint num, HostTraffic **hosts) {
+static void printICMPdata(int icmpColumnSort, u_int revertOrder,
+                   u_int num, HostTraffic **hosts) {
 
   char buf[1024], formatBuf[32];
   char *pluginName = "<A HREF=/plugins/icmpWatch";
   char *arrowGif, *arrow[15];
-  uint i;
+  u_int i;
   char *sign = "-";
-  uint printedEntries;
+  u_int printedEntries;
 
   if(icmpColumnSort<0) icmpColumnSort=0;
   if(icmpColumnSort>cmpFctnICMPmax) icmpColumnSort=0;
@@ -614,7 +614,7 @@ static void printICMPdata(int icmpColumnSort, uint revertOrder,
       sendString("</TR>\n");
 
       /* Avoid huge tables */
-      if(printedEntries++ > (uint)myGlobals.runningPref.maxNumLines)
+      if(printedEntries++ > (u_int)myGlobals.runningPref.maxNumLines)
 	break;
     }
 
@@ -625,7 +625,7 @@ static void printICMPdata(int icmpColumnSort, uint revertOrder,
 /* ******************************* */
 
 static void handleIcmpWatchHTTPrequest(char* url) {
-  uint i, revertOrder=0, num;
+  u_int i, revertOrder=0, num;
   int icmpId=-1;
   HostTraffic **hosts;
   struct in_addr hostIpAddress;

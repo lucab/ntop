@@ -67,16 +67,16 @@ extern void printTableEntryPercentage(char *buf, int bufLen,
 				      char *label, char* label_1,
 				      char* label_2, float total,
 				      float percentage,
-				      uint showFlows, Counter flows);
+				      u_int showFlows, Counter flows);
 extern void printPageTitle(char *text);
 extern void printSectionTitle(char *text);
 extern void printHostsCharacterization(void);
 extern void printFlagedWarning(char *text);
-extern void printHeader(int reportType, int revertOrder, uint column,
+extern void printHeader(int reportType, int revertOrder, u_int column,
                         HostsDisplayPolicy showHostsMode,
                         LocalityDisplayPolicy showLocalityMode,
 			char *vlanList, u_short vlanId);
-extern void printFcHeader(int reportType, int revertOrder, uint column, uint hour, char *url);
+extern void printFcHeader(int reportType, int revertOrder, u_int column, u_int hour, char *url);
 extern void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                                int column, int hostInfoPage);
 extern void printFcDisplayOptions (void);
@@ -96,7 +96,7 @@ extern int cmpScsiSessionsFctn (const void *_a, const void *_b);
 extern int cmpVsanFctn (const void *_a, const void *_b);
 extern int cmpFcDomainFctn (const void *_a, const void *_b);
 extern int cmpMulticastFctn(const void *_a, const void *_b);
-extern void printHostThtpShort(HostTraffic *el, int reportType, uint hourId);
+extern void printHostThtpShort(HostTraffic *el, int reportType, u_int hourId);
 extern int cmpHostsFctn(const void *_a, const void *_b);
 extern int cmpFcHostsFctn(const void *_a, const void *_b);
 extern void printPacketStats(HostTraffic *el, int actualDeviceId);
@@ -121,7 +121,7 @@ extern u_short isHostHealthy(HostTraffic *el);
 extern void printHostDetailedInfo(HostTraffic *el, int actualDeviceId);
 #ifdef ENABLE_FC
 extern void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId);
-extern void printVsanDetailedInfo (uint vsanId, int actualDeviceId);
+extern void printVsanDetailedInfo (u_int vsanId, int actualDeviceId);
 extern void printVsanProtocolStats (FcFabricElementHash *hash, int actualDeviceId);
 #endif
 extern void printServiceStats(char* svcName, ServiceStats* ss, short printSentStats);
@@ -130,8 +130,8 @@ extern void printHostIcmpStats(HostTraffic *el);
 extern void printTableEntry(char *buf, int bufLen,
 			    char *label, char* color,
 			    float total, float percentage,
-			    uint showFlows, Counter flows,
-			    uint showRRD);
+			    u_int showFlows, Counter flows,
+			    u_int showRRD);
 extern char* buildHTMLBrowserWindowsLabel(int i, int j, u_short forIpTraffic);
 extern int cmpEventsFctn(const void *_a, const void *_b);
 extern void printHostHourlyTrafficEntry(HostTraffic *el, int i,
@@ -154,7 +154,7 @@ extern void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mut
 extern void printPluginTrailer(char *left, char *middle);
 
 /* http.c */
-extern char* encodeString(char* in, char* out, uint out_len);
+extern char* encodeString(char* in, char* out, u_int out_len);
 extern void printHTMLtrailer(void);
 extern void returnHTTPpageBadCommunity(void);
 extern void returnHTTPredirect(char* destination);
@@ -190,8 +190,8 @@ extern void printBandwidthFooter(void);
 extern void initReports(void);
 extern void checkReportDevice(void);
 extern int reportValues(time_t *lastTime);
-extern void addPageIndicator(char *url, uint beginIdx,
-			     uint numEntries, uint linesPerPage,
+extern void addPageIndicator(char *url, u_int beginIdx,
+			     u_int numEntries, u_int linesPerPage,
 			     int revertOrder, int numCol, int netmode);
 extern void printTrafficSummary(int revertOrder);
 extern void printTrafficStatistics(int revertOrder);
@@ -369,7 +369,7 @@ extern void drawVsanSwilsProtoDistribution(u_short vsanId);
 
 /* python.c */
 #ifdef HAVE_PYTHON
-extern int handlePythonHTTPRequest(char *url, uint postLen);
+extern int handlePythonHTTPRequest(char *url, u_int postLen);
 #endif
 
 /* map.c */

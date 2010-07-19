@@ -37,9 +37,9 @@ static void* netflowUtilsLoop(void* _deviceId);
 #define valueOf(a) (a == NULL ? "" : a)
 #define isEmpty(a) ((a == NULL) || (a[0] == '\0') ? 1 : 0)
 
-#define SWAP8(a,b)  { uint8_t  c = a; a = b; b = c; }
-#define SWAP16(a,b) { uint16_t c = a; a = b; b = c; }
-#define SWAP32(a,b) { uint32_t c = a; a = b; b = c; }
+#define SWAP8(a,b)  { u_int8_t  c = a; a = b; b = c; }
+#define SWAP16(a,b) { u_int16_t c = a; a = b; b = c; }
+#define SWAP32(a,b) { u_int32_t c = a; a = b; b = c; }
 
 /*
   Cisco ASA
@@ -70,39 +70,39 @@ static int mapNetFlowDeviceToNtopDevice(int deviceId);
 
 struct generic_netflow_record {
   /* v5 */
-  uint32_t srcaddr;    /* Source IP Address */
-  uint32_t dstaddr;    /* Destination IP Address */
-  uint32_t nexthop;    /* Next hop router's IP Address */
-  uint16_t input;      /* Input interface index */
-  uint16_t output;     /* Output interface index */
-  uint32_t sentPkts, rcvdPkts;
-  uint32_t sentOctets, rcvdOctets;
-  uint32_t first;      /* SysUptime at start of flow */
-  uint32_t last;       /* and of last packet of the flow */
-  uint16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  uint16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  uint8_t  tcp_flags;  /* Cumulative OR of tcp flags */
-  uint8_t  proto;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
-  uint8_t  tos;        /* IP Type-of-Service */
-  uint16_t dst_as;     /* dst peer/origin Autonomous System */
-  uint16_t src_as;     /* source peer/origin Autonomous System */
-  uint8_t  dst_mask;   /* destination route's mask bits */
-  uint8_t  src_mask;   /* source route's mask bits */
+  u_int32_t srcaddr;    /* Source IP Address */
+  u_int32_t dstaddr;    /* Destination IP Address */
+  u_int32_t nexthop;    /* Next hop router's IP Address */
+  u_int16_t input;      /* Input interface index */
+  u_int16_t output;     /* Output interface index */
+  u_int32_t sentPkts, rcvdPkts;
+  u_int32_t sentOctets, rcvdOctets;
+  u_int32_t first;      /* SysUptime at start of flow */
+  u_int32_t last;       /* and of last packet of the flow */
+  u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int8_t  tcp_flags;  /* Cumulative OR of tcp flags */
+  u_int8_t  proto;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t  tos;        /* IP Type-of-Service */
+  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
+  u_int16_t src_as;     /* source peer/origin Autonomous System */
+  u_int8_t  dst_mask;   /* destination route's mask bits */
+  u_int8_t  src_mask;   /* source route's mask bits */
 
   /* v9 */
   char src_mac[LEN_ETHERNET_ADDRESS], src_mac_set, dst_mac[LEN_ETHERNET_ADDRESS], dst_mac_set;
-  uint16_t vlanId;
+  u_int16_t vlanId;
 
   /* Latency extensions */
-  uint32_t client_nw_latency_sec, client_nw_latency_usec;
-  uint32_t server_nw_latency_sec, server_nw_latency_usec;
-  uint32_t appl_latency_sec, appl_latency_usec;
+  u_int32_t client_nw_latency_sec, client_nw_latency_usec;
+  u_int32_t server_nw_latency_sec, server_nw_latency_usec;
+  u_int32_t appl_latency_sec, appl_latency_usec;
 
   /* VoIP Extensions */
   char sip_call_id[50], sip_calling_party[50], sip_called_party[50];
 
   /* Efficiency */
-  uint8_t efficiency_sent, efficiency_rcvd;
+  u_int8_t efficiency_sent, efficiency_rcvd;
 };
 
 /* ****************************** */
@@ -353,11 +353,11 @@ static void updateInterfaceName(InterfaceStats *ifStats) {
 
 /* *************************** */
 
-static void updateNetFlowIfStats(uint32_t netflow_device_ip,
-				 uint16_t netflow_device_port,
-				 int deviceId, uint32_t ifId,
+static void updateNetFlowIfStats(u_int32_t netflow_device_ip,
+				 u_int16_t netflow_device_port,
+				 int deviceId, u_int32_t ifId,
 				 u_char selfUpdate, u_char sentStats,
-				 uint32_t _pkts, uint32_t _octets) {
+				 u_int32_t _pkts, u_int32_t _octets) {
   if(_pkts == 0)
     return;
   else {
@@ -443,8 +443,8 @@ static void updateNetFlowIfStats(uint32_t netflow_device_ip,
 
 /* *************************** */
 
-static void updateInterfaceStats(uint32_t netflow_device_ip,
-				 uint16_t netflow_device_port,
+static void updateInterfaceStats(u_int32_t netflow_device_ip,
+				 u_int16_t netflow_device_port,
 				 int deviceId, struct generic_netflow_record *record) {
 
   if((myGlobals.device[deviceId].netflowGlobals == NULL) || (record == NULL)) {
@@ -504,15 +504,15 @@ static inline int is_zero_timeval(struct timeval *tv) {
 
 /* *************************** */
 
-static int handleGenericFlow(uint32_t netflow_device_ip,
-			     uint16_t netflow_device_port,
+static int handleGenericFlow(u_int32_t netflow_device_ip,
+			     u_int16_t netflow_device_port,
 			     time_t recordActTime, time_t recordSysUpTime,
 			     struct generic_netflow_record *record,
 			     int deviceId, time_t *firstSeen, time_t *lastSeen,
 			     u_char deEndianize) {
   int actualDeviceId;
   char theFlags[256], srcPseudoLocal, dstPseudoLocal;
-  uint16_t srcAS, dstAS;
+  u_int16_t srcAS, dstAS;
   struct in_addr a, b;
   HostAddr addr1, addr2;
   HostTraffic *srcHost=NULL, *dstHost=NULL;
@@ -527,7 +527,7 @@ static int handleGenericFlow(uint32_t netflow_device_ip,
   IPSession *session = NULL;
   time_t initTime;
   Counter total_pkts, total_bytes;
-  uint total_flows, ratio;
+  u_int total_flows, ratio;
 #ifdef ENABLE_EFFICIENCY
   Counter pkt_efficiency;
 #endif
@@ -654,7 +654,7 @@ static int handleGenericFlow(uint32_t netflow_device_ip,
   total_pkts  = record->sentPkts + record->rcvdPkts;
   total_bytes = record->sentOctets + record->rcvdOctets;
   total_flows = (record->sentPkts ? 1 : 0) + (record->rcvdPkts ? 1 : 0);
-  ratio = (uint)(total_bytes/total_pkts);
+  ratio = (u_int)(total_bytes/total_pkts);
 
   myGlobals.device[actualDeviceId].receivedPkts.value += total_pkts;
   myGlobals.device[actualDeviceId].ethernetPkts.value += total_pkts;
@@ -1295,7 +1295,7 @@ static char* nf_hex_dump(char *buf, u_short len) {
 
 
 static void updateSenderFlowSequence(int deviceId, int probeId,
-				     int numFlows, uint32_t flowSequence, uint32_t flowVersion) {
+				     int numFlows, u_int32_t flowSequence, u_int32_t flowVersion) {
 
   /*with V5/7 totNumflows and lostFlows mean flows, in V9 mean packets*/
   int resetParam = 3;
@@ -1350,8 +1350,8 @@ static void updateSenderFlowSequence(int deviceId, int probeId,
 
 /* ********************************************************* */
 
-static void dissectFlow(uint32_t netflow_device_ip,
-			uint16_t netflow_device_port,
+static void dissectFlow(u_int32_t netflow_device_ip,
+			u_int16_t netflow_device_port,
 			int probeId,
 			char *buffer, int bufferLen, int deviceId) {
   NetFlow5Record the5Record;
@@ -1359,7 +1359,7 @@ static void dissectFlow(uint32_t netflow_device_ip,
   time_t recordActTime = 0, recordSysUpTime = 0;
   struct generic_netflow_record record;
   time_t firstSeen, lastSeen;
-  uint32_t flowSequence = 0;
+  u_int32_t flowSequence = 0;
 
   memcpy(&the5Record, buffer, bufferLen > sizeof(the5Record) ? sizeof(the5Record): bufferLen);
   flowVersion = ntohs(the5Record.flowHeader.version);
@@ -2245,7 +2245,7 @@ static void* netflowMainLoop(void* _deviceId) {
 	    myGlobals.device[deviceId].netflowGlobals->probeList[i].probePort = fromHost.sin_port;
 	    myGlobals.device[deviceId].netflowGlobals->probeList[i].pkts = 1;
 	    myGlobals.device[deviceId].netflowGlobals->probeList[i].lastSequenceNumber = 0;
-	    myGlobals.device[deviceId].netflowGlobals->probeList[i].lowestSequenceNumber = (uint32_t)ULONG_MAX;
+	    myGlobals.device[deviceId].netflowGlobals->probeList[i].lowestSequenceNumber = (u_int32_t)ULONG_MAX;
 	    myGlobals.device[deviceId].netflowGlobals->probeList[i].highestSequenceNumber = 0;
 	    myGlobals.device[deviceId].netflowGlobals->probeList[i].totNumFlows = 0;
 	    probeId = i;
@@ -3158,7 +3158,7 @@ static void printNetFlowConfiguration(int deviceId) {
 
 static void printNetFlowStatisticsRcvd(int deviceId) {
   char buf[512], formatBuf[32], formatBuf2[32], formatBuf3[32];
-  uint i, totFlows;
+  u_int i, totFlows;
   InterfaceStats *ifStats = myGlobals.device[deviceId].netflowGlobals->ifStats;
 
   if(ifStats != NULL) {
@@ -4101,10 +4101,10 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
   if(myGlobals.pcap_file_list != NULL) {
     /* ntop is reading packets from a file */
     struct ether_header ehdr;
-    uint caplen = h->caplen;
-    uint length = h->len;
+    u_int caplen = h->caplen;
+    u_int length = h->len;
     unsigned short eth_type;
-    uint8_t debug = 0;
+    u_int8_t debug = 0;
     struct ip ip;
 
     deviceId = 1; /* Dummy value */
@@ -4126,7 +4126,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
       eth_type = ntohs(ehdr.ether_type);
 
       if(eth_type == ETHERTYPE_IP) {
-	uint plen, hlen;
+	u_int plen, hlen;
 
 #ifdef DEBUG_FLOWS
 	if(debug)
@@ -4134,7 +4134,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 #endif
 
 	memcpy(&ip, p+sizeof(struct ether_header), sizeof(struct ip));
-	hlen =(uint)ip.ip_hl * 4;
+	hlen =(u_int)ip.ip_hl * 4;
 	NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
 
 	plen = length-sizeof(struct ether_header);

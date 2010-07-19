@@ -33,14 +33,14 @@
 #ifdef WIN32
 struct icmp6_hdr
   {
-    uint8_t     icmp6_type;   /* type field */
-    uint8_t     icmp6_code;   /* code field */
-    uint16_t    icmp6_cksum;  /* checksum field */
+    u_int8_t     icmp6_type;   /* type field */
+    u_int8_t     icmp6_code;   /* code field */
+    u_int16_t    icmp6_cksum;  /* checksum field */
     union
       {
-        uint32_t  icmp6_un_data32[1]; /* type-specific field */
-        uint16_t  icmp6_un_data16[2]; /* type-specific field */
-        uint8_t   icmp6_un_data8[4];  /* type-specific field */
+        u_int32_t  icmp6_un_data32[1]; /* type-specific field */
+        u_int16_t  icmp6_un_data16[2]; /* type-specific field */
+        u_int8_t   icmp6_un_data8[4];  /* type-specific field */
       } icmp6_dataun;
   };
 #endif
@@ -163,10 +163,10 @@ struct icmp6_hdr
 /* Fragment header */
 struct ip6_frag
   {
-    uint8_t   ip6f_nxt;       /* next header */
-    uint8_t   ip6f_reserved;  /* reserved field */
-    uint16_t  ip6f_offlg;     /* offset, reserved, and flag */
-    uint32_t  ip6f_ident;     /* identification */
+    u_int8_t   ip6f_nxt;       /* next header */
+    u_int8_t   ip6f_reserved;  /* reserved field */
+    u_int16_t  ip6f_offlg;     /* offset, reserved, and flag */
+    u_int32_t  ip6f_ident;     /* identification */
   };
 #endif
 

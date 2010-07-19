@@ -30,7 +30,7 @@ static int processNtopConfigData (char *buf, int savePref);
 /* ****************************** */
 
 void showUsers(void) {
-  uint numUsers=0;
+  u_int numUsers=0;
   char buf[LEN_GENERAL_WORK_BUFFER];
   datum key_data, return_data;
 
@@ -415,7 +415,7 @@ if(err != NULL) {
    *********************************** */
 
 void showURLs(void) {
-  uint numUsers=0;
+  u_int numUsers=0;
   char buf[LEN_GENERAL_WORK_BUFFER], ebuf[256];
   datum key_data, return_data;
 

@@ -139,8 +139,8 @@ int reportValues(time_t *lastTime) {
 
 /* ******************************* */
 
-void addPageIndicator(char *url, uint pageNum,
-		      uint numEntries, uint linesPerPage,
+void addPageIndicator(char *url, u_int pageNum,
+		      u_int numEntries, u_int linesPerPage,
 		      int revertOrder, int numCol, int netmode) {
   char buf[LEN_GENERAL_WORK_BUFFER/2], prevBuf[LEN_GENERAL_WORK_BUFFER/2],
     nextBuf[LEN_GENERAL_WORK_BUFFER/2], shortBuf[16], separator;
@@ -1507,7 +1507,7 @@ void printHostsTraffic(int reportTypeReq,
 		       HostsDisplayPolicy showHostsMode,
 		       LocalityDisplayPolicy showLocalityMode,
 		       int vlanId) {
-  uint idx, idx1, numEntries=0;
+  u_int idx, idx1, numEntries=0;
   int printedEntries=0, hourId, maxHosts;
   char theDate[8];
   struct tm t;
@@ -2180,7 +2180,7 @@ void printHostsTraffic(int reportTypeReq,
 void printMulticastStats(int sortedColumn /* ignored so far */,
 			 int revertOrder,
 			 int pageNum) {
-  uint idx, numEntries=0, maxHosts;
+  u_int idx, numEntries=0, maxHosts;
   int printedEntries=0, i;
   HostTraffic *el;
   HostTraffic** tmpTable;
@@ -2513,7 +2513,7 @@ void makeDot() {
 
 void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes,
 		    int vlanId, int ifId, int knownSubnetId) {
-  uint idx, numEntries=0, maxHosts;
+  u_int idx, numEntries=0, maxHosts;
   int printedEntries=0;
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
   HostTraffic *el;
@@ -2523,7 +2523,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   char htmlAnchor[64], htmlAnchor1[64];
   char formatBuf[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
   u_char *vlanList, foundVlan = 0, vlanStr[16], ifStr[16], foundIf = 0, *ifList;
-  uint8_t *knownSubnets, foundSubnet = 0;
+  u_int8_t *knownSubnets, foundSubnet = 0;
 
   vlanList = calloc(1, MAX_VLAN);
   if(vlanList == NULL) {
@@ -2540,7 +2540,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   }
   ifId = abs(ifId);
 
-  knownSubnets = calloc(sizeof(uint8_t), myGlobals.numKnownSubnets);
+  knownSubnets = calloc(sizeof(u_int8_t), myGlobals.numKnownSubnets);
   if(ifList == NULL) {
     traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for if list");
     free(vlanList); free(ifList);
@@ -2677,7 +2677,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
     if(foundVlan) {
       u_char tmpBuf[64];
-      uint8_t selected;
+      u_int8_t selected;
 
       sendString("<tr><td><form action=\"../\">\n<b>VLAN</b>:</td>"
 		 "<td><select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
@@ -2713,7 +2713,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     }
 
     /* if(foundSubnet) */ {
-      uint8_t selected;
+      u_int8_t selected;
 
       sendString("<tr><td><form action=\"../\">\n<b>Subnet</b>:</td>"
 		 "<td><select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
@@ -2773,7 +2773,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
     if(foundIf) {
       u_char found = 0;
-      uint8_t selected;
+      u_int8_t selected;
 
       sendString("<tr><td><p><form action=\"../\">\n<b>Interface Id</b>:</td><td>"
 		 "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
@@ -3120,7 +3120,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 /* ************************************ */
 
 static void printHostNwDelay(HostTraffic *el, int actualDeviceId, 
-			     NetworkDelay *delay, uint clientDelay) {
+			     NetworkDelay *delay, u_int clientDelay) {
   int i;
   char buf[2*LEN_GENERAL_WORK_BUFFER];
 
@@ -3204,8 +3204,8 @@ static void printHostFingerprint(HostTraffic *el) {
 void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 			  int revertOrder, int pageNum, char *url,
 			  int hostInfoPage) {
-  uint idx, i, cols = 0;
-  uint16_t vlanId = NO_VLAN;
+  u_int idx, i, cols = 0;
+  u_int16_t vlanId = NO_VLAN;
   HostTraffic *el=NULL;
   char buf[LEN_GENERAL_WORK_BUFFER];
   char formatBuf[32], portBuf[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
@@ -3244,7 +3244,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     }
 #ifdef ENABLE_FC
     else if((el->fcCounters != NULL)
-	      && ((strncmp(fc_to_str ((uint8_t *)&el->fcCounters->hostFcAddress),
+	      && ((strncmp(fc_to_str ((u_int8_t *)&el->fcCounters->hostFcAddress),
 			   host, LEN_FC_ADDRESS_DISPLAY) == 0) &&
 		  ((el->fcCounters->vsanId == vsanId) || (vsanId == 0)))) {
       found = 1;
@@ -3574,7 +3574,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 void printLocalRoutersList(int actualDeviceId) {
   char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
   HostTraffic *el, *router;
-  uint i, j, numEntries=0;
+  u_int i, j, numEntries=0;
   HostSerial routerList[MAX_NUM_ROUTERS];
 
   printHTMLheader("Local Subnet Routers", NULL, 0);
@@ -3659,7 +3659,7 @@ void printLocalRoutersList(int actualDeviceId) {
 
 void printIpAccounting(int remoteToLocal, int sortedColumn,
 		       int revertOrder, int pageNum) {
-  uint idx, numEntries=0, maxHosts;
+  u_int idx, numEntries=0, maxHosts;
   int printedEntries=0;
   HostTraffic *el, **tmpTable;
   char buf[LEN_GENERAL_WORK_BUFFER], *str=NULL, *sign, *title=NULL;
@@ -4099,7 +4099,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 void printIpProtocolUsage(void) {
   HostTraffic **hosts, *el;
   u_short clientPorts[MAX_ASSIGNED_IP_PORTS], serverPorts[MAX_ASSIGNED_IP_PORTS];
-  uint j, idx1, hostsNum=0, numPorts=0, maxHosts;
+  u_int j, idx1, hostsNum=0, numPorts=0, maxHosts;
   char buf[LEN_GENERAL_WORK_BUFFER], portBuf[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
   PortUsage *ports;
 
@@ -4650,7 +4650,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 			    "</td><td><A HREF=\"/plugins/rrdPlugin?mode=zoom&action=graphSummary&graphId=4&"
 			    "key=interfaces/%s/&start=%u&end=%u\"><IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></tr></table></TD></TR>",
-			    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (uint)(now - 12 * 3600), (uint)now);
+			    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (u_int)(now - 12 * 3600), (u_int)now);
 	      sendString(buf);
 	    }
 
@@ -5511,7 +5511,7 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
 void printDomainStats(char* domain_network_name, int network_mode,
 		      int communityMode, int sortedColumn,
 		      int revertOrder, int pageNum) {
-  uint idx, tmpIdx, numEntries=0, printedEntries=0, maxHosts;
+  u_int idx, tmpIdx, numEntries=0, printedEntries=0, maxHosts;
   short keyValue=0, i;
   HostTraffic *el;
   char buf[3*LEN_GENERAL_WORK_BUFFER], buf1[64];
@@ -6065,7 +6065,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 			communityMode ? statsEntry->communityName : statsEntry->domainHost->dnsDomainValue);
       } else {
 	char *hostLink;
-	uint len;
+	u_int len;
 
 #if 0
 	int blankId;
@@ -6381,7 +6381,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
 /* ************************** */
 
 static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
-  uint numEntries=0, i, maxHosts;
+  u_int numEntries=0, i, maxHosts;
   HostTraffic **tmpTable, *el;
   char buf[LEN_GENERAL_WORK_BUFFER];
   char formatBuf[32], formatBuf1[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
@@ -6628,7 +6628,7 @@ void printFcHostsTraffic(int reportType,
                          int pageNum,
                          char* url,
                          LocalityDisplayPolicy showLocalityMode) {
-  uint idx, numEntries=0, maxHosts, whatToDo;
+  u_int idx, numEntries=0, maxHosts, whatToDo;
   int printedEntries=0, hourId;
   char theDate[8];
   struct tm t;

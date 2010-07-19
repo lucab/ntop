@@ -23,7 +23,7 @@
 
 #include "ntop.h"
 
-uint32_t num_db_insert = 0, num_db_insert_failed = 0;
+u_int32_t num_db_insert = 0, num_db_insert_failed = 0;
 
 #ifdef HAVE_MYSQL_H
 
@@ -350,14 +350,14 @@ int dump_session_to_db(IPSession *sess) {
 
 /* ***************************************************** */
 
-int insert_flow_record(uint16_t probeId,
-		       uint32_t srcAddr, uint32_t dstAddr,
-		       uint16_t input, uint16_t output,
-		       uint32_t sentPkts, uint32_t sentOctets,
-		       uint32_t rcvdPkts, uint32_t rcvdOctets,
-		       uint32_t first, uint32_t last,
-		       uint16_t srcPort, uint16_t dstPort, uint8_t tcpFlags,
-		       uint8_t proto, uint8_t tos, uint16_t vlanId) {
+int insert_flow_record(u_int16_t probeId,
+		       u_int32_t srcAddr, u_int32_t dstAddr,
+		       u_int16_t input, u_int16_t output,
+		       u_int32_t sentPkts, u_int32_t sentOctets,
+		       u_int32_t rcvdPkts, u_int32_t rcvdOctets,
+		       u_int32_t first, u_int32_t last,
+		       u_int16_t srcPort, u_int16_t dstPort, u_int8_t tcpFlags,
+		       u_int8_t proto, u_int8_t tos, u_int16_t vlanId) {
 
   if(myGlobals.runningPref.saveRecordsIntoDb == 0) return(0);
 
@@ -449,12 +449,12 @@ int is_db_enabled() { return(0); }
 void initDB() { traceEvent(CONST_TRACE_INFO, "Database support not compiled into ntop"); }
 void termDB() { ; }
 int dump_session_to_db(IPSession *sess) { return(0); }
-int insert_flow_record(uint16_t probeId,
-		       uint32_t srcAddr, uint32_t dstAddr,
-		       uint16_t input, uint16_t output,
-		       uint32_t sentPkts, uint32_t sentOctets,
-		       uint32_t rcvdPkts, uint32_t rcvdOctets,
-		       uint32_t first, uint32_t last,
-		       uint16_t srcPort, uint16_t dstPort, uint8_t tcpFlags,
-		       uint8_t proto, uint8_t tos, uint16_t vlanId) { return(-1); }
+int insert_flow_record(u_int16_t probeId,
+		       u_int32_t srcAddr, u_int32_t dstAddr,
+		       u_int16_t input, u_int16_t output,
+		       u_int32_t sentPkts, u_int32_t sentOctets,
+		       u_int32_t rcvdPkts, u_int32_t rcvdOctets,
+		       u_int32_t first, u_int32_t last,
+		       u_int16_t srcPort, u_int16_t dstPort, u_int8_t tcpFlags,
+		       u_int8_t proto, u_int8_t tos, u_int16_t vlanId) { return(-1); }
 #endif

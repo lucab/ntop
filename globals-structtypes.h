@@ -50,42 +50,42 @@ Courtesy of Helmut Schneider <jumper99@gmx.de>
 #ifndef __GNUC__
 typedef unsigned char  u_char;
 typedef unsigned short u_short;
-typedef unsigned int   uint;
+typedef unsigned int   u_int;
 typedef unsigned long  u_long;
 #endif
-#if !defined(HAVE_UINT8_T)
-typedef u_char  uint8_t;
+#if !defined(HAVE_u_int8_T)
+typedef u_char  u_int8_t;
 #endif
-#if !defined(HAVE_UINT16_T)
-typedef u_short uint16_t;
+#if !defined(HAVE_u_int16_T)
+typedef u_short u_int16_t;
 #endif
-#if !defined(HAVE_UINT32_T)
-typedef uint   uint32_t;
+#if !defined(HAVE_u_int32_T)
+typedef u_int   u_int32_t;
 #endif
 #endif /* WIN32 */
 
 #if !defined(HAVE_U_INT64_T)
 #if defined(WIN32)
-/* typedef _int64 uint64_t; */
+/* typedef _int64 u_int64_t; */
 #else
-#if defined(HAVE_UINT64_T)
-#define uint64_t uint64_t
+#if defined(HAVE_u_int64_T)
+#define u_int64_t u_int64_t
 #else
-#error "Sorry, I'm unable to define uint64_t on your platform"
+#error "Sorry, I'm unable to define u_int64_t on your platform"
 #endif
 #endif
 #endif
 
 #if !defined(HAVE_U_INT32_T)
-typedef unsigned int uint32_t;
+typedef unsigned int u_int32_t;
 #endif
 
 #if !defined(HAVE_U_INT16_T)
-typedef unsigned short uint16_t;
+typedef unsigned short u_int16_t;
 #endif
 
 #if !defined(HAVE_U_INT8_T)
-typedef unsigned char uint8_t;
+typedef unsigned char u_int8_t;
 #endif
 
 #if !defined(HAVE_INT32_T)
@@ -101,7 +101,7 @@ typedef char int8_t;
 #endif
 
 #ifndef bool
-#define bool uint8_t
+#define bool u_int8_t
 #endif
 
 #ifdef ENABLE_FC
@@ -110,19 +110,19 @@ typedef char int8_t;
 #endif
 
 typedef struct ether80211q {
-  uint16_t vlanId;
-  uint16_t protoType;
+  u_int16_t vlanId;
+  u_int16_t protoType;
 } Ether80211q;
 
 typedef struct _mac_t {
-    uint8_t mact_octet[6];
+    u_int8_t mact_octet[6];
 } mac_t;
 
 #ifdef ENABLE_FC
 typedef struct fcAddr {
-    uint8_t domain;
-    uint8_t area;
-    uint8_t port;
+    u_int8_t domain;
+    u_int8_t area;
+    u_int8_t port;
 } FcAddress;
 
 typedef struct _fcSerial {
@@ -131,7 +131,7 @@ typedef struct _fcSerial {
 } FcSerial;
 
 typedef union wwn_ {
-  uint8_t str[8];
+  u_int8_t str[8];
 #ifdef CFG_LITTLE_ENDIAN
   struct {
     unsigned naa            :4;
@@ -147,19 +147,19 @@ typedef union wwn_ {
 
   struct {
     unsigned naa:4;
-    uint64_t   vendor_specific:60;
+    u_int64_t   vendor_specific:60;
   } wwn_format3;
 
   struct {
     unsigned  naa           :4;
     unsigned  reserved      :28;
-    uint32_t ip_addr;
+    u_int32_t ip_addr;
   } wwn_format4;
 
   struct {
     unsigned naa            :4;
     unsigned ieee_company_id:24;
-    uint64_t   vsid        :36; /* vendor specific ID */
+    u_int64_t   vsid        :36; /* vendor specific ID */
   } wwn_format5;
 #else
   struct {
@@ -175,28 +175,28 @@ typedef union wwn_ {
   } wwn_format2;
 
   struct {
-    uint64_t   vendor_specific:60;
+    u_int64_t   vendor_specific:60;
     unsigned naa:4;
   } wwn_format3;
 
   struct {
-    uint32_t ip_addr;
+    u_int32_t ip_addr;
     unsigned  reserved      :28;
     unsigned  naa           :4;
   } wwn_format4;
 
   struct {
-    uint64_t   vsid        :36;
+    u_int64_t   vsid        :36;
     unsigned ieee_company_id:24;
     unsigned naa            :4;
   } wwn_format5;
 #endif
-  uint64_t num;
+  u_int64_t num;
 } wwn_t;
 #endif
 
 typedef struct hostAddr {
-  uint    hostFamily; /* AF_INET AF_INET6 */
+  u_int    hostFamily; /* AF_INET AF_INET6 */
   union {
     struct in_addr  _hostIp4Address;
 #ifdef INET6
@@ -220,12 +220,12 @@ typedef struct hostAddr {
 
 typedef struct _ethSerial {
   u_char  ethAddress[LEN_ETHERNET_ADDRESS];
-  uint16_t vlanId;
+  u_int16_t vlanId;
 } EthSerial;
 
 typedef struct _ipSerial {
   HostAddr ipAddress;
-  uint16_t  vlanId;
+  u_int16_t  vlanId;
 } IpSerial;
 
 typedef struct hostSerial {
@@ -285,8 +285,8 @@ typedef struct {
 #endif /* MAKE_NTOP_PACKETSZ_DECLARATIONS */
 
 typedef struct portProtoMapper {
-  uint portProto;       /* Port/proto to map */
-  uint mappedPortProto; /* Mapped port/proto */
+  u_int portProto;       /* Port/proto to map */
+  u_int mappedPortProto; /* Mapped port/proto */
   u_char dummyEntry;     /* Set to 1 if this entry is dummy */
 } PortProtoMapper;
 
@@ -298,7 +298,7 @@ typedef struct portProtoMapperHandler {
 
 typedef struct protocolsList {
   char *protocolName;
-  uint16_t protocolId, protocolIdAlias; /* I know it's ugly however this
+  u_int16_t protocolId, protocolIdAlias; /* I know it's ugly however this
 					    should be enough for most of
 					    the situations
 					 */
@@ -354,12 +354,12 @@ typedef struct holder {
 
 
 typedef struct pthreadMutex {
-  uint8_t isInitialized;
+  u_int8_t isInitialized;
 
 #ifdef MUTEX_DEBUG
   pthread_mutex_t mutex, statedatamutex;
-  uint8_t isLocked;
-  uint  numLocks, numReleases;
+  u_int8_t isLocked;
+  u_int  numLocks, numReleases;
   Holder attempt, lock, unlock, max;
   float  maxLockedDuration;
 #else
@@ -374,7 +374,7 @@ typedef struct packetInformation {
 } PacketInformation;
 
 typedef struct hash_list {
-  uint16_t idx;          /* Index of this entry in hostTraffic */
+  u_int16_t idx;          /* Index of this entry in hostTraffic */
   struct hash_list *next;
 } HashList;
 
@@ -516,9 +516,9 @@ typedef struct sapType {
 typedef struct unknownProto {
   u_char protoType; /* 0=notUsed, 1=Ethernet, 2=SAP, 3=IP */
   union {
-    uint16_t ethType;
+    u_int16_t ethType;
     SapType   sapType;
-    uint16_t ipType;
+    u_int16_t ipType;
   } proto;
 } UnknownProto;
 
@@ -680,7 +680,7 @@ typedef struct protoTrafficInfo {
 #define MAX_NUM_NON_IP_PROTO_TRAFFIC_INFO   8
 
 typedef struct nonIpProtoTrafficInfo {
-  uint16_t protocolId;
+  u_int16_t protocolId;
   TrafficCounter sentBytes, rcvdBytes;
   TrafficCounter sentPkts, rcvdPkts;
   struct nonIpProtoTrafficInfo *next;
@@ -701,18 +701,18 @@ typedef struct scsiLunTrafficInfo {
     TrafficCounter numScsiRdCmd, numScsiWrCmd, numScsiOtCmd;
     /* The following 3 counters are only FCP_DATA payload bytes */
     TrafficCounter scsiRdBytes, scsiWrBytes, scsiOtBytes;
-    uint32_t maxXferRdySize, minXferRdySize;
-    uint32_t maxRdSize, minRdSize, maxWrSize, minWrSize;
-    uint32_t numFailedCmds;
-    uint32_t chkCondCnt, busyCnt, resvConflictCnt;
-    uint32_t taskSetFullCnt, taskAbrtCnt, otherStatusCnt;
-    uint32_t abrtTaskSetCnt, clearTaskSetCnt, tgtRstCnt, lunRstCnt, clearAcaCnt;
+    u_int32_t maxXferRdySize, minXferRdySize;
+    u_int32_t maxRdSize, minRdSize, maxWrSize, minWrSize;
+    u_int32_t numFailedCmds;
+    u_int32_t chkCondCnt, busyCnt, resvConflictCnt;
+    u_int32_t taskSetFullCnt, taskAbrtCnt, otherStatusCnt;
+    u_int32_t abrtTaskSetCnt, clearTaskSetCnt, tgtRstCnt, lunRstCnt, clearAcaCnt;
     time_t lastTgtRstTime, lastLunRstTime;
-    uint16_t lastOxid;         /* used to track data with LUN if host issues
+    u_int16_t lastOxid;         /* used to track data with LUN if host issues
                                  * commands to multiple LUNs simultaneously */
     u_char lastScsiCmd, invalidLun;
     u_char frstRdDataRcvd, frstWrDataRcvd;
-    uint32_t cmdsFromLastIops;
+    u_int32_t cmdsFromLastIops;
     struct timeval reqTime, lastIopsTime;
     struct timeval minXfrRdyRTT, maxXfrRdyRTT;
     struct timeval minWrFrstDataRTT, maxWrFrstDataRTT;
@@ -753,7 +753,7 @@ typedef struct sortedFcDomainStatsEntry {
 } SortedFcDomainStatsEntry;
 
 typedef struct fcFabricElementHash {
-    uint16_t vsanId;
+    u_int16_t vsanId;
     TrafficCounter totBytes, totPkts;
     TrafficCounter dmBytes, dmPkts;
     TrafficCounter fspfBytes, fspfPkts, hloPkts;
@@ -767,7 +767,7 @@ typedef struct fcFabricElementHash {
     TrafficCounter fcDnsBytes, fcIpfcBytes, fcSwilsBytes, otherFcBytes;
     double maxTimeZoneConf, minTimeZoneConf;
     time_t zoneConfStartTime;
-    uint32_t numBF, numRCF, numZoneConf;
+    u_int32_t numBF, numRCF, numZoneConf;
     time_t fabricConfStartTime; /* for computing fabric conf time */
     double maxTimeFabricConf, minTimeFabricConf;
     double aveTimeFabricConf;
@@ -779,13 +779,13 @@ typedef struct fcFabricElementHash {
 } FcFabricElementHash;
 
 typedef struct fcNameServerCache {
-    uint16_t hashIdx;
-    uint16_t vsanId;
+    u_int16_t hashIdx;
+    u_int16_t vsanId;
     FcAddress    fcAddress;
     wwn_t     pWWN;
     wwn_t     nWWN;
     char      alias[MAX_LEN_SYM_HOST_NAME];
-    uint16_t tgtType;
+    u_int16_t tgtType;
     struct fcNameServerCache *next;
 } FcNameServerCacheEntry;
 
@@ -838,9 +838,9 @@ typedef struct fcScsiCounters {
 typedef struct networkDelay {
   struct timeval last_update;
   u_long min_nw_delay, max_nw_delay;
-  uint num_samples;
+  u_int num_samples;
   double total_delay;
-  uint16_t peer_port;
+  u_int16_t peer_port;
   HostSerial last_peer;
 } NetworkDelay;
 
@@ -851,23 +851,23 @@ typedef struct networkDelay {
 
 /* Host Traffic */
 typedef struct hostTraffic {
-  uint8_t         to_be_deleted; /* 1 = the host will be deleted in the next purge loop */
+  u_int8_t         to_be_deleted; /* 1 = the host will be deleted in the next purge loop */
   u_short          magic;
   u_short          l2Family;    /* 0 = Ethernet, 1 = Fibre Channel (FC) */
-  uint            hostTrafficBucket; /* Index in the **hash_hostTraffic list */
+  u_int            hostTrafficBucket; /* Index in the **hash_hostTraffic list */
   u_short          refCount;         /* Reference counter */
   HostSerial       hostSerial;
   HostAddr         hostIpAddress;
-  uint16_t        vlanId;          /* VLAN Id (-1 if not set) */
-  uint16_t        ifId;            /* Interface Id [e.g. for NetFlow] (-1 if not set) */
-  uint16_t        hostAS;          /* AS to which the host belongs to */
+  u_int16_t        vlanId;          /* VLAN Id (-1 if not set) */
+  u_int16_t        ifId;            /* Interface Id [e.g. for NetFlow] (-1 if not set) */
+  u_int16_t        hostAS;          /* AS to which the host belongs to */
   char             *hostASDescr;    /* Description of the host AS */
   time_t           firstSeen, lastSeen; /* time when this host has sent/rcvd some data  */
   u_char           ethAddress[LEN_ETHERNET_ADDRESS];
   u_char           lastEthAddress[LEN_ETHERNET_ADDRESS]; /* used for remote addresses */
   char             ethAddressString[LEN_ETHERNET_ADDRESS_DISPLAY];
   char             hostNumIpAddress[20] /* xxx.xxx.xxx.xxx */, *dnsDomainValue, *dnsTLDValue;
-  uint8_t         network_mask;    /* IPv6 notation e.g. /24 */
+  u_int8_t         network_mask;    /* IPv6 notation e.g. /24 */
   int8_t           known_subnet_id; /* UNKNOWN_SUBNET_ID if the host does not belong to a known subnet */
   char             *hwModel, *description, *community, *fingerprint;
   char             hostResolvedName[MAX_LEN_SYM_HOST_NAME];
@@ -906,7 +906,7 @@ typedef struct hostTraffic {
     actualTPktThpt, averageTPktThpt, peakTPktThpt;
   unsigned short   actBandwidthUsage, actBandwidthUsageS, actBandwidthUsageR;
   TrafficDistribution *trafficDistribution;
-  uint32_t        numHostSessions;
+  u_int32_t        numHostSessions;
 
   /* Routing */
   RoutingCounter   *routedTraffic;
@@ -967,9 +967,9 @@ typedef struct domainStats {
 typedef struct ipFragment {
   struct hostTraffic *src, *dest;
   char fragmentOrder;
-  uint fragmentId, lastOffset, lastDataLength;
-  uint totalDataLength, expectedDataLength;
-  uint totalPacketLength;
+  u_int fragmentId, lastOffset, lastDataLength;
+  u_int totalDataLength, expectedDataLength;
+  u_int totalPacketLength;
   u_short sport, dport;
   time_t firstSeen;
   struct ipFragment *prev, *next;
@@ -1013,21 +1013,21 @@ typedef struct ipSession {
   TrafficCounter bytesProtoRcvd;    /* # bytes rcvd (Protocol [e.g. HTTP])      */
   TrafficCounter bytesFragmentedSent;     /* IP Fragments                       */
   TrafficCounter bytesFragmentedRcvd;     /* IP Fragments                       */
-  uint minWindow, maxWindow;       /* TCP window size                          */
+  u_int minWindow, maxWindow;       /* TCP window size                          */
   struct timeval synTime, synAckTime, ackTime; /* Used to calcolate nw delay */
   struct timeval clientNwDelay, serverNwDelay; /* Network Delay/Latency         */
   u_short numFin;                   /* # FIN pkts rcvd                          */
   u_short numFinAcked;              /* # ACK pkts rcvd                          */
-  uint32_t lastAckIdI2R;           /* ID of the last ACK rcvd                  */
-  uint32_t lastAckIdR2I;           /* ID of the last ACK rcvd                  */
+  u_int32_t lastAckIdI2R;           /* ID of the last ACK rcvd                  */
+  u_int32_t lastAckIdR2I;           /* ID of the last ACK rcvd                  */
   u_short numDuplicatedAckI2R;      /* # duplicated ACKs                        */
   u_short numDuplicatedAckR2I;      /* # duplicated ACKs                        */
   TrafficCounter bytesRetranI2R;    /* # bytes retransmitted (due to duplicated ACKs) */
   TrafficCounter bytesRetranR2I;    /* # bytes retransmitted (due to duplicated ACKs) */
-  uint32_t finId[MAX_NUM_FIN];     /* ACK ids we're waiting for                */
+  u_int32_t finId[MAX_NUM_FIN];     /* ACK ids we're waiting for                */
   u_long lastFlags;                 /* flags of the last TCP packet             */
-  uint32_t lastCSAck, lastSCAck;   /* they store the last ACK ids C->S/S->C    */
-  uint32_t lastCSFin, lastSCFin;   /* they store the last FIN ids C->S/S->C    */
+  u_int32_t lastCSAck, lastSCAck;   /* they store the last ACK ids C->S/S->C    */
+  u_int32_t lastCSFin, lastSCFin;   /* they store the last FIN ids C->S/S->C    */
   u_char lastInitiator2RemFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags             */
   u_char lastRem2InitiatorFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags             */
   u_char sessionState;              /* actual session state                     */
@@ -1123,10 +1123,10 @@ typedef enum {
 
 typedef struct probeInfo {
   struct in_addr probeAddr;
-  uint16_t probePort;
-  uint32_t      pkts;
-  uint32_t lastSequenceNumber, lowestSequenceNumber, highestSequenceNumber, totNumFlows;
-  uint32_t lostFlows;
+  u_int16_t probePort;
+  u_int32_t      pkts;
+  u_int32_t lastSequenceNumber, lowestSequenceNumber, highestSequenceNumber, totNumFlows;
+  u_int32_t lostFlows;
 } ProbeInfo;
 
 /* Flow aggregation */
@@ -1161,29 +1161,29 @@ typedef enum {
 /* ********************************* */
 
 struct flow_ver1_hdr {
-  uint16_t version;         /* Current version = 1*/
-  uint16_t count;           /* The number of records in PDU. */
-  uint32_t sysUptime;       /* Current time in msecs since router booted */
-  uint32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
-  uint32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
+  u_int16_t version;         /* Current version = 1*/
+  u_int16_t count;           /* The number of records in PDU. */
+  u_int32_t sysUptime;       /* Current time in msecs since router booted */
+  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
+  u_int32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
 };
 
 struct flow_ver1_rec {
-  uint32_t srcaddr;    /* Source IP Address */
-  uint32_t dstaddr;    /* Destination IP Address */
-  uint32_t nexthop;    /* Next hop router's IP Address */
-  uint16_t input;      /* Input interface index */
-  uint16_t output;     /* Output interface index */
-  uint32_t dPkts;      /* Packets sent in Duration */
-  uint32_t dOctets;    /* Octets sent in Duration */
-  uint32_t first;      /* SysUptime at start of flow */
-  uint32_t last;       /* and of last packet of the flow */
-  uint16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  uint16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  uint16_t pad;        /* pad to word boundary */
-  uint8_t  proto;      /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
-  uint8_t  tos;        /* IP Type-of-Service */
-  uint8_t  pad2[7];    /* pad to word boundary */
+  u_int32_t srcaddr;    /* Source IP Address */
+  u_int32_t dstaddr;    /* Destination IP Address */
+  u_int32_t nexthop;    /* Next hop router's IP Address */
+  u_int16_t input;      /* Input interface index */
+  u_int16_t output;     /* Output interface index */
+  u_int32_t dPkts;      /* Packets sent in Duration */
+  u_int32_t dOctets;    /* Octets sent in Duration */
+  u_int32_t first;      /* SysUptime at start of flow */
+  u_int32_t last;       /* and of last packet of the flow */
+  u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int16_t pad;        /* pad to word boundary */
+  u_int8_t  proto;      /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t  tos;        /* IP Type-of-Service */
+  u_int8_t  pad2[7];    /* pad to word boundary */
 };
 
 typedef struct single_flow_ver1_rec {
@@ -1194,39 +1194,39 @@ typedef struct single_flow_ver1_rec {
 /* ********************************* */
 
 struct flow_ver5_hdr {
-  uint16_t version;         /* Current version=5*/
-  uint16_t count;           /* The number of records in PDU. */
-  uint32_t sysUptime;       /* Current time in msecs since router booted */
-  uint32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
-  uint32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
-  uint32_t flow_sequence;   /* Sequence number of total flows seen */
-  uint8_t  engine_type;     /* Type of flow switching engine (RP,VIP,etc.)*/
-  uint8_t  engine_id;       /* Slot number of the flow switching engine */
+  u_int16_t version;         /* Current version=5*/
+  u_int16_t count;           /* The number of records in PDU. */
+  u_int32_t sysUptime;       /* Current time in msecs since router booted */
+  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
+  u_int32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
+  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
+  u_int8_t  engine_type;     /* Type of flow switching engine (RP,VIP,etc.)*/
+  u_int8_t  engine_id;       /* Slot number of the flow switching engine */
 };
 
 struct flow_ver5_rec {
-  uint32_t srcaddr;    /* Source IP Address */
-  uint32_t dstaddr;    /* Destination IP Address */
-  uint32_t nexthop;    /* Next hop router's IP Address */
-  uint16_t input;      /* Input interface index */
-  uint16_t output;     /* Output interface index */
-  uint32_t dPkts;      /* Packets sent in Duration (milliseconds between 1st
+  u_int32_t srcaddr;    /* Source IP Address */
+  u_int32_t dstaddr;    /* Destination IP Address */
+  u_int32_t nexthop;    /* Next hop router's IP Address */
+  u_int16_t input;      /* Input interface index */
+  u_int16_t output;     /* Output interface index */
+  u_int32_t dPkts;      /* Packets sent in Duration (milliseconds between 1st
 			   & last packet in this flow)*/
-  uint32_t dOctets;    /* Octets sent in Duration (milliseconds between 1st
+  u_int32_t dOctets;    /* Octets sent in Duration (milliseconds between 1st
 			   & last packet in  this flow)*/
-  uint32_t first;      /* SysUptime at start of flow */
-  uint32_t last;       /* and of last packet of the flow */
-  uint16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  uint16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  uint8_t  pad1;       /* pad to word boundary */
-  uint8_t  tcp_flags;  /* Cumulative OR of tcp flags */
-  uint8_t  proto;      /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
-  uint8_t  tos;        /* IP Type-of-Service */
-  uint16_t src_as;     /* source peer/origin Autonomous System */
-  uint16_t dst_as;     /* dst peer/origin Autonomous System */
-  uint8_t  src_mask;   /* source route's mask bits */
-  uint8_t  dst_mask;   /* destination route's mask bits */
-  uint16_t pad2;       /* pad to word boundary */
+  u_int32_t first;      /* SysUptime at start of flow */
+  u_int32_t last;       /* and of last packet of the flow */
+  u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int8_t  pad1;       /* pad to word boundary */
+  u_int8_t  tcp_flags;  /* Cumulative OR of tcp flags */
+  u_int8_t  proto;      /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t  tos;        /* IP Type-of-Service */
+  u_int16_t src_as;     /* source peer/origin Autonomous System */
+  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
+  u_int8_t  src_mask;   /* source route's mask bits */
+  u_int8_t  dst_mask;   /* destination route's mask bits */
+  u_int16_t pad2;       /* pad to word boundary */
 };
 
 typedef struct single_flow_ver5_rec {
@@ -1237,37 +1237,37 @@ typedef struct single_flow_ver5_rec {
 /* ********************************* */
 
 struct flow_ver7_hdr {
-  uint16_t version;         /* Current version=7*/
-  uint16_t count;           /* The number of records in PDU. */
-  uint32_t sysUptime;       /* Current time in msecs since router booted */
-  uint32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
-  uint32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
-  uint32_t flow_sequence;   /* Sequence number of total flows seen */
-  uint32_t reserved;
+  u_int16_t version;         /* Current version=7*/
+  u_int16_t count;           /* The number of records in PDU. */
+  u_int32_t sysUptime;       /* Current time in msecs since router booted */
+  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
+  u_int32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
+  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
+  u_int32_t reserved;
 };
 
 struct flow_ver7_rec {
-  uint32_t srcaddr;    /* Source IP Address */
-  uint32_t dstaddr;    /* Destination IP Address */
-  uint32_t nexthop;    /* Next hop router's IP Address */
-  uint16_t input;      /* Input interface index */
-  uint16_t output;     /* Output interface index */
-  uint32_t dPkts;      /* Packets sent in Duration */
-  uint32_t dOctets;    /* Octets sent in Duration */
-  uint32_t first;      /* SysUptime at start of flow */
-  uint32_t last;       /* and of last packet of the flow */
-  uint16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  uint16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  uint8_t  flags;      /* Shortcut mode(dest only,src only,full flows*/
-  uint8_t  tcp_flags;  /* Cumulative OR of tcp flags */
-  uint8_t  proto;      /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
-  uint8_t  tos;        /* IP Type-of-Service */
-  uint16_t dst_as;     /* dst peer/origin Autonomous System */
-  uint16_t src_as;     /* source peer/origin Autonomous System */
-  uint8_t  dst_mask;   /* destination route's mask bits */
-  uint8_t  src_mask;   /* source route's mask bits */
-  uint16_t pad2;       /* pad to word boundary */
-  uint32_t router_sc;  /* Router which is shortcut by switch */
+  u_int32_t srcaddr;    /* Source IP Address */
+  u_int32_t dstaddr;    /* Destination IP Address */
+  u_int32_t nexthop;    /* Next hop router's IP Address */
+  u_int16_t input;      /* Input interface index */
+  u_int16_t output;     /* Output interface index */
+  u_int32_t dPkts;      /* Packets sent in Duration */
+  u_int32_t dOctets;    /* Octets sent in Duration */
+  u_int32_t first;      /* SysUptime at start of flow */
+  u_int32_t last;       /* and of last packet of the flow */
+  u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int8_t  flags;      /* Shortcut mode(dest only,src only,full flows*/
+  u_int8_t  tcp_flags;  /* Cumulative OR of tcp flags */
+  u_int8_t  proto;      /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t  tos;        /* IP Type-of-Service */
+  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
+  u_int16_t src_as;     /* source peer/origin Autonomous System */
+  u_int8_t  dst_mask;   /* destination route's mask bits */
+  u_int8_t  src_mask;   /* source route's mask bits */
+  u_int16_t pad2;       /* pad to word boundary */
+  u_int32_t router_sc;  /* Router which is shortcut by switch */
 };
 
 typedef struct single_flow_ver7_rec {
@@ -1291,34 +1291,34 @@ typedef struct flow_ipfix_template_field {
 } V9V10TemplateField;
 
 typedef struct flow_ver9_hdr {
-  uint16_t version;         /* Current version=9 */
-  uint16_t count;           /* The number of records in PDU. */
-  uint32_t sysUptime;       /* Current time in msecs since router booted */
-  uint32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
-  uint32_t flow_sequence;   /* Sequence number of total flows seen */
-  uint32_t sourceId;        /* Source id */
+  u_int16_t version;         /* Current version=9 */
+  u_int16_t count;           /* The number of records in PDU. */
+  u_int32_t sysUptime;       /* Current time in msecs since router booted */
+  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
+  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
+  u_int32_t sourceId;        /* Source id */
 } V9FlowHeader;
 
 typedef struct flow_ver9_template_field {
-  uint16_t fieldType;
-  uint16_t fieldLen;
+  u_int16_t fieldType;
+  u_int16_t fieldLen;
 } V9TemplateField;
 
 typedef struct flow_ver9_template {
-  uint16_t templateFlowset; /* = 0 */
-  uint16_t flowsetLen;
-  uint16_t templateId;
-  uint16_t fieldCount;
+  u_int16_t templateFlowset; /* = 0 */
+  u_int16_t flowsetLen;
+  u_int16_t templateId;
+  u_int16_t fieldCount;
 } V9Template;
 
 typedef struct flow_ver9_flow_set {
-  uint16_t templateId;
-  uint16_t flowsetLen;
+  u_int16_t templateId;
+  u_int16_t flowsetLen;
 } V9FlowSet;
 
 typedef struct flow_ver9_templateids {
-  uint16_t templateId;
-  uint16_t templateLen;
+  u_int16_t templateId;
+  u_int16_t templateLen;
   char      *templateDescr;
 } V9TemplateId;
 
@@ -1334,8 +1334,8 @@ typedef struct flowSetV9 {
 } FlowSetV9;
 
 typedef struct interfaceStats {
-  uint32_t netflow_device_ip;
-  uint16_t netflow_device_port;
+  u_int32_t netflow_device_ip;
+  u_int16_t netflow_device_port;
   u_short interface_id;
   char interface_name[32];
   TrafficCounter inBytes, outBytes, inPkts, outPkts;
@@ -1354,13 +1354,13 @@ typedef struct astats {
 } AsStats;
 
 typedef struct {
-  uint32_t address[4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */    
+  u_int32_t address[4]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */    
 } NetworkStats;
 
 #define MAX_INTERFACE_STATS_QUEUE_LEN  32
 
 typedef struct optionTemplate {
-  uint16_t templateId;
+  u_int16_t templateId;
   struct optionTemplate *next;
 } OptionTemplate;
 
@@ -1401,7 +1401,7 @@ typedef struct netFlowGlobals {
   InterfaceStats *ifStats;
   NetworkStats whiteNetworks[MAX_NUM_NETWORKS], blackNetworks[MAX_NUM_NETWORKS];
   u_short numWhiteNets, numBlackNets;
-  uint32_t flowProcessed;
+  u_int32_t flowProcessed;
   Counter flowProcessedBytes;
   HostTraffic *dummyHost;
   FlowSetV9 *templates;
@@ -1438,7 +1438,7 @@ typedef struct cpacket_globals {
 
   /* Stats */
   ProbeInfo deviceList[MAX_NUM_PROBES];
-  uint32_t statsProcessed;
+  u_int32_t statsProcessed;
   
   /* Counters */
   cPacketCounter *counter_list_head, *last_head;
@@ -1452,29 +1452,29 @@ typedef struct cpacket_globals {
 #define MAX_NUM_SFLOW_INTERFACES      4096
 
 typedef struct ifCounters {
-  uint32_t ifIndex;
-  uint32_t ifType;
-  uint64_t ifSpeed;
-  uint32_t ifDirection;        /* Derived from MAU MIB (RFC 2668)
+  u_int32_t ifIndex;
+  u_int32_t ifType;
+  u_int64_t ifSpeed;
+  u_int32_t ifDirection;        /* Derived from MAU MIB (RFC 2668)
 				   0 = unknown, 1 = full-duplex,
 				   2 = half-duplex, 3 = in, 4 = out */
-  uint32_t ifStatus;           /* bit field with the following bits assigned:
+  u_int32_t ifStatus;           /* bit field with the following bits assigned:
 				   bit 0 = ifAdminStatus (0 = down, 1 = up)
 				   bit 1 = ifOperStatus (0 = down, 1 = up) */
-  uint64_t ifInOctets;
-  uint32_t ifInUcastPkts;
-  uint32_t ifInMulticastPkts;
-  uint32_t ifInBroadcastPkts;
-  uint32_t ifInDiscards;
-  uint32_t ifInErrors;
-  uint32_t ifInUnknownProtos;
-  uint64_t ifOutOctets;
-  uint32_t ifOutUcastPkts;
-  uint32_t ifOutMulticastPkts;
-  uint32_t ifOutBroadcastPkts;
-  uint32_t ifOutDiscards;
-  uint32_t ifOutErrors;
-  uint32_t ifPromiscuousMode;
+  u_int64_t ifInOctets;
+  u_int32_t ifInUcastPkts;
+  u_int32_t ifInMulticastPkts;
+  u_int32_t ifInBroadcastPkts;
+  u_int32_t ifInDiscards;
+  u_int32_t ifInErrors;
+  u_int32_t ifInUnknownProtos;
+  u_int64_t ifOutOctets;
+  u_int32_t ifOutUcastPkts;
+  u_int32_t ifOutMulticastPkts;
+  u_int32_t ifOutBroadcastPkts;
+  u_int32_t ifOutDiscards;
+  u_int32_t ifOutErrors;
+  u_int32_t ifPromiscuousMode;
   struct ifCounters *next;
 } IfCounters;
 
@@ -1502,7 +1502,7 @@ typedef struct sFlowGlobals {
   ProbeInfo probeList[MAX_NUM_PROBES];
   NetworkStats whiteNetworks[MAX_NUM_NETWORKS], blackNetworks[MAX_NUM_NETWORKS];
   u_short numWhiteNets, numBlackNets;
-  uint32_t flowProcessed;
+  u_int32_t flowProcessed;
   Counter flowProcessedBytes;
   HostTraffic *dummyHost;
 
@@ -1511,7 +1511,7 @@ typedef struct sFlowGlobals {
   PthreadMutex whiteblackListMutex;
 
   u_long numSamplesReceived, initialPool, lastSample;
-  uint32_t flowSampleSeqNo, numSamplesToGo;
+  u_int32_t flowSampleSeqNo, numSamplesToGo;
   IfCounters *ifCounters;
 } SflowGlobals;
 
@@ -1523,13 +1523,13 @@ typedef struct ntopInterface {
   char *humanFriendlyName;       /* Human friendly name of the interface (needed under WinNT and above) */
   int flags;                     /* the status of the interface as viewed by ntop */
 
-  uint32_t addr;                /* Internet address (four bytes notation) */
+  u_int32_t addr;                /* Internet address (four bytes notation) */
   char *ipdot;                   /* IP address (dot notation) */
   char *fqdn;                    /* FQDN (resolved for humans) */
 
   struct in_addr network;        /* network number associated to this interface */
   struct in_addr netmask;        /* netmask associated to this interface */
-  uint          numHosts;       /* # hosts of the subnet */
+  u_int          numHosts;       /* # hosts of the subnet */
   struct in_addr ifAddr;         /* network number associated to this interface */
 #ifdef INET6
   NtopIfaceAddr  *v6Addrs;
@@ -1547,7 +1547,7 @@ typedef struct ntopInterface {
   char activeDevice;             /* Is the interface active (useful for virtual interfaces) */
   char dummyDevice;              /* set to 1 for 'artificial' devices (e.g. sFlow-device) */
   bool hasVLANs;                 /* Have we seen 802.1q stuff */
-  uint32_t deviceSpeed;         /* Device speed (0 if speed is unknown) */
+  u_int32_t deviceSpeed;         /* Device speed (0 if speed is unknown) */
   int snaplen;                   /* maximum # of bytes to capture foreach pkt */
                                  /* read timeout in milliseconds */
   int datalink;                  /* data-link encapsulation type (see DLT_* in net/bph.h) */
@@ -1569,7 +1569,7 @@ typedef struct ntopInterface {
   PthreadMutex packetQueueMutex;
   PthreadMutex packetProcessMutex;
   PacketInformation *packetQueue; /* [CONST_PACKET_QUEUE_LENGTH+1]; */
-  uint packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;
+  u_int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;
   ConditionalVariable queueCondvar;
   pthread_t dequeuePacketThreadId;
 
@@ -1678,8 +1678,8 @@ typedef struct ntopInterface {
 
   pthread_t pcapDispatchThreadId;
 
-  uint  hostsno;        /* # of valid entries in the following table */
-  uint  actualHashSize;
+  u_int  hostsno;        /* # of valid entries in the following table */
+  u_int  actualHashSize;
   struct hostTraffic **hash_hostTraffic;
 
   u_short hashListMaxLookups;
@@ -1726,7 +1726,7 @@ typedef struct processInfo {
   TrafficCounter bytesSent, bytesRcvd;
   /* peers that talked with this process */
   HostSerial contactedIpPeersSerials[MAX_NUM_CONTACTED_PEERS];
-  uint contactedIpPeersIdx;
+  u_int contactedIpPeersIdx;
 } ProcessInfo;
 
 /* *********************************** */
@@ -1746,7 +1746,7 @@ typedef struct {
   int       queryType;                     /* type of original query */
   char      name[MAXDNAME];                /* official name of host */
   char      aliases[MAX_ALIASES][MAXDNAME]; /* alias list */
-  uint32_t addrList[MAX_ADDRESSES]; /* list of addresses from name server */
+  u_int32_t addrList[MAX_ADDRESSES]; /* list of addresses from name server */
   int       addrType;   /* host address type */
   int       addrLen;    /* length of address */
 } DNSHostInfo;
@@ -1767,7 +1767,7 @@ typedef struct bootProtocol {
   unsigned char	    bp_htype;	    /* hardware addr type - RFC 826 */
   unsigned char	    bp_hlen;	    /* hardware addr length (6 for 10Mb Ethernet) */
   unsigned char	    bp_hops;	    /* gateway hops (server set) */
-  uint32_t	    bp_xid;	    /* transaction ID (random) */
+  u_int32_t	    bp_xid;	    /* transaction ID (random) */
   unsigned short    bp_secs;	    /* seconds elapsed since
 				       client started trying to boot */
   unsigned short    bp_flags;	    /* flags (not much used): 0x8000 is broadcast */
@@ -1810,12 +1810,12 @@ struct llc {
 /* ******************************* */
 
 typedef struct {
-  uint16_t checksum, length;
-  uint8_t  hops, packetType;
+  u_int16_t checksum, length;
+  u_int8_t  hops, packetType;
   u_char    destNw[4], destNode[6];
-  uint16_t dstSocket;
+  u_int16_t dstSocket;
   u_char    srcNw[4], srcNode[6];
-  uint16_t srcSocket;
+  u_int16_t srcSocket;
 } IPXpacket;
 
 struct enamemem {
@@ -1902,8 +1902,8 @@ typedef struct hostAddress {
 
 /* Appletalk Datagram Delivery Protocol */
 typedef struct atDDPheader {
-  uint16_t       datagramLength, ddpChecksum;
-  uint16_t       dstNet, srcNet;
+  u_int16_t       datagramLength, ddpChecksum;
+  u_int16_t       dstNet, srcNet;
   u_char          dstNode, srcNode;
   u_char          dstSocket, srcSocket;
   u_char          ddpType;
@@ -1924,7 +1924,7 @@ typedef struct usersTraffic {
 /* **************************** */
 
 typedef struct transactionTime {
-  uint16_t transactionId;
+  u_int16_t transactionId;
   struct timeval theTime;
 } TransactionTime;
 
@@ -1941,42 +1941,42 @@ struct pbuf {
 typedef struct badGuysAddr {
   HostAddr       addr;
   time_t         lastBadAccess;
-  uint16_t      count;
+  u_int16_t      count;
 } BadGuysAddr;
 
 /* ******** Token Ring ************ */
 
 #if defined(WIN32) && !defined (__GNUC__)
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
+typedef unsigned char u_int8_t;
+typedef unsigned short u_int16_t;
 #endif /* WIN32 */
 
 struct tokenRing_header {
-  uint8_t  trn_ac;             /* access control field */
-  uint8_t  trn_fc;             /* field control field  */
-  uint8_t  trn_dhost[6];       /* destination host     */
-  uint8_t  trn_shost[6];       /* source host          */
-  uint16_t trn_rcf;            /* route control field  */
-  uint16_t trn_rseg[8];        /* routing registers    */
+  u_int8_t  trn_ac;             /* access control field */
+  u_int8_t  trn_fc;             /* field control field  */
+  u_int8_t  trn_dhost[6];       /* destination host     */
+  u_int8_t  trn_shost[6];       /* source host          */
+  u_int16_t trn_rcf;            /* route control field  */
+  u_int16_t trn_rseg[8];        /* routing registers    */
 };
 
 struct tokenRing_llc {
-  uint8_t  dsap;		/* destination SAP   */
-  uint8_t  ssap;		/* source SAP        */
-  uint8_t  llc;		/* LLC control field */
-  uint8_t  protid[3];		/* protocol id       */
-  uint16_t ethType;		/* ethertype field   */
+  u_int8_t  dsap;		/* destination SAP   */
+  u_int8_t  ssap;		/* source SAP        */
+  u_int8_t  llc;		/* LLC control field */
+  u_int8_t  protid[3];		/* protocol id       */
+  u_int16_t ethType;		/* ethertype field   */
 };
 
 /* ******** ANY ************ */
 
 typedef struct anyHeader {
-  uint16_t  pktType;
-  uint16_t  llcAddressType;
-  uint16_t  llcAddressLen;
+  u_int16_t  pktType;
+  u_int16_t  llcAddressType;
+  u_int16_t  llcAddressLen;
   u_char     ethAddress[LEN_ETHERNET_ADDRESS];
-  uint16_t  pad;
-  uint16_t  protoType;
+  u_int16_t  pad;
+  u_int16_t  protoType;
 } AnyHeader;
 
 /* ******** FDDI ************ */
@@ -1991,53 +1991,53 @@ typedef struct fddi_header {
 /* ************ GRE (Generic Routing Encapsulation) ************* */
 
 typedef struct greTunnel {
-  uint16_t	flags,     protocol;
-  uint16_t	payload,   callId;
-  uint32_t	seqAckNumber;
+  u_int16_t	flags,     protocol;
+  u_int16_t	payload,   callId;
+  u_int32_t	seqAckNumber;
 } GreTunnel;
 
 /* ************ PPP ************* */
 
 typedef struct pppTunnelHeader {
-  uint16_t	unused, protocol;
+  u_int16_t	unused, protocol;
 } PPPTunnelHeader;
 
 /* ************ Fibre Channel *********** */
 typedef struct fcHeader {
 #ifdef CFG_BIG_ENDIAN
-    uint32_t d_id:24;
-    uint32_t r_ctl:8;
-    uint32_t s_id:24;
-    uint32_t cs_ctl:8;
-    uint32_t f_ctl:24;
-    uint32_t type:8;
+    u_int32_t d_id:24;
+    u_int32_t r_ctl:8;
+    u_int32_t s_id:24;
+    u_int32_t cs_ctl:8;
+    u_int32_t f_ctl:24;
+    u_int32_t type:8;
 #else
-    uint32_t r_ctl:8;
-    uint32_t d_id:24;
-    uint32_t cs_ctl:8;
-    uint32_t s_id:24;
-    uint32_t type:8;
-    uint32_t f_ctl:24;
+    u_int32_t r_ctl:8;
+    u_int32_t d_id:24;
+    u_int32_t cs_ctl:8;
+    u_int32_t s_id:24;
+    u_int32_t type:8;
+    u_int32_t f_ctl:24;
 #endif
-    uint8_t  seq_id;
-    uint8_t  df_ctl;
-    uint16_t seq_cnt;
-    uint16_t oxid;
-    uint16_t rxid;
-    uint32_t parameter;
+    u_int8_t  seq_id;
+    u_int8_t  df_ctl;
+    u_int16_t seq_cnt;
+    u_int16_t oxid;
+    u_int16_t rxid;
+    u_int32_t parameter;
 } FcHeader;
 
 typedef struct fcHeader_align {
     /* This structure is used to correctly endian the FC header */
-    uint32_t fld1;
-    uint32_t fld2;
-    uint32_t fld3;
-    uint8_t  seq_id;
-    uint8_t  df_ctl;
-    uint16_t seq_cnt;
-    uint16_t oxid;
-    uint16_t rxid;
-    uint32_t parameter;
+    u_int32_t fld1;
+    u_int32_t fld2;
+    u_int32_t fld3;
+    u_int8_t  seq_id;
+    u_int8_t  df_ctl;
+    u_int16_t seq_cnt;
+    u_int16_t oxid;
+    u_int16_t rxid;
+    u_int32_t parameter;
 } FcHeaderAlign;
 
 /* ******** Cisco ISL ************ */
@@ -2045,10 +2045,10 @@ typedef struct fcHeader_align {
 typedef struct islHeader {
   u_char     dstEthAddress[LEN_ETHERNET_ADDRESS];
   u_char     srcEthAddress[LEN_ETHERNET_ADDRESS];
-  uint16_t  len;
-  uint8_t   dap, ssap, control;
+  u_int16_t  len;
+  u_int8_t   dap, ssap, control;
   u_char     hsa[3];
-  uint16_t  vlanId, idx, notUsed;
+  u_int16_t  vlanId, idx, notUsed;
 } IslHeader;
 
 /* ******************************** */
@@ -2151,20 +2151,20 @@ typedef struct _userPref {
   bool disablePromiscuousMode;   /* -s | --no-promiscuous */
   int  traceLevel;               /* -t | --trace-level */
   char *mapperURL;               /* -U | --disable-mapper */
-  uint     maxNumHashEntries;   /* -x */
-  uint     maxNumSessions;      /* -X */
-  uint8_t  liveMode;            /* --live */
+  u_int     maxNumHashEntries;   /* -x */
+  u_int     maxNumSessions;      /* -X */
+  u_int8_t  liveMode;            /* --live */
 
 #ifdef ENABLE_EFFICIENCY
-  uint8_t  calculateEfficiency; /* --enable-efficiency */
+  u_int8_t  calculateEfficiency; /* --enable-efficiency */
 #endif
   
    /* SQL Database */
   char    sqlDbConfig[64];
-  uint   sqlRecDaysLifetime;
+  u_int   sqlRecDaysLifetime;
   bool    saveRecordsIntoDb, saveSessionsIntoDb;
 
-  uint16_t defaultVsan;         /* -v | --default-vsan */
+  u_int16_t defaultVsan;         /* -v | --default-vsan */
   char      *webAddr;            /* -w | --http-serveraddress[:port] */
   int       webPort;
   int       ipv4or6;             /* -6 -4 */
@@ -2314,7 +2314,7 @@ typedef struct ntopGlobals {
    * DNSAR - DNS Address Resolution - optional
    */
   PthreadMutex addressResolutionMutex;
-  uint numDequeueAddressThreads;
+  u_int numDequeueAddressThreads;
   pthread_t dequeueAddressThreadId[MAX_NUM_DEQUEUE_ADDRESS_THREADS];
   ConditionalVariable queueAddressCondvar;
 
@@ -2357,7 +2357,7 @@ typedef struct ntopGlobals {
     dnsSniffARPACount,
     dnsSniffStoredInCache;
 
-  uint addressQueuedCurrent, addressQueuedMax, addressUnresolvedDrops, resolvedAddresses, failedResolvedAddresses;
+  u_int addressQueuedCurrent, addressQueuedMax, addressUnresolvedDrops, resolvedAddresses, failedResolvedAddresses;
 
 #ifdef PARM_USE_HOST
   u_long  numResolvedFromHostAddresses;
@@ -2413,8 +2413,8 @@ typedef struct ntopGlobals {
   size_t allocatedMemory;
 #endif
 
-  uint ipTrafficMatrixMemoryUsage;
-  uint fcTrafficMatrixMemoryUsage;
+  u_int ipTrafficMatrixMemoryUsage;
+  u_int fcTrafficMatrixMemoryUsage;
   u_char webInterfaceDisabled;
   int enableIdleHosts;   /* Purging of idle hosts support enabled by default */
   int actualReportDeviceId;
@@ -2493,7 +2493,7 @@ typedef struct ntopGlobals {
   char scsiDefaultDevType;
   char displayOption;
   FcNameServerCacheEntry **fcnsCacheHash;
-  uint32_t fcMatrixHashCollisions, fcMatrixHashUnresCollisions;
+  u_int32_t fcMatrixHashCollisions, fcMatrixHashUnresCollisions;
 #endif
 
   int multipleVLANedHostCount;
@@ -2513,14 +2513,14 @@ typedef struct ntopGlobals {
 #endif
 
   /* If the traffic is divided in cells (e.g. ATM, cell payload is 47 bytes) this is the cell lenght */
-  uint16_t cellLength; 
+  u_int16_t cellLength; 
 
   /* GeoIP */
   GeoIP *geo_ip_db, *geo_ip_asn_db;
   PthreadMutex geolocalizationMutex;
 
   /* Event Handling */
-  uint32_t event_mask;
+  u_int32_t event_mask;
   char *event_log;
 
   /* RRD */

@@ -487,7 +487,7 @@ static char *any(char *cp, char *match) {
 
 /* ************************************ */
 
-uint32_t inet_network(const char *cp) {
+u_int32_t inet_network(const char *cp) {
   register u_long val, base, n;
   register char c;
   u_long parts[4], *pp = parts;
@@ -1590,7 +1590,7 @@ void WINAPI serviceMain(DWORD dwArgc, LPTSTR *lpszArgv)
   LPTSTR *lpszNewArgv = NULL;
   DWORD dwNewArgc;
 
-  UINT i;
+  u_int i;
 
   char szParamKey[1025];
 
@@ -1739,7 +1739,7 @@ void main(int argc, char **argv)
 LPTSTR *convertArgStringToArgList(LPTSTR *lpszArgs, PDWORD pdwLen,
 				  LPTSTR lpszArgstring)
 {
-  UINT uCount;
+  u_int uCount;
   LPTSTR lpszArg, lpszToken;
 
 
@@ -1790,7 +1790,7 @@ LPTSTR convertArgListToArgString(LPTSTR lpszTarget,
 				 DWORD dwStart, DWORD dwArgc,
 				 LPTSTR *lpszArgv)
 {
-  UINT i;
+  u_int i;
 
   if(dwStart >= dwArgc){
     return NULL;
@@ -2414,7 +2414,7 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size) {
    */
   char tmp[64], *tp;
   struct { int base, len; } best, cur;
-  uint words[NS_IN6ADDRSZ / NS_INT16SZ];
+  u_int words[NS_IN6ADDRSZ / NS_INT16SZ];
   int i;
 
   memset(tmp, 0, sizeof(tmp));
