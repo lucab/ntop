@@ -21,8 +21,7 @@ Quick Instructions
 
          - gdbm, gdbm-devel
          - libpcap (http://www.tcpdump.org)
-         - gd, gd-devel
-         - libpng, libpng-devel
+         - librrdtool
 
 1b. Optional packages
 
@@ -216,3 +215,4 @@ Updated - July 2003 (2.2.1+ changes)
 Updated - March 2004 (3.0 final changes)
 Updated - May 2006 (replace ./configure with ./autogen.sh)
 Updated - April 2008
+Updated - July 2010
