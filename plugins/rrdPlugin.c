@@ -33,6 +33,9 @@
 
 #define RRD_GRAPH_SIZE        16
 
+#define MAX_NUM_ENTRIES   32
+#define MAX_BUF_LEN       384
+
 static u_char debug_rrd_graph = 0;
 static char *rrdd_sock_path = NULL;
 #ifdef WIN32
@@ -1012,9 +1015,6 @@ static int graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *rrdC
 
 /* ******************************************* */
 
-#define MAX_NUM_ENTRIES   32
-#define MAX_BUF_LEN       128
-
 #undef option_timespan
 #define option_timespan(theStartTime, theLabel, selected)		\
   safe_snprintf(__FILE__, __LINE__, strbuf, sizeof(strbuf),		\
@@ -1342,9 +1342,6 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
 }
 
 /* ******************************************* */
-
-#define MAX_NUM_ENTRIES   32
-#define MAX_BUF_LEN       128
 
 #undef option_timespan
 #define option_timespan(theStartTime, theLabel, selected)		\
