@@ -1437,7 +1437,12 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
   int idx, found = 0;
   char python_path[256], *document_root = strdup("."), buf[2048];
   struct stat statbuf;
+#ifdef WIN32
+  PyObject *fd; 
+#else
   FILE *fd;
+#endif
+
   char *question_mark = strchr(url, '?');
 
   // traceEvent(CONST_TRACE_INFO, "Calling python... [%s]", url);
@@ -1485,8 +1490,13 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
   /* ********************************* */
 
   /* traceEvent(CONST_TRACE_INFO, "[PYTHON] Executing %s", python_path); */
+#ifdef WIN32
+  fd = PyFile_FromString(python_path, "r");
+#else
+  fd = fopen(python_path, "r");
+#endif
 
-  if((fd = fopen(python_path, "r")) != NULL) {
+  if(fd != NULL) {
 #ifndef WIN32
     int old_stdin = 0, old_stdout = 0;
 #endif
@@ -1553,7 +1563,12 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 #endif
 
     /* Run the actual program */
+#ifdef WIN32
+	/* http://python-forum.org/pythonforum/viewtopic.php?f=15&t=1554&p=6567 */
+	PyRun_SimpleFile(PyFile_AsFile(fd), python_path);
+#else
     PyRun_SimpleFile(fd, python_path);
+#endif
 
 #ifndef WIN32
     /* if(myGlobals.runningPref.debugMode) */ /* -K */
@@ -1569,7 +1584,10 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 #endif
 
     releaseMutex(&python_mutex);
+
+#ifndef WIN32
     fclose(fd);
+#endif
   }
 
   free(document_root);

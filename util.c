@@ -1700,7 +1700,9 @@ void handleFlowsSpecs(void) {
 int getLocalHostAddress(struct in_addr *hostAddress, u_int8_t *netmask_v6, char* device) {
   int rc = 0;
 #ifdef WIN32
-  hostAddress->s_addr = GetHostIPAddr();
+   (*netmask_v6) = 9; /* default C class */
+   hostAddress->s_addr = GetHostIPAddr();
+
   return(0);
 #else
   int fd, numHosts;

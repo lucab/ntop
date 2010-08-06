@@ -13,7 +13,7 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
+ *  You should have rleceived a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
@@ -3218,18 +3218,6 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     vlanId = vsanId = atoi(&tok[1]);
     *tok = '\0';
   }
-
-  /* ****************************** */
-
-#if 1
-  i=0;
-
-  for(el=getFirstHost(actualDeviceId);
-      el != NULL; el = getNextHost(actualDeviceId, el)) {
-    if(strcmp(el->hostNumIpAddress, host) == 0)
-      traceEvent (CONST_TRACE_WARNING, "[%3d] %s", i++, el->hostNumIpAddress);
-  }
-#endif
  
   /* ****************************** */
 

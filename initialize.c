@@ -1102,6 +1102,11 @@ void addDevice(char* deviceName, char* deviceDescr) {
     myGlobals.device[deviceId].v6Addrs = getLocalHostAddressv6(myGlobals.device[deviceId].v6Addrs, 
 							       myGlobals.device[deviceId].name);
 #endif
+
+	if(myGlobals.device[deviceId].network.s_addr == 0) {
+		myGlobals.device[deviceId].netmask.s_addr = 0xFFFFFF00;/* /24 */
+		myGlobals.device[deviceId].network.s_addr = myGlobals.device[deviceId].ifAddr.s_addr & myGlobals.device[deviceId].netmask.s_addr;
+	}
   }
 
   mallocLen = 2;
