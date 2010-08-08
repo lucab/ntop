@@ -59,7 +59,7 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder, u_int num, Host
 
 static PluginInfo icmpPluginInfo[] = {
   { VERSION, /* current ntop version */
-    "ICMP Watch",
+    "ICMPWatch",
     "This plugin produces a report about the ICMP packets that ntop has seen.<br>"
     "The report includes each host, byte and per-type counts (sent/received).",
     "2.4a", /* version */
@@ -502,9 +502,9 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
   if(icmpColumnSort>cmpFctnICMPmax) icmpColumnSort=0;
 
   if(!revertOrder) {
-    arrowGif = "&nbsp;<IMG ALT=\"Ascending order, click to reverse\" SRC=/arrow_up.gif BORDER=0>";
+    arrowGif = "&nbsp;<IMG ALT=\"Ascending order, click to reverse\" SRC=/arrow_up.png BORDER=0>";
   } else {
-    arrowGif = "&nbsp;<IMG ALT=\"Descending order, click to reverse\" SRC=/arrow_down.gif BORDER=0>";
+    arrowGif = "&nbsp;<IMG ALT=\"Descending order, click to reverse\" SRC=/arrow_down.png BORDER=0>";
     sign = "";
   }
 

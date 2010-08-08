@@ -8325,8 +8325,8 @@ int handlePluginHTTPRequest(char* url) {
       char *arg;
 
       /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-      if((!flows->pluginStatus.activePlugin) ||
-	 (!flows->pluginStatus.pluginPtr->inactiveSetup)) {
+      if((!flows->pluginStatus.activePlugin) 
+	 /* || (!flows->pluginStatus.pluginPtr->inactiveSetup) */) {
 	char buf[LEN_GENERAL_WORK_BUFFER], name[32];
 
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
