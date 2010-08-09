@@ -28,7 +28,7 @@ static void* netflowMainLoop(void* _deviceId);
 static void* netflowUtilsLoop(void* _deviceId);
 #endif
 
-/* #define DEBUG_FLOWS */
+/* #define DEBUG_FLOWS  */
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -124,7 +124,7 @@ static PluginInfo netflowPluginInfo[] = {
     "V1/V5/V7/V9 and <A HREF=http://ipfix.doit.wisc.edu/>IPFIX</A> (draft) data.<br>"
     "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
     "reports.<br><em>Remember to <A HREF=/switch.html>switch</A> the reporting NIC.</em>",
-    "4.2", /* version */
+    "4.3", /* version */
     "<a href=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     0, /* Active by default */
@@ -1293,7 +1293,6 @@ static char* nf_hex_dump(char *buf, u_short len) {
 
 /* ********************************************************* */
 
-
 static void updateSenderFlowSequence(int deviceId, int probeId,
 				     int numFlows, u_int32_t flowSequence, u_int32_t flowVersion) {
 
@@ -1461,8 +1460,6 @@ static void dissectFlow(u_int32_t netflow_device_ip,
     }
   }  /* DON'T ADD a else here ! */
 
-  flowSequence = ntohl(the5Record.flowHeader.flow_sequence);
-
   if((the5Record.flowHeader.version == htons(9))
      || (the5Record.flowHeader.version == htons(10))) {
     /* NetFlowV9/IPFIX Record */
@@ -1472,10 +1469,20 @@ static void dissectFlow(u_int32_t netflow_device_ip,
     FlowSet v9ipfix_template;
     int i;
     u_char handle_ipfix;
-    V9V10TemplateField *fields = NULL;
+    V9V10TemplateField *fields = NULL;   
 
     memset(&template, 0, sizeof(template));
-    if(the5Record.flowHeader.version == htons(9)) handle_ipfix = 0; else handle_ipfix = 1;
+    if(the5Record.flowHeader.version == htons(9)) {
+      V9FlowHeader *v9_hdr = (V9FlowHeader*)&the5Record.flowHeader;
+      flowSequence = ntohl(v9_hdr->flow_sequence);
+      handle_ipfix = 0;
+    } else {
+      IPFIXFlowHeader *v10_hdr = (IPFIXFlowHeader*)&the5Record.flowHeader;
+      flowSequence = ntohl(v10_hdr->flow_sequence);
+      /* traceEvent(CONST_TRACE_INFO, "IPFIX Flow sequence: %u", flowSequence); */
+      handle_ipfix = 1; 
+    }
+
     numFlows = 1;
 
     if(handle_ipfix) {
@@ -1494,6 +1501,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
     for(i=0; (!done) && (displ < bufferLen) && (i < numEntries); i++) {
       u_char isOptionTemplate;
       u_int16_t flowsetLen;
+      int16_t stillToProcess; /* Do not change to uint: this way I can catch template length issues */
 
       /* 1st byte */
 #ifdef DEBUG_FLOWS
@@ -1520,6 +1528,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	memcpy(&flowsetLen, &buffer[displ], sizeof(flowsetLen));
 	flowsetLen = htons(flowsetLen);
 	displ += 2;
+	stillToProcess = flowsetLen-4;
 
 	while((bufferLen > (displ+sizeof(V9Template))) && (!done)) {
 	  if(bufferLen > (displ+sizeof(V9Template))) {
@@ -1605,9 +1614,9 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 #ifdef DEBUG_FLOWS
 		  if(1)
-		    traceEvent(CONST_TRACE_INFO, "[%d] fieldType=%d/fieldLen=%d/totLen=%d",
+		    traceEvent(CONST_TRACE_INFO, "[%d] fieldType=%d/fieldLen=%d/totLen=%d [stillToProcess=%u]",
 			       1+fieldId, fields[fieldId].fieldType, fields[fieldId].fieldLen,
-			       accumulatedLen);
+			       accumulatedLen, stillToProcess);
 #endif
 		}
 	      }
@@ -1668,11 +1677,12 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	      }
 	    }
 
-	    displ += len;
-
+	    displ += len, stillToProcess -= len;
+	    
 #ifdef DEBUG_FLOWS
 	    traceEvent(CONST_TRACE_INFO, "Moving ahead of %d bytes: new offset is %d", len, displ);
 #endif
+	    if(stillToProcess <= 0) done = 1;
 	  } else
 	    done = 1;
 	}
@@ -1970,6 +1980,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
   } else if(the5Record.flowHeader.version == htons(5)) {
     int i;
 
+    flowSequence = ntohl(the5Record.flowHeader.flow_sequence);
     numFlows = ntohs(the5Record.flowHeader.count);
     recordActTime   = ntohl(the5Record.flowHeader.unix_secs);
     recordSysUpTime = ntohl(the5Record.flowHeader.sysUptime);

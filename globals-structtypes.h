@@ -1299,6 +1299,14 @@ typedef struct flow_ver9_hdr {
   u_int32_t sourceId;        /* Source id */
 } V9FlowHeader;
 
+typedef struct flow_ipfix_hdr {
+  u_int16_t version;         /* Current version=10 */
+  u_int16_t length;          /* The flow length (bytes) */
+  u_int32_t sysUptime;       /* Current time in msecs since router booted */
+  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
+  u_int32_t domainId;        /* Observation domain id */
+} IPFIXFlowHeader;
+
 typedef struct flow_ver9_template_field {
   u_int16_t fieldType;
   u_int16_t fieldLen;
