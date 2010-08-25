@@ -3290,7 +3290,8 @@ static int returnHTTPPage(char* pageName,
 	sendString("<ul><li>" CONST_MAILTO_STEFANO " has contributed several ideas and comments</li>");
 	sendString("<li>" CONST_MAILTO_ABDELKADER " and " CONST_MAILTO_OLIVIER " provided IPv6 support</li>");
 	sendString("<li>" CONST_MAILTO_DINESH " for SCSI & FiberChannel support</li>");
-	sendString("<li>" CONST_MAILTO_BURTON " contributed to ntop in early 2000's.</li></ul>");
+	sendString("<li>" CONST_MAILTO_BURTON " contributed to ntop in early 2000's.</li>");
+	sendString("<li>" CONST_MAILTO_MEDICI " implemented RRD Alarm and Region Map.</li></ul>");
 	sendString("<p>In addition, many other people downloaded this program, tested it,");
 	sendString("joined the <a class=external href=\"http://lists.ntop.org/mailman/listinfo/ntop\"");
 	sendString(" class=tooltip title=\"ntop mailing list signup page\">ntop</a> ");

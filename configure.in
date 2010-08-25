@@ -65,7 +65,15 @@ NTOP_VERSION_EXTRA=""
 
 echo
 echo "Welcome to $PACKAGE_NAME, Version $PACKAGE_VERSION $NTOP_VERSION_EXTRA"
-echo "  copyright (c) 1998-2010 Luca Deri <deri@ntop.org>"
+echo "Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>"
+
+
+THE_UID=`id -u`
+if test $THE_UID -eq 0; then
+   echo "Please run configure as normal user, not as superuser"
+   exit
+fi
+
 echo
 echo          "Configuration script version $SCRIPTVER"
 echo

@@ -1147,6 +1147,7 @@
 #define CONST_MAILTO_OLIVIER                "<a class=mailto href=\"mailto:&#111;&#108;&#105;&#118;&#105;&#101;&#114;&#046;&#102;&#101;&#115;&#116;&#111;&#114;&#064;&#108;&#111;&#114;&#105;&#097;&#046;&#102;&#114;\" title=\"Send email to Olivier Festor\">Olivier Festor</a>"
 #define CONST_MAILTO_DINESH                 "<a class=mailto href=\"mailto:&#100;&#100;&#117;&#116;&#116;&#064;&#099;&#105;&#115;&#099;&#111;&#046;&#099;&#111;&#109;\" title=\"Send email to Dinesh G. Dutt\">Dinesh G. Dutt</a>"
 #define CONST_MAILTO_BURTON                 "<a class=mailto href=\"mailto:&#098;&#117;&#114;&#116;&#111;&#110;&#064;&#110;&#116;&#111;&#112;&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#046;&#099;&#111;&#109;\" title=\"Send email to Burton Strauss\">Burton Strauss</a>"
+#define CONST_MAILTO_MEDICI                 "<a class=mailto href=\"mailto:gianluca_medici@tin.it\" title=\"Send email to Gianluca Medici\">Gianluca Medici</a>"
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
