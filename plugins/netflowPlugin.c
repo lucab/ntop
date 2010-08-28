@@ -124,7 +124,7 @@ static PluginInfo netflowPluginInfo[] = {
     "V1/V5/V7/V9 and <A HREF=http://ipfix.doit.wisc.edu/>IPFIX</A> (draft) data.<br>"
     "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
     "reports.<br><em>Remember to <A HREF=/switch.html>switch</A> the reporting NIC.</em>",
-    "4.3", /* version */
+    "4.4", /* version */
     "<a href=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     0, /* Active by default */
@@ -1465,8 +1465,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
     /* NetFlowV9/IPFIX Record */
     u_char foundRecord = 0, done = 0;
     u_short numEntries, displ;
-    V9Template template;
-    FlowSet v9ipfix_template;
+    V9SimpleTemplate template;
     int i;
     u_char handle_ipfix;
     V9V10TemplateField *fields = NULL;   
@@ -1500,7 +1499,6 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
     for(i=0; (!done) && (displ < bufferLen) && (i < numEntries); i++) {
       u_char isOptionTemplate;
-      u_int16_t flowsetLen;
       int16_t stillToProcess; /* Do not change to uint: this way I can catch template length issues */
 
       /* 1st byte */
@@ -1524,43 +1522,47 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 	if(handle_ipfix && (isOptionTemplate == 2)) isOptionTemplate = 0;
 
-	displ += 2;
-	memcpy(&flowsetLen, &buffer[displ], sizeof(flowsetLen));
-	flowsetLen = htons(flowsetLen);
-	displ += 2;
-	stillToProcess = flowsetLen-4;
+	if(bufferLen > (displ+sizeof(V9TemplateHeader))) {
+	  V9TemplateHeader header;
+	  u_short stillToGo;
+	  u_int8_t templateDone = 0;
 
-	while((bufferLen > (displ+sizeof(V9Template))) && (!done)) {
-	  if(bufferLen > (displ+sizeof(V9Template))) {
+	  memcpy(&header, &buffer[displ], sizeof(V9TemplateHeader));
+	  header.templateFlowset = ntohs(header.templateFlowset);
+	  header.flowsetLen = ntohs(header.flowsetLen);
+	  stillToProcess = header.flowsetLen-sizeof(V9TemplateHeader);
+	  displ += sizeof(V9TemplateHeader);
+	  stillToGo = header.flowsetLen-sizeof(V9TemplateHeader);
+
+	  while((bufferLen >= (displ+stillToGo)) && (!templateDone)) {
+	    V9TemplateDef templateDef;
 	    FlowSetV9 *cursor = myGlobals.device[deviceId].netflowGlobals->templates;
 	    u_char found = 0;
 	    u_short len = 0, accumulatedLen = 0;
 	    int fieldId;
 
+	    memcpy(&templateDef, &buffer[displ], sizeof(V9TemplateDef));
+	    templateDef.templateId = htons(templateDef.templateId), templateDef.fieldCount = htons(templateDef.fieldCount);
+	    displ += sizeof(V9TemplateDef);
+
 	    if(!isOptionTemplate) {
 	      u_char goodTemplate = 0;
 
-	      memcpy(&v9ipfix_template, &buffer[displ], sizeof(v9ipfix_template));
-	      v9ipfix_template.templateId = htons(v9ipfix_template.templateId);
-	      v9ipfix_template.fieldCount = htons(v9ipfix_template.fieldCount);
-	      template.templateId = v9ipfix_template.templateId;
-	      template.fieldCount = v9ipfix_template.fieldCount;
-	      len = sizeof(v9ipfix_template);
+	      template.templateId = templateDef.templateId, template.fieldCount = templateDef.fieldCount;
 
 	      if(handle_ipfix) {
-		fields = (V9V10TemplateField*)malloc(v9ipfix_template.fieldCount * sizeof(V9V10TemplateField));
+		fields = (V9V10TemplateField*)malloc(templateDef.fieldCount * sizeof(V9V10TemplateField));
 		if(fields == NULL) {
 		  traceEvent(CONST_TRACE_WARNING, "Not enough memory");
 		  break;
 		}
 
-		if(((v9ipfix_template.fieldCount * 4) + sizeof(FlowSet) + 4 /* templateFlowSet + FlowsetLen */) >  flowsetLen) {
+		if(((templateDef.fieldCount * 4) + sizeof(FlowSet) + 4 /* templateFlowSet + FlowsetLen */) >  header.flowsetLen) {
 		  traceEvent(CONST_TRACE_WARNING, "Bad length [expected=%d][real=%lu]",
-			     v9ipfix_template.fieldCount * 4,
+			     templateDef.fieldCount * 4,
 			     numEntries + sizeof(FlowSet));
 		} else {
 		  goodTemplate = 1;
-		  len = sizeof(v9ipfix_template);
 
 		  /* Check the template before to handle it */
 		  for(fieldId=0; fieldId < template.fieldCount; fieldId++) {
@@ -1648,12 +1650,11 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		  myGlobals.device[deviceId].netflowGlobals->templates = cursor;
 		}
 
-		cursor->templateInfo.templateFlowset = 0;
-		cursor->templateInfo.flowsetLen = len + sizeof(v9ipfix_template);
-		cursor->templateInfo.templateId = v9ipfix_template.templateId;
-		cursor->templateInfo.fieldCount = v9ipfix_template.fieldCount;
+		cursor->templateInfo.flowsetLen = len + sizeof(header);
+		cursor->templateInfo.templateId = templateDef.templateId;
+		cursor->templateInfo.fieldCount = templateDef.fieldCount;
 		cursor->flowLen                 = accumulatedLen;
-		cursor->fields = fields;
+		cursor->fields                  = fields;
 
 #ifdef DEBUG_FLOWS
 		traceEvent(CONST_TRACE_INFO, ">>>>> Defined flow template [id=%d][flowLen=%d][fieldCount=%d]",
@@ -1666,25 +1667,21 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 #endif
 	      }
 	    } else {
-	      if(handle_ipfix) {
-		template.flowsetLen = flowsetLen;
-		displ -= 4 /* 4 bytes have been accounted already */;
-	      } else {
-		u_short move_ahead;
-
-		memcpy(&move_ahead, &buffer[displ+2], 2);
-		template.flowsetLen = ntohs(move_ahead);
-	      }
-	    }
-
-	    displ += len, stillToProcess -= len;
+	      len = header.flowsetLen;
+	      displ -= sizeof(V9TemplateDef)+sizeof(V9TemplateHeader) /* Bytes have been accounted already */;
+	      if(len == 0) {
+		traceEvent(CONST_TRACE_WARNING, "Flowset %d bytes long: discarding it", len);
+		return;
+	      }	      
+	    }	  
+	    
+	    displ += len, stillToProcess -= (len+sizeof(templateDef));
 	    
 #ifdef DEBUG_FLOWS
 	    traceEvent(CONST_TRACE_INFO, "Moving ahead of %d bytes: new offset is %d", len, displ);
 #endif
-	    if(stillToProcess <= 0) done = 1;
-	  } else
-	    done = 1;
+	    if(stillToProcess <= 0) templateDone = 1;
+	  }	  
 	}
       } else {
 #ifdef DEBUG_FLOWS

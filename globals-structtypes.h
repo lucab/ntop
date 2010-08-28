@@ -1312,12 +1312,23 @@ typedef struct flow_ver9_template_field {
   u_int16_t fieldLen;
 } V9TemplateField;
 
-typedef struct flow_ver9_template {
+typedef struct flow_ver9_template_header {
   u_int16_t templateFlowset; /* = 0 */
   u_int16_t flowsetLen;
+} V9TemplateHeader;
+
+typedef struct flow_ver9_template_def {
   u_int16_t templateId;
   u_int16_t fieldCount;
-} V9Template;
+} V9TemplateDef;
+
+typedef struct flow_ver9_template {
+  /* V9TemplateHeader */
+  u_int16_t flowsetLen;
+  /* V9TemplateDef */
+  u_int16_t templateId;
+  u_int16_t fieldCount;
+} V9SimpleTemplate;
 
 typedef struct flow_ver9_flow_set {
   u_int16_t templateId;
@@ -1335,7 +1346,7 @@ typedef struct flow_ver9_templateids {
 #define NUM_TEMPLATES 88
 
 typedef struct flowSetV9 {
-  V9Template templateInfo;
+  V9SimpleTemplate templateInfo;
   u_int16_t flowLen; /* Real flow length */
   V9V10TemplateField *fields;
   struct flowSetV9 *next;
