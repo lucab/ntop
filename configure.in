@@ -70,8 +70,14 @@ echo "Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>"
 
 THE_UID=`id -u`
 if test $THE_UID -eq 0; then
+   echo "################## WARNING ##################"
+   echo
+   echo "Running configure and compiling as root might lead"
+   echo "to compilation issues."
+   echo
    echo "Please run configure as normal user, not as superuser"
-   exit
+   echo
+   echo "#############################################"
 fi
 
 echo
