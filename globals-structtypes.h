@@ -307,10 +307,12 @@ typedef struct protocolsList {
 
 #ifndef HAVE_RW_LOCK
 #ifndef WIN32
-#define pthread_rwlock_t       pthread_mutex_t
-#define pthread_rwlock_init    pthread_mutex_init
-#define pthread_rwlock_wrlock  pthread_mutex_lock
-#define pthread_rwlock_unlock  pthread_mutex_unlock
+#define pthread_rwlock_t         pthread_mutex_t
+#define pthread_rwlock_init      pthread_mutex_init
+#define pthread_rwlock_wrlock    pthread_mutex_lock
+#define pthread_rwlock_unlock    pthread_mutex_unlock
+#define pthread_rwlock_destroy   pthread_mutex_destroy
+#define pthread_rwlock_trywrlock pthread_mutex_trywrlock
 #endif
 #endif
 

@@ -1558,9 +1558,9 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		}
 
 		if(((templateDef.fieldCount * 4) + sizeof(FlowSet) + 4 /* templateFlowSet + FlowsetLen */) >  header.flowsetLen) {
-		  traceEvent(CONST_TRACE_WARNING, "Bad length [expected=%d][real=%lu]",
+		  traceEvent(CONST_TRACE_WARNING, "Bad length [expected=%d][real=%u]",
 			     templateDef.fieldCount * 4,
-			     numEntries + sizeof(FlowSet));
+			     (unsigned int)(numEntries + sizeof(FlowSet)));
 		} else {
 		  goodTemplate = 1;
 
