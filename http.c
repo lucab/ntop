@@ -1152,26 +1152,26 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
         epipecount++;
 
         if(epipecount < 10)
-          traceEvent(CONST_TRACE_INFO, "EPIPE during sending of page to web client");
+          traceEvent(CONST_TRACE_INFO, "EPIPE while sending page to web client");
         else if(epipecount == 10)
           traceEvent(CONST_TRACE_INFO,
-                     "EPIPE during sending of page to web client (skipping further warnings)");
+                     "EPIPE while sending page to web client (skipping further warnings)");
 #ifndef WIN32
       } else if(errno == ECONNRESET /* Client reset */) {
         static int econnresetcount=0;
         econnresetcount++;
 
         if(econnresetcount < 10)
-          traceEvent(CONST_TRACE_INFO, "ECONNRESET during sending of page to web client");
+          traceEvent(CONST_TRACE_INFO, "ECONNRESET while sending page to web client");
         else if(econnresetcount == 10)
           traceEvent(CONST_TRACE_INFO,
-                     "ECONNRESET during sending of page to web client (skipping further warnings)");
+                     "ECONNRESET while sending page to web client (skipping further warnings)");
 #endif
       } else if(errno == EBADF /* Bad file descriptor: a
 				  disconnected client is still sending */) {
-        traceEvent(CONST_TRACE_INFO, "EBADF during sending of page to web client");
+        traceEvent(CONST_TRACE_INFO, "EBADF while sending page to web client");
       } else if(errno != 0) {
-        traceEvent(CONST_TRACE_INFO, "errno %d during sending of page to web client", errno);
+        traceEvent(CONST_TRACE_INFO, "errno %d while sending page to web client", errno);
       }
 
       // traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes, '%s'", strlen(theString), theString);
