@@ -1947,7 +1947,7 @@
 #define DEFAULT_NTOP_OTHER_PKT_DUMP         0         /* -j */
 #define DEFAULT_NTOP_PCAP_LOG_FILENAME      NULL      /* -l */
 #define DEFAULT_NTOP_LOCAL_SUBNETS          NULL      /* -m */
-#define DEFAULT_NTOP_NUMERIC_IP_ADDRESSES   0         /* -n */
+#define DEFAULT_NTOP_NUMERIC_IP_ADDRESSES   dnsResolutionForAll   /* -n */
 #define DEFAULT_NTOP_DONT_TRUST_MAC_ADDR    0         /* -o */
 #define DEFAULT_NTOP_PROTO_SPECS            NULL      /* -p */
 #define DEFAULT_NTOP_SUSPICIOUS_PKT_DUMP    0         /* -q */

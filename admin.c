@@ -1173,7 +1173,8 @@ void addDefaultAdminUser(void) {
    tmpPrefs.disablePromiscuousMode = tmpPrefs.disableMutexExtraInfo = 0;
    tmpPrefs.disableInstantSessionPurge = tmpPrefs.disableStopcap = 0;
    tmpPrefs.debugMode = tmpPrefs.daemonMode = tmpPrefs.w3c = 0;
-   tmpPrefs.numericFlag = tmpPrefs.mergeInterfaces = tmpPrefs.enableL7 = 0;
+   tmpPrefs.numericFlag = dnsResolutionForAll;
+   tmpPrefs.mergeInterfaces = tmpPrefs.enableL7 = 0;
    tmpPrefs.dontTrustMACaddr = 0;
    tmpPrefs.enableOtherPacketDump = tmpPrefs.enableSuspiciousPacketDump = 0;
    tmpPrefs.enableSessionHandling = 0;
@@ -1762,8 +1763,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		     "from the interface or in case of capture files");
 
     CONFIG_RADIO_ENTRY(DARK_BG, "No DNS (-n)", NTOP_PREF_NUMERIC_IP,
-		       pref->numericFlag, "Skip DNS resolution, showing "
-		       "only numeric IP addresses");
+		       pref->numericFlag, "DNS resolution mode");
 
     CONFIG_STR_ENTRY(DARK_BG, "TCP/UDP Protocols To Monitor (-p)",
 		     NTOP_PREF_PROTOSPECS, 50, pref->protoSpecs,

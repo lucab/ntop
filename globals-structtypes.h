@@ -1123,6 +1123,13 @@ typedef enum {
   asAggregation
 } AggregationType;
 
+typedef enum {
+  noDnsResolution = 0,
+  dnsResolutionForLocalHostsOnly = 1,
+  dnsResolutionForLocalRemoteOnly = 2,
+  dnsResolutionForAll = 3
+} DnsResolutionMode;
+
 typedef struct probeInfo {
   struct in_addr probeAddr;
   u_int16_t probePort;
@@ -2164,7 +2171,7 @@ typedef struct _userPref {
   bool enableOtherPacketDump;    /* -j | --create-other-packets */
   char *pcapLog;                 /* -l | --pcap-log */
   char *localAddresses;          /* -m | --local-subnets */
-  bool numericFlag;              /* -n | --numeric-ip-addresses */
+  DnsResolutionMode numericFlag; /* -n | --numeric-ip-addresses */
   bool dontTrustMACaddr;         /* -o | --no-mac */
   char *protoSpecs;              /* -p | --protocols */
   bool enableSuspiciousPacketDump;  /* -q | --create-suspicious-packets */

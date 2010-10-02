@@ -56,7 +56,7 @@ static char __see__ []    =
    * ('P' option) and so these are processed separately.
    */
 #ifdef WIN32
-static char*  short_options = "46a:bce:f:ghi:jl:m:nop:qr:st:w:x:zAB:C:D:F:M" 
+static char*  short_options = "46a:bce:f:ghi:jl:m:n:op:qr:st:w:x:zAB:C:D:F:M" 
 #ifdef ENABLE_FC
   "N:"
 #endif
@@ -65,7 +65,7 @@ static char*  short_options = "46a:bce:f:ghi:jl:m:nop:qr:st:w:x:zAB:C:D:F:M"
 #endif
   "O:P:Q:S:U:VX:W:";
 #elif defined(MAKE_WITH_SYSLOG)
-static char*  short_options = "46a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKLM" 
+static char*  short_options = "46a:bcde:f:ghi:jl:m:n:op:qr:st:u:w:x:zAB:C:D:F:IKLM" 
 #ifdef ENABLE_FC
   "N:"
 #endif
@@ -74,7 +74,7 @@ static char*  short_options = "46a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKL
 #endif
   "O:P:Q:S:U:VX:W:";
 #else
-static char*  short_options = "46a:bcde:f:ghi:jl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKM"
+static char*  short_options = "46a:bcde:f:ghi:jl:m:n:op:qr:st:u:w:x:zAB:C:D:F:IKM"
 #ifdef ENABLE_FC
   "N:"
 #endif
@@ -103,7 +103,7 @@ static struct option const long_options[] = {
   { "create-other-packets",             no_argument,       NULL, 'j' },
   { "pcap-log",                         required_argument, NULL, 'l' },
   { "local-subnets",                    required_argument, NULL, 'm' },
-  { "numeric-ip-addresses",             no_argument,       NULL, 'n' },
+  { "numeric-ip-addresses",             required_argument, NULL, 'n' },
   { "no-mac",                           no_argument,       NULL, 'o' },
 
   { "protocols",                        required_argument, NULL, 'p' },
@@ -398,7 +398,7 @@ int parseOptions(int argc, char* argv[]) {
 #ifndef WIN32
     case 'd':
       myGlobals.runningPref.daemonMode = 1;
-      traceEvent(CONST_TRACE_ERROR, "++++ DEMON MODE=%d\n", myGlobals.runningPref.daemonMode);
+      /* traceEvent(CONST_TRACE_ERROR, "++++ DEMON MODE=%d\n", myGlobals.runningPref.daemonMode); */
       break;
 #endif
 
@@ -440,7 +440,11 @@ int parseOptions(int argc, char* argv[]) {
       break;
 
     case 'n':
-      myGlobals.runningPref.numericFlag = 1;
+      myGlobals.runningPref.numericFlag = atoi(optarg);
+      if(myGlobals.runningPref.numericFlag > dnsResolutionForAll) {
+	traceEvent(CONST_TRACE_WARNING, "Invalid value for -n: setting it to 0");
+	myGlobals.runningPref.numericFlag = noDnsResolution;
+      }
       break;
 
     case 'o': /* Do not trust MAC addresses */
@@ -1071,12 +1075,12 @@ void processStrPref(char *key, char *value, char **globalVar, bool savePref)
 
 	safe_snprintf(__FILE__, __LINE__, tmpValue, sizeof(tmpValue),
 		      "%s,%s", *globalVar, value);
-	storePrefsValue (key, tmpValue);
+	storePrefsValue(key, tmpValue);
 	free(*globalVar);
 	*globalVar = strdup (tmpValue);
 	return;
       } else
-	storePrefsValue (key, value);
+	storePrefsValue(key, value);
     }
 
     if(*globalVar)
@@ -1100,9 +1104,8 @@ void processIntPref(char *key, char *value, int *globalVar, bool savePref)
   *globalVar = atoi(value);
 
   if(savePref) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "%d", *globalVar);
-    storePrefsValue (key, buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", *globalVar);
+    storePrefsValue(key, buf);
   }
 }
 
@@ -1117,7 +1120,7 @@ void processBoolPref(char *key, bool value, bool *globalVar, bool savePref)
   if(savePref) {
     safe_snprintf (__FILE__, __LINE__, buf, sizeof(buf),
 		   "%d", value);
-    storePrefsValue (key, buf);
+    storePrefsValue(key, buf);
   }
 
   *globalVar = value;
@@ -1171,7 +1174,7 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
 	/* DS: Search for : to find xxx.xxx.xxx.xxx:port */
 	/* This code is to be able to bind to a particular interface */
 	if(savePref) {
-	  storePrefsValue (key, value);
+	  storePrefsValue(key, value);
 	}
 	*pref->webAddr = '\0';
 	pref->webPort = atoi(pref->webAddr+1);
@@ -1201,9 +1204,9 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
       if((pref->sslAddr = strchr(tmpStr,':'))) {
 	/* DS: Search for : to find xxx.xxx.xxx.xxx:port */
 	/* This code is to be able to bind to a particular interface */
-	if(savePref) {
-	  storePrefsValue (key, value);
-	}
+	if(savePref)
+	  storePrefsValue(key, value);
+	
 	*pref->sslAddr = '\0';
 	pref->sslPort = atoi(pref->sslAddr+1);
 	pref->sslAddr = value;
@@ -1290,7 +1293,7 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
       free (tmpStr);      /* alloc'd in processStrPref() */
     }
   } else if(strcmp(key, NTOP_PREF_NUMERIC_IP) == 0) {
-    processBoolPref(NTOP_PREF_NUMERIC_IP, value2bool(value), &pref->numericFlag,
+    processIntPref(NTOP_PREF_NUMERIC_IP, value, (int*)&pref->numericFlag,
 		     savePref);
   } else if(strcmp(key, NTOP_PREF_PROTOSPECS) == 0) {
     processStrPref(NTOP_PREF_PROTOSPECS, value, &pref->protoSpecs,

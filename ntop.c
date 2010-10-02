@@ -63,7 +63,7 @@ void handleSigHup(int signalId _UNUSED_) {
     printMutexInfo(&myGlobals.device[i].packetQueueMutex, tmp);
   }
 
-  if(myGlobals.runningPref.numericFlag == 0)
+  if(myGlobals.runningPref.numericFlag != noDnsResolution)
     printMutexInfo(&myGlobals.addressResolutionMutex, "myGlobals.addressResolutionMutex");
 
   handleKnownAddresses(myGlobals.runningPref.knownSubnets);
@@ -1098,7 +1098,7 @@ RETSIGTYPE cleanup(int signo) {
     deleteMutex(&myGlobals.device[i].packetQueueMutex);
   }
 
-  if(myGlobals.runningPref.numericFlag == 0) {
+  if(myGlobals.runningPref.numericFlag != noDnsResolution) {
     tryLockMutex(&myGlobals.addressResolutionMutex, "cleanup");
     deleteMutex(&myGlobals.addressResolutionMutex);
   }

@@ -728,7 +728,7 @@ void initThreads(void) {
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SIH: Started thread for idle hosts detection",
              (long)myGlobals.scanIdleThreadId);
 
-  if(myGlobals.runningPref.numericFlag == 0) {
+  if(myGlobals.runningPref.numericFlag != noDnsResolution) {
     createMutex(&myGlobals.addressResolutionMutex);
  
 #if defined(HAVE_GETHOSTBYADDR_R)

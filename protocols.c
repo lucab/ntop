@@ -160,7 +160,7 @@ void handleBootp(HostTraffic *srcHost,
 		strncpy(realDstHost->hostNumIpAddress,
 			_intoa(realDstHost->hostIp4Address, buf, sizeof(buf)),
 			sizeof(realDstHost->hostNumIpAddress));
-		if(myGlobals.runningPref.numericFlag == 0) {
+		if(myGlobals.runningPref.numericFlag != noDnsResolution) {
 		  realDstHost->hostIpAddress.hostFamily = AF_INET;
 		  ipaddr2str(realDstHost, realDstHost->hostIpAddress, realDstHost->vlanId, actualDeviceId);
 		}

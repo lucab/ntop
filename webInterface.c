@@ -5944,7 +5944,7 @@ void printMutexStatusReport(int textPrintFlag) {
 
   printMutexStatus(textPrintFlag, &myGlobals.purgeMutex, "purgeMutex");
 
-  if(myGlobals.runningPref.numericFlag == 0)
+  if(myGlobals.runningPref.numericFlag != noDnsResolution)
     printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
 
   printMutexStatus(textPrintFlag, &myGlobals.hostsHashLockMutex, "hostsHashLockMutex");
@@ -5961,6 +5961,19 @@ void printMutexStatusReport(int textPrintFlag) {
 
   sendString(texthtml("\n\n", "</table>"TABLE_OFF"</p>\n"));
 #endif
+}
+
+/* ******************************** */
+
+static char* numeric2str(DnsResolutionMode mode) {
+  switch(mode) {
+  case noDnsResolution: return("noDnsResolution");
+  case dnsResolutionForLocalHostsOnly: return("dnsResolutionForLocalHostsOnly");
+  case dnsResolutionForLocalRemoteOnly: return("dnsResolutionForLocalRemoteOnly");
+  case dnsResolutionForAll:
+  default:
+    return("dnsResolutionForAll");
+  }  
 }
 
 /* ******************************** */
@@ -6137,8 +6150,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                            DEFAULT_NTOP_LOCAL_SUBNETS);
 
   printParameterConfigInfo(textPrintFlag, "-n | --numeric-ip-addresses",
-                           pref->numericFlag > 0 ? "Yes" : "No",
-                           DEFAULT_NTOP_NUMERIC_IP_ADDRESSES > 0 ? "Yes" : "No");
+                           numeric2str(pref->numericFlag), numeric2str(DEFAULT_NTOP_NUMERIC_IP_ADDRESSES));
 
   printParameterConfigInfo(textPrintFlag, "-o | --no-mac",
 			   pref->dontTrustMACaddr == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses",
@@ -6449,7 +6461,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 		(int)myGlobals.webServerRequestQueueLength);
   printFeatureConfigInfo(textPrintFlag, "WebServer Request Queue", buf);
 
-  if(!myGlobals.runningPref.numericFlag) {
+  if(!myGlobals.runningPref.numericFlag != noDnsResolution) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[current: %d][max: %d][drops: %d]",
 		  (int)myGlobals.addressQueuedCurrent,
 		  (int)myGlobals.addressQueuedMax,

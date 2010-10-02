@@ -104,7 +104,10 @@ void usage(FILE * fp) {
   fprintf(fp, "    [-j             | --create-other-packets]             %sCreate file ntop-other-pkts.XXX.pcap file\n", newLine);
   fprintf(fp, "    [-l <path>      | --pcap-log <path>]                  %sDump packets captured to a file (debug only!)\n", newLine);
   fprintf(fp, "    [-m <addresses> | --local-subnets <addresses>]        %sLocal subnetwork(s) (see man page)\n", newLine);
-  fprintf(fp, "    [-n             | --numeric-ip-addresses]             %sNumeric IP addresses - no DNS resolution\n", newLine);
+  fprintf(fp, "    [-n <mode>      | --numeric-ip-addresses <mode>]      %sNumeric IP addresses DNS resolution mode:\n", newLine);
+  fprintf(fp, "                                                          %s  %d - %s\n", newLine, 0, "No DNS resolution at all");
+  fprintf(fp, "                                                          %s  %d - %s\n", newLine, 1, "DNS resolution for local hosts only");
+  fprintf(fp, "                                                          %s  %d - %s\n", newLine, 2, "DNS resolution for remote hosts only");
   fprintf(fp, "    [-o             | --no-mac]                           %sntop will trust just IP addresses (no MACs)\n", newLine);
   fprintf(fp, "    [-p <list>      | --protocols <list>]                 %sList of IP protocols to monitor (see man page)\n", newLine);
   fprintf(fp, "    [-q             | --create-suspicious-packets]        %sCreate file ntop-suspicious-pkts.XXX.pcap file\n", newLine);
@@ -165,7 +168,7 @@ void usage(FILE * fp) {
   fprintf(fp, "    [--p3p-cp]                                            %sSet return value for p3p compact policy, header\n", newLine);
   fprintf(fp, "    [--p3p-uri]                                           %sSet return value for p3p policyref header\n", newLine);
   fprintf(fp, "    [--skip-version-check]                                %sSkip ntop version check\n", newLine);
-  fprintf(fp, "    [--known-subnets]                                     %sList of known subnets (separated by ,)\n", newLine);
+  fprintf(fp, "    [--known-subnets <networks>]                          %sList of known subnets (separated by ,)\n", newLine);
   fprintf(fp, "                                                          %sIf the argument starts with @ it is assumed it is a file path\n", newLine);
   fprintf(fp, "                                                          %sE.g. 192.168.0.0/14=home,172.16.0.0/16=private\n", newLine);
 #ifdef ENABLE_EFFICIENCY

@@ -965,7 +965,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
               sizeof(el->hostNumIpAddress));
       setResolvedName(el, el->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
 
-      if(myGlobals.runningPref.numericFlag == 0)
+      if(myGlobals.runningPref.numericFlag != noDnsResolution)
         ipaddr2str(el, el->hostIpAddress, el->vlanId, actualDeviceId);
 
       if(isBroadcastAddress(&el->hostIpAddress, NULL, NULL))
@@ -1164,7 +1164,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       updateHostKnownSubnet(el);
 
       /* Trick to fill up the address cache */
-      if(myGlobals.runningPref.numericFlag == 0)
+      if(myGlobals.runningPref.numericFlag != noDnsResolution)
 	ipaddr2str(el, el->hostIpAddress, el->vlanId, actualDeviceId);
 
       /* getHostAS(el); */

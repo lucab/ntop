@@ -111,10 +111,15 @@ static void queueAddress(HostAddr elem) {
   int i;
   HostAddrList *cloned = NULL;
 
-  if(myGlobals.runningPref.numericFlag
-     || (myGlobals.runningPref.trackOnlyLocalHosts
-	 && (!_pseudoLocalAddress(&elem, NULL, NULL))))
-    return;
+  if(myGlobals.runningPref.numericFlag == noDnsResolution) return;
+  if(_pseudoLocalAddress(&elem, NULL, NULL)) {
+    /* Local Host */
+    if(myGlobals.runningPref.trackOnlyLocalHosts) return;
+    else if(myGlobals.runningPref.numericFlag == dnsResolutionForLocalRemoteOnly) return;
+  } else {
+    /* Remote Host */
+    if(myGlobals.runningPref.numericFlag == dnsResolutionForLocalHostsOnly) return;
+  }
 
   accessAddrResMutex("queueAddress");
 
