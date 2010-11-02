@@ -2072,6 +2072,12 @@ case "${host}" in
 	ln -s  /usr/bin/glibtool libtool
         echo
         ;;
+	*)
+	LIBTOOL_PATH="/usr/bin/libtool"
+	if test -x ${LIBTOOL_PATH}; then
+	   rm -f libtool
+	   ln -s ${LIBTOOL_PATH} libtool
+	fi
 esac
 
 echo
