@@ -239,9 +239,9 @@ void* dequeueAddress(void *_i) {
 	    he = &_hp;
 	  else
 	    he = NULL;
-#endif
 	} else
 	  he = NULL;
+#endif
 #else
 	he = gethostbyaddr(theAddr, size, family);
 #endif

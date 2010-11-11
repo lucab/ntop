@@ -71,21 +71,37 @@ typedef u_int   u_int32_t;
 #if defined(HAVE_u_int64_T)
 #define u_int64_t u_int64_t
 #else
+#if defined(HAVE_UINT64_T)
+#define u_int64_t uint64_t
+#else
 #error "Sorry, I'm unable to define u_int64_t on your platform"
+#endif
 #endif
 #endif
 #endif
 
 #if !defined(HAVE_U_INT32_T)
+#if defined(HAVE_UINT32_T)
+#define u_int32_t uint32_t
+#else
 typedef unsigned int u_int32_t;
+#endif
 #endif
 
 #if !defined(HAVE_U_INT16_T)
+#if defined(HAVE_UINT16_T)
+#define u_int16_t uint16_t
+#else
 typedef unsigned short u_int16_t;
+#endif
 #endif
 
 #if !defined(HAVE_U_INT8_T)
+#if defined(HAVE_UINT8_T)
+#define u_int8_t uint8_t
+#else
 typedef unsigned char u_int8_t;
+#endif
 #endif
 
 #if !defined(HAVE_INT32_T)
@@ -312,7 +328,11 @@ typedef struct protocolsList {
 #define pthread_rwlock_wrlock    pthread_mutex_lock
 #define pthread_rwlock_unlock    pthread_mutex_unlock
 #define pthread_rwlock_destroy   pthread_mutex_destroy
+#ifdef SOLARIS
+#define pthread_rwlock_trywrlock pthread_mutex_trylock
+#else /* SOLARIS */
 #define pthread_rwlock_trywrlock pthread_mutex_trywrlock
+#endif /* SOLARIS */
 #endif
 #endif
 
