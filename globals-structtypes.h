@@ -1019,6 +1019,7 @@ typedef struct portCounter {
 typedef struct ipSession {
   u_short magic;
   u_char isP2P;                     /* Set to 1 if this is a P2P session          */
+  u_int8_t specialHttpSession;      /* Mark this as a special protocol session    */
   HostTraffic* initiator;           /* initiator address                          */
   HostAddr initiatorRealIp;         /* Real IP address (if masqueraded and known) */
   u_short sport;                    /* initiator address (port)                   */
@@ -2508,7 +2509,7 @@ typedef struct ntopGlobals {
 #endif
 
   /* Peer2Peer Protocol Indexes */
-  u_short GnutellaIdx, KazaaIdx, FTPIdx, EdonkeyIdx, BitTorrentIdx, VoipIdx;
+  u_short GnutellaIdx, KazaaIdx, FTPIdx, EdonkeyIdx, BitTorrentIdx, VoipIdx, FacebookIdx, TwitterIdx, YouTubeIdx;
 
   /* Hash table collisions - counted during load */
   int ipxsapHashLoadCollisions;

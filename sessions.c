@@ -342,7 +342,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   if(myGlobals.sessionsCacheLen < (MAX_SESSIONS_CACHE_LEN-1)) {
     sessionToPurge->magic = 0;
     myGlobals.sessionsCache[myGlobals.sessionsCacheLen++] = sessionToPurge;
-    if (myGlobals.sessionsCacheLen > myGlobals.sessionsCacheLenMax)
+    if(myGlobals.sessionsCacheLen > myGlobals.sessionsCacheLenMax)
         myGlobals.sessionsCacheLenMax = myGlobals.sessionsCacheLen;
   } else {
     /* No room left: it's time to free the bucket */
@@ -380,7 +380,7 @@ void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
     }
 
     for (i = 0; i < MAX_LUNS_SUPPORTED; i++) {
-        if (sessionToPurge->activeLuns[i] != NULL) {
+        if(sessionToPurge->activeLuns[i] != NULL) {
             free (sessionToPurge->activeLuns[i]);
         }
     }
@@ -397,7 +397,7 @@ void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
     /* Memory recycle */
     if(myGlobals.sessionsCacheLen < (MAX_SESSIONS_CACHE_LEN-1)) {
         myGlobals.sessionsCache[myGlobals.sessionsCacheLen++] = sessionToPurge;
-        if (myGlobals.sessionsCacheLen > myGlobals.sessionsCacheLenMax)
+        if(myGlobals.sessionsCacheLen > myGlobals.sessionsCacheLenMax)
             myGlobals.sessionsCacheLenMax = myGlobals.sessionsCacheLen;
     } else {
         /* No room left: it's time to free the bucket */
@@ -538,7 +538,7 @@ static void handleFTPSession(const struct pcap_pkthdr *h,
       || (theSession->bytesProtoSent.value < 64))
      /* The sender name is sent at the beginning of the communication */
      && (packetDataLength > 7)) {
-    if ((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
+    if((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
       traceEvent (CONST_TRACE_WARNING, "handleFTPSession: Unable to "
 		  "allocate memory, FTP Session handling incomplete\n");
       return;
@@ -584,7 +584,7 @@ static void handleSMTPSession (const struct pcap_pkthdr *h,
      && (packetDataLength > 7)) {
     int beginIdx = 11, i;
 
-    if ((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
+    if((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
       traceEvent (CONST_TRACE_WARNING, "handleSMTPSession: Unable to "
 		  "allocate memory, SMTP Session handling incomplete\n");
       return;
@@ -645,7 +645,7 @@ static void handlePOPSession (const struct pcap_pkthdr *h,
       || (theSession->bytesProtoSent.value < 64)) /* The user name is sent at the beginning of the communication */
      && (packetDataLength > 4)) {
 
-    if ((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
+    if((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
       traceEvent (CONST_TRACE_WARNING, "handlePOPSession: Unable to "
 		  "allocate memory, POP Session handling incomplete\n");
       return;
@@ -690,7 +690,7 @@ static void handleIMAPSession (const struct pcap_pkthdr *h,
      /* The sender name is sent at the beginning of the communication */
      && (packetDataLength > 7)) {
 
-    if ((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
+    if((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
       traceEvent (CONST_TRACE_WARNING, "handleIMAPSession: Unable to "
 		  "allocate memory, IMAP Session handling incomplete\n");
       return;
@@ -1061,10 +1061,12 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
   char *rcStr, tmpStr[256] = { '\0' };
   struct timeval tvstrct;
 
-  if (sport == IP_TCP_PORT_HTTP) setHostFlag(FLAG_HOST_TYPE_SVC_HTTP, srcHost);
-  if (dport == IP_TCP_PORT_HTTP) setHostFlag(FLAG_HOST_TYPE_SVC_HTTP, dstHost);
+  printf("handleHTTPSession(%d)\n", h->len);
 
-  if ((sport == IP_TCP_PORT_HTTP)
+  if(sport == IP_TCP_PORT_HTTP) setHostFlag(FLAG_HOST_TYPE_SVC_HTTP, srcHost);
+  if(dport == IP_TCP_PORT_HTTP) setHostFlag(FLAG_HOST_TYPE_SVC_HTTP, dstHost);
+
+  if((sport == IP_TCP_PORT_HTTP)
       && (theSession->bytesProtoRcvd.value == 0)) {
     memcpy(tmpStr, packetData, 16);
     tmpStr[16] = '\0';
@@ -1139,9 +1141,9 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 #endif
       }
     }
-  } else if (dport == IP_TCP_PORT_HTTP) {
+  } else if(dport == IP_TCP_PORT_HTTP) {
     if(theSession->bytesProtoSent.value == 0) {
-      if ((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
+      if((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
 	traceEvent (CONST_TRACE_WARNING, "handleHTTPSession: Unable to "
 		    "allocate memory, HTTP Session handling incomplete\n");
 	return;
@@ -1149,12 +1151,12 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
       memcpy(rcStr, packetData, packetDataLength);
       rcStr[packetDataLength] = '\0';
 
-#ifdef HTTP_DEBUG
+      //#ifdef HTTP_DEBUG
       printf("HTTP_DEBUG: %s->%s [%s]\n",
 	     srcHost->hostResolvedName,
 	     dstHost->hostResolvedName,
 	     rcStr);
-#endif
+      //#endif
 
       if(isInitialHttpData(rcStr)) {
 	char *strtokState, *row;
@@ -1259,7 +1261,19 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 	    printf("DEBUG: HOST='%s'\n", host);
 #endif
 	    if(theSession->virtualPeerName == NULL)
-	      theSession->virtualPeerName = strdup(host);
+	      theSession->virtualPeerName = strdup(host);	  
+	  } else if((len > 8) && (strncmp(row, "Referer:", 8) == 0)) {
+	    traceEvent(CONST_TRACE_WARNING, "%s", row);
+	    if(strstr(row, "facebook.com")) {
+	      setHostFlag(FLAG_HOST_TYPE_SVC_FACEBOOK_CLIENT, dstHost);
+	      theSession->specialHttpSession = FLAG_FACEBOOK;
+	    } else if(strstr(row, "twitter.com")) {
+	      setHostFlag(FLAG_HOST_TYPE_SVC_TWITTER_CLIENT, dstHost);
+	      theSession->specialHttpSession = FLAG_TWITTER;
+	    } else if(strstr(row, "youtube")) {
+	      // setHostFlag(FLAG_HOST_TYPE_SVC_YOUTUBE_CLIENT, dstHost);
+	      theSession->specialHttpSession = FLAG_YOUTUBE;
+	    }
 	  }
 
 	  row = strtok_r(NULL, "\n", &strtokState);
@@ -1329,7 +1343,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
       memcpy(tmpStr, packetData, len);
 
       if(myGlobals.runningPref.enablePacketDecoding) {
-	if ((dport != IP_TCP_PORT_HTTP)
+	if((dport != IP_TCP_PORT_HTTP)
 	    && (dport != IP_TCP_PORT_NTOP)
 	    && (dport != IP_TCP_PORT_SQUID)
 	    && isInitialHttpData(tmpStr)) {
@@ -1397,7 +1411,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
     theSession->sessionState = FLAG_STATE_ACTIVE;
   }
-  else if ((addedNewEntry == 0)
+  else if((addedNewEntry == 0)
 	   && ((theSession->sessionState == FLAG_STATE_SYN)
 	       || (theSession->sessionState == FLAG_STATE_SYN_ACK))
 	   && (!(tp->th_flags & TH_RST))) {
@@ -1819,7 +1833,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     */
 #ifdef PARM_USE_SESSIONS_CACHE
     /* There's enough space left in the hashtable */
-    if (myGlobals.sessionsCacheLen > 0) {
+    if(myGlobals.sessionsCacheLen > 0) {
       theSession = myGlobals.sessionsCache[--myGlobals.sessionsCacheLen];
       myGlobals.sessionsCacheReused++;
       /*
@@ -1948,22 +1962,22 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     len = packetDataLength;
 
   if(myGlobals.runningPref.enablePacketDecoding
-     && ((theSession->bytesProtoSent.value > 0) && (theSession->bytesProtoSent.value < 128))
+     && ((theSession->bytesProtoSent.value >= 0) && (theSession->bytesProtoSent.value < 128))
      /* Reduce protocol decoding effort */
      ) {
-    if (((sport == IP_TCP_PORT_HTTP) || (dport == IP_TCP_PORT_HTTP))
+    if(((sport == IP_TCP_PORT_HTTP) || (dport == IP_TCP_PORT_HTTP))
 	&& (packetDataLength > 0)) {
       handleHTTPSession(h, srcHost, sport, dstHost, dport,
 			 packetDataLength, packetData, theSession,
 			 actualDeviceId);
     } else if((dport == IP_TCP_PORT_KAZAA) && (packetDataLength > 0)) {
       theSession->isP2P = FLAG_P2P_KAZAA;
-    } else if (((dport == IP_TCP_PORT_GNUTELLA1) ||
+    } else if(((dport == IP_TCP_PORT_GNUTELLA1) ||
 		(dport == IP_TCP_PORT_GNUTELLA2) ||
 		(dport == IP_TCP_PORT_GNUTELLA3))
 	       && (packetDataLength > 0)) {
       theSession->isP2P = FLAG_P2P_GNUTELLA;
-    } else if (((sport == IP_TCP_PORT_MSMSGR) ||
+    } else if(((sport == IP_TCP_PORT_MSMSGR) ||
 		(dport == IP_TCP_PORT_MSMSGR))
 	       && (packetDataLength > 0)) {
       handleMsnMsgrSession(h, srcHost, sport, dstHost, dport,
@@ -2112,7 +2126,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     assume that this doesn't take up much CPU time
   */
   if(len > 0) {
-    if ((sport == IP_TCP_PORT_FTP) || (dport == IP_TCP_PORT_FTP)) {
+    if((sport == IP_TCP_PORT_FTP) || (dport == IP_TCP_PORT_FTP)) {
       memset(tmpStr, 0, sizeof(tmpStr));
       memcpy(tmpStr, packetData, len);
 
@@ -2208,7 +2222,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	if(hostToUpdate->maxLatency.tv_usec > 1000)
 	  hostToUpdate->maxLatency.tv_usec -= 1000, hostToUpdate->maxLatency.tv_sec++;
       }
-    } else if ((addedNewEntry == 0)
+    } else if((addedNewEntry == 0)
 	     && ((theSession->sessionState == FLAG_STATE_SYN)
 		 || (theSession->sessionState == FLAG_STATE_SYN_ACK))
 	     && (!(theSession->lastFlags & TH_RST))) {
@@ -2529,7 +2543,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
     because BOOTP uses broadcast addresses hence
     it would be filtered out by the (**) check
   */
-  if (myGlobals.runningPref.enablePacketDecoding && (tp == NULL /* UDP session */) &&
+  if(myGlobals.runningPref.enablePacketDecoding && (tp == NULL /* UDP session */) &&
       (srcHost->hostIpAddress.hostFamily == AF_INET &&
        dstHost->hostIpAddress.hostFamily == AF_INET))
     handleBootp(srcHost, dstHost, sport, dport, packetDataLength, packetData, actualDeviceId);
@@ -2557,7 +2571,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
       if(tp->th_flags & TH_SYN) printf("SYN ");
       if(tp->th_flags & TH_FIN) printf("FIN ");
       if(tp->th_flags & TH_RST) printf("RST ");
-      if(tp->th_flags & TH_PUSH) printf("PUSH");
+x      if(tp->th_flags & TH_PUSH) printf("PUSH");
       printf("\n");
     }
   }
@@ -2720,7 +2734,7 @@ static int getScsiLunCmdInfo (FCSession *theSession, u_int16_t *lun,
 {
   u_int16_t i;
 
-  if (theSession->lastScsiOxid == oxid) {
+  if(theSession->lastScsiOxid == oxid) {
     /* simple match */
     *lun = theSession->lastLun;
     *cmd = theSession->lastScsiCmd;
@@ -2734,8 +2748,8 @@ static int getScsiLunCmdInfo (FCSession *theSession, u_int16_t *lun,
    * transfer.
    */
   for (i = 0; i < MAX_LUNS_SUPPORTED; i++) {
-    if (theSession->activeLuns[i] != NULL) {
-      if (theSession->activeLuns[i]->lastOxid == oxid) {
+    if(theSession->activeLuns[i] != NULL) {
+      if(theSession->activeLuns[i]->lastOxid == oxid) {
 	*lun = i;
 	*cmd = theSession->activeLuns[i]->lastScsiCmd;
 
@@ -2750,20 +2764,20 @@ static int getScsiLunCmdInfo (FCSession *theSession, u_int16_t *lun,
 static void scsiSetMinMaxRTT (struct timeval *rtt, struct timeval *minRTT,
                               struct timeval *maxRTT)
 {
-  if (rtt->tv_sec > maxRTT->tv_sec) {
+  if(rtt->tv_sec > maxRTT->tv_sec) {
     *maxRTT = *rtt;
   }
-  else if ((rtt->tv_sec == maxRTT->tv_sec) &&
+  else if((rtt->tv_sec == maxRTT->tv_sec) &&
 	   (rtt->tv_usec > maxRTT->tv_usec)) {
     *maxRTT = *rtt;
   }
 
-  if ((rtt->tv_sec < minRTT->tv_sec) ||
+  if((rtt->tv_sec < minRTT->tv_sec) ||
       ((minRTT->tv_sec == 0) &&
        (minRTT->tv_usec == 0))) {
     *minRTT = *rtt;
   }
-  else if ((rtt->tv_sec == minRTT->tv_sec) &&
+  else if((rtt->tv_sec == minRTT->tv_sec) &&
 	   (rtt->tv_usec < minRTT->tv_usec)) {
     *minRTT = *rtt;
   }
@@ -2795,20 +2809,20 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
   /*
    * Increment session counters.
    */
-  if (isXchgOrig) {
+  if(isXchgOrig) {
     incrementTrafficCounter(&theSession->fcpBytesSent, length);
   }
   else {
     incrementTrafficCounter(&theSession->fcpBytesRcvd, length);
   }
 
-  if (rCtl != FCP_IU_CMD) {
+  if(rCtl != FCP_IU_CMD) {
 
     /* Get the last SCSI Cmd, LUN matching this {VSAN, S_ID, D_ID, OX_ID}
        tuple */
-    if (!getScsiLunCmdInfo (theSession, &lun, &cmd, oxid)) {
+    if(!getScsiLunCmdInfo (theSession, &lun, &cmd, oxid)) {
       /* No matching command/lun found. Skip */
-      if (isXchgOrig) {
+      if(isXchgOrig) {
 	incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				 length);
       }
@@ -2819,11 +2833,11 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       return;
     }
     lunStats = theSession->activeLuns[lun];
-    if (lunStats == NULL) {
+    if(lunStats == NULL) {
       /* No LUN structure has been allocated for this LUN yet. This means
        * it cannot be tracked as well. So, just return.
        */
-      if (isXchgOrig) {
+      if(isXchgOrig) {
 	incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				 length);
       }
@@ -2834,18 +2848,18 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       return;
     }
 
-    if (theSession->initiator == srcHost) {
+    if(theSession->initiator == srcHost) {
       hostLunStats = dstHost->fcCounters->activeLuns[lun];
     }
     else {
       hostLunStats = srcHost->fcCounters->activeLuns[lun];
     }
 
-    if (hostLunStats == NULL) {
+    if(hostLunStats == NULL) {
       /* No LUN structure has been allocated for this LUN yet. This means
        * it cannot be tracked as well. So, just return.
        */
-      if (isXchgOrig) {
+      if(isXchgOrig) {
 	incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				 length);
       }
@@ -2860,17 +2874,17 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
   switch (rCtl) {
   case FCP_IU_CMD:
     srcHost->fcCounters->devType = SCSI_DEV_INITIATOR;
-    if (dstHost->fcCounters->devType == SCSI_DEV_UNINIT) {
+    if(dstHost->fcCounters->devType == SCSI_DEV_UNINIT) {
       dstHost->fcCounters->devType = myGlobals.scsiDefaultDevType;
     }
 
-    if (bp[0] != 0) {
+    if(bp[0] != 0) {
       /* We have a multi-level LUN, lets see more before we give up */
-      if (bp[2] != 0) {
+      if(bp[2] != 0) {
 	traceEvent (CONST_TRACE_WARNING, "Have a multi-level LUN for %s,"
 		    "so stats can be tracked for this LUN.\n",
 		    dstHost->fcCounters->hostNumFcAddress);
-	if (isXchgOrig) {
+	if(isXchgOrig) {
 	  incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				   length);
 	}
@@ -2888,11 +2902,11 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       lun = (u_int16_t)bp[1]; /* 2nd byte alone has LUN info */
     }
 
-    if (lun > MAX_LUNS_SUPPORTED) {
+    if(lun > MAX_LUNS_SUPPORTED) {
       traceEvent (CONST_TRACE_WARNING, "Cannot track LUNs > %d (for %s),"
 		  "so stats can be tracked for this LUN.\n",
 		  MAX_LUNS_SUPPORTED, dstHost->fcCounters->hostNumFcAddress);
-      if (isXchgOrig) {
+      if(isXchgOrig) {
 	incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				 length);
       }
@@ -2904,12 +2918,12 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
     }
 
     /* Check if LUN structure is allocated */
-    if (theSession->activeLuns[lun] == NULL) {
+    if(theSession->activeLuns[lun] == NULL) {
       theSession->activeLuns[lun] = (ScsiLunTrafficInfo *)malloc (sizeof (ScsiLunTrafficInfo));
-      if (theSession->activeLuns[lun] == NULL) {
+      if(theSession->activeLuns[lun] == NULL) {
 	traceEvent (CONST_TRACE_ERROR, "Unable to allocate LUN for %d:%s\n",
 		    lun, dstHost->fcCounters->hostNumFcAddress);
-	if (isXchgOrig) {
+	if(isXchgOrig) {
 	  incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				   length);
 	}
@@ -2927,19 +2941,19 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       theSession->activeLuns[lun]->lastIopsTime.tv_usec = h->ts.tv_usec;
     }
 
-    if (lun > theSession->lunMax) {
+    if(lun > theSession->lunMax) {
       theSession->lunMax = lun;
     }
 
     /* Also allocate LUN stats structure in the host data structure */
-    if (theSession->initiator == srcHost) {
-      if (dstHost->fcCounters->activeLuns[lun] == NULL) {
+    if(theSession->initiator == srcHost) {
+      if(dstHost->fcCounters->activeLuns[lun] == NULL) {
 	dstHost->fcCounters->activeLuns[lun] = (ScsiLunTrafficInfo *)malloc (sizeof (ScsiLunTrafficInfo));
 
-	if (dstHost->fcCounters->activeLuns[lun] == NULL) {
+	if(dstHost->fcCounters->activeLuns[lun] == NULL) {
 	  traceEvent (CONST_TRACE_ERROR, "Unable to allocate host LUN for %d:%s\n",
 		      lun, dstHost->fcCounters->hostNumFcAddress);
-	  if (isXchgOrig) {
+	  if(isXchgOrig) {
 	    incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				     length);
 	  }
@@ -2959,12 +2973,12 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       hostLunStats = dstHost->fcCounters->activeLuns[lun];
     }
     else {
-      if (srcHost->fcCounters->activeLuns[lun] == NULL) {
+      if(srcHost->fcCounters->activeLuns[lun] == NULL) {
 	srcHost->fcCounters->activeLuns[lun] = (ScsiLunTrafficInfo *)malloc (sizeof (ScsiLunTrafficInfo));
-	if (srcHost->fcCounters->activeLuns[lun] == NULL) {
+	if(srcHost->fcCounters->activeLuns[lun] == NULL) {
 	  traceEvent (CONST_TRACE_ERROR, "Unable to allocate host LUN for %d:%s\n",
 		      lun, srcHost->fcCounters->hostNumFcAddress);
-	  if (isXchgOrig) {
+	  if(isXchgOrig) {
 	    incrementTrafficCounter(&theSession->unknownLunBytesSent,
 				     length);
 	  }
@@ -2984,15 +2998,15 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
     }
 
     lunStats = theSession->activeLuns[lun];
-    if ((duration = h->ts.tv_sec - lunStats->lastIopsTime.tv_sec) >= 1) {
+    if((duration = h->ts.tv_sec - lunStats->lastIopsTime.tv_sec) >= 1) {
       /* compute iops every sec at least */
       iops = (float) (lunStats->cmdsFromLastIops/duration);
 
-      if (iops > lunStats->maxIops) {
+      if(iops > lunStats->maxIops) {
 	lunStats->maxIops = iops;
       }
 
-      if (iops &&
+      if(iops &&
 	  ((iops < lunStats->minIops) || (lunStats->minIops == 0))) {
 	lunStats->minIops = iops;
       }
@@ -3005,14 +3019,14 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       lunStats->cmdsFromLastIops++;
     }
 
-    if ((hostDur = h->ts.tv_sec - hostLunStats->lastIopsTime.tv_sec) >= 1) {
+    if((hostDur = h->ts.tv_sec - hostLunStats->lastIopsTime.tv_sec) >= 1) {
       iops = (float) hostLunStats->cmdsFromLastIops/hostDur;
 
-      if (iops > hostLunStats->maxIops) {
+      if(iops > hostLunStats->maxIops) {
 	hostLunStats->maxIops = iops;
       }
 
-      if (iops &&
+      if(iops &&
 	  ((iops < hostLunStats->minIops) || (hostLunStats->minIops == 0))) {
 	hostLunStats->minIops = iops;
       }
@@ -3032,16 +3046,16 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
     cmd = theSession->lastScsiCmd = lunStats->lastScsiCmd = bp[12];
     iocmdType = getScsiCmdType (cmd, &ioSize, bp);
 
-    if (cmd == SCSI_SPC2_INQUIRY) {
+    if(cmd == SCSI_SPC2_INQUIRY) {
       /* Check if this is a general inquiry or page inquiry */
-      if (bp[13] & 0x1) {
+      if(bp[13] & 0x1) {
 	theSession->lastScsiCmd = SCSI_SPC2_INQUIRY_EVPD;
       }
     }
     theSession->lastScsiOxid = lunStats->lastOxid = oxid;
     theSession->lastLun = lun;
 
-    if (iocmdType == SCSI_READ_CMD) {
+    if(iocmdType == SCSI_READ_CMD) {
       incrementTrafficCounter(&theSession->numScsiRdCmd, 1);
       incrementTrafficCounter(&lunStats->numScsiRdCmd, 1);
       incrementTrafficCounter(&hostLunStats->numScsiRdCmd, 1);
@@ -3050,24 +3064,24 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       hostLunStats->frstRdDataRcvd = TRUE;
 
       /* Session-specific Stats */
-      if (ioSize > lunStats->maxRdSize) {
+      if(ioSize > lunStats->maxRdSize) {
 	lunStats->maxRdSize = ioSize;
       }
 
-      if ((ioSize < lunStats->minRdSize) || (!lunStats->minRdSize)) {
+      if((ioSize < lunStats->minRdSize) || (!lunStats->minRdSize)) {
 	lunStats->minRdSize = ioSize;
       }
 
       /* LUN-specific Stats */
-      if (ioSize > hostLunStats->maxRdSize) {
+      if(ioSize > hostLunStats->maxRdSize) {
 	hostLunStats->maxRdSize = ioSize;
       }
 
-      if ((ioSize < hostLunStats->minRdSize) || (!hostLunStats->minRdSize)) {
+      if((ioSize < hostLunStats->minRdSize) || (!hostLunStats->minRdSize)) {
 	hostLunStats->minRdSize = ioSize;
       }
     }
-    else if (iocmdType == SCSI_WR_CMD) {
+    else if(iocmdType == SCSI_WR_CMD) {
       incrementTrafficCounter(&theSession->numScsiWrCmd, 1);
       incrementTrafficCounter(&lunStats->numScsiWrCmd, 1);
       incrementTrafficCounter(&hostLunStats->numScsiWrCmd, 1);
@@ -3076,20 +3090,20 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       hostLunStats->frstWrDataRcvd = TRUE;
 
       /* Session-specific Stats */
-      if (ioSize > lunStats->maxWrSize) {
+      if(ioSize > lunStats->maxWrSize) {
 	lunStats->maxWrSize = ioSize;
       }
 
-      if ((ioSize < lunStats->minWrSize) || (!lunStats->minWrSize)) {
+      if((ioSize < lunStats->minWrSize) || (!lunStats->minWrSize)) {
 	lunStats->minWrSize = ioSize;
       }
 
       /* LUN-specific Stats */
-      if (ioSize > hostLunStats->maxWrSize) {
+      if(ioSize > hostLunStats->maxWrSize) {
 	hostLunStats->maxWrSize = ioSize;
       }
 
-      if ((ioSize < hostLunStats->minWrSize) || (!hostLunStats->minWrSize)) {
+      if((ioSize < hostLunStats->minWrSize) || (!hostLunStats->minWrSize)) {
 	hostLunStats->minWrSize = ioSize;
       }
     }
@@ -3099,7 +3113,7 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       incrementTrafficCounter(&hostLunStats->numScsiOtCmd, 1);
     }
 
-    if ((task_mgmt = bp[10]) != 0) {
+    if((task_mgmt = bp[10]) != 0) {
       switch (task_mgmt) {
       case SCSI_TM_ABORT_TASK_SET:
 	lunStats->abrtTaskSetCnt++;
@@ -3132,7 +3146,7 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       }
     }
 
-    if (theSession->initiator == srcHost) {
+    if(theSession->initiator == srcHost) {
       incrementTrafficCounter(&(lunStats->bytesSent), length);
       lunStats->pktSent++;
 
@@ -3153,11 +3167,11 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
     case SCSI_SPC2_INQUIRY:
 
       /* verify that we don't copy info for a non-existent LUN */
-      if ((bp[0] & 0xE0) == 0x30) {
+      if((bp[0] & 0xE0) == 0x30) {
 	traceEvent (CONST_TRACE_WARNING, "processScsiPkt: Invalid LUN ignored\n");
       }
       else {
-	if ((bp[0]&0x1F) == SCSI_DEV_NODEV) {
+	if((bp[0]&0x1F) == SCSI_DEV_NODEV) {
 	  lunStats->invalidLun = TRUE;
 	  hostLunStats->invalidLun = TRUE;
 	}
@@ -3165,13 +3179,13 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
 	  srcHost->fcCounters->devType = bp[0]&0x1F;
 	}
 
-	if (length >= 24+8) {
+	if(length >= 24+8) {
 	  strncpy((char*)srcHost->fcCounters->vendorId, (char*)&bp[8], 8);
 	}
-	if (length >= 24+8+16) {
+	if(length >= 24+8+16) {
 	  strncpy((char*)srcHost->fcCounters->productId, (char*)&bp[16], 16);
 	}
-	if (length >= 24+8+16+4) {
+	if(length >= 24+8+16+4) {
 	  strncpy((char*)srcHost->fcCounters->productRev, (char*)&bp[32], 4);
 	}
       }
@@ -3181,12 +3195,12 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       listlen = ntohl (*(int32_t *)&bp[0]);
       offset = 4;
 
-      if (listlen > (length-24)) {
+      if(listlen > (length-24)) {
 	listlen = length-24;
       }
 
       while ((listlen > 0) && (listlen > offset)) {
-	if (bp[offset] != 0) {
+	if(bp[offset] != 0) {
 	  srcHost->lunsGt256 = TRUE;
 	}
 	listlen -= 8;
@@ -3201,11 +3215,11 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
 
     iocmdType = getScsiCmdType (lunStats->lastScsiCmd, &ioSize, bp);
 
-    if (iocmdType == SCSI_READ_CMD) {
+    if(iocmdType == SCSI_READ_CMD) {
       incrementTrafficCounter(&lunStats->scsiRdBytes, payload_len);
       incrementTrafficCounter(&hostLunStats->scsiRdBytes, payload_len);
 
-      if (lunStats->frstRdDataRcvd) {
+      if(lunStats->frstRdDataRcvd) {
 	lunStats->frstRdDataRcvd = FALSE;
 	rtt.tv_sec = h->ts.tv_sec - lunStats->reqTime.tv_sec;
 	rtt.tv_usec = h->ts.tv_usec - lunStats->reqTime.tv_usec;
@@ -3216,11 +3230,11 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
 			  &hostLunStats->maxRdFrstDataRTT);
       }
     }
-    else if (iocmdType == SCSI_WR_CMD) {
+    else if(iocmdType == SCSI_WR_CMD) {
       incrementTrafficCounter(&lunStats->scsiWrBytes, payload_len);
       incrementTrafficCounter(&hostLunStats->scsiWrBytes, payload_len);
 
-      if (lunStats->frstWrDataRcvd) {
+      if(lunStats->frstWrDataRcvd) {
 	lunStats->frstWrDataRcvd = FALSE;
 	rtt.tv_sec = h->ts.tv_sec - lunStats->reqTime.tv_sec;
 	rtt.tv_usec = h->ts.tv_usec - lunStats->reqTime.tv_usec;
@@ -3236,7 +3250,7 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       incrementTrafficCounter(&hostLunStats->scsiOtBytes, payload_len);
     }
 
-    if (theSession->initiator == srcHost) {
+    if(theSession->initiator == srcHost) {
       incrementTrafficCounter(&(lunStats->bytesSent), length);
       lunStats->pktSent++;
 
@@ -3255,23 +3269,23 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
   case FCP_IU_XFER_RDY:
     xferRdySize = ntohl (*(u_int32_t *)&bp[4]);
 
-    if (xferRdySize > lunStats->maxXferRdySize) {
+    if(xferRdySize > lunStats->maxXferRdySize) {
       lunStats->maxXferRdySize = xferRdySize;
     }
-    else if ((lunStats->minXferRdySize > xferRdySize) ||
+    else if((lunStats->minXferRdySize > xferRdySize) ||
 	     (!lunStats->minXferRdySize)) {
       lunStats->minXferRdySize = xferRdySize;
     }
 
-    if (xferRdySize > hostLunStats->maxXferRdySize) {
+    if(xferRdySize > hostLunStats->maxXferRdySize) {
       hostLunStats->maxXferRdySize = xferRdySize;
     }
-    else if ((hostLunStats->minXferRdySize > xferRdySize) ||
+    else if((hostLunStats->minXferRdySize > xferRdySize) ||
 	     (!hostLunStats->minXferRdySize)) {
       hostLunStats->minXferRdySize = xferRdySize;
     }
 
-    if (theSession->initiator == srcHost) {
+    if(theSession->initiator == srcHost) {
       incrementTrafficCounter(&(lunStats->bytesSent), length);
       lunStats->pktSent++;
 
@@ -3286,7 +3300,7 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       hostLunStats->pktSent++;
     }
 
-    if (lunStats->frstWrDataRcvd) {
+    if(lunStats->frstWrDataRcvd) {
       rtt.tv_sec = h->ts.tv_sec - lunStats->reqTime.tv_sec;
       rtt.tv_usec = h->ts.tv_usec - lunStats->reqTime.tv_usec;
 
@@ -3303,14 +3317,14 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
 
     status = bp[11];
 
-    if (status != SCSI_STATUS_GOOD) {
+    if(status != SCSI_STATUS_GOOD) {
       /* TBD: Some failures are notifications; verify & flag real errors
        * only
        */
       lunStats->numFailedCmds++;
       hostLunStats->numFailedCmds++;
 
-      if (myGlobals.runningPref.enableSuspiciousPacketDump) {
+      if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	dumpSuspiciousPacket (actualDeviceId);
       }
 
@@ -3347,7 +3361,7 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
       }
     }
 
-    if (theSession->initiator == srcHost) {
+    if(theSession->initiator == srcHost) {
       incrementTrafficCounter(&(lunStats->bytesSent), length);
       lunStats->pktSent++;
 
@@ -3379,11 +3393,11 @@ static void processSwRscn (const u_char *bp, u_short vsanId, int actualDeviceId)
   HostTraffic *affectedHost;
   u_int detectFn;
 
-  if ((detectFn = ntohl (*(u_int32_t *)&bp[8])) == FC_SW_RSCN_FABRIC_DETECT) {
+  if((detectFn = ntohl (*(u_int32_t *)&bp[8])) == FC_SW_RSCN_FABRIC_DETECT) {
     /* Only fabric-detected events have online/offline events */
     event = bp[4] & 0xF0;
 
-    if (!event) {
+    if(!event) {
       /* return as this is not an online/offline event */
       return;
     }
@@ -3392,12 +3406,12 @@ static void processSwRscn (const u_char *bp, u_short vsanId, int actualDeviceId)
     affectedId.area = bp[6];
     affectedId.port = bp[7];
 
-    if ((affectedHost = lookupFcHost (&affectedId, vsanId,
+    if((affectedHost = lookupFcHost (&affectedId, vsanId,
 				      actualDeviceId)) != NULL) {
-      if (event == FC_SW_RSCN_PORT_ONLINE) {
+      if(event == FC_SW_RSCN_PORT_ONLINE) {
 	affectedHost->fcCounters->lastOnlineTime = myGlobals.actTime;
       }
-      else if (event == FC_SW_RSCN_PORT_OFFLINE) {
+      else if(event == FC_SW_RSCN_PORT_OFFLINE) {
 	affectedHost->fcCounters->lastOfflineTime = myGlobals.actTime;
 	incrementTrafficCounter(&affectedHost->fcCounters->numOffline, 1);
       }
@@ -3430,7 +3444,7 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
     return(NULL);
   }
 
-  if ((srcHost->fcCounters->vsanId > MAX_VSANS) || (dstHost->fcCounters->vsanId > MAX_VSANS)) {
+  if((srcHost->fcCounters->vsanId > MAX_VSANS) || (dstHost->fcCounters->vsanId > MAX_VSANS)) {
     traceEvent (CONST_TRACE_WARNING, "Not following session for invalid"
 		" VSAN pair %d:%d", srcHost->fcCounters->vsanId, dstHost->fcCounters->vsanId);
     return (NULL);
@@ -3460,7 +3474,7 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
        && (theSession->remotePeer == dstHost)) {
       found = 1;
       break;
-    } else if ((theSession->initiator == dstHost)
+    } else if((theSession->initiator == dstHost)
 	       && (theSession->remotePeer == srcHost)) {
       found = 1;
       break;
@@ -3496,7 +3510,7 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
       */
     } else
 #endif
-      if ( (theSession = (FCSession*)malloc(sizeof(FCSession))) == NULL) return(NULL);
+      if( (theSession = (FCSession*)malloc(sizeof(FCSession))) == NULL) return(NULL);
 
     memset(theSession, 0, sizeof(FCSession));
     addedNewEntry = 1;
@@ -3518,7 +3532,7 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
     if(myGlobals.device[actualDeviceId].numFcSessions > myGlobals.device[actualDeviceId].maxNumFcSessions)
       myGlobals.device[actualDeviceId].maxNumFcSessions = myGlobals.device[actualDeviceId].numFcSessions;
 
-    if ((myGlobals.device[actualDeviceId].fcSession[idx] != NULL) &&
+    if((myGlobals.device[actualDeviceId].fcSession[idx] != NULL) &&
 	(myGlobals.device[actualDeviceId].fcSession[idx]->magic != CONST_MAGIC_NUMBER)) {
       traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) handleFcSession() (idx=%d)",
                  CONST_MAGIC_NUMBER, myGlobals.device[actualDeviceId].fcSession[idx]->magic, idx);
@@ -3529,7 +3543,7 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
     }
     myGlobals.device[actualDeviceId].fcSession[idx] = theSession;
 
-    if (isXchgOrig) {
+    if(isXchgOrig) {
       theSession->initiator = srcHost;
       theSession->remotePeer = dstHost;
     }
@@ -3551,7 +3565,7 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
   /* Typically in FC, the exchange originator is always the same entity in a
    * flow
    */
-  if (isXchgOrig) {
+  if(isXchgOrig) {
     incrementTrafficCounter(&(theSession->bytesSent), length);
     theSession->pktSent++;
   }
@@ -3569,14 +3583,14 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
   case FC_FTYPE_ELS:
     cmd = bp[0];
 
-    if ((theSession->lastElsCmd == FC_ELS_CMD_PLOGI) && (cmd == FC_ELS_CMD_ACC)) {
+    if((theSession->lastElsCmd == FC_ELS_CMD_PLOGI) && (cmd == FC_ELS_CMD_ACC)) {
       fillFcHostInfo (bp, srcHost);
     }
-    else if ((theSession->lastElsCmd == FC_ELS_CMD_LOGO) && (cmd == FC_ELS_CMD_ACC)) {
+    else if((theSession->lastElsCmd == FC_ELS_CMD_LOGO) && (cmd == FC_ELS_CMD_ACC)) {
       theSession->sessionState = FLAG_STATE_END;
     }
 
-    if (isXchgOrig) {
+    if(isXchgOrig) {
       incrementTrafficCounter(&theSession->fcElsBytesSent, length);
     }
     else {
@@ -3590,9 +3604,9 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
     gs_type = bp[4];
     gs_stype = bp[5];
 
-    if (((gs_type == FCCT_GSTYPE_DIRSVC) && (gs_stype == FCCT_GSSUBTYPE_DNS)) ||
+    if(((gs_type == FCCT_GSTYPE_DIRSVC) && (gs_stype == FCCT_GSSUBTYPE_DNS)) ||
 	((gs_type == FCCT_GSTYPE_MGMTSVC) && (gs_stype == FCCT_GSSUBTYPE_UNS))) {
-      if (isXchgOrig) {
+      if(isXchgOrig) {
 	incrementTrafficCounter(&theSession->fcDnsBytesSent, length);
       }
       else {
@@ -3600,7 +3614,7 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
       }
     }
     else {
-      if (isXchgOrig) {
+      if(isXchgOrig) {
 	incrementTrafficCounter(&theSession->otherBytesSent, length);
       }
       else {
@@ -3611,7 +3625,7 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
   case FC_FTYPE_SWILS:
   case FC_FTYPE_SWILS_RSP:
 
-    if (isXchgOrig) {
+    if(isXchgOrig) {
       incrementTrafficCounter(&theSession->fcSwilsBytesSent, length);
     }
     else {
@@ -3619,15 +3633,15 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
     }
 
     hash = getFcFabricElementHash (srcHost->fcCounters->vsanId, actualDeviceId);
-    if (hash == NULL) {
+    if(hash == NULL) {
       break;
     }
-    if (protocol == FC_FTYPE_SWILS) {
+    if(protocol == FC_FTYPE_SWILS) {
       theSession->lastSwilsOxid = oxid;
       theSession->lastSwilsCmd = bp[0];
       opcode = bp[0];
     }
-    else if (oxid == theSession->lastSwilsOxid) {
+    else if(oxid == theSession->lastSwilsOxid) {
       opcode = theSession->lastSwilsCmd;
     }
     else {
@@ -3675,7 +3689,7 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
   case FC_FTYPE_SBCCS:
     break;
   case FC_FTYPE_IP:
-    if (isXchgOrig) {
+    if(isXchgOrig) {
       incrementTrafficCounter(&theSession->ipfcBytesSent, length);
     }
     else {
@@ -3684,7 +3698,7 @@ FCSession* handleFcSession(const struct pcap_pkthdr *h,
     break;
 
   default:
-    if (isXchgOrig) {
+    if(isXchgOrig) {
       incrementTrafficCounter(&theSession->otherBytesSent, length);
     }
     else {

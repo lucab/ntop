@@ -399,7 +399,8 @@ extern void allocateSecurityHostPkts(HostTraffic *srcHost);
 extern int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 		    const u_int numPkts, const u_int _length,
 		    u_short isPassiveSess, u_short isVoipSess,
-		    u_short p2pSessionIdx, int actualDeviceId, u_short newSession,
+		    u_short p2pSessionIdx, u_short httpSessionIdx, 
+		    int actualDeviceId, u_short newSession,
 		    u_int efficiencySent /* 0 = unknown */,
 		    u_int efficiencyRcvd /* 0 = unknown */);
 extern void deleteFragment(IpFragment *fragment, int actualDeviceId);
@@ -1045,7 +1046,8 @@ Code "inherited" from nslookup
 #define isVoIPClient(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, &(a->flags)))
 #define isVoIPGateway(a)            ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_VOIP_GATEWAY, &(a->flags)))
 #define isVoIPHost(a)               (isVoIPClient(a) || isVoIPGateway(a))
-
+#define isFacebookClient(a)         ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_FACEBOOK_CLIENT, &(a->flags)))
+#define isTwitterClient(a)          ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_TWITTER_CLIENT, &(a->flags)))
 						     
 
 #define isDHCPClient(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_DHCP_CLIENT, &(a->flags)))

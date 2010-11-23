@@ -170,7 +170,9 @@ u_int computeEfficiency(u_int pktLen) {
 int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	     const u_int numPkts, const u_int _length, u_short isPassiveSess,
 	     u_short isVoipSess,
-	     u_short p2pSessionIdx, int actualDeviceId,
+	     u_short p2pSessionIdx, 
+	     u_short httpSessionIdx, 
+	     int actualDeviceId,
 	     u_short newSession,
 	     u_int efficiencySent /* 0 = unknown */,
 	     u_int efficiencyRcvd /* 0 = unknown */) {
@@ -192,6 +194,13 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
   } else if(isVoipSess || (port == 54045 /* Skype default port */)) {
     /* Emulate VoIP session */
     idx = myGlobals.VoipIdx;
+  } else if(httpSessionIdx != 0) {
+    switch(httpSessionIdx) {
+    case FLAG_FACEBOOK: idx =  myGlobals.FacebookIdx; break;
+    case FLAG_TWITTER: idx =  myGlobals.TwitterIdx; break;
+    case FLAG_YOUTUBE: idx =  myGlobals.YouTubeIdx; break;
+    default: idx = -1; break;
+    }
   } else {
     if(p2pSessionIdx) {
       switch(p2pSessionIdx) {
@@ -339,7 +348,6 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
       }
     }
 #endif
-
   }
 
   return(idx);
@@ -1723,18 +1731,26 @@ static void processIpPkt(const u_char *bp,
 	     sportIdx, dport, dportIdx); */
 
 	  if(handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession, 0, 0) == -1)
+		      theSession != NULL ? theSession->isP2P : 0, 
+		      theSession != NULL ? theSession->specialHttpSession : 0, 
+		      actualDeviceId, newSession, 0, 0) == -1)
 	    handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession, 0, 0);
+		     theSession != NULL ? theSession->isP2P : 0, 
+		     theSession != NULL ? theSession->specialHttpSession : 0, 
+		     actualDeviceId, newSession, 0, 0);
 	} else {
 	  /*
 	    traceEvent(CONST_TRACE_INFO, "[2] sportIdx(%d)=%d - dportIdx(%d)=%d",
 	    sport, sportIdx, dport, dportIdx); */
 
 	  if(handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession, 0, 0) == -1)
+		      theSession != NULL ? theSession->isP2P : 0, 
+		      theSession != NULL ? theSession->specialHttpSession : 0, 
+		      actualDeviceId, newSession, 0, 0) == -1)
 	    handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession, 0, 0);
+		     theSession != NULL ? theSession->isP2P : 0, 
+		     theSession != NULL ? theSession->specialHttpSession : 0, 
+		     actualDeviceId, newSession, 0, 0);
 	}
       }
     }
@@ -2014,14 +2030,14 @@ static void processIpPkt(const u_char *bp,
 	*/
         if(dport < sport) {
 	  if(handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      0, actualDeviceId, newSession, 0, 0) == -1)
+		      0, 0, actualDeviceId, newSession, 0, 0) == -1)
 	    handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     0, actualDeviceId, newSession, 0, 0);
+		     0, 0, actualDeviceId, newSession, 0, 0);
         } else {
 	  if(handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      0, actualDeviceId, newSession, 0, 0) == -1)
+		      0, 0, actualDeviceId, newSession, 0, 0) == -1)
 	    handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     0, actualDeviceId, newSession, 0, 0);
+		     0, 0, actualDeviceId, newSession, 0, 0);
         }
       }
     }

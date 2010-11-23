@@ -611,6 +611,11 @@ void addDefaultProtocols(void) {
   myGlobals.KazaaIdx = handleProtocolList("Kazaa",       "1214|");
     myGlobals.EdonkeyIdx = handleProtocolList("eDonkey", "4661-4665|");
   myGlobals.BitTorrentIdx = handleProtocolList("BitTorrent", "6881-6999|6969|"); /* http://www.dessent.net/btfaq/#ports */
+
+  myGlobals.FacebookIdx = handleProtocolList("Facebook", "0|");
+  myGlobals.TwitterIdx = handleProtocolList("Twitter", "0|");
+  myGlobals.YouTubeIdx = handleProtocolList("YouTube", "0|");
+
   handleProtocolList("Messenger", "1863|5000|5001|5190-5193|");
 }
 

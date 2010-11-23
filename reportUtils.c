@@ -3460,6 +3460,7 @@ void checkHostProvidedServices(HostTraffic *el) {
      || isHTTPhost(el)
      || isWINShost(el)
      || isDHCPClient(el) || isDHCPServer(el)
+     || isFacebookClient(el) || isTwitterClient(el)
      ) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>", getRowColor(), "Host Type");
@@ -3491,6 +3492,9 @@ void checkHostProvidedServices(HostTraffic *el) {
 
     if(isDHCPClient(el))       sendString("BOOTP/DHCP Client&nbsp;" CONST_IMG_DHCP_CLIENT "<BR>\n");
     if(isDHCPServer(el))       sendString("BOOTP/DHCP Server&nbsp;" CONST_IMG_DHCP_SERVER "<BR>\n");
+
+    if(isFacebookClient(el))   sendString("Facebook Client<BR>\n");
+    if(isTwitterClient(el))    sendString("Twitter Client<BR>\n");
 
     sendString("</TD></TR>");
   }

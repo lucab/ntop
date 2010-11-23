@@ -1697,6 +1697,8 @@
 #define FLAG_HOST_TYPE_MULTIVLANED          28
 #define FLAG_HOST_TYPE_SVC_VOIP_CLIENT      29
 #define FLAG_HOST_TYPE_SVC_VOIP_GATEWAY     30
+#define FLAG_HOST_TYPE_SVC_FACEBOOK_CLIENT  31
+#define FLAG_HOST_TYPE_SVC_TWITTER_CLIENT   32
 
 #define MAX_FLAG_HOST_TYPE                  FLAG_HOST_TYPE_SVC_VOIP_GATEWAY
 
@@ -1721,6 +1723,8 @@
 #define BITFLAG_P2P_UPLOAD_MODE             1
 #define BITFLAG_P2P_DOWNLOAD_MODE           2
 
+
+
 /*
  * Some defines for the isP2P field of "struct ipSession"
  *     Over time, as one p2p system waxes or wanes, this list
@@ -1733,6 +1737,9 @@
 #define FLAG_P2P_BITTORRENT                 4
 #define FLAG_P2P_OTHER_PROTOCOL             5
 #define FLAG_VOIP                           6
+#define FLAG_FACEBOOK                       7
+#define FLAG_TWITTER                        8
+#define FLAG_YOUTUBE                        9
 
 #define UNKNOWN_P2P_FILE                    "&lt;unknown&nbsp;file&gt;"
 

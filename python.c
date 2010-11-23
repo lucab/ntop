@@ -574,6 +574,20 @@ static PyObject* python_isPOPhost(PyObject *self,
 
 /* **************************************** */
 
+static PyObject* python_isFacebookClient(PyObject *self,
+					 PyObject *args) {
+  return PyBool_FromLong(isFacebookClient(ntop_host));
+}
+
+/* **************************************** */
+
+static PyObject* python_isTwitterClient(PyObject *self,
+					 PyObject *args) {
+  return PyBool_FromLong(isTwitterClient(ntop_host));
+}
+
+/* **************************************** */
+
 static PyObject* python_isIMAPhost(PyObject *self,
 				   PyObject *args) {
   //traceEvent(CONST_TRACE_WARNING, "-%s-", "python_ipAddress");
@@ -1323,6 +1337,8 @@ static PyMethodDef host_methods[] = {
   { "isPrinter",  python_isPrinter, METH_NOARGS, "Check isPrinter Host" },
   { "isSMTPhost",  python_isSMTPhost, METH_NOARGS, "Check isSMTPhost Host" },
   { "isPOPhost",  python_isPOPhost, METH_NOARGS, "Check isPOPhost Host" },
+  { "isFacebookClient",  python_isFacebookClient, METH_NOARGS, "Check isFacebookClient Host" },
+  { "isTwitterClient",  python_isTwitterClient, METH_NOARGS, "Check isTwitterClient Host" },
   { "isIMAPhost",  python_isIMAPhost, METH_NOARGS, "Check isIMAPhost Host" },
   { "isDirectoryHost",  python_isDirectoryHost, METH_NOARGS, "Check isDirectoryHost Host" },
   { "isHTTPhost",  python_isHTTPhost, METH_NOARGS, "Check isHTTPhost Host" },
