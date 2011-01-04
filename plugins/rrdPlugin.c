@@ -263,7 +263,8 @@ static int createMultihostGraph(char *rrdName,
 
     if((strlen(hosts) + strlen(host_ip) + 2 + strlen(rrdHosts[i]->hostResolvedName)) < sizeof(hosts)) {
       if(i > 0) strcat(hosts, ",");
-      strcat(hosts, host_ip);
+      /* Fix below courtesy of Alexandre Barros <abarros@abitecnologia.com.br> */
+      strcat(hosts, dotToSlash(host_ip, buf, sizeof(buf)));
       strcat(hosts, "@");
       strcat(hosts, rrdHosts[i]->hostResolvedName);
     }
