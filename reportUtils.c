@@ -5101,7 +5101,7 @@ void buildMapLink(HostTraffic *el, char *buf, int buf_len) {
 #else
     safe_snprintf(__FILE__, __LINE__, buf, buf_len,
 		  " <A class=external href=\"#\" title=\"Physical Host Location\" "
-		  "onclick=\"window.open(\'%s?host=%s&ip=%s\', "
+		  "onclick=\"window.open(\'%s?host=%s&IP=%s\', "
 		  "\'Host Map\', \'height=530, width=750,toolbar=nodirectories=no,status=no,"
 		  "menubar=no,scrollbars=no,resizable=no\'); return false;\">"
 		  "<IMG SRC=/marker.png border=0></A>\n",

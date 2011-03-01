@@ -1963,7 +1963,7 @@
 #if 0
 #define DEFAULT_NTOP_MAPPER_URL             "http://www.ntop.org/cgi-bin/mapper.pl" /* -U -*/
 #else
-#define DEFAULT_NTOP_MAPPER_URL             "http://geotool.servehttp.com/" /* -U -*/
+#define DEFAULT_NTOP_MAPPER_URL             "http://www.geoiptool.com/en/" /* -U -*/
 #endif
 
 #define DEFAULT_NTOP_FCNS_FILE              NULL

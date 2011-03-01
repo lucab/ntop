@@ -107,8 +107,8 @@ u_int computeEfficiency(u_int pktLen) {
 int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	     const u_int numPkts, const u_int _length, u_short isPassiveSess,
 	     u_short isVoipSess,
-	     u_short p2pSessionIdx, 
-	     u_short httpSessionIdx, 
+	     u_short p2pSessionIdx,
+	     u_short httpSessionIdx,
 	     int actualDeviceId,
 	     u_short newSession,
 	     u_int efficiencySent /* 0 = unknown */,
@@ -580,7 +580,7 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
   static u_short lastHourId=0;
   u_short hourId;
   struct tm t, *thisTime;
-  
+
   if(numPkts == 0) return;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
@@ -589,13 +589,13 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
   }
 
   updateASTraffic(actualDeviceId, srcHost->hostAS, dstHost->hostAS, bytes.value);
-  
+
   if(srcHost == dstHost) {
     return;
   } else if((srcHost == myGlobals.otherHostEntry)
-	  && (dstHost == myGlobals.otherHostEntry)) {
+	    && (dstHost == myGlobals.otherHostEntry)) {
     return;
-  }  
+  }
 
   thisTime = localtime_r(&myGlobals.actTime, &t);
   hourId = thisTime->tm_hour % 24 /* just in case... */;;
@@ -1071,10 +1071,10 @@ static void processIpPkt(const u_char *bp,
     addrput(AF_INET6, &srcAddr, &ip6->ip6_src);
     addrput(AF_INET6, &dstAddr, &ip6->ip6_dst);
   } else {
-      NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
-      addrput(AF_INET, &srcAddr,&ip.ip_src.s_addr);
-      addrput(AF_INET, &dstAddr,&ip.ip_dst.s_addr);
-    }
+    NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
+    addrput(AF_INET, &srcAddr,&ip.ip_src.s_addr);
+    addrput(AF_INET, &dstAddr,&ip.ip_dst.s_addr);
+  }
 
   if(ip6 == NULL) {
     if((!myGlobals.runningPref.dontTrustMACaddr)
@@ -1156,22 +1156,22 @@ static void processIpPkt(const u_char *bp,
     }
 
   } else {
-      updateDevicePacketTTLStats(ip.ip_ttl, actualDeviceId);
+    updateDevicePacketTTLStats(ip.ip_ttl, actualDeviceId);
 
-      if(ip.ip_ttl != 255) {
-	/*
-	  TTL can be calculated only when the packet
-	  is originated by the sender
-	*/
-	if((srcHost->minTTL == 0) || (ip.ip_ttl < srcHost->minTTL)) srcHost->minTTL = ip.ip_ttl;
-	if((ip.ip_ttl > srcHost->maxTTL)) srcHost->maxTTL = ip.ip_ttl;
-      }
+    if(ip.ip_ttl != 255) {
+      /*
+	TTL can be calculated only when the packet
+	is originated by the sender
+      */
+      if((srcHost->minTTL == 0) || (ip.ip_ttl < srcHost->minTTL)) srcHost->minTTL = ip.ip_ttl;
+      if((ip.ip_ttl > srcHost->maxTTL)) srcHost->maxTTL = ip.ip_ttl;
     }
+  }
 
   ctr.value = h->len;
   updatePacketCount(srcHost, &srcAddr, dstHost, &dstAddr, ctr, 1, actualDeviceId);
 
-  if((!myGlobals.runningPref.dontTrustMACaddr) 
+  if((!myGlobals.runningPref.dontTrustMACaddr)
      && (!myGlobals.device[actualDeviceId].dummyDevice)) {
     checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
     ctr.value = length;
@@ -1181,9 +1181,9 @@ static void processIpPkt(const u_char *bp,
     incrementHostTrafficCounter(srcHost, ipv6BytesSent, length);
     incrementHostTrafficCounter(dstHost, ipv6BytesRcvd, length);
   } else {
-      incrementHostTrafficCounter(srcHost, ipv4BytesSent, length);
-      incrementHostTrafficCounter(dstHost, ipv4BytesRcvd, length);
-    }
+    incrementHostTrafficCounter(srcHost, ipv4BytesSent, length);
+    incrementHostTrafficCounter(dstHost, ipv4BytesRcvd, length);
+  }
 
   if(subnetPseudoLocalHost(srcHost)) {
     if(subnetPseudoLocalHost(dstHost)) {
@@ -1210,12 +1210,12 @@ static void processIpPkt(const u_char *bp,
       nh = ip6->ip6_nxt;
     }
   } else {
-      off = ntohs(ip.ip_off);
-      if(off & 0x3fff) {
-	fragmented = 1;
-	nh = ip.ip_p;
-      }
+    off = ntohs(ip.ip_off);
+    if(off & 0x3fff) {
+      fragmented = 1;
+      nh = ip.ip_p;
     }
+  }
 
   /*
     This is a fragment: fragment handling is handled by handleFragment()
@@ -1482,7 +1482,7 @@ static void processIpPkt(const u_char *bp,
 	    theSession = handleSession(h, fragmented, tp.th_win,
 				       srcHost, sport, dstHost,
 				       dport, ntohs(ip6->ip6_plen), 0, &tp,
-				       tcpDataLength, 
+				       tcpDataLength,
 				       theData, actualDeviceId, &newSession, 1);
 	  else
 	    theSession = handleSession(h, (off & 0x3fff), tp.th_win,
@@ -1529,12 +1529,12 @@ static void processIpPkt(const u_char *bp,
 	     sportIdx, dport, dportIdx); */
 
 	  if(handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      theSession != NULL ? theSession->isP2P : 0, 
-		      theSession != NULL ? theSession->specialHttpSession : 0, 
+		      theSession != NULL ? theSession->isP2P : 0,
+		      theSession != NULL ? theSession->specialHttpSession : 0,
 		      actualDeviceId, newSession, 0, 0) == -1)
 	    handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     theSession != NULL ? theSession->isP2P : 0, 
-		     theSession != NULL ? theSession->specialHttpSession : 0, 
+		     theSession != NULL ? theSession->isP2P : 0,
+		     theSession != NULL ? theSession->specialHttpSession : 0,
 		     actualDeviceId, newSession, 0, 0);
 	} else {
 	  /*
@@ -1542,12 +1542,12 @@ static void processIpPkt(const u_char *bp,
 	    sport, sportIdx, dport, dportIdx); */
 
 	  if(handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      theSession != NULL ? theSession->isP2P : 0, 
-		      theSession != NULL ? theSession->specialHttpSession : 0, 
+		      theSession != NULL ? theSession->isP2P : 0,
+		      theSession != NULL ? theSession->specialHttpSession : 0,
 		      actualDeviceId, newSession, 0, 0) == -1)
 	    handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     theSession != NULL ? theSession->isP2P : 0, 
-		     theSession != NULL ? theSession->specialHttpSession : 0, 
+		     theSession != NULL ? theSession->isP2P : 0,
+		     theSession != NULL ? theSession->specialHttpSession : 0,
 		     actualDeviceId, newSession, 0, 0);
 	}
       }
@@ -3190,7 +3190,7 @@ void processPacket(u_char *_deviceId,
 
 		  switch(element.cdp_type) {
 		  case 0x0001: /* Device Id */
-		    if((srcHost->hostResolvedName[0] == '\0') 
+		    if((srcHost->hostResolvedName[0] == '\0')
 		       || (strcmp(srcHost->hostResolvedName, srcHost->hostNumIpAddress))) {
 		      u_short tmpStrLen = min(element.cdp_len-4, MAX_LEN_SYM_HOST_NAME-1);
 		      strncpy(srcHost->hostResolvedName, (char*)&cdp[cdp_idx], tmpStrLen);
@@ -3436,7 +3436,7 @@ void processPacket(u_char *_deviceId,
 		    if(strlen(nodeName) >= (MAX_LEN_SYM_HOST_NAME-1))
 		      nodeName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
 
-		    if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, 
+		    if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1,
 												    sizeof(NonIPTraffic));
 		    if(srcHost->nonIPTraffic == NULL) return;
 
@@ -3531,137 +3531,137 @@ void processPacket(u_char *_deviceId,
 	  processIpPkt(p+hlen, h, length, NULL, NULL, actualDeviceId, vlanId);
         }
       } else  /* Non IP */ if(!myGlobals.runningPref.dontTrustMACaddr) {
-	/* MAC addresses are meaningful here */
-	struct ether_arp arpHdr;
-	HostAddr addr;
-	TrafficCounter ctr;
+	  /* MAC addresses are meaningful here */
+	  struct ether_arp arpHdr;
+	  HostAddr addr;
+	  TrafficCounter ctr;
 
-	if(length > hlen)
-	  length -= hlen;
-	else
-	  length = 0;
+	  if(length > hlen)
+	    length -= hlen;
+	  else
+	    length = 0;
 
-	srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
-	if(srcHost == NULL) {
-	  /* Sanity check */
-	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (11) [Low memory?]");
-	  lowMemoryMsgShown = 1;
-	  return;
-	} else {
-	  lockHostsHashMutex(srcHost, "processPacket-src-5");
-	  allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
-	  if(srcHost->nonIPTraffic == NULL) {
-	    unlockHostsHashMutex(srcHost);
+	  srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
+	  if(srcHost == NULL) {
+	    /* Sanity check */
+	    if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (11) [Low memory?]");
+	    lowMemoryMsgShown = 1;
 	    return;
-	  }
-	}
-
-	dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
-	if(dstHost == NULL) {
-	  /* Sanity check */
-	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (12) [Low memory?]");
-	  unlockHostsHashMutex(srcHost);
-	  lowMemoryMsgShown = 1;
-	  return;
-	} else {
-	  /* traceEvent(CONST_TRACE_INFO, "lockHostsHashMutex()"); */
-	  lockHostsHashMutex(dstHost, "processPacket-src-5");
-	  allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
-	  if(dstHost->nonIPTraffic == NULL) {
-	    unlockHostsHashMutex(srcHost), unlockHostsHashMutex(dstHost);
-	    return;
-	  }
-	}
-
-	if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
-
-	switch(eth_type) {
-	case ETHERTYPE_ARP: /* ARP - Address resolution Protocol */
-	  memcpy(&arpHdr, p+hlen, sizeof(arpHdr));
-
-	  if(EXTRACT_16BITS(&arpHdr.arp_pro) == ETHERTYPE_IP) {
-	    int arpOp = EXTRACT_16BITS(&arpHdr.arp_op);
-
-	    switch(arpOp) {
-	    case ARPOP_REPLY: /* ARP REPLY */
-	      addr.hostFamily = AF_INET;
-	      memcpy(&addr.Ip4Address.s_addr, &arpHdr.arp_tpa, sizeof(struct in_addr));
-	      addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
-	      unlockHostsHashMutex(srcHost), unlockHostsHashMutex(dstHost);
-
-	      dstHost = lookupHost(&addr, (u_char*)&arpHdr.arp_tha, vlanId, 0, 0, actualDeviceId);
-	      memcpy(&addr.Ip4Address.s_addr, &arpHdr.arp_spa, sizeof(struct in_addr));
-	      addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
-	      if(dstHost != NULL) {
-		lockHostsHashMutex(dstHost, "processPacket-dst-6");
-		allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
-		incrementHostTrafficCounter(dstHost, nonIPTraffic->arpReplyPktsRcvd, 1);
-	      }
-
-	      srcHost = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, vlanId, 0, 0, actualDeviceId);
-	      if(srcHost != NULL) {
-		lockHostsHashMutex(srcHost, "processPacket-src-6");
-		allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
-		incrementHostTrafficCounter(srcHost, nonIPTraffic->arpReplyPktsSent, 1);
-	      }
+	  } else {
+	    lockHostsHashMutex(srcHost, "processPacket-src-5");
+	    allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
+	    if(srcHost->nonIPTraffic == NULL) {
+	      unlockHostsHashMutex(srcHost);
+	      return;
 	    }
 	  }
-	  /* DO NOT ADD A break ABOVE ! */
 
-	case ETHERTYPE_REVARP: /* Reverse ARP */
-	  if(srcHost != NULL) {
-	    incrementHostTrafficCounter(srcHost, nonIPTraffic->arp_rarpSent, length);
+	  dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
+	  if(dstHost == NULL) {
+	    /* Sanity check */
+	    if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (12) [Low memory?]");
+	    unlockHostsHashMutex(srcHost);
+	    lowMemoryMsgShown = 1;
+	    return;
+	  } else {
+	    /* traceEvent(CONST_TRACE_INFO, "lockHostsHashMutex()"); */
+	    lockHostsHashMutex(dstHost, "processPacket-src-5");
+	    allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
+	    if(dstHost->nonIPTraffic == NULL) {
+	      unlockHostsHashMutex(srcHost), unlockHostsHashMutex(dstHost);
+	      return;
+	    }
 	  }
 
-	  if(dstHost != NULL) {
+	  if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
-	    incrementHostTrafficCounter(dstHost, nonIPTraffic->arp_rarpRcvd, length);
-	  }
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].arpRarpBytes, length);
-	  break;
+	  switch(eth_type) {
+	  case ETHERTYPE_ARP: /* ARP - Address resolution Protocol */
+	    memcpy(&arpHdr, p+hlen, sizeof(arpHdr));
 
-	case ETHERTYPE_ATALK: /* AppleTalk */
-	case ETHERTYPE_AARP:
-	  incrementHostTrafficCounter(srcHost, nonIPTraffic->appletalkSent, length);
-	  incrementHostTrafficCounter(dstHost, nonIPTraffic->appletalkRcvd, length);
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].atalkBytes, length);
-	  break;
+	    if(EXTRACT_16BITS(&arpHdr.arp_pro) == ETHERTYPE_IP) {
+	      int arpOp = EXTRACT_16BITS(&arpHdr.arp_op);
 
-	case ETHERTYPE_IPv6:
-	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
-	  incrementHostTrafficCounter(srcHost, ipv6BytesSent, length);
-	  incrementHostTrafficCounter(dstHost, ipv6BytesRcvd, length);
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipv6Bytes, length);
-	  break;
+	      switch(arpOp) {
+	      case ARPOP_REPLY: /* ARP REPLY */
+		addr.hostFamily = AF_INET;
+		memcpy(&addr.Ip4Address.s_addr, &arpHdr.arp_tpa, sizeof(struct in_addr));
+		addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
+		unlockHostsHashMutex(srcHost), unlockHostsHashMutex(dstHost);
 
-	default:
+		dstHost = lookupHost(&addr, (u_char*)&arpHdr.arp_tha, vlanId, 0, 0, actualDeviceId);
+		memcpy(&addr.Ip4Address.s_addr, &arpHdr.arp_spa, sizeof(struct in_addr));
+		addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
+		if(dstHost != NULL) {
+		  lockHostsHashMutex(dstHost, "processPacket-dst-6");
+		  allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
+		  incrementHostTrafficCounter(dstHost, nonIPTraffic->arpReplyPktsRcvd, 1);
+		}
+
+		srcHost = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, vlanId, 0, 0, actualDeviceId);
+		if(srcHost != NULL) {
+		  lockHostsHashMutex(srcHost, "processPacket-src-6");
+		  allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
+		  incrementHostTrafficCounter(srcHost, nonIPTraffic->arpReplyPktsSent, 1);
+		}
+	      }
+	    }
+	    /* DO NOT ADD A break ABOVE ! */
+
+	  case ETHERTYPE_REVARP: /* Reverse ARP */
+	    if(srcHost != NULL) {
+	      incrementHostTrafficCounter(srcHost, nonIPTraffic->arp_rarpSent, length);
+	    }
+
+	    if(dstHost != NULL) {
+
+	      incrementHostTrafficCounter(dstHost, nonIPTraffic->arp_rarpRcvd, length);
+	    }
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].arpRarpBytes, length);
+	    break;
+
+	  case ETHERTYPE_ATALK: /* AppleTalk */
+	  case ETHERTYPE_AARP:
+	    incrementHostTrafficCounter(srcHost, nonIPTraffic->appletalkSent, length);
+	    incrementHostTrafficCounter(dstHost, nonIPTraffic->appletalkRcvd, length);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].atalkBytes, length);
+	    break;
+
+	  case ETHERTYPE_IPv6:
+	    processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
+	    incrementHostTrafficCounter(srcHost, ipv6BytesSent, length);
+	    incrementHostTrafficCounter(dstHost, ipv6BytesRcvd, length);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipv6Bytes, length);
+	    break;
+
+	  default:
 #ifdef UNKNOWN_PACKET_DEBUG
-	  traceEvent(CONST_TRACE_INFO, "UNKNOWN_PACKET_DEBUG: %s/%s->%s/%s [eth type %d (0x%x)]",
-		     srcHost->hostNumIpAddress, srcHost->ethAddressString,
-		     dstHost->hostNumIpAddress, dstHost->ethAddressString,
-		     eth_type, eth_type);
+	    traceEvent(CONST_TRACE_INFO, "UNKNOWN_PACKET_DEBUG: %s/%s->%s/%s [eth type %d (0x%x)]",
+		       srcHost->hostNumIpAddress, srcHost->ethAddressString,
+		       dstHost->hostNumIpAddress, dstHost->ethAddressString,
+		       eth_type, eth_type);
 #endif
-	  incrementHostTrafficCounter(srcHost, nonIPTraffic->otherSent, length);
-	  incrementHostTrafficCounter(dstHost, nonIPTraffic->otherRcvd, length);
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
-	  incrementUnknownProto(srcHost, 0 /* sent */, eth_type /* eth */, 0 /* dsap */,
-				0 /* ssap */, 0 /* ip */);
-	  incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */,
-				0 /* ssap */, 0 /* ip */);
-	  if(myGlobals.runningPref.enableOtherPacketDump)
-	    dumpOtherPacket(actualDeviceId);
-	  break;
-	}
+	    incrementHostTrafficCounter(srcHost, nonIPTraffic->otherSent, length);
+	    incrementHostTrafficCounter(dstHost, nonIPTraffic->otherRcvd, length);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
+	    incrementUnknownProto(srcHost, 0 /* sent */, eth_type /* eth */, 0 /* dsap */,
+				  0 /* ssap */, 0 /* ip */);
+	    incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */,
+				  0 /* ssap */, 0 /* ip */);
+	    if(myGlobals.runningPref.enableOtherPacketDump)
+	      dumpOtherPacket(actualDeviceId);
+	    break;
+	  }
 
-	ctr.value = length;
-	/*
-	  Even if this is not IP the hostIpAddress field is
-	  fine because it is not used in this special case and I need
-	  a placeholder here.
-	*/
-	updatePacketCount(srcHost, &srcHost->hostIpAddress, dstHost,
-			  &dstHost->hostIpAddress, ctr, 1, actualDeviceId);
-      }
+	  ctr.value = length;
+	  /*
+	    Even if this is not IP the hostIpAddress field is
+	    fine because it is not used in this special case and I need
+	    a placeholder here.
+	  */
+	  updatePacketCount(srcHost, &srcHost->hostIpAddress, dstHost,
+			    &dstHost->hostIpAddress, ctr, 1, actualDeviceId);
+	}
     }
 
     if(srcHost) unlockHostsHashMutex(srcHost);

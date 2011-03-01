@@ -1004,8 +1004,6 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
   char *rcStr, tmpStr[256] = { '\0' };
   struct timeval tvstrct;
 
-  printf("handleHTTPSession(%d)\n", h->len);
-
   if(sport == IP_TCP_PORT_HTTP) setHostFlag(FLAG_HOST_TYPE_SVC_HTTP, srcHost);
   if(dport == IP_TCP_PORT_HTTP) setHostFlag(FLAG_HOST_TYPE_SVC_HTTP, dstHost);
 
