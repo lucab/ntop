@@ -879,7 +879,7 @@ static char* _res_skip(char *msg,
 
 /* ************************************ */
 
-static void setHostName(HostTraffic *srcHost, char *name) {
+void setHostName(HostTraffic *srcHost, char *name) {
   u_short tmpStrLen = min(strlen(name), MAX_LEN_SYM_HOST_NAME);
   strncpy(srcHost->hostResolvedName, name, tmpStrLen);
   srcHost->hostResolvedName[tmpStrLen] = '\0';

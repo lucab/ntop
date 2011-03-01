@@ -5865,29 +5865,6 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
 	  strncpy(debugCmpFctn, "2A1-MAC", sizeof(debugCmpFctn));
 #endif
 	}
-      } else if(((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FCID)
-		&& ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FC_WWN)
-		&& ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS)
-		&& ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FAKE)) {
-	/* For most of the rest of the tests, we just compare the names we
-	 * have - since they're always the same type, a strncasecmp test
-	 * IS meaningful.
-	 */
-	name1 = (*a)->hostResolvedName;
-	name2 = (*b)->hostResolvedName;
-	rc = strcasecmp(name1, name2);
-#ifdef CMPFCTN_DEBUG
-	strncpy(debugCmpFctn, "2A1-!FC!FAKE", sizeof(debugCmpFctn));
-#endif
-      } else if ((((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FCID)
-		  || ((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN)
-		  || ((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS))) {
-	name1 = (*a)->hostResolvedName;
-	name2 = (*b)->hostResolvedName;
-	rc = strcasecmp(name1, name2);
-#ifdef CMPFCTN_DEBUG
-	strncpy(debugCmpFctn, "2A1-FC", sizeof(debugCmpFctn));
-#endif
       } else { /* FAKE */
 	name1 = (*a)->hostResolvedName;
 	name2 = (*b)->hostResolvedName;

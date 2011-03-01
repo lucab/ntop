@@ -108,7 +108,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	     const u_int numPkts, const u_int _length, u_short isPassiveSess,
 	     u_short isVoipSess,
 	     u_short p2pSessionIdx,
-	     u_short httpSessionIdx,
+	     u_short l7ProtoSessionIdx,
 	     int actualDeviceId,
 	     u_short newSession) {
   int idx;
@@ -126,11 +126,13 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
   } else if(isVoipSess || (port == 54045 /* Skype default port */)) {
     /* Emulate VoIP session */
     idx = myGlobals.VoipIdx;
-  } else if(httpSessionIdx != 0) {
-    switch(httpSessionIdx) {
+  } else if(l7ProtoSessionIdx != 0) {
+    switch(l7ProtoSessionIdx) {
     case FLAG_FACEBOOK: idx =  myGlobals.FacebookIdx; break;
-    case FLAG_TWITTER: idx =  myGlobals.TwitterIdx; break;
-    case FLAG_YOUTUBE: idx =  myGlobals.YouTubeIdx; break;
+    case FLAG_TWITTER:  idx =  myGlobals.TwitterIdx; break;
+    case FLAG_YOUTUBE:  idx =  myGlobals.YouTubeIdx; break;
+    case FLAG_SSH:      idx =  myGlobals.SshIdx; break;
+    case FLAG_SKYPE:    idx =  myGlobals.SkypeIdx; break;
     default: idx = -1; break;
     }
   } else {
@@ -139,8 +141,8 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
       case FLAG_P2P_EDONKEY:
 	idx = myGlobals.EdonkeyIdx;
 	break;
-      case FLAG_P2P_KAZAA:
-	idx = myGlobals.KazaaIdx;
+      case FLAG_SKYPE:
+	idx = myGlobals.SkypeIdx;
 	break;
       case FLAG_P2P_BITTORRENT:
 	idx = myGlobals.BitTorrentIdx;
@@ -1014,15 +1016,6 @@ static void processIpPkt(const u_char *bp,
 
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipPkts, 1);
 
-  if(ip6 == NULL)
-    if((bp != NULL)
-       && (myGlobals.device[actualDeviceId].datalink != DLT_NULL)
-       && (in_cksum((const u_short *)bp, hlen, 0) != 0)
-       ) {
-      incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.badChecksum, 1);
-      return;
-    }
-
   /*
     Fix below courtesy of Christian Hammers <ch@westend.com>
   */
@@ -1097,9 +1090,6 @@ static void processIpPkt(const u_char *bp,
       }
     }
   }
-
-  /* ******************************************************************* */
-  /* ******************************************************************* */
 
   /*
     IMPORTANT:
@@ -1528,11 +1518,11 @@ static void processIpPkt(const u_char *bp,
 
 	  if(handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		      theSession != NULL ? theSession->isP2P : 0,
-		      theSession != NULL ? theSession->specialHttpSession : 0,
+		      theSession != NULL ? theSession->knownProtocolIdx : 0,
 		      actualDeviceId, newSession) == -1)
 	    handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		     theSession != NULL ? theSession->isP2P : 0,
-		     theSession != NULL ? theSession->specialHttpSession : 0,
+		     theSession != NULL ? theSession->knownProtocolIdx : 0,
 		     actualDeviceId, newSession);
 	} else {
 	  /*
@@ -1541,11 +1531,11 @@ static void processIpPkt(const u_char *bp,
 
 	  if(handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		      theSession != NULL ? theSession->isP2P : 0,
-		      theSession != NULL ? theSession->specialHttpSession : 0,
+		      theSession != NULL ? theSession->knownProtocolIdx : 0,
 		      actualDeviceId, newSession) == -1)
 	    handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		     theSession != NULL ? theSession->isP2P : 0,
-		     theSession != NULL ? theSession->specialHttpSession : 0,
+		     theSession != NULL ? theSession->knownProtocolIdx : 0,
 		     actualDeviceId, newSession);
 	}
       }

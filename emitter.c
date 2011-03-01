@@ -1314,8 +1314,6 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	wrtLlongItm(fDescr, lang, "\t", "shortest",myGlobals.device[i].rcvdPktStats.shortest, ',', numEntries);
       if(checkFilter(filter, "longest"))
 	wrtLlongItm(fDescr, lang, "\t", "longest",myGlobals.device[i].rcvdPktStats.longest, ',', numEntries);
-      if(checkFilter(filter, "badChecksum"))
-	wrtLlongItm(fDescr, lang, "\t", "badChecksum",myGlobals.device[i].rcvdPktStats.badChecksum, ',', numEntries);
       if(checkFilter(filter, "tooLong"))
 	wrtLlongItm(fDescr, lang, "\t", "tooLong",myGlobals.device[i].rcvdPktStats.tooLong, ',', numEntries);
       if(checkFilter(filter, "peakThroughput"))

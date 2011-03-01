@@ -123,7 +123,7 @@
 /* PARM_PRINT_ALL_SESSIONS causes report.c/reportUtils.c to include in reports
  * lines for sessions that are not "active".
  */
-/* #define PARM_PRINT_ALL_SESSIONS */
+#define PARM_PRINT_ALL_SESSIONS
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Timeouts and intervals - in seconds (x*60 = x minutes)
@@ -147,13 +147,13 @@
 /*
  *  How long between runs of the idle host purge?
  */
-#define PARM_HOST_PURGE_INTERVAL            2*60
+#define PARM_HOST_PURGE_INTERVAL            60
 
 /*
  *  How long must a host be idle to be considered for purge?
  */
-#define PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES 10*60
-#define PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES   30*60
+#define PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES    60
+#define PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES      60
 
 /*
  *  How long must a session be idle to be considered for purge?
@@ -323,10 +323,6 @@
  * DNS requests and replies sniffed out of the ntop monitored traffic.
  */
 /* #define DNS_SNIFF_DEBUG */
-
-/* FC_DEBUG logs information about FibreChannel processing.
- */
-/* #define FC_DEBUG */
 
 /* FINGERPRINT_DEBUG logs information about OS Fingerprinting.
  */
@@ -795,7 +791,7 @@
  * Sets myGlobals.maxNumLines, which is used to determine how many rows (lines)
  * appear on each page of a multiple paged report
  */
-#define CONST_NUM_TABLE_ROWS_PER_PAGE       128
+#define CONST_NUM_TABLE_ROWS_PER_PAGE       30
 
 /*
  * Size of myGlobals.transTimeHash[], used to produce the "IP Service Stats"
@@ -999,14 +995,6 @@
 #define CONST_DUMP_NTOP_XML                 "dump.xml"
 #define CONST_EDIT_PREFS                    "editPrefs.html"
 #define CONST_FAVICON_ICO                   "favicon.ico"
-#define CONST_FC_ACTIVITY_HTML              "fcActivity.html"
-#define CONST_FC_DATA_HTML                  "fcData.html"
-#define CONST_FC_HOSTS_INFO_HTML            "fcHostsInfo.html"
-#define CONST_PIE_FC_PKT_SZ_DIST            "fcPktSizeDistribPie"
-#define CONST_BAR_FC_PROTO_DIST             "fcProtoDistribution"
-#define CONST_FC_TRAFFIC_HTML               "fcShowStats.html"
-#define CONST_FC_THPT_HTML                  "fcThpt.html"
-#define CONST_FC_SESSIONS_HTML              "FcSessions.html"
 #define CONST_FILTER_INFO_HTML              "filterInfo.html"
 #define CONST_IF_STATS_HTML                 "ifStats.html"
 #define CONST_NTOP_HELP_HTML                "help.html"
@@ -1040,7 +1028,7 @@
 #define CONST_MODIFY_USERS                  "modifyUsers"
 #define CONST_MULTICAST_STATS_HTML          "multicastStats.html"
 #define CONST_NET_FLOWS_HTML                "NetFlows.html"
-#define CONST_ACTIVE_TCP_SESSIONS_HTML      "NetNetstat.html"
+#define CONST_ACTIVE_SESSIONS_HTML          "activeSessions.html"
 #define CONST_NETWORK_IMAGE_MAP             "network_map.png"
 #define CONST_CGI_HEADER                    "ntop-bin/"
 #define CONST_EMBEDDED_PYTHON_HEADER        "python/"
@@ -1144,10 +1132,6 @@
 #define LEN_ETHERNET_ADDRESS_DISPLAY        sizeof("00:00:00:00:00:00")
 #define LEN_ETHERNET_VENDOR                 3
 #define LEN_ETHERNET_VENDOR_DISPLAY         sizeof("00:00:00")
-#define LEN_FC_ADDRESS                      3
-#define LEN_FC_ADDRESS_DISPLAY              sizeof ("00.00.00")
-#define LEN_WWN_ADDRESS                     8
-#define LEN_WWN_ADDRESS_DISPLAY             sizeof ("00:00:00:00:00:00:00:00")
 
 /*
  * Maximum number of addresses in a dns packet - see handleDNSpacket()
@@ -1236,7 +1220,7 @@
  * This is the 2MSL timeout as defined in the TCP standard (RFC 761).
  * Used in sessions.c and pbuf.c
  */
-#define CONST_TWO_MSL_TIMEOUT          120      /* 2 minutes */
+#define CONST_TWO_MSL_TIMEOUT          60      /* 1 minute */
 #define CONST_DOUBLE_TWO_MSL_TIMEOUT   (2*CONST_TWO_MSL_TIMEOUT)
 
 /*
@@ -1259,6 +1243,12 @@
  * What's our 'name', for tcp wrappers (/etc/hosts.allow, /etc/hosts.deny)
  */
 #define CONST_DAEMONNAME                    "ntop"
+
+#define CONST_FACEBOOK_ICON        "<IMG SRC=facebook.gif ALT=\"FaceBook\">"
+#define CONST_TWITTER_ICON         "<IMG SRC=twitter.png ALT=\"Twitter\">"
+#define CONST_LINKEDIN_ICON        "<IMG SRC=linkedin.gif ALT=\"LinkedIn\">"
+#define CONST_YOUTUBE_ICON         "<IMG SRC=youtube.gif ALT=\"YouTube\">"
+#define CONST_SKYPE_ICON           "<IMG SRC=skype.png ALT=\"Skype\">"
 
 /*
  *    This list is derived from RFC1945 in sec 3.2 Uniform Resource Identifiers
@@ -1511,11 +1501,6 @@
 #define CONST_IMG_SCSI_INITIATOR       "<img class=tooltip src=\"/initiator.gif\" border=\"0\" alt=\"SCSI Initiator\" title=\"SCSI Initiator\">"
 #define CONST_IMG_SCSI_DISK            "<img class=tooltip src=\"/disk.gif\" border=\"0\" alt=\"SCSI Block Device (disk)\" title=\"SCSI Block Device (disk)\">"
 
-#define CONST_IMG_FC_VEN_BROCADE       "<img class=tooltip src=\"/brocade.gif\" border=\"0\" alt=\"Brocade Communications Systems, Inc.\" title=\"Brocade Communications Systems, Inc.\">"
-#define CONST_IMG_FC_VEN_EMULEX        "<img class=tooltip src=\"/emulex.gif\" border=\"0\" alt=\"Emulex Corporation\" title=\"Emulex Corporation\">"
-#define CONST_IMG_FC_VEN_JNI           "<img class=tooltip src=\"/jni.gif\" border=\"0\" alt=\"JNI Corporation\" title=\"JNI Corporation\">"
-#define CONST_IMG_FC_VEN_SEAGATE       "<img class=tooltip src=\"/seagate.gif\" border=\"0\" alt=\"Seagate Technology\" title=\"Seagate Technology\">"
-
 #define CONST_IMG_ARROW_UP             "<img class=tooltip src=\"/arrow_up.png\" border=\"0\" alt=\"Ascending order, click to reverse\" title=\"Ascending order, click to reverse\">"
 #define CONST_IMG_ARROW_DOWN           "<img class=tooltip src=\"/arrow_down.png\" border=\"0\" alt=\"Descending order, click to reverse\" title=\"Descending order, click to reverse\">"
 
@@ -1703,6 +1688,9 @@
 #define FLAG_FACEBOOK                       6
 #define FLAG_TWITTER                        7
 #define FLAG_YOUTUBE                        8
+#define FLAG_LINKEDIN                       9
+#define FLAG_SSH                           10
+#define FLAG_SKYPE                         11
 
 #define UNKNOWN_P2P_FILE                    "&lt;unknown&nbsp;file&gt;"
 
@@ -1786,8 +1774,6 @@
 #define FLAG_HOST_SYM_ADDR_TYPE_FAKE        -9
 #define FLAG_HOST_SYM_ADDR_TYPE_NONE        0
 #define FLAG_HOST_SYM_ADDR_TYPE_FCID        5
-#define FLAG_HOST_SYM_ADDR_TYPE_FC_WWN      6
-#define FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS    7
 #define FLAG_HOST_SYM_ADDR_TYPE_MAC         9
 #define FLAG_HOST_SYM_ADDR_TYPE_IPX         17
 #define FLAG_HOST_SYM_ADDR_TYPE_IP          19
@@ -1795,16 +1781,6 @@
 #define FLAG_HOST_SYM_ADDR_TYPE_NETBIOS     27
 #define FLAG_HOST_SYM_ADDR_TYPE_NAME        29
 #define FLAG_HOST_SYM_ADDR_TYPE_MDNS        30 /* Multicast DNS */
-
-/*
- * FibreChannel
- */
-#define FLAG_FC_NS_CASE_VSAN                0
-#define FLAG_FC_NS_CASE_FCID                1
-#define FLAG_FC_NS_CASE_PWWN                2
-#define FLAG_FC_NS_CASE_NWWN                3
-#define FLAG_FC_NS_CASE_ALIAS               4
-#define FLAG_FC_NS_CASE_TGTTYPE             5
 
 /*
  * emitter.c language flags
@@ -2636,7 +2612,9 @@ struct ip6_hdr
 #define IP_TCP_PORT_HTTP           80
 #define IP_TCP_PORT_POP2           109
 #define IP_TCP_PORT_POP3           110
+#define IP_TCP_PORT_POPS           995
 #define IP_TCP_PORT_IMAP           143
+#define IP_TCP_PORT_IMAPS          993
 #define IP_TCP_PORT_HTTPS          443
 #define IP_TCP_PORT_PRINTER        515
 #define IP_TCP_PORT_KAZAA          1214
@@ -2692,7 +2670,6 @@ struct ip6_hdr
 #define NTOP_PREF_MAXSESSIONS            "ntop.maxNumSessions"
 #define NTOP_PREF_MERGEIF                "ntop.mergeInterfaces"
 #define NTOP_PREF_ENABLE_L7PROTO         "ntop.enableL7Proto"
-#define NTOP_PREF_NO_ISESS_PURGE         "ntop.disableInstantSessionPurge"
 #define NTOP_PREF_NO_TRUST_MAC           "ntop.dontTrustMACaddr"
 #define NTOP_PREF_PCAP_LOGBASE           "ntop.pcapLogBasePath"
 #define NTOP_PREF_DBG_MODE               "ntop.debugMode"

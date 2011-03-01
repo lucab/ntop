@@ -144,6 +144,7 @@ extern char * _addrtostr(HostAddr *addr, char* buf, u_short bufLen);
 extern char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen);
 extern char * addrtostr(HostAddr *addr);
 extern int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type);
+extern void setHostName(HostTraffic *srcHost, char *name);
 extern void ipaddr2str(HostTraffic *el, HostAddr hostIpAddress, 
 		       short vlanId, u_int actualDeviceId);
 extern char* etheraddr_string(const u_char *ep, char *buf);
@@ -456,6 +457,8 @@ extern void updateThpt(int quickUpdate);
 extern void updateDbHostsTraffic(int deviceToUpdate);
 extern int isInitialHttpData(char* packetData);
 extern int isInitialSshData(char* packetData);
+extern int isInitialSkypeData(char* packetData, int packetDataLen);
+extern int isInitialEdonkeyData(char* packetData, int packetDataLen);
 extern int isInitialFtpData(char* packetData);
 extern char* findHostCommunity(u_int32_t host_ip, char *buf, u_short buf_len);
 extern void setHostCommunity(HostTraffic *el);

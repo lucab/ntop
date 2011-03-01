@@ -621,7 +621,7 @@ static void ssiMenu_Head(void) {
 		  "				[null,'Ports Used','/" CONST_IP_PROTO_USAGE_HTML "',null,null],\n");
   if(myGlobals.runningPref.enableSessionHandling)
     sendStringWOssi(
-		    "				[null,'Active TCP/UDP Sessions','/" CONST_ACTIVE_TCP_SESSIONS_HTML "',null,null],\n");
+		    "				[null,'Active Sessions','/" CONST_ACTIVE_SESSIONS_HTML "',null,null],\n");
   sendStringWOssi(
 		  "				[null,'Host Fingerprint','/" CONST_HOSTS_LOCAL_FINGERPRINT_HTML "',null,null],\n"
 		  "				[null,'Host Characterization','/" CONST_HOSTS_LOCAL_CHARACT_HTML "',null,null],\n");
@@ -2812,8 +2812,8 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	if(sortedColumn == 0) { sortedColumn = 1; }
 	printIpAccounting(FLAG_LOCAL_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder, pageNum);
-      } else if(strncasecmp(pageName, CONST_ACTIVE_TCP_SESSIONS_HTML,
-			    strlen(CONST_ACTIVE_TCP_SESSIONS_HTML)) == 0) {
+      } else if(strncasecmp(pageName, CONST_ACTIVE_SESSIONS_HTML,
+			    strlen(CONST_ACTIVE_SESSIONS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printActiveTCPSessions(myGlobals.actualReportDeviceId, pageNum, NULL);
       } else if(strncasecmp(pageName, CONST_MULTICAST_STATS_HTML, strlen(CONST_MULTICAST_STATS_HTML)) == 0) {

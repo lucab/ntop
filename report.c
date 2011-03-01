@@ -462,15 +462,6 @@ void printTrafficSummary (int revertOrder) {
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
     sendString(buf);
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Bad&nbsp;Packets&nbsp;(Checksum)</th>"
-		  "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-		  getRowColor(),
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.badChecksum.value, formatBuf, sizeof(formatBuf)),
-		  (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-			  rcvdPktStats.badChecksum.value)/
-		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
-    sendString(buf);    
-
     /* ****************** */
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
@@ -933,14 +924,6 @@ void printTrafficStatistics(int revertOrder) {
 		    (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value, formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Bad&nbsp;Packets&nbsp;(Checksum)</th>"
-		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-					   rcvdPktStats.badChecksum.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.badChecksum.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
     }
 
@@ -3574,6 +3557,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 
 /* ********************************** */
 
+#ifdef PRINT_SESSION_DETAILS
 static char* print_flags(IPSession *session, char *buf, int buf_len) {
   snprintf(buf, buf_len,"%s%s%s%s%s&nbsp;",
 	   (session->lastFlags & TH_SYN) ? " SYN" : "",
@@ -3584,20 +3568,83 @@ static char* print_flags(IPSession *session, char *buf, int buf_len) {
 
   return(buf);
 }
+#endif
+
+/* ********************************** */
+
+static char* httpSiteIcon(IPSession *session, char *buf, u_int buf_len) {
+  int i, num_dot = 0;
+
+  if(session->virtualPeerName == NULL)
+    return("&nbsp;");
+
+  i = strlen(session->virtualPeerName);
+  while(i > 0) {
+    if(session->virtualPeerName[i] == '.') {
+      num_dot++;
+      if(num_dot == 2) {
+	i++;
+	break;
+      }
+    }
+
+    i--;
+  }
+  
+  safe_snprintf(__FILE__, __LINE__, buf, buf_len,
+		"<IMG width=16 height=16 SRC=\"http://www.%s/favicon.ico\" BORDER=0>&nbsp;<A HREF=http://%s>%s</A>",
+		&session->virtualPeerName[i], session->virtualPeerName,
+		session->virtualPeerName);
+
+  return(buf);
+}
+
+/* ********************************** */
+
+static char *knownProtocolIdx(IPSession *session, char *buf, u_int buf_len) {
+  if(session == NULL)
+    return("&nbsp;");
+
+  switch(session->knownProtocolIdx) {
+  case FLAG_FACEBOOK:
+    return(CONST_FACEBOOK_ICON);
+    break;
+  case FLAG_TWITTER:
+    return(CONST_TWITTER_ICON);
+    break;
+  case FLAG_YOUTUBE:
+    return(CONST_YOUTUBE_ICON);
+    break;
+  case FLAG_LINKEDIN:
+    return(CONST_LINKEDIN_ICON);
+    break;
+  case FLAG_SSH:
+    return("ssh");
+    break;
+  case FLAG_SKYPE:
+    return(CONST_SKYPE_ICON);
+    break;
+  }
+
+  return(httpSiteIcon(session, buf, buf_len));
+}
 
 /* ********************************** */
 
 void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   int idx;
-  char buf[1500], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER], flags_buf[64],
-    hostLinkBuf1[2*LEN_GENERAL_WORK_BUFFER], *voipStr;
+  char buf[1500], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER],
+    hostLinkBuf1[2*LEN_GENERAL_WORK_BUFFER], *voipStr, http_buf[256];
+#ifdef PRINT_SESSION_DETAILS
+  char flags_buf[64];
+#endif
   int numSessions, printedSessions;
   char formatBuf[64], formatBuf1[64], formatBuf2[64], formatBuf3[64],
     formatBuf4[64], formatBuf5[64], formatBuf6[64], formatBuf7[64];
 
   if(!myGlobals.runningPref.enableSessionHandling) {
     if(el != NULL) return;
-    printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
+    printHTMLheader("Active Sessions", NULL, 0);
     printNotAvailable("-z or --disable-sessions");
     return;
   }
@@ -3605,7 +3652,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   if((myGlobals.device[actualDeviceId].tcpSession == NULL) ||
      (myGlobals.device[actualDeviceId].numTcpSessions == 0)) {
     if(el != NULL) return;
-    printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
+    printHTMLheader("Active Sessions", NULL, 0);
     printNoDataYet();
     return;
   }
@@ -3647,27 +3694,32 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	}
 
 	if(printedSessions == 0) {
-	  if(el == NULL)
-	    printHTMLheader("Active TCP/UDP Sessions", NULL, 0);
-	  else
-	    printSectionTitle("Active TCP/UDP Sessions");
+	  if(el == NULL) {
+	    snprintf(buf, sizeof(buf), "%u Active Sessions", 
+		     myGlobals.device[actualDeviceId].numTcpSessions);
+	    printHTMLheader(buf, NULL, 0);
+	  } else
+	    printSectionTitle("Active Sessions");
 
 	  sendString("<CENTER>\n"
 		     ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
+		     "<TH "TH_BG">Proto</TH>"
 		     "<TH "TH_BG">Client</TH>"
 		     "<TH "TH_BG">Server</TH>"
-		     "<TH "TH_BG">Data&nbsp;Sent</TH>"
-		     "<TH "TH_BG">Data&nbsp;Rcvd</TH>"
+		     "<TH "TH_BG" COLSPAN=2>Data&nbsp;Sent/Rcvd</TH>"
 		     "<TH "TH_BG">Active&nbsp;Since</TH>"
 		     "<TH "TH_BG">Last&nbsp;Seen</TH>"
 		     "<TH "TH_BG">Duration</TH>"
 		     "<TH "TH_BG">Inactive</TH>"
-		     "<TH "TH_BG" COLSPAN=2>Client/Server Network Delay</TH>"
+		     "<TH "TH_BG" COLSPAN=2>Client/Server Nw Delay</TH>"
 		     "<TH "TH_BG">L7 Proto</TH>"
-		     "<TH "TH_BG">Note</TH>");
+#ifdef PRINT_SESSION_DETAILS
+		     "<TH "TH_BG">Note</TH>"
 #ifdef PARM_PRINT_ALL_SESSIONS
-	  sendString("<TH "TH_BG">State</TH>");
+		     "<TH "TH_BG">State</TH>"
 #endif
+#endif
+		     );
 	  sendString("</TR>\n");
 	}
 
@@ -3706,9 +3758,11 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	  voipStr = "";
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
+		      "<TD "TD_BG" ALIGN=CENTER NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s%s%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s</TD>",
 		      getRowColor(),
+		      (session->proto == IPPROTO_TCP) ? "TCP" : "UDP",
 		      makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT,
 				   0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 		      sport, session->isP2P == 1 ? "&nbsp&lt;P2P&gt;" : "",
@@ -3728,7 +3782,10 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD><TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=CENTER NOWRAP>%s</TD>"
-		      "<TD "TD_BG" ALIGN=LEFT NOWRAP>%s</TD>",
+#ifdef PRINT_SESSION_DETAILS
+		      "<TD "TD_BG" ALIGN=LEFT NOWRAP>%s</TD>"
+#endif
+		      ,
 		      formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),
 		      formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1)),
 		      formatTime(&(session->firstSeen), formatBuf2, sizeof(formatBuf2)),
@@ -3737,16 +3794,20 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
 		      formatLatency(session->clientNwDelay, session->sessionState, formatBuf6, sizeof(formatBuf6)),
 		      formatLatency(session->serverNwDelay, session->sessionState, formatBuf7, sizeof(formatBuf7)),
-		      (session->guessed_protocol == NULL) ? "&nbsp;" : session->guessed_protocol,
-		      session->session_info ? session->session_info : print_flags(session, flags_buf, sizeof(flags_buf)) /* "&nbsp;" */);
+		      (session->guessed_protocol == NULL) ? knownProtocolIdx(session, http_buf, sizeof(http_buf)) : session->guessed_protocol
+#ifdef PRINT_SESSION_DETAILS
+		      , session->session_info ? session->session_info : print_flags(session, flags_buf, sizeof(flags_buf)) /* "&nbsp;" */
+#endif
+		      );
 	sendString(buf);
 
+#ifdef PRINT_SESSION_DETAILS
 #ifdef PARM_PRINT_ALL_SESSIONS
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-		      "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
-		      getSessionState(session));
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", getSessionState(session));
 	sendString(buf);
 #endif
+#endif
+
 	sendString("</TR>\n");
 
 	session = session->next;
@@ -3762,7 +3823,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     sendString("</CENTER>\n");
 
     if(el == NULL)
-      addPageIndicator(CONST_ACTIVE_TCP_SESSIONS_HTML, pageNum,
+      addPageIndicator(CONST_ACTIVE_SESSIONS_HTML, pageNum,
 		       myGlobals.device[actualDeviceId].numTcpSessions,
 		       myGlobals.runningPref.maxNumLines, -1, 0, -1);
 

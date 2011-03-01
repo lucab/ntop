@@ -369,11 +369,6 @@ char* makeHostLink(HostTraffic *el, short mode,
     if(myGlobals.runningPref.debugMode == 1)
 #endif
       switch (el->hostResolvedNameType) {
-      case FLAG_HOST_SYM_ADDR_TYPE_FCID:
-      case FLAG_HOST_SYM_ADDR_TYPE_FC_WWN:
-      case FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS:
-	strncat(noteBuf, " [FibreChannel]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
-	break;
       case FLAG_HOST_SYM_ADDR_TYPE_MAC:
 	strncat(noteBuf, " [MAC]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
 	break;
@@ -2793,12 +2788,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_ABTNTOP_HTML", CONST_ABTNTOP_HTML);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_ABTNTOP_HTML", "undefined");
-#endif
-
-#ifdef CONST_ACTIVE_TCP_SESSIONS_HTML
-  printFeatureConfigInfo(textPrintFlag, "CONST_ACTIVE_TCP_SESSIONS_HTML", CONST_ACTIVE_TCP_SESSIONS_HTML);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_ACTIVE_TCP_SESSIONS_HTML", "undefined");
 #endif
 
 #ifdef CONST_ADD_URLS_HTML
@@ -6282,10 +6271,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 		  pref->maxNumSessions);
     printFeatureConfigInfo(textPrintFlag, "-X", buf);
   }
-
-  printParameterConfigInfo(textPrintFlag, "--disable-instantsessionpurge",
-                           pref->disableInstantSessionPurge == TRUE ? "Yes" : "No",
-                           "No");
 
   printParameterConfigInfo(textPrintFlag, "--disable-mutexextrainfo",
                            pref->disableMutexExtraInfo == TRUE ? "Yes" : "No",

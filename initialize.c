@@ -463,7 +463,7 @@ void resetStats(int deviceId) {
 	myGlobals.device[deviceId].tcpSession[j] = NULL;
       }
   }
-
+  
   myGlobals.device[deviceId].hash_hostTraffic[BROADCAST_HOSTS_ENTRY] = myGlobals.broadcastEntry;
   myGlobals.broadcastEntry->hostSerial.serialType = SERIAL_IPV4;
   myGlobals.broadcastEntry->hostSerial.value.ipSerial.ipAddress.Ip4Address.s_addr = -1;

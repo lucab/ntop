@@ -344,7 +344,7 @@ typedef struct packetStats {
   TrafficCounter above1518;
 #endif
   TrafficCounter shortest, longest;
-  TrafficCounter badChecksum, tooLong;
+  TrafficCounter tooLong;
 } PacketStats;
 
 /* *********************** */
@@ -756,8 +756,9 @@ typedef struct portCounter {
 /* IP Session Information */
 typedef struct ipSession {
   u_short magic;
+  u_int8_t proto;                   /* IPPROTO_TCP / IPPROTO_UDP                  */
   u_char isP2P;                     /* Set to 1 if this is a P2P session          */
-  u_int8_t specialHttpSession;      /* Mark this as a special protocol session    */
+  u_int8_t knownProtocolIdx;        /* Mark this as a special protocol session    */
   HostTraffic* initiator;           /* initiator address                          */
   HostAddr initiatorRealIp;         /* Real IP address (if masqueraded and known) */
   u_short sport;                    /* initiator address (port)                   */
@@ -1830,7 +1831,6 @@ typedef struct _userPref {
   char *logo;
   bool disableStopcap;           /* --disable-stopcap '142' */
 
-  bool disableInstantSessionPurge;  /* --disable-instantsessionpurge '144' */
   bool disableMutexExtraInfo;    /* --disable-mutexextrainfo '145' */
   bool skipVersionCheck;         /* --skip-version-check '150' */
   char *knownSubnets;            /* --known-subnets '151' */
@@ -2079,7 +2079,7 @@ typedef struct ntopGlobals {
 #endif
 
   /* Peer2Peer Protocol Indexes */
-  u_short KazaaIdx, FTPIdx, EdonkeyIdx, BitTorrentIdx, VoipIdx, FacebookIdx, TwitterIdx, YouTubeIdx;
+  u_short SshIdx, FTPIdx, EdonkeyIdx, BitTorrentIdx, VoipIdx, FacebookIdx, TwitterIdx, YouTubeIdx, SkypeIdx;
 
   /* Hash table collisions - counted during load */
   int ipxsapHashLoadCollisions;

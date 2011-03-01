@@ -1171,7 +1171,7 @@ void addDefaultAdminUser(void) {
    tmpPrefs.enableSessionHandling = tmpPrefs.enablePacketDecoding = 0;
    tmpPrefs.stickyHosts = tmpPrefs.trackOnlyLocalHosts = 0;
    tmpPrefs.disablePromiscuousMode = tmpPrefs.disableMutexExtraInfo = 0;
-   tmpPrefs.disableInstantSessionPurge = tmpPrefs.disableStopcap = 0;
+   tmpPrefs.disableStopcap = 0;
    tmpPrefs.debugMode = tmpPrefs.daemonMode = tmpPrefs.w3c = 0;
    tmpPrefs.numericFlag = dnsResolutionForAll;
    tmpPrefs.mergeInterfaces = tmpPrefs.enableL7 = 0;
@@ -1276,11 +1276,6 @@ void addDefaultAdminUser(void) {
 
    if (advanced_prefs && myGlobals.savedPref.enableL7 && !tmpPrefs.enableL7) {
      processNtopPref(NTOP_PREF_ENABLE_L7PROTO, FALSE, savePref, &tmpPrefs);
-   }
-
-   if (advanced_prefs && myGlobals.savedPref.disableInstantSessionPurge &&
-       !tmpPrefs.disableInstantSessionPurge) {
-     processNtopPref(NTOP_PREF_NO_ISESS_PURGE, FALSE, savePref, &tmpPrefs);
    }
 
    if (advanced_prefs && myGlobals.savedPref.dontTrustMACaddr && !tmpPrefs.dontTrustMACaddr) {
@@ -1685,12 +1680,6 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
     CONFIG_RADIO_ENTRY(DARK_BG, "Merge Interfaces (-M)",
 		       NTOP_PREF_MERGEIF, pref->mergeInterfaces,
 		       "Yes = merge data from all interfaces (if possible), No = do not merge data from all interfaces");
-
-    CONFIG_RADIO_ENTRY(DARK_BG, "No Instant Session Purge",
-		       NTOP_PREF_NO_ISESS_PURGE,
-		       pref->disableInstantSessionPurge,
-		       "Makes ntop respect the timeouts for completed "
-		       "sessions");
 
     CONFIG_RADIO_ENTRY(DARK_BG, "Don't Trust MAC Address (-o)",
 		       NTOP_PREF_NO_TRUST_MAC, pref->dontTrustMACaddr,

@@ -3100,7 +3100,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 char *getSessionState(IPSession *session) {
   switch (session->sessionState) {
   case FLAG_STATE_SYN:
-    return("Sent&nbsp;Syn");
+    return("Syn&nbsp;Sent");
   case FLAG_STATE_SYN_ACK:
     return("Rcvd&nbsp;Syn/Ack");
   case FLAG_STATE_ACTIVE:
@@ -3363,8 +3363,8 @@ void checkHostProvidedServices(HostTraffic *el) {
     if(isDHCPClient(el))       sendString("BOOTP/DHCP Client&nbsp;" CONST_IMG_DHCP_CLIENT "<BR>\n");
     if(isDHCPServer(el))       sendString("BOOTP/DHCP Server&nbsp;" CONST_IMG_DHCP_SERVER "<BR>\n");
 
-    if(isFacebookClient(el))   sendString("Facebook Client<BR>\n");
-    if(isTwitterClient(el))    sendString("Twitter Client<BR>\n");
+    if(isFacebookClient(el))   sendString(CONST_FACEBOOK_ICON" Client<BR>\n");
+    if(isTwitterClient(el))    sendString(CONST_TWITTER_ICON" Client<BR>\n");
 
     sendString("</TD></TR>");
   }

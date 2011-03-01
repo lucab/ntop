@@ -721,10 +721,6 @@ int parseOptions(int argc, char* argv[]) {
       myGlobals.runningPref.disableStopcap = TRUE;
       break;
 
-    case 144: /* disable-instantsessionpurge */
-      myGlobals.runningPref.disableInstantSessionPurge = TRUE;
-      break;
-
     case 145: /* disable-mutexextrainfo */
       myGlobals.runningPref.disableMutexExtraInfo = TRUE;
       break;
@@ -1253,9 +1249,6 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
   } else if(strcmp(key, NTOP_PREF_ENABLE_L7PROTO) == 0) {
     processBoolPref(NTOP_PREF_ENABLE_L7PROTO, value2bool(value),
 		     &pref->enableL7, savePref);
-  } else if(strcmp(key, NTOP_PREF_NO_ISESS_PURGE) == 0) {
-    processBoolPref(NTOP_PREF_NO_ISESS_PURGE, value2bool(value),
-		     &pref->disableInstantSessionPurge, savePref);
   } else if(strcmp(key, NTOP_PREF_NO_TRUST_MAC) == 0) {
     processBoolPref(NTOP_PREF_NO_TRUST_MAC, value2bool(value),
 		     &pref->dontTrustMACaddr, savePref);
@@ -1364,7 +1357,6 @@ void initUserPrefs(UserPref *pref) {
    pref->P3Puri = DEFAULT_NTOP_P3PURI;
 
    pref->disableStopcap = DEFAULT_NTOP_DISABLE_STOPCAP;
-   pref->disableInstantSessionPurge = DEFAULT_NTOP_DISABLE_IS_PURGE;
    pref->disableMutexExtraInfo = DEFAULT_NTOP_DISABLE_MUTEXINFO;
    pref->skipVersionCheck      = DEFAULT_NTOP_SKIP_VERSION_CHECK;
 }
