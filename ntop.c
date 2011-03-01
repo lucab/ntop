@@ -602,7 +602,6 @@ void addDefaultProtocols(void) {
   handleProtocolList("SSH",      "22|");
 
   /* Peer-to-Peer Protocols */
-  myGlobals.GnutellaIdx = handleProtocolList("Gnutella", "6346|6347|6348|");
   myGlobals.KazaaIdx = handleProtocolList("Kazaa",       "1214|");
     myGlobals.EdonkeyIdx = handleProtocolList("eDonkey", "4661-4665|");
   myGlobals.BitTorrentIdx = handleProtocolList("BitTorrent", "6881-6999|6969|"); /* http://www.dessent.net/btfaq/#ports */

@@ -4739,77 +4739,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
     updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent, 0);
     updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd, 0);
 
-#ifdef ENABLE_EFFICIENCY
-    if(myGlobals.runningPref.calculateEfficiency) {
-      Counter c, diff;
-
-      if(el->greSent.value > 0) {
-	if((diff = el->grePktSent.value - el->lastGrePktSent.value) > 0) {
-	  c = el->greEfficiencySent.value / diff;
-	  updateGauge(rrdPath, "greEfficiencySent", c, 0);
-	  el->lastGrePktSent.value = el->grePktSent.value;
-	  el->greEfficiencySent.value = 0; /* Reset value */
-	}
-      }
-
-      if(el->greRcvd.value > 0) {
-	if((diff = el->grePktRcvd.value - el->lastGrePktRcvd.value) > 0) {
-	  c = el->greEfficiencyRcvd.value / diff;
-	  updateGauge(rrdPath, "greEfficiencyRcvd", c, 0);
-	  el->lastGrePktRcvd.value = el->grePktRcvd.value;
-	  el->greEfficiencyRcvd.value = 0; /* Reset value */
-	}
-      }
-
-      /* ********************************************* */
-
-      if(el->ipsecSent.value > 0) {
-	if((diff = el->ipsecPktSent.value - el->lastIpsecPktSent.value) > 0) {
-	  c = el->ipsecEfficiencySent.value / diff;
-	  updateGauge(rrdPath, "ipsecEfficiencySent", c, 0);
-	  el->lastIpsecPktSent.value = el->ipsecPktSent.value;
-	  el->ipsecEfficiencySent.value = 0; /* Reset value */
-	}
-      }
-
-      if(el->ipsecRcvd.value > 0) {
-	if((diff = el->ipsecPktRcvd.value - el->lastIpsecPktRcvd.value) > 0) {
-	  c = el->ipsecEfficiencyRcvd.value / diff;
-	  updateGauge(rrdPath, "ipsecEfficiencyRcvd", c, 0);
-	  el->lastIpsecPktRcvd.value = el->ipsecPktRcvd.value;
-	  el->ipsecEfficiencyRcvd.value = 0; /* Reset value */
-	}
-      }
-    }
-#endif
-
     if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
-#ifdef ENABLE_EFFICIENCY
-      if(myGlobals.runningPref.calculateEfficiency) {
-	if(el->pktSent.value > 0) {
-	  Counter c, diff = el->pktSent.value - el->lastEfficiencyPktSent.value;
-
-	  if(diff > 0) {
-	    c = el->efficiencySent.value / diff;
-	    updateGauge(rrdPath, "efficiencySent", c, 0);
-	    el->lastEfficiencyPktSent.value = el->pktSent.value;
-	    el->efficiencySent.value = 0;
-	  }
-	}
-
-	if(el->pktRcvd.value > 0) {
-	  Counter c, diff = el->pktRcvd.value - el->lastEfficiencyPktRcvd.value;
-
-	  if(diff > 0) {
-	    c = el->efficiencyRcvd.value / diff;
-	    updateGauge(rrdPath, "efficiencyRcvd", c, 0);
-	    el->lastEfficiencyPktRcvd.value = el->pktRcvd.value;
-	    el->efficiencyRcvd.value = 0;
-	  }
-	}
-      }
-#endif
-
       updateTrafficCounter(rrdPath, "pktDuplicatedAckSent", &el->pktDuplicatedAckSent, 0);
       updateTrafficCounter(rrdPath, "pktDuplicatedAckRcvd", &el->pktDuplicatedAckRcvd, 0);
       updateTrafficCounter(rrdPath, "pktBroadcastSent", &el->pktBroadcastSent, 0);
@@ -4913,42 +4843,6 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 			    myGlobals.ipTrafficProtosNames[j]);
 	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->rcvdLoc.value+
 			    el->protoIPTrafficInfos[j]->rcvdFromRem.value, 0);
-
-#ifdef ENABLE_EFFICIENCY
-	      if(myGlobals.runningPref.calculateEfficiency) {
-		if(el->protoIPTrafficInfos[j]->pktSent.value > 0) {
-		  Counter c, diff;
-
-		  diff = el->protoIPTrafficInfos[j]->pktSent.value - el->protoIPTrafficInfos[j]->lastEfficiencyPktSent.value;
-
-		  if(diff > 0) {
-		    c = el->protoIPTrafficInfos[j]->efficiencySent.value / diff;
-		    safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencySent", myGlobals.ipTrafficProtosNames[j]);
-		    // traceEvent(CONST_TRACE_WARNING, "--> Sent [val = %u]", c);
-		    updateGauge(rrdPath, key, c, 0);
-		    el->protoIPTrafficInfos[j]->lastEfficiencyPktSent.value = el->protoIPTrafficInfos[j]->pktSent.value;
-		    el->protoIPTrafficInfos[j]->efficiencySent.value = 0; /* Reset value */
-		  }
-		}
-
-		if(el->protoIPTrafficInfos[j]->pktRcvd.value > 0) {
-		  Counter c, diff;
-
-		  diff = el->protoIPTrafficInfos[j]->pktRcvd.value - el->protoIPTrafficInfos[j]->lastEfficiencyPktRcvd.value;
-
-		  if(diff > 0) {
-		    c = el->protoIPTrafficInfos[j]->efficiencyRcvd.value / el->protoIPTrafficInfos[j]->pktRcvd.value;
-		    safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sEfficiencyRcvd", myGlobals.ipTrafficProtosNames[j]);
-
-		    // traceEvent(CONST_TRACE_WARNING, "--> Rcvd [val = %u]", c);
-
-		    updateGauge(rrdPath, key, c, 0);
-		    el->protoIPTrafficInfos[j]->lastEfficiencyPktRcvd.value = el->protoIPTrafficInfos[j]->pktRcvd.value;
-		    el->protoIPTrafficInfos[j]->efficiencyRcvd.value = 0; /* Reset value */
-		  }
-		}
-	      }
-#endif
 	    }
 	  }
 	}

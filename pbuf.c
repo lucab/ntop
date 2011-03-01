@@ -110,9 +110,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	     u_short p2pSessionIdx,
 	     u_short httpSessionIdx,
 	     int actualDeviceId,
-	     u_short newSession,
-	     u_int efficiencySent /* 0 = unknown */,
-	     u_int efficiencyRcvd /* 0 = unknown */) {
+	     u_short newSession) {
   int idx;
   Counter length = (Counter)_length;
 
@@ -1531,11 +1529,11 @@ static void processIpPkt(const u_char *bp,
 	  if(handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		      theSession != NULL ? theSession->isP2P : 0,
 		      theSession != NULL ? theSession->specialHttpSession : 0,
-		      actualDeviceId, newSession, 0, 0) == -1)
+		      actualDeviceId, newSession) == -1)
 	    handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		     theSession != NULL ? theSession->isP2P : 0,
 		     theSession != NULL ? theSession->specialHttpSession : 0,
-		     actualDeviceId, newSession, 0, 0);
+		     actualDeviceId, newSession);
 	} else {
 	  /*
 	    traceEvent(CONST_TRACE_INFO, "[2] sportIdx(%d)=%d - dportIdx(%d)=%d",
@@ -1544,11 +1542,11 @@ static void processIpPkt(const u_char *bp,
 	  if(handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		      theSession != NULL ? theSession->isP2P : 0,
 		      theSession != NULL ? theSession->specialHttpSession : 0,
-		      actualDeviceId, newSession, 0, 0) == -1)
+		      actualDeviceId, newSession) == -1)
 	    handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
 		     theSession != NULL ? theSession->isP2P : 0,
 		     theSession != NULL ? theSession->specialHttpSession : 0,
-		     actualDeviceId, newSession, 0, 0);
+		     actualDeviceId, newSession);
 	}
       }
     }
@@ -1820,14 +1818,14 @@ static void processIpPkt(const u_char *bp,
 	*/
         if(dport < sport) {
 	  if(handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      0, 0, actualDeviceId, newSession, 0, 0) == -1)
+		      0, 0, actualDeviceId, newSession) == -1)
 	    handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     0, 0, actualDeviceId, newSession, 0, 0);
+		     0, 0, actualDeviceId, newSession);
         } else {
 	  if(handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      0, 0, actualDeviceId, newSession, 0, 0) == -1)
+		      0, 0, actualDeviceId, newSession) == -1)
 	    handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     0, 0, actualDeviceId, newSession, 0, 0);
+		     0, 0, actualDeviceId, newSession);
         }
       }
     }

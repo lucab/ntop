@@ -635,22 +635,11 @@ void initThreads(void) {
   int i;
 
   /*
-    for(i=0; i<myGlobals.numDevices; i++) {
-    createThread(&myGlobals.device[i].dequeuePacketThreadId, dequeuePacket, (void*)((long)i));
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NPA: Started thread for network packet analyzer (%s)",
-    (long)myGlobals.device[i].dequeuePacketThreadId,
-    myGlobals.device[i].humanFriendlyName);
-    }
-  */
-
-  if(!myGlobals.runningPref.liveMode) {
-    /*
-     * Create the thread (3) - SFP - Scan Fingerprints
-     */
-    createThread(&myGlobals.scanFingerprintsThreadId, scanFingerprintLoop, NULL);
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SFP: Started thread for fingerprinting",
-	       (long)myGlobals.scanFingerprintsThreadId);
-  }
+   * Create the thread (3) - SFP - Scan Fingerprints
+   */
+  createThread(&myGlobals.scanFingerprintsThreadId, scanFingerprintLoop, NULL);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: SFP: Started thread for fingerprinting",
+	     (long)myGlobals.scanFingerprintsThreadId);
 
   /*
    * Create the thread (4) - SIH - Scan Idle Hosts - optional

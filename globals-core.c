@@ -88,11 +88,9 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
     return;
   }
 
-  if(!myGlobals.runningPref.liveMode) {
-    initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, FALSE,  &statbuf);
-    initSingleGdbm(&myGlobals.fingerprintFile,  "fingerprint.db",  spoolDirectory, FALSE,  &statbuf);
-    createVendorTable(&statbuf);
-  }
+  initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, FALSE,  &statbuf);
+  initSingleGdbm(&myGlobals.fingerprintFile,  "fingerprint.db",  spoolDirectory, FALSE,  &statbuf);
+  createVendorTable(&statbuf);
 
   checkCommunities(); /* Check if communities are defined */
 }

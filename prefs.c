@@ -162,7 +162,6 @@ static struct option const long_options[] = {
 
   { "skip-version-check",               required_argument, NULL, 150 },
   { "known-subnets",                    required_argument, NULL, 151 },
-  { "live",                             no_argument,       NULL, 152 },
 
   {NULL, 0, NULL, 0}
 };
@@ -743,10 +742,6 @@ int parseOptions(int argc, char* argv[]) {
       myGlobals.runningPref.knownSubnets = strdup(optarg);
       break;
 
-    case 152:
-      myGlobals.runningPref.liveMode = 1;
-      break;
-
     default:
       printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);
 #ifdef DEBUG
@@ -756,12 +751,6 @@ int parseOptions(int argc, char* argv[]) {
       usage(stdout);
       exit(-1);
     }
-  }
-
-  if(myGlobals.runningPref.liveMode) {
-    myGlobals.runningPref.trackOnlyLocalHosts   = 1;
-    myGlobals.runningPref.dontTrustMACaddr      = 1;
-    myGlobals.runningPref.enableSessionHandling = 1;
   }
 
   /* *********************** */

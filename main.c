@@ -143,7 +143,7 @@ void usage(FILE * fp) {
   fprintf(fp, "    [-V             | --version]                          %sOutput version information and exit\n", newLine);
   fprintf(fp, "    [-X <max num TCP sessions> ]                          %sMax num. TCP sessions ntop can handle (default %u)\n",
 	  newLine, myGlobals.runningPref.maxNumSessions);
-  fprintf(fp, "    [--live]                                              %sEnable ntop live mode\n", newLine);
+
 /*  Please keep long-only options alphabetically ordered */
 
   fprintf(fp, "    [--disable-instantsessionpurge]                       %sDisable instant FIN session purge\n", newLine);

@@ -384,9 +384,7 @@ extern int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 		    const u_int numPkts, const u_int _length,
 		    u_short isPassiveSess, u_short isVoipSess,
 		    u_short p2pSessionIdx, u_short httpSessionIdx, 
-		    int actualDeviceId, u_short newSession,
-		    u_int efficiencySent /* 0 = unknown */,
-		    u_int efficiencyRcvd /* 0 = unknown */);
+		    int actualDeviceId, u_short newSession);
 extern void deleteFragment(IpFragment *fragment, int actualDeviceId);
 extern void purgeOldFragmentEntries(int actualDeviceId);
 extern void updateHostName(HostTraffic *el);

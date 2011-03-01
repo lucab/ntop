@@ -98,9 +98,6 @@ struct generic_netflow_record {
 
   /* VoIP Extensions */
   char sip_call_id[50], sip_calling_party[50], sip_called_party[50];
-
-  /* Efficiency */
-  u_int8_t efficiency_sent, efficiency_rcvd;
 };
 
 /* ****************************** */
@@ -473,9 +470,6 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   time_t initTime;
   Counter total_pkts, total_bytes;
   u_int total_flows, ratio;
-#ifdef ENABLE_EFFICIENCY
-  Counter pkt_efficiency;
-#endif
 
 #ifdef MAX_NETFLOW_FLOW_BUFFER
   float elapsed;
@@ -765,32 +759,26 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
   if((sport != 0) && (dport != 0)) {
     if(dport < sport) {
-      if(handleIP(dport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1,
-		  record->efficiency_sent, record->efficiency_rcvd) == -1) {
-	if(handleIP(sport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1,
-		    record->efficiency_sent, record->efficiency_rcvd) == -1) {
+      if(handleIP(dport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1) == -1) {
+	if(handleIP(sport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1) == -1) {
 	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
 	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost,
-		     total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1,
-		     record->efficiency_sent, record->efficiency_rcvd);
+		     total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1);
 	  }
 	}
       }
     } else {
-      if(handleIP(sport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1,
-		  record->efficiency_sent, record->efficiency_rcvd) == -1) {
-	if(handleIP(dport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1,
-		    record->efficiency_sent, record->efficiency_rcvd) == -1) {
+      if(handleIP(sport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1) == -1) {
+	if(handleIP(dport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1) == -1) {
 	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
 	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost,
-		     total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1,
-		     record->efficiency_sent, record->efficiency_rcvd);
+		     total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1);
 	  }
 	}
       }
@@ -1012,9 +1000,6 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     incrementHostTrafficCounter(srcHost, grePktRcvd, record->rcvdPkts);
     incrementHostTrafficCounter(dstHost, grePktSent, record->rcvdPkts);
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].greBytes, total_bytes);
-#ifdef ENABLE_EFFICIENCY
-    updateGreEfficiency(srcHost, dstHost, record->sentPkts, record->sentOctets, actualDeviceId);
-#endif
     break;
 
   case IPPROTO_IPSEC_ESP:
@@ -1030,9 +1015,6 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     incrementHostTrafficCounter(srcHost, ipsecPktRcvd, record->rcvdPkts);
     incrementHostTrafficCounter(dstHost, ipsecPktSent, record->rcvdPkts);
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipsecBytes, total_bytes);
-#ifdef ENABLE_EFFICIENCY
-    updateIpsecEfficiency(srcHost, dstHost, record->sentPkts, record->sentOctets, actualDeviceId);
-#endif
     break;
 
   default:
@@ -2211,9 +2193,10 @@ static void* netflowMainLoop(void* _deviceId) {
   }
   myGlobals.device[deviceId].activeDevice = 0;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread terminated [p%d][netFlowDeviceId=%d]",
-	     (long unsigned int)pthread_self(), getpid(),
-	     myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+  if(myGlobals.device[deviceId].netflowGlobals)
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: NETFLOW: thread terminated [p%d][netFlowDeviceId=%d]",
+	       (long unsigned int)pthread_self(), getpid(),
+	       myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
 
   return(NULL);
 }

@@ -1797,8 +1797,6 @@ typedef struct _userPref {
   char *mapperURL;               /* -U | --disable-mapper */
   u_int     maxNumHashEntries;   /* -x */
   u_int     maxNumSessions;      /* -X */
-  u_int8_t  liveMode;            /* --live */
-
   char      *webAddr;            /* -w | --http-serveraddress[:port] */
   int       webPort;
   int       ipv4or6;             /* -6 -4 */
@@ -2081,7 +2079,7 @@ typedef struct ntopGlobals {
 #endif
 
   /* Peer2Peer Protocol Indexes */
-  u_short GnutellaIdx, KazaaIdx, FTPIdx, EdonkeyIdx, BitTorrentIdx, VoipIdx, FacebookIdx, TwitterIdx, YouTubeIdx;
+  u_short KazaaIdx, FTPIdx, EdonkeyIdx, BitTorrentIdx, VoipIdx, FacebookIdx, TwitterIdx, YouTubeIdx;
 
   /* Hash table collisions - counted during load */
   int ipxsapHashLoadCollisions;

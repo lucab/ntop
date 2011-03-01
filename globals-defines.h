@@ -2690,7 +2690,6 @@ struct ip6_hdr
 
 #define NTOP_PREF_MAXHASH                "ntop.maxNumHashEntries"
 #define NTOP_PREF_MAXSESSIONS            "ntop.maxNumSessions"
-#define NTOP_PREF_LIVE_MODE              "ntop.liveMode"
 #define NTOP_PREF_MERGEIF                "ntop.mergeInterfaces"
 #define NTOP_PREF_ENABLE_L7PROTO         "ntop.enableL7Proto"
 #define NTOP_PREF_NO_ISESS_PURGE         "ntop.disableInstantSessionPurge"
