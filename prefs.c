@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- * Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ * Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -57,27 +57,18 @@ static char __see__ []    =
    */
 #ifdef WIN32
 static char*  short_options = "46a:bce:f:ghi:jl:m:n:op:qr:st:w:x:zAB:C:D:F:M" 
-#ifdef ENABLE_FC
-  "N:"
-#endif
 #if defined(DARWIN) && (!defined(TIGER))
   "v"
 #endif
   "O:P:Q:S:U:VX:W:";
 #elif defined(MAKE_WITH_SYSLOG)
 static char*  short_options = "46a:bcde:f:ghi:jl:m:n:op:qr:st:u:w:x:zAB:C:D:F:IKLM" 
-#ifdef ENABLE_FC
-  "N:"
-#endif
 #if defined(DARWIN) && (!defined(TIGER))
   "v"
 #endif
   "O:P:Q:S:U:VX:W:";
 #else
 static char*  short_options = "46a:bcde:f:ghi:jl:m:n:op:qr:st:u:w:x:zAB:C:D:F:IKM"
-#ifdef ENABLE_FC
-  "N:"
-#endif
 #if defined(DARWIN) && (!defined(TIGER))
   "v"
 #endif
@@ -134,10 +125,6 @@ static struct option const long_options[] = {
 
   { "no-interface-merge",               no_argument,       NULL, 'M' },
 
-#ifdef ENABLE_FC
-  { "wwn-map",                          required_argument, NULL, 'N' },
-#endif
-
   { "output-packet-path",               required_argument, NULL, 'O' },
   { "db-file-path",                     required_argument, NULL, 'P' },
   { "spool-file-path",                  required_argument, NULL, 'Q' },
@@ -173,18 +160,9 @@ static struct option const long_options[] = {
   { "disable-instantsessionpurge",      no_argument,       NULL, 144 },
   { "disable-mutexextrainfo",           no_argument,       NULL, 145 },
 
-#ifdef ENABLE_FC
-  { "fc-only",                          no_argument,       NULL, 147 },
-  { "no-fc",                            no_argument,       0,    148 },
-  { "no-invalid-lun",                   no_argument,       0,    149 },
-#endif
-
   { "skip-version-check",               required_argument, NULL, 150 },
   { "known-subnets",                    required_argument, NULL, 151 },
   { "live",                             no_argument,       NULL, 152 },
-#ifdef ENABLE_EFFICIENCY
-  { "enable-efficiency",                no_argument,       NULL, 153 },
-#endif
 
   {NULL, 0, NULL, 0}
 };
@@ -574,13 +552,6 @@ int parseOptions(int argc, char* argv[]) {
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Interface merge disabled due to command line switch");
       break;
 
-#ifdef ENABLE_FC
-    case 'N':
-      pathSanityCheck(optarg, "-N | --wwn-map");
-      myGlobals.runningPref.fcNSCacheFile = strdup (optarg);
-      break;
-#endif
-
     case 'O': /* pcap log path - Ola Lundqvist <opal@debian.org> */
       pathSanityCheck(optarg, "-O | --output-packet-path");
        myGlobals.runningPref.pcapLogBasePath = strdup(optarg);
@@ -784,12 +755,6 @@ int parseOptions(int argc, char* argv[]) {
     case 152:
       myGlobals.runningPref.liveMode = 1;
       break;
-
-#ifdef ENABLE_EFFICIENCY
-    case 153:
-      myGlobals.runningPref.calculateEfficiency = 1;
-      break;
-#endif
 
     default:
       printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);
@@ -1140,9 +1105,6 @@ static bool value2bool(char* value) {
 bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
   bool startCap = FALSE;
   char buf[16], *tmpStr = NULL;
-#ifdef ENABLE_FC
-  int tmpInt;
-#endif
 
   if(value == NULL) value = ""; /* Safer */
 
@@ -1265,22 +1227,6 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
     }
     processIntPref(NTOP_PREF_MAXLINES, value, &pref->maxNumLines,
 		    savePref);
-#ifdef ENABLE_FC
-  } else if(strcmp(key, NTOP_PREF_PRINT_FCORIP) == 0) {
-    tmpInt = atoi (value);
-    if(tmpInt == NTOP_PREF_VALUE_PRINT_IPONLY) {
-      pref->printIpOnly = TRUE, pref->printFcOnly = FALSE;
-    } else if(tmpInt == NTOP_PREF_VALUE_PRINT_FCONLY) {
-      pref->printIpOnly = FALSE, pref->printFcOnly = TRUE;
-    } else {
-      pref->printIpOnly = FALSE, pref->printFcOnly = FALSE;
-    }
-
-    processIntPref(NTOP_PREF_PRINT_FCORIP, value, &tmpInt, savePref);
-  } else if(strcmp(key, NTOP_PREF_NO_INVLUN) == 0) {
-    processBoolPref(NTOP_PREF_NO_INVLUN, value2bool(value),
-		     &pref->noInvalidLunDisplay, savePref);
-#endif
   } else if(strcmp(key, NTOP_PREF_W3C) == 0) {
     processBoolPref(NTOP_PREF_W3C, value2bool(value), &pref->w3c, savePref);
   } else if(strcmp(key, NTOP_PREF_IPV4V6) == 0) {
@@ -1302,11 +1248,6 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
     processStrPref(NTOP_PREF_P3PCP, value, &pref->P3Pcp, savePref);
   } else if(strcmp(key, NTOP_PREF_P3PURI) == 0) {
     processStrPref(NTOP_PREF_P3PURI, value, &pref->P3Puri, savePref);
-#ifdef ENABLE_FC
-  } else if(strcmp(key, NTOP_PREF_WWN_MAP) == 0) {
-    processStrPref(NTOP_PREF_WWN_MAP, value, &pref->fcNSCacheFile,
-		    savePref);
-#endif
   } else if(strcmp(key, NTOP_PREF_MAXHASH) == 0) {
     if(value == NULL) {
       safe_snprintf (__FILE__, __LINE__, buf, sizeof(buf), "%d",
@@ -1315,29 +1256,6 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
     }
     processIntPref(NTOP_PREF_MAXHASH, value,
 		   (int*)&pref->maxNumHashEntries, savePref);
-  } else if(strcmp(key, NTOP_PREF_SQL_DB_CONFIG) == 0) {
-    processStrPref(NTOP_PREF_SQL_DB_CONFIG, value, &tmpStr, savePref);
-    if(tmpStr != NULL) {
-      strncpy(pref->sqlDbConfig, tmpStr, sizeof(pref->sqlDbConfig));
-      free(tmpStr);      /* alloc'd in processStrPref() */
-    }
-  } else if(strcmp(key, NTOP_PREF_SQL_REC_LIFETIME) == 0) {
-    if(value == NULL) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		    "%d",
-		    -1);
-      value = buf;
-    }
-    processIntPref(NTOP_PREF_SQL_REC_LIFETIME, value,
-		   (int*)&pref->sqlRecDaysLifetime, savePref);
-  } else if(strcmp(key, NTOP_PREF_SAVE_REC_INTO_DB) == 0) {
-    processBoolPref(NTOP_PREF_SAVE_REC_INTO_DB, value2bool(value),
-		    &pref->saveRecordsIntoDb, savePref);
-    myGlobals.runningPref.saveRecordsIntoDb = pref->saveRecordsIntoDb; /* activate immediately */
-  } else if(strcmp(key, NTOP_PREF_SAVE_SESSIONS_INTO_DB) == 0) {
-    processBoolPref(NTOP_PREF_SAVE_SESSIONS_INTO_DB, value2bool(value),
-		    &pref->saveSessionsIntoDb, savePref);   
-    myGlobals.runningPref.saveSessionsIntoDb = pref->saveSessionsIntoDb; /* activate immediately */
   } else if(strcmp(key, NTOP_PREF_MAXSESSIONS) == 0) {
     if(value == NULL) {
       safe_snprintf (__FILE__, __LINE__, buf, sizeof(buf), "%d",
@@ -1436,10 +1354,6 @@ void initUserPrefs(UserPref *pref) {
   pref->traceLevel = DEFAULT_TRACE_LEVEL;
   pref->maxNumHashEntries  = DEFAULT_NTOP_MAX_HASH_ENTRIES;
   pref->maxNumSessions     = DEFAULT_NTOP_MAX_NUM_SESSIONS;
-  strncpy(pref->sqlDbConfig, DEFAULT_NTOP_SQL_DB_CONFIG, sizeof(pref->sqlDbConfig));
-  pref->sqlRecDaysLifetime = DEFAULT_NTOP_SQL_REC_DAYS_LIFETIME;
-  pref->saveRecordsIntoDb  = DEFAULT_NTOP_SAVE_REC_INTO_DB;
-  pref->saveSessionsIntoDb = DEFAULT_NTOP_SAVE_SESSIONS_INTO_DB;
   pref->webAddr = DEFAULT_NTOP_WEB_ADDR;
   pref->webPort = DEFAULT_NTOP_WEB_PORT;
   pref->ipv4or6 = DEFAULT_NTOP_FAMILY;
@@ -1457,9 +1371,6 @@ void initUserPrefs(UserPref *pref) {
 					      * break the logic */
 #else
   pref->pcapLogBasePath = strdup(CFG_DBFILE_DIR);
-#endif
-#ifdef ENABLE_FC
-  pref->fcNSCacheFile   = DEFAULT_NTOP_FCNS_FILE;
 #endif
   /* note that by default ntop will merge network interfaces */
   pref->mapperURL = DEFAULT_NTOP_MAPPER_URL;

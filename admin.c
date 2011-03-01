@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  *			    http://www.ntop.org/
  *
@@ -1262,13 +1262,6 @@ void addDefaultAdminUser(void) {
        processNtopPref(NTOP_PREF_DAEMON, FALSE, savePref, &tmpPrefs);
      }
 
-#ifdef ENABLE_FC
-     if (display_prefs && myGlobals.savedPref.noInvalidLunDisplay &&
-	 !tmpPrefs.noInvalidLunDisplay) {
-       processNtopPref(NTOP_PREF_NO_INVLUN, FALSE, savePref, &tmpPrefs);
-     }
-#endif
-
    if (display_prefs && myGlobals.savedPref.w3c && !tmpPrefs.w3c) {
      processNtopPref(NTOP_PREF_W3C, FALSE, savePref, &tmpPrefs);
    }
@@ -1313,14 +1306,6 @@ void addDefaultAdminUser(void) {
      processNtopPref(NTOP_PREF_NO_MUTEX_EXTRA, FALSE, savePref, &tmpPrefs);
    }
 
-   if (db_prefs && myGlobals.savedPref.saveRecordsIntoDb && !tmpPrefs.saveRecordsIntoDb) {
-     processNtopPref(NTOP_PREF_SAVE_REC_INTO_DB, FALSE, savePref, &tmpPrefs);
-   }
-
-   if (db_prefs && myGlobals.savedPref.saveSessionsIntoDb && !tmpPrefs.saveSessionsIntoDb) {
-     processNtopPref(NTOP_PREF_SAVE_SESSIONS_INTO_DB, FALSE, savePref, &tmpPrefs);
-   }
-
    /* Copy over the preferences now */
    myGlobals.savedPref = tmpPrefs;
 
@@ -1349,14 +1334,8 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
-#ifdef HAVE_MYSQL_H
-		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;"
-#endif
 		  "</p>",
 		  theLink, theLink, theLink, theLink, theLink, theLink
-#ifdef HAVE_MYSQL_H
-		  , theLink
-#endif
 		  );
     break;
 
@@ -1368,14 +1347,8 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
-#ifdef HAVE_MYSQL_H
-		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;"
-#endif
 		  "</p>",
 		  theLink, theLink, theLink, theLink, theLink, theLink
-#ifdef HAVE_MYSQL_H
-		  , theLink
-#endif
 		  );
     break;
 
@@ -1387,15 +1360,8 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
-#ifdef HAVE_MYSQL_H
-		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;"
-#endif
 		  "</p>",
-		  theLink, theLink, theLink, theLink, theLink, theLink
-#ifdef HAVE_MYSQL_H
-		  , theLink
-#endif
-		  );
+		  theLink, theLink, theLink, theLink, theLink, theLink);
     break;
 
   case showPrefFCPref:
@@ -1406,15 +1372,8 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  "[ <B>FC Prefs</B> ]&nbsp;"
 		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
-#ifdef HAVE_MYSQL_H
-		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;"
-#endif
 		  "</p>",
-		  theLink, theLink, theLink, theLink, theLink, theLink
-#ifdef HAVE_MYSQL_H
-		  , theLink
-#endif
-		  );
+		  theLink, theLink, theLink, theLink, theLink, theLink);
     break;
 
   case showPrefAdvPref:
@@ -1425,15 +1384,8 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
 		  "[ <B>Advanced Prefs</B> ]&nbsp;"
 		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
-#ifdef HAVE_MYSQL_H
-		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;"
-#endif
 		  "</p>",
-		  theLink, theLink, theLink, theLink, theLink, theLink
-#ifdef HAVE_MYSQL_H
-		  , theLink
-#endif
-		  );
+		  theLink, theLink, theLink, theLink, theLink, theLink);
     break;
 
   case showPrefDbgPref:
@@ -1444,33 +1396,9 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
 		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
 		  "[ <B>Debugging Prefs</B> ]&nbsp;"
-#ifdef HAVE_MYSQL_H
-		  "[ <A HREF=%s7>DB Prefs</A> ]&nbsp;"
-#endif
 		  "</p>",
-		  theLink, theLink, theLink, theLink, theLink, theLink
-#ifdef HAVE_MYSQL_H
-		  , theLink
-#endif
-		  );
+		  theLink, theLink, theLink, theLink, theLink, theLink);
     break;
-
-  case showPrefDBPref:
-#ifdef HAVE_MYSQL_H
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
-		  "[ <A HREF=%s1>Basic Prefs</A> ]&nbsp;"
-		  "[ <A HREF=%s2>Display Prefs</A> ]&nbsp;"
-		  "[ <A HREF=%s3>IP Prefs</A> ]&nbsp;"
-		  "[ <A HREF=%s4>FC Prefs</A> ]&nbsp;"
-		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
-		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
-		  "[ <B>DB Prefs</B> ]&nbsp;</p>",
-		  theLink, theLink, theLink, theLink, theLink, theLink, theLink);
-#else
-	  /* Nothing to do */
-#endif
-    break;
-
   }
 
   sendString (buf);
@@ -1702,33 +1630,6 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		     "Max number of lines that ntop will display on each "
 		     " generated HTML page");
 
-#ifdef ENABLE_FC
-    sendString("<TR><TD ALIGN=LEFT "DARK_BG">Show Menus For</TD><TD ALIGN=LEFT>");
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "<INPUT TYPE=radio NAME=%s  VALUE=%d %s>IP<br>\n",
-		  NTOP_PREF_PRINT_FCORIP, NTOP_PREF_VALUE_PRINT_IPONLY,
-		  (pref->printIpOnly) ? "CHECKED" : "");
-    sendString(buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "<INPUT TYPE=radio NAME=%s VALUE=%d %s>FC<br>\n",
-		  NTOP_PREF_PRINT_FCORIP, NTOP_PREF_VALUE_PRINT_FCONLY,
-		  (pref->printFcOnly) ? "CHECKED" : "");
-    sendString(buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "<INPUT TYPE=radio NAME=%s VALUE=%d %s>Both\n",
-		  NTOP_PREF_PRINT_FCORIP, NTOP_PREF_VALUE_PRINT_BOTH,
-		  (!pref->printIpOnly && !pref->printFcOnly) ? "CHECKED" : "");
-    sendString(buf);
-    sendString("</TD></TR>");
-
-    CONFIG_RADIO_ENTRY(DARK_BG, "No Info On Invalid LUNs",
-		       NTOP_PREF_NO_INVLUN,
-		       pref->noInvalidLunDisplay,
-		       "Don't display info about non-existent LUNs");
-#endif
-
     CONFIG_RADIO_ENTRY(DARK_BG, "Use W3C", NTOP_PREF_W3C,
 		       pref->w3c,
 		       "Generate 'BETTER' (but not perfect) w3c "
@@ -1779,16 +1680,6 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		     "Return value for p3p policyref header");
 
     break;
-
-#ifdef ENABLE_FC
-  case showPrefFCPref:
-    sendString("<INPUT TYPE=HIDDEN NAME=FC_PREFS VALUE=1>");
-
-    CONFIG_STR_ENTRY(DARK_BG, "WWN Mapper File (-N)", NTOP_PREF_WWN_MAP,
-		     50, pref->fcNSCacheFile,
-		     "Location of file mapping VSAN/FC_ID to WWN/Alias");
-    break;
-#endif
 
   case showPrefAdvPref:
     sendString("<INPUT TYPE=HIDDEN NAME=ADVANCED_PREFS VALUE=1>");
@@ -1866,38 +1757,6 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		       "Disables storing of extra information about the locks"
 		       " and unlocks of the protective mutexes Ntop uses");
     break;
-
-#ifdef HAVE_MYSQL_H
-  case showPrefDBPref:
-    sendString("<INPUT TYPE=HIDDEN NAME=DB_PREFS VALUE=1>");
-
-    CONFIG_RADIO_ENTRY(DARK_BG, "Save Data into DB",
-		       NTOP_PREF_SAVE_REC_INTO_DB,
-		       pref->saveRecordsIntoDb,
-		       "Enable/disable ntop to save data (sessions and NetFlow flows) into the SQL (MySQL) database.");
-
-    if(pref->saveRecordsIntoDb) {
-      CONFIG_RADIO_ENTRY(DARK_BG, "Save Sessions into DB",
-			 NTOP_PREF_SAVE_SESSIONS_INTO_DB,
-			 pref->saveSessionsIntoDb,
-			 "Enable/disable ntop to save TCP/UDP sessions into the SQL (MySQL) database.");
-    } else
-      pref->saveSessionsIntoDb = 0;
-
-    CONFIG_STR_ENTRY(DARK_BG, "DB Configuration",
-		     NTOP_PREF_SQL_DB_CONFIG, 20, pref->sqlDbConfig,
-		     "Database (MySQL) database configuration: format &lt;Db host&gt;:&lt;DB user&gt;:&lt;DB User Pw&gt;.<br>"
-		     "Note that the credentials must allow this user to create tables,<br>"
-		     " hence make sure that the user privileges are properly specified.<p>"
-		     "<b>Note</b>: changes will have effect at the next ntop restart");
-
-    CONFIG_INT_ENTRY(DARK_BG, "DB Max record lifetime",
-		     NTOP_PREF_SQL_REC_LIFETIME, 5,
-		     pref->sqlRecDaysLifetime,
-		     "Maximum database (MySQL) records (flows and netflows) persistence [days] in the database after which <br>"
-		     "will be automatically removed. Set this parameter to 0 (zero) to disable record purge.");
-    break;
-#endif
   }
 
   sendString ("</TABLE>");

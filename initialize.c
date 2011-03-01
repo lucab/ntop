@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- * Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ * Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -264,26 +264,6 @@ void resetDevice(int devIdx, short fullReset) {
   resetTrafficCounter(&myGlobals.device[devIdx].greBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].ipv6Bytes);
   resetTrafficCounter(&myGlobals.device[devIdx].otherBytes);
-#ifdef ENABLE_FC
-  resetTrafficCounter(&myGlobals.device[devIdx].fcBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].fragmentedFcBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcFcpBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcFiconBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcIpfcBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcSwilsBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcDnsBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcElsBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].otherFcBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].class2Bytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].class3Bytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].classFBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcPkts);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcEofaPkts);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcEofAbnormalPkts);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcAbnormalPkts);
-  resetTrafficCounter(&myGlobals.device[devIdx].fcBroadcastPkts);
-  memset(&myGlobals.device[devIdx].rcvdFcPktStats, 0, sizeof(FcPacketStats));
-#endif
   resetTrafficCounter(&myGlobals.device[devIdx].lastMinEthernetBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastFiveMinsEthernetBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastMinEthernetPkts);
@@ -365,7 +345,6 @@ void initCounters(void) {
 
   setDomainName();
 
-#ifdef INET6
   _in6addr_linklocal_allnodes.s6_addr[0] = 0xff;
   _in6addr_linklocal_allnodes.s6_addr[1] = 0x02;
   _in6addr_linklocal_allnodes.s6_addr[2] = 0x00;
@@ -382,7 +361,6 @@ void initCounters(void) {
   _in6addr_linklocal_allnodes.s6_addr[13] = 0x00;
   _in6addr_linklocal_allnodes.s6_addr[14] = 0x00;
   _in6addr_linklocal_allnodes.s6_addr[15] = 0x01;
-#endif
 
   memset(myGlobals.transTimeHash, 0, sizeof(myGlobals.transTimeHash));
   memset(myGlobals.dummyEthAddress, 0, LEN_ETHERNET_ADDRESS);
@@ -395,17 +373,8 @@ void initCounters(void) {
       len = sizeof(IPSession*)*MAX_TOT_NUM_SESSIONS;
       myGlobals.device[i].tcpSession = (IPSession**)malloc(len);
       memset(myGlobals.device[i].tcpSession, 0, len);
-
-#ifdef ENABLE_FC
-      len = sizeof(FCSession *)*MAX_TOT_NUM_SESSIONS;
-      myGlobals.device[i].fcSession = (FCSession **)malloc(len);
-      memset(myGlobals.device[i].fcSession, 0, len);
-#endif
     } else {
       myGlobals.device[i].tcpSession     = NULL;
-#ifdef ENABLE_FC
-      myGlobals.device[i].fcSession      = NULL;
-#endif
     }
 
     myGlobals.device[i].fragmentList = NULL;
@@ -414,19 +383,7 @@ void initCounters(void) {
   myGlobals.ipxsapHashLoadCollisions = 0;
   myGlobals.hashCollisionsLookup     = 0;
 
-#ifdef ENABLE_FC
-  myGlobals.numVendorLookupRead = 0;
-  myGlobals.numVendorLookupAdded = 0;
-  myGlobals.numVendorLookupAddedSpecial = 0;
-  myGlobals.numVendorLookupCalls = 0;
-  myGlobals.numVendorLookupSpecialCalls = 0;
-  myGlobals.numVendorLookupFound48bit = 0;
-  myGlobals.numVendorLookupFound24bit = 0;
-  myGlobals.numVendorLookupFoundMulticast = 0;
-  myGlobals.numVendorLookupFoundLAA = 0;
-#endif
-
-  if (myGlobals.pcap_file_list == NULL)
+  if(myGlobals.pcap_file_list == NULL)
     myGlobals.initialSniffTime = myGlobals.lastRefreshTime = time(NULL);  
   else
     myGlobals.initialSniffTime = 0; /* We set the start when first pkt is
@@ -467,10 +424,6 @@ void initCounters(void) {
 
 void resetStats(int deviceId) {
   u_int j;
-#ifdef ENABLE_FC
-  int i;
-  FCSession *session;
-#endif
 
   traceEvent(CONST_TRACE_INFO, "Resetting traffic statistics for device %s",
 	     myGlobals.device[deviceId].humanFriendlyName);
@@ -510,27 +463,6 @@ void resetStats(int deviceId) {
 	myGlobals.device[deviceId].tcpSession[j] = NULL;
       }
   }
-
-#ifdef ENABLE_FC
-  if(myGlobals.device[deviceId].fcSession != NULL) {
-    for(j=0; j<MAX_TOT_NUM_SESSIONS; j++)
-      if((session = myGlobals.device[deviceId].fcSession[j]) != NULL) {
-          for(i = 0; i < MAX_LUNS_SUPPORTED; i++) {
-	    if(session->activeLuns[i] != NULL) {
-	      free (session->activeLuns[i]);
-	    }
-          }
-          free(session);
-          myGlobals.device[deviceId].fcSession[j] = NULL;
-      }
-  }
-
-  /* Free VSAN Hash */
-  if (myGlobals.device[deviceId].vsanHash != NULL) {
-      free (myGlobals.device[deviceId].vsanHash);
-      myGlobals.device[deviceId].vsanHash = NULL;
-  }
-#endif
 
   myGlobals.device[deviceId].hash_hostTraffic[BROADCAST_HOSTS_ENTRY] = myGlobals.broadcastEntry;
   myGlobals.broadcastEntry->hostSerial.serialType = SERIAL_IPV4;
@@ -1098,11 +1030,8 @@ void addDevice(char* deviceName, char* deviceDescr) {
     u_int8_t netmask_v6;
     
     getLocalHostAddress(&myGlobals.device[deviceId].ifAddr, &netmask_v6, myGlobals.device[deviceId].name);
-#ifdef INET6
     myGlobals.device[deviceId].v6Addrs = getLocalHostAddressv6(myGlobals.device[deviceId].v6Addrs, 
 							       myGlobals.device[deviceId].name);
-#endif
-
 	if(myGlobals.device[deviceId].network.s_addr == 0) {
 		myGlobals.device[deviceId].netmask.s_addr = 0xFFFFFF00;/* /24 */
 		myGlobals.device[deviceId].network.s_addr = myGlobals.device[deviceId].ifAddr.s_addr & myGlobals.device[deviceId].netmask.s_addr;

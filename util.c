@@ -3,7 +3,7 @@
  *
  *                          http://www.ntop.org
  *
- *           Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ *           Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -227,12 +227,6 @@ HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
     return(findHostByNumIP(theSerial.value.ipSerial.ipAddress,
 			   theSerial.value.ipSerial.vlanId,
 			   actualDeviceId));
-#ifdef ENABLE_FC
-  } else if(theSerial.serialType == SERIAL_FC) {
-    return(findHostByFcAddress(&theSerial.value.fcSerial.fcAddress,
-				 theSerial.value.fcSerial.vsanId,
-				 actualDeviceId));
-#endif
   } else {
     /* MAC */
     return(findHostByMAC((char*)theSerial.value.ethSerial.ethAddress,
@@ -269,13 +263,11 @@ HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId) {
 
 /* *****************************************************/
 
-#ifdef INET6
 unsigned long in6_hash(struct in6_addr *addr) {
   return
     (addr->s6_addr[13]      ) | (addr->s6_addr[15] << 8) |
     (addr->s6_addr[14] << 16) | (addr->s6_addr[11] << 24);
 }
-#endif
 
 /* *************************************** */
 
@@ -296,14 +288,12 @@ unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int d
      */
     idx = (u_int)(dstAddr->Ip4Address.s_addr+srcAddr->Ip4Address.s_addr+sport+dport);
     break;
-#ifdef INET6
   case AF_INET6:
     idx = (u_int)(dstAddr->Ip6Address.s6_addr[0] +
 		  dstAddr->Ip6Address.s6_addr[0] +
 		  srcAddr->Ip6Address.s6_addr[0] +
 		  srcAddr->Ip6Address.s6_addr[0] + sport +! dport);
     break;
-#endif
   }
   return idx;
 }
@@ -320,23 +310,19 @@ u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dp
     transactionId = (u_int16_t)(3*srcAddr->Ip4Address.s_addr+
 				dstAddr->Ip4Address.s_addr+5*dport+7*sport);
     break;
-#ifdef INET6
   case AF_INET6:
     transactionId = (u_int16_t)(3*srcAddr->Ip6Address.s6_addr[0]+
 				dstAddr->Ip6Address.s6_addr[0]+5*dport+7*sport);
     break;
-#endif
   }
   return transactionId;
 }
 
 /* ***************************** */
 
-#ifdef INET6
 int in6_isglobal(struct in6_addr *addr) {
   return (addr->s6_addr[0] & 0xe0) == 0x20;
 }
-#endif
 
 /* ***************************** */
 
@@ -375,7 +361,6 @@ short addrcmp(HostAddr *addr1, HostAddr *addr2) {
       return (0);
     /*return (addr1->Ip4Address.s_addr != addr2->Ip4Address.s_addr);*/
 
-#ifdef INET6
   case AF_INET6:
     if(memcmp(&addr1->Ip6Address,&addr2->Ip6Address,sizeof(struct in6_addr)) > 0)
       return (1);
@@ -384,7 +369,7 @@ short addrcmp(HostAddr *addr1, HostAddr *addr2) {
     else
       return (0);
     break;
-#endif
+
   default:
     return 1;
   }
@@ -398,11 +383,9 @@ HostAddr *addrcpy(HostAddr *dst, HostAddr *src) {
   case AF_INET:
     memcpy(&dst->Ip4Address,&src->Ip4Address,sizeof(struct in_addr));
     return(dst);
-#ifdef INET6
   case AF_INET6:
     memcpy(&dst->Ip6Address,&src->Ip6Address,sizeof(struct in6_addr));
     return(dst);
-#endif
 
   default:
     return NULL;
@@ -429,13 +412,13 @@ unsigned short addrget(HostAddr *Haddr,void *addr, int *family , int *size) {
     memcpy((struct in_addr *)addr,&v4addr,sizeof(struct in_addr));
     *size = sizeof(struct in_addr);
     break;
-#ifdef INET6
+
   case AF_INET6:
     memcpy((struct in6_addr *)addr,&Haddr->Ip6Address, sizeof(struct in6_addr));
     *size = sizeof(struct in6_addr);
     break;
-#endif
   }
+
   return 1;
 }
 
@@ -449,11 +432,9 @@ unsigned short addrput(int family, HostAddr *dst, void *src) {
   case AF_INET:
     memcpy(&dst->Ip4Address, (struct in_addr *)src,sizeof(struct in_addr));
     break;
-#ifdef INET6
   case AF_INET6:
     memcpy(&dst->Ip6Address, (struct in6_addr *)src, sizeof(struct in6_addr));
     break;
-#endif
   }
   return(1);
 }
@@ -464,10 +445,8 @@ unsigned short addrnull(HostAddr *addr) {
   switch(addr->hostFamily) {
   case AF_INET:
     return (addr->Ip4Address.s_addr == 0x0);
-#ifdef INET6
   case AF_INET6:
     return (addr->Ip6Address.s6_addr[0] == 0x0);
-#endif
   default:
     return(1);
   }
@@ -479,17 +458,15 @@ unsigned short addrfull(HostAddr *addr) {
   switch(addr->hostFamily) {
   case AF_INET:
     return (addr->Ip4Address.s_addr == 0xffffffff);
-#ifdef INET6
   case AF_INET6:
     return(0);
-#endif
-  default: return 0;
+  default:
+    return 0;
   }
 }
 
 /* ****************************************** */
 
-#ifdef INET6
 unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, int size) {
   int found = 0;
   NtopIfaceAddr *it;
@@ -513,19 +490,15 @@ unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, int siz
 
   return found;
 }
-#endif
 
 /* ****************************************** */
 
-#ifdef INET6
 unsigned short addrlookup(struct in6_addr *addr,  NtopIfaceAddr *addrs) {
   return (prefixlookup(addr,addrs, sizeof(struct in6_addr)));
 }
-#endif
 
 /* ****************************************** */
 
-#ifdef INET6
 NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
   struct iface_handler        *ih;
   struct iface_if             *ii;
@@ -565,7 +538,6 @@ NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
   return(addrs);
 
 }
-#endif
 
 /*******************************************/
 /*
@@ -604,7 +576,6 @@ char* copy_argv(register char **argv) {
 
 /**************************************/
 
-#ifdef INET6
 unsigned short isLinkLocalAddress(struct in6_addr *addr,
 				  u_int32_t *the_local_network,
 				  u_int32_t *the_local_network_mask) {
@@ -628,15 +599,12 @@ unsigned short isLinkLocalAddress(struct in6_addr *addr,
     return 0;
   }
 }
-#endif
 
 /*******************************************/
 
-#ifdef INET6
 unsigned short in6_isMulticastAddress(struct in6_addr *addr,
 				      u_int32_t *the_local_network,
 				      u_int32_t *the_local_network_mask) {
-
   if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
@@ -649,15 +617,12 @@ unsigned short in6_isMulticastAddress(struct in6_addr *addr,
   } else
     return 0;
 }
-#endif
 
 /*******************************************/
 
-#ifdef INET6
 unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId,
 				  u_int32_t *the_local_network,
 				  u_int32_t *the_local_network_mask) {
-
   if(the_local_network && the_local_network_mask)
     (*the_local_network) = 0,  (*the_local_network_mask) = 0;
 
@@ -696,7 +661,6 @@ unsigned short in6_isPrivateAddress(struct in6_addr *addr,
 
   return(0);
 }
-#endif
 
 /* ********************************* */
 
@@ -864,10 +828,8 @@ unsigned short isBroadcastAddress(HostAddr *addr,
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_isBroadcastAddress(&addr->Ip4Address, the_local_network, the_local_network_mask));
-#ifdef INET6
   case AF_INET6:
     return (isLinkLocalAddress(&addr->Ip6Address, NULL, NULL));
-#endif
   default: return(0);
   }
 }
@@ -883,10 +845,8 @@ unsigned short isMulticastAddress(HostAddr *addr,
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_isMulticastAddress(&addr->Ip4Address, the_local_network, the_local_network_mask));
-#ifdef INET6
   case AF_INET6:
     return (in6_isMulticastAddress(&addr->Ip6Address, NULL, NULL));
-#endif
   default: return(0);
   }
 }
@@ -902,10 +862,8 @@ unsigned short isLocalAddress(HostAddr *addr, u_int deviceId,
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_isLocalAddress(&addr->Ip4Address, deviceId, the_local_network, the_local_network_mask));
-#ifdef INET6
   case AF_INET6:
     return (in6_isLocalAddress(&addr->Ip6Address, deviceId, NULL, NULL));
-#endif
   default: return(0);
   }
 }
@@ -921,10 +879,8 @@ unsigned short isPrivateAddress(HostAddr *addr,
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_isPrivateAddress(&addr->Ip4Address, the_local_network, the_local_network_mask));
-#ifdef INET6
   case AF_INET6:
     return (in6_isPrivateAddress(&addr->Ip6Address, NULL, NULL));
-#endif
   default: return(0);
   }
 }
@@ -1224,7 +1180,6 @@ void handleKnownAddresses(char* addresses) {
 
 /* ********************************* */
 
-#ifdef INET6
 unsigned short in6_pseudoLocalAddress(struct in6_addr *addr,
 				      u_int32_t *the_local_network,
 				      u_int32_t *the_local_network_mask) {
@@ -1237,7 +1192,6 @@ unsigned short in6_pseudoLocalAddress(struct in6_addr *addr,
   }
   return(0);
 }
-#endif
 
 /* ******************************************************* */
 
@@ -1294,7 +1248,6 @@ unsigned short in_pseudoLocalAddress(struct in_addr *addr,
 
 /* ********************************* */
 
-#ifdef INET6
 unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId,
 				      u_int32_t *the_local_network,
 				      u_int32_t *the_local_network_mask) {
@@ -1307,7 +1260,6 @@ unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId,
 
   return(rc);
 }
-#endif
 
 /* ********************************* */
 
@@ -1335,7 +1287,6 @@ unsigned short in_deviceLocalAddress(struct in_addr *addr, u_int deviceId,
 
 /* ********************************* */
 
-#ifdef INET6
 unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId,
 					u_int32_t *the_local_network,
 					u_int32_t *the_local_network_mask) {
@@ -1365,7 +1316,6 @@ unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId,
 
   return(0);
 }
-#endif
 
 /* ******************************************** */
 
@@ -1445,10 +1395,8 @@ unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId,
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_deviceLocalAddress(&addr->Ip4Address, deviceId, the_local_network, the_local_network_mask));
-#ifdef INET6
   case AF_INET6:
     return (in6_deviceLocalAddress(&addr->Ip6Address, deviceId, NULL, NULL));
-#endif
   default: return(0);
   }
 }
@@ -1465,10 +1413,8 @@ unsigned short isPseudoLocalAddress(HostAddr *addr, u_int deviceId,
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_isPseudoLocalAddress(&addr->Ip4Address, deviceId, the_local_network, the_local_network_mask));
-#ifdef INET6
   case AF_INET6:
     return (in6_isPseudoLocalAddress(&addr->Ip6Address, deviceId, NULL, NULL));
-#endif
   default: return(0);
   }
 }
@@ -1481,10 +1427,8 @@ unsigned short isPseudoBroadcastAddress(HostAddr *addr,
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_isPseudoBroadcastAddress(&addr->Ip4Address, the_local_network, the_local_network_mask));
-#ifdef INET6
   case AF_INET6:
     return 0;
-#endif
   default: return(0);
   }
 }
@@ -1497,10 +1441,8 @@ unsigned short _pseudoLocalAddress(HostAddr *addr,
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_pseudoLocalAddress(&addr->Ip4Address, the_local_network, the_local_network_mask));
-#ifdef INET6
   case AF_INET6:
     return (in6_pseudoLocalAddress(&addr->Ip6Address, NULL, NULL));
-#endif
   default: return(0);
   }
 }
@@ -2560,11 +2502,6 @@ void resetHostsVariables(HostTraffic* el) {
   if (el->protocolInfo != NULL)        free(el->protocolInfo);
   el->protocolInfo = NULL;
 
-#ifdef ENABLE_FC
-  if(el->fcCounters != NULL) free(el->fcCounters);
-  el->fcCounters = NULL;
-#endif
-
   resetUsageCounter(&el->contactedSentPeers);
   resetUsageCounter(&el->contactedRcvdPeers);
   resetUsageCounter(&el->contactedRouters);
@@ -3348,11 +3285,9 @@ int ipSanityCheck(char* string, char* parm, int nonFatal) {
     memset(&ipChar, 0, sizeof(ipChar));
     for(i='0'; i<='9'; i++) ipChar[i]=1;
     ipChar['.']=1;
-#ifdef INET6
     for(i='A'; i<='Z'; i++) ipChar[i]=1;
     for(i='a'; i<='z'; i++) ipChar[i]=1;
     ipChar[':']=1;
-#endif
   }
 
   for(i=0, j=1; i<strlen(string); i++) {
@@ -4308,23 +4243,6 @@ void resetTrafficCounter(TrafficCounter *ctr) {
 
 /* ******************************** */
 
-#ifdef ENABLE_FC
-void allocateElementHash(int deviceId, u_short hashType) {
-  int fcmemLen = sizeof(FcFabricElementHash*)*MAX_ELEMENT_HASH;
-
-  switch(hashType) {
-  case 2: /* VSAN */
-    if(myGlobals.device[deviceId].vsanHash == NULL) {
-      myGlobals.device[deviceId].vsanHash = (FcFabricElementHash**)malloc(fcmemLen);
-      memset(myGlobals.device[deviceId].vsanHash, 0, fcmemLen);
-    }
-    break;
-  }
-}
-#endif
-
-/* *************************************************** */
-
 u_int numActiveSenders(u_int deviceId) {
   u_int numSenders = 0;
   HostTraffic *el;
@@ -4334,40 +4252,12 @@ u_int numActiveSenders(u_int deviceId) {
     if(broadcastHost(el)
        || ((myGlobals.actTime-el->lastSeen) > PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES))
       continue;
-#ifdef ENABLE_FC
-    else if (isFcHost (el) && (el->fcCounters->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
-      continue;
-#endif
     else
       numSenders++;
   }
 
   return(numSenders);
 }
-
-/* *************************************************** */
-
-#ifdef ENABLE_FC
-u_int numActiveVsans(u_int deviceId)
-{
-  u_int numVsans = 0, i;
-  FcFabricElementHash **theHash;
-
-  if ((theHash = myGlobals.device[deviceId].vsanHash) == NULL) {
-    return (numVsans);
-  }
-
-  for (i=0; i<MAX_ELEMENT_HASH; i++) {
-    if((theHash[i] != NULL) && (theHash[i]->vsanId < MAX_HASHDUMP_ENTRY) &&
-       (theHash[i]->vsanId < MAX_USER_VSAN)) {
-      if (theHash[i]->totBytes.value)
-	numVsans++;
-    }
-  }
-
-  return (numVsans);
-}
-#endif
 
 /* *************************************************** */
 
@@ -4730,74 +4620,6 @@ void removeNtopPid(void) {
 
 /* ************************************ */
 
-#ifdef ENABLE_FC
-/* The following two routines have been extracted from Ethereal */
-static char *
-bytestring_to_str(const u_int8_t *ad, u_int32_t len, char punct) {
-  static char  str[3][32];
-  static char *cur;
-  char        *p;
-  int          i;
-  u_int32_t   octet;
-  /* At least one version of Apple's C compiler/linker is buggy, causing
-     a complaint from the linker about the "literal C string section"
-     not ending with '\0' if we initialize a 16-element "char" array with
-     a 16-character string, the fact that initializing such an array with
-     such a string is perfectly legitimate ANSI C nonwithstanding, the 17th
-     '\0' byte in the string nonwithstanding. */
-  static const char hex_digits[16] =
-    { '0', '1', '2', '3', '4', '5', '6', '7',
-      '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-
-  if (len < 0) {
-    return "";
-  }
-
-  len--;
-
-  if (cur == &str[0][0]) {
-    cur = &str[1][0];
-  } else if (cur == &str[1][0]) {
-    cur = &str[2][0];
-  } else {
-    cur = &str[0][0];
-  }
-  p = &cur[18];
-  *--p = '\0';
-  i = len;
-  for (;;) {
-    octet = ad[i];
-    *--p = hex_digits[octet&0xF];
-    octet >>= 4;
-    *--p = hex_digits[octet&0xF];
-    if (i == 0)
-      break;
-    if (punct)
-      *--p = punct;
-    i--;
-  }
-  return p;
-}
-
-char* fc_to_str(const u_int8_t *ad)
-{
-  return bytestring_to_str (ad, 3, '.');
-}
-
-char* fcwwn_to_str (const u_int8_t *ad)
-{
-  u_int8_t zero_wwn[LEN_WWN_ADDRESS] = {0,0,0,0,0,0,0,0};
-
-  if (!memcmp (ad, zero_wwn, LEN_WWN_ADDRESS)) {
-    return ("N/A");
-  }
-
-  return bytestring_to_str (ad, 8, ':');
-}
-#endif
-
-/* ************************************ */
-
 int ntop_conditional_sched_yield(void) {
 #ifndef WIN32
     return(sched_yield());
@@ -4805,72 +4627,6 @@ int ntop_conditional_sched_yield(void) {
     return(0);
 #endif
 }
-
-#ifdef ENABLE_FC
-
-/* *************************************************** */
-
-u_int numActiveNxPorts (u_int deviceId) {
-  u_int numSenders = 0;
-  HostTraffic *el;
-
-  for(el=getFirstHost(deviceId);
-      el != NULL; el = getNextHost(deviceId, el)) {
-    if (isFcHost (el) && (el->fcCounters->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
-      continue;
-    else
-      numSenders++;
-  }
-
-  return(numSenders);
-}
-
-/* *************************************** */
-
-HostTraffic* findHostByFcAddress (FcAddress *fcAddr, u_short vsanId, u_int actualDeviceId) {
-  HostTraffic *el;
-  u_int idx = hashFcHost(fcAddr, vsanId, &el, actualDeviceId);
-
-  if(el != NULL)
-    return(el); /* Found */
-  else if(idx == FLAG_NO_PEER)
-    return(NULL);
-  else
-    el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
-
-  for(; el != NULL; el = el->next) {
-    if (el->fcCounters != NULL) {
-      if ((el->fcCounters->hostFcAddress.domain != 0) &&
-	  (!memcmp(&el->fcCounters->hostFcAddress, fcAddr, LEN_FC_ADDRESS)) &&
-	  (el->fcCounters->vsanId == vsanId))
-	return(el);
-    }
-  }
-
-  return(NULL);
-}
-
-/* *************************************** */
-
-FcNameServerCacheEntry *findFcHostNSCacheEntry(FcAddress *fcAddr, u_short vsanId) {
-  FcNameServerCacheEntry *entry = NULL;
-  HostTraffic *el = NULL;
-  u_int hashIdx = hashFcHost(fcAddr, vsanId, &el, -1);
-
-  entry = myGlobals.fcnsCacheHash[hashIdx];
-
-  while (entry != NULL) {
-    if ((entry->vsanId == vsanId) &&
-	(memcmp ((u_int8_t *)fcAddr, (u_int8_t *)&entry->fcAddress,
-		 LEN_FC_ADDRESS) == 0))
-      return (entry);
-
-    entry = entry->next;
-  }
-
-  return (NULL);
-}
-#endif
 
 /* ************************************ */
 
@@ -5874,13 +5630,6 @@ static void updateGeoIP(HostTraffic *el) {
 	accessMutex(&myGlobals.geolocalizationMutex, "GeoIP_name_by_ipnum/v6");
 	if(el->hostIpAddress.hostFamily == AF_INET)
 	  rsp = GeoIP_name_by_ipnum(myGlobals.geo_ip_asn_db, el->hostIpAddress.Ip4Address.s_addr);
-	else {
-#ifdef INET6
-#ifndef WIN32
-	  //rsp = GeoIP_name_by_ipnum_v6(myGlobals.geo_ip_asn_db, el->hostIpAddress.Ip6Address);
-#endif
-#endif
-	}
 	releaseMutex(&myGlobals.geolocalizationMutex);
 
 	if(rsp != NULL) {
@@ -5926,18 +5675,8 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
                  file, line);
 #endif
 
-#ifdef ENABLE_FC
-    if (updateType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN) {
-      safe_snprintf(__FILE__, __LINE__, el->hostResolvedName,
-		    sizeof(el->hostResolvedName),
-		    fcwwn_to_str ((u_int8_t*)updateValue));
-      el->hostResolvedName[LEN_WWN_ADDRESS_DISPLAY] = '\0';
-    } else 
-#endif
-      {
-      safe_snprintf(__FILE__, __LINE__, el->hostResolvedName, 
-		    sizeof(el->hostResolvedName), "%s", updateValue);
-    }
+    safe_snprintf(__FILE__, __LINE__, el->hostResolvedName, 
+		  sizeof(el->hostResolvedName), "%s", updateValue);
 
     // el->hostResolvedName[MAX_LEN_SYM_HOST_NAME-1] = '\0';
     /* Really needed ? */

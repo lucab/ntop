@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-10 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 2002-11 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -4673,25 +4673,6 @@ RETSIGTYPE rrdcleanup(int signo) {
     msgSent++;
   }
 
-#ifdef HAVE_BACKTRACE
-  /* Don't double fault... */
-  /* signal(signo, SIG_DFL); */
-
-  /* Grab the backtrace before we do much else... */
-  size = backtrace(array, 20);
-  strings = (char**)backtrace_symbols(array, size);
-
-  traceEvent(CONST_TRACE_ERROR, "RRD: BACKTRACE:     backtrace is:");
-  if(size < 2) {
-    traceEvent(CONST_TRACE_ERROR, "RRD: BACKTRACE:         **unavailable!");
-  } else {
-    /* Ignore the 0th entry, that's our cleanup() */
-    for (i=1; i<size; i++) {
-      traceEvent(CONST_TRACE_ERROR, "RRD: BACKTRACE:          %2d. %s", i, strings[i]);
-    }
-  }
-#endif /* HAVE_BACKTRACE */
-
   traceEvent(CONST_TRACE_FATALERROR, "RRD: ntop shutting down...");
   exit(101);
 }
@@ -4997,81 +4978,6 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 
   return;
 }
-
-/* ****************************** */
-
-#ifdef ENABLE_FC
-static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
-  char rrdPath[512], *adjHostName, hostKey[128], buf1[64];
-
-  lockHostsHashMutex(el, "rrdUpdateFcHostStats");
-
-  if((el->bytesSent.value > 0) || (el->bytesRcvd.value > 0)) {
-    if(el->fcCounters->hostNumFcAddress[0] != '\0') {
-      safe_snprintf(__FILE__, __LINE__, hostKey, sizeof (hostKey), "%s-%d",
-		    el->fcCounters->hostNumFcAddress,
-		    el->fcCounters->vsanId);
-    } else {
-      /* For the time being do not save IP-less hosts */
-      unlockHostsHashMutex(el);
-      return;
-    }
-
-    adjHostName = dotToSlash(hostKey, buf1, sizeof(buf1));
-
-    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath),
-		  "%s/interfaces/%s/hosts/%s/",
-		  myGlobals.rrdPath, myGlobals.device[devIdx].uniqueIfName,
-		  adjHostName);
-    mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
-
-#if defined(RRD_DEBUG)
-    traceEventRRDebug(2, "Updating %s [%s/%d]", hostKey, el->fcCounters->hostNumFcAddress, el->fcCounters->vsanId);
-#endif
-
-    updateTrafficCounter(rrdPath, "pktSent", &el->pktSent, 0);
-    updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd, 0);
-    updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent, 0);
-    updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd, 0);
-    updateCounter(rrdPath, "totContactedPeersSent", el->totContactedSentPeers, 0);
-    updateCounter(rrdPath, "totContactedPeersRcvd", el->totContactedRcvdPeers, 0);
-
-    if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
-      updateTrafficCounter(rrdPath, "fcFcpBytesSent", &el->fcCounters->fcFcpBytesSent, 0);
-      updateTrafficCounter(rrdPath, "fcFcpBytesRcvd", &el->fcCounters->fcFcpBytesRcvd, 0);
-      updateTrafficCounter(rrdPath, "fcFiconBytesSent", &el->fcCounters->fcFiconBytesSent, 0);
-      updateTrafficCounter(rrdPath, "fcFiconBytesRcvd", &el->fcCounters->fcFiconBytesRcvd, 0);
-      updateTrafficCounter(rrdPath, "fcElsBytesSent", &el->fcCounters->fcElsBytesSent, 0);
-      updateTrafficCounter(rrdPath, "fcElsBytesRcvd", &el->fcCounters->fcElsBytesRcvd, 0);
-      updateTrafficCounter(rrdPath, "fcDnsBytesSent", &el->fcCounters->fcDnsBytesSent, 0);
-      updateTrafficCounter(rrdPath, "fcDnsBytesRcvd", &el->fcCounters->fcDnsBytesRcvd, 0);
-      updateTrafficCounter(rrdPath, "fcSwilsBytesSent", &el->fcCounters->fcSwilsBytesSent, 0);
-      updateTrafficCounter(rrdPath, "fcSwilsBytesRcvd", &el->fcCounters->fcSwilsBytesRcvd, 0);
-      updateTrafficCounter(rrdPath, "fcIpfcBytesSent", &el->fcCounters->fcIpfcBytesSent, 0);
-      updateTrafficCounter(rrdPath, "fcIpfcBytesRcvd", &el->fcCounters->fcIpfcBytesRcvd, 0);
-      updateTrafficCounter(rrdPath, "otherFcBytesSent", &el->fcCounters->otherFcBytesSent, 0);
-      updateTrafficCounter(rrdPath, "otherFcBytesRcvd", &el->fcCounters->otherFcBytesRcvd, 0);
-      updateTrafficCounter(rrdPath, "fcRscnsRcvd", &el->fcCounters->fcRscnsRcvd, 0);
-      updateTrafficCounter(rrdPath, "scsiReadBytes", &el->fcCounters->scsiReadBytes, 0);
-      updateTrafficCounter(rrdPath, "scsiWriteBytes", &el->fcCounters->scsiWriteBytes, 0);
-      updateTrafficCounter(rrdPath, "scsiOtherBytes", &el->fcCounters->scsiOtherBytes, 0);
-      updateTrafficCounter(rrdPath, "class2Sent", &el->fcCounters->class2Sent, 0);
-      updateTrafficCounter(rrdPath, "class2Rcvd", &el->fcCounters->class2Rcvd, 0);
-      updateTrafficCounter(rrdPath, "class3Sent", &el->fcCounters->class3Sent, 0);
-      updateTrafficCounter(rrdPath, "class3Rcvd", &el->fcCounters->class3Rcvd, 0);
-      updateTrafficCounter(rrdPath, "classFSent", &el->fcCounters->classFSent, 0);
-      updateTrafficCounter(rrdPath, "classFRcvd", &el->fcCounters->classFRcvd, 0);
-    }
-
-    if(adjHostName != NULL)
-      free(adjHostName);
-  }
-
-  unlockHostsHashMutex(el);
-
-  ntop_conditional_sched_yield(); /* Allow other threads to run */
-}
-#endif
 
 /* ****************************** */
 
@@ -5408,10 +5314,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	for (el = getFirstHost(devIdx); el != NULL; el = getNextHost(devIdx, el)) {
 	  if (el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH)
 	    rrdUpdateIPHostStats(el, devIdx, 0);
-#ifdef ENABLE_FC
-	  else if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC)
-	    rrdUpdateFcHostStats(el, devIdx);
-#endif
         }
       }
     }
@@ -5937,7 +5839,7 @@ PluginInfo* rrdPluginEntryFctn(void)
 #endif
 {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-	     "RRD: Welcome to %s. (C) 2002-10 by Luca Deri.",
+	     "RRD: Welcome to %s. (C) 2002-11 by Luca Deri.",
 	     rrdPluginInfo->pluginName);
 
   return(rrdPluginInfo);

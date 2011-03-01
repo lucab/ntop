@@ -4,7 +4,7 @@
  *
  * Copyright (C) 2003      Abdelkader Lahmadi <Abdelkader.Lahmadi@loria.fr>
  *                         Olivier Festor <Olivier.Festor@loria.fr>
- * Copyright (C) 2003-10   Luca Deri <deri@ntop.org>
+ * Copyright (C) 2003-11   Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -24,8 +24,6 @@
  */
 
 #include "ntop.h"
-
-#ifdef INET6
 
 #define ROUNDUP(a) \
         ((a) > 0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
@@ -50,7 +48,6 @@ static struct in_addr *in4_cpy(struct in_addr *dst, struct in_addr *src) {
   memcpy(dst, src, sizeof(struct in_addr));
   return(dst);
 }
-#endif
 
 /* ************************************************* */
 

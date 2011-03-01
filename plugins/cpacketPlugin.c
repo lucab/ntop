@@ -1,5 +1,5 @@
 /*
- *  Copyright(C) 2008-10 Luca Deri <deri@ntop.org>
+ *  Copyright(C) 2008-11 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -277,25 +277,6 @@ RETSIGTYPE cpacketcleanup(int signo) {
                : "other");
     msgSent++;
   }
-
-#ifdef HAVE_BACKTRACE
-  /* Don't double fault... */
-  /* signal(signo, SIG_DFL); */
-
-  /* Grab the backtrace before we do much else... */
-  size = backtrace(array, 20);
-  strings = (char**)backtrace_symbols(array, size);
-
-  traceEvent(CONST_TRACE_ERROR, "CPACKET: BACKTRACE:     backtrace is:");
-  if (size < 2) {
-    traceEvent(CONST_TRACE_ERROR, "CPACKET: BACKTRACE:         **unavailable!");
-  } else {
-    /* Ignore the 0th entry, that's our cleanup() */
-    for (i=1; i<size; i++) {
-      traceEvent(CONST_TRACE_ERROR, "CPACKET: BACKTRACE:          %2d. %s", i, strings[i]);
-    }
-  }
-#endif /* HAVE_BACKTRACE */
 
   traceEvent(CONST_TRACE_FATALERROR, "CPACKET: ntop shutting down...");
   exit(100);

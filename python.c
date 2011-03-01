@@ -3,7 +3,7 @@
  *
  *                          http://www.ntop.org
  *
- *             Copyright (C) 2010 Luca Deri <deri@ntop.org>
+ *             Copyright (C) 2011 Luca Deri <deri@ntop.org>
  *                                Daniele Sgandurra <sgandurra@ntop.org>
  *                                Jaime Blasco <jaime.blasco@alienvault.com>
  *                                Gianluca Medici <gmedici@ntop.org>
@@ -926,7 +926,7 @@ static PyObject* python_interface_numHosts(PyObject *self, PyObject *args) {
   return PyLong_FromUnsignedLong(myGlobals.device[interfaceId].numHosts);
 }
 
-#ifdef INET6
+
 static PyObject* python_interface_ipv6Address(PyObject *self, PyObject *args) {
   u_int interfaceId;
   char buf[64];
@@ -939,7 +939,6 @@ static PyObject* python_interface_ipv6Address(PyObject *self, PyObject *args) {
 			     _intop(&myGlobals.device[interfaceId].v6Addrs->af.inet6.ifAddr, buf, sizeof(buf)),
 			     myGlobals.device[interfaceId].v6Addrs->af.inet6.prefixlen);
 }
-#endif
 
 static PyObject* python_interface_time(PyObject *self, PyObject *args) {
   u_int interfaceId;
@@ -1010,50 +1009,6 @@ static PyObject* python_interface_pktsStats(PyObject *self, PyObject *args) {
 
   return obj;
 }
-
-#ifdef ENABLE_FC
-
-static PyObject* python_interface_fcPktsStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
-  PyObject *obj;
-
-  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
-  if(interfaceId >= myGlobals.numDevices) return NULL;
-  if((obj = PyDict_New()) == NULL) return NULL;
-
-  PyDict_SetItem(obj, PyString_FromString("total"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].fcPkts.value));
-  PyDict_SetItem(obj, PyString_FromString("eofa"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].fcEofaPkts.value));
-  PyDict_SetItem(obj, PyString_FromString("eofAbnormal"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].fcEofAbnormalPkts.value));
-  PyDict_SetItem(obj, PyString_FromString("abnormal"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].fcAbnormalPkts.value));
-  PyDict_SetItem(obj, PyString_FromString("broadcast"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].fcBroadcastPkts.value));
-  return obj;
-}
-
-static PyObject* python_interface_fcBytesStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
-  PyObject *obj;
-
-  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
-  if(interfaceId >= myGlobals.numDevices) return NULL;
-  if((obj = PyDict_New()) == NULL) return NULL;
-
-  PyDict_SetItem(obj, PyString_FromString("total"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcBytes.value));
-  PyDict_SetItem(obj, PyString_FromString("fragmented"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fragmentedFcBytes.value));
-  PyDict_SetItem(obj, PyString_FromString("fcp"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcFcpBytes.value));
-  PyDict_SetItem(obj, PyString_FromString("ficon"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcFiconBytes.value));
-  PyDict_SetItem(obj, PyString_FromString("ip"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcIpfcBytes.value));
-  PyDict_SetItem(obj, PyString_FromString("swils"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcSwilsBytes.value));
-  PyDict_SetItem(obj, PyString_FromString("dns"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcDnsBytes.value));
-  PyDict_SetItem(obj, PyString_FromString("els"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcElsBytes.value));
-  PyDict_SetItem(obj, PyString_FromString("other"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].otherFcBytes.value));
-  PyDict_SetItem(obj, PyString_FromString("broadcast"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].fcBroadcastBytes.value));
-  PyDict_SetItem(obj, PyString_FromString("class2"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].class2Bytes.value));
-  PyDict_SetItem(obj, PyString_FromString("class3"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].class3Bytes.value));
-  PyDict_SetItem(obj, PyString_FromString("classFb"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].classFBytes.value));
-  return obj;
-}
-
-#endif
 
 static PyObject* python_interface_bytesStats(PyObject *self, PyObject *args) {
   u_int interfaceId;
@@ -1289,19 +1244,13 @@ static PyMethodDef interface_methods[] = {
   { "ipv4", python_interface_ipv4Address, METH_VARARGS, "Get interface address (IPv4)" },
   { "network", python_interface_network, METH_VARARGS, "Get network and mask to which the interface belongs" },
   { "numHosts", python_interface_numHosts, METH_VARARGS, "Get the number of hosts active on this interface" },
-#ifdef INET6
   { "ipv6", python_interface_ipv6Address, METH_VARARGS, "Get interface address (IPv6)" },
-#endif
   { "time", python_interface_time, METH_VARARGS, "Get interface time" },
   { "virtual", python_interface_virtual, METH_VARARGS, "Check if this is a virtual interface" },
   { "speed", python_interface_speed, METH_VARARGS, "Interface speed (0 if unknown)" },
   { "mtu", python_interface_mtu, METH_VARARGS, "Get interface MTU size" },
   { "bpf", python_interface_bpf, METH_VARARGS, "Get BPF filter set for this interface (if any)" },
   { "pktsStats", python_interface_pktsStats, METH_VARARGS, "Get packet statistics " },
-#ifdef ENABLE_FC
-  { "fcPktsStats", python_interface_fcPktsStats, METH_VARARGS, "Get FC pkts stats" },
-  { "fcBytesStats", python_interface_fcBytesStats, METH_VARARGS, "Get FC byte stats" },
-#endif
   { "bytesStats", python_interface_bytesStats, METH_VARARGS, "Get bytes statistics" },
   { "throughputStats", python_interface_throughputStats, METH_VARARGS, "" },
   { "tcpStats", python_interface_tcpStats, METH_VARARGS, "Get TCP stats" },

@@ -23,8 +23,6 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifdef INET6
-
 #ifndef _IFACE_H_
 #define _IFACE_H_
 
@@ -442,7 +440,6 @@ int iface_addr_ifindex(struct iface_addr *ia);
 void *iface_addr_getinfo(struct iface_addr *ia, void *infobuf);
 
 #endif /* _IFACE_H_ */
-#endif /* INET6 */
 
 extern void calculateUniqueInterfaceName(int deviceId);
 extern void sanitizeIfName(char *deviceDescr);

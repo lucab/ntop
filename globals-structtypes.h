@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- *         Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ *         Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -120,11 +120,6 @@ typedef char int8_t;
 #define bool u_int8_t
 #endif
 
-#ifdef ENABLE_FC
-#include "fcUtils.h"
-#include "scsiUtils.h"
-#endif
-
 typedef struct ether80211q {
   u_int16_t vlanId;
   u_int16_t protoType;
@@ -134,99 +129,18 @@ typedef struct _mac_t {
     u_int8_t mact_octet[6];
 } mac_t;
 
-#ifdef ENABLE_FC
-typedef struct fcAddr {
-    u_int8_t domain;
-    u_int8_t area;
-    u_int8_t port;
-} FcAddress;
-
-typedef struct _fcSerial {
-    FcAddress fcAddress;
-    u_short vsanId;
-} FcSerial;
-
-typedef union wwn_ {
-  u_int8_t str[8];
-#ifdef CFG_LITTLE_ENDIAN
-  struct {
-    unsigned naa            :4;
-    unsigned reserved       :12;
-    mac_t    mac;
-  } wwn_format1;
-
-  struct {
-    unsigned naa            :4;
-    unsigned vendor_specific:12;
-    mac_t    mac;
-  } wwn_format2;
-
-  struct {
-    unsigned naa:4;
-    u_int64_t   vendor_specific:60;
-  } wwn_format3;
-
-  struct {
-    unsigned  naa           :4;
-    unsigned  reserved      :28;
-    u_int32_t ip_addr;
-  } wwn_format4;
-
-  struct {
-    unsigned naa            :4;
-    unsigned ieee_company_id:24;
-    u_int64_t   vsid        :36; /* vendor specific ID */
-  } wwn_format5;
-#else
-  struct {
-    mac_t    mac;
-    unsigned reserved       :12;
-    unsigned naa            :4;
-  } wwn_format1;
-
-  struct {
-    mac_t    mac;
-    unsigned vendor_specific:12;
-    unsigned naa            :4;
-  } wwn_format2;
-
-  struct {
-    u_int64_t   vendor_specific:60;
-    unsigned naa:4;
-  } wwn_format3;
-
-  struct {
-    u_int32_t ip_addr;
-    unsigned  reserved      :28;
-    unsigned  naa           :4;
-  } wwn_format4;
-
-  struct {
-    u_int64_t   vsid        :36;
-    unsigned ieee_company_id:24;
-    unsigned naa            :4;
-  } wwn_format5;
-#endif
-  u_int64_t num;
-} wwn_t;
-#endif
-
 typedef struct hostAddr {
   u_int    hostFamily; /* AF_INET AF_INET6 */
   union {
     struct in_addr  _hostIp4Address;
-#ifdef INET6
     struct in6_addr _hostIp6Address;
-#endif
   } addr;
 } HostAddr;
 
 #define Ip4Address addr._hostIp4Address
 
-#ifdef INET6
 #define Ip6Address addr._hostIp6Address
 #define SIZEOF_HOSTSERIAL   8
-#endif
 
 #define SERIAL_NONE         0
 #define SERIAL_MAC          1
@@ -249,9 +163,6 @@ typedef struct hostSerial {
   union {
     EthSerial ethSerial; /* hostSerial == SERIAL_MAC */
     IpSerial  ipSerial;  /* hostSerial == SERIAL_IPV4/SERIAL_IPV6 */
-#ifdef ENABLE_FC
-    FcSerial  fcSerial;
-#endif
   } value;
 } HostSerial;
 
@@ -436,17 +347,6 @@ typedef struct packetStats {
   TrafficCounter shortest, longest;
   TrafficCounter badChecksum, tooLong;
 } PacketStats;
-
-/* *********************** */
-
-#ifdef ENABLE_FC
-typedef struct fcPacketStats {
-  TrafficCounter upTo36, upTo48, upTo52, upTo68, upTo104;
-  TrafficCounter upTo548, upTo1060, upTo2136, above2136;
-  TrafficCounter shortest, longest;
-  TrafficCounter badCRC, tooLong;
-} FcPacketStats;
-#endif
 
 /* *********************** */
 
@@ -690,10 +590,6 @@ typedef struct protoTrafficInfo {
   TrafficCounter sentLoc, sentRem;
   TrafficCounter rcvdLoc, rcvdFromRem;
   TrafficCounter pktSent, pktRcvd;
-#ifdef ENABLE_EFFICIENCY
-  TrafficCounter efficiencySent, efficiencyRcvd;
-  TrafficCounter lastEfficiencyPktSent, lastEfficiencyPktRcvd; /* Used by the RRD plugin */
-#endif
   TrafficCounter totalFlows;
 } ProtoTrafficInfo;
 
@@ -707,153 +603,6 @@ typedef struct nonIpProtoTrafficInfo {
   TrafficCounter sentPkts, rcvdPkts;
   struct nonIpProtoTrafficInfo *next;
 } NonIpProtoTrafficInfo;
-
-/* *********************** */
-
-#ifdef ENABLE_FC
-/* ************************************* */
-/*         SCSI-specific structures      */
-/* ************************************* */
-
-typedef struct scsiLunTrafficInfo {
-    struct timeval firstSeen;         /* time when the session has been initiated   */
-    struct timeval lastSeen;          /* time when the session has been closed      */
-    u_long pktSent, pktRcvd;
-    TrafficCounter bytesSent, bytesRcvd; /* This includes FC header + FCP + SCSI */
-    TrafficCounter numScsiRdCmd, numScsiWrCmd, numScsiOtCmd;
-    /* The following 3 counters are only FCP_DATA payload bytes */
-    TrafficCounter scsiRdBytes, scsiWrBytes, scsiOtBytes;
-    u_int32_t maxXferRdySize, minXferRdySize;
-    u_int32_t maxRdSize, minRdSize, maxWrSize, minWrSize;
-    u_int32_t numFailedCmds;
-    u_int32_t chkCondCnt, busyCnt, resvConflictCnt;
-    u_int32_t taskSetFullCnt, taskAbrtCnt, otherStatusCnt;
-    u_int32_t abrtTaskSetCnt, clearTaskSetCnt, tgtRstCnt, lunRstCnt, clearAcaCnt;
-    time_t lastTgtRstTime, lastLunRstTime;
-    u_int16_t lastOxid;         /* used to track data with LUN if host issues
-                                 * commands to multiple LUNs simultaneously */
-    u_char lastScsiCmd, invalidLun;
-    u_char frstRdDataRcvd, frstWrDataRcvd;
-    u_int32_t cmdsFromLastIops;
-    struct timeval reqTime, lastIopsTime;
-    struct timeval minXfrRdyRTT, maxXfrRdyRTT;
-    struct timeval minWrFrstDataRTT, maxWrFrstDataRTT;
-    struct timeval minRdFrstDataRTT, maxRdFrstDataRTT;
-    struct timeval minRTT, maxRTT;
-    float minIops, maxIops, aveIops;
-} ScsiLunTrafficInfo;
-
-/* This is used to sort the LUN entries */
-typedef struct lunStatsSortEntry {
-    u_short lun;
-    ScsiLunTrafficInfo *stats;
-} LunStatsSortedEntry;
-
-/* ************************************* */
-/*         FC-specific structures        */
-/* ************************************* */
-
-typedef struct fcDomainStats {
-    TrafficCounter sentBytes, rcvdBytes;
-    TrafficCounter scsiReadSentBytes, scsiReadRcvdBytes;
-    TrafficCounter scsiWriteSentBytes, scsiWriteRcvdBytes;
-    TrafficCounter scsiOtherSentBytes, scsiOtherRcvdBytes;
-} FcDomainStats;
-
-typedef struct fcDomainList {
-    /* This is basically the structure of Domain ID list in EFP */
-    /* It maybe inefficient, but it is simple to maintain */
-    u_char recordType;          /* This is always 1 */
-    u_char domainId;
-    u_char pad[6];
-    wwn_t  switchWWN;
-} FcDomainList;
-
-typedef struct sortedFcDomainStatsEntry {
-    u_char domainId;
-    FcDomainStats *stats;
-} SortedFcDomainStatsEntry;
-
-typedef struct fcFabricElementHash {
-    u_int16_t vsanId;
-    TrafficCounter totBytes, totPkts;
-    TrafficCounter dmBytes, dmPkts;
-    TrafficCounter fspfBytes, fspfPkts, hloPkts;
-    TrafficCounter lsuBytes, lsuPkts, lsaBytes, lsaPkts;
-    TrafficCounter zsBytes, zsPkts;
-    TrafficCounter nsBytes, nsPkts;
-    TrafficCounter rscnBytes, rscnPkts;
-    TrafficCounter fcsBytes, fcsPkts;
-    TrafficCounter otherCtlBytes, otherCtlPkts;
-    TrafficCounter fcFcpBytes, fcFiconBytes, fcElsBytes;
-    TrafficCounter fcDnsBytes, fcIpfcBytes, fcSwilsBytes, otherFcBytes;
-    double maxTimeZoneConf, minTimeZoneConf;
-    time_t zoneConfStartTime;
-    u_int32_t numBF, numRCF, numZoneConf;
-    time_t fabricConfStartTime; /* for computing fabric conf time */
-    double maxTimeFabricConf, minTimeFabricConf;
-    double aveTimeFabricConf;
-    FcDomainStats domainStats[MAX_FC_DOMAINS];
-    wwn_t principalSwitch;
-    u_short domainListLen;
-    FcDomainList  *domainList;
-    struct fcFabricElementHash *next;
-} FcFabricElementHash;
-
-typedef struct fcNameServerCache {
-    u_int16_t hashIdx;
-    u_int16_t vsanId;
-    FcAddress    fcAddress;
-    wwn_t     pWWN;
-    wwn_t     nWWN;
-    char      alias[MAX_LEN_SYM_HOST_NAME];
-    u_int16_t tgtType;
-    struct fcNameServerCache *next;
-} FcNameServerCacheEntry;
-
-typedef struct fcScsiCounters {
-  /* FC-Specific stuff */
-  FcAddress        hostFcAddress;
-  short            vsanId;           /* VSAN Id (0 if not set) */
-  char             hostNumFcAddress[LEN_FC_ADDRESS_DISPLAY];
-
-  /* FC/SCSI Info */
-  wwn_t            pWWN, nWWN;
-  u_short          fcRecvSize, scsiTarget, lunsGt256;
-  u_char           reportedLuns[MAX_LUNS_SUPPORTED];
-  u_char           devType;
-  char             vendorId[SCSI_VENDOR_ID_LEN];
-  char             productId[SCSI_VENDOR_ID_LEN];
-  char             productRev[4];
-  ScsiLunTrafficInfo *activeLuns[MAX_LUNS_SUPPORTED];
-  time_t           lastOnlineTime, lastOfflineTime;
-  TrafficCounter   numOffline;
-
-  /* FC Counters */
-  TrafficCounter   class2Sent, class2Rcvd, class3Sent, class3Rcvd;
-  TrafficCounter   classFSent, classFRcvd;
-  TrafficCounter   fcPktsSent, fcPktsRcvd;
-  TrafficCounter   fcBytesSent, fcBytesRcvd;
-  TrafficCounter   fcFcpPktsSent, fcFcpPktsRcvd;
-  TrafficCounter   fcFcpBytesSent, fcFcpBytesRcvd;
-  TrafficCounter   fcFiconPktsSent, fcFiconPktsRcvd;
-  TrafficCounter   fcFiconBytesSent, fcFiconBytesRcvd;
-  TrafficCounter   fcIpfcPktsSent, fcIpfcPktsRcvd;
-  TrafficCounter   fcIpfcBytesSent, fcIpfcBytesRcvd;
-  TrafficCounter   fcElsPktsSent, fcElsPktsRcvd;
-  TrafficCounter   fcElsBytesSent, fcElsBytesRcvd;
-  TrafficCounter   fcDnsPktsSent, fcDnsPktsRcvd;
-  TrafficCounter   fcDnsBytesSent, fcDnsBytesRcvd;
-  TrafficCounter   fcSwilsPktsSent, fcSwilsPktsRcvd;
-  TrafficCounter   fcSwilsBytesSent, fcSwilsBytesRcvd;
-  TrafficCounter   fcOtherFcPktsSent, fcOtherFcPktsRcvd;
-  TrafficCounter   otherFcBytesSent, otherFcBytesRcvd;
-  TrafficCounter   fcRscnsRcvd;
-
-  /* SCSI Counters */
-  TrafficCounter   scsiReadBytes, scsiWriteBytes, scsiOtherBytes;
-} FcScsiCounters;
-#endif
 
 /* **************************** */
 
@@ -897,11 +646,6 @@ typedef struct hostTraffic {
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
   struct timeval   minLatency, maxLatency;
   GeoIPRecord      *geo_ip;
-
-#ifdef ENABLE_EFFICIENCY
-  TrafficCounter greEfficiencySent, greEfficiencyRcvd, ipsecEfficiencySent, ipsecEfficiencyRcvd,
-    efficiencySent, efficiencyRcvd, lastEfficiencyPktSent, lastEfficiencyPktRcvd;
-#endif
 
   TrafficCounter   greSent, greRcvd, grePktSent, grePktRcvd, lastGrePktSent, lastGrePktRcvd;
   TrafficCounter   ipsecSent, ipsecRcvd, ipsecPktSent, ipsecPktRcvd, lastIpsecPktSent, lastIpsecPktRcvd;
@@ -958,11 +702,6 @@ typedef struct hostTraffic {
 
   ShortProtoTrafficInfo **ipProtosList;        /* List of myGlobals.numIpProtosList entries */
   ProtoTrafficInfo      **protoIPTrafficInfos; /* Info about IP traffic generated/rcvd by this host */
-
-#ifdef ENABLE_FC
-  /* Fiber Channel/SCSI */
-  FcScsiCounters   *fcCounters;
-#endif
 
   Counter          totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
   UsageCounter     contactedSentPeers;   /* peers that talked with this host */
@@ -1063,73 +802,23 @@ typedef struct ipSession {
 
 /* ************************************* */
 
-#ifdef ENABLE_FC
-
-/* FC Session Information */
-typedef struct fcSession {
-  u_short magic;
-  u_short lunMax;                      /* max LUN accessed by this sesssion */
-  HostTraffic *initiator;
-  FcAddress initiatorAddr;             /* initiator FC address */
-  HostTraffic *remotePeer;
-  FcAddress remotePeerAddr;            /* remote peer FC address */
-  int deviceId;
-  struct timeval firstSeen;         /* time when the session has been initiated   */
-  struct timeval lastSeen;          /* time when the session has been closed      */
-  u_long pktSent, pktRcvd;
-  TrafficCounter bytesSent, bytesRcvd;
-  TrafficCounter numScsiRdCmd, numScsiWrCmd, numScsiOtCmd;
-  TrafficCounter fcpBytesSent, fcpBytesRcvd;
-  TrafficCounter ficonRdBytes, ficonWrBytes, ficonOtBytes;
-  TrafficCounter ipfcBytesSent, ipfcBytesRcvd;
-  TrafficCounter fcElsBytesSent, fcElsBytesRcvd;
-  TrafficCounter fcDnsBytesSent, fcDnsBytesRcvd;
-  TrafficCounter fcSwilsBytesSent, fcSwilsBytesRcvd;
-  TrafficCounter otherBytesSent, otherBytesRcvd;
-  TrafficCounter unknownLunBytesSent, unknownLunBytesRcvd;
-  TrafficCounter bytesFragmentedSent;     /* FC Fragments                       */
-  TrafficCounter bytesFragmentedRcvd;     /* FC Fragments                       */
-  TrafficCounter acksSent, acksRcvd;      /* Num of ACK1 frames; Class F/2      */
-  TrafficCounter class2BytesSent, class2BytesRcvd;
-  TrafficCounter class3BytesSent, class3BytesRcvd;
-  u_char lastRctlRcvd, lastRctlSent;
-  u_char lastTypeRcvd, lastTypeSent;
-  u_short lastOxidSent, lastOxidRcvd;
-  u_short lastScsiOxid, lastElsOxid, lastSwilsOxid, lastLun;
-  u_char  lastScsiCmd, lastElsCmd, lastSwilsCmd;
-  u_char sessionState;              /* actual session state                     */
-  ScsiLunTrafficInfo *activeLuns[MAX_LUNS_SUPPORTED];
-  struct fcSession *next;
-} FCSession;
-
-typedef struct scsiSessionSortEntry {
-    HostTraffic *initiator, *target;
-    u_short lun;
-    ScsiLunTrafficInfo *stats;
-} ScsiSessionSortEntry;
-#endif
-
 typedef struct ntopIfaceAddrInet {
   struct in_addr ifAddr;
   struct in_addr network;
   struct in_addr netmask;
 } NtopIfaceAddrInet;
 
-#ifdef INET6
 typedef struct ntopIfaceAddrInet6 {
   struct in6_addr ifAddr;
   int             prefixlen;
 } NtopIfaceAddrInet6;
-#endif
 
 typedef struct ntopIfaceaddr{
   int family;
   struct ntopIfaceaddr *next;
   union {
     NtopIfaceAddrInet  inet;
-#ifdef INET6
     NtopIfaceAddrInet6 inet6;
-#endif
   } af;
 } NtopIfaceAddr;
 
@@ -1428,7 +1117,7 @@ typedef struct netFlowGlobals {
 #ifdef HAVE_SCTP
   int netFlowInSctpSocket;
 #endif
-  u_char netFlowAssumeFTP, saveFlowsIntoDB, enableSessionHandling;
+  u_char netFlowAssumeFTP, enableSessionHandling;
   u_short netFlowInPort;
   struct in_addr netFlowIfAddress, netFlowIfMask;
   char *netFlowWhiteList, *netFlowBlackList;
@@ -1634,14 +1323,6 @@ typedef struct ntopInterface {
   TrafficCounter multicastPkts;   /* # of multicast pkts captured by the application */
   TrafficCounter ipPkts;          /* # of IP pkts captured by the application */
 
-#ifdef ENABLE_FC
-  TrafficCounter fcPkts;
-  TrafficCounter fcEofaPkts;
-  TrafficCounter fcEofAbnormalPkts;
-  TrafficCounter fcAbnormalPkts;
-  TrafficCounter fcBroadcastPkts;
-#endif
-
   /*
    * The bytes section
    */
@@ -1667,20 +1348,6 @@ typedef struct ntopInterface {
   TrafficCounter otherBytes;
   TrafficCounter *ipProtosList;        /* List of myGlobals.numIpProtosList entries */
 
-#ifdef ENABLE_FC
-  TrafficCounter fcBytes;
-  TrafficCounter fragmentedFcBytes;
-  TrafficCounter fcFcpBytes;
-  TrafficCounter fcFiconBytes;
-  TrafficCounter fcIpfcBytes;
-  TrafficCounter fcSwilsBytes;
-  TrafficCounter fcDnsBytes;
-  TrafficCounter fcElsBytes;
-  TrafficCounter otherFcBytes;
-  TrafficCounter fcBroadcastBytes;
-  TrafficCounter class2Bytes, class3Bytes, classFBytes;
-#endif
-
   PortCounter    **ipPorts; /* [MAX_IP_PORT] */
 
   TrafficCounter lastMinEthernetBytes;
@@ -1701,9 +1368,6 @@ typedef struct ntopInterface {
   TrafficCounter lastNonIpBytes;
 
   PacketStats rcvdPktStats; /* statistics from start of the run to time of call */
-#ifdef ENABLE_FC
-  FcPacketStats rcvdFcPktStats; /* statistics from start of the run to time of call */
-#endif
   TTLstats    rcvdPktTTLStats;
 
   float peakThroughput, actualThpt, lastMinThpt, lastFiveMinsThpt;
@@ -1733,10 +1397,6 @@ typedef struct ntopInterface {
 
   u_short hashListMaxLookups;
 
-#ifdef ENABLE_FC
-  FcFabricElementHash **vsanHash;
-#endif
-
   /* ************************** */
 
   IpFragment *fragmentList;
@@ -1747,13 +1407,6 @@ typedef struct ntopInterface {
   fd_set ipTrafficMatrixPromiscHosts;
 
   /* ************************** */
-
-#ifdef ENABLE_FC
-  struct fcSession **fcSession;
-  u_short numFcSessions, maxNumFcSessions;
-  TrafficEntry** fcTrafficMatrix; /* Subnet traffic Matrix */
-  struct hostTraffic** fcTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */
-#endif
 
   NetFlowGlobals *netflowGlobals;  /* NetFlow */
   SflowGlobals   *sflowGlobals;    /* sFlow */
@@ -2137,26 +1790,12 @@ typedef enum {
 /* *************************************************************** */
 
 typedef enum {
-  showHostMainPage = 0,
-  showHostLunStats,
-  showHostLunGraphs,
-  showHostScsiSessionBytes,
-  showHostScsiSessionTimes,
-  showHostScsiSessionStatus,
-  showHostScsiSessionTMInfo,
-  showHostFcSessions
-} FcHostsDisplayPolicy;
-
-/* *************************************************************** */
-
-typedef enum {
   showPrefBasicPref = 1,
   showPrefDisplayPref,
   showPrefIPPref,
   showPrefFCPref,
   showPrefAdvPref,
   showPrefDbgPref,
-  showPrefDBPref
 } UserPrefDisplayPage;
 
 /* *********************************** */
@@ -2204,16 +1843,6 @@ typedef struct _userPref {
   u_int     maxNumSessions;      /* -X */
   u_int8_t  liveMode;            /* --live */
 
-#ifdef ENABLE_EFFICIENCY
-  u_int8_t  calculateEfficiency; /* --enable-efficiency */
-#endif
-  
-   /* SQL Database */
-  char    sqlDbConfig[64];
-  u_int   sqlRecDaysLifetime;
-  bool    saveRecordsIntoDb, saveSessionsIntoDb;
-
-  u_int16_t defaultVsan;         /* -v | --default-vsan */
   char      *webAddr;            /* -w | --http-serveraddress[:port] */
   int       webPort;
   int       ipv4or6;             /* -6 -4 */
@@ -2232,10 +1861,6 @@ typedef struct _userPref {
   bool mergeInterfaces;          /* -M | --no-interface-merge */
   bool enableL7;                 /* Enable/disable l7 protocol pattern matching */
   char *pcapLogBasePath;         /* -O | --pcap-file-path */  /* Added by Ola Lundqvist <opal@debian.org>. */
-
-#ifdef ENABLE_FC
-  char *fcNSCacheFile;           /* -N | --wwn-map */
-#endif
 
 #ifdef HAVE_OPENSSL
   char *sslAddr;                 /* -W | --https-serveraddress[:port] */
@@ -2536,14 +2161,6 @@ typedef struct ntopGlobals {
   char ** logView;         /* vector of log messages */
   int logViewNext;
   PthreadMutex logViewMutex;
-
-#ifdef ENABLE_FC
-  /* SCSI */
-  char scsiDefaultDevType;
-  char displayOption;
-  FcNameServerCacheEntry **fcnsCacheHash;
-  u_int32_t fcMatrixHashCollisions, fcMatrixHashUnresCollisions;
-#endif
 
   int multipleVLANedHostCount;
 

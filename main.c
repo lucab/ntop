@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- *          Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ *          Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -23,7 +23,6 @@
 
 #include "ntop.h"
 #include "globals-report.h"
-#include "scsiUtils.h"
 
 #if defined(DARWIN) && (!defined(TIGER))
 #include <mach-o/dyld.h>
@@ -32,10 +31,6 @@ extern char ** environ;
 
 #if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 1)
 #include <mcheck.h>
-#endif
-
-#if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 4) && defined(HAVE_BACKTRACE)
-#include <execinfo.h>
 #endif
 
 char static_ntop;
@@ -49,7 +44,7 @@ void welcome (FILE * fp) {
 	   myGlobals.program_name, version, sizeof(long) == 8 ? 64 : 32,
 	   configureDate, buildDate);
 
-  fprintf (fp, "Copyright 1998-2010 by %s.\n", author);
+  fprintf (fp, "Copyright 1998-2011 by %s.\n", author);
   fprintf (fp, "Get the freshest ntop from http://www.ntop.org/\n");
 }
 
@@ -141,9 +136,6 @@ void usage(FILE * fp) {
 
   fprintf(fp, "    [-M             | --no-interface-merge]               %sDon't merge network interfaces (see man page)\n",
 	  newLine);
-#ifdef ENABLE_FC
-  fprintf(fp, "    [-N             | --wwn-map]                          %sMap file providing map of WWN to FCID/VSAN\n", newLine);
-#endif
   fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            %sPath for log files in pcap format\n", newLine);
   fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     %sURL (mapper.pl) for displaying host location\n",
 	  newLine);
@@ -158,12 +150,6 @@ void usage(FILE * fp) {
   fprintf(fp, "    [--disable-mutexextrainfo]                            %sDisable extra mutex info\n", newLine);
   fprintf(fp, "    [--disable-stopcap]                                   %sCapture packets even if there's no memory left\n", newLine);
 
-#ifdef ENABLE_FC
-  fprintf(fp, "    [--fc-only]                                           %sDisplay only Fibre Channel statistics\n", newLine);
-  fprintf(fp, "    [--no-fc]                                             %sDisable processing & Display of Fibre Channel\n", newLine);
-  fprintf(fp, "    [--no-invalid-lun]                                    %sDon't display Invalid LUN information\n", newLine);
-#endif
-
   fprintf(fp, "    [--instance <name>]                                   %sSet log name for this ntop instance\n", newLine);
   fprintf(fp, "    [--p3p-cp]                                            %sSet return value for p3p compact policy, header\n", newLine);
   fprintf(fp, "    [--p3p-uri]                                           %sSet return value for p3p policyref header\n", newLine);
@@ -171,9 +157,6 @@ void usage(FILE * fp) {
   fprintf(fp, "    [--known-subnets <networks>]                          %sList of known subnets (separated by ,)\n", newLine);
   fprintf(fp, "                                                          %sIf the argument starts with @ it is assumed it is a file path\n", newLine);
   fprintf(fp, "                                                          %sE.g. 192.168.0.0/14=home,172.16.0.0/16=private\n", newLine);
-#ifdef ENABLE_EFFICIENCY
-  fprintf(fp, "    [--enable-efficiency]                                 %sCompute network traffic efficiency on ATM cells\n", newLine);
-#endif
 
  fprintf(fp, "\n"
 	 "NOTE\n"
@@ -284,48 +267,6 @@ static void verifyOptions (void){
 
     return;
 }
-
-/* ************************************ */
-
-#if defined(MEMORY_DEBUG) && (MEMORY_DEBUG == 4)
-static void abortfn(enum mcheck_status status) {
-
-#ifdef HAVE_BACKTRACE
-  int i;
-  void *array[20];
-  size_t size;
-  char **strings;
-
-  /* Grab the backtrace before we do much else... */
-  size = backtrace(array, 20);
-  strings = (char**)backtrace_symbols(array, size);
-#endif
-
-  switch(status) {
-    case MCHECK_HEAD:
-      traceEvent(CONST_TRACE_ERROR, "MCHECK_HEAD: modified before block");
-      break;
-    case MCHECK_TAIL:
-      traceEvent(CONST_TRACE_ERROR, "MCHECK_TAIL: modified after block");
-      break;
-    case MCHECK_FREE:
-      traceEvent(CONST_TRACE_ERROR, "MCHECK_FREE: already freed");
-      break;
-  }
-
-#ifdef HAVE_BACKTRACE
-  if (size >= 2) {
-    traceEvent(CONST_TRACE_INFO, "MCHECK: backtrace is:");
-    for (i=0; i<size; i++) {
-      traceEvent(CONST_TRACE_ERROR, "MCHECK: %2d. %s", i, strings[i]);
-    }
-  }
-#endif /* HAVE_BACKTRACE */
-
-  traceEvent(CONST_TRACE_FATALERROR, "MCHECK: %d", status);
-
-}
-#endif
 
 /* ***************************************************** */
 
@@ -636,7 +577,7 @@ int main(int argc, char *argv[]) {
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s (%d bit)", version, sizeof(long) == 8 ? 64 : 32);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Configured on %s, built on %s.", configureDate, buildDate);
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2010 by %s", author);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2011 by %s", author);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Get the freshest ntop from http://www.ntop.org/");
 
 #ifndef WIN32
@@ -665,12 +606,6 @@ int main(int argc, char *argv[]) {
   if(myGlobals.runningPref.P3Puri != NULL)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "P3P: Policy reference uri is '%s'",
 		 myGlobals.runningPref.P3Puri);
-
-#ifdef ENABLE_FC
-  if(!myGlobals.runningPref.printIpOnly && (myGlobals.runningPref.fcNSCacheFile != NULL)) {
-    processFcNSCacheFile (myGlobals.runningPref.fcNSCacheFile);
-  }
-#endif
 
   initNtop(myGlobals.runningPref.devices);
 

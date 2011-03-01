@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *                      
  *  			    http://www.ntop.org/
  *  					
@@ -105,12 +105,10 @@ extern ULONG GetHostIPAddr();
 #define MAKE_WITH_ZLIB
 #define HAVE_DIRENT_H
 #define HAVE_PCAP_FREEALLDEVS
-#define HAVE_MYSQL_H
 #define HAVE_PYTHON 1
 #define HAVE_GEOIP
 
 #if !defined(__GNUC__)
-#define INET6
 #define in6_addr in_addr6
 #endif
 

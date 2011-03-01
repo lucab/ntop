@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- *            Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ *            Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -22,11 +22,6 @@
  */
 
 #include "ntop.h"
-
-#ifdef HAVE_BACKTRACE
-extern size_t backtrace(void* thearray[], int thearraylen);
-extern char** backtrace_symbols(void* thearray[], int thearraylen);
-#endif
 
 static int *servicesMapper = NULL; /* temporary value */
 
@@ -995,33 +990,6 @@ RETSIGTYPE cleanup(int signo) {
   alarm(10);
 #endif
 
-#ifdef HAVE_BACKTRACE
-  if(signo == SIGSEGV) {
-    void *array[20];
-    size_t size;
-    char **strings;
-
-    /* Don't double fault... */
-    signal(SIGSEGV, SIG_DFL);
-
-    /* Grab the backtrace before we do much else... */
-    size = backtrace(array, 20);
-    strings = (char**)backtrace_symbols(array, size);
-
-    traceEvent(CONST_TRACE_ERROR, "BACKTRACE: *****ntop error: Signal(%d)", signo);
-
-    traceEvent(CONST_TRACE_ERROR, "BACKTRACE:     backtrace is:");
-    if(size < 2) {
-      traceEvent(CONST_TRACE_ERROR, "BACKTRACE:         **unavailable!");
-    } else {
-      /* Ignore the 0th entry, that's our cleanup() */
-      for (i=1; i<size; i++) {
-	traceEvent(CONST_TRACE_ERROR, "BACKTRACE:          %2d. %s", i, strings[i]);
-      }
-    }
-  }
-#endif /* HAVE_BACKTRACE */
-
   if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN) {
     return;
   }
@@ -1114,7 +1082,6 @@ RETSIGTYPE cleanup(int signo) {
   }
 
   termGdbm();
-  termDB();
   
   if(myGlobals.geo_ip_db != NULL) {
     GeoIP_delete(myGlobals.geo_ip_db);
@@ -1191,7 +1158,6 @@ RETSIGTYPE cleanup(int signo) {
     if(myGlobals.device[i].pcapOtherDumper != NULL)
       pcap_dump_close(myGlobals.device[i].pcapOtherDumper);
 
-#ifdef INET6
     {
       NtopIfaceAddr * tmp;
       while(myGlobals.device[i].v6Addrs) {
@@ -1200,7 +1166,6 @@ RETSIGTYPE cleanup(int signo) {
         free(tmp);
       }
     }
-#endif
 
     while(myGlobals.device[i].asStats) {
       AsStats *next = myGlobals.device[i].asStats->next;

@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- *            Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ *            Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -965,39 +965,6 @@
 #define GOOGLE_DEFAULT_MAP_KEY "ABQIAAAAfFZuochHQVROgoyQEe3_SBS6yewdwLQqdZ11GEdkGrSPz1gWRxTmFdYiXZrTS3LFawwiK5Pufj5j1Q"
 
 /*
- * FibreChannel/SCSI constants
- */
-
-/*
- * This is the maximum number of FibreChannel domains to report on at once.
- */
-#define MAX_FC_DOMAINS                      240
-
-/*
- * This is the maximum number of FibreChannel domains to graph at once.
- */
-#define MAX_VSANS_GRAPHED       10
-
-/*
- * This is the default Vsan # to use if there isn't a specific value.
- * AFAIK, this constant sets something in myGlobals but that isn't used
- * at present.  1 is a common value for switches and such.
- */
-#define DEFAULT_VSAN                        1
-
-/*
- * VSANs below this are visible in many ntop reports, values above this
- * are not.  I think it's a Cisco ism, so if you have other equipment and
- * are missing data, try changing this.
- */
-#define MAX_USER_VSAN           1001
-
-/*
- * Theoretical maximum number of VSANs
- */
-#define MAX_VSANS               4095
-
-/*
  * These are the constants used by the ntop web server to match requests and
  * to generate links in generated pages.  Look in http.c, plugins, etc.
  *
@@ -1730,16 +1697,14 @@
  *     Over time, as one p2p system waxes or wanes, this list
  *     will change. It is suggested that you DO NOT reuse old #s
  */
-#define FLAG_P2P_GNUTELLA                   1
 #define FLAG_P2P_KAZAA                      2
 /* new */
 #define FLAG_P2P_EDONKEY                    3
 #define FLAG_P2P_BITTORRENT                 4
-#define FLAG_P2P_OTHER_PROTOCOL             5
-#define FLAG_VOIP                           6
-#define FLAG_FACEBOOK                       7
-#define FLAG_TWITTER                        8
-#define FLAG_YOUTUBE                        9
+#define FLAG_VOIP                           5
+#define FLAG_FACEBOOK                       6
+#define FLAG_TWITTER                        7
+#define FLAG_YOUTUBE                        8
 
 #define UNKNOWN_P2P_FILE                    "&lt;unknown&nbsp;file&gt;"
 
@@ -2583,11 +2548,6 @@
 #endif
 
 #ifdef WIN32
-
-#ifndef __GNUC__
-#define INET6
-#endif /* __GNUC__ */
-
 #ifndef s6_addr
 //
 // Duplicate these definitions here so that this file can be included by
@@ -2730,20 +2690,9 @@ struct ip6_hdr
 #define NTOP_PREF_P3PCP                  "ntop.P3Pcp"
 #define NTOP_PREF_P3PURI                 "ntop.P3Puri"
 
-#ifdef ENABLE_FC
-#define NTOP_PREF_WWN_MAP                "ntop.fcNSCacheFile"
-#define NTOP_PREF_PRINT_FCORIP           "ntop.printFcOrIp"
-#define NTOP_PREF_NO_INVLUN              "ntop.noInvalidLunDisplay"
-#endif
-
 #define NTOP_PREF_MAXHASH                "ntop.maxNumHashEntries"
-#define NTOP_PREF_SQL_DB_CONFIG          "ntop.sqlDbConfig"
-#define NTOP_PREF_SQL_REC_LIFETIME       "ntop.sqlRecDaysLifetime"
-#define NTOP_PREF_SAVE_REC_INTO_DB       "ntop.saveRecordsIntoDb"
-#define NTOP_PREF_SAVE_SESSIONS_INTO_DB  "ntop.saveSessionsIntoDb"
 #define NTOP_PREF_MAXSESSIONS            "ntop.maxNumSessions"
 #define NTOP_PREF_LIVE_MODE              "ntop.liveMode"
-#define NTOP_PREF_NET_EFFICIENCY         "ntop.netEfficiency"
 #define NTOP_PREF_MERGEIF                "ntop.mergeInterfaces"
 #define NTOP_PREF_ENABLE_L7PROTO         "ntop.enableL7Proto"
 #define NTOP_PREF_NO_ISESS_PURGE         "ntop.disableInstantSessionPurge"

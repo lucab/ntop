@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- *            Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ *            Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -36,9 +36,7 @@ extern short _setRunState(char *file, int line, short newRunState);
 extern MYCODE myFacilityNames[];
 #endif
 
-#if defined(INET6)
 extern struct in6_addr _in6addr_linklocal_allnodes;
-#endif
 
 #define accessAddrResMutex(a) if(myGlobals.runningPref.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex,a)
 #define releaseAddrResMutex() if(myGlobals.runningPref.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex)
@@ -138,10 +136,8 @@ extern int printable(int ch);
 extern void cleanupAddressQueue(void);
 extern void* dequeueAddress(void* notUsed);
 extern void purgeQueuedV4HostAddress(u_int32_t addr);
-#ifdef INET6
 extern char* _intop(struct in6_addr *addr,char *buf, u_short buflen);
 extern char* intop(struct in6_addr *addr);
-#endif
 extern char* _intoa(struct in_addr addr, char* buf, u_short bufLen);
 extern char* intoa(struct in_addr addr);
 extern char * _addrtostr(HostAddr *addr, char* buf, u_short bufLen);
@@ -196,11 +192,6 @@ extern void clearUserUrlList(void);
 extern char* _formatTime(time_t *theTime, char *outStr, int outStrLen, char *file, int line);
 #define formatTime(t, o, l) _formatTime(t, o, l, __FILE__, __LINE__)
 
-#ifdef ENABLE_FC
-/* fcUtils.c */
-extern HostTraffic* allocFcScsiCounters(HostTraffic *host);
-#endif
-
 /* python.c */
 #ifdef HAVE_PYTHON
 extern void init_python(int argc, char *argv[]);
@@ -210,10 +201,6 @@ extern void term_python(void);
 /* hash.c */
 extern u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 		      short* useIPAddressForSearching, HostTraffic **el, int actualDeviceId);
-#ifdef ENABLE_FC
-extern u_int hashFcHost(FcAddress *fcAddress, u_short vsanId,
-			HostTraffic **el, int actualDeviceId);
-#endif
 extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void readSessionPurgeParams(void);
@@ -225,9 +212,6 @@ extern HostTraffic * _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 				 u_char forceUsingIPaddress, int actualDeviceId,
 				 char *file, int line);
 #define lookupHost(a, b, c, d, e, f) _lookupHost(a, b, c, d, e, f, __FILE__, __LINE__)
-#ifdef ENABLE_FC
-extern HostTraffic * lookupFcHost(FcAddress *fcAddress, u_short vsanId, int actualDeviceId);
-#endif
 extern void add_valid_ptr(void* ptr);
 extern void remove_valid_ptr(void* ptr);
 extern int is_valid_ptr(void* ptr);
@@ -519,13 +503,6 @@ extern int ntop_conditional_sched_yield(void);
 extern HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualDeviceId);
 extern HostTraffic* findHostBySerial(HostSerial serial, u_int actualDeviceId);
 extern HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId);
-#ifdef ENABLE_FC
-extern HostTraffic* findHostByFcAddress(FcAddress *fcAddr, u_short vsanId, u_int actualDeviceId);
-extern FcNameServerCacheEntry *findFcHostNSCacheEntry(FcAddress *fcAddr, u_short vsanId);
-extern char* fc_to_str(const u_int8_t *ad);
-extern char* fcwwn_to_str(const u_int8_t *ad);
-#endif
-#ifdef INET6
 extern unsigned long in6_hash(struct in6_addr *addr);
 extern int in6_isglobal(struct in6_addr *addr);
 extern unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, int size);
@@ -553,7 +530,6 @@ extern unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int devi
 extern unsigned short in6_isPrivateAddress(struct in6_addr *addr,
 					   u_int32_t *the_local_network, 
 					   u_int32_t *the_local_network_mask);
-#endif
 extern unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport);
 extern u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport);
 extern unsigned short in_isBroadcastAddress(struct in_addr *addr,
@@ -850,10 +826,6 @@ extern void l7SessionProtoDetection(IPSession *theSession,
 extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);
 extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, 
 			u_char allocateMemoryIfNeeded, u_char lockMutex);
-#ifdef ENABLE_FC
-extern void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
-			  u_char allocateMemoryIfNeeded, u_char lockMutex);
-#endif
 extern void scanTimedoutTCPSessions(int actualDeviceId);
 extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
 			    u_short sport, u_short dport, u_int length);
@@ -877,54 +849,10 @@ extern void updatePeersDelayStats(HostTraffic *peer_a, HostSerial *peer_b_serial
 				  u_char is_client_delay, 
 				  int port_idx);
 extern void updateSessionDelayStats(IPSession* session);
-#ifdef ENABLE_FC
-extern FCSession* handleFcSession(const struct pcap_pkthdr *h,
-				  u_short fragmentedData,
-				  HostTraffic *srcHost, HostTraffic *dstHost,
-				  u_int length, u_int payload_len, u_short oxid,
-				  u_short rxid, u_short protocol, u_char rCtl,
-				  u_char isXchgOrig, const u_char *bp,
-				  int actualDeviceId);
-#endif
 
 /* event.c */
 extern void notifyEvent(EventType evt, HostTraffic *el, IPSession *session, int eventValue);
 extern void init_events(void);
-
-
-#ifdef ENABLE_FC
-/* fcUtils.c */
-extern int isFlogiAcc(FcAddress *fcAddress, u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
-extern int fillFcHostInfo(const u_char *bp, HostTraffic *srcHost);
-extern int isPlogi(u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
-extern int isLogout(u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
-extern int isRscn(u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
-extern int fillFcpInfo(const u_char *bp, HostTraffic *srcHost,
-		       HostTraffic *dstHost);
-extern FcFabricElementHash *getFcFabricElementHash(u_short vsanId,
-						   int actualDeviceId);
-extern int isValidFcNxPort(FcAddress *fcAddress);
-extern int updateFcFabricElementHash(FcFabricElementHash **theHash, u_short vsanId,
-				     const u_char *bp, FcAddress *srcAddr,
-				     FcAddress *dstAddr,
-				     u_short protocol, u_char r_ctl,
-				     u_int32_t pktlen);
-extern void processFcNSCacheFile(char *filename);
-#endif
-
-extern u_int32_t num_db_insert, num_db_insert_failed;
-extern int is_db_enabled(void);
-extern void initDB(void);
-extern void termDB(void);
-extern int dump_session_to_db(IPSession *sess);
-extern int insert_flow_record(u_int16_t probeId,
-			      u_int32_t srcAddr, u_int32_t dstAddr,
-			      u_int16_t input, u_int16_t output,
-			      u_int32_t sentPkts, u_int32_t sentOctets,
-			      u_int32_t rcvdPkts, u_int32_t rcvdOctets,
-			      u_int32_t first, u_int32_t last,
-			      u_int16_t srcPort, u_int16_t dstPort, u_int8_t tcpFlags,
-			      u_int8_t proto, u_int8_t tos, u_int16_t vlanId);
 
 /* Pseudo-functions.
  *   We use these as if they were real functions, but they expand to

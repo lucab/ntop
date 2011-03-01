@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  *  			    http://www.ntop.org/
  *
@@ -850,55 +850,15 @@ int sortHostFctn(const void *_a, const void *_b) {
     return(rc);
     break;
   case 2:
-#ifdef ENABLE_FC
-      if (isFcHost ((*a)) && isFcHost ((*b))) {
-	if((*a)->fcCounters->hostFcAddress.domain > (*b)->fcCounters->hostFcAddress.domain)
-              return(1);
-          else if ((*a)->fcCounters->hostFcAddress.domain < (*b)->fcCounters->hostFcAddress.domain)
-              return (-1);
-          else {
-              if ((*a)->fcCounters->hostFcAddress.area > (*b)->fcCounters->hostFcAddress.area)
-                  return (1);
-              else if ((*a)->fcCounters->hostFcAddress.area < (*b)->fcCounters->hostFcAddress.area)
-                  return (-1);
-              else {
-                  if ((*a)->fcCounters->hostFcAddress.port > (*b)->fcCounters->hostFcAddress.port)
-                      return (1);
-                  else if ((*a)->fcCounters->hostFcAddress.port < (*b)->fcCounters->hostFcAddress.port)
-                      return (-1);
-                  else
-                      return (0);
-              }
-          }
-      } else
-#endif
-	{
-          rc = addrcmp(&(*a)->hostIpAddress,&(*b)->hostIpAddress);
-          return(rc);
-      }
+    rc = addrcmp(&(*a)->hostIpAddress,&(*b)->hostIpAddress);
+    return(rc);
     break;
   case 3:
-#ifdef ENABLE_FC
-      if (isFcHost ((*a)) && isFcHost ((*b))) {
-          n_a = (*a)->fcCounters->vsanId, n_b = (*b)->fcCounters->vsanId;
-          return ((n_a < n_b) ? -1 : (n_a > n_b) ? 1 : 0);
-      } else
-#endif
-	{
-          return(strcasecmp((*a)->ethAddressString, (*b)->ethAddressString));
-      }
+    return(strcasecmp((*a)->ethAddressString, (*b)->ethAddressString));
   case 5:
-#ifdef ENABLE_FC
-      if (isFcHost ((*a)) && isFcHost ((*b))) {
-	return(strcasecmp(getVendorInfo(&((*a)->fcCounters->pWWN.str[2]), 0),
-			  getVendorInfo(&((*b)->fcCounters->pWWN.str[2]), 0)));
-      } else
-#endif
-	{
-          return(strcasecmp(getVendorInfo((*a)->ethAddress, 0),
-                            getVendorInfo((*b)->ethAddress, 0)));
-      }
-      break;
+    return(strcasecmp(getVendorInfo((*a)->ethAddress, 0),
+		      getVendorInfo((*b)->ethAddress, 0)));
+    break;
   case 6:
     if((*a)->nonIPTraffic == NULL) {
       nameA = "";
@@ -1804,26 +1764,11 @@ int cmpHostsFctn(const void *_a, const void *_b) {
 
   switch(myGlobals.columnSort) {
   case 2: /* IP Address */
-#ifdef ENABLE_FC
-    if(isFcHost((*a)) && isFcHost((*b))) {
-      return(memcmp(((u_int8_t *)&(*a)->fcCounters->hostFcAddress), 
-		    ((u_int8_t *)&(*b)->fcCounters->hostFcAddress),
-		    LEN_FC_ADDRESS));
-    }
-    else
-#endif
-      return(addrcmp(&(*a)->hostIpAddress, &(*b)->hostIpAddress));
+    return(addrcmp(&(*a)->hostIpAddress, &(*b)->hostIpAddress));
     break;
 
   case 3: /* Data Sent */
-#ifdef ENABLE_FC
-    if (isFcHost((*a)) && isFcHost((*b))) {
-      a_ = (*a)->fcCounters->fcBytesSent.value;
-      b_ = (*b)->fcCounters->fcBytesSent.value;
-    } else
-#endif
-      {
-      switch(myGlobals.sortFilter) {
+    switch(myGlobals.sortFilter) {
       case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
 	a_ = (*a)->bytesSentLoc.value;
 	b_ = (*b)->bytesSentLoc.value;
@@ -1836,19 +1781,11 @@ int cmpHostsFctn(const void *_a, const void *_b) {
 	a_ = (*a)->bytesSentLoc.value;
 	b_ = (*b)->bytesSentLoc.value;
 	break;
-      }
-    }
+      }    
     if(a_ < b_) return(1); else if (a_ > b_) return(-1); else return(0);
     break;
 
   case 4: /* Data Rcvd */
-#ifdef ENABLE_FC
-    if(isFcHost((*a)) && isFcHost((*b))) {
-      a_ = (*a)->fcCounters->fcBytesRcvd.value;
-      b_ = (*b)->fcCounters->fcBytesRcvd.value;
-    } else
-#endif
-      {
       switch(myGlobals.sortFilter) {
       case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
 	a_ = (*a)->bytesRcvdLoc.value;
@@ -1862,19 +1799,9 @@ int cmpHostsFctn(const void *_a, const void *_b) {
 	a_ = (*a)->bytesRcvdLoc.value;
 	b_ = (*b)->bytesRcvdLoc.value;
 	break;
-      }
-    }
+      }    
     if(a_ < b_) return(1); else if (a_ > b_) return(-1); else return(0);
     break;
-
-#ifdef ENABLE_FC
-  case 5: /* VSAN */
-    if(isFcHost((*a)) && isFcHost((*b))) {
-      a_ = (*a)->fcCounters->vsanId, b_ = (*b)->fcCounters->vsanId;
-      return((a_ < b_) ? -1 : (a_ > b_) ? 1 : 0);
-    }
-    break;
-#endif
 
   default: /* Host Name */
     return(cmpFctnResolvedName(a, b));
@@ -2784,7 +2711,6 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
 /* ************************************ */
 
-#ifdef INET6
 void printIcmpv6Stats(HostTraffic *el) {
   char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32], formatBuf1[32];
 
@@ -2859,7 +2785,6 @@ void printIcmpv6Stats(HostTraffic *el) {
   }
   sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
 }
-#endif
 
 /* ******************************************** */
 
@@ -2991,10 +2916,8 @@ void printHostIcmpStats(HostTraffic *el){
   family = el->hostIpAddress.hostFamily;
   if (family == AF_INET)
     printIcmpv4Stats(el);
-#ifdef INET6
   else if (family == AF_INET6)
     printIcmpv6Stats(el);
-#endif
 }
 
 /* ************************************ */
@@ -3032,12 +2955,6 @@ void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
 /* ************************************ */
 
 HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) {
-#ifdef ENABLE_FC
-  FcNameServerCacheEntry *fcnsEntry;
-  FcScsiCounters *tmp;
-  HostTraffic *srcEl;
-#endif
-  
   if(cmpSerial(&theSerial, &myGlobals.broadcastEntry->hostSerial)) {
     memcpy(el, myGlobals.broadcastEntry, sizeof(HostTraffic));
     return(el);
@@ -3046,13 +2963,7 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     return(0);
   }
 
-#ifdef ENABLE_FC
-  tmp = el->fcCounters;
-#endif
   memset(el, 0, sizeof(HostTraffic));
-#ifdef ENABLE_FC
-  el->fcCounters = tmp;
-#endif
   copySerial(&el->hostSerial, &theSerial);
 
   if((theSerial.serialType == SERIAL_IPV4) ||
@@ -3068,41 +2979,7 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
 	    sizeof(el->hostNumIpAddress));
 
     // FIX -- Update address TODO
-  }
-#ifdef ENABLE_FC
-  else if (theSerial.serialType == SERIAL_FC) {
-    memcpy ((u_int8_t *)&el->fcCounters->hostFcAddress,
-            (u_int8_t *)&theSerial.value.fcSerial.fcAddress,
-            LEN_FC_ADDRESS);
-    safe_snprintf (__FILE__, __LINE__, el->fcCounters->hostNumFcAddress, sizeof(el->fcCounters->hostNumFcAddress), 
-		   "%02x.%02x.%02x", el->fcCounters->hostFcAddress.domain,
-             el->fcCounters->hostFcAddress.area, el->fcCounters->hostFcAddress.port);
-    setResolvedName(el, el->fcCounters->hostNumFcAddress, FLAG_HOST_SYM_ADDR_TYPE_FCID);
-
-    el->fcCounters->vsanId = theSerial.value.fcSerial.vsanId;
-    el->l2Family = FLAG_HOST_TRAFFIC_AF_FC;
-    el->fcCounters->devType = SCSI_DEV_UNINIT;
-    el->magic = CONST_MAGIC_NUMBER;
-    
-    if((srcEl = findHostBySerial (theSerial, deviceId)) != NULL) {
-      strcpy (el->hostResolvedName, srcEl->hostResolvedName);
-      el->hostResolvedNameType = srcEl->hostResolvedNameType;
-    } else {
-        fcnsEntry = findFcHostNSCacheEntry (&el->fcCounters->hostFcAddress, el->fcCounters->vsanId);
-        if (fcnsEntry != NULL) {
-	  if (fcnsEntry->alias != NULL) {
-	    setResolvedName(el, fcnsEntry->alias, FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS);
-	  }
-	  else {
-	    setResolvedName(el, (char*)fcnsEntry->pWWN.str, FLAG_HOST_SYM_ADDR_TYPE_FC_WWN);
-	  }
-	  memcpy((u_int8_t *)el->fcCounters->pWWN.str, (u_int8_t *)fcnsEntry->pWWN.str,
-		  LEN_WWN_ADDRESS);
-        }
-    }
-  }
-#endif
-  else {
+  } else {
     /* MAC */
     char *ethAddr;
     char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
@@ -3124,13 +3001,6 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
   u_int i, titleSent = 0;
   char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
   HostTraffic tmpEl;
-
-#ifdef ENABLE_FC
-  if (isFcHost (el)) {
-      printFcHostContactedPeers (el, actualDeviceId);
-      return;
-  }
-#endif
 
   if((el->pktSent.value != 0) || (el->pktRcvd.value != 0)) {
       int ok =0;
@@ -5230,165 +5100,6 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
 }
 
 /* ************************************************ */
-
-#ifdef ENABLE_FC
-void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, char *url) {
-  char buf[LEN_GENERAL_WORK_BUFFER];
-  char *sign, *arrowGif, *arrow[48], *theAnchor[48];
-  char htmlAnchor[64], htmlAnchor1[64];
-  char hours[][24] = {"12<BR>AM", "1<BR>AM", "2<BR>AM", "3<BR>AM", "4<BR>AM", "5<BR>AM", "6<BR>AM",
-                       "7<BR>AM", "8<BR>AM", "9<BR>AM", "10<BR>AM", "11<BR>AM", "12<BR>PM", "1<BR>PM",
-                       "2<BR>PM", "3<BR>PM", "4<BR>PM", "5<BR>PM", "6<BR>PM", "7<BR>PM", "8<BR>PM",
-                       "9<BR>PM", "10<BR>PM", "11<BR>PM"};
-  int i, j;
-
-  /* printf("->%d<-\n",screenNumber); */
-
-  if(revertOrder) {
-    sign = "";
-    arrowGif = "&nbsp;" CONST_IMG_ARROW_UP;
-  } else {
-    sign = "-";
-    arrowGif = "&nbsp;" CONST_IMG_ARROW_DOWN;
-  }
-
-  memset(buf, 0, sizeof(buf));
-
-  safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=\"%s?col=%s", url, sign);
-  safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=\"%s?col=",  url);
-
-  if(abs(column) == FLAG_HOST_DUMMY_IDX) {
-    arrow[0] = arrowGif; theAnchor[0] = htmlAnchor;
-  } else {
-    arrow[0] = ""; theAnchor[0] = htmlAnchor1;
-  }
-
-  if(abs(column) == FLAG_DOMAIN_DUMMY_IDX) {
-    arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;
-  } else {
-    arrow[1] = "";  theAnchor[1] = htmlAnchor1;
-  }
-
-  if(abs(column) == 0) {
-    arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;
-  } else {
-    arrow[2] = ""; theAnchor[2] = htmlAnchor1;
-  }
-
-  switch(reportType) {
-  case SORT_FC_DATA:
-    sendString("<CENTER>\n");
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON">"
-		"<TH "TH_BG" "DARK_BG">%s" FLAG_DOMAIN_DUMMY_IDX_STR "\">VSAN%s</A></TH>\n"
-		"<TH "TH_BG" "DARK_BG">%s" FLAG_HOST_DUMMY_IDX_STR "\">FC_Port%s</A></TH>\n"
-		"<TH "TH_BG" COLSPAN=2 "DARK_BG">%s0\">Total Bytes%s</A></TH>\n",
-		theAnchor[1], arrow[1], theAnchor[0], arrow[0],
-                theAnchor[2], arrow[2]);
-    sendString(buf);
-
-    if(abs(column) == 1)
-      { arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
-    else { arrow[0] = ""; theAnchor[0] = htmlAnchor1;  }
-    if(abs(column) == 2)
-      { arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;  }
-    else { arrow[1] = "";  theAnchor[1] = htmlAnchor1;}
-    if(abs(column) == 3)
-      { arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;  }
-    else { arrow[2] = ""; theAnchor[2] = htmlAnchor1; }
-    if(abs(column) == 4)
-      { arrow[3] = arrowGif; theAnchor[3] = htmlAnchor;  }
-    else { arrow[3] = ""; theAnchor[3] = htmlAnchor1; }
-    if(abs(column) == 5)
-      { arrow[4] = arrowGif; theAnchor[4] = htmlAnchor;  }
-    else { arrow[4] = ""; theAnchor[4] = htmlAnchor1;  }
-    if(abs(column) == 6)
-      { arrow[5] = arrowGif; theAnchor[5] = htmlAnchor;  }
-    else { arrow[5] = ""; theAnchor[5] = htmlAnchor1;  }
-    if(abs(column) == 7)
-      { arrow[6] = arrowGif; theAnchor[6] = htmlAnchor1;  }
-
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" "DARK_BG">%s1\">SCSI%s</A></TH>"
-                "<TH "TH_BG" "DARK_BG">%s2\">ELS%s</A></TH><TH "TH_BG" "DARK_BG">%s3\">NS%s</A></TH>"
-                "<TH "TH_BG" "DARK_BG">%s4\">IP/FC%s</A><TH "TH_BG" "DARK_BG">%s5\">SWILS%s</A></TH>"
-                "<TH "TH_BG" "DARK_BG">%s6\">Other%s</A></TH>",
-                theAnchor[0], arrow[0], theAnchor[1], arrow[1],
-                theAnchor[2], arrow[2], theAnchor[3], arrow[3],
-                theAnchor[4], arrow[4], theAnchor[5], arrow[5]);
-    sendString(buf);
-    break;
-
-  case SORT_FC_ACTIVITY:
-    sendString("<CENTER>\n");
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" >"
-		"<TH "TH_BG" "DARK_BG">%s" FLAG_DOMAIN_DUMMY_IDX_STR "\">VSAN%s</A></TH>"
-		"<TH "TH_BG" "DARK_BG">%s" FLAG_HOST_DUMMY_IDX_STR "\">FC_Port%s</A></TH>\n",
-		theAnchor[1], arrow[1], theAnchor[0], arrow[0]);
-    sendString(buf);
-    j = hourId;
-    for (i = 0; i < 24; i++) {
-        j = j % 24;
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TH "TH_BG" "DARK_BG">%s</TH>\n", hours[j]);
-        sendString (buf);
-        if (!j) {
-            j = 23;
-        }
-        else {
-            j--;
-        }
-    }
-    break;
-  case SORT_FC_THPT:
-    sendString("<CENTER>\n");
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON">"
-		"<TH "TH_BG" ROWSPAN=\"2\" "DARK_BG">%s" FLAG_DOMAIN_DUMMY_IDX_STR "\">VSAN%s</A></TH>"
-		"<TH "TH_BG" ROWSPAN=\"2\" "DARK_BG">%s" FLAG_HOST_DUMMY_IDX_STR "\">FC_Port%s</A></TH>",
-		theAnchor[1], arrow[1], theAnchor[0], arrow[0]);
-    sendString(buf);
-    updateThpt(0);
-    if(abs(column) == 1) { arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
-    else { arrow[0] = ""; theAnchor[0] = htmlAnchor1;  }
-    if(abs(column) == 2) { arrow[1] = arrowGif; theAnchor[1] = htmlAnchor; }
-    else { arrow[1] = ""; theAnchor[1] = htmlAnchor1; }
-    if(abs(column) == 3) { arrow[2] = arrowGif; theAnchor[2] = htmlAnchor; }
-    else { arrow[2] = "";  theAnchor[2] = htmlAnchor1;}
-    if(abs(column) == 4) { arrow[3] = arrowGif; theAnchor[3] = htmlAnchor; }
-    else { arrow[3] = "";  theAnchor[3] = htmlAnchor1;}
-    if(abs(column) == 5) { arrow[4] = arrowGif; theAnchor[4] = htmlAnchor; }
-    else { arrow[4] = "";  theAnchor[4] = htmlAnchor1;}
-    if(abs(column) == 6) { arrow[5] = arrowGif; theAnchor[5] = htmlAnchor; }
-    else { arrow[5] = "";  theAnchor[5] = htmlAnchor1;}
-
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\" "DARK_BG">Bytes</TH>"
-	    "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\" "DARK_BG">Packets</TH>"
-            "</TR><TR "TR_ON">");
-    sendString(buf);
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" "DARK_BG">%s1\">Current%s</A></TH>"
-	     "<TH "TH_BG" "DARK_BG">%s2\">Avg%s</A></TH>"
-	     "<TH "TH_BG" "DARK_BG">%s3\">Peak%s</A></TH>"
-	    "<TH "TH_BG" "DARK_BG">%s4\">Current%s</A></TH><TH "TH_BG" "DARK_BG">%s5\">Avg%s</A></TH>"
-	     "<TH "TH_BG" "DARK_BG">%s6\">Peak%s</A></TH>",
-	    theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2],
-	    theAnchor[3], arrow[3], theAnchor[4], arrow[4], theAnchor[5], arrow[5]);
-    sendString(buf);
-    break;
-  default:
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, 
-                "<CENTER><p>ERROR: reportType=%d</p>\n",
-                reportType);
-    sendString(buf);
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON">"
-		"<TH "TH_BG" "DARK_BG">%s" FLAG_DOMAIN_DUMMY_IDX_STR "\">VSAN%s</A></TH>"
-		"<TH "TH_BG" "DARK_BG">%s" FLAG_HOST_DUMMY_IDX_STR "\">FC_Port%s</A></TH>",
-		theAnchor[1], arrow[1], theAnchor[0], arrow[0]);
-    sendString(buf);
-    break;
-  }
-
-  sendString("</TR>\n");
-}
-#endif
-
-/* ************************************ */
 
 void printPluginTrailer(char *left, char *middle) {
   sendString("<br>\n<hr>\n<br>\n<table border=\"0\" width=100%><tr>");

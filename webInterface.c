@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  *		 	    http://www.ntop.org/
  *
@@ -2676,14 +2676,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "INET6",
-#ifdef INET6
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "LSTAT_FOLLOWS_SLASHED_SYMLINK",
 #ifdef LSTAT_FOLLOWS_SLASHED_SYMLINK
                          "yes"
@@ -3457,18 +3449,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_IMG_ROUTER", CONST_IMG_ROUTER);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_IMG_ROUTER", "undefined");
-#endif
-
-#ifdef CONST_IMG_SCSI_DISK
-  printFeatureConfigInfo(textPrintFlag, "CONST_IMG_SCSI_DISK", CONST_IMG_SCSI_DISK);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_IMG_SCSI_DISK", "undefined");
-#endif
-
-#ifdef CONST_IMG_SCSI_INITIATOR
-  printFeatureConfigInfo(textPrintFlag, "CONST_IMG_SCSI_INITIATOR", CONST_IMG_SCSI_INITIATOR);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_IMG_SCSI_INITIATOR", "undefined");
 #endif
 
 #ifdef CONST_IMG_SMTP_SERVER
@@ -5485,11 +5465,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "NTOP_PREF_VALUE_AF_BOTH", "undefined");
 #endif
 
-#ifdef NTOP_PREF_VALUE_AF_INET6
   printFeatureConfigNum(textPrintFlag, "NTOP_PREF_VALUE_AF_INET6", NTOP_PREF_VALUE_AF_INET6);
-#else
-  printFeatureConfigInfo(textPrintFlag, "NTOP_PREF_VALUE_AF_INET6", "undefined");
-#endif
 
 #ifdef NTOP_PREF_VALUE_AF_INET
   printFeatureConfigNum(textPrintFlag, "NTOP_PREF_VALUE_AF_INET", NTOP_PREF_VALUE_AF_INET);
@@ -6483,24 +6459,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 		myGlobals.hashCollisionsLookup);
   printFeatureConfigInfo(textPrintFlag,
 			 "Total Hash Collisions (Vendor/Special) (lookup)", buf);
-
-  printFeatureConfigInfo(textPrintFlag, "Database (MySQL) Support Enabled",
-			 is_db_enabled() ? "Yes" : "No");
-
-  if(is_db_enabled()) {
-    printFeatureConfigInfo(textPrintFlag, "Database Configuration",
-			   myGlobals.runningPref.sqlDbConfig);
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s [%u failures]",
-		  formatPkts(num_db_insert, formatBuf, sizeof(formatBuf)),
-		  num_db_insert_failed);
-    printFeatureConfigInfo(textPrintFlag, "Database Record Insert", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "[Save Data into DB: %s] [Save Sessions into DB: %s]",
- 		  myGlobals.runningPref.saveRecordsIntoDb ? "Yes" : "No",
-		  myGlobals.runningPref.saveSessionsIntoDb ? "Yes" : "No");
-    printFeatureConfigInfo(textPrintFlag, "Database Record Save Policy", buf);
-  }
 
   /* *************************** */
 
@@ -7764,7 +7722,7 @@ void printNtopProblemReport(void) {
 
 void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   int sockopt = 1, rc;
-#if defined(INET6) && !defined(WIN32)
+#if !defined(WIN32)
   struct addrinfo hints, *ai = NULL, *aitop;
   char strport[32];
   char ntop[1024];
@@ -7783,7 +7741,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 
   traceEvent(CONST_TRACE_NOISY, "Initializing%s socket, port %d, address %s",
              sslOrNot, *port, addr == NULL ? "(any)" : addr);
-#if defined(INET6) && !defined(WIN32)
+#if !defined(WIN32)
   memset(&hints,0,sizeof(hints));
   hints.ai_family = ipv4or6;
   hints.ai_flags = AI_PASSIVE;
@@ -7841,7 +7799,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 #endif /* INET6 */
 
   errno = 0;
-#if defined(INET6) && !defined(WIN32)
+#if !defined(WIN32)
   *sock = socket(ai->ai_family, SOCK_STREAM, 0);
   if((*sock < 0) || (errno != 0) ) {
     errno = 0;
@@ -7875,7 +7833,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 #endif
 
   errno = 0;
-#if defined(INET6) && !defined(WIN32)
+#if !defined(WIN32)
   rc = bind(*sock, ai->ai_addr, ai->ai_addrlen);
   if(aitop != NULL)
     freeaddrinfo(aitop);
@@ -8254,7 +8212,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 /* ************************************* */
 
 static void handleSingleWebConnection(fd_set *fdmask) {
-#if defined(INET6) && !defined(WIN32)
+#if !defined(WIN32)
   struct sockaddr from;
 #else
   struct sockaddr_in from;
@@ -8284,7 +8242,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
   }
 
   if(myGlobals.newSock >= 0) {
-#if defined(INET6) && !defined(WIN32)
+#if !defined(WIN32)
     if(from.sa_family == AF_INET) {
       addrput(AF_INET, &remote_ipaddr, &(((struct sockaddr_in *)&from)->sin_addr));
     } else if(from.sa_family == AF_INET6)

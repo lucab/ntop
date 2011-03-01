@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  *  			    http://www.ntop.org/
  *
@@ -197,9 +197,6 @@ void printTrafficSummary (int revertOrder) {
   Counter unicastPkts;
   int i;
   char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32];
-#ifdef ENABLE_FC
-  char formatBuf1[32];
-#endif
   struct pcap_stat pcapStat;
 
   unicastPkts = 0;
@@ -215,9 +212,7 @@ void printTrafficSummary (int revertOrder) {
 	     "<TH "TH_BG" "DARK_BG">Speed</TH><TH "TH_BG" "DARK_BG">Sampling Rate</TH><TH "TH_BG" "DARK_BG">MTU</TH>"
 	     "<TH "TH_BG" "DARK_BG">Header</TH><TH "TH_BG" "DARK_BG">Address</TH>");
 
-#ifdef INET6
   sendString("<TH "TH_BG" "DARK_BG">IPv6 Addresses</TH>");
-#endif
   sendString("</TR>\n");
 
   for(i=0; i<myGlobals.numDevices; i++) {
@@ -277,7 +272,6 @@ void printTrafficSummary (int revertOrder) {
 		    _intoa(myGlobals.device[i].ifAddr, buf1, sizeof(buf1)));
       sendString(buf);
 
-#ifdef INET6
       sendString("<TD ALIGN=LEFT>");
       if(myGlobals.device[i].v6Addrs > 0) {
 	NtopIfaceAddr *ifaddr;
@@ -293,7 +287,6 @@ void printTrafficSummary (int revertOrder) {
 	sendString("&nbsp;");
 
       sendString("</TD>");
-#endif
       sendString("</TR>\n");
     }
   }
@@ -482,54 +475,6 @@ void printTrafficSummary (int revertOrder) {
 
     /* ****************** */
 
-#ifdef ENABLE_FC
-    if(!myGlobals.runningPref.printIpOnly &&
-       myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value > 0) {
-      if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total</th>"
-		      "<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
-		      getRowColor(),
-		      formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].fcBytes.value, 1,
-				  formatBuf, sizeof(formatBuf)),
-		      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-				 formatBuf1, sizeof(formatBuf1)));
-	sendString(buf);
-#ifdef NOT_YET
-	if(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value > 0) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			"<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
-			"<TD "TD_BG" COLSPAN=2 align=right>%s [%.2f %%]</td></TR>\n",
-			getRowColor(),
-			formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value,
-				   formatBuf, sizeof(formatBuf)),
-			(float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value*100)
-			/(float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value);
-	  sendString(buf);
-	}
-#endif
-      }
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Unicast</th>"
-		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-		    getRowColor(),
-		    formatPkts(unicastPkts, formatBuf, sizeof(formatBuf)),
-		    (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].
-		    fcPkts.value);
-      sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Broadcast</th>"
-		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-		    getRowColor(),
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].fcBroadcastPkts.value,
-			       formatBuf, sizeof(formatBuf)),
-		    (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].fcBroadcastPkts.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value);
-      sendString(buf);
-
-    }
-#endif
-
-    /* ****************** */
-
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       updateThpt(0);
 
@@ -588,13 +533,6 @@ void printTrafficSummary (int revertOrder) {
     sendString("<p>\n");
     printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, FALSE);
   }
-
-#ifdef ENABLE_FC
-  if(!myGlobals.runningPref.printIpOnly) {
-    sendString("<p>\n");
-    printFcTrafficSummary(0);
-  }
-#endif
 }
 
 /* ******************************* */
@@ -619,9 +557,7 @@ void printTrafficStatistics(int revertOrder) {
 	     "<TH "TH_BG" "DARK_BG">Speed</TH><TH "TH_BG" "DARK_BG">Sampling Rate</TH><TH "TH_BG" "DARK_BG">MTU</TH>"
 	     "<TH "TH_BG" "DARK_BG">Header</TH><TH "TH_BG" "DARK_BG">Address</TH>");
 
-#ifdef INET6
   sendString("<TH "TH_BG" "DARK_BG">IPv6 Addresses</TH>");
-#endif
   sendString("</TR>\n");
 
   for(i=0; i<myGlobals.numDevices; i++) {
@@ -678,7 +614,6 @@ void printTrafficStatistics(int revertOrder) {
 		    _intoa(myGlobals.device[i].ifAddr, buf1, sizeof(buf1)));
       sendString(buf);
 
-#ifdef INET6
       sendString("<TD ALIGN=LEFT>");
       if(myGlobals.device[i].v6Addrs > 0) {
 	NtopIfaceAddr *ifaddr;
@@ -694,7 +629,6 @@ void printTrafficStatistics(int revertOrder) {
 	sendString("&nbsp;");
 
       sendString("</TD>");
-#endif
       sendString("</TR>\n");
     }
   }
@@ -1016,174 +950,6 @@ void printTrafficStatistics(int revertOrder) {
 
     /* ****************** */
 
-#ifdef ENABLE_FC
-    if(!myGlobals.runningPref.printIpOnly &&
-       myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value > 0) {
-      sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">FC Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
-
-      if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total</th>"
-		      "<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
-		      getRowColor(),
-		      formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].fcBytes.value, 1,
-				  formatBuf, sizeof(formatBuf)),
-		      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-				 formatBuf1, sizeof(formatBuf1)));
-	sendString(buf);
-#ifdef NOT_YET
-	if(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value > 0) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			"<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
-			"<TD "TD_BG" COLSPAN=2 align=right>%s [%.2f %%]</td></TR>\n",
-			getRowColor(),
-			formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value,
-				   formatBuf, sizeof(formatBuf)),
-			(float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value*100)
-			/(float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value);
-	  sendString(buf);
-	}
-#endif
-      }
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Unicast</th>"
-		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].
-		    fcPkts.value,
-		    formatPkts(unicastPkts, formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Broadcast</th>"
-		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].fcBroadcastPkts.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].fcBroadcastPkts.value,
-			       formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Shortest</th>"
-		    "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
-		    getRowColor(),
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.shortest.value,
-			       formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-
-      avgPktLen = myGlobals.device[myGlobals.actualReportDeviceId].fcBytes.value/
-	myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value;
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Average&nbsp;Size</th>"
-		    "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
-		    getRowColor(), formatPkts(avgPktLen, formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Longest</th>"
-		    "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
-		    getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].
-					      rcvdFcPktStats.longest.value, formatBuf,
-					      sizeof(formatBuf)));
-      sendString(buf);
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">&le&nbsp;36&nbsp;bytes</th>"
-		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-					   rcvdFcPktStats.upTo36.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo36.value,
-			       formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;48&nbsp;bytes</th>"
-		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-					   rcvdFcPktStats.upTo48.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo48.value,
-			       formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;52&nbsp;bytes</th>"
-		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-					   rcvdFcPktStats.upTo52.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo52.value,
-			       formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;68&nbsp;bytes</th>"
-		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-					   rcvdFcPktStats.upTo68.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo68.value,
-			       formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;104&nbsp;bytes</th>"
-		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-					   rcvdFcPktStats.upTo104.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo104.value,
-			       formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;548&nbsp;bytes</th>"
-		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-					   rcvdFcPktStats.upTo548.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo548.value,
-			       formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;1060&nbsp;bytes</th>"
-		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-					   rcvdFcPktStats.upTo1060.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo1060.value,
-			       formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&le;&nbsp;2136&nbsp;bytes</th>"
-		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-					   rcvdFcPktStats.upTo2136.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.upTo2136.value,
-			       formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>&gt;&nbsp;2136&nbsp;bytes</th>"
-		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-					   rcvdFcPktStats.above2136.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.above2136.value,
-			       formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-
-      sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		 "<iframe frameborder=0 SRC=\"" CONST_PIE_FC_PKT_SZ_DIST  CHART_FORMAT "\" width=400 height=250></iframe></TH></TR>\n");
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>Packets&nbsp;too&nbsp;long [> %d]</th>"
-		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), 2136,
-		    (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.above2136.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.above2136.value,
-			       formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>Bad&nbsp;EOF&nbsp;Frames</th>"
-		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-					   rcvdFcPktStats.badCRC.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdFcPktStats.badCRC.value,
-			       formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-
-    }
-#endif
-    /* ****************** */
-
     sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total</th>"
 		  "<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
@@ -1425,13 +1191,6 @@ void printTrafficStatistics(int revertOrder) {
     sendString("<p>\n");
     printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, TRUE);
   }
-
-#ifdef ENABLE_FC
-  if(!myGlobals.runningPref.printIpOnly) {
-    sendString("<p>\n");
-    printFcProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, TRUE);
-  }
-#endif
 }
 
 /* ******************************* */
@@ -3202,8 +2961,7 @@ static void printHostFingerprint(HostTraffic *el) {
 /* ************************************ */
 
 void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
-			  int revertOrder, int pageNum, char *url,
-			  int hostInfoPage) {
+			  int revertOrder, int pageNum, char *url) {
   u_int idx, i, cols = 0;
   u_int16_t vlanId = NO_VLAN;
   HostTraffic *el=NULL;
@@ -3230,16 +2988,6 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
       found = 1;
       break;
     }
-#ifdef ENABLE_FC
-    else if((el->fcCounters != NULL)
-	      && ((strncmp(fc_to_str ((u_int8_t *)&el->fcCounters->hostFcAddress),
-			   host, LEN_FC_ADDRESS_DISPLAY) == 0) &&
-		  ((el->fcCounters->vsanId == vsanId) || (vsanId == 0)))) {
-      found = 1;
-      foundFcHost = 1;
-      break;
-    }
-#endif
   }
 
   /* Dennis Schoen (dennis@cns.dnsalias.org)
@@ -3286,53 +3034,6 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     printHostUsedServices(el, actualDeviceId);
     printHostFingerprint(el); /* ----- **** ----- */
   }
-#ifdef ENABLE_FC
-  else if(foundFcHost) {
-    printHTMLheader("", NULL, 0);
-    printFcHostHeader(el, url, revertOrder, sortedColumn, hostInfoPage);
-
-    switch (hostInfoPage) {
-    case showHostMainPage:
-      printFcHostDetailedInfo (el, actualDeviceId);
-      printFcHostTrafficStats (el, actualDeviceId);
-      printFcHostContactedPeers(el, actualDeviceId);
-      break;
-    case showHostLunStats:
-      if(el->fcCounters->devType != SCSI_DEV_INITIATOR) {
-	printScsiLunStats (el, actualDeviceId, sortedColumn,
-			   revertOrder, pageNum, url);
-      }
-      break;
-    case showHostLunGraphs:
-      if(el->fcCounters->devType != SCSI_DEV_INITIATOR) {
-	printScsiLunGraphs (el, actualDeviceId);
-      }
-      break;
-    case showHostScsiSessionBytes:
-      printScsiSessionBytes (actualDeviceId, sortedColumn, revertOrder,
-			     pageNum, url, el);
-      break;
-    case showHostScsiSessionTimes:
-      printScsiSessionTimes (actualDeviceId, sortedColumn, revertOrder,
-			     pageNum, url, el);
-      break;
-    case showHostScsiSessionStatus:
-      printScsiSessionStatusInfo (actualDeviceId, sortedColumn,
-				  revertOrder, pageNum, url, el);
-      break;
-    case showHostScsiSessionTMInfo:
-      printScsiSessionTmInfo (actualDeviceId, sortedColumn,
-			      revertOrder, pageNum, url, el);
-      break;
-    case showHostFcSessions:
-      printFCSessions (actualDeviceId, sortedColumn,
-		       revertOrder, pageNum, url, el);
-      break;
-    }
-
-    return;
-  }
-#endif
 
   /* ***************************************************** */
 
@@ -5004,21 +4705,12 @@ void printThptStatsMatrix(int sortedColumn) {
   printHTMLheader("Network Load Statistics Matrix", NULL, 0);
 
   memset(&tmpEl, 0, sizeof(HostTraffic));
-#ifdef ENABLE_FC
-  if(allocFcScsiCounters(&tmpEl) == NULL) {
-    traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for FC counters");
-    return;
-  }
-#endif
 
   switch(sortedColumn) {
   case 0:
   case 1:
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 1) {
       printNoDataYet();
-#ifdef ENABLE_FC
-      free(tmpEl.fcCounters);
-#endif
       return;
     }
 
@@ -5159,9 +4851,6 @@ void printThptStatsMatrix(int sortedColumn) {
   default:
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 60) {
       printNoDataYet();
-#ifdef ENABLE_FC
-      free (tmpEl.fcCounters);
-#endif
       return;
     } else {
       sendString("<CENTER>\n");
@@ -5295,9 +4984,6 @@ void printThptStatsMatrix(int sortedColumn) {
   }
 
   sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
-#ifdef ENABLE_FC
-  free (tmpEl.fcCounters);
-#endif
 }
 
 /* ************************ */
@@ -6325,16 +6011,8 @@ void printHostHourlyTraffic(HostTraffic *el) {
   }
 
   sendString("<TR "TR_ON"><TH "TH_BG" "DARK_BG">Total</TH>\n");
-
-#ifdef ENABLE_FC
-  if(isFcHost (el)) {
-    targetStr = el->fcCounters->hostNumFcAddress;
-  } else 
-#endif
-    {
-      safe_snprintf(__FILE__, __LINE__, macAddr, sizeof(macAddr), "%s", el->ethAddressString);
-      targetStr = el->hostNumIpAddress[0] == '\0' ?  macAddr : el->hostNumIpAddress;
-    }
+  safe_snprintf(__FILE__, __LINE__, macAddr, sizeof(macAddr), "%s", el->ethAddressString);
+  targetStr = el->hostNumIpAddress[0] == '\0' ?  macAddr : el->hostNumIpAddress;
 
   urlFixupToRFC1945Inplace(targetStr);
 
@@ -6608,367 +6286,6 @@ void showPortTraffic(u_short portNr) {
 }
 
 /* ******************************************* */
-
-#ifdef ENABLE_FC
-void printFcHostsTraffic(int reportType,
-                         int sortedColumn,
-                         int revertOrder,
-                         int pageNum,
-                         char* url,
-                         LocalityDisplayPolicy showLocalityMode) {
-  u_int idx, numEntries=0, maxHosts, whatToDo;
-  int printedEntries=0, hourId;
-  char theDate[8];
-  struct tm t;
-  HostTraffic *el;
-  HostTraffic** tmpTable;
-  char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[8][32], vsanBuf[LEN_MEDIUM_WORK_BUFFER];
-  char hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
-  float sentPercent=0, rcvdPercent=0, totPercent=0;
-  Counter totFcBytesSent=0, totFcBytesRcvd=0, totFcBytes=0;
-
-  memset(buf, 0, sizeof(buf));
-  switch(reportType) {
-  case SORT_FC_ACTIVITY:
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "FibreChannel Activity");
-    myGlobals.reportKind = SORT_DATA_HOST_TRAFFIC;
-    showLocalityMode = 0;
-    break;
-  case SORT_FC_DATA:
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "FibreChannel Traffic: ");
-    break;
-  case SORT_FC_THPT:
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "FibreChannel Throughput: ");
-    break;
-  default:
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "?? %d : ", reportType);
-    break;
-  }
-
-  if(reportType != SORT_FC_ACTIVITY) {
-    switch(showLocalityMode) {
-    case showSentReceived:
-      strncat(buf, "Data Sent+Received", sizeof(buf) - strlen(buf) - 1);
-      myGlobals.reportKind = (reportType == SORT_FC_DATA) ?
-	SORT_DATA_PROTOS : SORT_DATA_THPT;
-      break;
-    case showOnlySent:
-      strncat(buf, "Data Sent", sizeof(buf) - strlen(buf) - 1);
-      myGlobals.reportKind = (reportType == SORT_FC_DATA) ?
-	SORT_DATA_SENT_PROTOS : SORT_DATA_SENT_THPT;
-      break;
-    case showOnlyReceived:
-      strncat(buf, "Data Received", sizeof(buf) - strlen(buf) - 1);
-      myGlobals.reportKind = (reportType == SORT_FC_DATA) ?
-	SORT_DATA_RECEIVED_PROTOS : SORT_DATA_RECEIVED_THPT;
-      break;
-    }
-  }
-  printHTMLheader(buf, 0, 0);
-
-  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
-
-  tmpTable =  (HostTraffic**)mallocAndInitWithReportWarn(myGlobals.device[myGlobals.actualReportDeviceId].
-							 actualHashSize*sizeof(HostTraffic*), "printFcHostsTraffic");
-  if(tmpTable == NULL)
-    return;
-
-  strftime(theDate, 8, CONST_TOD_HOUR_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
-  hourId = atoi(theDate);
-
-  for (el = getFirstHost (myGlobals.actualReportDeviceId);
-       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-
-    if(el->community && (!isAllowedCommunity(el->community))) continue;
-    if(isFcHost (el)) {
-      /* Skip Control VSAN traffic */
-      if(el->fcCounters->vsanId > MAX_USER_VSAN) continue;
-
-      if(((showLocalityMode == showOnlySent) && (el->fcCounters->fcBytesSent.value > 0))
-	 || ((showLocalityMode == showOnlyReceived) && (el->fcCounters->fcBytesRcvd.value > 0))
-	 || ((showLocalityMode == showSentReceived) && ((el->fcCounters->fcBytesSent.value > 0) ||
-							(el->fcCounters->fcBytesRcvd.value > 0)))) {
-	tmpTable[numEntries++]=el;
-
-	if(numEntries >= maxHosts)
-	  break;
-      }
-    }
-  }
-
-  if(numEntries <= 0) {
-    printNoDataYet();
-    free(tmpTable);
-    return;
-  }
-
-  if(reportType != SORT_FC_ACTIVITY) {
-    switch(showLocalityMode) {
-    case showSentReceived:
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<p align=\"right\">"
-		    "[<b> All </b>]&nbsp;"
-		    "[ <a href=\"%s?col=%s%d&showL=1\">Sent Only</a> ]&nbsp;"
-		    "[ <a href=\"%s?col=%s%d&showL=2\">Received Only</a> ]&nbsp;</p>",
-		    url, revertOrder ? "-" : "", sortedColumn,
-		    url, revertOrder ? "-" : "", sortedColumn);
-      break;
-    case showOnlySent:
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<p align=\"right\">"
-		    "[ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
-		    "[<b> Sent Only </b>]&nbsp;"
-		    "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;</p>",
-		    url, revertOrder ? "-" : "", sortedColumn, showLocalityMode,
-		    url, revertOrder ? "-" : "", sortedColumn, showLocalityMode);
-      break;
-    default:
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<p align=\"right\">"
-		    "[ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
-		    "[ <a href=\"%s?col=%s%d&showH=%d&showL=1\">Sent Only</a> ]&nbsp;"
-		    "[<b> Received Only </b>]&nbsp;</p>",
-		    url, revertOrder ? "-" : "", sortedColumn, showLocalityMode,
-		    url, revertOrder ? "-" : "", sortedColumn, showLocalityMode);
-      break;
-    }
-    sendString(buf);
-  }
-
-#ifdef ENABLE_FC
-  printFcHeader(reportType, revertOrder, abs(sortedColumn), hourId, url);
-#endif
-
-  myGlobals.columnSort = sortedColumn;
-
-#ifdef FC_DEBUG
-  traceEvent(CONST_TRACE_INFO, "FC_DEBUG: reportType=%d/sortedColumn=%d/myGlobals.columnSort=%d",
-	     reportType, sortedColumn, myGlobals.columnSort);
-#endif
-
-  qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFcFctn);
-
-  totFcBytesSent = totFcBytesRcvd = totFcBytes = 0;
-
-  for(idx=0; idx<numEntries; idx++) {
-    if(tmpTable[idx] != NULL) {
-      /* Count 'em both - not worth the IFs */
-      totFcBytesSent += tmpTable[idx]->fcCounters->fcBytesSent.value;
-      totFcBytesRcvd += tmpTable[idx]->fcCounters->fcBytesRcvd.value;
-      switch(showLocalityMode) {
-      case showSentReceived:
-	totFcBytes += tmpTable[idx]->fcCounters->fcBytesSent.value +
-	  tmpTable[idx]->fcCounters->fcBytesRcvd.value;
-	break;
-      case showOnlySent:
-	totFcBytes += tmpTable[idx]->fcCounters->fcBytesSent.value;
-	break;
-      case showOnlyReceived:
-	totFcBytes += tmpTable[idx]->fcCounters->fcBytesRcvd.value;
-	break;
-      }
-    }
-  }
-
-  /* Avoid core dumps */
-  if(totFcBytesSent == 0) totFcBytesSent = 1;
-  if(totFcBytesRcvd == 0) totFcBytesRcvd = 1;
-  if(totFcBytes == 0)     totFcBytes = 1;
-
-#ifdef FC_DEBUG
-  traceEvent(CONST_TRACE_INFO, "FC_DEBUG: totIpBytesSent=%u, totIpBytesRcvd=%u totIpBytes=%u",
-	     totFcBytesSent, totFcBytesRcvd, totFcBytes);
-#endif
-
-  for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
-    char webHostName[LEN_GENERAL_WORK_BUFFER];
-
-    if(revertOrder)
-      el = tmpTable[numEntries-idx-1];
-    else
-      el = tmpTable[idx];
-
-    if(el != NULL) {
-      sentPercent = (100*(float)el->fcCounters->fcBytesSent.value)/totFcBytesSent;
-      rcvdPercent = (100*(float)el->fcCounters->fcBytesRcvd.value)/totFcBytesRcvd;
-      totPercent = (100*(float) (el->fcCounters->fcBytesSent.value + el->fcCounters->fcBytesRcvd.value) )/totFcBytes;
-
-      strncpy(webHostName,
-	      makeFcHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0,
-			     hostLinkBuf, sizeof(hostLinkBuf)),
-	      sizeof(webHostName));
-
-      /* We have two reports x three data breakdowns + activity...
-	 cheat and create a number for a 1d switch() 100*Locality + SORT_FC
-	 precise formula is irrelevant, as long as it's unique...
-      */
-      whatToDo = 100*showLocalityMode + reportType;
-
-      switch(whatToDo) {
-      case (100*showSentReceived + SORT_FC_DATA):
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-                      "%s%s"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      getRowColor(),
-                      makeVsanLink (el->fcCounters->vsanId, FLAG_HOSTLINK_HTML_FORMAT,
-                                    vsanBuf, sizeof(vsanBuf)),
-                      webHostName,
-		      formatBytes(el->fcCounters->fcBytesSent.value     +el->fcCounters->fcBytesRcvd.value,      1, formatBuf[1], 32),
-                      totPercent, myGlobals.separator,
-                      formatBytes(el->fcCounters->fcFcpBytesSent.value  +el->fcCounters->fcFcpBytesRcvd.value,   1, formatBuf[2], 32),
-		      formatBytes(el->fcCounters->fcElsBytesSent.value  +el->fcCounters->fcElsBytesRcvd.value,   1, formatBuf[3], 32),
-		      formatBytes(el->fcCounters->fcDnsBytesSent.value  +el->fcCounters->fcDnsBytesRcvd.value,   1, formatBuf[4], 32),
-                      formatBytes(el->fcCounters->fcIpfcBytesSent.value +el->fcCounters->fcIpfcBytesRcvd.value,  1, formatBuf[5], 32),
-                      formatBytes(el->fcCounters->fcSwilsBytesSent.value+el->fcCounters->fcSwilsBytesRcvd.value, 1, formatBuf[6], 32),
-                      formatBytes(el->fcCounters->otherFcBytesSent.value+el->fcCounters->otherFcBytesRcvd.value, 1, formatBuf[7], 32));
-	break;
-      case (100*showOnlySent + SORT_FC_DATA):
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-                      "%s%s"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      getRowColor(),
-                      makeVsanLink (el->fcCounters->vsanId, FLAG_HOSTLINK_HTML_FORMAT,
-                                    vsanBuf, sizeof(vsanBuf)),
-                      webHostName,
-		      formatBytes(el->fcCounters->fcBytesSent.value, 1, formatBuf[1], 32),
-                      sentPercent, myGlobals.separator,
-                      formatBytes(el->fcCounters->fcFcpBytesSent.value, 1, formatBuf[2], 32),
-		      formatBytes(el->fcCounters->fcElsBytesSent.value, 1, formatBuf[3], 32),
-		      formatBytes(el->fcCounters->fcDnsBytesSent.value, 1, formatBuf[4], 32),
-                      formatBytes(el->fcCounters->fcIpfcBytesSent.value, 1, formatBuf[5], 32),
-                      formatBytes(el->fcCounters->fcSwilsBytesSent.value, 1, formatBuf[6], 32),
-                      formatBytes(el->fcCounters->otherFcBytesSent.value, 1, formatBuf[7], 32));
-	break;
-      case (100*showOnlyReceived + SORT_FC_DATA):
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-                      "%s%s"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      getRowColor(),
-                      makeVsanLink (el->fcCounters->vsanId, FLAG_HOSTLINK_HTML_FORMAT, vsanBuf,
-                                    sizeof(vsanBuf)),
-                      webHostName,
-                      formatBytes(el->fcCounters->fcBytesRcvd.value, 1, formatBuf[1], 32),
-		      rcvdPercent, myGlobals.separator,
-		      formatBytes(el->fcCounters->fcFcpBytesRcvd.value, 1, formatBuf[2], 32),
-		      formatBytes(el->fcCounters->fcElsBytesRcvd.value, 1, formatBuf[3], 32),
-		      formatBytes(el->fcCounters->fcDnsBytesRcvd.value, 1, formatBuf[4], 32),
-                      formatBytes(el->fcCounters->fcIpfcBytesRcvd.value, 1, formatBuf[5], 32),
-                      formatBytes(el->fcCounters->fcSwilsBytesRcvd.value, 1, formatBuf[6], 32),
-                      formatBytes(el->fcCounters->otherFcBytesRcvd.value, 1, formatBuf[7], 32));
-	break;
-      case (100*showSentReceived + SORT_FC_THPT):
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-		      "%s%s"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>",
-		      getRowColor(),
-		      makeVsanLink (el->fcCounters->vsanId, FLAG_HOSTLINK_HTML_FORMAT,
-				    vsanBuf, sizeof(vsanBuf)),
-		      webHostName,
-		      formatThroughput(el->actualTThpt, 1, formatBuf[0], 32),
-		      formatThroughput(el->averageTThpt, 1, formatBuf[1], 32),
-		      formatThroughput(el->peakTThpt, 1, formatBuf[2], 32),
-		      el->actualTPktThpt,
-		      el->averageTPktThpt,
-		      el->peakTPktThpt);
-	break;
-      case (100*showOnlySent + SORT_FC_THPT):
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-		      "%s%s"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>",
-		      getRowColor(),
-		      makeVsanLink (el->fcCounters->vsanId, FLAG_HOSTLINK_HTML_FORMAT,
-				    vsanBuf, sizeof(vsanBuf)),
-		      webHostName,
-		      formatThroughput(el->actualSentThpt, 1, formatBuf[0], 32),
-		      formatThroughput(el->averageSentThpt, 1, formatBuf[1], 32),
-		      formatThroughput(el->peakSentThpt, 1, formatBuf[2], 32),
-		      el->actualSentPktThpt,
-		      el->averageSentPktThpt,
-		      el->peakSentPktThpt);
-	break;
-      case (100*showOnlyReceived + SORT_FC_THPT):
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-		      "%s%s"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkt/s</TD>",
-		      getRowColor(),
-		      makeVsanLink (el->fcCounters->vsanId, FLAG_HOSTLINK_HTML_FORMAT,
-				    vsanBuf, sizeof(vsanBuf)),
-		      webHostName,
-		      formatThroughput(el->actualRcvdThpt, 1, formatBuf[0], 32),
-		      formatThroughput(el->averageRcvdThpt, 1, formatBuf[1], 32),
-		      formatThroughput(el->peakRcvdThpt, 1, formatBuf[2], 32),
-		      el->actualRcvdPktThpt,
-		      el->averageRcvdPktThpt,
-		      el->peakRcvdPktThpt);
-	break;
-      case SORT_FC_ACTIVITY:
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR  "TR_ON" %s>"
-		      "%s%s",
-		      getRowColor(),
-		      makeVsanLink (el->fcCounters->vsanId, FLAG_HOSTLINK_HTML_FORMAT,
-				    vsanBuf, sizeof(vsanBuf)),
-		      webHostName);
-	sendString(buf);
-	printHostThtpShort(el, myGlobals.reportKind, hourId);
-	buf[0]='\0';
-	break;
-      }
-      sendString(buf);
-      sendString("</TR>\n");
-
-      /* Avoid huge tables */
-      if(printedEntries++ > myGlobals.runningPref.maxNumLines)
-	break;
-    }
-  }
-
-  sendString("\n</TABLE>"TABLE_OFF"\n");
-
-  switch(reportType) {
-  case SORT_FC_THPT:
-    break;
-  case SORT_FC_ACTIVITY:
-    break;
-  case SORT_FC_DATA:
-    sendString("<P><I>Note: These counters do not include broadcasts and "
-	       "will not equal the 'Global Protocol Distribution'</I></P>\n");
-    break;
-  }
-
-  sendString("</CENTER>\n");
-
-  printFooter(reportType);
-
-  addPageIndicator(url, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
-		   revertOrder, abs(sortedColumn), -1);
-
-  myGlobals.lastRefreshTime = myGlobals.actTime;
-  free(tmpTable);
-}
-#endif
-
-/* ************************************ */
 
 void purgeHost(char *serialized_serial) {
   HostSerial theSerial;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  *  			    http://www.ntop.org/
  *
@@ -284,10 +284,6 @@ void cleanupAddressQueue(void) {
 
 /* ************************************ */
 
-#ifdef INET6
-
-/* ************************************ */
-
 char* _intop(struct in6_addr *addr, char *buf, u_short buflen) {
   return (char *)inet_ntop(AF_INET6, addr, buf, buflen);
 }
@@ -300,8 +296,6 @@ char* intop(struct in6_addr *addr) {
   memset(ntop_buf, 0, INET6_ADDRSTRLEN);
   return (char *)_intop(addr, ntop_buf,sizeof(ntop_buf));
 }
-
-#endif /*INET6 */
 
 /* ************************************ */
 
@@ -353,10 +347,8 @@ char* addrtostr(HostAddr *addr) {
   switch(addr->hostFamily) {
   case AF_INET:
     return(char *)(intoa(addr->Ip4Address));
-#ifdef INET6
   case AF_INET6:
     return(char *)(intop(&addr->Ip6Address));
-#endif
   default: return("???");
   }
 }
@@ -369,10 +361,8 @@ char * _addrtostr(HostAddr *addr, char* buf, u_short bufLen) {
   switch(addr->hostFamily) {
   case AF_INET:
     return (_intoa(addr->Ip4Address,buf,bufLen));
-#ifdef INET6
   case AF_INET6:
     return (_intop(&addr->Ip6Address,buf,bufLen));
-#endif
   default: return("???");
   }
 }
@@ -387,12 +377,10 @@ char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen) {
   case AF_INET:
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "%u", addr->Ip4Address.s_addr);
     break;
-#ifdef INET6
   case AF_INET6:
     if(_intop(&addr->Ip6Address, buf, bufLen) == NULL)
       BufferTooSmall(buf, bufLen);
     break;
-#endif
   default:
     return("???");
   }

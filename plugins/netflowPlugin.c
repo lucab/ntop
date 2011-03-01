@@ -1,5 +1,5 @@
 /*
- *  Copyright(C) 2002-10 Luca Deri <deri@ntop.org>
+ *  Copyright(C) 2002-11 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -1197,16 +1197,6 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     netflowfmaxTime = elapsed;
 #endif
 
-  if(myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB)
-    insert_flow_record(deviceId,
-		       record->srcaddr, record->dstaddr,
-		       record->input, record->output,
-		       record->sentPkts, record->sentOctets,
-		       record->rcvdPkts, record->rcvdOctets,
-		       *firstSeen, *lastSeen,
-		       record->srcport, record->dstport,
-		       record->tcp_flags,
-		       record->proto, record->tos, record->vlanId);
   return(0);
 }
 
@@ -2079,25 +2069,6 @@ RETSIGTYPE netflowcleanup(int signo) {
     msgSent++;
   }
 
-#ifdef HAVE_BACKTRACE
-  /* Don't double fault... */
-  /* signal(signo, SIG_DFL); */
-
-  /* Grab the backtrace before we do much else... */
-  size = backtrace(array, 20);
-  strings = (char**)backtrace_symbols(array, size);
-
-  traceEvent(CONST_TRACE_ERROR, "NETFLOW: BACKTRACE:     backtrace is:");
-  if (size < 2) {
-    traceEvent(CONST_TRACE_ERROR, "NETFLOW: BACKTRACE:         **unavailable!");
-  } else {
-    /* Ignore the 0th entry, that's our cleanup() */
-    for (i=1; i<size; i++) {
-      traceEvent(CONST_TRACE_ERROR, "NETFLOW: BACKTRACE:          %2d. %s", i, strings[i]);
-    }
-  }
-#endif /* HAVE_BACKTRACE */
-
   traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: ntop shutting down...");
   exit(100);
 }
@@ -2406,12 +2377,6 @@ static void initNetFlowDevice(int deviceId) {
     myGlobals.device[deviceId].netflowGlobals->enableSessionHandling = 0;
   } else
     myGlobals.device[deviceId].netflowGlobals->enableSessionHandling = atoi(value);
-
-  if(fetchPrefsValue(nfValue(deviceId, "saveFlowsIntoDB", 1), value, sizeof(value)) == -1) {
-    storePrefsValue(nfValue(deviceId, "saveFlowsIntoDB", 1), "0" /* no */);
-    myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB = 0;
-  } else
-    myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB = atoi(value);
 
   if(fetchPrefsValue(nfValue(deviceId, "netFlowDumpInterval", 1), value, sizeof(value)) == -1) {
     storePrefsValue(nfValue(deviceId, "netFlowDumpInterval", 1), "0" /* no */);
@@ -3013,34 +2978,6 @@ static void printNetFlowConfiguration(int deviceId) {
 	     "only if the ntop host has enough computing resources as this can lead "
 	     "to high CPU and memory consumption.</p>\n"
 	     "</td>\n</tr>\n");
-
-  /* ****************************************************** */
-
-#ifdef HAVE_MYSQL_H
-  sendString("<tr><th colspan=\"2\" "DARK_BG">Save Flows<br>into SQL DB</th>\n");
-
-  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
-  sendString(netflowPluginInfo->pluginURLname);
-  sendString("\" method=GET>\n<p>");
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
-  sendString(buf);
-
-  if(myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB) {
-    sendString("<input type=\"radio\" name=\"saveFlowsIntoDB\" value=\"1\" checked>Yes\n"
-               "<input type=\"radio\" name=\"saveFlowsIntoDB\" value=\"0\">No\n");
-  } else {
-    sendString("<input type=\"radio\" name=\"saveFlowsIntoDB\" value=\"1\">Yes\n"
-               "<input type=\"radio\" name=\"saveFlowsIntoDB\" value=\"0\" checked>No\n");
-  }
-
-  sendString("<input type=\"submit\" value=\"Change Flow Save Policy\"></p>\n</form>\n"
-	     "<p>This options instruments <b>ntop</b> to save flows into the configured "
-	     "SQL database. Note that you can also <A HREF=\"/"CONST_CONFIG_NTOP_HTML"?&showD=7\">configure</A> "
-	     "DB options and records persistency.</p>\n"
-	     "</td>\n</tr>\n");
-#endif
 
   /* ****************************************************** */
 
@@ -3716,11 +3653,6 @@ static void handleNetflowHTTPrequest(char* _url) {
 	    myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = atoi(value);
 	    storePrefsValue(nfValue(deviceId, "netFlowAssumeFTP", 1), value);
 	  }
-	} else if(strcmp(device, "saveFlowsIntoDB") == 0) {
-	  if(deviceId > 0) {
-	    myGlobals.device[deviceId].netflowGlobals->saveFlowsIntoDB = atoi(value);
-	    storePrefsValue(nfValue(deviceId, "saveFlowsIntoDB", 1), value);
-	  }
 	} else if(strcmp(device, "enableSessionHandling") == 0) {
 	  if(deviceId > 0) {
 	    myGlobals.device[deviceId].netflowGlobals->enableSessionHandling = atoi(value);
@@ -4190,7 +4122,7 @@ PluginInfo* PluginEntryFctn(void)
 #endif
 {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-	     "NETFLOW: Welcome to %s.(C) 2002-10 by Luca Deri",
+	     "NETFLOW: Welcome to %s.(C) 2002-11 by Luca Deri",
 	     netflowPluginInfo->pluginName);
 
   return(netflowPluginInfo);

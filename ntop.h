@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *                          http://www.ntop.org
  *
- *           Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ *           Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -372,15 +372,6 @@ ntop.h
  *  Feature specific stuff
  *
  * **************************************************************************************/
-
-#if defined(HAVE_MYSQL_H) || defined(WIN32)
-#if defined(WIN32)
-#define my_socket_defined
-#define my_socket int
-#endif
-#include <mysql.h> /* Headers for MySQL usage */
-#include <errmsg.h>
-#endif
 
 #ifndef WIN32
 #if defined(HAVE_SYS_SCHED_H) && !defined(FREEBSD)

@@ -3,7 +3,7 @@
  *
  *                          http://www.ntop.org
  *
- *          Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>
+ *          Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
@@ -71,9 +71,7 @@ static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR, DEFAULT_NTOP_CFG_CON
 #endif
 				   NULL };
 
-#if defined(INET6)
 struct in6_addr _in6addr_linklocal_allnodes;
-#endif
 
 /* ************************************************************ */
 
@@ -452,31 +450,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
   myGlobals.startedAs = startedAs;
 
-#ifdef ENABLE_FC
-  /* FC & SCSI-specific stuff */
-  myGlobals.scsiDefaultDevType = SCSI_DEV_UNINIT;
-
-  if (!myGlobals.runningPref.printIpOnly) {
-    if (myGlobals.fcnsCacheHash != NULL) {
-      free (myGlobals.fcnsCacheHash);
-    }
-    myGlobals.fcnsCacheHash = malloc(CONST_HASH_INITIAL_SIZE * sizeof(FcNameServerCacheEntry *));
-    if (myGlobals.fcnsCacheHash == NULL) {
-      traceEvent (CONST_TRACE_ERROR, "Unable to allocate fc Name Server Cache\n");
-    }
-
-    memset(myGlobals.fcnsCacheHash, 0,
-	   CONST_HASH_INITIAL_SIZE * sizeof(FcNameServerCacheEntry *));
-
-    myGlobals.displayOption = DISPLAY_FC_DEFAULT;
-    if (!myGlobals.runningPref.defaultVsan)
-      myGlobals.runningPref.defaultVsan = DEFAULT_VSAN;
-  }
-
-  myGlobals.fcMatrixHashCollisions = 0;
-  myGlobals.fcMatrixHashUnresCollisions = 0;
-#endif
-
   /* 
      Efficiency is the ability to fill-up ATM cells so that they
      can be efficiently used by applications
@@ -622,7 +595,6 @@ void initNtop(char *devices) {
 
   createPortHash();
   initCounters();
-  initDB();
   initApps();
   initThreads();
 

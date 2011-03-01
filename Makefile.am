@@ -98,7 +98,6 @@ NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.p
 
 WEBFILES       = `cat www/FILES`
 PLUGINSFILES   = `cat plugins/FILES`
-DATABASEFILES  = `cat database/FILES`
 DOCSFILES      = `cat docs/FILES`
 
 #
@@ -127,10 +126,10 @@ noinst_HEADERS     = @GETOPT_H@ globals-core.h globals-report.h ntop.h
 lib_LTLIBRARIES    = libntop.la libntopreport.la
 
 # core Archive, or the 'engine'
-libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
+libntop_la_SOURCES = address.c    argv.c        dataFormat.c   \
                      event.c globals-core.c \
                      hash.c       iface.c       initialize.c  leaks.c \
-                     ntop.c       pbuf.c        database.c \
+                     ntop.c       pbuf.c \
                      plugin.c     prefs.c       protocols.c   \
                      sessions.c   term.c        util.c        utildl.c \
                      traffic.c    vendor.c      version.c      \
@@ -142,7 +141,7 @@ libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN
 
 # Archive for http representation, or the 'viewer'
 libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
-                           fcReport.c      http.c            \
+                           http.c            \
                            report.c        reportUtils.c     ssl.c   \
                            webInterface.c  map.c	     \
 		           python.c
