@@ -669,13 +669,6 @@ int main(int argc, char *argv[]) {
   traceEvent(CONST_TRACE_NOISY, "MEMORY:     or %.2fMB for %d interfaces",
 	     xvertDOT00MB(myGlobals.numDevices*sizeof(NtopInterface)),
 	     myGlobals.numDevices);
-  traceEvent(CONST_TRACE_NOISY, "MEMORY: ipTraffixMatrix structure (no TrafficEntry loaded) is %.2fMB",
-	     xvertDOT00MB(myGlobals.ipTrafficMatrixMemoryUsage));
-
-#ifdef NOT_YET
-  traceEvent(CONST_TRACE_NOISY, "MEMORY: fcTrafficMatrix structure (no TrafficEntry loaded) is %.2fMB",
-	     xvertDOT00MB(myGlobals.fcTrafficMatrixMemoryUsage));
-#endif
 
   /*
    * OK, ntop is up... if we have't failed during init, start running with the actual packet capture...

@@ -590,18 +590,12 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
 
   updateASTraffic(actualDeviceId, srcHost->hostAS, dstHost->hostAS, bytes.value);
   
-  if(!myGlobals.runningPref.printIpOnly) {
-    if(srcHost == dstHost) {
-      return;
-    }
-    else if((srcHost == myGlobals.otherHostEntry)
-	     && (dstHost == myGlobals.otherHostEntry)) {
-      return;
-    }
-  }
-  else if(srcHost == dstHost)
+  if(srcHost == dstHost) {
     return;
-
+  } else if((srcHost == myGlobals.otherHostEntry)
+	  && (dstHost == myGlobals.otherHostEntry)) {
+    return;
+  }  
 
   thisTime = localtime_r(&myGlobals.actTime, &t);
   hourId = thisTime->tm_hour % 24 /* just in case... */;;
@@ -1004,9 +998,9 @@ static void processIpPkt(const u_char *bp,
 
   /* Need to copy this over in case bp isn't properly aligned.
    * This occurs on SunOS 4.x at least.
+   *
    * Paul D. Smith <psmith@baynetworks.com>
    */
-
   memcpy(&ip, bp, sizeof(struct ip));
   /* TODO: isipv6 = (ip.ip_v == 6)?1:0; */
   if(ip.ip_v == 6) {
@@ -1021,6 +1015,7 @@ static void processIpPkt(const u_char *bp,
     hlen = (u_int)ip.ip_hl * 4;
 
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipPkts, 1);
+
   if(ip6 == NULL)
     if((bp != NULL)
        && (myGlobals.device[actualDeviceId].datalink != DLT_NULL)
@@ -1105,6 +1100,9 @@ static void processIpPkt(const u_char *bp,
     }
   }
 
+  /* ******************************************************************* */
+  /* ******************************************************************* */
+
   /*
     IMPORTANT:
     do NOT change the order of the lines below (see isBroadcastAddress call)
@@ -1177,7 +1175,6 @@ static void processIpPkt(const u_char *bp,
      && (!myGlobals.device[actualDeviceId].dummyDevice)) {
     checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
     ctr.value = length;
-    updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);
   }
 
   if(ip6) {
@@ -2319,12 +2316,6 @@ void queuePacket(u_char *_deviceId,
     myGlobals.receivedPacketsProcessed++;
 
     len = h->caplen;
-    if(myGlobals.runningPref.printIpOnly) {
-      /* When we do Fibre Channel, the end of the packet contains EOF
-       * information and so truncating it isn't a good idea.
-       */
-      if(len >= DEFAULT_SNAPLEN) len = DEFAULT_SNAPLEN-1;
-    }
 
     if(h->caplen >= MAX_PACKET_LEN) {
       if(h->caplen > myGlobals.device[deviceId].mtuSize) {
@@ -2370,14 +2361,8 @@ void queuePacket(u_char *_deviceId,
 	   sizeof(myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].p));
     /* Just to be safe */
     len = h->caplen;
-    if(myGlobals.runningPref.printIpOnly) {
-      if(len >= DEFAULT_SNAPLEN) len = DEFAULT_SNAPLEN-1;
-      memcpy(myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].p, p, len);
-      myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].h.caplen = len;
-    } else {
-      memcpy(myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].p, p, len);
-      myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].h.caplen = len;
-    }
+    memcpy(myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].p, p, len);
+    myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].h.caplen = len;
 
     myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueHead].deviceId =
       (int)((long)((void*)_deviceId));
@@ -2455,10 +2440,7 @@ void* dequeuePacket(void* _deviceId) {
        && (myGlobals.runningPref.enablePacketDecoding /* Courtesy of Ken Beaty <ken@ait.com> */))
       traceEvent (CONST_TRACE_WARNING, "dequeuePacket: caplen %d != len %d\n", h.caplen, h.len);
 
-    if(myGlobals.runningPref.printIpOnly)
-      memcpy(p, myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueTail].p, DEFAULT_SNAPLEN);
-    else
-      memcpy(p, myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueTail].p, MAX_PACKET_LEN);
+    memcpy(p, myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueTail].p, MAX_PACKET_LEN);
 
     if(h.len > MAX_PACKET_LEN) {
       traceEvent(CONST_TRACE_WARNING, "packet truncated (%d->%d)", h.len, MAX_PACKET_LEN);
@@ -3511,7 +3493,6 @@ void processPacket(u_char *_deviceId,
 			 etheraddr_string(ether_dst, etherbuf));
 #endif
 
-
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
 	      incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, llcHeader.dsap /* dsap */,
 				    llcHeader.ssap /* ssap */, 0 /* ip */);
@@ -3537,60 +3518,6 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
 	}
-      } else if(eth_type == 0xDEAD) /* Agilent */ {
-	typedef struct {
-	  u_int8_t  version;        /* Protocol Version */
-	  u_int8_t  response_pdu;   /* 0=Request, 1=Response */
-	  u_int8_t  fragment_id;    /* Fragment Id (Only for
-				       fragmented FORWARD responses) */
-	  u_int8_t  pdu_type;       /* See sgbic_pdu_type */
-	  u_int16_t pdu_id;         /* Unique (serial) PDU identifier */
-	  u_int16_t pdu_len;        /* length (bytes) of the PDU (not
-				       including this header) */
-	  u_char    digest[16];     /* MD5 digest */
-	} sgbic_header_v1;
-
-	sgbic_header_v1 *pdu;
-
-	if(length > hlen+sizeof(sgbic_header_v1)) {
-	  pdu = (sgbic_header_v1*)(p+hlen);
-
-	  if((pdu->version == 1) && (pdu->pdu_type == 2 /* forward */)) {
-	    static u_short last_pdu_len, last_pdu_id;
-	    u_short size_shift = hlen+sizeof(sgbic_header_v1);
-
-	    if(pdu->fragment_id == 0) {
-	      struct pcap_pkthdr h1;
-
-	      h1.caplen     = h->caplen-size_shift;
-	      h1.len        = h->len-size_shift;
-	      h1.ts.tv_sec  = h->ts.tv_sec;
-	      h1.ts.tv_usec = h->ts.tv_usec;
-
-
-	      if(last_pdu_id == pdu->pdu_id) {
-		if(0)
-		  traceEvent(CONST_TRACE_ERROR, "[vers=%d][pdu_type=%d][pdu_id=%d][len=%d][fragment_id=%d]",
-			     pdu->version, pdu->pdu_type, pdu->pdu_id, ntohs(pdu->pdu_len), pdu->fragment_id);
-
-		h1.len += last_pdu_len;
-		if(0)
-		  traceEvent(CONST_TRACE_ERROR, "[caplen=%d][len=%d][last_pdu_len=%d]",
-			     h1.caplen, h1.len, last_pdu_len);
-	      }
-
-	      processPacket(_deviceId, &h1, p+size_shift);
-	    } else {
-	      last_pdu_len = h->len-size_shift, last_pdu_id = pdu->pdu_id;
-
-	      if(0)
-		traceEvent(CONST_TRACE_ERROR, "[vers=%d][pdu_type=%d][pdu_id=%d][len=%d][fragment_id=%d]",
-			   pdu->version, pdu->pdu_type, pdu->pdu_id, ntohs(pdu->pdu_len), pdu->fragment_id);
-
-	    }
-	  }
-	}
-
       } else if(eth_type == 0x8864) /* PPPOE */ {
         /* PPPoE - Courtesy of Andreas Pfaller Feb20032
          *   This strips the PPPoE encapsulation for traffic transiting the network.

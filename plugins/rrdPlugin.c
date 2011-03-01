@@ -79,7 +79,7 @@ static float rrdcmaxDuration = 0, lastRRDupdateDuration = 0, maxRRDupdateDuratio
 static time_t start_tm, end_tm;
 
 static u_short dumpDomains, dumpFlows, dumpHosts, dumpSubnets,
-  dumpInterfaces, dumpASs, enableAberrant, dumpMatrix, shownCreate=0;
+  dumpInterfaces, dumpASs, enableAberrant, shownCreate=0;
 
 static Counter rrdGraphicRequests=0;
 
@@ -3077,13 +3077,6 @@ static void commonRRDinit(void) {
     enableAberrant = atoi(value);
   }
 
-  if(fetchPrefsValue("rrd.dataDumpMatrix", value, sizeof(value)) == -1) {
-    storePrefsValue("rrd.dataDumpMatrix", "0");
-    dumpMatrix = 0;
-  } else {
-    dumpMatrix = atoi(value);
-  }
-
   if(hostsFilter != NULL) free(hostsFilter);
   if(fetchPrefsValue("rrd.hostsFilter", value, sizeof(value)) == -1) {
     int i;
@@ -3204,7 +3197,6 @@ static void commonRRDinit(void) {
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpHosts %s", dumpHosts == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterfaces %s", dumpInterfaces == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpASs %s", dumpASs == 0 ? "no" : "yes");
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpMatrix %s", dumpMatrix == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpDetail %s",
 	     dumpDetail == FLAG_RRD_DETAIL_HIGH ? "high" :
              (dumpDetail == FLAG_RRD_DETAIL_MEDIUM ? "medium" : "low"));
@@ -4045,7 +4037,7 @@ static void handleRRDHTTPrequest(char* url) {
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
   int _dumpDomains, _dumpFlows, _dumpSubnets, _dumpHosts, _dumpInterfaces, _dumpASs, _enableAberrant, _delay,
-    _dumpMatrix, _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId = 0,
+    _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId = 0,
     _heartbeat;
   int i, len, idx;
   time_t date1 = 0, date2 = 0;
@@ -4078,7 +4070,6 @@ static void handleRRDHTTPrequest(char* url) {
   _dumpInterfaces=0;
   _dumpASs=0;
   _enableAberrant=0;
-  _dumpMatrix=0;
   _heartbeat = DEFAULT_RRD_HEARTBEAT_MULTIPLIER;
   _dumpDetail = CONST_RRD_DETAIL_DEFAULT;
   _dumpInterval = DEFAULT_RRD_INTERVAL;
@@ -4229,8 +4220,6 @@ static void handleRRDHTTPrequest(char* url) {
 	  _dumpASs = 1;
 	} else if(strcmp(key, "enableAberrant") == 0) {
 	  _enableAberrant = atoi(value);
-	} else if(strcmp(key, "dumpMatrix") == 0) {
-	  _dumpMatrix = 1;
 #ifndef WIN32
 	} else if(strcmp(key, "permissions") == 0) {
 	  _dumpPermissions = atoi(value);
@@ -4289,7 +4278,6 @@ static void handleRRDHTTPrequest(char* url) {
       dumpInterfaces = _dumpInterfaces;
       dumpASs = _dumpASs;
       enableAberrant = _enableAberrant;
-      dumpMatrix = _dumpMatrix;
       dumpDetail = _dumpDetail;
 #ifndef WIN32
       dumpPermissions = _dumpPermissions;
@@ -4323,8 +4311,6 @@ static void handleRRDHTTPrequest(char* url) {
       storePrefsValue("rrd.dumpASs", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", enableAberrant);
       storePrefsValue("rrd.enableAberrant", buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpMatrix);
-      storePrefsValue("rrd.dataDumpMatrix", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpDetail);
       storePrefsValue("rrd.dataDumpDetail", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpHeartbeatMultiplier);
@@ -4503,10 +4489,6 @@ static void handleRRDHTTPrequest(char* url) {
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpASs VALUE=1 %s> ASs<br>\n",
 		dumpASs ? "CHECKED" : "");
-  sendString(buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpMatrix VALUE=1 %s> Matrix<br>\n",
-		dumpMatrix ? "CHECKED" : "");
   sendString(buf);
 
   sendString("</td></tr>\n");
@@ -5641,40 +5623,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     }
 
     /* ************************** */
-
-    if(dumpMatrix) {
-      int k;
-
-      for(k=0; k<myGlobals.numDevices; k++)
-	for(i=1; i<myGlobals.device[k].numHosts; i++)
-	  for(j=1; j<myGlobals.device[k].numHosts; j++) {
-	    if(i != j) {
-	      idx = i*myGlobals.device[k].numHosts+j;
-
-	      if(myGlobals.device[k].ipTrafficMatrix == NULL)
-		continue;
-	      if(myGlobals.device[k].ipTrafficMatrix[idx] == NULL)
-		continue;
-
-	      if(myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value > 0) {
-
-		safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath),
-			      "%s/interfaces/%s/matrix/%s/%s/",
-			      myGlobals.rrdPath,
-			      myGlobals.device[k].uniqueIfName,
-			      myGlobals.device[k].ipTrafficMatrixHosts[i]->hostNumIpAddress,
-			      myGlobals.device[k].ipTrafficMatrixHosts[j]->hostNumIpAddress);
-		mkdir_p("RRD", rrdPath, myGlobals.rrdDirectoryPermissions);
-
-		updateCounter(rrdPath, "pkts",
-			      myGlobals.device[k].ipTrafficMatrix[idx]->pktsSent.value, 0);
-
-		updateCounter(rrdPath, "bytes",
-			      myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value, 0);
-	      }
-	    }
-	  }
-    }
 
     gettimeofday(&rrdEndOfCycle, NULL);
     elapsed = timeval_subtract(rrdEndOfCycle, rrdStartOfCycle);

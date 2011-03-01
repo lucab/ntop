@@ -611,8 +611,7 @@ void reinitMutexes (void) {
   for(i=0; i<NUM_SESSION_MUTEXES; i++)
     createMutex(&myGlobals.tcpSessionsMutex[i]); /* data to synchronize TCP sessions access */
 
-  createMutex(&myGlobals.fcSessionsMutex);
-  createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
+    createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
   createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
 
   for(i=0; i<CONST_HASH_INITIAL_SIZE; i++) {
@@ -740,7 +739,7 @@ void allocDeviceMemory(int deviceId) {
  * if device is "none" it adds a dummy interface
  */
 void addDevice(char* deviceName, char* deviceDescr) {
-  int i, deviceId, mallocLen, memlen;
+  int i, deviceId, mallocLen;
   char *workDevices = NULL;
   char myName[255], *column = NULL, ebuf[CONST_SIZE_PCAP_ERR_BUF], tmpStr[64];
 
@@ -833,20 +832,12 @@ void addDevice(char* deviceName, char* deviceDescr) {
     }
 #endif
 
-    if(myGlobals.runningPref.printIpOnly) {
-      myGlobals.device[deviceId].pcapPtr =
-	pcap_open_live(myGlobals.device[deviceId].name,
-		       myGlobals.runningPref.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN,
-		       myGlobals.runningPref.disablePromiscuousMode == 1 ? 0 : 1,
-		       1000 /* ms */, ebuf);
-    }
-    else {
-        myGlobals.device[deviceId].pcapPtr =
-	pcap_open_live(myGlobals.device[deviceId].name,
-		       MAX_PACKET_LEN,
-		       myGlobals.runningPref.disablePromiscuousMode == 1 ? 0 : 1,
-		       1000 /* ms */, ebuf);
-    }
+    
+    myGlobals.device[deviceId].pcapPtr =
+      pcap_open_live(myGlobals.device[deviceId].name,
+		     MAX_PACKET_LEN,
+		     myGlobals.runningPref.disablePromiscuousMode == 1 ? 0 : 1,
+		     1000 /* ms */, ebuf);    
 
       if(myGlobals.device[deviceId].pcapPtr == NULL) {
 	traceEvent(CONST_TRACE_ERROR, "pcap_open_live(): '%s'", ebuf);
@@ -955,7 +946,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
     } else {
       myGlobals.device[deviceId].numHosts = 0xFFFFFFFF - myGlobals.device[deviceId].netmask.s_addr + 1;
 
-      /* Add some room for multicast hosts in the ipTrafficMatrix
+      /* Add some room for multicast hosts
        * This is an arbitrary guess.
        * We use the log function to limit growth for large networks, while the factor of 50
        * is designed to ensure a certain minimal # even for smaller networks
@@ -974,53 +965,6 @@ void addDevice(char* deviceName, char* deviceDescr) {
 		 myGlobals.device[deviceId].name,
 		 intoa(myGlobals.device[deviceId].netmask),
 		 myGlobals.device[deviceId].numHosts);
-    }
-
-    if(myGlobals.runningPref.liveMode) {
-      myGlobals.device[deviceId].ipTrafficMatrix = NULL;
-    } else {
-      memlen = sizeof(TrafficEntry*)*myGlobals.device[deviceId].numHosts*myGlobals.device[deviceId].numHosts;
-      myGlobals.device[deviceId].ipTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[deviceId].numHosts
-									  *myGlobals.device[deviceId].numHosts,
-									  sizeof(TrafficEntry*));
-      if(myGlobals.device[deviceId].ipTrafficMatrix == NULL) {
-	traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for ipTraffixMatrix failed", memlen);
-	exit(12); /* Just in case */
-      }
-
-      traceEvent(CONST_TRACE_NOISY, "MEMORY: ipTrafficMatrix base (no TrafficEntry) for interface '%s' is %5.2fMB",
-		 myGlobals.device[deviceId].name,
-		 ((float)(memlen)/(float)(1024.0*1024.0))+0.05);
-      myGlobals.ipTrafficMatrixMemoryUsage += memlen;
-
-      memlen = sizeof(struct hostTraffic*)*myGlobals.device[deviceId].numHosts;
-      myGlobals.device[deviceId].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
-										     myGlobals.device[deviceId].numHosts);
-
-      if(myGlobals.device[deviceId].ipTrafficMatrixHosts == NULL) {
-	traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for ipTraffixMatrixHosts failed", memlen);
-	exit(13); /* Just in case */
-      }
-
-      /* Allocate FC Traffic Matrices */
-#ifdef NOT_YET
-      if (!myGlobals.runningPref.printIpOnly) {
-        memlen = sizeof(TrafficEntry*)*myGlobals.device[deviceId].numHosts*myGlobals.device[deviceId].numHosts;
-        myGlobals.device[deviceId].fcTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[deviceId].numHosts
-                                                                            *myGlobals.device[deviceId].numHosts,
-                                                                            sizeof(TrafficEntry*));
-        if(myGlobals.device[deviceId].fcTrafficMatrix == NULL) {
-          traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for fcTraffixMatrix failed", memlen);
-          exit(14); /* Just in case */
-        }
-        myGlobals.fcTrafficMatrixMemoryUsage += memlen;
-
-        memlen = sizeof(struct hostTraffic*)*myGlobals.device[deviceId].numHosts;
-        myGlobals.device[deviceId].fcTrafficMatrixHosts = 
-	  (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
-				       myGlobals.device[deviceId].numHosts);
-      }
-#endif
     }
   }
 
@@ -1518,26 +1462,6 @@ u_int createDummyInterface(char *ifName) {
     myGlobals.device[deviceId].hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;
     myGlobals.otherHostEntry->next = NULL;
   }
-
-#ifdef NOT_YET
-  mallocLen = sizeof(TrafficEntry*)*myGlobals.device[deviceId].numHosts*myGlobals.device[deviceId].numHosts;
-  myGlobals.device[deviceId].fcTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[deviceId].numHosts
-                                                                      *myGlobals.device[deviceId].numHosts,
-                                                                      sizeof(TrafficEntry*));
-  if(myGlobals.device[deviceId].fcTrafficMatrix == NULL) {
-      traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for fcTraffixMatrix failed", mallocLen);
-      exit(16); /* Just in case */
-  }
-
-  mallocLen = sizeof(struct hostTraffic*)*myGlobals.device[deviceId].numHosts;
-  myGlobals.device[deviceId].fcTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
-                                                                                 myGlobals.device[deviceId].numHosts);
-
-  if(myGlobals.device[deviceId].fcTrafficMatrixHosts == NULL) {
-      traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for fcTrafficMatrixHosts failed", mallocLen);
-      exit(17); /* Just in case */
-  }
-#endif
 
   /* Allocate memory for dhcp stats */
   for(i=0; i<myGlobals.numKnownSubnets; i++) {

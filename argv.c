@@ -28,7 +28,7 @@ Cambridge, MA 02139, USA.  */
 #else /* not __GNUC__ */
 #ifdef sparc
 #include <alloca.h>
-/* This is declared at least on Solaris 9, maybe this should better be detected during configure-time?
+/* This is declared at least on Solaris 9, maybe this should better be detected during configure-time? */
 extern char *__builtin_alloca();  /* Stupid include file doesn't declare it */
 #else
 #ifdef _AIX

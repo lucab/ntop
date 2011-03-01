@@ -6295,21 +6295,9 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                            pref->disableStopcap == TRUE ? "Yes" : "No",
                            "No");
 
-  printParameterConfigInfo(textPrintFlag, "--fc-only",
-                           pref->printFcOnly == TRUE ? "Yes" : "No",
-                           "No");
-
   printParameterConfigInfo(textPrintFlag, "--instance",
                            pref->instance,
                            NULL);
-
-  printParameterConfigInfo(textPrintFlag, "--no-fc",
-                           pref->printIpOnly == TRUE ? "Yes" : "No",
-                           "No");
-
-  printParameterConfigInfo(textPrintFlag, "--no-invalid-lun",
-                           pref->noInvalidLunDisplay == TRUE ? "Yes" : "No",
-                           "No");
 
   printParameterConfigInfo(textPrintFlag, "--p3p-cp",
                            ((pref->P3Pcp == NULL) ||

@@ -50,8 +50,6 @@ static void* netflowUtilsLoop(void* _deviceId);
 
 /* Forward */
 static int setNetFlowInSocket(int);
-static void setNetFlowInterfaceMatrix(int);
-static void freeNetFlowMatrixMemory(int);
 static void setPluginStatus(char * status);
 static int initNetFlowFunct(void);
 static void termNetflowFunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
@@ -178,59 +176,6 @@ static char* nfValue(int deviceId, char *name, int appendDeviceId) {
 #endif
 
   return(buf);
-}
-
-/* ****************************** */
-
-static void freeNetFlowMatrixMemory(int deviceId) {
-  /*
-    NOTE: wee need to lock something here(TBD)
-  */
-
-  if((!myGlobals.device[deviceId].activeDevice) ||(deviceId == -1)) return;
-
-  if(myGlobals.device[deviceId].ipTrafficMatrix != NULL) {
-    int j;
-
-    /* Courtesy of Wies-Software <wies@wiessoft.de> */
-    for(j=0; j<(myGlobals.device[deviceId].numHosts *
-		myGlobals.device[deviceId].numHosts); j++)
-      if(myGlobals.device[deviceId].ipTrafficMatrix[j] != NULL)
-	free(myGlobals.device[deviceId].ipTrafficMatrix[j]);
-
-    free(myGlobals.device[deviceId].ipTrafficMatrix);
-  }
-
-  if(myGlobals.device[deviceId].ipTrafficMatrixHosts != NULL)
-    free(myGlobals.device[deviceId].ipTrafficMatrixHosts);
-}
-
-/* ************************************************** */
-
-static void setNetFlowInterfaceMatrix(int deviceId) {
-  if((!myGlobals.device[deviceId].activeDevice)
-     || (deviceId == -1))
-    return;
-
-  myGlobals.device[deviceId].numHosts       = 0xFFFFFFFF - myGlobals.device[deviceId].netflowGlobals->netFlowIfMask.s_addr+1;
-  myGlobals.device[deviceId].ifAddr.s_addr  = myGlobals.device[deviceId].netflowGlobals->netFlowIfAddress.s_addr;
-  myGlobals.device[deviceId].network.s_addr = myGlobals.device[deviceId].netflowGlobals->netFlowIfAddress.s_addr;
-  myGlobals.device[deviceId].netmask.s_addr = myGlobals.device[deviceId].netflowGlobals->netFlowIfMask.s_addr;
-
-  if(myGlobals.device[deviceId].numHosts > MAX_SUBNET_HOSTS) {
-    myGlobals.device[deviceId].numHosts = MAX_SUBNET_HOSTS;
-    traceEvent(CONST_TRACE_WARNING, "NETFLOW: Truncated network size(device %s) to %d hosts(real netmask %s).",
-	       myGlobals.device[deviceId].name, myGlobals.device[deviceId].numHosts,
-	       intoa(myGlobals.device[deviceId].netmask));
-  }
-
-  myGlobals.device[deviceId].ipTrafficMatrix =
-    (TrafficEntry**)calloc(myGlobals.device[deviceId].numHosts*
-			   myGlobals.device[deviceId].numHosts,
-			   sizeof(TrafficEntry*));
-  myGlobals.device[deviceId].ipTrafficMatrixHosts =
-    (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
-				 myGlobals.device[deviceId].numHosts);
 }
 
 /* ************************************** */
@@ -872,7 +817,6 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
   if(srcPseudoLocal) {
     if(dstPseudoLocal) {
-      updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);
       incrementTrafficCounter(&srcHost->bytesSentLoc, record->sentOctets);
       incrementTrafficCounter(&dstHost->bytesRcvdLoc, record->sentOctets);
       if(record->rcvdOctets > 0) {
@@ -3489,7 +3433,6 @@ static int createNetFlowDevice(int netFlowDeviceId) {
     myGlobals.device[deviceId].dummyDevice  = 0;
     myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId = netFlowDeviceId;
     initNetFlowDevice(deviceId);
-    setNetFlowInterfaceMatrix(deviceId);
     createDeviceIpProtosList(deviceId);
 
     if(fetchPrefsValue(nfValue(deviceId, "humanFriendlyName", 1),
@@ -3667,16 +3610,12 @@ static void handleNetflowHTTPrequest(char* _url) {
 	      myGlobals.device[deviceId].netflowGlobals->netFlowIfAddress.s_addr = (a << 24) +(b << 16) +(c << 8) + d;
 	      myGlobals.device[deviceId].netflowGlobals->netFlowIfMask.s_addr    = (a1 << 24) +(b1 << 16) +(c1 << 8) + d1;
 	      storePrefsValue(nfValue(deviceId, "ifNetMask", 1), value);
-	      freeNetFlowMatrixMemory(deviceId);
-	      setNetFlowInterfaceMatrix(deviceId);
 	    } else if(sscanf(value, "%d.%d.%d.%d/%d", &a, &b, &c, &d, &a1) == 5) {
 	      myGlobals.device[deviceId].netflowGlobals->netFlowIfAddress.s_addr = (a << 24) +(b << 16) +(c << 8) + d;
 	      myGlobals.device[deviceId].netflowGlobals->netFlowIfMask.s_addr    = 0xffffffff >> a1;
 	      myGlobals.device[deviceId].netflowGlobals->netFlowIfMask.s_addr =~
 		myGlobals.device[deviceId].netflowGlobals->netFlowIfMask.s_addr;
 	      storePrefsValue(nfValue(deviceId, "ifNetMask", 1), value);
-	      freeNetFlowMatrixMemory(deviceId);
-	      setNetFlowInterfaceMatrix(deviceId);
 	    } else
 	      traceEvent(CONST_TRACE_ERROR, "NETFLOW: HTTP request netmask parse error (%s)", value);
 	  }

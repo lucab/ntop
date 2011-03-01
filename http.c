@@ -630,9 +630,39 @@ static void ssiMenu_Head(void) {
 		  "				[null,'Network Traffic Map','/" CONST_NETWORK_MAP_HTML "',null,null],\n");
 #endif
   sendStringWOssi(
-		  "				[null,'Local Matrix','/" CONST_IP_TRAFFIC_MATRIX_HTML "',null,null],\n"
 		  "		],\n"
 		  "	],\n");
+
+#ifdef ENABLE_FC
+  if(!myGlobals.runningPref.printIpOnly
+     && myGlobals.device[myGlobals.actualReportDeviceId].vsanHash /* We have something to show */) {
+    sendStringWOssi(
+		    "	[null,'Media',null,null,null,\n"
+		    "		[null,'Fibre Channel',null,null,null,\n"
+		    "				[null,'Traffic','/" CONST_FC_DATA_HTML "',null,null],\n"
+		    "				[null,'Throughput','/" CONST_FC_THPT_HTML "',null,null],\n"
+		    "				[null,'Activity','/" CONST_FC_ACTIVITY_HTML "',null,null],\n"
+		    "				[null,'Hosts','/" CONST_FC_HOSTS_INFO_HTML "',null,null],\n"
+		    "				[null,'Traffic Per Port','/" CONST_FC_TRAFFIC_HTML "',null,null],\n");
+    if(myGlobals.runningPref.enableSessionHandling)
+      sendStringWOssi(
+		      "				[null,'Sessions','/" CONST_FC_SESSIONS_HTML "',null,null],\n");
+    sendStringWOssi(
+		    "				[null,'VSANs','/" CONST_VSAN_LIST_HTML "',null,null],\n"
+		    "				[null,'VSAN Summary','/" CONST_VSAN_DISTRIB_HTML "',null,null],\n"
+		    "		],\n");
+    if(myGlobals.runningPref.enableSessionHandling)
+      sendStringWOssi(
+		      "		[null,'SCSI Sessions',null,null,null,\n"
+		      "				[null,'Bytes','/" CONST_SCSI_BYTES_HTML "',null,null],\n"
+		      "				[null,'Times','/" CONST_SCSI_TIMES_HTML "',null,null],\n"
+		      "				[null,'Status','/" CONST_SCSI_STATUS_HTML "',null,null],\n"
+		      "				[null,'Task Management','/" CONST_SCSI_TM_HTML "',null,null],\n"
+		      "		],\n");
+    sendStringWOssi(
+		    "	],\n");
+  }
+#endif
 
   sendStringWOssi("	[null,'Utils',null,null,null,\n");
 #ifdef HAVE_PYTHON
@@ -795,6 +825,7 @@ static void ssiMenu_Body(void) {
   } else {
     sendStringWOssi("      <A HREF=http://www.ntop.org><img src=\"/" CONST_NTOP_LOGO "\" class=\"reflect\" border=0></A>");
   }
+
   sendStringWOssi(
 		  "     </td>\n"
 		  "    </tr>\n"
@@ -1272,7 +1303,7 @@ void printHTMLtrailer(void) {
   if(myGlobals.pcap_file_list == NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "[ntop uptime: %s]\n",
 		  formatSeconds((unsigned long)(time(NULL)-myGlobals.initialSniffTime), 
-						formatBuf, sizeof(formatBuf)));
+				formatBuf, sizeof(formatBuf)));
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
 		  "[from file %s]\n",
@@ -1374,9 +1405,9 @@ void initAccessLog(void) {
   if(myGlobals.runningPref.accessLogFile) {
 
 #ifdef WIN32
-	_umask(0137);
+    _umask(0137);
 #else
-	umask(0137);
+    umask(0137);
 #endif
 
     myGlobals.accessLogFd = fopen(myGlobals.runningPref.accessLogFile, "a");
@@ -2285,60 +2316,60 @@ static int returnHTTPPage(char* pageName,
       return(0);
     }
   } else {
-      for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
-	  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
-			"%s/html/%s",
-			myGlobals.dataFileDirs[idx],
-			pageURI);
+    for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
+      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
+		    "%s/html/%s",
+		    myGlobals.dataFileDirs[idx],
+		    pageURI);
 
-	  revertSlashIfWIN32(tmpStr, 0);
+      revertSlashIfWIN32(tmpStr, 0);
 
 #if defined(HTTP_DEBUG) || defined(URL_DEBUG)
-	traceEvent(CONST_TRACE_INFO, "HTTP/URL_DEBUG: Testing for page %s at %s",
-		   pageURI, tmpStr);
+      traceEvent(CONST_TRACE_INFO, "HTTP/URL_DEBUG: Testing for page %s at %s",
+		 pageURI, tmpStr);
 #endif
 
-	if(stat(tmpStr, &statbuf) == 0) {
-	  if(ifModificedSince[0] != '\0') {
-	    struct tm modified;
+      if(stat(tmpStr, &statbuf) == 0) {
+	if(ifModificedSince[0] != '\0') {
+	  struct tm modified;
 
-	    if(strptime(ifModificedSince, CONST_RFC1945_TIMESPEC, &modified) != NULL) {
-	      struct tm *_tm = localtime(&statbuf.st_mtime);
-	      time_t t_modified, t_if_modified_since;
+	  if(strptime(ifModificedSince, CONST_RFC1945_TIMESPEC, &modified) != NULL) {
+	    struct tm *_tm = localtime(&statbuf.st_mtime);
+	    time_t t_modified, t_if_modified_since;
 
-	      t_modified = mktime(_tm)-(time_t)myGlobals.thisZone;
-	      t_if_modified_since = mktime(&modified);
+	    t_modified = mktime(_tm)-(time_t)myGlobals.thisZone;
+	    t_if_modified_since = mktime(&modified);
 
-	      if(t_modified > t_if_modified_since) {
-		/* The file has been modified */
-	      } else {
-		char theDate[48];
-		time_t  theTime = myGlobals.actTime - (time_t)myGlobals.thisZone;
+	    if(t_modified > t_if_modified_since) {
+	      /* The file has been modified */
+	    } else {
+	      char theDate[48];
+	      time_t  theTime = myGlobals.actTime - (time_t)myGlobals.thisZone;
 
-		sendString("HTTP/1.1 304 Not Modified\r\n");
-		strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, localtime_r(&theTime, &t));
-		theDate[sizeof(theDate)-1] = '\0';
-		safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Date: %s\r\n", theDate);
-		sendString(tmpStr);
-		sendString("Connection: close\r\n");
-		free(pageURI);
-		return(0);
-	      }
+	      sendString("HTTP/1.1 304 Not Modified\r\n");
+	      strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, localtime_r(&theTime, &t));
+	      theDate[sizeof(theDate)-1] = '\0';
+	      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Date: %s\r\n", theDate);
+	      sendString(tmpStr);
+	      sendString("Connection: close\r\n");
+	      free(pageURI);
+	      return(0);
 	    }
 	  }
-
-	  if((fd = fopen(tmpStr, "rb")) != NULL) {
-	    found = 1;
-	    /* traceEvent(CONST_TRACE_ERROR, "--> %s", tmpStr); */
-	    break;
-	  }
-
-	  traceEvent(CONST_TRACE_ERROR, "Cannot open file '%s', ignored...", tmpStr);
-	} else {
-	  if(0) 
-	    traceEvent(CONST_TRACE_INFO, "File %s not found on disk [%s][%d]", 
-		       tmpStr, myGlobals.dataFileDirs[idx], idx);
 	}
+
+	if((fd = fopen(tmpStr, "rb")) != NULL) {
+	  found = 1;
+	  /* traceEvent(CONST_TRACE_ERROR, "--> %s", tmpStr); */
+	  break;
+	}
+
+	traceEvent(CONST_TRACE_ERROR, "Cannot open file '%s', ignored...", tmpStr);
+      } else {
+	if(0) 
+	  traceEvent(CONST_TRACE_INFO, "File %s not found on disk [%s][%d]", 
+		     tmpStr, myGlobals.dataFileDirs[idx], idx);
+      }
     }
   }
 
@@ -2547,10 +2578,10 @@ static int returnHTTPPage(char* pageName,
     addURL(NULL);
     /* Temporary here - begin
 
-    Due to some strange problems, graph generation has some problems
-    when several charts are generated concurrently.
+       Due to some strange problems, graph generation has some problems
+       when several charts are generated concurrently.
 
-    This NEEDS to be fixed.
+       This NEEDS to be fixed.
     */
   } else if(strcasecmp(pageName, CONST_FAVICON_ICO) == 0) {
     /* Burton Strauss (BStrauss@acm.org) - April 2002
@@ -2694,7 +2725,7 @@ static int returnHTTPPage(char* pageName,
 #endif
 
     if(strncasecmp(pageName, CONST_EMBEDDED_PYTHON_HEADER, 
-			  strlen(CONST_EMBEDDED_PYTHON_HEADER)) == 0) {
+		   strlen(CONST_EMBEDDED_PYTHON_HEADER)) == 0) {
       if(domainNameParm != NULL) free(domainNameParm);
       if(db_key != NULL) free(db_key);
       if(db_val != NULL) free(db_val);
@@ -2720,10 +2751,6 @@ static int returnHTTPPage(char* pageName,
 			    strlen(CONST_SORT_DATA_THPT_STATS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printThptStats(sortedColumn);
-      } else if(strncasecmp(pageName, CONST_THPT_STATS_MATRIX_HTML,
-			    strlen(CONST_THPT_STATS_MATRIX_HTML)) == 0) {
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printThptStatsMatrix(sortedColumn);
       } else if(strncasecmp(pageName, CONST_HOSTS_INFO_HTML, strlen(CONST_HOSTS_INFO_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vlanId, ifId, subnetId);
@@ -2807,9 +2834,6 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printHTMLheader(NULL, NULL, 0);
 	printIpProtocolDistribution(FLAG_HOSTLINK_TEXT_FORMAT, revertOrder, TRUE);
-      } else if(strcasecmp(pageName, CONST_IP_TRAFFIC_MATRIX_HTML) == 0) {
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printIpTrafficMatrix();
       } else if(strcasecmp(pageName, CONST_LOCAL_ROUTERS_LIST_HTML) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printLocalRoutersList(myGlobals.actualReportDeviceId);
@@ -2928,11 +2952,11 @@ static int returnHTTPPage(char* pageName,
 	  for(el=getFirstHost(myGlobals.actualReportDeviceId);
 	      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
 	    if((el != myGlobals.broadcastEntry)
-		 && (el->hostNumIpAddress != NULL)
-		 && ((el->vlanId <= 0) || (el->vlanId == vlanId))
-		 && ((strcmp(el->hostNumIpAddress, hostName) == 0)
-                     || (strcmp(el->ethAddressString, hostName) == 0)))
-		break;
+	       && (el->hostNumIpAddress != NULL)
+	       && ((el->vlanId <= 0) || (el->vlanId == vlanId))
+	       && ((strcmp(el->hostNumIpAddress, hostName) == 0)
+		   || (strcmp(el->ethAddressString, hostName) == 0)))
+	      break;
 	  } /* for */
 
 	  if(el == NULL) {
@@ -3041,14 +3065,6 @@ static int returnHTTPPage(char* pageName,
 	  dumpNtopFlows(NULL, NULL, myGlobals.actualReportDeviceId);
 	else
 	  dumpNtopFlows(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
-	printTrailer = 0;
-      } else if(strncasecmp(pageName, CONST_DUMP_NTOP_HOSTS_MATRIX_HTML,
-			    strlen(CONST_DUMP_NTOP_HOSTS_MATRIX_HTML)) == 0) {
-	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
-	if((questionMark == NULL) || (questionMark[0] == '\0'))
-	  dumpNtopTrafficMatrix(NULL, NULL, myGlobals.actualReportDeviceId);
-	else
-	  dumpNtopTrafficMatrix(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
 	printTrailer = 0;
       } else if(strncasecmp(pageName, CONST_DUMP_TRAFFIC_DATA_HTML,
 			    strlen(CONST_DUMP_TRAFFIC_DATA_HTML)) == 0) {
@@ -3195,7 +3211,7 @@ static int checkHTTPpassword(char *theRequestedURL,
 
   /* Retrieve CURRENT record - it might have changed since stored above */
 #ifdef URL_DEBUG
-    traceEvent(CONST_TRACE_INFO, "***** URL_DEBUG: Retrieving '%s' [%s]", outBuffer, &theRequestedURL[1]);
+  traceEvent(CONST_TRACE_INFO, "***** URL_DEBUG: Retrieving '%s' [%s]", outBuffer, &theRequestedURL[1]);
 #endif
 
   key.dptr = outBuffer;
@@ -3539,47 +3555,47 @@ void handleHTTPrequest(HostAddr from) {
 	myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].count = 1;
       }
     }
- #endif
+#endif
 
-     returnHTTPaccessForbidden();
-     free(requestedURLCopy);
-     return;
-   }
+    returnHTTPaccessForbidden();
+    free(requestedURLCopy);
+    return;
+  }
 
-   free(requestedURLCopy);
+  free(requestedURLCopy);
 
-   /*
-     Fix courtesy of
-     Michael Wescott <wescott@crosstor.com>
-   */
-   if((requestedURL[0] != '\0') && (requestedURL[0] != '/')) {
-     returnHTTPpageNotFound(NULL);
-     return;
-   }
+  /*
+    Fix courtesy of
+    Michael Wescott <wescott@crosstor.com>
+  */
+  if((requestedURL[0] != '\0') && (requestedURL[0] != '/')) {
+    returnHTTPpageNotFound(NULL);
+    return;
+  }
 
-   if(checkHTTPpassword(requestedURL, sizeof(requestedURL), pw, sizeof(pw) ) != 1) {
-     returnHTTPaccessDenied();
-     return;
-   }
+  if(checkHTTPpassword(requestedURL, sizeof(requestedURL), pw, sizeof(pw) ) != 1) {
+    returnHTTPaccessDenied();
+    return;
+  }
 
-   myGlobals.actTime = time(NULL); /* Don't forget this */
+  myGlobals.actTime = time(NULL); /* Don't forget this */
 
-   skipLeading = 0;
-   while (requestedURL[skipLeading] == '/') {
-     skipLeading++;
-   }
+  skipLeading = 0;
+  while (requestedURL[skipLeading] == '/') {
+    skipLeading++;
+  }
 
-   if(requestedURL[0] == '\0') {
-     returnHTTPpageNotFound(NULL);
-   }
+  if(requestedURL[0] == '\0') {
+    returnHTTPpageNotFound(NULL);
+  }
 
- #ifdef IDLE_PURGE_DEBUG
-   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() accessMutex(purgeMutex)...calling");
- #endif
-   accessMutex(&myGlobals.purgeMutex, "returnHTTPPage");
- #ifdef IDLE_PURGE_DEBUG
-   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() accessMutex(purgeMutex)...locked");
- #endif
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() accessMutex(purgeMutex)...calling");
+#endif
+  accessMutex(&myGlobals.purgeMutex, "returnHTTPPage");
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() accessMutex(purgeMutex)...locked");
+#endif
 
   rc = returnHTTPPage(&requestedURL[1], postLen,
 		      &from, &httpRequestedAt, &usedFork,

@@ -166,20 +166,6 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   handlePluginHostCreationDeletion(host, (u_short)actualDeviceId, 0 /* host deletion */);
 
-  /* Make sure this host is not part of the ipTrafficMatrixHosts list */
-  if((myGlobals.device[actualDeviceId].ipTrafficMatrix != NULL)
-     && (myGlobals.device[actualDeviceId].numHosts > 0)
-     && isMatrixHost(host, actualDeviceId)) {
-    int id = matrixHostHash(host, actualDeviceId, 0);
-
-    myGlobals.device[actualDeviceId].ipTrafficMatrixHosts[id] = NULL;
-
-    for(i=0; i<myGlobals.device[actualDeviceId].numHosts-1; i++) {
-      myGlobals.device[actualDeviceId].ipTrafficMatrix[id*myGlobals.device[actualDeviceId].numHosts+i] = NULL;
-      myGlobals.device[actualDeviceId].ipTrafficMatrix[i*myGlobals.device[actualDeviceId].numHosts+id] = NULL;
-    }
-  }
-
   myGlobals.device[actualDeviceId].hostsno--;
 
   if(host->protoIPTrafficInfos != NULL) {

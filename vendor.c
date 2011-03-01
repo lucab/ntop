@@ -570,7 +570,6 @@ void createVendorTable(struct stat *dbStat) {
 
   } /* for macInputFiles */
 
-  if (!myGlobals.runningPref.printFcOnly) {
     traceEvent(CONST_TRACE_INFO, "Fingerprint: Loading signature file");
       
     fd = checkForInputFile("Fingerprint", "Fingerprint file...",
@@ -599,7 +598,6 @@ void createVendorTable(struct stat *dbStat) {
           
       traceEvent(CONST_TRACE_INFO, "Fingerprint: ...loaded %d records", numEntries);
     } else
-      traceEvent(CONST_TRACE_NOISY, "Unable to find fingeprint signature file.");
-  }
+      traceEvent(CONST_TRACE_NOISY, "Unable to find fingeprint signature file.");  
 }
 

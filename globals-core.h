@@ -455,10 +455,6 @@ extern void termGdbm(void);
 
 /* traffic.c */
 extern void updateThpt(int quickUpdate);
-extern int isMatrixHost(HostTraffic *host, int actualDeviceId);
-extern unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash);
-extern void updateTrafficMatrix(HostTraffic *srcHost, HostTraffic *dstHost,
-                                TrafficCounter length, int actualDeviceId);
 extern void updateDbHostsTraffic(int deviceToUpdate);
 extern int isInitialHttpData(char* packetData);
 extern int isInitialSshData(char* packetData);

@@ -535,67 +535,6 @@ void updateThpt(int fullUpdate) {
   }
 }
 
-/* ******************************* */
-
-/* Check if a host can be potentially added the host matrix */
-int isMatrixHost(HostTraffic *host, int actualDeviceId) {
-  if((host->hostIpAddress.hostFamily == AF_INET) /* Only IPv4 addresses are used in the matrix */
-     && (deviceLocalAddress(&host->hostIpAddress, actualDeviceId, NULL, NULL) || multicastHost(host))
-     && (!broadcastHost(host)))
-    return(1);
-  else
-    return(0);
-}
-
-/* ******************************* */
-
-unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash) {
-  unsigned long hash = 0;
-
-  if(myGlobals.device[actualDeviceId].numHosts  == 0) return(0);
-
-  if (host->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) {
-    if (host->hostIpAddress.hostFamily == AF_INET)
-      hash = host->hostIp4Address.s_addr;
-    else if (host->hostIpAddress.hostFamily == AF_INET6)
-      hash = *(u_int32_t *)&host->hostIp6Address.s6_addr[0];
-  }
- 
-  return((unsigned int)(hash) % myGlobals.device[actualDeviceId].numHosts);
-}
-
-/* ******************************* */
-
-void updateTrafficMatrix(HostTraffic *srcHost,
-			 HostTraffic *dstHost,
-			 TrafficCounter length, 
-			 int actualDeviceId) {
-
-  if(myGlobals.device[actualDeviceId].numHosts == 0) return;
-  
-  if(isMatrixHost(srcHost, actualDeviceId) 
-     && isMatrixHost(dstHost, actualDeviceId)) {
-    unsigned int a, b, id;    
-    
-    a = matrixHostHash(srcHost, actualDeviceId, 0), b = matrixHostHash(dstHost, actualDeviceId, 0);
-
-    myGlobals.device[actualDeviceId].ipTrafficMatrixHosts[a] = srcHost, 
-      myGlobals.device[actualDeviceId].ipTrafficMatrixHosts[b] = dstHost;
-
-    id = a*myGlobals.device[actualDeviceId].numHosts+b;
-    if(myGlobals.device[actualDeviceId].ipTrafficMatrix[id] == NULL)
-      myGlobals.device[actualDeviceId].ipTrafficMatrix[id] = (TrafficEntry*)calloc(1, sizeof(TrafficEntry));
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipTrafficMatrix[id]->bytesSent, length.value);
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipTrafficMatrix[id]->pktsSent, 1);
-
-    id = b*myGlobals.device[actualDeviceId].numHosts+a;
-    if(myGlobals.device[actualDeviceId].ipTrafficMatrix[id] == NULL)
-      myGlobals.device[actualDeviceId].ipTrafficMatrix[id] = (TrafficEntry*)calloc(1, sizeof(TrafficEntry));
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipTrafficMatrix[id]->bytesRcvd, length.value);
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipTrafficMatrix[id]->pktsRcvd, 1);
-  }
-}
-
 /* ************************ */
 
 int isInitialHttpData(char* packetData) {

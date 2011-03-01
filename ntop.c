@@ -969,7 +969,7 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 
 /* Report statistics and write out the raw packet file */
 RETSIGTYPE cleanup(int signo) {
-  int i, j, idx;
+  int i, idx;
   char buf[128];
   static int cleanup_called = 0;
 
@@ -1107,19 +1107,6 @@ RETSIGTYPE cleanup(int signo) {
     traceEvent(CONST_TRACE_INFO, "CLEANUP: Freeing device %s",
 	       myGlobals.device[i].humanFriendlyName);
 
-    if(myGlobals.device[i].ipTrafficMatrix != NULL) {
-      /* Courtesy of Wies-Software <wies@wiessoft.de> */
-      for(j=0; j<(myGlobals.device[i].numHosts*myGlobals.device[i].numHosts); j++)
-        if(myGlobals.device[i].ipTrafficMatrix[j] != NULL)
-	  free(myGlobals.device[i].ipTrafficMatrix[j]);
-
-      free(myGlobals.device[i].ipTrafficMatrix);
-    }
-
-    /* FIX
-    if(myGlobals.device[i].ipTrafficMatrixHosts != NULL)
-      free(myGlobals.device[i].ipTrafficMatrixHosts);
-    */
     if(myGlobals.device[i].ipProtoStats != NULL)
       free(myGlobals.device[i].ipProtoStats);
 

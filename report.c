@@ -430,48 +430,46 @@ void printTrafficSummary (int revertOrder) {
                   /(float)myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value);
     sendString(buf);
 
-    if(!myGlobals.runningPref.printFcOnly) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Unicast</th>"
-		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-		    getRowColor(),
-		    formatPkts(unicastPkts, formatBuf, sizeof(formatBuf)),
-		    (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].
-		    ethernetPkts.value);
-      sendString(buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Unicast</th>"
+		  "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
+		  getRowColor(),
+		  formatPkts(unicastPkts, formatBuf, sizeof(formatBuf)),
+		  (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].
+		  ethernetPkts.value);
+    sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Broadcast</th>"
-		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-		    getRowColor(),
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value, formatBuf, sizeof(formatBuf)),
-		    (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
-      sendString(buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Broadcast</th>"
+		  "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
+		  getRowColor(),
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value, formatBuf, sizeof(formatBuf)),
+		  (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
+    sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Multicast</th>"
-		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-		    getRowColor(),
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value, formatBuf, sizeof(formatBuf)),
-		    (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
-      sendString(buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Multicast</th>"
+		  "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
+		  getRowColor(),
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value, formatBuf, sizeof(formatBuf)),
+		  (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
+    sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Packets&nbsp;too&nbsp;long [> %d]</th>"
-		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-		    getRowColor(), myGlobals.mtuSize[myGlobals.device[myGlobals.actualReportDeviceId].datalink],
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value, formatBuf, sizeof(formatBuf)),
-		    (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
-      sendString(buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Packets&nbsp;too&nbsp;long [> %d]</th>"
+		  "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
+		  getRowColor(), myGlobals.mtuSize[myGlobals.device[myGlobals.actualReportDeviceId].datalink],
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value, formatBuf, sizeof(formatBuf)),
+		  (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
+    sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Bad&nbsp;Packets&nbsp;(Checksum)</th>"
-		    "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
-		    getRowColor(),
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.badChecksum.value, formatBuf, sizeof(formatBuf)),
-		    (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
-			    rcvdPktStats.badChecksum.value)/
-		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
-      sendString(buf);
-    }
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Bad&nbsp;Packets&nbsp;(Checksum)</th>"
+		  "<TD "TD_BG" align=right>%s(%.1f%%)</td></TR>\n",
+		  getRowColor(),
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.badChecksum.value, formatBuf, sizeof(formatBuf)),
+		  (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
+			  rcvdPktStats.badChecksum.value)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
+    sendString(buf);    
 
     /* ****************** */
 
@@ -528,11 +526,9 @@ void printTrafficSummary (int revertOrder) {
 
   sendString("</TABLE></CENTER>\n");
 
-  if(!myGlobals.runningPref.printFcOnly) {
-    printProtoTraffic(FALSE);
-    sendString("<p>\n");
-    printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, FALSE);
-  }
+  printProtoTraffic(FALSE);
+  sendString("<p>\n");
+  printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, FALSE);
 }
 
 /* ******************************* */
@@ -1186,11 +1182,9 @@ void printTrafficStatistics(int revertOrder) {
 
   sendString("</TABLE></CENTER>\n");
 
-  if(!myGlobals.runningPref.printFcOnly) {
-    printProtoTraffic(TRUE);
-    sendString("<p>\n");
-    printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, TRUE);
-  }
+  printProtoTraffic(TRUE);
+  sendString("<p>\n");
+  printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, TRUE);
 }
 
 /* ******************************* */
@@ -4551,446 +4545,9 @@ void printProtoTraffic(int printGraph) {
 
 /* ************************ */
 
-void printIpTrafficMatrix(void) {
-  int i, j, numEntries=0, numConsecutiveEmptyCells;
-  char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
-  short *activeHosts;
-  Counter minTraffic=(Counter)LONG_MAX, maxTraffic=0, avgTraffic;
-  Counter avgTrafficLow, avgTrafficHigh, tmpCounter;
-
-  printHTMLheader("IP Subnet Traffic Matrix", NULL, 0);
-
-  if(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix == NULL) {
-    printFlagedWarning("<I>Traffic matrix is not available for the selected network interface</I>");
-    return;
-  }
-
-  activeHosts = (short*)mallocAndInitWithReportWarn(myGlobals.device[myGlobals.actualReportDeviceId].numHosts*sizeof(short), "printIpTrafficMatrix");
-  if(activeHosts == NULL)
-    return;
-
-  for(i=0; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; i++) {
-    activeHosts[i] = 0;
-
-    for(j=0; j<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; j++) {
-      int id = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+j;
-
-      if(((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[id] != NULL)
-	  && (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[id]->bytesSent.value != 0))
-	 || ((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[id] != NULL)
-	     && (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[id]->bytesRcvd.value != 0))) {
-	activeHosts[i] = 1;
-	numEntries++;
-	break;
-      }
-    }
-
-    if(activeHosts[i] == 1) {
-      if(numEntries == 1) {
-	sendString("<CENTER>\n");
-	sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG"><SMALL>&nbsp;F&nbsp;"
-		   "&nbsp;&nbsp;To<br>&nbsp;r<br>&nbsp;o<br>&nbsp;m</SMALL></TH>\n");
-      }
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TH "TH_BG" ALIGN=CENTER "DARK_BG"><SMALL>%s</SMALL></TH>",
-		    getHostName(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i],
-				1, hostLinkBuf, sizeof(hostLinkBuf)));
-      sendString(buf);
-    }
-  }
-
-  if(numEntries == 0) {
-    printNoDataYet();
-    free(activeHosts);
-    return;
-  } else
-    sendString("</TR>\n");
-
-  for(i=0; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; i++)
-    for(j=0; j<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; j++) {
-      int idx = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+j;
-
-      if(((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx] != NULL)
-	  && ((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value != 0)
-	      || (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd.value != 0)))) {
-	if(minTraffic > myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value)
-	  minTraffic = myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value;
-	if(minTraffic > myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd.value)
-	  minTraffic = myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd.value;
-	if(maxTraffic < myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value)
-	  maxTraffic = myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value;
-	if(maxTraffic < myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd.value)
-	  maxTraffic = myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd.value;
-      }
-    }
-
-  avgTraffic = (Counter)(((float)minTraffic+(float)maxTraffic)/2);
-  avgTrafficLow  = (avgTraffic*15)/100; /* 15% of the average */
-  avgTrafficHigh = 2*(maxTraffic/3);   /* 75% of max traffic */
-
-
-  for(i=0; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts; i++)
-    if(activeHosts[i] == 1) {
-      numConsecutiveEmptyCells=0;
-
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG"><SMALL>",  getRowColor());
-      sendString(buf);
-
-      sendString(makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i],
-			      FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, hostLinkBuf, sizeof(hostLinkBuf)));
-      sendString("</SMALL></TH>");
-
-      for(j=0; j<myGlobals.device[myGlobals.actualReportDeviceId].numHosts; j++) {
-	int idx = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+j;
-
-	if((i == j) &&
-	   strcmp(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostNumIpAddress,
-		  "127.0.0.1"))
-	  numConsecutiveEmptyCells++;
-	else if(activeHosts[j] == 1) {
-	  if(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx] == NULL)
-	    numConsecutiveEmptyCells++;
-	  else {
-	    if(numConsecutiveEmptyCells > 0) {
-	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" COLSPAN=%d>&nbsp;</TD>\n",
-			    numConsecutiveEmptyCells);
-	      sendString(buf);
-	      numConsecutiveEmptyCells = 0;
-	    }
-
-	    tmpCounter = myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value+
-	      myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd.value;
-	    /* Fix below courtesy of Danijel Doriae <danijel.doric@industrogradnja.tel.hr> */
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER %s>"
-			  "<A HREF=# onMouseOver=\"window.status='"
-			  "%s';return true\" onMouseOut="
-			  "\"window.status='';return true\"><SMALL>%s</SMALL></A></TH>\n",
-			  calculateCellColor(tmpCounter, avgTrafficLow, avgTrafficHigh),
-			  buildHTMLBrowserWindowsLabel(i, j, TRUE),
-			  formatBytes(tmpCounter, 1, formatBuf, sizeof(formatBuf)));
-	    sendString(buf);
-	  }
-	}
-      }
-
-      if(numConsecutiveEmptyCells > 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" COLSPAN=%d>&nbsp;</TD>\n",
-		      numConsecutiveEmptyCells);
-	sendString(buf);
-	numConsecutiveEmptyCells = 0;
-      }
-
-      sendString("</TR>\n");
-    }
-
-  sendString("</TABLE>"TABLE_OFF"\n<P>\n");
-  sendString("</CENTER>\n");
-
-  printFooterHostLink();
-
-  free(activeHosts);
-}
-
-/* ************************ */
-
-void printThptStatsMatrix(int sortedColumn) {
-  int i, dataSent;
-  char label[32], label1[32], buf[LEN_GENERAL_WORK_BUFFER],
-    formatBuf[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
-  time_t tmpTime;
-  struct tm t;
-  HostTraffic *el;
-  HostTraffic tmpEl;
-
-  printHTMLheader("Network Load Statistics Matrix", NULL, 0);
-
-  memset(&tmpEl, 0, sizeof(HostTraffic));
-
-  switch(sortedColumn) {
-  case 0:
-  case 1:
-    if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 1) {
-      printNoDataYet();
-      return;
-    }
-
-    sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-	       "<TH "TH_BG">Sampling Period</TH>"
-	       "<TH "TH_BG">Average Thpt</TH>"
-	       "<TH "TH_BG">Top Hosts Sent Thpt</TH>"
-	       "<TH "TH_BG">Top Hosts Rcvd Thpt</TH></TR>\n");
-
-    for(i=0; i<(sortedColumn == 0 ? 10 : 60); i++) {
-      if(myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].trafficValue == 0)
-	break;
-
-      if(myGlobals.pcap_file_list != NULL) {
-	tmpTime = myGlobals.lastPktTime.tv_sec-(i*60);
-      }
-      else {
-	tmpTime = myGlobals.actTime-(i*60);
-      }
-      strftime(label, sizeof(label), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
-
-      if(myGlobals.pcap_file_list != NULL) {
-	tmpTime = myGlobals.lastPktTime.tv_sec -((i+1)*60);
-      }
-      else {
-	tmpTime = myGlobals.actTime-((i+1)*60);
-      }
-      strftime(label1, sizeof(label), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=CENTER>"
-		    "<B>%s&nbsp;-&nbsp;%s</B></TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT>"
-		    "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%%>",
-		    getRowColor(), label1, label,
-		    formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				     last60MinutesThpt[i].trafficValue, 1,
-				     formatBuf, sizeof(formatBuf)));
-      sendString(buf);
-
-      dataSent = 0;
-
-      /* ************************* */
-
-      if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].topHostSentSerial)) {
-
-
-	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
-			       last60MinutesThpt[i].topHostSentSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last60MinutesThpt[i].topSentTraffic.value, 1,
-					 formatBuf, sizeof(formatBuf)));
-	  sendString(buf); dataSent = 1;
-	}
-      }
-
-      if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].secondHostSentSerial)) {
-
-	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
-			       last60MinutesThpt[i].secondHostSentSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last60MinutesThpt[i].secondSentTraffic.value, 1,
-					 formatBuf, sizeof(formatBuf)));
-	  sendString(buf); dataSent = 1;
-	}
-      }
-
-      if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].thirdHostSentSerial)) {
-
-	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
-			       last60MinutesThpt[i].thirdHostSentSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last60MinutesThpt[i].thirdSentTraffic.value, 1,
-					 formatBuf, sizeof(formatBuf)));
-	  sendString(buf); dataSent = 1;
-	}
-      }
-
-      /* ************************* */
-
-      if(!dataSent) sendString("&nbsp;");
-      sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" ALIGN=LEFT><TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%%>\n");
-      dataSent = 0;
-
-      /* ************************* */
-
-      if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].topHostRcvdSerial)) {
-
-	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
-			       last60MinutesThpt[i].topHostRcvdSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last60MinutesThpt[i].topRcvdTraffic.value, 1,
-					 formatBuf, sizeof(formatBuf)));
-	  sendString(buf); dataSent = 1;
-	}
-      }
-
-      if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].secondHostRcvdSerial)) {
-
-	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
-			       last60MinutesThpt[i].secondHostRcvdSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last60MinutesThpt[i].secondRcvdTraffic.value, 1,
-					 formatBuf, sizeof(formatBuf)));
-	  sendString(buf); dataSent = 1;
-	}
-      }
-
-      if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].thirdHostRcvdSerial)) {
-
-	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
-			       last60MinutesThpt[i].thirdHostRcvdSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last60MinutesThpt[i].thirdRcvdTraffic.value, 1,
-					 formatBuf, sizeof(formatBuf)));
-	  sendString(buf); dataSent = 1;
-	}
-      }
-
-      /* ************************* */
-
-      if(!dataSent) sendString("&nbsp;");
-      sendString("</TABLE></TD></TR>\n");
-    }
-    break;
-  case 2:
-  default:
-    if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 60) {
-      printNoDataYet();
-      return;
-    } else {
-      sendString("<CENTER>\n");
-      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
-		 "<TH "TH_BG">Sampling Period</TH><TH "TH_BG">Average Thpt</TH>"
-		 "<TH "TH_BG">Top Thpt Sent Hosts</TH><TH "TH_BG">Top Rcvd Sent Hosts</TH>"
-		 "</TR>\n");
-
-      for(i=0; i<24; i++) {
-	if(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].trafficValue == 0)
-	  break;
-
-        if(myGlobals.pcap_file_list != NULL) {
-	  tmpTime = myGlobals.lastPktTime.tv_sec-(i*60*60);
-        }
-        else {
-	  tmpTime = myGlobals.actTime-(i*60*60);
-        }
-	strftime(label, sizeof(label), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
-
-        if(myGlobals.pcap_file_list != NULL) {
-	  tmpTime = myGlobals.lastPktTime.tv_sec-((i+1)*60*60);
-        }
-        else {
-	  tmpTime = myGlobals.actTime-((i+1)*60*60);
-        }
-	strftime(label1, sizeof(label1), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
-
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TD "TD_BG" ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT "DARK_BG">"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">",
-		      getRowColor(), label, label1,
-		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				       last24HoursThpt[i].trafficValue, 1,
-				       formatBuf, sizeof(formatBuf)));
-	sendString(buf);
-
-	/* ************************* */
-
-	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostSentSerial)) {
-
-	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostSentSerial,
-				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			  makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-			  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					   last24HoursThpt[i].topSentTraffic.value, 1,
-					   formatBuf, sizeof(formatBuf)));
-	    sendString(buf);
-	  }
-	}
-
-	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostSentSerial)) {
-
-	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostSentSerial,
-				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			  makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-			  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					   last24HoursThpt[i].secondSentTraffic.value, 1,
-					   formatBuf, sizeof(formatBuf)));
-	    sendString(buf);
-	  }
-	}
-
-	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostSentSerial)) {
-
-	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostSentSerial,
-				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			  makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-			  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					   last24HoursThpt[i].thirdSentTraffic.value, 1,
-					   formatBuf, sizeof(formatBuf)));
-	    sendString(buf);
-	  }
-	}
-
-	/* ************************* */
-
-	sendString("&nbsp;");
-	sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" ALIGN=LEFT "DARK_BG">"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
-
-	/* ************************* */
-
-	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostRcvdSerial)) {
-
-	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostRcvdSerial,
-				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			  makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-			  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					   last24HoursThpt[i].topRcvdTraffic.value, 1,
-					   formatBuf, sizeof(formatBuf)));
-	    sendString(buf);
-	  }
-	}
-
-	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostRcvdSerial)) {
-
-	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostRcvdSerial,
-				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			  makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-			  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					   last24HoursThpt[i].secondRcvdTraffic.value, 1,
-					   formatBuf, sizeof(formatBuf)));
-	    sendString(buf);
-	  }
-	}
-
-	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdSerial)) {
-
-	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdSerial,
-				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			  makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-			  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					   last24HoursThpt[i].thirdRcvdTraffic.value, 1,
-					   formatBuf, sizeof(formatBuf)));
-	    sendString(buf);
-	  }
-	}
-
-	/* ************************* */
-
-	sendString("&nbsp;");
-	sendString("</TABLE>"TABLE_OFF"</TD></TR>\n");
-      }
-    }
-    break;
-  }
-
-  sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
-}
-
-/* ************************ */
-
 #define RRD_THPT_URL "/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=throughput&arbiface=%s&arbip=&start=%u&end=%u&counter=&title=%s"
 
-#define RRD_THPT_STR "<tr><td align=right><A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=%d\" BORDER=0 BGCOLOR=white><IMG class=tooltip SRC=\"" RRD_THPT_URL "\" border=\"0\" alt=\"Domain-wide Historical Data\"></A></td><td align=left><A HREF=\"" RRD_THPT_URL "&mode=zoom\" BORDER=0 BGCOLOR=white>&nbsp;<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></td></tr>"
+#define RRD_THPT_STR "<tr><td align=right><IMG class=tooltip SRC=\"" RRD_THPT_URL "\" border=\"0\" alt=\"Domain-wide Historical Data\"></A></td><td align=left><A HREF=\"" RRD_THPT_URL "&mode=zoom\" BORDER=0 BGCOLOR=white>&nbsp;<IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></td></tr>"
 
 void printThptStats(int sortedColumn _UNUSED_) {
   char tmpBuf[1024], formatBuf[32], formatBuf1[32];
@@ -5039,7 +4596,6 @@ void printThptStats(int sortedColumn _UNUSED_) {
       sendString("<CENTER>\n<table border=0>\n");
 
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		    0,
 		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-600),
 		    (unsigned int)now, "Last+10+Minutes+Throughput",
 		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-600),
@@ -5053,7 +4609,6 @@ void printThptStats(int sortedColumn _UNUSED_) {
       sendString(tmpBuf);
 
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		    1,
 		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-3600),
 		    (unsigned int)now, "Last+Hour+Throughput",
 		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-3600),
@@ -5068,7 +4623,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
     if(useRRD) {
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		    2, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-86400),
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-86400),
 		    (unsigned int)now, "Current+Day+Throughput",
 		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-86400),
 		    (unsigned int)now, "Throughput");
@@ -5082,7 +4637,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
     if(useRRD) {
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		    3, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		    (unsigned int)(now-86400*30), (unsigned int)now, "Last+Month+Throughput",
 		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		    (unsigned int)(now-86400*30), (unsigned int)now, "Throughput");

@@ -731,16 +731,7 @@ int parseOptions(int argc, char* argv[]) {
       break;
 
     case 147:
-      myGlobals.runningPref.printFcOnly = TRUE;
       myGlobals.runningPref.stickyHosts = TRUE;
-      break;
-
-    case 148:
-      myGlobals.runningPref.printIpOnly = TRUE;
-      break;
-
-    case 149:
-      myGlobals.runningPref.noInvalidLunDisplay = TRUE;
       break;
 
     case 150:
@@ -1385,9 +1376,6 @@ void initUserPrefs(UserPref *pref) {
 
    pref->disableStopcap = DEFAULT_NTOP_DISABLE_STOPCAP;
    pref->disableInstantSessionPurge = DEFAULT_NTOP_DISABLE_IS_PURGE;
-   pref->printIpOnly = DEFAULT_NTOP_PRINTIPONLY;
-   pref->printFcOnly = DEFAULT_NTOP_PRINTFCONLY;
-   pref->noInvalidLunDisplay   = DEFAULT_NTOP_NO_INVLUN_DISPLAY;
    pref->disableMutexExtraInfo = DEFAULT_NTOP_DISABLE_MUTEXINFO;
    pref->skipVersionCheck      = DEFAULT_NTOP_SKIP_VERSION_CHECK;
 }

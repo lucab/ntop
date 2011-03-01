@@ -291,8 +291,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   for(i=0; i<NUM_SESSION_MUTEXES; i++)
     createMutex(&myGlobals.tcpSessionsMutex[i]); /* data to synchronize TCP sessions access */
 
-  createMutex(&myGlobals.fcSessionsMutex); /* data to synchronize TCP sessions access */
-  createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
+    createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
   createMutex(&myGlobals.purgeMutex);       /* synchronize purging */
   createMutex(&myGlobals.securityItemsMutex);
   createMutex(&myGlobals.hostsHashLockMutex);
@@ -574,9 +573,8 @@ void initNtop(char *devices) {
   /* Handle known subnetworks (if any) */
   handleKnownAddresses(myGlobals.runningPref.knownSubnets);
 
-  if((myGlobals.pcap_file_list != NULL) &&
-     ((myGlobals.runningPref.localAddresses == NULL) &&
-      !myGlobals.runningPref.printFcOnly)) {
+  if((myGlobals.pcap_file_list != NULL) 
+     && (myGlobals.runningPref.localAddresses == NULL)) {
     char *any_net = "0.0.0.0/0";
 
     traceEvent(CONST_TRACE_WARNING,

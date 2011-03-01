@@ -131,7 +131,6 @@ extern void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId);
 extern void dumpNtopHashes(FILE*, char*, int actualDeviceId);
 extern void dumpNtopHashIndexes(FILE*, char* options, int actualDeviceId);
 extern void dumpNtopTrafficInfo(FILE*, char* options);
-extern void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId);
 extern void checkHostProvidedServices(HostTraffic *el);
 extern void printHostsStats(int fingerprintRemote);
 extern void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName);
@@ -205,8 +204,6 @@ extern void printIpProtocolDistribution(int mode, int revertOrder, int printGrap
 
 extern void printProtoTraffic(int printGraph);
 extern void printProcessInfo(int processPid, int actualReportDeviceId);
-extern void printIpTrafficMatrix(void);
-extern void printThptStatsMatrix(int sortedColumn);
 extern void printThptStats(int sortedColumn);
 extern void printDomainStats(char* domain_domain_name, int network_mode, int communityMode, 
 			     int sortedColumn, int revertOrder, int pageNum);

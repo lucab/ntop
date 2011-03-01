@@ -146,7 +146,6 @@ typedef struct hostAddr {
 #define SERIAL_MAC          1
 #define SERIAL_IPV4         2
 #define SERIAL_IPV6         3
-#define SERIAL_FC           4
 
 typedef struct _ethSerial {
   u_char  ethAddress[LEN_ETHERNET_ADDRESS];
@@ -624,7 +623,7 @@ typedef struct networkDelay {
 typedef struct hostTraffic {
   u_int8_t         to_be_deleted; /* 1 = the host will be deleted in the next purge loop */
   u_short          magic;
-  u_short          l2Family;    /* 0 = Ethernet, 1 = Fibre Channel (FC) */
+  u_short          l2Family;    /* 0 = Ethernet */
   u_int            hostTrafficBucket; /* Index in the **hash_hostTraffic list */
   u_short          refCount;         /* Reference counter */
   HostSerial       hostSerial;
@@ -1216,7 +1215,6 @@ typedef struct ifCounters {
   struct ifCounters *next;
 } IfCounters;
 
-
 typedef struct sFlowGlobals {
   u_char sflowDebug;
 
@@ -1402,9 +1400,6 @@ typedef struct ntopInterface {
   IpFragment *fragmentList;
   IPSession **tcpSession;
   u_short numTcpSessions, maxNumTcpSessions;
-  TrafficEntry** ipTrafficMatrix; /* Subnet traffic Matrix */
-  struct hostTraffic** ipTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */
-  fd_set ipTrafficMatrixPromiscHosts;
 
   /* ************************** */
 
@@ -1704,44 +1699,6 @@ typedef struct pppTunnelHeader {
   u_int16_t	unused, protocol;
 } PPPTunnelHeader;
 
-/* ************ Fibre Channel *********** */
-typedef struct fcHeader {
-#ifdef CFG_BIG_ENDIAN
-    u_int32_t d_id:24;
-    u_int32_t r_ctl:8;
-    u_int32_t s_id:24;
-    u_int32_t cs_ctl:8;
-    u_int32_t f_ctl:24;
-    u_int32_t type:8;
-#else
-    u_int32_t r_ctl:8;
-    u_int32_t d_id:24;
-    u_int32_t cs_ctl:8;
-    u_int32_t s_id:24;
-    u_int32_t type:8;
-    u_int32_t f_ctl:24;
-#endif
-    u_int8_t  seq_id;
-    u_int8_t  df_ctl;
-    u_int16_t seq_cnt;
-    u_int16_t oxid;
-    u_int16_t rxid;
-    u_int32_t parameter;
-} FcHeader;
-
-typedef struct fcHeader_align {
-    /* This structure is used to correctly endian the FC header */
-    u_int32_t fld1;
-    u_int32_t fld2;
-    u_int32_t fld3;
-    u_int8_t  seq_id;
-    u_int8_t  df_ctl;
-    u_int16_t seq_cnt;
-    u_int16_t oxid;
-    u_int16_t rxid;
-    u_int32_t parameter;
-} FcHeaderAlign;
-
 /* ******** Cisco ISL ************ */
 
 typedef struct islHeader {
@@ -1793,7 +1750,6 @@ typedef enum {
   showPrefBasicPref = 1,
   showPrefDisplayPref,
   showPrefIPPref,
-  showPrefFCPref,
   showPrefAdvPref,
   showPrefDbgPref,
 } UserPrefDisplayPage;
@@ -1877,9 +1833,6 @@ typedef struct _userPref {
   bool disableStopcap;           /* --disable-stopcap '142' */
 
   bool disableInstantSessionPurge;  /* --disable-instantsessionpurge '144' */
-  bool printFcOnly;              /* --fc-only '147' */
-  bool printIpOnly;              /* --no-fc '148' */
-  bool noInvalidLunDisplay;      /* --no-invalid-lun '149' */
   bool disableMutexExtraInfo;    /* --disable-mutexextrainfo '145' */
   bool skipVersionCheck;         /* --skip-version-check '150' */
   char *knownSubnets;            /* --known-subnets '151' */
@@ -1997,7 +1950,6 @@ typedef struct ntopGlobals {
    */
   PthreadMutex gdbmMutex, portsMutex;
   PthreadMutex tcpSessionsMutex[NUM_SESSION_MUTEXES];
-  PthreadMutex fcSessionsMutex; /* One mutex should be enough */
   PthreadMutex purgePortsMutex;
   PthreadMutex securityItemsMutex;
 #ifdef FORPRENPTL
@@ -2062,8 +2014,6 @@ typedef struct ntopGlobals {
   u_short numIpProtosList;
   ProtocolsList *ipProtosList;
 
-  u_short numFcProtosToMonitor;
-
   /* IP Ports */
   PortProtoMapperHandler ipPortMapper;
 
@@ -2087,8 +2037,6 @@ typedef struct ntopGlobals {
   size_t allocatedMemory;
 #endif
 
-  u_int ipTrafficMatrixMemoryUsage;
-  u_int fcTrafficMatrixMemoryUsage;
   u_char webInterfaceDisabled;
   int enableIdleHosts;   /* Purging of idle hosts support enabled by default */
   int actualReportDeviceId;
@@ -2128,7 +2076,6 @@ typedef struct ntopGlobals {
 
 #ifdef PARM_USE_SESSIONS_CACHE
   IPSession   *sessionsCache[MAX_SESSIONS_CACHE_LEN];
-  FCSession   *fcSessionsCache[MAX_SESSIONS_CACHE_LEN];
   u_short      sessionsCacheLen, sessionsCacheLenMax;
   int          sessionsCacheReused;
 #endif

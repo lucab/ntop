@@ -1364,18 +1364,6 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 		  theLink, theLink, theLink, theLink, theLink, theLink);
     break;
 
-  case showPrefFCPref:
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
-		  "[ <A HREF=%s1>Basic Prefs</A> ]&nbsp;"
-		  "[ <A HREF=%s2>Display Prefs</A> ]&nbsp;"
-		  "[ <A HREF=%s3>IP Prefs</A> ]&nbsp;"
-		  "[ <B>FC Prefs</B> ]&nbsp;"
-		  "[ <A HREF=%s5>Advanced Prefs</A> ]&nbsp;"
-		  "[ <A HREF=%s6>Debugging Prefs</A> ]&nbsp;"
-		  "</p>",
-		  theLink, theLink, theLink, theLink, theLink, theLink);
-    break;
-
   case showPrefAdvPref:
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
 		  "[ <A HREF=%s1>Basic Prefs</A> ]&nbsp;"
