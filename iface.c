@@ -25,6 +25,7 @@
 
 #include "ntop.h"
 
+#if 0 
 #define ROUNDUP(a) \
         ((a) > 0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
 
@@ -433,21 +434,17 @@ int iface_addrcount(struct iface_handler *hdlr) {
   return hdlr->addr_count;
 }
 
-
 int iface_ifcount(struct iface_handler *hdlr) {
   return hdlr->if_count;
 }
-
 
 struct iface_if *iface_getif_first(struct iface_handler *hdlr) {
   return hdlr->if_count ? &hdlr->if_list[0] : NULL;
 }
 
-
 struct iface_if *iface_getif_next(struct iface_if *ii) {
   return ii ? ii->next : NULL;
 }
-
 
 int iface_if_addrcount(struct iface_if *ii, int family) {
   struct iface_addr *ia;
@@ -459,8 +456,6 @@ int iface_if_addrcount(struct iface_if *ii, int family) {
   return count;
 }
 
-
-
 struct iface_if *iface_getif_byindex(struct iface_handler *hdlr, int idx) {
   int i;
 
@@ -470,7 +465,6 @@ struct iface_if *iface_getif_byindex(struct iface_handler *hdlr, int idx) {
   return NULL;
 }
 
-
 struct iface_if *iface_getif_byname(struct iface_handler *hdlr, char *name) {
   int i;
 
@@ -479,7 +473,6 @@ struct iface_if *iface_getif_byname(struct iface_handler *hdlr, char *name) {
       return &hdlr->if_list[i];
   return NULL;
 }
-
 
 char *iface_if_getname(struct iface_if *ii, char *name, int size) {
   if (name) {
@@ -495,18 +488,13 @@ int iface_if_getindex(struct iface_if *ii) {
   return ii->index;
 }
 
-
-
 int iface_if_getinfo(struct iface_if *ii) {
   return ii->info;
 }
 
-
 int iface_if_gettype(struct iface_if *ii) {
   return ii->type;
 }
-
-
 
 int iface_if_getphys(struct iface_if *ii,int *type,char *addr,int *addrsize) {
   if (type)
@@ -518,7 +506,6 @@ int iface_if_getphys(struct iface_if *ii,int *type,char *addr,int *addrsize) {
   }
   return ii->phys.size;
 }
-
 
 struct iface_addr *iface_getaddr_first(struct iface_if *ii, int family) {
   struct iface_addr	*ia;
@@ -538,16 +525,13 @@ struct iface_addr *iface_getaddr_next(struct iface_addr *ia, int family) {
   return ia;
 }
 
-
 int iface_addr_getfamily(struct iface_addr *ia) {
   return ia->family;
 }
 
-
 int iface_addr_ifindex(struct iface_addr *ia) {
   return ia->ifi->index;
 }
-
 
 void *iface_addr_getinfo(struct iface_addr *ia, void *infobuf) {
   switch(ia->family) {
@@ -738,6 +722,8 @@ int iface_getalladdr(int type, int *size, char **addr){
 #endif
 
 #endif /* INET6 */
+
+#endif /* 0 */
 
 /* ********************************************************************** */
 

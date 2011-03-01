@@ -48,7 +48,7 @@ static u_short voipSessionsLen;
 
 static char *versionSite[]   = {
   CONST_VERSIONCHECK_SITE,
-  NULL 
+  NULL
 };
 
 /* ************************************ */
@@ -203,18 +203,18 @@ void str2serial(HostSerial *theSerial, char *buf, int buf_len) {
     u_char *ptr = (u_char*)theSerial;
 
     for(i=0, j=0; j<sizeof(HostSerial); j++) {
-	  u_int c;
+      u_int c;
 
       tmpStr[0] = buf[i++];
       tmpStr[1] = buf[i++];
       tmpStr[2] = '\0';
       sscanf(tmpStr, "%02X", &c);
-	  ptr[j] = c & 0xFF;
+      ptr[j] = c & 0xFF;
 
-	  /*
-	   ptr[j] = ((u_int8_t)buf[i]) * 16 + ((u_int8_t)buf[i+1]);
-	   i += 2;
-	   */
+      /*
+	ptr[j] = ((u_int8_t)buf[i]) * 16 + ((u_int8_t)buf[i+1]);
+	i += 2;
+      */
     }
   }
 }
@@ -500,6 +500,7 @@ unsigned short addrlookup(struct in6_addr *addr,  NtopIfaceAddr *addrs) {
 /* ****************************************** */
 
 NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
+#if 0
   struct iface_handler        *ih;
   struct iface_if             *ii;
   struct iface_addr           *ia;
@@ -512,7 +513,7 @@ NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
   for(ii = iface_getif_first(ih) ; ii ; ii = iface_getif_next(ii))
     if(!strcmp(ii->name,device))
       if(iface_if_getinfo(ii) & IFACE_INFO_UP) {
-	/* Allocate memory for IPv6 addresses*/
+	/* Allocate memory for IPv6 addresses */
 	count = iface_if_addrcount(ii, AF_INET6);
 	if(count == 0) break;
 	addrs = (NtopIfaceAddr *)calloc(count, sizeof(NtopIfaceAddr));
@@ -520,6 +521,7 @@ NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
 	for(ia = iface_getaddr_first(ii, AF_INET6) ; ia ;
 	    ia = iface_getaddr_next(ia, AF_INET6)) {
 	  struct iface_addr_inet6 i6;
+
 	  iface_addr_getinfo(ia, &i6);
 	  if(in6_isglobal(&i6.addr)&& (addr_pos < count)) {
 	    tmp = &addrs[addr_pos];
@@ -536,7 +538,9 @@ NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
   iface_destroy(ih);
 
   return(addrs);
-
+#else
+  return(NULL);
+#endif
 }
 
 /*******************************************/
@@ -737,7 +741,7 @@ u_int8_t num_network_bits(u_int32_t addr) {
     for(j=0; j<4; j++)
       if ((fields[j] & (1 << i)) != 0) bits++;
 
-    return(bits);
+  return(bits);
 }
 
 /* ********************************* */
@@ -1642,8 +1646,8 @@ void handleFlowsSpecs(void) {
 int getLocalHostAddress(struct in_addr *hostAddress, u_int8_t *netmask_v6, char* device) {
   int rc = 0;
 #ifdef WIN32
-   (*netmask_v6) = 9; /* default C class */
-   hostAddress->s_addr = GetHostIPAddr();
+  (*netmask_v6) = 9; /* default C class */
+  hostAddress->s_addr = GetHostIPAddr();
 
   return(0);
 #else
@@ -1798,7 +1802,7 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   if((rc = pthread_mutex_init(&(mutexId->mutex), NULL)) != 0) {
     traceEvent(CONST_TRACE_ERROR, "createMutex() call returned %s(%d) [t%lu m%p @%s:%d]",
-               strerror(rc), rc, (long unsigned int)pthread_self(), 
+               strerror(rc), rc, (long unsigned int)pthread_self(),
 	       (void*)&(mutexId->mutex), fileName, fileLine);
   } else if((rc = pthread_mutex_init(&(mutexId->statedatamutex), NULL)) != 0) {
     traceEvent(CONST_TRACE_ERROR, "createMutex() call2 returned %s(%d) [t%lu m%p @%s:%d]",
@@ -2612,13 +2616,13 @@ time_t getTimeMapping(u_int16_t transactionId,
 
   /* ****************************************
 
-  As  Andreas Pfaller <apfaller@yahoo.com.au>
-  pointed out, the hash code needs to be optimised.
-  Actually the hash is scanned completely
-  if (unlikely but possible) the searched entry
-  is not present into the table.
+     As  Andreas Pfaller <apfaller@yahoo.com.au>
+     pointed out, the hash code needs to be optimised.
+     Actually the hash is scanned completely
+     if (unlikely but possible) the searched entry
+     is not present into the table.
 
-  **************************************** */
+     **************************************** */
 
   for(i=0; i<CONST_NUM_TRANSACTION_ENTRIES; i++) {
     if(myGlobals.transTimeHash[idx].transactionId == transactionId) {
@@ -2866,25 +2870,25 @@ char* _strncpy(char *dest, const char *src, size_t n) {
 #ifndef HAVE_STRTOK_R
 /* Reentrant string tokenizer.  Generic myGlobals.version.
 
-Slightly modified from: glibc 2.1.3
+   Slightly modified from: glibc 2.1.3
 
-Copyright (C) 1991, 1996, 1997, 1998, 1999 Free Software Foundation, Inc.
-This file is part of the GNU C Library.
+   Copyright (C) 1991, 1996, 1997, 1998, 1999 Free Software Foundation, Inc.
+   This file is part of the GNU C Library.
 
-The GNU C Library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Library General Public License as
-published by the Free Software Foundation; either version 2 of the
-License, or (at your option) any later version.
+   The GNU C Library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Library General Public License as
+   published by the Free Software Foundation; either version 2 of the
+   License, or (at your option) any later version.
 
-The GNU C Library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Library General Public License for more details.
+   The GNU C Library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Library General Public License for more details.
 
-You should have received a copy of the GNU Library General Public
-License along with the GNU C Library; see the file COPYING.LIB.  If not,
-write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+   You should have received a copy of the GNU Library General Public
+   License along with the GNU C Library; see the file COPYING.LIB.  If not,
+   write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.  */
 
 char *strtok_r(char *s, const char *delim, char **save_ptr) {
   char *token;
@@ -3003,8 +3007,8 @@ void stringSanityCheck(char* string, char* parm) {
     case '%':
     case '\\':
       string[i]='.';
-      j=0;
-      break;
+    j=0;
+    break;
     }
   }
 
@@ -3059,27 +3063,27 @@ void uriSanityCheck(char* string, char* parm, int allowParms) {
       string[i]='.';
       j = 0;
     } else switch(string[i]) {
-    case ';':
-    case '@':
-    case '+':
-    case '"':
-    case '#':
-    case '%':
-    case '<':
-    case '>':
-    case '\\':  /* Add this one for directory traversal */
-      string[i]='.';
+      case ';':
+      case '@':
+      case '+':
+      case '"':
+      case '#':
+      case '%':
+      case '<':
+      case '>':
+      case '\\':  /* Add this one for directory traversal */
+	string[i]='.';
       j=0;
       break;
-    case '=':
-    case '?':
-    case '&':
-      if(allowParms == FALSE) {
-	string[i]='.';
-	j=0;
-      }
+      case '=':
+      case '?':
+      case '&':
+	if(allowParms == FALSE) {
+	  string[i]='.';
+	  j=0;
+	}
       break;
-    }
+      }
   }
 
   if(j == 0) {
@@ -3141,7 +3145,7 @@ void pathSanityCheck(char* string, char* parm) {
   if((string[0] != '"') || (string[strlen(string)-1] != '"') )
     k=1;
 
-	revertSlashIfWIN32(string, 0);
+  revertSlashIfWIN32(string, 0);
 #endif
 
 
@@ -3333,7 +3337,7 @@ void deviceSanityCheck(char* string) {
       case ' ':
       case ',':
 	j=0;
-	break;
+      break;
       }
     }
   }
@@ -3502,7 +3506,7 @@ void trimString(char* str) {
 	     && (out[idx-1] != ' ')
 	     && (out[idx-1] != '\t'))
 	    out[idx++] = str[i];
-	  break;
+	break;
 	default:
 	  out[idx++] = str[i];
 	  break;
@@ -4146,7 +4150,7 @@ unsigned int _ntopSleepWhileSameState(char *file, int line, unsigned int secs) {
 /* ---------- */
 
 void ntopSleepUntilStateRUN(void) {
-  traceEvent(CONST_TRACE_BEYONDNOISY, "WAIT[t%lu]: for ntopState RUN", 
+  traceEvent(CONST_TRACE_BEYONDNOISY, "WAIT[t%lu]: for ntopState RUN",
 	     (long unsigned int)pthread_self());
 
   while(myGlobals.ntopRunState < FLAG_NTOPSTATE_RUN) {
@@ -4163,7 +4167,7 @@ void ntopSleepUntilStateRUN(void) {
 #endif /* WIN32 */
   }
 
-  traceEvent(CONST_TRACE_BEYONDNOISY, "WAIT[t%lu]: ntopState is RUN", 
+  traceEvent(CONST_TRACE_BEYONDNOISY, "WAIT[t%lu]: ntopState is RUN",
 	     (long unsigned int)pthread_self());
 }
 
@@ -4622,9 +4626,9 @@ void removeNtopPid(void) {
 
 int ntop_conditional_sched_yield(void) {
 #ifndef WIN32
-    return(sched_yield());
+  return(sched_yield());
 #else
-    return(0);
+  return(0);
 #endif
 }
 
@@ -5375,11 +5379,11 @@ void* checkVersion(void* notUsed _UNUSED_) {
 
   for(idx = 0; versionSite[idx] != NULL; idx++) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-	       "CHKVER: Checking current ntop version at %s/%s", 
+	       "CHKVER: Checking current ntop version at %s/%s",
 	       versionSite[idx], CONST_VERSIONCHECK_DOCUMENT);
-    
+
 #ifdef CHKVER_DEBUG
-    traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: '%s' '%s'", 
+    traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: '%s' '%s'",
 	       versionSite[idx], CONST_VERSIONCHECK_DOCUMENT);
 #endif
 
@@ -5541,7 +5545,7 @@ FILE* checkForInputFile(char* logTag, char* descr,
       else
         strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC,
   	         localtime_r(&(dbStat->st_mtime), &t));
-      traceEvent(CONST_TRACE_NOISY, "%s: Database %s created/last modified %s", 
+      traceEvent(CONST_TRACE_NOISY, "%s: Database %s created/last modified %s",
 		 logTag, fileName, bufTime);
     }
 
@@ -5675,7 +5679,7 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
                  file, line);
 #endif
 
-    safe_snprintf(__FILE__, __LINE__, el->hostResolvedName, 
+    safe_snprintf(__FILE__, __LINE__, el->hostResolvedName,
 		  sizeof(el->hostResolvedName), "%s", updateValue);
 
     // el->hostResolvedName[MAX_LEN_SYM_HOST_NAME-1] = '\0';
@@ -5698,72 +5702,72 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
 
   /* This function is ugly, but critical, so bare with...
 
-  It takes two HostTraffic entries and performs a standardized compare
-  of the hostResolvedName fields, reaching into OTHER fields as necessary.
+     It takes two HostTraffic entries and performs a standardized compare
+     of the hostResolvedName fields, reaching into OTHER fields as necessary.
 
-  The SOLE goal is to provide a stable comparison.
+     The SOLE goal is to provide a stable comparison.
 
-  Hopefully the results are PREDICTABLE and EXPLAINABLE, but that's totally
-  secondary.
+     Hopefully the results are PREDICTABLE and EXPLAINABLE, but that's totally
+     secondary.
 
-  Why?  Because sorts don't handle non-transitive compares very well.
+     Why?  Because sorts don't handle non-transitive compares very well.
 
-  If  A>B but B !< A, the sort will probably CHOKE.
+     If  A>B but B !< A, the sort will probably CHOKE.
 
-  Since the hostResolvedName field contains something like six or nine
-  possible types of 'names' for a host, a simple alphabetic compare
-  won't cut it.  Especially as hostResolvedName may not be valued
-  at the time of the compare...
+     Since the hostResolvedName field contains something like six or nine
+     possible types of 'names' for a host, a simple alphabetic compare
+     won't cut it.  Especially as hostResolvedName may not be valued
+     at the time of the compare...
 
-  We also can't simply just use the next valued field in the
-  sets, because we run the risk of intransitive compares,
-  where
+     We also can't simply just use the next valued field in the
+     sets, because we run the risk of intransitive compares,
+     where
 
-  primary(a) > primary(b)
+     primary(a) > primary(b)
 
-  but
+     but
 
-  secondary(a) < secondary(b)
+     secondary(a) < secondary(b)
 
-  and if we have say primary for a and c, but not b, risk that
-  just because a<b and b<c a !< c... this completely hoses the
-  sort.
-
-
-  So instead in this routine, we practice a gracefull, explicit fallback:
-
-  1. If the HostTraffic pointers are NULL, we return equality.
-
-  1A. If one of the HostTraffic pointers is NULL, we return THAT entry as <
-
-  2. If both of the hostResolvedName fields are NOT NULL,
-  and both of the hostResolvedNameType fields are NONE, we:
-
-  2A. Check the hostResolvedNameType fields for both A and B.
-
-  2A1. If they are identical, we perform the approprate
-  apples to apples compare.
-
-  For example using hostNumIpAddress for a meaningful
-  IP address sort (where 9.0.0.0 < 10.0.0.0).
-
-  2A2. If the hostResolvedNameType fields are NOT identical, we
-  do the sort on the hostResolvedNameType field itself.
+     and if we have say primary for a and c, but not b, risk that
+     just because a<b and b<c a !< c... this completely hoses the
+     sort.
 
 
-  2A1+2A2 means that we sort all of the NAMES alphabetically,
-  followed by all of the IP addresses sorted NUMERICALLY, followed by...
+     So instead in this routine, we practice a gracefull, explicit fallback:
 
-  3A. If precisely ONE of the hostResolvedName fields is NULL or precisely ONE
-  of the hostResolvedNameType fields is NONE, we return the
-  valued field < the unvalued one (so unresolved things fall to the
-  end of the sort).
+     1. If the HostTraffic pointers are NULL, we return equality.
 
-  3B. If both of the hostResolvedName fields are NULL, we fall back
-  gracefully, seeking - in the order of the _TYPE flags, a field which
-  is valued in BOTH a and b.
+     1A. If one of the HostTraffic pointers is NULL, we return THAT entry as <
 
-  4. Finally if nothing matches, we return a=b.
+     2. If both of the hostResolvedName fields are NOT NULL,
+     and both of the hostResolvedNameType fields are NONE, we:
+
+     2A. Check the hostResolvedNameType fields for both A and B.
+
+     2A1. If they are identical, we perform the approprate
+     apples to apples compare.
+
+     For example using hostNumIpAddress for a meaningful
+     IP address sort (where 9.0.0.0 < 10.0.0.0).
+
+     2A2. If the hostResolvedNameType fields are NOT identical, we
+     do the sort on the hostResolvedNameType field itself.
+
+
+     2A1+2A2 means that we sort all of the NAMES alphabetically,
+     followed by all of the IP addresses sorted NUMERICALLY, followed by...
+
+     3A. If precisely ONE of the hostResolvedName fields is NULL or precisely ONE
+     of the hostResolvedNameType fields is NONE, we return the
+     valued field < the unvalued one (so unresolved things fall to the
+     end of the sort).
+
+     3B. If both of the hostResolvedName fields are NULL, we fall back
+     gracefully, seeking - in the order of the _TYPE flags, a field which
+     is valued in BOTH a and b.
+
+     4. Finally if nothing matches, we return a=b.
 
   */
 
@@ -6098,7 +6102,7 @@ static PortUsage* allocatePortUsage(void) {
 #endif
 
   ptr = (PortUsage*)calloc(1, sizeof(PortUsage));
-  
+
   if(ptr)
     setEmptySerial(&ptr->clientUsesLastPeer), setEmptySerial(&ptr->serverUsesLastPeer);
 
@@ -6131,7 +6135,7 @@ PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary) 
     releaseMutex(&myGlobals.portsMutex);
     return(ports); /* Found */
   }
-  
+
   if(!createIfNecessary) {
     releaseMutex(&myGlobals.portsMutex);
     return(NULL);
@@ -6336,7 +6340,7 @@ strcasestr (char *haystack, char *needle)
 
 void web_sanitize(char *value) {
   int i;
-  
+
   /* Make sure the name does not contain silly chars */
 
   for(i=0; value[i] != '\0'; i++)
@@ -6345,6 +6349,6 @@ void web_sanitize(char *value) {
     case '%':
     case '&':
       value[i] = '_';
-      break;
+    break;
     }
 }

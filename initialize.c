@@ -1,6 +1,6 @@
 /*
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
- *                          http://www.ntop.org
+ *                          HutuBttp://www.ntop.org
  *
  * Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
  *
@@ -970,7 +970,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
   /* ********************************************* */
 
-  if(!(myGlobals.device[deviceId].dummyDevice || myGlobals.device[deviceId].virtualDevice)){
+  if(!(myGlobals.device[deviceId].dummyDevice || myGlobals.device[deviceId].virtualDevice)) {
     u_int8_t netmask_v6;
     
     getLocalHostAddress(&myGlobals.device[deviceId].ifAddr, &netmask_v6, myGlobals.device[deviceId].name);
@@ -978,7 +978,8 @@ void addDevice(char* deviceName, char* deviceDescr) {
 							       myGlobals.device[deviceId].name);
 	if(myGlobals.device[deviceId].network.s_addr == 0) {
 		myGlobals.device[deviceId].netmask.s_addr = 0xFFFFFF00;/* /24 */
-		myGlobals.device[deviceId].network.s_addr = myGlobals.device[deviceId].ifAddr.s_addr & myGlobals.device[deviceId].netmask.s_addr;
+		myGlobals.device[deviceId].network.s_addr = myGlobals.device[deviceId].ifAddr.s_addr 
+		  & myGlobals.device[deviceId].netmask.s_addr;
 	}
   }
 
