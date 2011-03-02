@@ -1208,13 +1208,13 @@ int cmpFctn(const void *_a, const void *_b) {
 	int i;
 
 	for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	  if((*a)->protoIPTrafficInfos[i])
+	  if((*a)->protoIPTrafficInfos && (*a)->protoIPTrafficInfos[i])
 	    a_val = ((*a)->protoIPTrafficInfos[i]->rcvdLoc.value
 		     +(*a)->protoIPTrafficInfos[i]->rcvdFromRem.value);
 	  else
 	    a_val = 0;
 
-	  if((*b)->protoIPTrafficInfos[i])
+	  if((*b)->protoIPTrafficInfos && (*b)->protoIPTrafficInfos[i])
 	    b_val = ((*b)->protoIPTrafficInfos[i]->rcvdLoc.value
 		     +(*b)->protoIPTrafficInfos[i]->rcvdFromRem.value);
 	  else
@@ -1469,8 +1469,6 @@ int cmpFctn(const void *_a, const void *_b) {
     break;
   case SORT_DATA_IP:
     columnProtoId = myGlobals.columnSort - 1;
-    if(((*a)->protoIPTrafficInfos == NULL) && ((*b)->protoIPTrafficInfos != NULL)) return(1);
-    else if(((*a)->protoIPTrafficInfos != NULL) && ((*b)->protoIPTrafficInfos == NULL)) return(-1);
 
     if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
       if(columnProtoId <= 0) {
@@ -1501,7 +1499,7 @@ int cmpFctn(const void *_a, const void *_b) {
         int i;
 
         for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	  if((*a)->protoIPTrafficInfos[i])
+	  if((*a)->protoIPTrafficInfos && (*a)->protoIPTrafficInfos[i])
 	    a_val = ((*a)->protoIPTrafficInfos[i]->rcvdLoc.value
 		     +(*a)->protoIPTrafficInfos[i]->rcvdFromRem.value
 		     +(*a)->protoIPTrafficInfos[i]->sentLoc.value
@@ -1509,7 +1507,7 @@ int cmpFctn(const void *_a, const void *_b) {
 	  else
 	    a_val = 0;
 	    
-	  if((*b)->protoIPTrafficInfos[i])
+	  if((*b)->protoIPTrafficInfos && (*b)->protoIPTrafficInfos[i])
 	    b_val = ((*b)->protoIPTrafficInfos[i]->rcvdLoc.value
 		     +(*b)->protoIPTrafficInfos[i]->rcvdFromRem.value
 		     +(*b)->protoIPTrafficInfos[i]->sentLoc.value
@@ -1560,29 +1558,33 @@ int cmpFctn(const void *_a, const void *_b) {
     break;
   }
 
-  /*
-    traceEvent(CONST_TRACE_INFO, "%s=%u - %s=%u",
-    (*a)->hostResolvedName, (unsigned long)a_,
-    (*b)->hostResolvedName, (unsigned long)b_);
-  */
-
   if(floatCompare == 0) {
+#if 0
+    traceEvent(CONST_TRACE_INFO, "[1] %s=%lu - %s=%lu",
+	       (*a)->hostResolvedName, (unsigned long)a_,
+	       (*b)->hostResolvedName, (unsigned long)b_);  
+#endif
+
     if(a_ < b_) {
       return(1);
     } else if (a_ > b_) {
       return(-1);
-    } else {
-      return(0);
-    }
+    }   
   } else {
+#if 0
+    traceEvent(CONST_TRACE_INFO, "[2] %s=%lu - %s=%lu",
+	       (*a)->hostResolvedName, (unsigned long)fa_,
+	       (*b)->hostResolvedName, (unsigned long)fb_);  
+#endif
+
     if(fa_ < fb_) {
       return(1);
     } else if (fa_ > fb_) {
       return(-1);
-    } else {
-      return(0);
     }
   }
+
+  return(0);
 }
 
 /* ******************************* */

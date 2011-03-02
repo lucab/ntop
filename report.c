@@ -1407,6 +1407,16 @@ void printHostsTraffic(int reportTypeReq,
 
     qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
 
+    if(0) {
+      int i;
+
+      for(i=0; i<numEntries; i++)
+	traceEvent(CONST_TRACE_INFO, "%02d) %s", 
+		   i, tmpTable[i]->hostResolvedName);
+
+    }
+
+
     switch(reportType) {
     case SORT_DATA_RECEIVED_PROTOS:
     case SORT_DATA_SENT_PROTOS:
@@ -3548,7 +3558,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   char flags_buf[64];
 #endif
   int numSessions, printedSessions;
-  char formatBuf[64], formatBuf1[64], formatBuf2[64], formatBuf3[64],
+  char formatBuf[64], formatBuf1[64], formatBuf2[64],
     formatBuf4[64], formatBuf5[64], formatBuf6[64], formatBuf7[64];
 
   if(!myGlobals.runningPref.enableSessionHandling) {
