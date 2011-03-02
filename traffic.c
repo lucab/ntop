@@ -677,3 +677,21 @@ void setHostCommunity(HostTraffic *el) {
     el->community = strdup(community);
 }
 
+/* ********************************** */
+
+u_short isP2P(HostTraffic *a) {
+  if((a != NULL)
+     && ((a->totContactedSentPeers > CONTACTED_PEERS_THRESHOLD) 
+	 || (a->totContactedRcvdPeers > CONTACTED_PEERS_THRESHOLD))) {
+    /* Now we need to check if this has really been a P2P server */
+    int i;
+
+    for(i=0; i<MAX_NUM_RECENT_PORTS; i++) {
+      if((a->recentlyUsedServerPorts[i] == -1) || (a->recentlyUsedClientPorts[i] == -1))
+	return(0); /* It's just a busy server */
+    }
+    
+    return(1);
+  } else
+    return(0);
+}

@@ -977,8 +977,7 @@ Code "inherited" from nslookup
 
 #define isDHCPClient(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_DHCP_CLIENT, &(a->flags)))
 #define isDHCPServer(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_DHCP_SERVER, &(a->flags)))
-#define isP2P(a)                    ((a != NULL) && ((a->totContactedSentPeers > CONTACTED_PEERS_THRESHOLD) || (a->totContactedRcvdPeers > CONTACTED_PEERS_THRESHOLD)))
-     
+extern u_short isP2P(HostTraffic *a);
 #define isNtpServer(a)              ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_NTP_SERVER, &(a->flags)))
 
 /* Host health */

@@ -996,6 +996,134 @@ static void handleMsnMsgrSession (const struct pcap_pkthdr *h,
 
 /* *********************************** */
 
+static void handleHTTPSSession(const struct pcap_pkthdr *h,
+			       HostTraffic *srcHost, u_short sport,
+			       HostTraffic *dstHost, u_short dport,
+			       u_int packetDataLength, char* packetData,
+			       IPSession *theSession, int actualDeviceId) {
+  u_int offset, base_offset = 43;
+  char *vhost_name = NULL;
+
+  if(packetData[0] == 0x16 /* Handshake */) {
+    u_int16_t total_len  = packetData[4] + 5 /* SSL Header */;
+    u_int8_t handshake_protocol = packetData[5];
+
+    if(handshake_protocol == 0x02 /* Server Hello */) {
+      int i;
+
+      for(i=total_len; i < packetDataLength-3; i++) {
+	if((packetData[i] == 0x04)
+	   && (packetData[i+1] == 0x03)
+	   && (packetData[i+2] == 0x0c)) {
+	  u_int8_t server_len = packetData[i+3];
+
+	  if(server_len+i+3 < packetDataLength) {
+	    char *server_name = &packetData[i+4], buffer[64];
+	    u_int8_t begin = 0, len, j, num_dots;
+
+	    while(begin < server_len) {
+	      if(!isprint(server_name[begin]))
+		begin++;
+	      else
+		break;
+	    }
+
+	    len = min(server_len-begin, sizeof(buffer)-1);
+	    strncpy(buffer, &server_name[begin], len);
+	    buffer[len] = '\0';
+
+	    /* We now have to check if this looks like an IP address or host name */
+	    for(j=0, num_dots = 0; j<len; j++) {
+	      if(!isprint((buffer[j]))) {
+		num_dots = 0; /* This is not what we look for */
+		break;
+	      } else if(buffer[j] == '.') {
+		num_dots++;
+		if(num_dots >=2) break;
+	      }
+	    }
+
+	    if(num_dots >= 2) {
+#ifdef DEBUG
+	      traceEvent(TRACE_NORMAL, "[S] -> '%s' [%u -> %u]", buffer, sport, dport);
+#endif
+	      vhost_name = strdup(buffer);
+	    }
+	  }
+	}
+      }
+    } else if(handshake_protocol == 0x01 /* Client Hello */) {
+      u_int16_t session_id_len = packetData[base_offset];
+      u_int16_t cypher_len =  packetData[session_id_len+base_offset+2];
+
+      offset = base_offset + session_id_len + cypher_len + 2;
+
+      if(offset < total_len) {
+	u_int16_t compression_len;
+	u_int16_t extensions_len;
+
+	compression_len = packetData[offset+1];
+	offset += compression_len + 3;
+	extensions_len = packetData[offset];
+
+	if((extensions_len+offset) < total_len) {
+	  u_int16_t extension_offset = 1; /* Move to the first extension */
+
+	  while(extension_offset < extensions_len) {
+	    u_int16_t extension_id, extension_len;
+
+	    memcpy(&extension_id, &packetData[offset+extension_offset], 2);
+	    extension_offset += 2;
+
+	    memcpy(&extension_len, &packetData[offset+extension_offset], 2);
+	    extension_offset += 2;
+
+	    extension_id = ntohs(extension_id), extension_len = ntohs(extension_len);
+
+	    /* traceEvent(TRACE_NORMAL, "extension_id=0x%X [%u -> %u]", extension_id, sport, dport); */
+
+	    if(extension_id == 0) {
+	      u_int begin = 0,len;
+	      char *server_name = &packetData[offset+extension_offset], buffer[64];
+
+	      while(begin < extension_len) {
+		if(!isprint(server_name[begin]))
+		  begin++;
+		else
+		  break;
+	      }
+
+	      len = min(extension_len-begin, sizeof(buffer)-1);
+	      strncpy(buffer, &server_name[begin], len);
+	      buffer[len] = '\0';
+
+#ifdef DEBUG
+	      traceEvent(TRACE_NORMAL, "[C] -> '%s' [%u -> %u]", buffer, sport, dport);
+#endif
+	      vhost_name = strdup(buffer);
+	      break; /* We're happy now */
+	    }
+
+	    extension_offset += extension_len;
+	  }
+	}
+      }
+    }
+  }
+
+  if(vhost_name) {
+    if (theSession->virtualPeerName == NULL) {
+      HostTraffic *server = (theSession->sport == IP_TCP_PORT_HTTPS) ? theSession->initiator : theSession->remotePeer;
+      
+      setHostName(server, vhost_name);
+      theSession->virtualPeerName = vhost_name;
+    } else    
+      free(vhost_name);
+  }
+}
+
+/* *********************************** */
+
 static void handleHTTPSession(const struct pcap_pkthdr *h,
                               HostTraffic *srcHost, u_short sport,
                               HostTraffic *dstHost, u_short dport,
@@ -1202,7 +1330,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 	    printf("DEBUG: HOST='%s'\n", host);
 #endif
 	    if(theSession->virtualPeerName == NULL) {
-	      HostTraffic *server = (sport == 80) ? theSession->initiator : theSession->remotePeer;
+	      HostTraffic *server = (theSession->sport == IP_TCP_PORT_HTTP) ? theSession->initiator : theSession->remotePeer;
 
 	      /* if(server->hostResolvedName[0] == '\0') */ setHostName(server, host);
 	      theSession->virtualPeerName = strdup(host);
@@ -1210,10 +1338,10 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 
 	  check_site:
 	    if(strstr(row, "facebook.com")) {
-	      setHostFlag(FLAG_HOST_TYPE_SVC_FACEBOOK_CLIENT, (sport == 80) ? dstHost : srcHost);
+	      setHostFlag(FLAG_HOST_TYPE_SVC_FACEBOOK_CLIENT, (sport == IP_TCP_PORT_HTTP) ? dstHost : srcHost);
 	      theSession->knownProtocolIdx = FLAG_FACEBOOK;
 	    } else if(strstr(row, "twitter.com")) {
-	      setHostFlag(FLAG_HOST_TYPE_SVC_TWITTER_CLIENT, (sport == 80) ? dstHost : srcHost);
+	      setHostFlag(FLAG_HOST_TYPE_SVC_TWITTER_CLIENT, (sport == IP_TCP_PORT_HTTP) ? dstHost : srcHost);
 	      theSession->knownProtocolIdx = FLAG_TWITTER;
 	    } else if(strstr(row, "youtube")) {
 	      theSession->knownProtocolIdx = FLAG_YOUTUBE;
@@ -1930,6 +2058,11 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
       handleHTTPSession(h, srcHost, sport, dstHost, dport,
 			packetDataLength, packetData, theSession,
 			actualDeviceId);
+    } else if(((sport == IP_TCP_PORT_HTTPS) || (dport == IP_TCP_PORT_HTTPS))
+	      && (packetDataLength > 0)) {
+      handleHTTPSSession(h, srcHost, sport, dstHost, dport,
+			 packetDataLength, (char*)packetData, theSession,
+			 actualDeviceId);
     } else if((dport == IP_TCP_PORT_KAZAA) && (packetDataLength > 0)) {
       theSession->isP2P = FLAG_P2P_KAZAA;
     } else if(((sport == IP_TCP_PORT_MSMSGR) ||
