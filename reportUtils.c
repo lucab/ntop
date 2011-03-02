@@ -3338,13 +3338,20 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     custom_host_name[0] = '\0';
   }
 
-  buf1[0]=0;
+  buf1[0] = 0;
 
   if((el->hostResolvedName[0] != '\0') && (strcmp(el->hostResolvedName, el->hostNumIpAddress))) {
+    char httpSiteIconBuf[128] = { 0 };
+
+    if(isHTTPhost(el))
+      httpSiteIcon((custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName,
+		   httpSiteIconBuf, sizeof(httpSiteIconBuf), 0);
+    
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
-		  "TITLE=\"Link to web server on host, if available\" class=external>%s</A>\n",
+		  "TITLE=\"Link to web server on host, if available\" class=external>%s%s</A>\n",
 		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName,
+		  httpSiteIconBuf,
 		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName);
 
     safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s", el->hostResolvedName);

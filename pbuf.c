@@ -133,6 +133,7 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
     case FLAG_YOUTUBE:  idx =  myGlobals.YouTubeIdx; break;
     case FLAG_SSH:      idx =  myGlobals.SshIdx; break;
     case FLAG_SKYPE:    idx =  myGlobals.SkypeIdx; break;
+    case FLAG_HTTP:     idx =  myGlobals.HttpIdx; break;
     default: idx = -1; break;
     }
   } else {

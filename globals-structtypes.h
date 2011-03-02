@@ -2067,7 +2067,8 @@ typedef struct ntopGlobals {
 #endif
 
   /* Peer2Peer Protocol Indexes */
-  u_short SshIdx, FTPIdx, EdonkeyIdx, BitTorrentIdx, VoipIdx, FacebookIdx, TwitterIdx, YouTubeIdx, SkypeIdx;
+  u_short SshIdx, HttpIdx, FTPIdx, EdonkeyIdx, BitTorrentIdx, 
+    VoipIdx, FacebookIdx, TwitterIdx, YouTubeIdx, SkypeIdx;
 
   /* Hash table collisions - counted during load */
   int ipxsapHashLoadCollisions;

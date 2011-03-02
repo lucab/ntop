@@ -215,7 +215,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag,
 		   char *buf, int bufLen) {
   char symIp[256], linkName[256], flag[256], colorSpec[64], vlanStr[8], mapStr[1024];
-  char osBuf[128], titleBuf[256], noteBuf[256], noteBufAppend[64], tooltip[256];
+  char osBuf[128], titleBuf[256], noteBuf[256], noteBufAppend[64], tooltip[256], httpFavico[256];
   char *dhcpBootpStr, *p2pStr, *multihomedStr, *multivlanedStr, *gwStr, *brStr, *dnsStr, *printStr,
     *smtpStr, *healthStr, *userStr, *httpStr, *ntpStr, *voipHostStr, custom_host_name[128];
   short usedEthAddress=0;
@@ -443,7 +443,13 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(nameServerHost(el))   dnsStr = "&nbsp;" CONST_IMG_DNS_SERVER ; else dnsStr = "";
   if(isPrinter(el))        printStr = "&nbsp;" CONST_IMG_PRINTER ; else printStr = "";
   if(isSMTPhost(el))       smtpStr = "&nbsp;" CONST_IMG_SMTP_SERVER ; else smtpStr = "";
-  if(isHTTPhost(el))       httpStr = "&nbsp;" CONST_IMG_HTTP_SERVER ; else httpStr = "";
+  if(isHTTPhost(el)) {
+    httpStr = "&nbsp;" CONST_IMG_HTTP_SERVER ; 
+
+    httpSiteIcon(symIp, httpFavico, sizeof(httpFavico), 0);
+  } else 
+    httpStr = "", httpFavico[0] = '\0';  
+
   if(isNtpServer(el))      ntpStr = "&nbsp;" CONST_IMG_NTP_SERVER ; else ntpStr = "";
 
   if(el->protocolInfo != NULL) {
@@ -548,11 +554,11 @@ char* makeHostLink(HostTraffic *el, short mode,
   /* Make the hostlink */
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<th "TH_BG" align=\"left\" nowrap width=\"250\">\n"
-		  "<a %s href=\"/%s%s.html\" %s%s%s>%s%s</a>\n"
+		  "<a %s href=\"/%s%s.html\" %s%s%s>%s%s%s</a>\n"
 		  "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s&nbsp;&nbsp;&nbsp;</th>%s\n",
 		  tooltip, linkName, vlanStr,
 		  titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
-		  (custom_host_name[0] != '\0') ? custom_host_name : symIp,
+		  httpFavico, (custom_host_name[0] != '\0') ? custom_host_name : symIp,
 		  noteBuf,
 		  getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)),
 		  dhcpBootpStr, multihomedStr, multivlanedStr,
@@ -563,13 +569,13 @@ char* makeHostLink(HostTraffic *el, short mode,
   } else if(mode == FLAG_HOSTLINK_TEXT_LITE_FORMAT) {
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "/%s%s.html", linkName, vlanStr);
   } else {
-    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<a %s href=\"/%s%s.html\" %s nowrap width=\"250\" %s%s%s>%s%s</a>\n"
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<a %s href=\"/%s%s.html\" %s nowrap width=\"250\" %s%s%s>%s%s%s</a>\n"
 		  "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
 		  tooltip, linkName, vlanStr,
 		  makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)),
 		  titleBuf[0] != '\0' ? "title=\"" : "",
 		  titleBuf, titleBuf[0] != '\0' ? "\"" : "",
-		  (custom_host_name[0] != '\0') ? custom_host_name : symIp,
+		  httpFavico, (custom_host_name[0] != '\0') ? custom_host_name : symIp,
 		  noteBuf,
 		  dhcpBootpStr, multihomedStr, multivlanedStr,
 		  usedEthAddress ? CONST_IMG_NIC_CARD : "",

@@ -464,6 +464,7 @@ extern char* findHostCommunity(u_int32_t host_ip, char *buf, u_short buf_len);
 extern void setHostCommunity(HostTraffic *el);
 extern void updateDeviceThpt(int deviceToUpdate, int quickUpdate);
 extern void checkCommunities(void);
+extern char* httpSiteIcon(char *name, char *buf, u_int buf_len, u_short addName);
 
 /* prefs.c */
 extern void loadPrefs(int argc, char* argv[]);

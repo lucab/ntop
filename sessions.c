@@ -1372,6 +1372,9 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
       free(rcStr);
     }
   }
+
+  if(theSession->knownProtocolIdx == 0)
+    theSession->knownProtocolIdx = FLAG_HTTP;
 }
 
 /* *********************************** */

@@ -695,3 +695,38 @@ u_short isP2P(HostTraffic *a) {
   } else
     return(0);
 }
+
+/* ********************************** */
+
+char* httpSiteIcon(char *name, char *buf, u_int buf_len, u_short addName) {
+  int i, num_dot = 0;
+
+  if(name == NULL)
+    return("&nbsp;");
+
+  i = strlen(name);
+  while(i > 0) {
+    if(name[i] == '.') {
+      num_dot++;
+      if(num_dot == 2) {
+	i++;
+	break;
+      }
+    }
+
+    i--;
+  }
+  
+  if(addName)
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len,
+		  "<IMG width=16 height=16 SRC=\"http://www.%s/favicon.ico\" BORDER=0>&nbsp;<A HREF=http://%s>%s</A>",
+		  &name[i], name, name);
+  else
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len,
+		  "<IMG width=16 height=16 SRC=\"http://www.%s/favicon.ico\" BORDER=0>&nbsp;",
+		  &name[i]);
+  
+  return(buf);
+}
+
+

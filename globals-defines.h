@@ -1675,6 +1675,7 @@
 
 
 
+#define FLAG_HTTP                           1
 /*
  * Some defines for the isP2P field of "struct ipSession"
  *     Over time, as one p2p system waxes or wanes, this list

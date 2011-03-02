@@ -3507,35 +3507,6 @@ static char* print_flags(IPSession *session, char *buf, int buf_len) {
 
 /* ********************************** */
 
-static char* httpSiteIcon(IPSession *session, char *buf, u_int buf_len) {
-  int i, num_dot = 0;
-
-  if(session->virtualPeerName == NULL)
-    return("&nbsp;");
-
-  i = strlen(session->virtualPeerName);
-  while(i > 0) {
-    if(session->virtualPeerName[i] == '.') {
-      num_dot++;
-      if(num_dot == 2) {
-	i++;
-	break;
-      }
-    }
-
-    i--;
-  }
-  
-  safe_snprintf(__FILE__, __LINE__, buf, buf_len,
-		"<IMG width=16 height=16 SRC=\"http://www.%s/favicon.ico\" BORDER=0>&nbsp;<A HREF=http://%s>%s</A>",
-		&session->virtualPeerName[i], session->virtualPeerName,
-		session->virtualPeerName);
-
-  return(buf);
-}
-
-/* ********************************** */
-
 static char *knownProtocolIdx(IPSession *session, char *buf, u_int buf_len) {
   if(session == NULL)
     return("&nbsp;");
@@ -3554,14 +3525,17 @@ static char *knownProtocolIdx(IPSession *session, char *buf, u_int buf_len) {
     return(CONST_LINKEDIN_ICON);
     break;
   case FLAG_SSH:
-    return("ssh");
+    return("SSH");
+    break;
+  case FLAG_HTTP:
+    return("HTTP");
     break;
   case FLAG_SKYPE:
     return(CONST_SKYPE_ICON);
     break;
   }
 
-  return(httpSiteIcon(session, buf, buf_len));
+  return(httpSiteIcon(session->virtualPeerName, buf, buf_len, 1));
 }
 
 /* ********************************** */
@@ -3591,6 +3565,9 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     printNoDataYet();
     return;
   }
+  
+  if(myGlobals.device[actualDeviceId].numTcpSessions < pageNum*myGlobals.runningPref.maxNumLines)
+    pageNum = myGlobals.device[actualDeviceId].numTcpSessions / pageNum*myGlobals.runningPref.maxNumLines;
 
   /*
     Due to the way sessions are handled, sessions before those to
@@ -3599,7 +3576,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   for(idx=1, numSessions=0, printedSessions=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
     int mutex_idx;
 
-    if(el && (printedSessions >= el->numHostSessions)) break;
+    /* if(el && (printedSessions >= el->numHostSessions)) break; */
 
     mutex_idx = idx % NUM_SESSION_MUTEXES;
 
@@ -3643,7 +3620,6 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		     "<TH "TH_BG">Server</TH>"
 		     "<TH "TH_BG" COLSPAN=2>Data&nbsp;Sent/Rcvd</TH>"
 		     "<TH "TH_BG">Active&nbsp;Since</TH>"
-		     "<TH "TH_BG">Last&nbsp;Seen</TH>"
 		     "<TH "TH_BG">Duration</TH>"
 		     "<TH "TH_BG">Inactive</TH>"
 		     "<TH "TH_BG" COLSPAN=2>Client/Server Nw Delay</TH>"
@@ -3683,11 +3659,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	   || (session->lastSeen == 0))
 	  session->lastSeen = myGlobals.actTime;
 
-	if((session->guessed_protocol != NULL)
-	   && session->voipSession
-	   && strstr(session->guessed_protocol, "skype"))
-	  voipStr = "/skype.gif";
-	else if(session->voipSession)
+	if(session->voipSession)
 	  voipStr = "&nbsp&lt;VoIP&gt;";
 	else
 	  voipStr = "";
@@ -3714,7 +3686,6 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD><TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"
 		      "<TD "TD_BG" ALIGN=CENTER NOWRAP>%s</TD>"
 #ifdef PRINT_SESSION_DETAILS
@@ -3724,7 +3695,6 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),
 		      formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1)),
 		      formatTime(&(session->firstSeen), formatBuf2, sizeof(formatBuf2)),
-		      formatTime(&(session->lastSeen), formatBuf3, sizeof(formatBuf3)),
 		      formatSeconds(session->lastSeen-session->firstSeen, formatBuf4, sizeof(formatBuf4)),
 		      formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
 		      formatLatency(session->clientNwDelay, session->sessionState, formatBuf6, sizeof(formatBuf6)),

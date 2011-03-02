@@ -587,7 +587,7 @@ void handleProtocols(void) {
 
 void addDefaultProtocols(void) {
   myGlobals.FTPIdx = handleProtocolList("FTP",      "ftp|ftp-data|");
-  handleProtocolList("HTTP",     "http|www|https|3128|"); /* 3128 is HTTP cache */
+  myGlobals.HttpIdx = handleProtocolList("HTTP",     "http|www|https|3128|"); /* 3128 is HTTP cache */
   handleProtocolList("DNS",      "name|domain|");
   /* 22 == ssh (just to make sure the port is defined) */
   myGlobals.SshIdx = handleProtocolList("Login",   "telnet|login|22|");
