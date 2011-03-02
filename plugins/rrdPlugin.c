@@ -4781,8 +4781,6 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       if(el->nonIPTraffic) {
 	updateTrafficCounter(rrdPath, "stpSent", &el->nonIPTraffic->stpSent, 0);
 	updateTrafficCounter(rrdPath, "stpRcvd", &el->nonIPTraffic->stpRcvd, 0);
-	updateTrafficCounter(rrdPath, "ipxSent", &el->nonIPTraffic->ipxSent, 0);
-	updateTrafficCounter(rrdPath, "ipxRcvd", &el->nonIPTraffic->ipxRcvd, 0);
 	updateTrafficCounter(rrdPath, "dlcSent", &el->nonIPTraffic->dlcSent, 0);
 	updateTrafficCounter(rrdPath, "dlcRcvd", &el->nonIPTraffic->dlcRcvd, 0);
 	updateTrafficCounter(rrdPath, "arpRarpSent", &el->nonIPTraffic->arp_rarpSent, 0);
@@ -4790,8 +4788,6 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	updateTrafficCounter(rrdPath, "arpReqPktsSent", &el->nonIPTraffic->arpReqPktsSent, 0);
 	updateTrafficCounter(rrdPath, "arpReplyPktsSent", &el->nonIPTraffic->arpReplyPktsSent, 0);
 	updateTrafficCounter(rrdPath, "arpReplyPktsRcvd", &el->nonIPTraffic->arpReplyPktsRcvd, 0);
-	updateTrafficCounter(rrdPath, "appletalkSent", &el->nonIPTraffic->appletalkSent, 0);
-	updateTrafficCounter(rrdPath, "appletalkRcvd", &el->nonIPTraffic->appletalkRcvd, 0);
 	updateTrafficCounter(rrdPath, "netbiosSent", &el->nonIPTraffic->netbiosSent, 0);
 	updateTrafficCounter(rrdPath, "netbiosRcvd", &el->nonIPTraffic->netbiosRcvd, 0);
 	updateTrafficCounter(rrdPath, "otherSent", &el->nonIPTraffic->otherSent, 0);
@@ -5327,12 +5323,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  updateCounter(rrdPath, "otherIpBytes", myGlobals.device[devIdx].otherIpBytes.value, 0);
 	  updateCounter(rrdPath, "icmpBytes", myGlobals.device[devIdx].icmpBytes.value, 0);
 	  updateCounter(rrdPath, "dlcBytes", myGlobals.device[devIdx].dlcBytes.value, 0);
-	  updateCounter(rrdPath, "ipxBytes", myGlobals.device[devIdx].ipxBytes.value, 0);
 	  updateCounter(rrdPath, "stpBytes", myGlobals.device[devIdx].stpBytes.value, 0);
 	  updateCounter(rrdPath, "ipsecBytes", myGlobals.device[devIdx].ipsecBytes.value, 0);
 	  updateCounter(rrdPath, "netbiosBytes", myGlobals.device[devIdx].netbiosBytes.value, 0);
 	  updateCounter(rrdPath, "arpRarpBytes", myGlobals.device[devIdx].arpRarpBytes.value, 0);
-	  updateCounter(rrdPath, "atalkBytes", myGlobals.device[devIdx].atalkBytes.value, 0);
 	  updateCounter(rrdPath, "egpBytes", myGlobals.device[devIdx].egpBytes.value, 0);
 	  updateCounter(rrdPath, "greBytes", myGlobals.device[devIdx].greBytes.value, 0);
 	  updateCounter(rrdPath, "ipv6Bytes", myGlobals.device[devIdx].ipv6Bytes.value, 0);

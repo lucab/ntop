@@ -1474,9 +1474,7 @@ dnl>
     PYTHON_LIBS="`$PYTHON_CONFIG --libs`"
     if test "x$PYTHON_LIBS" = "x"; then
       AC_MSG_RESULT(Python[-devel] support is present but misconfigured)     
-    else
-    
-
+    else   
     dnl echo "Python libs: ${PYTHON_LIBS}"
     LIBS="${LIBS} ${PYTHON_LIBS}"
 

@@ -449,22 +449,11 @@ typedef struct nonIPTraffic {
   /* NetBIOS */
   char             nbNodeType, *nbHostName, *nbAccountName, *nbDomainName, *nbDescr;
 
-  /* AppleTalk*/
-  u_short          atNetwork;
-  u_char           atNode;
-  char             *atNodeName, *atNodeType[MAX_NODE_TYPES];
-
-  /* IPX */
-  char             *ipxHostName;
-  u_short          numIpxNodeTypes, ipxNodeType[MAX_NODE_TYPES];
-
   /* Non IP */
   TrafficCounter   stpSent, stpRcvd; /* Spanning Tree */
-  TrafficCounter   ipxSent, ipxRcvd;
   TrafficCounter   dlcSent, dlcRcvd;
   TrafficCounter   arp_rarpSent, arp_rarpRcvd;
   TrafficCounter   arpReqPktsSent, arpReplyPktsSent, arpReplyPktsRcvd;
-  TrafficCounter   appletalkSent, appletalkRcvd;
   TrafficCounter   netbiosSent, netbiosRcvd;
   TrafficCounter   otherSent, otherRcvd; /* Other traffic we cannot classify */
   UnknownProto     *unknownProtoSent, *unknownProtoRcvd; /* List of MAX_NUM_UNKNOWN_PROTOS elements */
@@ -1339,7 +1328,6 @@ typedef struct ntopInterface {
   TrafficCounter ipsecBytes;
   TrafficCounter netbiosBytes;
   TrafficCounter arpRarpBytes;
-  TrafficCounter atalkBytes;
   TrafficCounter egpBytes;
   TrafficCounter greBytes;
   TrafficCounter ipv6Bytes;

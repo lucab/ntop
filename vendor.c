@@ -21,18 +21,6 @@
 /*
  * NOTE: About the tables in this program and vendortable.h...
  *
- *   IPX SAP
- *       The official list is maintained by iana at
- *             http://www.iana.org/assignments/novell-sap-numbers
- *
- *       While there is Makefile code to download and rebuild the structure (make dnsapt sapt),
- *       as of 01-2003, it doesn't work.
- *
- *       The file format has been changed, the sapt.sed file is lost, and besides it builds a
- *       saptable.h file which you would manually have to insert into vendor.c.
- *
- *       OTOP, Novell doesn't change things very often.
- *
  *   Vendor
  *       The official list is updated daily at http://standards.ieee.org/regauth/oui/oui.txt
  *       The vendor table data does change, frequently, albeit irrelevantly to most of us.
@@ -99,14 +87,7 @@
  *       TEST_HASHSIZE: specialMacHash 141   1
  *       TEST_HASHSIZE: specialMacHash BEST is 0 collisions, size 167
  *
- *   The ipxsap table is referenced only for reporting - so a few collisions
- *   isn't a huge deal.
  */
-
-typedef struct {
-  unsigned long ipxsapId;
-  char* ipxsapName;
-} IPXSAPInfo;
 
 #include "ntop.h"
 
@@ -117,153 +98,6 @@ static char* macInputFiles[] = {
   "oui.txt",
   NULL
 };
-
-static IPXSAPInfo ipxSAP[] = {
-  { 0x0000,	"Unknown" },
-  { 0x0001,	"User" },
-  { 0x0002,	"User Group" },
-  { 0x0003,	"Print Queue" },
-  { 0x0004,	"File server" },
-  { 0x0005,	"Job server" },
-  { 0x0007,	"Print server" },
-  { 0x0008,	"Archive server" },
-  { 0x0009,	"Archive server" },
-  { 0x000a,	"Job queue" },
-  { 0x000b,	"Administration" },
-  { 0x0021,	"NAS SNA gateway" },
-  { 0x0024,	"Remote bridge" },
-  { 0x0026,	"Bridge server" },
-  { 0x0027,	"TCP/IP gateway" },
-  { 0x002d,	"Time Synchronization VAP" },
-  { 0x002e,	"Archive Server Dynamic SAP" },
-  { 0x0047,	"Advertising print server" },
-  { 0x004b,	"Btrieve VAP 5.0" },
-  { 0x004c,	"SQL VAP" },
-  { 0x0050,	"Btrieve VAP" },
-  { 0x0053,	"Print Queue VAP" },
-  { 0x007a,	"TES NetWare for VMS" },
-  { 0x0098,	"NetWare access server" },
-  { 0x009a,	"Named Pipes server" },
-  { 0x009e,	"Portable NetWare Unix" },
-  { 0x0107,	"NetWare 386" },
-  { 0x0111,	"Test server" },
-  { 0x0133,	"NetWare Name Service" },
-  { 0x0166,	"NetWare management" },
-  { 0x023f,	"SMS Testing and Development" },
-  { 0x026a,	"NetWare management" },
-  { 0x026b,	"Time synchronization" },
-  { 0x027b,	"NetWare Management Agent" },
-  { 0x0278,	"NetWare Directory server" },
-  { 0x030c,	"HP LaserJet / Quick Silver" },
-  { 0x0355,	"Arcada Software" },
-  { 0x0361,	"NETINELO" },
-  { 0x037e,	"Powerchute UPS Monitoring" },
-  { 0x03e1,	"UnixWare Application Server" },
-  { 0x044c,	"Archive" },
-  { 0x055d,	"Attachmate SNA gateway" },
-  { 0x0610,	"Adaptec SCSI Management" },
-  { 0x0640,	"NT Server-RPC/GW for NW/Win95 User Level Sec" },
-  { 0x064e,	"NT Server-IIS" },
-  { 0x0810,	"ELAN License Server Demo" },
-  { 0x8002,	"Intel NetPort Print Server" },
-  { 0x0000,	NULL }
-};
-
-IPXSAPInfo* ipxSAPhash[MAX_IPXSAP_NAME_HASH];
-
-
-
-/* *********************************** */
-
-static int addIPXSAPTableEntry(IPXSAPInfo* theMacHash[],
-                               IPXSAPInfo* entry,
-                               u_int tableLen) {
-  u_int idx;
-  unsigned long ipxsapValue;
-  int hashLoadCollisions=0;
-
-#ifdef PARM_USE_MACHASH_INVERT
-  ipxsapValue = 256*256*(unsigned long)(entry->ipxsapId & 0xff)
-    + 256*(unsigned long)((entry->ipxsapId >> 8) & 0xff)
-    + (unsigned long)((entry->ipxsapId >> 16) & 0xff);
-#else
-  idx = (u_int)(entry->ipxsapId % tableLen);
-#endif
-  idx = (u_int)((u_int)ipxsapValue % tableLen);
-
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: addIPXSAPTableEntry(%06x, %s) gives %ld (mod %d = %d)",
-	 entry->ipxsapId,
-	 entry->ipxsapName,
-         ipxsapValue,
-         tableLen,
-         idx);
-#endif
-
-  /* Count # of collisions during load - only ONCE per item */
-  if(theMacHash[idx] != NULL) {
-      hashLoadCollisions++;
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: HashLoad Collision - %d %x '%s",
-                                   idx, entry->ipxsapId, entry->ipxsapName);
-#endif
-  }
-
-  for(;;) {
-    if(theMacHash[idx] == NULL) {
-      theMacHash[idx] = entry;
-      break;
-    }
-    idx = (idx+1)%tableLen;
-  }
-
-  return hashLoadCollisions;
-}
-
-/* *********************************** */
-
-char* getSAPInfo(u_int16_t sapInfo, short encodeString) {
-  u_int idx;
-  unsigned long ipxsapValue = (unsigned long)sapInfo;
-  IPXSAPInfo* cursor;
-
-  idx = (u_int)((u_int)sapInfo % MAX_IPXSAP_NAME_HASH);
-
-  for(;;) {
-    cursor = ipxSAPhash[idx];
-
-    if(ipxSAPhash[idx] == NULL) {
-      /* Unknown vendor */
-      return("");
-    } else if(ipxSAPhash[idx] != NULL) {
-      if(ipxSAPhash[idx]->ipxsapId == ipxsapValue) {
-	if(encodeString) {
-	  static char ipxsapName[256];
-	  int a, b;
-
-	  for(a=0, b=0; ipxSAPhash[idx]->ipxsapName[a] != '\0'; a++)
-	    if(ipxSAPhash[idx]->ipxsapName[a] == ' ') {
-	      ipxsapName[b++] = '&';
-	      ipxsapName[b++] = 'n';
-	      ipxsapName[b++] = 'b';
-	      ipxsapName[b++] = 's';
-	      ipxsapName[b++] = 'p';
-	      ipxsapName[b++] = ';';
-	    } else
-	      ipxsapName[b++] = ipxSAPhash[idx]->ipxsapName[a];
-
-	  ipxsapName[b] = '\0';
-	  return(ipxsapName);
-	} else
-	  return(ipxSAPhash[idx]->ipxsapName);
-      }
-    }
-
-    idx = (idx+1)%MAX_IPXSAP_NAME_HASH;
-  }
-
-  return(""); /* NOTREACHED */
-}
 
 /* *********************************** */
 
@@ -398,45 +232,6 @@ void createVendorTable(struct stat *dbStat) {
   struct macInfo macInfoEntry;
   datum data_data, key_data;
   u_char compressedFormat;
-
-#ifdef TEST_HASHSIZE_IPXSAP
-  {
-    int i, j, best, besti;
-
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: Testing ipxSAP (%s) from 51 -> %d...wait",
-#ifdef PARM_USE_MACHASH_INVERT
-	       "invert",
-#else
-	       "normal",
-#endif
-	       MAX_IPXSAP_NAME_HASH);
-    best=99999;
-    besti=0;
-    for (i=51; i<=MAX_IPXSAP_NAME_HASH; i += 2) {
-      j=0;
-      for(idx=0; ipxSAP[idx].ipxsapName != NULL; idx++)
-	j += addIPXSAPTableEntry(ipxSAPhash, &ipxSAP[idx], i);
-      if(j == 0) {
-	best=0;
-	besti=i;
-	break;
-      } else if( j < best ) {
-	best = j;
-	besti = i;
-	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: ipxSAP %3d %3d", i, j);
-      }
-      memset(ipxSAPhash, 0, sizeof(ipxSAPhash));
-    }
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: ipxSAP BEST is %d collisions, size %d", best, besti);
-  }
-#endif
-
-  myGlobals.ipxsapHashLoadSize = sizeof(ipxSAPhash);
-  for(idx=0; ipxSAP[idx].ipxsapName != NULL; idx++) {
-    myGlobals.ipxsapHashLoadSize += sizeof(IPXSAPInfo) + strlen(ipxSAP[idx].ipxsapName);
-    myGlobals.ipxsapHashLoadCollisions +=
-      addIPXSAPTableEntry(ipxSAPhash, &ipxSAP[idx], MAX_IPXSAP_NAME_HASH);
-  }
 
   /*
    * Ok, so we've loaded the static table.

@@ -336,12 +336,6 @@ char* makeHostLink(HostTraffic *el, short mode,
       if(el->nonIPTraffic->nbHostName != NULL) {
         strncpy(symIp, el->nonIPTraffic->nbHostName, sizeof(symIp));
         strncat(noteBuf, " [NetBios]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
-      } else if(el->nonIPTraffic->ipxHostName != NULL) {
-        strncpy(symIp, el->nonIPTraffic->ipxHostName, sizeof(symIp));
-        strncat(noteBuf, " [IPX]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
-      } else if(el->nonIPTraffic->atNodeName != NULL) {
-        strncpy(symIp, el->nonIPTraffic->atNodeName, sizeof(symIp));
-        strncat(noteBuf, " [Appletalk]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
       }
     } else {
       if(mode == FLAG_HOSTLINK_HTML_FORMAT)
@@ -372,14 +366,8 @@ char* makeHostLink(HostTraffic *el, short mode,
       case FLAG_HOST_SYM_ADDR_TYPE_MAC:
 	strncat(noteBuf, " [MAC]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
 	break;
-      case FLAG_HOST_SYM_ADDR_TYPE_IPX:
-	strncat(noteBuf, " [IPX]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
-	break;
       case FLAG_HOST_SYM_ADDR_TYPE_IP:
 	strncat(noteBuf, " [IP]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
-	break;
-      case FLAG_HOST_SYM_ADDR_TYPE_ATALK:
-	strncat(noteBuf, " [Appletalk]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
 	break;
       case FLAG_HOST_SYM_ADDR_TYPE_NETBIOS:
 	/* Do nothing - handled in open code above */
@@ -6626,13 +6614,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numHandledSIGPIPEerrors);
   printFeatureConfigInfo(textPrintFlag, "# Handled SIGPIPE Errors", buf);
 
-  if(textPrintFlag == TRUE) {
-    printInfoSectionTitle(textPrintFlag, "Memory Usage");
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadSize);
-    printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Size (bytes)", buf);
-  }
-
   printInfoSectionTitle(textPrintFlag, "Host Memory Cache");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
@@ -6664,19 +6645,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.sessionsCacheReused);
   printFeatureConfigInfo(textPrintFlag, "# Entries Reused", buf);
 #endif
-
-  if(textPrintFlag == TRUE) {
-    printInfoSectionTitle(textPrintFlag, "MAC/IPX Hash tables");
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", MAX_IPXSAP_NAME_HASH);
-    printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Size (entries)", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadCollisions);
-    printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Collisions (load)", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.hashCollisionsLookup);
-    printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Collisions (use)", buf);
-  }
 
   /* **** */
 

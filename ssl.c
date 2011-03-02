@@ -168,7 +168,7 @@ int init_ssl(void) {
 #if (OPENSSL_VERSION_NUMBER < 0x00905100l)
   needs_openssl_095_or_later();
 #endif
-  meth = SSLv23_server_method();
+  meth = (SSL_METHOD*)SSLv23_server_method();
   myGlobals.ctx = SSL_CTX_new(meth);
   if (!myGlobals.ctx) {
     ntop_ssl_error_report("ssl_init-server_method");

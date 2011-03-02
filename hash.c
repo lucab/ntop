@@ -189,11 +189,6 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     if(host->nonIPTraffic->nbAccountName != NULL)       free(host->nonIPTraffic->nbAccountName);
     if(host->nonIPTraffic->nbDomainName != NULL)        free(host->nonIPTraffic->nbDomainName);
     if(host->nonIPTraffic->nbDescr != NULL)             free(host->nonIPTraffic->nbDescr);
-    if(host->nonIPTraffic->atNodeName != NULL)          free(host->nonIPTraffic->atNodeName);
-    for(i=0; i<MAX_NODE_TYPES; i++)
-      if(host->nonIPTraffic->atNodeType[i] != NULL) free(host->nonIPTraffic->atNodeType[i]);
-    if(host->nonIPTraffic->atNodeName != NULL)          free(host->nonIPTraffic->atNodeName);
-    if(host->nonIPTraffic->ipxHostName != NULL)         free(host->nonIPTraffic->ipxHostName);
     if(host->nonIPTraffic->unknownProtoSent   != NULL)  free(host->nonIPTraffic->unknownProtoSent);
     if(host->nonIPTraffic->unknownProtoRcvd   != NULL)  free(host->nonIPTraffic->unknownProtoRcvd);
     free(host->nonIPTraffic);

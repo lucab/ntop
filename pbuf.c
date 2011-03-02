@@ -675,10 +675,6 @@ void updateHostName(HostTraffic *el) {
       */
       memset(el->hostResolvedName, 0, sizeof(el->hostResolvedName));
       setResolvedName(el, el->nonIPTraffic->nbHostName, FLAG_HOST_SYM_ADDR_TYPE_NETBIOS);
-    } else if(el->nonIPTraffic->ipxHostName != NULL) {
-      setResolvedName(el, el->nonIPTraffic->ipxHostName, FLAG_HOST_SYM_ADDR_TYPE_IPX);
-    } else if(el->nonIPTraffic->atNodeName != NULL) {
-      setResolvedName(el, el->nonIPTraffic->atNodeName, FLAG_HOST_SYM_ADDR_TYPE_ATALK);
     }
 
     if(el->hostResolvedName[0] != '\0')
@@ -2627,7 +2623,6 @@ void processPacket(u_char *_deviceId,
   u_short eth_type=0;
   /* Token-Ring Strings */
   struct tokenRing_llc *trllc;
-  unsigned char ipxBuffer[128];
   int deviceId, actualDeviceId;
   u_int16_t vlanId=NO_VLAN;
   static time_t lastUpdateThptTime = 0;
@@ -2972,62 +2967,7 @@ void processPacket(u_char *_deviceId,
     if((myGlobals.device[deviceId].datalink != DLT_PPP)
        && (myGlobals.device[deviceId].datalink != DLT_RAW)
        && (myGlobals.device[deviceId].datalink != DLT_ANY)) {
-      if((!myGlobals.runningPref.dontTrustMACaddr) && (eth_type == 0x8137)) {
-	/* IPX */
-	IPXpacket ipxPkt;
-
-	srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
-	if(srcHost == NULL) {
-	  /* Sanity check */
-	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (5) [Low memory?]");
-	  lowMemoryMsgShown = 1;
-	  return;
-	} else {
-	  lockHostsHashMutex(srcHost, "processPacket-src");
-	}
-
-	dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
-	if(dstHost == NULL) {
-	  /* Sanity check */
-	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (6) [Low memory?]");
-	  unlockHostsHashMutex(srcHost);
-	  lowMemoryMsgShown = 1;
-	  return;
-	} else {
-	  lockHostsHashMutex(dstHost, "processPacket-dst");
-	}
-
-	if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
-
-	memcpy((char *)&ipxPkt, (char *)p+sizeof(struct ether_header), sizeof(IPXpacket));
-
-	allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
-	allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
-
-	if(ntohs(ipxPkt.dstSocket) == 0x0452) {
-	  /* SAP */
-	  int displ = sizeof(struct ether_header);
-	  p1 = p+displ;
-	  length -= displ;
-	  goto handleIPX;
-	} else {
-	  TrafficCounter ctr;
-
-	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-
-	  incrementHostTrafficCounter(srcHost, nonIPTraffic->ipxSent, length);
-	  incrementHostTrafficCounter(dstHost, nonIPTraffic->ipxRcvd, length);
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
-
-	  ctr.value = length;
-	  /*
-	    Even if this is IPX (i.e. no IP) the hostIpAddress field is
-	    fine because it is not used in this special case and I need
-	    a placeholder here.
-	  */
-	  updatePacketCount(srcHost, &srcHost->hostIpAddress, dstHost, &dstHost->hostIpAddress, ctr, 1, actualDeviceId);
-	}
-      } else if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type < ETHERMTU)) {
+      if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type < ETHERMTU)) {
 	TrafficCounter ctr;
 
 	trp = (struct tokenRing_header*)orig_p;
@@ -3088,8 +3028,6 @@ void processPacket(u_char *_deviceId,
 	   && (p[sizeof(struct ether_header)] == 0xff)
 	   && (p[sizeof(struct ether_header)+1] == 0xff)
 	   && (p[sizeof(struct ether_header)+4] == 0x0)) {
-	  /* IPX */
-
 	  srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
 	  if(srcHost == NULL) {
 	    /* Sanity check */
@@ -3116,10 +3054,6 @@ void processPacket(u_char *_deviceId,
 	  allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
 	  allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
 	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-
-	  incrementHostTrafficCounter(srcHost, nonIPTraffic->ipxSent, length);
-	  incrementHostTrafficCounter(dstHost, nonIPTraffic->ipxRcvd, length);
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 	} else if(!myGlobals.runningPref.dontTrustMACaddr) {
 	  /* MAC addresses are meaningful here */
 	  srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
@@ -3242,123 +3176,6 @@ void processPacket(u_char *_deviceId,
 	      incrementHostTrafficCounter(dstHost, nonIPTraffic->stpRcvd, length);
 	      setHostFlag(FLAG_HOST_TYPE_SVC_BRIDGE, srcHost);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].stpBytes, length);
-	    } else if(myGlobals.runningPref.enablePacketDecoding && (sap_type == 0xE0)) {
-	      /* NetWare */
-	      if(!(llcHeader.ssap == LLCSAP_GLOBAL && llcHeader.dsap == LLCSAP_GLOBAL)) {
-		p1 += 3; /* LLC Header (short myGlobals.version) */
-	      }
-
-	    handleIPX:
-	      /* IPX packet beginning */
-	      if(length > 128)
-		memcpy(ipxBuffer, p1, 128);
-	      else
-		memcpy(ipxBuffer, p1, length);
-	      if((ipxBuffer[16] == 0x04)    /* SAP (Service Advertising Protocol) (byte 0) */
-		 && (ipxBuffer[17] == 0x52) /* SAP (Service Advertising Protocol) (byte 1) */
-		 && (ipxBuffer[30] == 0x0)  /* SAP Response (byte 0) */
-		 && (ipxBuffer[31] == 0x02) /* SAP Response (byte 1) */) {
-		u_int16_t serverType;
-		char serverName[MAX_LEN_SYM_HOST_NAME];
-		int i, found;
-
-		memcpy(&serverType, &ipxBuffer[32], 2);
-		serverType = ntohs(serverType);
-
-		memcpy(serverName, &ipxBuffer[34], 56); serverName[56] = '\0';
-		for(i=0; i<56; i++)
-		  if(serverName[i] == '!') {
-		    serverName[i] = '\0';
-		    break;
-		  }
-
-		incrementHostTrafficCounter(srcHost, nonIPTraffic->ipxSent, length);
-		incrementHostTrafficCounter(dstHost, nonIPTraffic->ipxRcvd, length);
-
-		for(i=0, found=0; i<srcHost->nonIPTraffic->numIpxNodeTypes; i++)
-		  if(srcHost->nonIPTraffic->ipxNodeType[i] == serverType) {
-		    found = 1;
-		    break;
-		  }
-
-		if((!found) && (srcHost->nonIPTraffic->numIpxNodeTypes < MAX_NODE_TYPES)) {
-		  srcHost->nonIPTraffic->ipxNodeType[srcHost->nonIPTraffic->numIpxNodeTypes] = serverType;
-		  srcHost->nonIPTraffic->numIpxNodeTypes++;
-
-		  switch(serverType) {
-		  case 0x0007: /* Print server */
-		  case 0x0003: /* Print Queue */
-		  case 0x8002: /* Intel NetPort Print Server */
-		  case 0x030c: /* HP LaserJet / Quick Silver */
-		    setHostFlag(FLAG_HOST_TYPE_PRINTER, srcHost);
-		    break;
-
-		  case 0x0027: /* TCP/IP gateway */
-		  case 0x0021: /* NAS SNA gateway */
-		  case 0x055d: /* Attachmate SNA gateway */
-		    setHostFlag(FLAG_GATEWAY_HOST, srcHost);
-		    /* ==> updateRoutedTraffic(srcHost);
-		       is not needed as there are no routed packets */
-		    break;
-
-		  case 0x0004: /* File server */
-		  case 0x0005: /* Job server */
-		  case 0x0008: /* Archive server */
-		  case 0x0009: /* Archive server */
-		  case 0x002e: /* Archive Server Dynamic SAP */
-		  case 0x0098: /* NetWare access server */
-		  case 0x009a: /* Named Pipes server */
-		  case 0x0111: /* Test server */
-		  case 0x03e1: /* UnixWare Application Server */
-		  case 0x0810: /* ELAN License Server Demo */
-		    setHostFlag(FLAG_HOST_TYPE_SERVER, srcHost);
-		    break;
-
-		  case 0x0278: /* NetWare Directory server */
-		    setHostFlag(FLAG_HOST_TYPE_SVC_DIRECTORY, srcHost);
-		    break;
-
-		  case 0x0024: /* Rem bridge */
-		  case 0x0026: /* Bridge server */
-		    setHostFlag(FLAG_HOST_TYPE_SVC_BRIDGE, srcHost);
-		    break;
-
-		  case 0x0640: /* NT Server-RPC/GW for NW/Win95 User Level Sec */
-		  case 0x064e: /* NT Server-IIS */
-		    setHostFlag(FLAG_HOST_TYPE_SERVER, srcHost);
-		    break;
-
-		  case 0x0133: /* NetWare Name Service */
-		    setHostFlag(FLAG_NAME_SERVER_HOST, srcHost);
-		    break;
-		  }
-		}
-
-		if(srcHost->nonIPTraffic->ipxHostName == NULL) {
-		  int begin = 1;
-
-		  for(i=1; i<strlen(serverName); i++)
-		    if((serverName[i] == '_') && (serverName[i-1] == '_')) {
-		      serverName[i-1] = '\0'; /* Avoid weird names */
-		      break;
-		    }
-
-		  if(serverName[0] == '\0') begin = 1; else begin = 0;
-		  if(strlen(serverName) >= (MAX_LEN_SYM_HOST_NAME-1))
-		    serverName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
-		  srcHost->nonIPTraffic->ipxHostName = strdup(&serverName[begin]);
-		  for(i=0; srcHost->nonIPTraffic->ipxHostName[i] != '\0'; i++)
-		    srcHost->nonIPTraffic->ipxHostName[i] = tolower(srcHost->nonIPTraffic->ipxHostName[i]);
-
-		  updateHostName(srcHost);
-		}
-#ifdef DEBUG
-		traceEvent(CONST_TRACE_INFO, "%s [%s][%x]", serverName,
-			   getSAPInfo(serverType, 0), serverType);
-#endif
-	      }
-
-	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 	    } else if((llcHeader.ssap == LLCSAP_NETBIOS) && (llcHeader.dsap == LLCSAP_NETBIOS)) {
 	      /* Netbios */
 	      incrementHostTrafficCounter(srcHost, nonIPTraffic->netbiosSent, length);
@@ -3386,91 +3203,28 @@ void processPacket(u_char *_deviceId,
 
 		http://www.faqs.org/rfcs/rfc1060.html
 	      */
-	      if(myGlobals.runningPref.enablePacketDecoding
-		 && ((snapType == 0x809B) || (snapType == 0x80F3))) {
-		/* Appletalk */
-		AtDDPheader ddpHeader;
-
-		memcpy(&ddpHeader, (char*)p1, sizeof(AtDDPheader));
-
-		srcHost->nonIPTraffic->atNetwork = ntohs(ddpHeader.srcNet),
-		  srcHost->nonIPTraffic->atNode = ddpHeader.srcNode;
-		dstHost->nonIPTraffic->atNetwork = ntohs(ddpHeader.dstNet),
-		  dstHost->nonIPTraffic->atNode = ddpHeader.dstNode;
-
-		if(ddpHeader.ddpType == 2) {
-		  /* Appletalk NBP (Name Binding Protocol) */
-		  AtNBPheader nbpHeader;
-		  int numTuples, i;
-
-		  p1 = (u_char*)(p1+13);
-		  memcpy(&nbpHeader, (char*)p1, sizeof(AtNBPheader));
-		  numTuples = nbpHeader.function & 0x0F;
-
-		  if((nbpHeader.function == 0x21) && (numTuples == 1)) {
-		    char nodeName[256];
-		    int displ;
-
-		    p1 = (u_char*)(p1+2);
-
-		    if(p1[6] == '=')
-		      displ = 2;
-		    else
-		      displ = 0;
-
-		    memcpy(nodeName, &p1[6+displ], p1[5+displ]);
-		    nodeName[p1[5+displ]] = '\0';
-
-		    if(strlen(nodeName) >= (MAX_LEN_SYM_HOST_NAME-1))
-		      nodeName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
-
-		    if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1,
-												    sizeof(NonIPTraffic));
-		    if(srcHost->nonIPTraffic == NULL) return;
-
-		    srcHost->nonIPTraffic->atNodeName = strdup(nodeName);
-		    updateHostName(srcHost);
-
-		    memcpy(nodeName, &p1[7+p1[5+displ]+displ], p1[6+p1[5+displ]+displ]);
-		    nodeName[p1[6+p1[5+displ]]] = '\0';
-
-		    for(i=0; i<MAX_NODE_TYPES; i++)
-		      if((srcHost->nonIPTraffic->atNodeType[i] == NULL)
-			 || (strcmp(srcHost->nonIPTraffic->atNodeType[i], nodeName) == 0))
-			break;
-
-		    if((i < MAX_NODE_TYPES) && (srcHost->nonIPTraffic->atNodeType[i] == NULL))
-		      srcHost->nonIPTraffic->atNodeType[i] = strdup(nodeName);
-		  }
-		}
-
-		incrementHostTrafficCounter(srcHost, nonIPTraffic->appletalkSent, length);
-		incrementHostTrafficCounter(dstHost, nonIPTraffic->appletalkRcvd, length);
-		incrementTrafficCounter(&myGlobals.device[actualDeviceId].atalkBytes, length);
-	      } else {
-		if((llcHeader.ctl.snap_ether.snap_orgcode[0] == 0x0)
-		   && (llcHeader.ctl.snap_ether.snap_orgcode[1] == 0x0)
-		   && (llcHeader.ctl.snap_ether.snap_orgcode[2] == 0x0C) /* Cisco */) {
-		  /* NOTE:
-		     If llcHeader.ctl.snap_ether.snap_ethertype[0] == 0x20
-		     && llcHeader.ctl.snap_ether.snap_ethertype[1] == 0x0
-		     this is Cisco Discovery Protocol
-		  */
-
-		  setHostFlag(FLAG_GATEWAY_HOST, srcHost);
-		}
-
-		incrementHostTrafficCounter(srcHost, nonIPTraffic->otherSent, length);
-		incrementHostTrafficCounter(dstHost, nonIPTraffic->otherRcvd, length);
-		incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
-
-		incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, llcHeader.dsap /* dsap */,
-				      llcHeader.ssap /* ssap */, 0 /* ip */);
-		incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */,
-				      llcHeader.ssap /* ssap */, 0 /* ip */);
-		if(myGlobals.runningPref.enableOtherPacketDump)
-		  dumpOtherPacket(actualDeviceId);
+	      if((llcHeader.ctl.snap_ether.snap_orgcode[0] == 0x0)
+		 && (llcHeader.ctl.snap_ether.snap_orgcode[1] == 0x0)
+		 && (llcHeader.ctl.snap_ether.snap_orgcode[2] == 0x0C) /* Cisco */) {
+		/* NOTE:
+		   If llcHeader.ctl.snap_ether.snap_ethertype[0] == 0x20
+		   && llcHeader.ctl.snap_ether.snap_ethertype[1] == 0x0
+		   this is Cisco Discovery Protocol
+		*/
+		
+		setHostFlag(FLAG_GATEWAY_HOST, srcHost);
 	      }
+	      
+	      incrementHostTrafficCounter(srcHost, nonIPTraffic->otherSent, length);
+	      incrementHostTrafficCounter(dstHost, nonIPTraffic->otherRcvd, length);
+	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
+	      
+	      incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, llcHeader.dsap /* dsap */,
+				    llcHeader.ssap /* ssap */, 0 /* ip */);
+	      incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */,
+				    llcHeader.ssap /* ssap */, 0 /* ip */);
+	      if(myGlobals.runningPref.enableOtherPacketDump)
+		dumpOtherPacket(actualDeviceId);
 	    } else {
 	      /* Unknown Protocol */
 #ifdef UNKNOWN_PACKET_DEBUG
@@ -3606,13 +3360,6 @@ void processPacket(u_char *_deviceId,
 	      incrementHostTrafficCounter(dstHost, nonIPTraffic->arp_rarpRcvd, length);
 	    }
 	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].arpRarpBytes, length);
-	    break;
-
-	  case ETHERTYPE_ATALK: /* AppleTalk */
-	  case ETHERTYPE_AARP:
-	    incrementHostTrafficCounter(srcHost, nonIPTraffic->appletalkSent, length);
-	    incrementHostTrafficCounter(dstHost, nonIPTraffic->appletalkRcvd, length);
-	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].atalkBytes, length);
 	    break;
 
 	  case ETHERTYPE_IPv6:

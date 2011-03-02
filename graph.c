@@ -174,10 +174,8 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     
     if(theHost->nonIPTraffic != NULL)
       totTraffic.value += theHost->nonIPTraffic->stpSent.value+
-	theHost->nonIPTraffic->ipxSent.value+
 	theHost->nonIPTraffic->dlcSent.value+
 	theHost->nonIPTraffic->arp_rarpSent.value+
-	theHost->nonIPTraffic->appletalkSent.value+
 	theHost->nonIPTraffic->netbiosSent.value+
 	theHost->nonIPTraffic->otherSent.value;
 
@@ -195,10 +193,8 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
     if(theHost->nonIPTraffic != NULL)
       totTraffic.value += theHost->nonIPTraffic->stpRcvd.value
-	+theHost->nonIPTraffic->ipxRcvd.value
 	+theHost->nonIPTraffic->dlcRcvd.value
 	+theHost->nonIPTraffic->arp_rarpRcvd.value
-	+theHost->nonIPTraffic->appletalkRcvd.value
 	+theHost->nonIPTraffic->netbiosRcvd.value
 	+theHost->nonIPTraffic->otherRcvd.value;
     
@@ -250,11 +246,6 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "STP";
 	}
 
-	if(theHost->nonIPTraffic->ipxSent.value > 0) {
-	  p[num] = (float)((100*theHost->nonIPTraffic->ipxSent.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPX";
-	}
-
 	if(theHost->nonIPTraffic->dlcSent.value > 0) {
 	  p[num] = (float)((100*theHost->nonIPTraffic->dlcSent.value)/totTraffic.value);
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DLC";
@@ -263,11 +254,6 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	if(theHost->nonIPTraffic->arp_rarpSent.value > 0) {
 	  p[num] = (float)((100*theHost->nonIPTraffic->arp_rarpSent.value)/totTraffic.value);
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "(R)ARP";
-	}
-
-	if(theHost->nonIPTraffic->appletalkSent.value > 0) {
-	  p[num] = (float)((100*theHost->nonIPTraffic->appletalkSent.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "AppleTalk";
 	}
 
 	if(theHost->nonIPTraffic->netbiosSent.value > 0) {
@@ -319,11 +305,6 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "STP";
 	}
 
-	if(theHost->nonIPTraffic->ipxRcvd.value > 0) {
-	  p[num] = (float)((100*theHost->nonIPTraffic->ipxRcvd.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPX";
-	}
-
 	if(theHost->nonIPTraffic->dlcRcvd.value > 0) {
 	  p[num] = (float)((100*theHost->nonIPTraffic->dlcRcvd.value)/totTraffic.value);
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DLC";
@@ -332,11 +313,6 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	if(theHost->nonIPTraffic->arp_rarpRcvd.value > 0) {
 	  p[num] = (float)((100*theHost->nonIPTraffic->arp_rarpRcvd.value)/totTraffic.value);
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "(R)ARP";
-	}
-
-	if(theHost->nonIPTraffic->appletalkRcvd.value > 0) {
-	  p[num] = (float)((100*theHost->nonIPTraffic->appletalkRcvd.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "AppleTalk";
 	}
 
 	if(theHost->nonIPTraffic->netbiosRcvd.value > 0) {
@@ -934,12 +910,8 @@ void drawGlobalProtoDistribution(void) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value; lbl[idx] = "(R)ARP"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value; lbl[idx] = "DLC"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value; lbl[idx] = "IPX"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].ipsecBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipsecBytes.value;lbl[idx] = "IPsec";  idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value; lbl[idx] = "AppleTalk"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value; lbl[idx] = "NetBios"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].greBytes.value > 0) {

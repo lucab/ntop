@@ -586,14 +586,6 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	  wrtStrItm(fDescr, lang, "\t", "nbDescr",      el->nonIPTraffic->nbDescr, ',', numEntries);
 	if(checkFilter(filter, "nodeType"))
 	  wrtUcharItm (fDescr, lang, "\t", "nodeType",  el->nonIPTraffic->nbNodeType, ' ', numEntries);
-	if(checkFilter(filter, "atNodeName"))
-	  wrtStrItm(fDescr, lang, "\t", "atNodeName",   el->nonIPTraffic->atNodeName, ',', numEntries);
-	if(checkFilter(filter, "atNetwork"))
-	  wrtUshortItm(fDescr, lang, "\t", "atNetwork",  el->nonIPTraffic->atNetwork, ' ', numEntries);
-	if(checkFilter(filter, "atNode"))
-	  wrtUcharItm (fDescr, lang, "\t", "atNode",    el->nonIPTraffic->atNode, ' ', numEntries);
-	if(checkFilter(filter, "ipxHostName"))
-	  wrtStrItm(fDescr, lang, "\t", "ipxHostName",  el->nonIPTraffic->ipxHostName, ',', numEntries);
       }
     }
 
@@ -772,15 +764,6 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	  wrtLlongItm(fDescr, lang, "\t", "stpSent", el->nonIPTraffic->stpSent, ',', numEntries);
 	if(checkFilter(filter, "stpRcvd"))
 	  wrtLlongItm(fDescr, lang, "\t", "stpRcvd", el->nonIPTraffic->stpRcvd, ',', numEntries);
-	if(checkFilter(filter, "ipxSent"))
-	  wrtLlongItm(fDescr, lang, "\t", "ipxSent", el->nonIPTraffic->ipxSent, ',', numEntries);
-	if(checkFilter(filter, "ipxRcvd"))
-	  wrtLlongItm(fDescr, lang, "\t", "ipxRcvd", el->nonIPTraffic->ipxRcvd, ',', numEntries);
-	if(checkFilter(filter, "dlcSent"))
-	  wrtLlongItm(fDescr, lang, "\t", "dlcSent", el->nonIPTraffic->dlcSent, ',', numEntries);
-	if(checkFilter(filter, "dlcRcvd"))
-	  wrtLlongItm(fDescr, lang, "\t", "dlcRcvd", el->nonIPTraffic->dlcRcvd, ',', numEntries);
-
 	if(checkFilter(filter, "arp_rarpSent"))
 	  wrtLlongItm(fDescr, lang, "\t", "arp_rarpSent",el->nonIPTraffic->arp_rarpSent, ',', numEntries);
 	if(checkFilter(filter, "arp_rarpRcvd"))
@@ -791,10 +774,6 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	  wrtLlongItm(fDescr, lang, "\t", "arpReplyPktsSent", el->nonIPTraffic->arpReplyPktsSent, ',', numEntries);
 	if(checkFilter(filter, "arpReplyPktsRcvd"))
 	  wrtLlongItm(fDescr, lang, "\t", "arpReplyPktsRcvd", el->nonIPTraffic->arpReplyPktsRcvd, ',', numEntries);
-	if(checkFilter(filter, "appletalkSent"))
-	  wrtLlongItm(fDescr, lang, "\t", "appletalkSent", el->nonIPTraffic->appletalkSent, ',', numEntries);
-	if(checkFilter(filter, "appletalkRcvd"))
-	  wrtLlongItm(fDescr, lang, "\t", "appletalkRcvd", el->nonIPTraffic->appletalkRcvd, ',', numEntries);
 	if(checkFilter(filter, "netbiosSent"))
 	  wrtLlongItm(fDescr, lang, "\t", "netbiosSent", el->nonIPTraffic->netbiosSent, ',', numEntries);
 	if(checkFilter(filter, "netbiosRcvd"))
@@ -1252,8 +1231,6 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
     if(checkFilter(filter, "dlcBytes"))
       wrtLlongItm(fDescr, lang, "\t", "dlcBytes",myGlobals.device[i].dlcBytes, ',', numEntries);
 
-    if(checkFilter(filter, "ipxBytes"))
-      wrtLlongItm(fDescr, lang, "\t", "ipxBytes",myGlobals.device[i].ipxBytes, ',', numEntries);
     if(checkFilter(filter, "stpBytes"))
       wrtLlongItm(fDescr, lang, "\t", "stpBytes",myGlobals.device[i].stpBytes, ',', numEntries);
     if(checkFilter(filter, "ipsecBytes"))
@@ -1262,8 +1239,6 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
       wrtLlongItm(fDescr, lang, "\t", "netbiosBytes",myGlobals.device[i].netbiosBytes, ',', numEntries);
     if(checkFilter(filter, "arpRarpBytes"))
       wrtLlongItm(fDescr, lang, "\t", "arpRarpBytes",myGlobals.device[i].arpRarpBytes, ',', numEntries);
-    if(checkFilter(filter, "atalkBytes"))
-      wrtLlongItm(fDescr, lang, "\t", "atalkBytes",myGlobals.device[i].atalkBytes, ',', numEntries);
     if(checkFilter(filter, "egpBytes"))
       wrtLlongItm(fDescr, lang, "\t", "egpBytes",myGlobals.device[i].egpBytes, ',', numEntries);
     if(checkFilter(filter, "greBytes"))

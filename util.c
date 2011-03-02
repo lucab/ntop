@@ -5921,25 +5921,12 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
 #endif
 	//TODO FC??
       } else if(((*a)->nonIPTraffic != NULL) && ((*b)->nonIPTraffic != NULL)) {
-	/* Neither a nor b are null, so we can compare the fields in nonIPTraffic...
-	 *  NetBIOS, IPX then Appletalk, if we have 'em */
+	/* Neither a nor b are null, so we can compare the fields in nonIPTraffic... */
 	if(((*a)->nonIPTraffic->nbHostName != NULL) &&
 	   ((*b)->nonIPTraffic->nbHostName != NULL)) {
 	  rc=strcasecmp((*a)->nonIPTraffic->nbHostName, (*b)->nonIPTraffic->nbHostName);
 #ifdef CMPFCTN_DEBUG
 	  strncpy(debugCmpFctn, "3B-NB", sizeof(debugCmpFctn));
-#endif
-	} else if(((*a)->nonIPTraffic->ipxHostName != NULL) &&
-		  ((*b)->nonIPTraffic->ipxHostName != NULL)) {
-	  rc=strcasecmp((*a)->nonIPTraffic->ipxHostName, (*b)->nonIPTraffic->ipxHostName);
-#ifdef CMPFCTN_DEBUG
-	  strncpy(debugCmpFctn, "3B-IPX", sizeof(debugCmpFctn));
-#endif
-	} else if(((*a)->nonIPTraffic->atNodeName != NULL) &&
-		  ((*b)->nonIPTraffic->atNodeName != NULL)) {
-	  rc=strcasecmp((*a)->nonIPTraffic->atNodeName, (*b)->nonIPTraffic->atNodeName);
-#ifdef CMPFCTN_DEBUG
-	  strncpy(debugCmpFctn, "3B-ATALK", sizeof(debugCmpFctn));
 #endif
 	} else {
 	  rc=0;  /* can't tell 'em apart... trouble */
