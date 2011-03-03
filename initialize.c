@@ -425,7 +425,7 @@ void resetStats(int deviceId) {
   traceEvent(CONST_TRACE_INFO, "Resetting traffic statistics for device %s",
 	     myGlobals.device[deviceId].humanFriendlyName);
 
-  if(myGlobals.purgeMutex.isInitialized != 0)
+  if(myGlobals.purgeMutex.isInitialized)
     accessMutex(&myGlobals.purgeMutex, "resetStats");
 
   for(j=FIRST_HOSTS_ENTRY; j<myGlobals.device[deviceId].actualHashSize; j++) {

@@ -289,7 +289,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   for(i=0; i<NUM_SESSION_MUTEXES; i++)
     createMutex(&myGlobals.tcpSessionsMutex[i]); /* data to synchronize TCP sessions access */
 
-    createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
+  createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
   createMutex(&myGlobals.purgeMutex);       /* synchronize purging */
   createMutex(&myGlobals.securityItemsMutex);
   createMutex(&myGlobals.hostsHashLockMutex);
