@@ -1,11 +1,4 @@
 #
-# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-#
-# Copyright (c) 1998-2009 Luca Deri <deri@ntop.org>
-# Updated 1Q 2000 Rocco Carbone <rocco@ntop.org>
-# Updates 2003-2004 Luca Deri and Burton Strauss
-#
-# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or

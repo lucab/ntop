@@ -38,8 +38,8 @@ extern MYCODE myFacilityNames[];
 
 extern struct in6_addr _in6addr_linklocal_allnodes;
 
-#define accessAddrResMutex(a) if(myGlobals.runningPref.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex,a)
-#define releaseAddrResMutex() if(myGlobals.runningPref.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex)
+#define accessAddrResMutex(a) accessMutex(&myGlobals.addressResolutionMutex, a)
+#define releaseAddrResMutex() releaseMutex(&myGlobals.addressResolutionMutex)
 
 /* version.c */
 extern char *version, *osName, *author, *buildDate, *configureDate,

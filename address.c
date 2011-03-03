@@ -46,15 +46,11 @@ typedef struct hostAddrList {
 } HostAddrList;
 
 static HostAddrList *hostAddrList_head = NULL;
-static HostAddr lastResolvedAddr[MAX_NUM_DEQUEUE_ADDRESS_THREADS];
-static u_short lastResolvedAddrIdx;
 
 
 /* **************************************** */
 
 void initAddressResolution(void) {
-  memset(&lastResolvedAddr, 0, sizeof(lastResolvedAddr));
-  lastResolvedAddrIdx = 0;
   createCondvar(&myGlobals.queueAddressCondvar);
 }
 
@@ -123,17 +119,6 @@ static void queueAddress(HostAddr elem) {
 
   accessAddrResMutex("queueAddress");
 
-  for(i=0; i<myGlobals.numDequeueAddressThreads; i++) {
-    if(memcmp(&lastResolvedAddr[i], &elem, sizeof(HostAddr)) == 0) {
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_ERROR, "queueAddress(%s): already been resolved",
-		 addrtostr(&elem));
-#endif
-      releaseAddrResMutex();
-      return;
-    }
-  }
-
   if(myGlobals.addressQueuedCurrent > 16384) {
     myGlobals.addressUnresolvedDrops++;
   } else {
@@ -177,6 +162,8 @@ void* dequeueAddress(void *_i) {
              (long unsigned int)pthread_self(), dqaIndex+1);
 
   while(myGlobals.ntopRunState <= FLAG_NTOPSTATE_RUN) {
+    HostAddrList *elem;
+
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Waiting for address to resolve...");
 #endif
@@ -190,76 +177,70 @@ void* dequeueAddress(void *_i) {
     traceEvent(CONST_TRACE_INFO, "DEBUG: Address resolution started...");
 #endif
 
-    while(hostAddrList_head != NULL) {
-      HostAddrList *elem;
+    if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
 
-      if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
+    accessAddrResMutex("dequeueAddress");
 
-      accessAddrResMutex("dequeueAddress");
+    if(hostAddrList_head != NULL) {
+      elem = hostAddrList_head;
+      hostAddrList_head = hostAddrList_head->next;
+      if(myGlobals.addressQueuedCurrent > 0) myGlobals.addressQueuedCurrent--;
+    } else
+      elem = NULL;
 
-      if(hostAddrList_head != NULL) {
-	elem = hostAddrList_head;
-	hostAddrList_head = hostAddrList_head->next;
-	if(myGlobals.addressQueuedCurrent > 0) myGlobals.addressQueuedCurrent--;
-	memcpy(&lastResolvedAddr[lastResolvedAddrIdx], &elem->addr, sizeof(HostAddr));
-	lastResolvedAddrIdx = (lastResolvedAddrIdx + 1) % myGlobals.numDequeueAddressThreads;
-      } else
-	elem = NULL;
+    releaseAddrResMutex();
 
-      releaseAddrResMutex();
-
-      if(elem) {
-	struct hostent *he = NULL;
-	int family, size;
-	char theAddr[64];
+    if(elem) {
+      struct hostent *he = NULL;
+      int family, size;
+      char theAddr[64];
 #if defined(HAVE_GETHOSTBYADDR_R)
-	struct hostent _hp, *__hp;
-	char buffer[4096]; /* It MUST be 4096 as otherwise on Linux will fail */
+      struct hostent _hp, *__hp;
+      char buffer[4096]; /* It MUST be 4096 as otherwise on Linux will fail */
 #endif
 
-	memset(theAddr, 0, sizeof(theAddr));
-	addrget(&elem->addr, theAddr, &family, &size);
+      memset(theAddr, 0, sizeof(theAddr));
+      addrget(&elem->addr, theAddr, &family, &size);
 
 #if defined(HAVE_GETHOSTBYADDR_R)
 #ifdef SOLARIS
-	he = gethostbyaddr_r((const char*)theAddr, size,
-			     family, &_hp,
-			     buffer, sizeof(buffer),
-			     &h_errno);
-#else
-#if 0
-	traceEvent(CONST_TRACE_INFO, "About to resolve %s [family=%d][size=%d]", addrtostr(&elem->addr), family, size);
-#endif
-	if(gethostbyaddr_r((const char*)theAddr, size,
+      he = gethostbyaddr_r((const char*)theAddr, size,
 			   family, &_hp,
 			   buffer, sizeof(buffer),
-			   &__hp, &h_errno) == 0) {
+			   &h_errno);
+#else
+#if 0
+      traceEvent(CONST_TRACE_INFO, "About to resolve %s [family=%d][size=%d]", addrtostr(&elem->addr), family, size);
+#endif
+      if(gethostbyaddr_r((const char*)theAddr, size,
+			 family, &_hp,
+			 buffer, sizeof(buffer),
+			 &__hp, &h_errno) == 0) {
 
-	  if(h_errno == 0)
-	    he = &_hp;
-	  else
-	    he = NULL;
-	} else
+	if(h_errno == 0)
+	  he = &_hp;
+	else
 	  he = NULL;
+      } else
+	he = NULL;
 #endif
 #else
-	he = gethostbyaddr(theAddr, size, family);
+      he = gethostbyaddr(theAddr, size, family);
 #endif
 
-	if((he != NULL) && (he->h_name != NULL)) {
-	  updateHostNameInfo(elem->addr, he->h_name, FLAG_HOST_SYM_ADDR_TYPE_NAME);
-	  accessAddrResMutex("dequeueAddress"); myGlobals.resolvedAddresses++; releaseAddrResMutex();
-	} else {
+      if((he != NULL) && (he->h_name != NULL)) {
+	updateHostNameInfo(elem->addr, he->h_name, FLAG_HOST_SYM_ADDR_TYPE_NAME);
+	accessAddrResMutex("dequeueAddress"); myGlobals.resolvedAddresses++; releaseAddrResMutex();
+      } else {
 #if 0
-	  traceEvent(CONST_TRACE_ERROR, "Address resolution failure [%d][%s]", h_errno, hstrerror(h_errno));
+	traceEvent(CONST_TRACE_ERROR, "Address resolution failure [%d][%s]", h_errno, hstrerror(h_errno));
 #endif
-	  accessAddrResMutex("dequeueAddress"); myGlobals.failedResolvedAddresses++; releaseAddrResMutex();
-	}
-
-	memset(elem, 0, sizeof(HostAddr));
-	free(elem);
+	accessAddrResMutex("dequeueAddress"); myGlobals.failedResolvedAddresses++; releaseAddrResMutex();
       }
-    } /* while */
+
+      memset(elem, 0, sizeof(HostAddr));
+      free(elem);
+    }
   } /* endless loop */
 
   myGlobals.dequeueAddressThreadId[dqaIndex] = 0;
@@ -267,11 +248,11 @@ void* dequeueAddress(void *_i) {
   traceEvent(CONST_TRACE_INFO, "THREADMGMT[t%lu]: DNSAR(%d): Address resolution thread terminated [p%d]",
              (long unsigned int)pthread_self(), dqaIndex+1,
 #ifndef WIN32
-			 getpid()
+	     getpid()
 #else
-			 0
+	     0
 #endif
-			 );
+	     );
 
   return(NULL);
 }
