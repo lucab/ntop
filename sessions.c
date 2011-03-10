@@ -1306,7 +1306,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 #endif
 
 	      if(srcHost->fingerprint == NULL) {
-		char buffer[128], *delimiter;
+		char buffer[512], *delimiter;
 
 		safe_snprintf(__FILE__, __LINE__, buffer, sizeof(buffer), ":%s", os);
 
