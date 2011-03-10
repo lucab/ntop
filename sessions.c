@@ -1835,7 +1835,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
   HostTraffic *hostToUpdate = NULL;
   u_char *rcStr, tmpStr[256];
   int len = 0, mutex_idx;
-  char *pnotes, *snotes, *dnotes;
+  char *pnotes = NULL, *snotes = NULL, *dnotes = NULL;
   /* Latency measurement */
   char buf[32], buf1[32];
 
