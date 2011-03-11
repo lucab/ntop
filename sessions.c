@@ -396,10 +396,10 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
       u_char free_session;
 
       if(theSession->magic != CONST_MAGIC_NUMBER) {
-	theSession = NULL;
 	myGlobals.device[actualDeviceId].numTcpSessions--;
         traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) scanTimedoutTCPSessions()",
 	           CONST_MAGIC_NUMBER, theSession->magic);
+	theSession = NULL;
 	continue;
       }
 
