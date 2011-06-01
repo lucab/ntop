@@ -3644,7 +3644,7 @@ void addVoIPSessionInfo(HostAddr *theHost, u_short thePort, char *notes) {
 }
 
 /* ******************************************* */
-
+/* FIX - avoid scanning the list up to 'ptr_len' by using a smarter datastructure */
 static int isKnownSession(SessionInfo *ptr, u_short ptr_len,
 			  HostAddr *theHost, u_short thePort, char **notes) {
   int i;
