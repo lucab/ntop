@@ -8277,10 +8277,46 @@ int handlePluginHTTPRequest(char* url) {
 
 #define DEVICE_NAME         "device.name."
 
-void edit_prefs(char *db_key, char *db_val) {
+void edit_prefs(int postLen) {
   datum key, nextkey;
   int num_added = 0;
   char buf[1024];
+  char *db_key = NULL, *db_val = NULL;
+  char postData[256];
+  int idx;
+
+  if((idx = readHTTPpostData(postLen, postData, sizeof(postData))) > 0) {
+    char *tkn = strtok(postData, "&");
+
+    while(tkn != NULL) {
+      if(strncmp(tkn, "key=", 4) == 0) {
+	db_key = strdup(&tkn[4]);
+      } else if(strncmp(tkn, "val=", 4) == 0) {
+	u_int val = 0;
+      
+	if(db_val != NULL) {
+	  if(db_key && (!strcmp(db_key, EVENTS_MASK)))
+	    val = atoi(db_val);
+	  free(db_val);
+	}
+      
+	if(db_key && (!strcmp(db_key, EVENTS_MASK))) {
+	  char str_val[16];
+	
+	  val = val | atoi(&tkn[4]);
+	
+	  safe_snprintf(__FILE__, __LINE__, 
+			str_val, sizeof(str_val), 
+			"%d", val);
+	
+	  db_val = strdup(str_val);
+	} else
+	  db_val = strdup(&tkn[4]);
+      }    
+    
+      tkn = strtok(NULL, "&");
+    }
+  }
 
   printHTMLheader("Edit Preferences", NULL, 0);
 
@@ -8330,7 +8366,7 @@ void edit_prefs(char *db_key, char *db_val) {
       num_added++;
       if(fetchPrefsValue(key.dptr, val, sizeof(val)) == 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<FORM ACTION="CONST_EDIT_PREFS">"
+		      "<FORM ACTION="CONST_EDIT_PREFS" METHOD=POST>"
 		      "<TR><TH ALIGN=LEFT "DARK_BG"><INPUT TYPE=HIDDEN NAME=key VALUE=\"%s\">"
 		      "<A NAME=\"%s\">%s</A></TH>"
 		      "<TD>",
@@ -8405,5 +8441,8 @@ void edit_prefs(char *db_key, char *db_val) {
 	 || (!strcmp(db_key, EVENTS_LOG)))) {
     init_events(); /* Reload events */
   }
+
+  if(db_key) free(db_key);
+  if(db_val) free(db_val);
 }
 

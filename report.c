@@ -3947,8 +3947,8 @@ static int cmpPortsFctn(const void *_a, const void *_b) {
 /* ********************************** */
 
 void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
-  int i;
-  char buf[4*LEN_GENERAL_WORK_BUFFER], *sign;
+  int i, buf_len = 8 * LEN_GENERAL_WORK_BUFFER;
+  char *buf, *sign;
   float total, partialTotal, remainingTraffic;
   float percentage;
   char formatBuf[32], formatBuf1[32], formatBuf2[32];
@@ -3958,6 +3958,11 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
   else
     sign = "-";
 
+  if((buf = calloc(1, buf_len)) == NULL) {
+    printFlagedWarning("Not enough memory");
+    return;
+  }
+  
   if(mode == FLAG_HOSTLINK_TEXT_FORMAT) {
     printSectionTitle("IP Protocol Distribution");
 
@@ -4092,7 +4097,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 
       partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote.value/1024;
       percentage = ((float)(partialTotal*100))/((float)total);
-      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
+      printTableEntryPercentage(buf, buf_len, "TCP&nbsp;vs.&nbsp;UDP",
 				"TCP", "UDP", total, percentage, 0, 0);
 
       sendString("</TABLE>"TABLE_OFF"\n");
@@ -4108,7 +4113,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	if(partialTotal > 0) {
 	  remainingTraffic += partialTotal;
 	  percentage = ((float)(partialTotal*100))/((float)total);
-	  printTableEntry(buf, sizeof(buf),
+	  printTableEntry(buf, buf_len,
 			  myGlobals.ipTrafficProtosNames[i],
 			  CONST_COLOR_1, partialTotal, percentage, 0, 0, 0);
 	}
@@ -4121,7 +4126,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 
       if(remainingTraffic > 0) {
 	percentage = ((float)(remainingTraffic*100))/((float)total);
-	printTableEntry(buf, sizeof(buf),
+	printTableEntry(buf, buf_len,
 			"Other&nbsp;TCP/UDP-based&nbsp;Protocols",
 			CONST_COLOR_1, remainingTraffic, percentage, 0, 0, 0);
       }
@@ -4151,7 +4156,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].
 	tcpGlobalTrafficStats.local2remote.value/1024;
       percentage = ((float)(partialTotal*100))/((float)total);
-      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
+      printTableEntryPercentage(buf, buf_len, "TCP&nbsp;vs.&nbsp;UDP",
 				"TCP", "UDP", total, percentage, 0, 0);
 
       sendString("</TABLE>"TABLE_OFF);
@@ -4167,7 +4172,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	if(partialTotal > 0) {
 	  remainingTraffic += partialTotal;
 	  percentage = ((float)(partialTotal*100))/((float)total);
-	  printTableEntry(buf, sizeof(buf), myGlobals.ipTrafficProtosNames[i],
+	  printTableEntry(buf, buf_len, myGlobals.ipTrafficProtosNames[i],
 			  CONST_COLOR_1, partialTotal, percentage, 0, 0, 0);
 	}
       }
@@ -4179,7 +4184,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 
       if(remainingTraffic > 0) {
 	percentage = ((float)(remainingTraffic*100))/((float)total);
-	printTableEntry(buf, sizeof(buf), "Other&nbsp;IP-based&nbsp;Protocols",
+	printTableEntry(buf, buf_len, "Other&nbsp;IP-based&nbsp;Protocols",
 			CONST_COLOR_1, remainingTraffic, percentage, 0, 0, 0);
       }
       sendString("</TABLE>"TABLE_OFF"<P>\n");
@@ -4202,9 +4207,10 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       }
     }
 
-    if(total == 0)
+    if(total == 0) {
+      free(buf);
       return;
-    else {
+    } else {
       int numProtosFound = 0;
       float remainingFlows = 0;
 
@@ -4230,7 +4236,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	  remainingTraffic += partialTotal;
 	  percentage = ((float)(partialTotal*100))/((float)total);
 	  numProtosFound++;
-	  printTableEntry(buf, sizeof(buf),
+	  printTableEntry(buf, buf_len,
 			  myGlobals.ipTrafficProtosNames[i], CONST_COLOR_1,
 			  partialTotal/1024, percentage,
 			  1, myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].totalFlows.value, 1);
@@ -4252,7 +4258,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	  remainingFlows = totFlows - remainingFlows;
 
 	percentage = ((float)(remainingTraffic*100))/((float)total);
-	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
+	printTableEntry(buf, buf_len, "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
 			CONST_COLOR_1, remainingTraffic/1024, percentage,
 			1, remainingFlows, 0);
       }
@@ -4266,7 +4272,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 
 	  /* RRD */
 	  /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
+	  safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s/interfaces/%s",
 			myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 			myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
 
@@ -4298,14 +4304,14 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 	    }
 
 	    if(found) {
-	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+	      safe_snprintf(__FILE__, __LINE__, buf, buf_len,
 			    "<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Historical View</TH><TD "TD_BG" COLSPAN=4 ALIGN=left BGCOLOR=white>"
 			    "<table border=0><tr><td><IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=4&"
 			    "key=interfaces/%s/&start=now-12h&end=now\" BORDER=0>",
 			    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
 	      sendString(buf);
 
-	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+	      safe_snprintf(__FILE__, __LINE__, buf, buf_len,
 			    "</td><td><A HREF=\"/plugins/rrdPlugin?mode=zoom&action=graphSummary&graphId=4&"
 			    "key=interfaces/%s/&start=%u&end=%u\"><IMG valign=middle class=tooltip SRC=/graph_zoom.gif border=0></A></tr></table></TD></TR>",
 			    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (u_int)(now - 12 * 3600), (u_int)now);
@@ -4362,7 +4368,7 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
 
 	      if(symPort == NULL) symPort = "";
 
-	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
+	      safe_snprintf(__FILE__, __LINE__, buf, buf_len, "<TR "TR_ON" %s>"
 			    "<TH "TH_BG" ALIGN=LEFT><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>"
 			    "</th><td align=right>%d</td>"
 			    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -4393,6 +4399,8 @@ void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
       }
     }
   }
+
+  free(buf);
 }
 
 /* ************************ */

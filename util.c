@@ -2789,7 +2789,6 @@ void traceEvent(int eventTraceLevel, char* file,
 
       printf("%s\n", buf);
       fflush(stdout);
-
 #ifdef MAKE_WITH_SYSLOG
     } else {
       /* Skip over time - syslog() adds it automatically) */
@@ -2836,10 +2835,8 @@ void traceEvent(int eventTraceLevel, char* file,
 #ifdef FORPRENPTL
       releaseMutex(&myGlobals.preNPTLlogMutex);
 #endif
-
     }
 #endif /* MAKE_WITH_SYSLOG */
-
   }
 
   va_end (va_ap);
@@ -2847,7 +2844,6 @@ void traceEvent(int eventTraceLevel, char* file,
   /* If it's fatal, die */
   if(eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL)
     raise(SIGINT);
-
 }
 
 /* ******************************************** */
