@@ -3911,12 +3911,11 @@ void printBar(char *buf, int bufLen,
       break;
     default:
       safe_snprintf(__FILE__, __LINE__, buf, bufLen,
-		    "<TD "TD_BG" ALIGN=RIGHT>"
-		    "&nbsp;<IMG ALIGN=ABSMIDDLE SRC=\"/gaugeS.jpg\" ALT=\"Sent %d%%\" WIDTH=%d HEIGHT=12>"
-		    "</TD><TD "TD_BG" ALIGN=LEFT>"
-		    "<IMG ALIGN=ABSMIDDLE SRC=\"/gaugeR.jpg\" ALT=\"Received %d%%\" WIDTH=%d HEIGHT=12>"
-		    "&nbsp;</TD>\n",
-		    percentageS, ratio*percentageS, percentageR, ratio*percentageR);
+		    "<TD "TD_BG" ALIGN=RIGHT><IMG ALIGN=ABSMIDDLE SRC=\"/gaugeR.jpg\" ALT=\"Received %d%%\" WIDTH=%d HEIGHT=12>&nbsp;</TD>"
+		    "<TD "TD_BG" ALIGN=LEFT>&nbsp;<IMG ALIGN=ABSMIDDLE SRC=\"/gaugeS.jpg\" ALT=\"Sent %d%%\" WIDTH=%d HEIGHT=12></TD>"
+		    "\n",
+		    percentageR, ratio*percentageR,
+		    percentageS, ratio*percentageS);
       break;
     }
   }

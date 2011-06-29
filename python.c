@@ -913,8 +913,7 @@ static PyObject* python_interface_network(PyObject *self, PyObject *args) {
   if(interfaceId >= myGlobals.numDevices) return NULL;
   return PyString_FromFormat("%s/%s",
 			     _intoa(myGlobals.device[interfaceId].network, buf, sizeof(buf)),
-			     _intoa(myGlobals.device[interfaceId].netmask, buf1, sizeof(buf1))
-			     );
+			     _intoa(myGlobals.device[interfaceId].netmask, buf1, sizeof(buf1)));
 }
 
 static PyObject* python_interface_numHosts(PyObject *self, PyObject *args) {
