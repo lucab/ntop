@@ -1150,6 +1150,11 @@ void addDefaultAdminUser(void) {
         safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td align=left><INPUT TYPE=radio NAME=%s VALUE=1 %s>Yes<INPUT TYPE=radio NAME=%s VALUE=0 %s>No<br>%s</TD></TR>\n", bg, title, name, value ? "CHECKED" : "", name, !value ? "CHECKED" : "", descr); \
         sendString (buf);
 
+#define CONFIG_RADIO_OPTION(title,name,value,checked) \
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=%s VALUE=%d %s>%s<BR>\n", name, value, (checked) ? "CHECKED" : "", title); \
+        sendString(buf);
+
+
 /* ************************************************* */
 
  int processNtopConfigData (char *buf, int savePref) {
@@ -1622,32 +1627,23 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
   case showPrefIPPref:
     sendString("<INPUT TYPE=HIDDEN NAME=IP_PREFS VALUE=1>");
 
-    sendString("<TR><TD ALIGN=LEFT "DARK_BG">Use IPv4 or IPv6 (-4/-6)</TD><TD ALIGN=LEFT>");
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "<INPUT TYPE=radio NAME=%s VALUE=%d %s>v4<br>\n",
-		  NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_INET,
-		  (pref->ipv4or6 == AF_INET) ? "CHECKED" : "");
-    sendString(buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "<INPUT TYPE=radio NAME=%s VALUE=%d %s>v6<br>\n",
-		  NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_INET6,
-		  (pref->ipv4or6 == AF_INET6) ? "CHECKED" : "");
-    sendString(buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "<INPUT TYPE=radio NAME=%s VALUE=%d %s>Both\n",
-		  NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_BOTH,
-		  (pref->ipv4or6 == AF_UNSPEC) ? "CHECKED" : "");
-    sendString(buf);
+    sendString("<TR><TD ALIGN=LEFT "DARK_BG">Use IPv4 or IPv6 (-4/-6)</TD><TD ALIGN=LEFT>\n");
+    CONFIG_RADIO_OPTION("v4",   NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_INET,  pref->ipv4or6 == AF_INET);
+    CONFIG_RADIO_OPTION("v6",   NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_INET6, pref->ipv4or6 == AF_INET6);
+    CONFIG_RADIO_OPTION("Both", NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_BOTH,  pref->ipv4or6 == AF_UNSPEC);
+    sendString("</TD></TR>\n");
 
     CONFIG_STR_ENTRY(DARK_BG, "Local Domain Name (-D)",
 		     NTOP_PREF_DOMAINNAME, 10, pref->domainName,
 		     "Only if ntop is having difficulty determining it "
 		     "from the interface or in case of capture files");
 
-    CONFIG_RADIO_ENTRY(DARK_BG, "No DNS (-n)", NTOP_PREF_NUMERIC_IP,
-		       pref->numericFlag, "DNS resolution mode");
+    sendString("<TR><TD ALIGN=LEFT "DARK_BG">DNS resolution mode (-n)</TD><TD ALIGN=LEFT>\n");
+    CONFIG_RADIO_OPTION("None",		     NTOP_PREF_NUMERIC_IP, noDnsResolution, 		    pref->numericFlag == noDnsResolution);
+    CONFIG_RADIO_OPTION("Local Only",	     NTOP_PREF_NUMERIC_IP, dnsResolutionForLocalHostsOnly,  pref->numericFlag == dnsResolutionForLocalHostsOnly);
+    CONFIG_RADIO_OPTION("Local/Remote Only", NTOP_PREF_NUMERIC_IP, dnsResolutionForLocalRemoteOnly, pref->numericFlag == dnsResolutionForLocalRemoteOnly);
+    CONFIG_RADIO_OPTION("All",		     NTOP_PREF_NUMERIC_IP, dnsResolutionForAll,		    pref->numericFlag == dnsResolutionForAll);
+    sendString("</TD></TR>\n");
 
     CONFIG_STR_ENTRY(DARK_BG, "TCP/UDP Protocols To Monitor (-p)",
 		     NTOP_PREF_PROTOSPECS, 50, pref->protoSpecs,
