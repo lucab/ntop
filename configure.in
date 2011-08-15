@@ -50,7 +50,7 @@ AC_INIT([ntop],[4.1.0])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v4.1.0-01-03-2011"
+SCRIPTVER="v4.1.0-15-08-2011"
 
 dnl>
 dnl> generate the config header
@@ -65,7 +65,7 @@ NTOP_VERSION_EXTRA=""
 
 echo
 echo "Welcome to $PACKAGE_NAME, Version $PACKAGE_VERSION $NTOP_VERSION_EXTRA"
-echo "Copyright (C) 1998-2010 Luca Deri <deri@ntop.org>"
+echo "Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>"
 
 
 THE_UID=`id -u`

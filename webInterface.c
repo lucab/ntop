@@ -7694,7 +7694,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   hints.ai_flags = AI_PASSIVE;
   hints.ai_socktype = SOCK_STREAM;
   safe_snprintf(__FILE__, __LINE__, strport,sizeof(strport),"%d",*port);
-  if((rc = getaddrinfo(addr,strport,&hints,&aitop)) !=0) {
+  if((rc = getaddrinfo(addr, strport, &hints, &aitop)) !=0) {
     traceEvent(CONST_TRACE_ERROR, "INITWEB: getaddrinfo() error %s(%d)", gai_strerror(rc), rc);
     traceEvent(CONST_TRACE_ERROR, "INITWEB: Unable to convert address '%s' - "
                "not binding to a particular interface", addr);
@@ -7707,7 +7707,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
         traceEvent(CONST_TRACE_ERROR, "INITWEB: getnameinfo() error %s(%d)", gai_strerror(errno), errno);
         traceEvent(CONST_TRACE_ERROR, "INITWEB: Unable to convert address '%s' - "
                    "not binding to a particular interface", addr);
-      }else
+      } else
         break;
     }
   }
