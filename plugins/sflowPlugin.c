@@ -1409,7 +1409,7 @@ static void handleSflowSample(SFSample *sample, int deviceId) {
   pkthdr.ts.tv_sec = time(NULL);
   pkthdr.ts.tv_usec = 0;
   pkthdr.caplen = sample->headerLen;
-  pkthdr.len = sample->sampledPacketSize+sample->meanSkipCount /* Scale data */;
+  pkthdr.len = sample->sampledPacketSize*sample->meanSkipCount /* Scale data */;
 
   /* Needed to avoid silly (for sFlow) warning */
   myGlobals.runningPref.disableMutexExtraInfo = 1;
