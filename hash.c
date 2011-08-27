@@ -69,7 +69,7 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
   } else if(memcmp(ether_addr, myGlobals.broadcastEntry->ethAddress, LEN_ETHERNET_ADDRESS) == 0) {
     *el = myGlobals.broadcastEntry;
     return(BROADCAST_HOSTS_ENTRY);
-  } else if((hostIpAddress == NULL) 
+  } else if((hostIpAddress == NULL)
 	    || isPseudoLocalAddress(hostIpAddress, actualDeviceId, NULL, NULL)) {
     memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(u_int)], sizeof(u_int));
     (*useIPAddressForSearching) = 0;
@@ -357,12 +357,12 @@ void readSessionPurgeParams() {
 }
 
 /* ************************************ */
-		     
+
 int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now) {
   /* Time used to decide whether a host need to be purged */
   time_t noSessionPurgeTime   = now-sec_idle_with_no_sessions;
   time_t withSessionPurgeTime = now-sec_idle_with_sessions;
-  
+
   if(el->to_be_deleted
      || ((myGlobals.pcap_file_list == NULL)
 	 && (el->refCount == 0)
@@ -371,8 +371,7 @@ int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now) {
 	 && (!broadcastHost(el)) && (el != myGlobals.otherHostEntry)
 	 && (myGlobals.device[actDevice].virtualDevice /* e.g. sFlow/NetFlow */
 	     || (!myGlobals.runningPref.stickyHosts)
-	     || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) &&
-		 ((el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
+	     || (((el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
 		  || (!subnetPseudoLocalHost(el)))) /* Purge remote hosts only */
 	     )
 	 )
@@ -437,7 +436,7 @@ int purgeIdleHosts(int actDevice) {
     if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN) break;
 
     if((el = myGlobals.device[actDevice].hash_hostTraffic[idx]) != NULL) {
-      prev = NULL;     
+      prev = NULL;
 
       while(el) {
 	if(is_host_ready_to_purge(actDevice, el, now)) {
@@ -446,7 +445,7 @@ int purgeIdleHosts(int actDevice) {
 
 	    /* Skip it and move to next host */
 	    prev = el;
-	    el = el->next;	    
+	    el = el->next;
 	  } else {
 	  /* Host selected for deletion */
 	  theFlaggedHosts[numHosts++] = el;
@@ -534,12 +533,88 @@ int purgeIdleHosts(int actDevice) {
 
 /* **************************************************** */
 
+/* NOTE - myGlobals.serialLockMutex MUST be locked by caller */
+void dumpHostSerial(HostSerial *serial, HostSerialIndex serialHostIndex) {
+  datum data_data, key_data;
+
+  // FIX - Implement periodic serial purging
+  // traceEvent(CONST_TRACE_WARNING, "dumpHostSerial(%u)", serialHostIndex);
+
+  /* 1 - Dump key(serial) */
+  key_data.dptr = (char*)serial, key_data.dsize = sizeof(HostSerial);
+  data_data.dptr = (char*)&serialHostIndex, data_data.dsize = sizeof(serialHostIndex);
+
+  if(gdbm_store(myGlobals.serialFile, key_data, data_data, GDBM_REPLACE) != 0)
+    traceEvent(CONST_TRACE_ERROR, "While adding host serial %u", serialHostIndex);
+
+  /* 2 - Dump key(serialHostIndex) */
+  key_data.dptr = (char*)&serialHostIndex, key_data.dsize = sizeof(serialHostIndex);
+  data_data.dptr = (char*)serial, data_data.dsize = sizeof(HostSerial);
+
+  if(gdbm_store(myGlobals.serialFile, key_data, data_data, GDBM_REPLACE) != 0)
+    traceEvent(CONST_TRACE_ERROR, "While adding host serial %u", serialHostIndex);
+}
+
+/* **************************************************** */
+
+HostSerial* getHostSerialFromId(HostSerialIndex serialHostIndex, HostSerial *serial) {
+  datum return_data, key_data;
+
+  accessMutex(&myGlobals.serialLockMutex, "getHostSerialFromId");
+
+  key_data.dptr = (char*)&serialHostIndex, key_data.dsize = sizeof(serialHostIndex);
+  return_data = gdbm_fetch(myGlobals.serialFile, key_data);
+
+  if(return_data.dptr != NULL) {
+    memcpy(serial, return_data.dptr, sizeof(HostSerial));
+    free(return_data.dptr);
+  } else {
+    /* Not found */
+    memset(serial, 0, sizeof(HostSerial));
+    serial->serialType = SERIAL_NONE;
+    traceEvent(CONST_TRACE_WARNING, "Failed getHostSerialFromId(%u)", serialHostIndex);
+  }
+
+  releaseMutex(&myGlobals.serialLockMutex);
+
+  return(serial);
+}
+
+/* **************************************************** */
+
+HostSerialIndex getHostIdFromSerial(HostSerial *serial) {
+  datum return_data, key_data;
+  HostSerialIndex serialHostIndex;
+
+  accessMutex(&myGlobals.serialLockMutex, "getHostSerialFromId");
+
+  key_data.dptr = (char*)serial, key_data.dsize = sizeof(HostSerial);
+  return_data = gdbm_fetch(myGlobals.serialFile, key_data);
+
+  if(return_data.dptr != NULL) {
+    memcpy(&serialHostIndex, return_data.dptr, sizeof(serialHostIndex));
+    free(return_data.dptr);
+  } else {
+    /* Not found */
+    serialHostIndex = 0;
+    traceEvent(CONST_TRACE_WARNING, "Failed getHostIdFromSerial(%u)", serialHostIndex);
+  }
+
+  releaseMutex(&myGlobals.serialLockMutex);
+
+  return(serialHostIndex);
+}
+
+/* **************************************************** */
+
 void setHostSerial(HostTraffic *el) {
   /* Nothing to do */
   if(el->hostSerial.serialType != SERIAL_NONE)
     return;
 
-    if(el->hostNumIpAddress[0] == '\0') {
+  memset(&el->hostSerial, 0, sizeof(HostSerial));
+
+  if(el->hostNumIpAddress[0] == '\0') {
     el->hostSerial.serialType = SERIAL_MAC;
     memcpy(&el->hostSerial.value.ethSerial.ethAddress, el->ethAddress, LEN_ETHERNET_ADDRESS);
     el->hostSerial.value.ethSerial.vlanId = el->vlanId;
@@ -553,6 +628,12 @@ void setHostSerial(HostTraffic *el) {
     addrcpy(&el->hostSerial.value.ipSerial.ipAddress, &el->hostIpAddress);
     el->hostSerial.value.ipSerial.vlanId = el->vlanId;
   }
+
+  /* We now need to fill in the serialId field */
+  accessMutex(&myGlobals.serialLockMutex, "setHostSerial");
+  el->serialHostIndex = ++myGlobals.hostSerialCounter; /* Start from 1 (0 = UNKNOWN_SERIAL_INDEX) */
+  dumpHostSerial(&el->hostSerial, el->serialHostIndex);
+  releaseMutex(&myGlobals.serialLockMutex);
 }
 
 /* ********************************************************* */
@@ -563,7 +644,8 @@ void setHostSerial(HostTraffic *el) {
 */
 HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t vlanId,
 			 u_char checkForMultihoming, u_char forceUsingIPaddress,
-			 int actualDeviceId, char *file, int line) {
+			 int actualDeviceId, char *file, int line,
+			 const struct pcap_pkthdr *h, const u_char *p) {
   u_int idx, isMultihomed = 0;
   HostTraffic *el=NULL;
   char buf[MAX_LEN_SYM_HOST_NAME_HTML];
@@ -576,8 +658,8 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   u_int32_t the_local_network, the_local_network_mask;
 
   if((hostIpAddress == NULL) && (ether_addr == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, 
-	       "Both Ethernet and IP addresses are NULL in lookupHost()[%s:%d]", 
+    traceEvent(CONST_TRACE_WARNING,
+	       "Both Ethernet and IP addresses are NULL in lookupHost()[%s:%d]",
 	       file, line);
     return(NULL);
   }
@@ -684,7 +766,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 			 "%s: [%s/%s] (spoofing detected?)",
 			 el->hostNumIpAddress,
 			 etheraddr_string(ether_addr, etherbuf), el->ethAddressString);
-	      dumpSuspiciousPacket(actualDeviceId);
+	      dumpSuspiciousPacket(actualDeviceId, h, p);
 	    }
 	  }
 
@@ -694,7 +776,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	}
       } else {
 	/* -o | --no-mac (or NetFlow, which doesn't have MACs) - compare with only the IP address */
-	if((addrcmp(&el->hostIpAddress, hostIpAddress) == 0) 
+	if((addrcmp(&el->hostIpAddress, hostIpAddress) == 0)
 	   || (ether_addr && (memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0))) {
 	  hostFound = 1;
 	  break;
@@ -705,7 +787,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     numRuns++;
   } /* while */
 
-  if(locked_mutex) 
+  if(locked_mutex)
     unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
 
   if((hostFound == 1) && (vlanId != NO_VLAN) && (el->vlanId != NO_VLAN)
@@ -766,12 +848,12 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }
-        
+
     if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) {
       if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }
-     
+
     memset(el, 0, sizeof(HostTraffic));
     el->firstSeen = myGlobals.actTime;
 
@@ -797,7 +879,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }
-    memset(el->protoIPTrafficInfos, 0, len);   
+    memset(el->protoIPTrafficInfos, 0, len);
     */
 
     el->magic = CONST_MAGIC_NUMBER;
@@ -810,8 +892,8 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     myGlobals.device[actualDeviceId].hash_hostTraffic[el->hostTrafficBucket] = el;  /* Insert a new entry */
     myGlobals.device[actualDeviceId].hostsno++;
 
-    if(0) 
-      traceEvent(CONST_TRACE_INFO, "-> Allocated(%d) [tot=%d]", 
+    if(0)
+      traceEvent(CONST_TRACE_INFO, "-> Allocated(%d) [tot=%d]",
 		 actualDeviceId, myGlobals.device[actualDeviceId].hostsno);
 
     the_local_network = 0, the_local_network_mask = 0;
@@ -839,23 +921,21 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	   remote network that uses the same physical wire (or forged)*/
 	memcpy(el->lastEthAddress, ether_addr, LEN_ETHERNET_ADDRESS);
 
-	if(hostIpAddress != NULL) {
-	  if(hostIpAddress->hostFamily == AF_INET)
-	    memcpy(el->ethAddress, &hostIpAddress->Ip4Address.s_addr, 4); /* Dummy/unique eth address */
-	  else if(hostIpAddress->hostFamily == AF_INET6)
-	    memcpy(el->ethAddress, &hostIpAddress->Ip6Address.s6_addr[8], 4);
+	if(hostIpAddress->hostFamily == AF_INET)
+	  memcpy(el->ethAddress, &hostIpAddress->Ip4Address.s_addr, 4); /* Dummy/unique eth address */
+	else if(hostIpAddress->hostFamily == AF_INET6)
+	  memcpy(el->ethAddress, &hostIpAddress->Ip6Address.s6_addr[8], 4);
 
-	  clearHostFlag(FLAG_SUBNET_LOCALHOST, el);
+	clearHostFlag(FLAG_SUBNET_LOCALHOST, el);
 
-	  if(isPrivateAddress(hostIpAddress, &the_local_network, &the_local_network_mask))
-	    setHostFlag(FLAG_PRIVATE_IP_ADDRESS, el);
+	if(isPrivateAddress(hostIpAddress, &the_local_network, &the_local_network_mask))
+	  setHostFlag(FLAG_PRIVATE_IP_ADDRESS, el);
 
-	  if(!isBroadcastAddress(hostIpAddress, &the_local_network, &the_local_network_mask)) {
-	    if(isPseudoLocalAddress(hostIpAddress, actualDeviceId, &the_local_network, &the_local_network_mask))
-	      setHostFlag(FLAG_SUBNET_PSEUDO_LOCALHOST, el);
-	    else
-	      clearHostFlag(FLAG_SUBNET_PSEUDO_LOCALHOST, el);
-	  }
+	if(!isBroadcastAddress(hostIpAddress, &the_local_network, &the_local_network_mask)) {
+	  if(isPseudoLocalAddress(hostIpAddress, actualDeviceId, &the_local_network, &the_local_network_mask))
+	    setHostFlag(FLAG_SUBNET_PSEUDO_LOCALHOST, el);
+	  else
+	    clearHostFlag(FLAG_SUBNET_PSEUDO_LOCALHOST, el);
 	}
       } else {
 	clearHostFlag(FLAG_SUBNET_LOCALHOST, el);
@@ -918,14 +998,14 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       el->lastSeen = myGlobals.actTime;
 
       if(myGlobals.runningPref.enableSuspiciousPacketDump)
-	checkSpoofing(el, actualDeviceId);
+	checkSpoofing(el, actualDeviceId, h, p);
     }
 
     if(hostIpAddress != NULL) {
       if(myGlobals.runningPref.dontTrustMACaddr && (ether_addr != NULL))
 	memcpy(el->lastEthAddress, ether_addr, LEN_ETHERNET_ADDRESS);
 
-      addrcpy(&el->hostIpAddress,hostIpAddress);
+      addrcpy(&el->hostIpAddress, hostIpAddress);
       strncpy(el->hostNumIpAddress,
 	      _addrtostr(hostIpAddress, buf, sizeof(buf)),
 	      sizeof(el->hostNumIpAddress));
@@ -947,7 +1027,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       /* This is a new entry and hostIpAddress was NOT set.  Fill in MAC address, if we have it */
       if(symEthName[0] != '\0') {
         /* This is a local address so we have the MAC address */
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%s", 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%s",
 		      symEthName, &el->ethAddressString[8]);
 
 	buf[MAX_LEN_SYM_HOST_NAME-1] = '\0';
@@ -959,7 +1039,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d]"
 		 "[actualHashSize=%d][#hosts=%d]",
 		 el->ethAddressString, el->hostNumIpAddress, idx, actualDeviceId,
-		 myGlobals.device[actualDeviceId].actualHashSize, 
+		 myGlobals.device[actualDeviceId].actualHashSize,
 		 myGlobals.device[actualDeviceId].hostsno);
 #endif
 
@@ -999,7 +1079,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 #endif
 
   if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
-  
+
   return(el);
 }
 
@@ -1057,10 +1137,10 @@ static void hostHashSanityCheck(HostTraffic *host) {
 
 #endif /* HASH_DEBUG */
 
-/* ****************************** 
-   
+/* ******************************
+
    Utility functions used by the remote plugin
-   
+
    ****************************** */
 
 #define MAX_NUM_VALID_PTRS   8
@@ -1068,7 +1148,7 @@ static void* valid_ptrs[MAX_NUM_VALID_PTRS] = { NULL };
 
 void add_valid_ptr(void* ptr) {
   int i;
-  
+
   traceEvent(CONST_TRACE_INFO, "add_valid_ptr(%p)", ptr);
 
   for(i=0; i<MAX_NUM_VALID_PTRS; i++) {
@@ -1084,14 +1164,14 @@ void add_valid_ptr(void* ptr) {
 /* ****************************** */
 
 void remove_valid_ptr(void* ptr) {
-  int i;  
+  int i;
 
   for(i=0; i<MAX_NUM_VALID_PTRS; i++) {
     if(valid_ptrs[i] == ptr) {
       valid_ptrs[i] = NULL;
       return;
     }
-  } 
+  }
 
   /* traceEvent(CONST_TRACE_ERROR, "remove_valid_ptr(%p) failed", ptr); */
 }
@@ -1109,7 +1189,7 @@ int is_valid_ptr(void* ptr) {
 	valid_ptrs[i-1] = valid_ptrs[i];
 	valid_ptrs[i] = swap;
       }
-      
+
       traceEvent(CONST_TRACE_INFO, "is_valid_ptr(%p): 1", ptr);
       return(1);
     }

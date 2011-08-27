@@ -125,6 +125,33 @@ typedef struct ether80211q {
   u_int16_t protoType;
 } Ether80211q;
 
+/* PPPoE - Courtesy of Andreas Pfaller Feb2003 */
+#ifdef HAVE_LINUX_IF_PPPOX_H
+#include <linux/if_pppox.h>
+#else
+/* Extracted and modified from the Linux header for other systems - BMS Mar2003 */
+/* And for Linux systems without if_pppox.h - BMS Apr2003 */
+struct pppoe_tag {
+  u_int16_t tag_type;
+  u_int16_t tag_len;
+  char tag_data;
+};
+
+struct pppoe_hdr {
+#ifdef CFG_LITTLE_ENDIAN
+  u_int8_t ver : 4;
+  u_int8_t type : 4;
+#else
+  u_int8_t type : 4;
+  u_int8_t ver : 4;
+#endif
+  u_int8_t code;
+  u_int16_t sid;
+  u_int16_t length;
+  struct pppoe_tag tag;
+};
+#endif
+
 typedef struct _mac_t {
     u_int8_t mact_octet[6];
 } mac_t;
@@ -140,12 +167,14 @@ typedef struct hostAddr {
 #define Ip4Address addr._hostIp4Address
 
 #define Ip6Address addr._hostIp6Address
-#define SIZEOF_HOSTSERIAL   8
+#define SIZEOF_HOSTSERIAL    8
 
-#define SERIAL_NONE         0
-#define SERIAL_MAC          1
-#define SERIAL_IPV4         2
-#define SERIAL_IPV6         3
+#define UNKNOWN_SERIAL_INDEX 0
+
+#define SERIAL_NONE          0
+#define SERIAL_MAC           1
+#define SERIAL_IPV4          2
+#define SERIAL_IPV6          3 
 
 typedef struct _ethSerial {
   u_char  ethAddress[LEN_ETHERNET_ADDRESS];
@@ -158,12 +187,24 @@ typedef struct _ipSerial {
 } IpSerial;
 
 typedef struct hostSerial {
-  u_char serialType;     /* 0 == empty */
+  u_int8_t serialType;     /* 0 == empty */
   union {
     EthSerial ethSerial; /* hostSerial == SERIAL_MAC */
     IpSerial  ipSerial;  /* hostSerial == SERIAL_IPV4/SERIAL_IPV6 */
   } value;
 } HostSerial;
+
+typedef u_int32_t HostSerialIndex;
+
+/*
+  extern int emptySerial(HostSerialIndex *a);
+  extern int cmpSerial(HostSerialIndex *a, HostSerialIndex *b);
+  extern int copySerial(HostSerialIndex *a, HostSerialIndex *b);
+*/
+#define emptySerial(a)    (*a == UNKNOWN_SERIAL_INDEX)
+#define cmpSerial(a, b)   (*a == *b)
+#define copySerial(a, b)  { *a = *b; }
+#define setEmptySerial(a) { *a = UNKNOWN_SERIAL_INDEX; }
 
 #ifdef WIN32
 #define pid_t unsigned int
@@ -321,15 +362,20 @@ typedef struct trafficCounter {
   u_char modified;
 } TrafficCounter;
 
+/* ******************************** */
+
+inline static incrementTrafficCounter(TrafficCounter *ctr, Counter value) { if(value > 0) ctr->value += value, ctr->modified = 1; }
+inline static void resetTrafficCounter(TrafficCounter *ctr)               { ctr->value = 0, ctr->modified = 0;                    }
+
 /* ************* Types Definition ********************* */
 
 typedef struct thptEntry {
   float trafficValue;
   /* ****** */
-  HostSerial topHostSentSerial, secondHostSentSerial, thirdHostSentSerial;
+  HostSerialIndex topHostSentSerial, secondHostSentSerial, thirdHostSentSerial;
   TrafficCounter topSentTraffic, secondSentTraffic, thirdSentTraffic;
   /* ****** */
-  HostSerial topHostRcvdSerial, secondHostRcvdSerial, thirdHostRcvdSerial;
+  HostSerialIndex topHostRcvdSerial, secondHostRcvdSerial, thirdHostRcvdSerial;
   TrafficCounter topRcvdTraffic, secondRcvdTraffic, thirdRcvdTraffic;
 } ThptEntry;
 
@@ -365,7 +411,7 @@ typedef struct simpleProtoTrafficInfo {
 
 typedef struct usageCounter {
   TrafficCounter value;
-  HostSerial peersSerials[MAX_NUM_CONTACTED_PEERS]; /* host serial */
+  HostSerialIndex peersSerials[MAX_NUM_CONTACTED_PEERS]; /* host serial */
 } UsageCounter;
 
 /* *********************** */
@@ -469,11 +515,25 @@ typedef struct trafficDistribution {
 /* *********************** */
 
 typedef struct portUsage {
-  u_short        port, clientUses, serverUses;
-  HostSerial     clientUsesLastPeer, serverUsesLastPeer;
+  u_short         port, clientUses, serverUses;
+  HostSerialIndex clientUsesLastPeer, serverUsesLastPeer;
   TrafficCounter clientTraffic, serverTraffic;
   struct portUsage *next;
 } PortUsage;
+
+/* *********************** */
+
+typedef struct hostTalker {
+  HostSerialIndex hostSerial;
+  float bps /* bytes/sec */;
+} HostTalker;
+
+/* *********************** */
+
+typedef struct topTalkers {
+  time_t when;
+  HostTalker senders[MAX_NUM_TOP_TALKERS], receivers[MAX_NUM_TOP_TALKERS];
+} TopTalkers;
 
 /* *********************** */
 
@@ -600,7 +660,7 @@ typedef struct networkDelay {
   u_int num_samples;
   double total_delay;
   u_int16_t peer_port;
-  HostSerial last_peer;
+  HostSerialIndex last_peer;
 } NetworkDelay;
 
 /* **************************** */
@@ -616,6 +676,7 @@ typedef struct hostTraffic {
   u_int            hostTrafficBucket; /* Index in the **hash_hostTraffic list */
   u_short          refCount;         /* Reference counter */
   HostSerial       hostSerial;
+  HostSerialIndex  serialHostIndex;  /* Stored in myGlobals.serialFile and valid until ntop restart */
   HostAddr         hostIpAddress;
   u_int16_t        vlanId;          /* VLAN Id (-1 if not set) */
   u_int16_t        ifId;            /* Interface Id [e.g. for NetFlow] (-1 if not set) */
@@ -642,22 +703,18 @@ typedef struct hostTraffic {
   NonIpProtoTrafficInfo *nonIpProtoTrafficInfos; /* Info about further non IP protos */
 
   fd_set           flags;
-  TrafficCounter   pktSent, pktRcvd, pktSentSession, pktRcvdSession,
-    pktDuplicatedAckSent, pktDuplicatedAckRcvd;
-  TrafficCounter   lastThptPktSent, lastThptPktRcvd;
-  TrafficCounter   pktBroadcastSent, bytesBroadcastSent;
-  TrafficCounter   pktMulticastSent, bytesMulticastSent,
-    pktMulticastRcvd, bytesMulticastRcvd;
-  TrafficCounter   lastBytesSent, lastHourBytesSent,
-    bytesSent, bytesSentLoc, bytesSentRem, bytesSentSession;
-  TrafficCounter   lastBytesRcvd, lastHourBytesRcvd, bytesRcvd,
-    bytesRcvdLoc, bytesRcvdFromRem, bytesRcvdSession;
-  float            actualRcvdThpt, lastHourRcvdThpt, averageRcvdThpt, peakRcvdThpt,
-    actualSentThpt, lastHourSentThpt, averageSentThpt, peakSentThpt,
-    actualTThpt, averageTThpt, peakTThpt;
-  float            actualRcvdPktThpt, averageRcvdPktThpt, peakRcvdPktThpt,
-    actualSentPktThpt, averageSentPktThpt, peakSentPktThpt,
-    actualTPktThpt, averageTPktThpt, peakTPktThpt;
+  TrafficCounter   pktsSent, pktsRcvd, pktsSentSession, pktsRcvdSession;
+  TrafficCounter   pktsDuplicatedAckSent, pktsDuplicatedAckRcvd;
+  TrafficCounter   pktsBroadcastSent, bytesBroadcastSent;
+  TrafficCounter   pktsMulticastSent, bytesMulticastSent;
+  TrafficCounter   pktsMulticastRcvd, bytesMulticastRcvd;
+  TrafficCounter   lastBytesSent, lastHourBytesSent;
+  TrafficCounter   bytesSent, bytesSentLoc, bytesSentRem, bytesSentSession;
+  TrafficCounter   lastBytesRcvd, lastHourBytesRcvd, bytesRcvd;
+  TrafficCounter   bytesRcvdLoc, bytesRcvdFromRem, bytesRcvdSession;
+  float            actualRcvdThpt, lastHourRcvdThpt, averageRcvdThpt, peakRcvdThpt;
+  float            actualSentThpt, lastHourSentThpt, averageSentThpt, peakSentThpt;
+  float            actualThpt, averageThpt /* REMOVE */, peakThpt;
   unsigned short   actBandwidthUsage, actBandwidthUsageS, actBandwidthUsageR;
   TrafficDistribution *trafficDistribution;
   u_int32_t        numHostSessions;
@@ -1366,9 +1423,7 @@ typedef struct ntopInterface {
   float  packetThroughput;
 
   unsigned long numThptSamples;
-  ThptEntry last60MinutesThpt[60], last24HoursThpt[24];
-  float last30daysThpt[30];
-  u_short last60MinutesThptIdx, last24HoursThptIdx, last30daysThptIdx;
+  TopTalkers last60MinTopTalkers[60], last24HoursTopTalkers[24];
 
   SimpleProtoTrafficInfo tcpGlobalTrafficStats, udpGlobalTrafficStats, icmpGlobalTrafficStats;
   SimpleProtoTrafficInfo *ipProtoStats;
@@ -1875,13 +1930,16 @@ typedef struct ntopGlobals {
   NtopInterface *device;   /* pointer to the network interfaces table */
 
   /* Database */
-  GDBM_FILE pwFile, prefsFile, macPrefixFile, fingerprintFile;
+  GDBM_FILE pwFile, prefsFile, macPrefixFile, fingerprintFile, serialFile, topTalkersFile;
 
   /* the table of broadcast entries */
   HostTraffic *broadcastEntry;
 
   /* the table of other hosts entries */
   HostTraffic *otherHostEntry;
+
+  /* Host serial */
+  u_int32_t hostSerialCounter;
 
   /* Administrative */
   char *shortDomainName;
@@ -1910,6 +1968,9 @@ typedef struct ntopGlobals {
   PthreadMutex hostsHashLockMutex;
   PthreadMutex hostsHashMutex[CONST_HASH_INITIAL_SIZE];
   volatile u_short hostsHashMutexNumLocks[CONST_HASH_INITIAL_SIZE];
+
+  /* Host Serial */
+  PthreadMutex serialLockMutex;
 
   /*
    * SIH - Scan Idle Hosts - optional
@@ -2125,4 +2186,7 @@ typedef struct ntopGlobals {
 
   /* RRD */
   time_t rrdTime;
+  
+  /* Message display */
+  u_char lowMemoryMsgShown;
 } NtopGlobals;

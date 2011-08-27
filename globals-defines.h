@@ -1027,6 +1027,9 @@
 #define CONST_MODIFY_URL                    "modifyURL"
 #define CONST_MODIFY_USERS                  "modifyUsers"
 #define CONST_MULTICAST_STATS_HTML          "multicastStats.html"
+#define CONST_LAST_HOUR_TOP_TALKERS_HTML    "lastHourTopTalkers.html"
+#define CONST_LAST_MONTH_TOP_TALKERS_HTML   "lastMonthTopTalkers.html"
+#define CONST_HISTORICAL_TALKERS_HTML       "historicalTalkers.html"
 #define CONST_NET_FLOWS_HTML                "NetFlows.html"
 #define CONST_ACTIVE_SESSIONS_HTML          "activeSessions.html"
 #define CONST_NETWORK_IMAGE_MAP             "network_map.png"
@@ -1072,15 +1075,17 @@
 #define CONST_TRAFFIC_SUMMARY_HTML          "trafficSummary.html"
 #define CONST_VIEW_LOG_HTML                 "viewLog.html"
 #define CONST_VLAN_LIST_HTML                "vlanList.html"
-#define CONST_PIE_VSAN_CNTL_TRAF_DIST       "vsanControlTrafficDistribPie"
-#define CONST_VSAN_DETAIL_HTML              "vsanDetail.html"
-#define CONST_VSAN_DISTRIB_HTML             "vsanDistrib.html"
-#define CONST_BAR_VSAN_TRAF_DIST_SENT       "vsanDomainTrafficDistribSent"
-#define CONST_BAR_VSAN_TRAF_DIST_RCVD       "vsanDomainTrafficDistribRcvd"
-#define CONST_VSAN_LIST_HTML                "vsanList.html"
 #define CONST_FIND_HOST_JSON                "findHost.json"
 #define CONST_W3C_P3P_XML                   "w3c/p3p.xml"
 #define CONST_XMLDUMP_PLUGIN_NAME           "xmldump"
+
+#define CONST_HOST_TRAFFIC_DISTR_HTML       "hostTrafficDistrib"
+#define CONST_HOST_IP_TRAFFIC_DISTR_HTML    "hostIPTrafficDistrib"
+#define CONST_HOST_FRAGMENT_DISTR_HTML      "hostFragmentDistrib"
+#define CONST_HOST_TOT_FRAGMENT_DISTR_HTML  "hostTotalFragmentDistrib"
+#define CONST_HOST_TIME_TRAFFIC_DISTR_HTML  "hostTimeTrafficDistribution"
+
+
 
 #define CONST_NTOP_LOGO                     "ntop_logo.png"
 
@@ -1144,9 +1149,15 @@
 #define MAX_ALIASES                         35
 
 /*
+ * Maximum number of top talkers
+ */
+#define MAX_NUM_TOP_TALKERS                  5
+
+/*
  * 9 messages in total -- see #define FLAG_DHCP_ _MSG below
  */
 #define MAX_NUM_DHCP_MSG                    8
+
 
 /*
  * Symbolic host buffer name length (hostResolvedName, symAddress, etc.)
@@ -1737,11 +1748,6 @@
 #define FLAG_NETFLOW_EXPORT_DISABLED        1
 #define FLAG_NETFLOW_EXPORT_ENABLED         2
 
-/*
- * Settings for Address Family
- */
-#define FLAG_HOST_TRAFFIC_AF_ETH            0
-#define FLAG_HOST_TRAFFIC_AF_FC             1
 
 /*
  * Settings for hostResolvedNameType
@@ -2711,6 +2717,8 @@ struct ip6_hdr
 /* *************************** */
 
 #define MAX_NUM_INTERFACE_NETWORKS      128
+
+/* ******************************** */
 
 #define quickLock(_a_, _b_) accessMutex(&myGlobals.device[_b_].counterMutex, "quickLock");
 #define quickUnlock(_a_, _b_) releaseMutex(&myGlobals.device[_b_].counterMutex);

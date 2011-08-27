@@ -675,12 +675,12 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   addrput(AF_INET, &addr2, &a);
 
   if(!skipDST)
-    dstHost = lookupHost(&addr1, NULL, record->vlanId, 0, 1, deviceId);
+    dstHost = lookupHost(&addr1, NULL, record->vlanId, 0, 1, deviceId, NULL, NULL);
   else
     dstHost = myGlobals.device[deviceId].netflowGlobals->dummyHost;
 
   if(!skipSRC)
-    srcHost = lookupHost(&addr2, NULL, record->vlanId, 0, 1, deviceId);
+    srcHost = lookupHost(&addr2, NULL, record->vlanId, 0, 1, deviceId, NULL, NULL);
   else
     srcHost = myGlobals.device[deviceId].netflowGlobals->dummyHost;
 
@@ -918,7 +918,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 #endif
 
     if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling)
-      session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport,
+      session = handleSession(&h, NULL, 0, 0, srcHost, sport, dstHost, dport,
 			      record->sentOctets, record->rcvdOctets,
 			      &tp, 0, NULL, actualDeviceId, &newSession, 1 /* FIX 0 */);
     break;
@@ -983,7 +983,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 #endif
 
     if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling)
-      session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport,
+      session = handleSession(&h, NULL, 0, 0, srcHost, sport, dstHost, dport,
 			      record->sentOctets, record->rcvdOctets,
 			      NULL, 0, NULL, actualDeviceId, &newSession, 0);
     break;
@@ -1098,14 +1098,14 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     }
 
     updatePeersDelayStats(srcHost,
-			  &dstHost->hostSerial,
+			  &dstHost->serialHostIndex,
 			  port,
 			  &clientNwDelay,
 			  &when,
 			  NULL, 1 /* client */, port_idx);
 
     updatePeersDelayStats(dstHost,
-			  &srcHost->hostSerial,
+			  &srcHost->serialHostIndex,
 			  port,
 			  &serverNwDelay,
 			  NULL,
@@ -2338,7 +2338,7 @@ static void initNetFlowDevice(int deviceId) {
 	  sizeof(myGlobals.device[deviceId].netflowGlobals->dummyHost->hostResolvedName));
   myGlobals.device[deviceId].netflowGlobals->dummyHost->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_FAKE;
   strcpy(myGlobals.device[deviceId].netflowGlobals->dummyHost->ethAddressString, "00:00:00:00:00:00");
-  setEmptySerial(&myGlobals.device[deviceId].netflowGlobals->dummyHost->hostSerial);
+  setEmptySerial(&myGlobals.device[deviceId].netflowGlobals->dummyHost->serialHostIndex);
   myGlobals.device[deviceId].netflowGlobals->dummyHost->portsUsage = NULL;
   myGlobals.device[deviceId].activeDevice = 1;
   myGlobals.device[deviceId].samplingRate = 1;

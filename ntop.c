@@ -591,17 +591,17 @@ void addDefaultProtocols(void) {
   handleProtocolList("DNS",      "name|domain|");
   /* 22 == ssh (just to make sure the port is defined) */
   myGlobals.SshIdx = handleProtocolList("Login",   "telnet|login|22|");
-  handleProtocolList("NetBios", "netbios-ns|netbios-dgm|netbios-ssn|445|");
+  handleProtocolList("NetBios",  "netbios-ns|netbios-dgm|netbios-ssn|445|");
   handleProtocolList("Mail",     "pop-2|pop-3|pop3|kpop|smtp|imap|imap2|585|993|995|");
-  handleProtocolList("DHCP", "67-68|"); /* Bootp */
+  handleProtocolList("DHCP",     "67-68|"); /* Bootp */
   handleProtocolList("SNMP",     "snmp|snmp-trap|");
   handleProtocolList("NNTP",     "nntp|");
-  handleProtocolList("NFS/AFS",      "mount|pcnfs|bwnfs|nfsd|nfs|nfsd-status|7000-7009");
-  myGlobals.VoipIdx = handleProtocolList("VoIP", "5060|2000|54045|"); /* 54045 = Skype default port */
+  handleProtocolList("NFS/AFS",  "mount|pcnfs|bwnfs|nfsd|nfs|nfsd-status|7000-7009");
+  myGlobals.VoipIdx = handleProtocolList("VoIP", "5060|2000");
   handleProtocolList("X11",      "6000-6010|");
 
   /* Peer-to-Peer Protocols */
-  myGlobals.SkypeIdx = handleProtocolList("Skype", "41652|");
+  myGlobals.SkypeIdx = handleProtocolList("Skype", "41652|13021|54045|"); /* 13021|54045 = Skype default port */
   myGlobals.EdonkeyIdx = handleProtocolList("eDonkey", "4661-4665|");
   myGlobals.BitTorrentIdx = handleProtocolList("BitTorrent", "6881-6999|6969|"); /* http://www.dessent.net/btfaq/#ports */
 

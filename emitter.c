@@ -589,10 +589,10 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
       }
     }
 
-    if(checkFilter(filter, "pktSent"))
-      wrtLlongItm(fDescr, lang, "\t", "pktSent",   el->pktSent, ',', numEntries);
-    if(checkFilter(filter, "pktRcvd"))
-      wrtLlongItm(fDescr, lang, "\t", "pktRcvd", el->pktRcvd, ',', numEntries);
+    if(checkFilter(filter, "pktsSent"))
+      wrtLlongItm(fDescr, lang, "\t", "pktsSent",   el->pktsSent, ',', numEntries);
+    if(checkFilter(filter, "pktsRcvd"))
+      wrtLlongItm(fDescr, lang, "\t", "pktsRcvd", el->pktsRcvd, ',', numEntries);
 
     if(checkFilter(filter, "ipv4BytesSent"))
       wrtLlongItm(fDescr, lang, "\t", "ipv4BytesSent", el->ipv4BytesSent, ',', numEntries);
@@ -602,23 +602,23 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
     /* *************************************** */
 
     if(!shortView) {
-      if(checkFilter(filter, "pktDuplicatedAckSent"))
-	wrtLlongItm(fDescr, lang, "\t", "pktDuplicatedAckSent",el->pktDuplicatedAckSent, ',', numEntries);
-      if(checkFilter(filter, "pktDuplicatedAckRcvd"))
-	wrtLlongItm(fDescr, lang, "\t", "pktDuplicatedAckRcvd",el->pktDuplicatedAckRcvd, ',', numEntries);
-      if(checkFilter(filter, "pktBroadcastSent"))
-	wrtLlongItm(fDescr, lang, "\t", "pktBroadcastSent",  el->pktBroadcastSent, ',', numEntries);
+      if(checkFilter(filter, "pktsDuplicatedAckSent"))
+	wrtLlongItm(fDescr, lang, "\t", "pktsDuplicatedAckSent",el->pktsDuplicatedAckSent, ',', numEntries);
+      if(checkFilter(filter, "pktsDuplicatedAckRcvd"))
+	wrtLlongItm(fDescr, lang, "\t", "pktsDuplicatedAckRcvd",el->pktsDuplicatedAckRcvd, ',', numEntries);
+      if(checkFilter(filter, "pktsBroadcastSent"))
+	wrtLlongItm(fDescr, lang, "\t", "pktsBroadcastSent",  el->pktsBroadcastSent, ',', numEntries);
     }
 
     if(checkFilter(filter, "bytesMulticastSent"))
       wrtLlongItm(fDescr, lang, "\t", "bytesMulticastSent", el->bytesMulticastSent, ',', numEntries);
-    if(checkFilter(filter, "pktMulticastSent"))
-      wrtLlongItm(fDescr, lang, "\t", "pktMulticastSent",  el->pktMulticastSent, ',', numEntries);
+    if(checkFilter(filter, "pktsMulticastSent"))
+      wrtLlongItm(fDescr, lang, "\t", "pktsMulticastSent",  el->pktsMulticastSent, ',', numEntries);
 
     if(checkFilter(filter, "bytesMulticastRcvd"))
       wrtLlongItm(fDescr, lang, "\t", "bytesMulticastRcvd", el->bytesMulticastRcvd, ',', numEntries);
-    if(checkFilter(filter, "pktMulticastRcvd"))
-      wrtLlongItm(fDescr, lang, "\t", "pktMulticastRcvd",  el->pktMulticastRcvd, ',', numEntries);
+    if(checkFilter(filter, "pktsMulticastRcvd"))
+      wrtLlongItm(fDescr, lang, "\t", "pktsMulticastRcvd",  el->pktsMulticastRcvd, ',', numEntries);
 
     /* *************************************** */
 
@@ -664,32 +664,12 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
       if(checkFilter(filter, "peakSentThpt"))
 	wrtFloatItm(fDescr, lang, "\t", "peakSentThpt",    el->peakSentThpt, ',', numEntries);
 
-      if(checkFilter(filter, "actualTThpt"))
-	wrtFloatItm(fDescr, lang, "\t", "actualTThpt",  el->actualTThpt, ',', numEntries);
-      if(checkFilter(filter, "averageTThpt"))
-	wrtFloatItm(fDescr, lang, "\t", "averageTThpt", el->averageTThpt, ',', numEntries);
-      if(checkFilter(filter, "peakTThpt"))
-	wrtFloatItm(fDescr, lang, "\t", "peakTThpt",    el->peakTThpt, ',', numEntries);
-
-      if(checkFilter(filter, "actualRcvdPktThpt"))
-	wrtFloatItm(fDescr, lang, "\t", "actualRcvdPktThpt", el->actualRcvdPktThpt, ',', numEntries);
-      if(checkFilter(filter, "averageRcvdPktThpt"))
-	wrtFloatItm(fDescr, lang, "\t", "averageRcvdPktThpt",el->averageRcvdPktThpt, ',', numEntries);
-      if(checkFilter(filter, "peakRcvdPktThpt"))
-	wrtFloatItm(fDescr, lang, "\t", "peakRcvdPktThpt", el->peakRcvdPktThpt, ',', numEntries);
-      if(checkFilter(filter, "actualSentPktThpt"))
-	wrtFloatItm(fDescr, lang, "\t", "actualSentPktThpt", el->actualSentPktThpt, ',', numEntries);
-      if(checkFilter(filter, "averageSentPktThpt"))
-	wrtFloatItm(fDescr, lang, "\t", "averageSentPktThpt", el->averageSentPktThpt, ',', numEntries);
-      if(checkFilter(filter, "peakSentPktThpt"))
-	wrtFloatItm(fDescr, lang, "\t", "peakSentPktThpt", el->peakSentPktThpt, ',', numEntries);
-
-      if(checkFilter(filter, "actualTPktThpt"))
-	wrtFloatItm(fDescr, lang, "\t", "actualTPktThpt", el->actualTPktThpt, ',', numEntries);
-      if(checkFilter(filter, "averageTPktThpt"))
-	wrtFloatItm(fDescr, lang, "\t", "averageTPktThpt",el->averageTPktThpt, ',', numEntries);
-      if(checkFilter(filter, "peakTPktThpt"))
-	wrtFloatItm(fDescr, lang, "\t", "peakTPktThpt", el->peakTPktThpt, ',', numEntries);
+      if(checkFilter(filter, "actualThpt"))
+	wrtFloatItm(fDescr, lang, "\t", "actualThpt",  el->actualThpt, ',', numEntries);
+      if(checkFilter(filter, "averageThpt"))
+	wrtFloatItm(fDescr, lang, "\t", "averageThpt", el->averageThpt, ',', numEntries);
+      if(checkFilter(filter, "peakThpt"))
+	wrtFloatItm(fDescr, lang, "\t", "peakThpt",    el->peakThpt, ',', numEntries);
     }
 
     if(checkFilter(filter, "ipv6BytesSent"))
@@ -1311,41 +1291,6 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	wrtFloatItm(fDescr, lang, "\t", "throughput", myGlobals.device[i].throughput, ',', numEntries);
       if(checkFilter(filter, "packetThroughput"))
 	wrtFloatItm(fDescr, lang, "\t", "packetThroughput",myGlobals.device[i].packetThroughput, ',', numEntries);
-
-      /* ********************************* */
-
-      if(checkFilter(filter, "last60MinutesThpt")) {
-	initWriteKey(fDescr, lang, "\t", "last60MinutesThpt", numEntries);
-
-	for(j=0; j<59; j++) {
-	  wrtIntFloatItm(fDescr, lang,"\t\t",j+1, myGlobals.device[i].last60MinutesThpt[j].trafficValue, ',', numEntries);
-	}
-	wrtIntFloatItm(fDescr, lang,"\t\t",j+1, myGlobals.device[i].last60MinutesThpt[j].trafficValue, ' ', numEntries);
-	endWriteKey(fDescr, lang,"\t", "last60MinutesThpt", ',');
-      }
-
-      /* ********************************* */
-
-      if(checkFilter(filter, "last24HoursThpt")) {
-	initWriteKey(fDescr, lang, "\t", "last24HoursThpt", numEntries);
-
-	for(j=0; j<23; j++) {
-	  wrtIntFloatItm(fDescr, lang, "\t\t", j+1, myGlobals.device[i].last24HoursThpt[j].trafficValue, ',', numEntries);
-	}
-	wrtIntFloatItm(fDescr, lang,"\t\t",j+1,myGlobals.device[i].last24HoursThpt[j].trafficValue, ' ', numEntries);
-	endWriteKey(fDescr, lang,"\t", "last24HoursThpt", ',');
-      }
-      /* ********************************* */
-
-      if(checkFilter(filter, "last30daysThpt")) {
-	initWriteKey(fDescr, lang, "\t", "last30daysThpt", numEntries);
-
-	for(j=0; j<29; j++) {
-	  wrtIntFloatItm(fDescr, lang,"\t\t",j+1,myGlobals.device[i].last30daysThpt[j], ',', numEntries);
-	}
-	wrtIntFloatItm(fDescr, lang,"\t\t",j+1,myGlobals.device[i].last30daysThpt[j], ' ', numEntries);
-	endWriteKey(fDescr, lang,"\t", "last30daysThpt", ',');
-      }
     }
 
     /* ********************************* */

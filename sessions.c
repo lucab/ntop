@@ -212,7 +212,7 @@ void updateUsedPorts(HostTraffic *srcHost,
 #endif
 
       incrementTrafficCounter(&ports->serverTraffic, length);
-      ports->serverUses++, ports->serverUsesLastPeer = dstHost->hostSerial;
+      ports->serverUses++, ports->serverUsesLastPeer = dstHost->serialHostIndex;
 
       ports = getPortsUsage(dstHost, sport, 1);
 
@@ -221,7 +221,7 @@ void updateUsedPorts(HostTraffic *srcHost,
 #endif
 
       incrementTrafficCounter(&ports->clientTraffic, length);
-      ports->clientUses++, ports->clientUsesLastPeer = srcHost->hostSerial;
+      ports->clientUses++, ports->clientUsesLastPeer = srcHost->serialHostIndex;
     }
 
     if(dport < MAX_ASSIGNED_IP_PORTS) {
@@ -232,7 +232,7 @@ void updateUsedPorts(HostTraffic *srcHost,
 #endif
 
       incrementTrafficCounter(&ports->clientTraffic, length);
-      ports->clientUses++, ports->clientUsesLastPeer = dstHost->hostSerial;
+      ports->clientUses++, ports->clientUsesLastPeer = dstHost->serialHostIndex;
 
       ports = getPortsUsage(dstHost, dport, 1);
 
@@ -241,7 +241,7 @@ void updateUsedPorts(HostTraffic *srcHost,
 #endif
 
       incrementTrafficCounter(&ports->serverTraffic, length);
-      ports->serverUses++, ports->serverUsesLastPeer = srcHost->hostSerial;
+      ports->serverUses++, ports->serverUsesLastPeer = srcHost->serialHostIndex;
     }
   }
 }
@@ -997,6 +997,7 @@ static void handleMsnMsgrSession (const struct pcap_pkthdr *h,
 /* *********************************** */
 
 static void handleHTTPSSession(const struct pcap_pkthdr *h,
+			       const u_char *p,
 			       HostTraffic *srcHost, u_short sport,
 			       HostTraffic *dstHost, u_short dport,
 			       u_int packetDataLength, char* packetData,
@@ -1125,6 +1126,7 @@ static void handleHTTPSSession(const struct pcap_pkthdr *h,
 /* *********************************** */
 
 static void handleHTTPSession(const struct pcap_pkthdr *h,
+			      const u_char *p,
                               HostTraffic *srcHost, u_short sport,
                               HostTraffic *dstHost, u_short dport,
                               u_int packetDataLength, u_char* packetData,
@@ -1365,7 +1367,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 		     dstHost->hostResolvedName, dport,
 		     rcStr);
 
-	  dumpSuspiciousPacket(actualDeviceId);
+	  dumpSuspiciousPacket(actualDeviceId, h, p);
 	}
       }
 
@@ -1384,6 +1386,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
  * dumps suspicious packets, if dumpSuspiciousPacket is set.
  */
 static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
+				     const u_char *p,
 				     HostTraffic *srcHost,
 				     u_short sport,
 				     HostTraffic *dstHost,
@@ -1432,7 +1435,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
 		       srcHost->hostResolvedName, sport,
 		       dstHost->hostResolvedName, dport,
 		       tmpStr);
-	    dumpSuspiciousPacket(actualDeviceId);
+	    dumpSuspiciousPacket(actualDeviceId, h, p);
 	  }
 	} else if((sport != IP_TCP_PORT_FTP) && (sport != IP_TCP_PORT_SMTP)
 		  && isInitialFtpData(tmpStr)) {
@@ -1442,7 +1445,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
 		       dstHost->hostResolvedName, dport,
 		       srcHost->hostResolvedName, sport,
 		       tmpStr);
-	    dumpSuspiciousPacket(actualDeviceId);
+	    dumpSuspiciousPacket(actualDeviceId, h, p);
 	  }
 	} else if(((sport == IP_TCP_PORT_FTP) || (sport == IP_TCP_PORT_SMTP)) &&
 		  (!isInitialFtpData(tmpStr))) {
@@ -1452,7 +1455,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
 		       dstHost->hostResolvedName, dport,
 		       srcHost->hostResolvedName, sport,
 		       tmpStr);
-	    dumpSuspiciousPacket(actualDeviceId);
+	    dumpSuspiciousPacket(actualDeviceId, h, p);
 	  }
 	} else if((sport != IP_TCP_PORT_SSH) && (dport != IP_TCP_PORT_SSH)
 		  &&  isInitialSshData(tmpStr)) {
@@ -1463,7 +1466,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
 		       dstHost->hostResolvedName, dport,
 		       srcHost->hostResolvedName, sport,
 		       tmpStr);
-	    dumpSuspiciousPacket(actualDeviceId);
+	    dumpSuspiciousPacket(actualDeviceId, h, p);
 	  }
 	} else if(((sport == IP_TCP_PORT_SSH) || (dport == IP_TCP_PORT_SSH)) 
 		  && (!isInitialSshData(tmpStr))) {
@@ -1473,7 +1476,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
 		       dstHost->hostResolvedName, dport,
 		       srcHost->hostResolvedName, sport,
 		       tmpStr);
-	    dumpSuspiciousPacket(actualDeviceId);
+	    dumpSuspiciousPacket(actualDeviceId, h, p);
 	  }
 	} else if((sport > 1024) && (dport > 1024)) { 
 	  if(isInitialEdonkeyData(tmpStr, len)) {
@@ -1542,7 +1545,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
 	traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed ACK scan of host [%s:%d]",
 		   dstHost->hostResolvedName, dport,
 		   srcHost->hostResolvedName, sport);
-	dumpSuspiciousPacket(actualDeviceId);
+	dumpSuspiciousPacket(actualDeviceId, h, p);
       }
     }
     /* Connection terminated */
@@ -1584,7 +1587,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
        && (tp->th_flags == TH_SYN)) {
       traceEvent(CONST_TRACE_WARNING, "Detected Land Attack against host %s:%d",
 		 srcHost->hostResolvedName, sport);
-      dumpSuspiciousPacket(actualDeviceId);
+      dumpSuspiciousPacket(actualDeviceId, h, p);
     }
 
     if(tp->th_flags == (TH_RST|TH_ACK)) {
@@ -1602,7 +1605,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
 		   srcHost->hostResolvedName, dstHost->hostResolvedName,
 		   dstHost->hostResolvedName, dport,
 		   srcHost->hostResolvedName, sport);
-	dumpSuspiciousPacket(actualDeviceId);
+	dumpSuspiciousPacket(actualDeviceId, h, p);
       } else if(((theSession->initiator == srcHost)
 		 && (theSession->lastRem2InitiatorFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
 		|| ((theSession->initiator == dstHost)
@@ -1615,7 +1618,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
 	traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed XMAS scan of host [%s:%d]",
 		   dstHost->hostResolvedName, dport,
 		   srcHost->hostResolvedName, sport);
-	dumpSuspiciousPacket(actualDeviceId);
+	dumpSuspiciousPacket(actualDeviceId, h, p);
       } else if(((theSession->initiator == srcHost)
 		 && ((theSession->lastRem2InitiatorFlags[0] & TH_FIN) == TH_FIN))
 		|| ((theSession->initiator == dstHost)
@@ -1628,7 +1631,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
 	traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed FIN scan of host [%s:%d]",
 		   dstHost->hostResolvedName, dport,
 		   srcHost->hostResolvedName, sport);
-	dumpSuspiciousPacket(actualDeviceId);
+	dumpSuspiciousPacket(actualDeviceId, h, p);
       } else if(((theSession->initiator == srcHost)
 		 && (theSession->lastRem2InitiatorFlags[0] == 0)
 		 && (theSession->bytesRcvd.value > 0))
@@ -1643,7 +1646,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
 	traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed NULL scan of host [%s:%d]",
 		   dstHost->hostResolvedName, dport,
 		   srcHost->hostResolvedName, sport);
-	dumpSuspiciousPacket(actualDeviceId);
+	dumpSuspiciousPacket(actualDeviceId, h, p);
       }
     }
 
@@ -1699,7 +1702,7 @@ static void timeval_diff(struct timeval *begin,
 /* *********************************** */
 
 static void updateNetworkDelay(NetworkDelay *delayStats,
-			       HostSerial *peer, u_int16_t peer_port,
+			       HostSerialIndex *peer, u_int16_t peer_port,
 			       struct timeval *delay,
 			       struct timeval *when,
 			       int port_idx) {
@@ -1734,7 +1737,7 @@ static void updateNetworkDelay(NetworkDelay *delayStats,
 /* *********************************** */
 
 void updatePeersDelayStats(HostTraffic *peer_a,
-			   HostSerial *peer_b_serial,
+			   HostSerialIndex *peer_b_serial,
 			   u_int16_t port,
 			   struct timeval *nwDelay,
 			   struct timeval *synAckTime,
@@ -1800,7 +1803,7 @@ void updateSessionDelayStats(IPSession* session) {
 
   if(subnetPseudoLocalHost(session->initiator))
     updatePeersDelayStats(session->initiator,
-			  &session->remotePeer->hostSerial,
+			  &session->remotePeer->serialHostIndex,
 			  port,
 			  &session->clientNwDelay,
 			  &session->synAckTime,
@@ -1808,7 +1811,7 @@ void updateSessionDelayStats(IPSession* session) {
 
   if(subnetPseudoLocalHost(session->remotePeer))
     updatePeersDelayStats(session->remotePeer,
-			  &session->initiator->hostSerial,
+			  &session->initiator->serialHostIndex,
 			  port,
 			  &session->serverNwDelay,
 			  NULL,
@@ -1819,6 +1822,7 @@ void updateSessionDelayStats(IPSession* session) {
 /* *********************************** */
 
 static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
+				      const u_char *p,
 				      u_short fragmentedData, u_int tcpWin,
 				      HostTraffic *srcHost, u_short sport,
 				      HostTraffic *dstHost, u_short dport,
@@ -2058,12 +2062,12 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
      ) {
     if(((sport == IP_TCP_PORT_HTTP) || (dport == IP_TCP_PORT_HTTP))
        && (packetDataLength > 0)) {
-      handleHTTPSession(h, srcHost, sport, dstHost, dport,
+      handleHTTPSession(h, p, srcHost, sport, dstHost, dport,
 			packetDataLength, packetData, theSession,
 			actualDeviceId);
     } else if(((sport == IP_TCP_PORT_HTTPS) || (dport == IP_TCP_PORT_HTTPS))
 	      && (packetDataLength > 0)) {
-      handleHTTPSSession(h, srcHost, sport, dstHost, dport,
+      handleHTTPSSession(h, p, srcHost, sport, dstHost, dport,
 			 packetDataLength, (char*)packetData, theSession,
 			 actualDeviceId);
     } else if((dport == IP_TCP_PORT_KAZAA) && (packetDataLength > 0)) {
@@ -2360,7 +2364,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
    * - Counting packets & bytes based on certain invalid TCP Flag combos
    * - Checking if a known protocol is running at a not well-known port
    */
-  tcpSessionSecurityChecks(h, srcHost, sport, dstHost, dport, tp,
+  tcpSessionSecurityChecks(h, p, srcHost, sport, dstHost, dport, tp,
 			   packetDataLength, packetData, addedNewEntry,
 			   theSession, actualDeviceId);
   /*
@@ -2419,8 +2423,8 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
       if(theSession->initiator == srcHost) {
 	theSession->numDuplicatedAckI2R++;
 	incrementTrafficCounter(&theSession->bytesRetranI2R, sent_length+rcvd_length);
-	incrementTrafficCounter(&theSession->initiator->pktDuplicatedAckSent, 1);
-	incrementTrafficCounter(&theSession->remotePeer->pktDuplicatedAckRcvd, 1);
+	incrementTrafficCounter(&theSession->initiator->pktsDuplicatedAckSent, 1);
+	incrementTrafficCounter(&theSession->remotePeer->pktsDuplicatedAckRcvd, 1);
 
 #ifdef DEBUG
 	traceEvent(CONST_TRACE_INFO, "DEBUG: Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
@@ -2430,8 +2434,8 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
       } else {
 	theSession->numDuplicatedAckR2I++;
 	incrementTrafficCounter(&theSession->bytesRetranR2I, sent_length+rcvd_length);
-	incrementTrafficCounter(&theSession->remotePeer->pktDuplicatedAckSent, 1);
-	incrementTrafficCounter(&theSession->initiator->pktDuplicatedAckRcvd, 1);
+	incrementTrafficCounter(&theSession->remotePeer->pktsDuplicatedAckSent, 1);
+	incrementTrafficCounter(&theSession->initiator->pktsDuplicatedAckRcvd, 1);
 #ifdef DEBUG
 	traceEvent(CONST_TRACE_INFO, "Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
 		   ack, theSession->numDuplicatedAckR2I,
@@ -2519,7 +2523,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 		   srcHost->hostResolvedName, sport,
 		   dstHost->hostResolvedName, dport,
 		   srcHost->hostResolvedName);
-	dumpSuspiciousPacket(actualDeviceId);
+	dumpSuspiciousPacket(actualDeviceId, h, p);
       }
 
       theSession->sessionState = FLAG_STATE_TIMEOUT;
@@ -2594,6 +2598,7 @@ static void handleUDPSession(const struct pcap_pkthdr *h,
 /* ************************************ */
 
 IPSession* handleSession(const struct pcap_pkthdr *h,
+			 const u_char *p,
                          u_short fragmentedData, u_int tcpWin,
                          HostTraffic *srcHost, u_short sport,
                          HostTraffic *dstHost, u_short dport,
@@ -2625,7 +2630,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
   if(myGlobals.runningPref.enablePacketDecoding && (tp == NULL /* UDP session */) &&
      (srcHost->hostIpAddress.hostFamily == AF_INET &&
       dstHost->hostIpAddress.hostFamily == AF_INET))
-    handleBootp(srcHost, dstHost, sport, dport, packetDataLength, packetData, actualDeviceId);
+    handleBootp(srcHost, dstHost, sport, dport, packetDataLength, packetData, actualDeviceId, h, p);
 
   if(broadcastHost(srcHost) || broadcastHost(dstHost)) /* (**) */
     return(theSession);
@@ -2678,7 +2683,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 	ended into the same flow. In this case it will not be added as it will be
 	immediately purged
       */
-      theSession = handleTCPUDPSession(sessionType, h, fragmentedData, tcpWin, srcHost, sport,
+      theSession = handleTCPUDPSession(sessionType, h, p, fragmentedData, tcpWin, srcHost, sport,
 				       dstHost, dport, sent_length, rcvd_length,
 				       tp, packetDataLength,
 				       packetData, actualDeviceId, newSession);
@@ -2710,7 +2715,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
       traceEvent(CONST_TRACE_WARNING, fmt,
 		 srcHost->hostResolvedName, sport,
 		 dstHost->hostResolvedName, dport);
-      dumpSuspiciousPacket(actualDeviceId);
+      dumpSuspiciousPacket(actualDeviceId, h, p);
     }
 
     if((dport == IP_L4_PORT_ECHO)
@@ -2753,7 +2758,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
       traceEvent(CONST_TRACE_WARNING, fmt, packetDataLength,
 		 srcHost->hostResolvedName, sport,
 		 dstHost->hostResolvedName, dport);
-      dumpSuspiciousPacket(actualDeviceId);
+      dumpSuspiciousPacket(actualDeviceId, h, p);
     }
   }
 

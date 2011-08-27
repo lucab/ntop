@@ -49,7 +49,8 @@ void handleBootp(HostTraffic *srcHost,
 		 u_short dport,
 		 u_int packetDataLength,
 		 u_char* packetData,
-		 int actualDeviceId) {
+		 int actualDeviceId,
+		 const struct pcap_pkthdr *h, const u_char *p) {
   BootProtocol bootProto;
   u_int len;
   int rc;
@@ -127,7 +128,7 @@ void handleBootp(HostTraffic *srcHost,
 	    realDstHost = findHostByMAC((char*)bootProto.bp_chaddr, dstHost->vlanId, actualDeviceId);
 	    if(realDstHost == NULL) {
 	      realDstHost = lookupHost(/* &bootProto.bp_yiaddr */ NULL, bootProto.bp_chaddr, 
-				       srcHost->vlanId, 0, 0, actualDeviceId);
+				       srcHost->vlanId, 0, 0, actualDeviceId, h, p);
 	    } else {
 #ifdef DHCP_DEBUG
 	      traceEvent(CONST_TRACE_INFO, "<<=>> %s (%d)",
@@ -487,7 +488,7 @@ void handleBootp(HostTraffic *srcHost,
 	    realClientHost = findHostByMAC((char*)bootProto.bp_chaddr, srcHost->vlanId, actualDeviceId);
 	    if(realClientHost == NULL) {
 	      realClientHost = lookupHost(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr,
-					  srcHost->vlanId, 0, 0, actualDeviceId);
+					  srcHost->vlanId, 0, 0, actualDeviceId, h, p);
 	    } else {
 #ifdef FLAG_DHCP_DEBUG
 	      traceEvent(CONST_TRACE_INFO, "<<=>> %s (%d)",

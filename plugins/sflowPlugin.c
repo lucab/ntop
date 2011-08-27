@@ -3251,7 +3251,7 @@ static void initsFlowDevice(int deviceId) {
 	  sizeof(myGlobals.device[deviceId].sflowGlobals->dummyHost->hostResolvedName));
   myGlobals.device[deviceId].sflowGlobals->dummyHost->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_FAKE;
   strcpy(myGlobals.device[deviceId].sflowGlobals->dummyHost->ethAddressString, "00:00:00:00:00:00");
-  setEmptySerial(&myGlobals.device[deviceId].sflowGlobals->dummyHost->hostSerial);
+  setEmptySerial(&myGlobals.device[deviceId].sflowGlobals->dummyHost->serialHostIndex);
   myGlobals.device[deviceId].sflowGlobals->dummyHost->portsUsage = NULL;
 
   myGlobals.device[deviceId].sflowGlobals->ifCounters = NULL;

@@ -292,7 +292,8 @@ char* makeHostLink(HostTraffic *el, short mode,
       else
         return("&lt;broadcast&gt;");
     }
-    if(cmpSerial(&el->hostSerial, &myGlobals.otherHostEntry->hostSerial)) {
+
+    if(cmpSerial(&el->serialHostIndex, &myGlobals.otherHostEntry->serialHostIndex)) {
       if(mode == FLAG_HOSTLINK_HTML_FORMAT)
         return("<TH "TH_BG" ALIGN=LEFT>&lt;other&gt;<!-- cmpSerial() match --></TH>");
       else
@@ -596,42 +597,36 @@ char* getHostName(HostTraffic *el, short cutName, char *buf, int bufLen) {
     return("broadcast");
 
   tmpStr = el->hostResolvedName;
-
-  if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
-    strncpy (buf, el->hostResolvedName, 80);
-  }
-  else {
-    if(broadcastHost(el)) {
-      strcpy (buf, "broadcast");
-    }
-    else {
-      tmpStr = el->hostResolvedName;
-
-      if((tmpStr == NULL) || (tmpStr[0] == '\0')) {
-	/* The DNS is still getting the entry name */
-	if(el->hostNumIpAddress[0] != '\0')
-	  strncpy(buf, el->hostNumIpAddress, 80);
-	else
-	  strncpy(buf, el->ethAddressString, 80);
-      } else if(tmpStr[0] != '\0') {
-	strncpy(buf, tmpStr, 80);
-	if(cutName) {
-	  int i;
-
-	  for(i=0; buf[i] != '\0'; i++)
-	    if((buf[i] == '.')
-	       && (!(isdigit(buf[i-1])
-		     && isdigit(buf[i+1]))
-		   )) {
-	      buf[i] = '\0';
-	      break;
-	    }
-	}
-      } else
-	strncpy(buf, el->ethAddressString, 80);
-    }
-  }
   
+  if(broadcastHost(el)) {
+    strcpy (buf, "broadcast");
+  } else {
+    tmpStr = el->hostResolvedName;
+
+    if((tmpStr == NULL) || (tmpStr[0] == '\0')) {
+      /* The DNS is still getting the entry name */
+      if(el->hostNumIpAddress[0] != '\0')
+	strncpy(buf, el->hostNumIpAddress, 80);
+      else
+	strncpy(buf, el->ethAddressString, 80);
+    } else if(tmpStr[0] != '\0') {
+      strncpy(buf, tmpStr, 80);
+      if(cutName) {
+	int i;
+
+	for(i=0; buf[i] != '\0'; i++)
+	  if((buf[i] == '.')
+	     && (!(isdigit(buf[i-1])
+		   && isdigit(buf[i+1]))
+		 )) {
+	    buf[i] = '\0';
+	    break;
+	  }
+      }
+    } else
+      strncpy(buf, el->ethAddressString, 80);
+  }
+   
   return(buf);
 }
 

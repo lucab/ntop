@@ -121,7 +121,7 @@ lib_LTLIBRARIES    = libntop.la libntopreport.la
 # core Archive, or the 'engine'
 libntop_la_SOURCES = address.c    argv.c        dataFormat.c   \
                      event.c globals-core.c \
-                     hash.c       iface.c       initialize.c  leaks.c \
+                     hash.c       ip.c		iface.c       initialize.c  leaks.c \
                      ntop.c       pbuf.c \
                      plugin.c     prefs.c       protocols.c   \
                      sessions.c   term.c        util.c        utildl.c \

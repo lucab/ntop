@@ -4734,19 +4734,19 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
     traceEventRRDebug(2, "Updating %s [%s/%s]", hostKey, el->hostNumIpAddress, el->ethAddressString);
 #endif
 
-    updateTrafficCounter(rrdPath, "pktSent", &el->pktSent, 0);
-    updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd, 0);
+    updateTrafficCounter(rrdPath, "pktsSent", &el->pktsSent, 0);
+    updateTrafficCounter(rrdPath, "pktsRcvd", &el->pktsRcvd, 0);
     updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent, 0);
     updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd, 0);
 
     if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
-      updateTrafficCounter(rrdPath, "pktDuplicatedAckSent", &el->pktDuplicatedAckSent, 0);
-      updateTrafficCounter(rrdPath, "pktDuplicatedAckRcvd", &el->pktDuplicatedAckRcvd, 0);
-      updateTrafficCounter(rrdPath, "pktBroadcastSent", &el->pktBroadcastSent, 0);
+      updateTrafficCounter(rrdPath, "pktsDuplicatedAckSent", &el->pktsDuplicatedAckSent, 0);
+      updateTrafficCounter(rrdPath, "pktsDuplicatedAckRcvd", &el->pktsDuplicatedAckRcvd, 0);
+      updateTrafficCounter(rrdPath, "pktsBroadcastSent", &el->pktsBroadcastSent, 0);
       updateTrafficCounter(rrdPath, "bytesBroadcastSent", &el->bytesBroadcastSent, 0);
-      updateTrafficCounter(rrdPath, "pktMulticastSent", &el->pktMulticastSent, 0);
+      updateTrafficCounter(rrdPath, "pktsMulticastSent", &el->pktsMulticastSent, 0);
       updateTrafficCounter(rrdPath, "bytesMulticastSent", &el->bytesMulticastSent, 0);
-      updateTrafficCounter(rrdPath, "pktMulticastRcvd", &el->pktMulticastRcvd, 0);
+      updateTrafficCounter(rrdPath, "pktsMulticastRcvd", &el->pktsMulticastRcvd, 0);
       updateTrafficCounter(rrdPath, "bytesMulticastRcvd", &el->bytesMulticastRcvd, 0);
 
       updateTrafficCounter(rrdPath, "bytesLocSent", &el->bytesSentLoc, 0);
@@ -5085,9 +5085,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	/* walk through all hosts, getting their domain names and counting stats */
 	for(el = getFirstHost(devIdx); el != NULL; el = getNextHost(devIdx, el)) {
-	  if (el->l2Family != FLAG_HOST_TRAFFIC_AF_ETH)
-	    continue;
-
 	  fillDomainName(el);
 
 	  /* if we didn't get a domain name, bail out */
@@ -5183,10 +5180,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
 	HostTraffic *el;
 
-	for (el = getFirstHost(devIdx); el != NULL; el = getNextHost(devIdx, el)) {
-	  if (el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH)
-	    rrdUpdateIPHostStats(el, devIdx, 0);
-        }
+	for(el = getFirstHost(devIdx); el != NULL; el = getNextHost(devIdx, el))
+	  rrdUpdateIPHostStats(el, devIdx, 0);        
       }
     }
 

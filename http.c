@@ -596,6 +596,12 @@ static void ssiMenu_Head(void) {
 		  "          [null,'Traffic','/" CONST_SORT_DATA_PROTOS_HTML "',null,null],\n"
 		  "          [null,'Throughput','/" CONST_SORT_DATA_THPT_HTML "',null,null],\n"
 		  "          [null,'Activity','/" CONST_SORT_DATA_HOST_TRAFFIC_HTML "',null,null],\n"
+		  "	     [null,'Top Talkers',null,null,null,\n"
+		  "		       [null,'Last Hour', '/" CONST_LAST_HOUR_TOP_TALKERS_HTML "',null,null],\n"
+		  "		       [null,'Last Day',  '/" CONST_LAST_MONTH_TOP_TALKERS_HTML "',null,null],\n"
+		  "		       [null,'Historical','/" CONST_HISTORICAL_TALKERS_HTML "',null,null],\n"
+		  "          ],\n"
+
 		  "          ],\n"
 		  "	[null,'IP',null,null,null,\n"
 		  "		[null,'Summary',null,null,null,\n"
@@ -2793,6 +2799,15 @@ static int returnHTTPPage(char* pageName,
 	printHostsTraffic(SORT_DATA_HOST_TRAFFIC, sortedColumn, revertOrder,
 			  pageNum, CONST_SORT_DATA_HOST_TRAFFIC_HTML,
 			  showHostsMode, showLocalityMode, vlanId);
+      } else if(strncasecmp(pageName, CONST_LAST_HOUR_TOP_TALKERS_HTML, strlen(CONST_LAST_HOUR_TOP_TALKERS_HTML)) == 0) {
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+	printTopTalkers(1);
+      } else if(strncasecmp(pageName, CONST_LAST_MONTH_TOP_TALKERS_HTML, strlen(CONST_LAST_MONTH_TOP_TALKERS_HTML)) == 0) {
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+	printTopTalkers(0);
+      } else if(strncasecmp(pageName, CONST_HISTORICAL_TALKERS_HTML, strlen(CONST_HISTORICAL_TALKERS_HTML)) == 0) {
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+	errorCode = FLAG_HTTP_INVALID_PAGE;
       } else if(strcasecmp(pageName, CONST_NET_FLOWS_HTML) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	listNetFlows();
@@ -2884,7 +2899,8 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawGlobalProtoDistribution();
 	printTrailer=0;
-      } else if(strncasecmp(pageName,CONST_NETWORK_MAP_HTML, strlen(CONST_NETWORK_MAP_HTML)) == 0) {
+      } else if(strncasecmp(pageName,CONST_NETWORK_MAP_HTML, 
+			    strlen(CONST_NETWORK_MAP_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	makeDot();
 	printTrailer=1;
@@ -2898,29 +2914,38 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawHostsDistanceGraph(0);
 	printTrailer=0;
-      } else if((strncasecmp(pageName,    "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0)
-		|| (strncasecmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0)
-		|| (strncasecmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0)
-		|| (strncasecmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0)
-		|| (strncasecmp(pageName, "hostTimeTrafficDistribution", strlen("hostTimeTrafficDistribution")) == 0)
+      } else if((strncasecmp(pageName,    CONST_HOST_TRAFFIC_DISTR_HTML,
+			     strlen(CONST_HOST_TRAFFIC_DISTR_HTML)) == 0)
+		|| (strncasecmp(pageName, CONST_HOST_FRAGMENT_DISTR_HTML, 
+				strlen(CONST_HOST_FRAGMENT_DISTR_HTML)) == 0)
+		|| (strncasecmp(pageName, CONST_HOST_TOT_FRAGMENT_DISTR_HTML, 
+				strlen(CONST_HOST_TOT_FRAGMENT_DISTR_HTML)) == 0)
+		|| (strncasecmp(pageName, CONST_HOST_IP_TRAFFIC_DISTR_HTML, 
+				strlen(CONST_HOST_IP_TRAFFIC_DISTR_HTML)) == 0)
+		|| (strncasecmp(pageName, CONST_HOST_TIME_TRAFFIC_DISTR_HTML, 
+				strlen(CONST_HOST_TIME_TRAFFIC_DISTR_HTML)) == 0)
 		) {
 	char hostName[47], *theHost;
 
-	if(strncasecmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0) {
+	if(strncasecmp(pageName, CONST_HOST_TRAFFIC_DISTR_HTML, 
+		       strlen(CONST_HOST_TRAFFIC_DISTR_HTML)) == 0) {
 	  idx = 0;
-	  theHost = &pageName[strlen("hostTrafficDistrib")+1];
-	} else if(strncasecmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0) {
+	  theHost = &pageName[strlen(CONST_HOST_TRAFFIC_DISTR_HTML)+1];
+	} else if(strncasecmp(pageName, CONST_HOST_FRAGMENT_DISTR_HTML, 
+			      strlen(CONST_HOST_FRAGMENT_DISTR_HTML)) == 0) {
 	  idx = 1;
-	  theHost = &pageName[strlen("hostFragmentDistrib")+1];
-	} else if(strncasecmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0) {
+	  theHost = &pageName[strlen(CONST_HOST_FRAGMENT_DISTR_HTML)+1];
+	} else if(strncasecmp(pageName, CONST_HOST_TOT_FRAGMENT_DISTR_HTML,
+			      strlen(CONST_HOST_TOT_FRAGMENT_DISTR_HTML)) == 0) {
 	  idx = 2;
-	  theHost = &pageName[strlen("hostTotalFragmentDistrib")+1];
-	} else if(strncasecmp(pageName, "hostTimeTrafficDistribution", strlen("hostTimeTrafficDistribution")) == 0) {
+	  theHost = &pageName[strlen(CONST_HOST_TOT_FRAGMENT_DISTR_HTML)+1];
+	} else if(strncasecmp(pageName, CONST_HOST_TIME_TRAFFIC_DISTR_HTML, 
+			      strlen(CONST_HOST_TIME_TRAFFIC_DISTR_HTML)) == 0) {
 	  idx = 3;
-	  theHost = &pageName[strlen("hostTimeTrafficDistribution")+1];
+	  theHost = &pageName[strlen(CONST_HOST_TIME_TRAFFIC_DISTR_HTML)+1];
 	} else {
 	  idx = 4;
-	  theHost = &pageName[strlen("hostIPTrafficDistrib")+1];
+	  theHost = &pageName[strlen(CONST_HOST_IP_TRAFFIC_DISTR_HTML)+1];
 	}
 
 	if(strlen(theHost) <= strlen(CHART_FORMAT)) {
@@ -3076,7 +3101,7 @@ static int returnHTTPPage(char* pageName,
 	printTrailer = 0;
       } else if(strncasecmp(pageName, CONST_PURGE_HOST, strlen(CONST_PURGE_HOST)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	purgeHost(db_key);
+	purgeHost((HostSerialIndex)atoi(db_key));
       } else if(strncasecmp(pageName, CONST_HOST_MAP, strlen(CONST_HOST_MAP)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printHTMLheader("Hosts World Map", NULL, 0);

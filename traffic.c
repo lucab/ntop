@@ -22,184 +22,66 @@
 
 static u_int8_t are_communities_defined = 0;
 
-void updateFcTrafficMatrix(HostTraffic *srcHost, HostTraffic *dstHost,
-                           TrafficCounter length, int actualDeviceId);
+/* ******************************* */
+
+static void dumpTopTalkers(time_t when, TopTalkers *lastMinTalkers) {
+  datum data_data, key_data;
+
+  // FIX - Implement periodic serial purging
+
+  key_data.dptr = (char*)&when, key_data.dsize = sizeof(time_t);
+  data_data.dptr = (char*)lastMinTalkers, data_data.dsize = sizeof(TopTalkers);
+
+  if(gdbm_store(myGlobals.topTalkersFile, key_data, data_data, GDBM_REPLACE) != 0)
+    traceEvent(CONST_TRACE_ERROR, "While adding top talkers at time %u", (unsigned int)when);
+}
 
 /* ******************************* */
 
-static void updateThptStats(int deviceToUpdate,
-			    HostSerial topSentSerial,
-			    HostSerial secondSentSerial, 
-			    HostSerial thirdSentSerial,
-			    HostSerial topHourSentSerial, 
-			    HostSerial secondHourSentSerial,
-			    HostSerial thirdHourSentSerial,
-			    HostSerial topRcvdSerial, 
-			    HostSerial secondRcvdSerial, 
-			    HostSerial thirdRcvdSerial,
-			    HostSerial topHourRcvdSerial, 
-			    HostSerial secondHourRcvdSerial,
-			    HostSerial thirdHourRcvdSerial) {
+static void updateThptStats(time_t when,
+			    int deviceToUpdate,
+			    TopTalkers *lastMinTalkers,
+			    TopTalkers *lastHourTalkers) {
   int i;
   HostTraffic *topHost;
   float topThpt;
-#ifdef DEBUG  
+
+#ifdef DEBUG
   char formatBuf[32];
-#endif  
+#endif
 
   /*
-  if(myGlobals.device[deviceToUpdate].dummyDevice)
+    if(myGlobals.device[deviceToUpdate].dummyDevice)
     return;
   */
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "updateThptStats(%d, %d, %d, %d, %d, %d)",
-	 topSentSerial, secondSentSerial, thirdSentSerial,
-	 topHourSentSerial, secondHourSentSerial,
-	 thirdHourSentSerial);
+  traceEvent(CONST_TRACE_INFO, "updateThptStats(%u, %d)", (unsigned int)myGlobals.actTime, deviceToUpdate);
 #endif
 
-  /* We never check enough... */
-  if(emptySerial(&topSentSerial)) 
-    return;
-
-  if(emptySerial(&topRcvdSerial))
-    return;
-
-  if(emptySerial(&secondSentSerial))
-      setEmptySerial(&secondSentSerial);
-
-  if(emptySerial(&thirdSentSerial))
-      setEmptySerial(&thirdSentSerial);
-
-  if(emptySerial(&secondRcvdSerial))
-      setEmptySerial(&secondRcvdSerial);
-
-  if(emptySerial(&thirdRcvdSerial))
-      setEmptySerial(&thirdRcvdSerial);
-
+  /* Shift */
   for(i=58; i>=0; i--)
-    memcpy(&myGlobals.device[deviceToUpdate].last60MinutesThpt[i+1],
-	   &myGlobals.device[deviceToUpdate].last60MinutesThpt[i], sizeof(ThptEntry));
+    memcpy(&myGlobals.device[deviceToUpdate].last60MinTopTalkers[i+1],
+	   &myGlobals.device[deviceToUpdate].last60MinTopTalkers[i], sizeof(TopTalkers));
 
-  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].trafficValue = myGlobals.device[deviceToUpdate].lastMinThpt;
+  /* Copy value */
+  memcpy(&myGlobals.device[deviceToUpdate].last60MinTopTalkers[0], lastMinTalkers, sizeof(TopTalkers));
 
-#ifdef DEBUG  
-  traceEvent (CONST_TRACE_ALWAYSDISPLAY, "LastMinThpt: %s",
-              formatThroughput(myGlobals.device[deviceToUpdate].lastMinThpt, 0, formatBuf, sizeof (formatBuf)));
-#endif  
-
-  topHost = findHostBySerial(topSentSerial, deviceToUpdate); 
-  if(topHost != NULL) topThpt = topHost->actualSentThpt; else topThpt = 0;
-  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topHostSentSerial = topSentSerial,
-    myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topSentTraffic.value = topThpt;
-
-  topHost = findHostBySerial(secondSentSerial, deviceToUpdate); 
-  if(topHost != NULL) topThpt = topHost->actualSentThpt; else topThpt = 0;
-  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].secondHostSentSerial = secondSentSerial,
-    myGlobals.device[deviceToUpdate].last60MinutesThpt[0].secondSentTraffic.value = topThpt;
-
-  topHost = findHostBySerial(thirdSentSerial, deviceToUpdate); 
-  if(topHost != NULL) topThpt = topHost->actualSentThpt; else topThpt = 0;
-  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].thirdHostSentSerial = thirdSentSerial,
-    myGlobals.device[deviceToUpdate].last60MinutesThpt[0].thirdSentTraffic.value = topThpt;
-
-  topHost = findHostBySerial(topRcvdSerial, deviceToUpdate); 
-  if(topHost != NULL) topThpt = topHost->actualRcvdThpt; else topThpt = 0;
-  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topHostRcvdSerial = topRcvdSerial,
-    myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topRcvdTraffic.value = topThpt;
-
-  topHost = findHostBySerial(secondRcvdSerial, deviceToUpdate); 
-  if(topHost != NULL) topThpt = topHost->actualRcvdThpt; else topThpt = 0;
-  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].secondHostRcvdSerial = secondRcvdSerial,
-    myGlobals.device[deviceToUpdate].last60MinutesThpt[0].secondRcvdTraffic.value = topThpt;
-
-  topHost = findHostBySerial(thirdRcvdSerial, deviceToUpdate); 
-  if(topHost != NULL) topThpt = topHost->actualRcvdThpt; else topThpt = 0;
-  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].thirdHostRcvdSerial = thirdRcvdSerial,
-    myGlobals.device[deviceToUpdate].last60MinutesThpt[0].thirdRcvdTraffic.value = topThpt;
-
-  myGlobals.device[deviceToUpdate].last60MinutesThptIdx = (myGlobals.device[deviceToUpdate].last60MinutesThptIdx+1) % 60;
-
-  if(!emptySerial(&topHourSentSerial)) { 
-    /* It wrapped -> 1 hour is over */
-    float average=0;
-
-    if(emptySerial(&topHourSentSerial)) return;
-    if(emptySerial(&topHourRcvdSerial)) return;
-    if(emptySerial(&secondHourSentSerial)) secondHourSentSerial.serialType = SERIAL_NONE;
-    if(emptySerial(&thirdHourSentSerial))  thirdHourSentSerial.serialType = SERIAL_NONE;
-    if(emptySerial(&secondHourRcvdSerial)) secondHourRcvdSerial.serialType = SERIAL_NONE;
-    if(emptySerial(&thirdHourRcvdSerial))  thirdHourRcvdSerial.serialType = SERIAL_NONE;
-
-    for(i=0; i<60; i++) {
-      average += myGlobals.device[deviceToUpdate].last60MinutesThpt[i].trafficValue;
-    }
-
-    average /= 60;
-
+  if(!emptySerial(&lastHourTalkers[0].senders)) {
+    /* Shift */
     for(i=22; i>=0; i--)
-      memcpy(&myGlobals.device[deviceToUpdate].last24HoursThpt[i+1], 
-	     &myGlobals.device[deviceToUpdate].last24HoursThpt[i], sizeof(ThptEntry));
+      memcpy(&myGlobals.device[deviceToUpdate].last24HoursTopTalkers[i+1],
+	     &myGlobals.device[deviceToUpdate].last24HoursTopTalkers[i], sizeof(TopTalkers));
 
-    myGlobals.device[deviceToUpdate].last24HoursThpt[0].trafficValue = average;
-
-  topHost = findHostBySerial(topHourSentSerial, deviceToUpdate); 
-  if(topHost != NULL) topThpt = topHost->lastHourSentThpt; else topThpt = 0;
-    myGlobals.device[deviceToUpdate].last24HoursThpt[0].topHostSentSerial = topHourSentSerial,
-      myGlobals.device[deviceToUpdate].last24HoursThpt[0].topSentTraffic.value = topThpt;
-
-  topHost = findHostBySerial(secondHourSentSerial, deviceToUpdate); 
-  if(topHost != NULL) topThpt = topHost->lastHourSentThpt; else topThpt = 0;
-    myGlobals.device[deviceToUpdate].last24HoursThpt[0].secondHostSentSerial = secondHourSentSerial,
-      myGlobals.device[deviceToUpdate].last24HoursThpt[0].secondSentTraffic.value = topThpt;
-
-  topHost = findHostBySerial(thirdHourSentSerial, deviceToUpdate); 
-  if(topHost != NULL) topThpt = topHost->lastHourSentThpt; else topThpt = 0;
-    myGlobals.device[deviceToUpdate].last24HoursThpt[0].thirdHostSentSerial = thirdHourSentSerial,
-      myGlobals.device[deviceToUpdate].last24HoursThpt[0].thirdSentTraffic.value = topThpt;
-
-
-  topHost = findHostBySerial(topHourRcvdSerial, deviceToUpdate); 
-  if(topHost != NULL) topThpt = topHost->lastHourRcvdThpt; else topThpt = 0;
-    myGlobals.device[deviceToUpdate].last24HoursThpt[0].topHostRcvdSerial = topHourRcvdSerial,
-      myGlobals.device[deviceToUpdate].last24HoursThpt[0].topRcvdTraffic.value = topThpt;
-
-  topHost = findHostBySerial(secondHourRcvdSerial, deviceToUpdate); 
-  if(topHost != NULL) topThpt = topHost->lastHourRcvdThpt; else topThpt = 0;
-    myGlobals.device[deviceToUpdate].last24HoursThpt[0].secondHostRcvdSerial = secondHourRcvdSerial,
-      myGlobals.device[deviceToUpdate].last24HoursThpt[0].secondRcvdTraffic.value = topThpt;
-
-  topHost = findHostBySerial(thirdHourRcvdSerial, deviceToUpdate); 
-  if(topHost != NULL) topThpt = topHost->lastHourRcvdThpt; else topThpt = 0;
-    myGlobals.device[deviceToUpdate].last24HoursThpt[0].thirdHostRcvdSerial = thirdHourRcvdSerial,
-      myGlobals.device[deviceToUpdate].last24HoursThpt[0].thirdRcvdTraffic.value = topThpt;
-
-    myGlobals.device[deviceToUpdate].last24HoursThptIdx = 
-      (myGlobals.device[deviceToUpdate].last24HoursThptIdx + 1) % 24;
-
-    if(myGlobals.device[deviceToUpdate].last24HoursThptIdx == 0) {
-      average=0;
-
-      for(i=0; i<24; i++) {
-	average += myGlobals.device[deviceToUpdate].last24HoursThpt[i].trafficValue;
-      }
-
-      average /= 24;
-
-      for(i=28; i>=0; i--) {
-	myGlobals.device[deviceToUpdate].last30daysThpt[i+1] = 
-	  myGlobals.device[deviceToUpdate].last30daysThpt[i];
-      }
-
-      myGlobals.device[deviceToUpdate].last30daysThpt[0] = average;
-      myGlobals.device[deviceToUpdate].last30daysThptIdx = 
-	(myGlobals.device[deviceToUpdate].last30daysThptIdx + 1) % 30;
-    }
+    /* Copy value */
+    memcpy(&myGlobals.device[deviceToUpdate].last24HoursTopTalkers[0], lastHourTalkers, sizeof(TopTalkers));
   }
 
   myGlobals.device[deviceToUpdate].numThptSamples++;
-  
+
+  /* Dump thpt stats on disk */
+  dumpTopTalkers(when, lastMinTalkers);
+
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "updateThptStats() completed.");
 #endif
@@ -207,25 +89,69 @@ static void updateThptStats(int deviceToUpdate,
 
 /* ******************************* */
 
+/* talkers = HostTalker[MAX_NUM_TOP_TALKERS] */
+static void updateTopThptDirection(HostTalker *talkers, 
+				   HostSerialIndex serialHostIndex, 
+				   float bps) {
+  int i, j;
+
+  if(talkers[MAX_NUM_TOP_TALKERS-1].bps > bps) 
+    return; /* We're not a top talker */
+
+  for(i=0; i<MAX_NUM_TOP_TALKERS; i++) {
+    if(talkers[i].hostSerial == serialHostIndex) break;
+
+    if(talkers[i].bps < bps) {
+      /* 1 - shift other values down */
+      for(j=i+1; j<MAX_NUM_TOP_TALKERS; j++)
+	talkers[j].hostSerial = talkers[j-1].hostSerial, 
+	  talkers[j].bps = talkers[j-1].bps;
+      
+      /* 2 - set the value at slot i */
+      talkers[i].hostSerial = serialHostIndex, talkers[i].bps = bps;
+      break;
+    }
+  }
+}
+
+/* ******************************* */
+
+static void updateTopThpt(TopTalkers *talkers, 
+			  HostSerialIndex serialHostIndex, 
+			  float sentBps, float rcvdBps) {
+  if(serialHostIndex == UNKNOWN_SERIAL_INDEX) return;
+
+  updateTopThptDirection((HostTalker*)&talkers->senders, serialHostIndex, sentBps);
+  updateTopThptDirection((HostTalker*)&talkers->receivers, serialHostIndex, rcvdBps);
+}
+
+/* ******************************* */
+
 void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
-  time_t timeDiff, timeMinDiff, timeHourDiff=0, totalTime;
+  int i;
+  time_t timeDiff, timeMinDiff, timeHourDiff=0, totalTime, when;
   HostTraffic *el, *topHost;
   float topThpt;
-  HostSerial topSentSerial, secondSentSerial, thirdSentSerial;
-  HostSerial topHourSentSerial, secondHourSentSerial, thirdHourSentSerial;
-  HostSerial topRcvdSerial, secondRcvdSerial, thirdRcvdSerial;
-  HostSerial topHourRcvdSerial, secondHourRcvdSerial, thirdHourRcvdSerial;
   short updateMinThpt=0, updateHourThpt=0;
-  
+  TopTalkers lastMinTalkers, lastHourTalkers;
+
   timeDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastThptUpdate;
   if(timeDiff < 10 /* secs */) return;
 
+  when = myGlobals.actTime + 60;
+  when -= (when % 60);
+  
   /* ******************************** */
+  
+  memset(&lastMinTalkers, 0, sizeof(lastMinTalkers));
+  memset(&lastHourTalkers, 0, sizeof(lastHourTalkers));
 
-  setEmptySerial(&topSentSerial), setEmptySerial(&secondSentSerial), setEmptySerial(&thirdSentSerial);
-  setEmptySerial(&topHourSentSerial), setEmptySerial(&secondHourSentSerial), setEmptySerial(&thirdHourSentSerial);
-  setEmptySerial(&topRcvdSerial), setEmptySerial(&secondRcvdSerial), setEmptySerial(&thirdRcvdSerial);
-  setEmptySerial(&topHourRcvdSerial), setEmptySerial(&secondHourRcvdSerial), setEmptySerial(&thirdHourRcvdSerial);
+  for(i=0; i<MAX_NUM_TOP_TALKERS; i++) {
+    setEmptySerial(&lastMinTalkers.senders[i].hostSerial);
+    setEmptySerial(&lastHourTalkers.senders[i].hostSerial);
+  }
+
+  lastMinTalkers.when = lastHourTalkers.when = when;
 
   /* ******************************** */
 
@@ -237,14 +163,14 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 
   /* timeDiff++; */
   myGlobals.device[deviceToUpdate].actualThpt = (float)myGlobals.device[deviceToUpdate].throughput/(float)timeDiff;
-  myGlobals.device[deviceToUpdate].actualPktsThpt = 
-      (float)myGlobals.device[deviceToUpdate].packetThroughput/(float)timeDiff;
-  
+  myGlobals.device[deviceToUpdate].actualPktsThpt =
+    (float)myGlobals.device[deviceToUpdate].packetThroughput/(float)timeDiff;
+
   if(myGlobals.device[deviceToUpdate].actualThpt > myGlobals.device[deviceToUpdate].peakThroughput)
-      myGlobals.device[deviceToUpdate].peakThroughput = myGlobals.device[deviceToUpdate].actualThpt;
-  
+    myGlobals.device[deviceToUpdate].peakThroughput = myGlobals.device[deviceToUpdate].actualThpt;
+
   if(myGlobals.device[deviceToUpdate].actualPktsThpt > myGlobals.device[deviceToUpdate].peakPacketThroughput)
-      myGlobals.device[deviceToUpdate].peakPacketThroughput = myGlobals.device[deviceToUpdate].actualPktsThpt;
+    myGlobals.device[deviceToUpdate].peakPacketThroughput = myGlobals.device[deviceToUpdate].actualPktsThpt;
 
   myGlobals.device[deviceToUpdate].throughput = myGlobals.device[deviceToUpdate].ethernetBytes.value;
   myGlobals.device[deviceToUpdate].packetThroughput = myGlobals.device[deviceToUpdate].ethernetPkts.value;
@@ -253,48 +179,48 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
     updateMinThpt = 1;
     myGlobals.device[deviceToUpdate].lastMinEthernetBytes.value = myGlobals.device[deviceToUpdate].ethernetBytes.value -
       myGlobals.device[deviceToUpdate].lastMinEthernetBytes.value;
-    myGlobals.device[deviceToUpdate].lastMinThpt = 
+    myGlobals.device[deviceToUpdate].lastMinThpt =
       (float)(myGlobals.device[deviceToUpdate].lastMinEthernetBytes.value)/(float)timeMinDiff;
     myGlobals.device[deviceToUpdate].lastMinEthernetBytes = myGlobals.device[deviceToUpdate].ethernetBytes;
     /* ******************* */
     myGlobals.device[deviceToUpdate].lastMinEthernetPkts.value = myGlobals.device[deviceToUpdate].ethernetPkts.value-
       myGlobals.device[deviceToUpdate].lastMinEthernetPkts.value;
-    myGlobals.device[deviceToUpdate].lastMinPktsThpt = 
+    myGlobals.device[deviceToUpdate].lastMinPktsThpt =
       (float)myGlobals.device[deviceToUpdate].lastMinEthernetPkts.value/(float)timeMinDiff;
     myGlobals.device[deviceToUpdate].lastMinEthernetPkts = myGlobals.device[deviceToUpdate].ethernetPkts;
     myGlobals.device[deviceToUpdate].lastMinThptUpdate = myGlobals.actTime;
   }
 
   if((timeMinDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate) >= 300 /* 5 minutes */) {
-    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes.value = 
+    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes.value =
       myGlobals.device[deviceToUpdate].ethernetBytes.value - myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes.value;
     myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate = timeMinDiff;
-    myGlobals.device[deviceToUpdate].lastFiveMinsThpt = 
+    myGlobals.device[deviceToUpdate].lastFiveMinsThpt =
       (float)myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes.value/
       (float)myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate;
-    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes.value = 
+    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes.value =
       myGlobals.device[deviceToUpdate].ethernetBytes.value;
     /* ******************* */
-    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts.value = 
-      myGlobals.device[deviceToUpdate].ethernetPkts.value 
+    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts.value =
+      myGlobals.device[deviceToUpdate].ethernetPkts.value
       - myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts.value;
-    myGlobals.device[deviceToUpdate].lastFiveMinsPktsThpt = 
+    myGlobals.device[deviceToUpdate].lastFiveMinsPktsThpt =
       (float)myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts.value/
       (float)myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate;
-    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts.value = 
+    myGlobals.device[deviceToUpdate].lastFiveMinsEthernetPkts.value =
       myGlobals.device[deviceToUpdate].ethernetPkts.value;
     myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate = myGlobals.actTime;
   }
 
   if(quickUpdate) {
-      myGlobals.device[deviceToUpdate].lastThptUpdate = myGlobals.actTime;
-      return;
+    myGlobals.device[deviceToUpdate].lastThptUpdate = myGlobals.actTime;
+    return;
   }
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "updateDeviceStats() called.");
 #endif
-  
+
   totalTime = myGlobals.actTime-myGlobals.initialSniffTime;
 
   if((timeHourDiff = myGlobals.actTime-myGlobals.
@@ -303,216 +229,52 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
     myGlobals.device[deviceToUpdate].lastHourThptUpdate = myGlobals.actTime;
   }
 
-  for(el=getFirstHost(deviceToUpdate); el != NULL; el = getNextHost(deviceToUpdate, el)) {
-    if(!isFcHost (el) && broadcastHost(el))
+  /*
+    By the time we update the throughtput we keep a list of top hosts
+    senders/receivers that we'll use for top talkers statistics
+  */
+
+  for(el = getFirstHost(deviceToUpdate); el != NULL; el = getNextHost(deviceToUpdate, el)) {
+    if(broadcastHost(el))
       continue;
 
     el->actualRcvdThpt       = (float)(el->bytesRcvd.value-el->lastBytesRcvd.value)/timeDiff;
     if(el->peakRcvdThpt      < el->actualRcvdThpt) el->peakRcvdThpt = el->actualRcvdThpt;
     el->actualSentThpt       = (float)(el->bytesSent.value-el->lastBytesSent.value)/timeDiff;
     if(el->peakSentThpt      < el->actualSentThpt) el->peakSentThpt = el->actualSentThpt;
-    el->actualTThpt          = (float)(el->bytesRcvd.value-el->lastBytesRcvd.value +
+    el->actualThpt          = (float)(el->bytesRcvd.value-el->lastBytesRcvd.value +
 				       el->bytesSent.value-el->lastBytesSent.value)/timeDiff;
-    if(el->peakTThpt         < el->actualTThpt) el->peakTThpt = el->actualTThpt;
+    if(el->peakThpt         < el->actualThpt) el->peakThpt = el->actualThpt;
     el->lastBytesSent        = el->bytesSent;
     el->lastBytesRcvd        = el->bytesRcvd;
 
     /* ******************************** */
 
-    el->actualRcvdPktThpt    = (float)(el->pktRcvd.value-el->lastThptPktRcvd.value)/timeDiff;
-    if(el->peakRcvdPktThpt   < el->actualRcvdPktThpt) el->peakRcvdPktThpt = el->actualRcvdPktThpt;
-    el->actualSentPktThpt    = (float)(el->pktSent.value-el->lastThptPktSent.value)/timeDiff;
-    if(el->peakSentPktThpt   < el->actualSentPktThpt) el->peakSentPktThpt = el->actualSentPktThpt;
-    el->actualTPktThpt       = (float)(el->pktRcvd.value-el->lastThptPktRcvd.value+
-				       el->pktSent.value-el->lastThptPktSent.value)/timeDiff;
-    if(el->peakTPktThpt      < el->actualTPktThpt) el->peakTPktThpt = el->actualTPktThpt;
-    el->lastThptPktSent          = el->pktSent;
-    el->lastThptPktRcvd          = el->pktRcvd;
-
-    /* ******************************** */
-
+    /* 1 Minute Throughput */
     if(updateMinThpt) {
       el->averageRcvdThpt    = ((float)el->bytesRcvdSession.value)/totalTime;
       el->averageSentThpt    = ((float)el->bytesSentSession.value)/totalTime;
-      el->averageTThpt       = ((float)el->bytesRcvdSession.value+
-				(float)el->bytesSentSession.value)/totalTime;
-      el->averageRcvdPktThpt = ((float)el->pktRcvdSession.value)/totalTime;
-      el->averageSentPktThpt = ((float)el->pktSentSession.value)/totalTime;
-      el->averageTPktThpt    = ((float)el->pktRcvdSession.value+
-				(float)el->pktSentSession.value)/totalTime;
 
-      if(emptySerial(&topSentSerial)) {
-	if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
-	  topSentSerial = el->hostSerial;
-      } else {
-	topHost = findHostBySerial(topSentSerial, deviceToUpdate); 
-	if(topHost != NULL) topThpt = topHost->actualSentThpt; else topThpt = 0;
-	if(el->actualSentThpt > topThpt) {
-	  if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry)) {
-	    secondSentSerial = topSentSerial;
-	    topSentSerial = el->hostSerial;
-	  }
-	} else {
-	    if(emptySerial(&secondSentSerial)) {
-                if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
-                    secondSentSerial = el->hostSerial;
-	  } else {
-	    topHost = findHostBySerial(secondSentSerial, deviceToUpdate); 
-	    if(topHost != NULL) topThpt = topHost->actualSentThpt; else topThpt = 0;
-	    if(el->actualSentThpt > topThpt) {
-	      if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry)) {
-		thirdSentSerial = secondSentSerial;
-		secondSentSerial = el->hostSerial;
-	      }
-	    } else {
-		if(emptySerial(&thirdSentSerial)) {
-		if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry)) {
-		  thirdSentSerial = el->hostSerial;
-		}
-	      } else {
-		topHost = findHostBySerial(thirdSentSerial, deviceToUpdate); 
-		if(topHost != NULL) topThpt = topHost->actualSentThpt; else topThpt = 0;
-		if(el->actualSentThpt > topThpt) {
-		  if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry)) {
-		    thirdSentSerial = el->hostSerial;
-		  }
-		}
-	      }
-	    }
-	  }
-	}
-      }
+      updateTopThpt(&lastMinTalkers, el->serialHostIndex, el->averageSentThpt, el->averageRcvdThpt);
 
-      if(emptySerial(&topRcvdSerial)) {
-	if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry)) 
-	  topRcvdSerial = el->hostSerial;
-      } else {
-	topHost = findHostBySerial(topRcvdSerial, deviceToUpdate); 
-	if(topHost != NULL) topThpt = topHost->actualRcvdThpt; else topThpt = 0;
-	if(el->actualRcvdThpt > topThpt) {
-	  if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry)) {
-	    secondRcvdSerial = topRcvdSerial;
-	    topRcvdSerial = el->hostSerial;
-	  }
-	} else {
-	    if(emptySerial(&secondRcvdSerial)) {
-	    if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
-	      secondRcvdSerial = el->hostSerial;
-	  } else {
-	    topHost = findHostBySerial(secondRcvdSerial, deviceToUpdate); 
-	    if(topHost != NULL) topThpt = topHost->actualRcvdThpt; else topThpt = 0;
-	    if(el->actualRcvdThpt > topThpt) {
-	      if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry)) {
-		thirdRcvdSerial = secondRcvdSerial;
-		secondRcvdSerial = el->hostSerial;
-	      }
-	    } else {
-		if(emptySerial(&thirdRcvdSerial)) {
-		if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
-		  thirdRcvdSerial = el->hostSerial;
-	      } else {
-		topHost = findHostBySerial(secondRcvdSerial, deviceToUpdate); 
-		if(topHost != NULL) topThpt = topHost->actualRcvdThpt; else topThpt = 0;
-		if(el->actualRcvdThpt > topThpt) {
-		  if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
-		    thirdRcvdSerial = el->hostSerial;
-		}
-	      }
-	    }
-	  }
-	}
-      }
-
+      /* 1 Hour Throughput */
       if(updateHourThpt) {
-	el->lastHourRcvdThpt = (float)(el->bytesRcvd.value-el->lastHourBytesRcvd.value)/timeHourDiff;
-	el->lastHourSentThpt = (float)(el->bytesSent.value-el->lastHourBytesSent.value)/timeHourDiff;
-	el->lastHourBytesRcvd = el->bytesRcvd;
-	el->lastHourBytesSent = el->bytesSent;
+	el->lastHourRcvdThpt     = (float)(el->bytesRcvd.value-el->lastHourBytesRcvd.value)/timeHourDiff;
+	el->lastHourSentThpt     = (float)(el->bytesSent.value-el->lastHourBytesSent.value)/timeHourDiff;
 
-	if(emptySerial(&topHourSentSerial)) {
-	  topHourSentSerial = el->hostSerial;
-	} else {
-	  topHost = findHostBySerial(topHourSentSerial, deviceToUpdate); 
-	  if(topHost != NULL) topThpt = topHost->lastHourSentThpt; else topThpt = 0;
-	  if(el->lastHourSentThpt > topThpt) {
-	    secondHourSentSerial = topHourSentSerial;
-	    topHourSentSerial = el->hostSerial;
-	  } else {
-	      if(emptySerial(&secondHourSentSerial)) {
-	      secondHourSentSerial = el->hostSerial;
-	    } else {
-	      topHost = findHostBySerial(secondHourSentSerial, deviceToUpdate); 
-	      if(topHost != NULL) topThpt = topHost->lastHourSentThpt; else topThpt = 0;
-	      if(el->lastHourSentThpt > topThpt) {
-		thirdHourSentSerial = secondHourSentSerial;
-		secondHourSentSerial = el->hostSerial;
-	      } else {
-		  if(emptySerial(&thirdHourSentSerial)) {
-		  thirdHourSentSerial = el->hostSerial;
-		} else {
-		  topHost = findHostBySerial(thirdHourSentSerial, deviceToUpdate); 
-		  if(topHost != NULL) topThpt = topHost->lastHourSentThpt; else topThpt = 0;
+	el->lastHourBytesRcvd = el->bytesRcvd, el->lastHourBytesSent = el->bytesSent;
 
-		  if(el->lastHourSentThpt > topThpt) {
-		    thirdHourSentSerial = el->hostSerial;
-		  }
-		}
-	      }
-	    }
-	  }
-	}
-
-	if(emptySerial(&topHourRcvdSerial)) {
-	  topHourRcvdSerial = el->hostSerial;
-	} else {
-	  topHost = findHostBySerial(topHourRcvdSerial, deviceToUpdate); 
-	  if(topHost != NULL) topThpt = topHost->lastHourRcvdThpt; else topThpt = 0;
-
-	  if(el->lastHourRcvdThpt > topThpt) {
-	    secondHourRcvdSerial = topHourRcvdSerial;
-	    topHourRcvdSerial = el->hostSerial;
-	  } else {
-	      if(emptySerial(&secondHourRcvdSerial)) {
-	      secondHourRcvdSerial = el->hostSerial;
-	    } else {
-	      topHost = findHostBySerial(secondHourRcvdSerial, deviceToUpdate); 
-	      if(topHost != NULL) topThpt = topHost->lastHourRcvdThpt; else topThpt = 0;
-
-	      if(el->lastHourRcvdThpt > topThpt) {
-		thirdHourRcvdSerial = secondHourRcvdSerial;
-		secondHourRcvdSerial = el->hostSerial;
-	      } else {
-		  if(emptySerial(&thirdHourRcvdSerial)) {
-		  thirdHourRcvdSerial = el->hostSerial;
-		} else {
-		  topHost = findHostBySerial(thirdHourRcvdSerial, deviceToUpdate); 
-		  if(topHost != NULL) topThpt = topHost->lastHourRcvdThpt; else topThpt = 0;
-
-		  if(el->lastHourRcvdThpt > topThpt) {
-		    thirdHourRcvdSerial = el->hostSerial;
-		  }
-		}
-	      }
-	    }
-	  }
-	}
+	updateTopThpt(&lastHourTalkers, el->serialHostIndex,
+		      el->lastHourSentThpt, el->lastHourRcvdThpt);
       }
     }
   }
 
-  if((updateMinThpt || updateHourThpt) 
-     && ((!emptySerial(&topSentSerial))
-	 || (!emptySerial(&topHourSentSerial))
-	 || (!emptySerial(&topRcvdSerial))
-	 || (!emptySerial(&topHourRcvdSerial))))
-    updateThptStats(deviceToUpdate,
-		    topSentSerial, secondSentSerial, thirdSentSerial,
-		    topHourSentSerial, secondHourSentSerial, thirdHourSentSerial,
-		    topRcvdSerial, secondRcvdSerial, thirdRcvdSerial,
-		    topHourRcvdSerial, secondHourRcvdSerial, thirdHourRcvdSerial);
+  if(updateMinThpt || updateHourThpt)
+    updateThptStats(when, deviceToUpdate, &lastMinTalkers, &lastHourTalkers);
 
   myGlobals.device[deviceToUpdate].lastThptUpdate = myGlobals.actTime;
-  
+
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "updateDeviceStats() completed.");
 #endif
@@ -548,7 +310,7 @@ int isInitialHttpData(char* packetData) {
      || (strncmp(packetData, "DELETE ",  7) == 0)
      || (strncmp(packetData, "TRACE ",   6) == 0)
      || (strncmp(packetData, "PROPFIND", 8) == 0) /* RFC 2518 */
-     ) 
+     )
     return(1);
   else
     return(0);
@@ -558,7 +320,7 @@ int isInitialHttpData(char* packetData) {
 
 int isInitialSkypeData(char* packetData, int packetDataLen) {
   int i, num_found = 0;
-  
+
   if((packetDataLen < 16) || (packetData[2] != 0x02)) return(0);
 
   for(i=0; i<16; i++) if(packetData[i] == 0x02) num_found++;
@@ -615,7 +377,7 @@ void checkCommunities() {
     free (key.dptr);
     key = nextkey;
   }
-  
+
   are_communities_defined = 0;
 }
 
@@ -631,7 +393,7 @@ char* findHostCommunity(u_int32_t host_ip, char *buf, u_short buf_len) {
       char val[256], localAddresses[2048], *communityName;
       NetworkStats localNetworks[MAX_NUM_NETWORKS]; /* [0]=network, [1]=mask, [2]=broadcast, [3]=mask_v6 */
       u_short numLocalNetworks = 0, i;
-    
+
       if((fetchPrefsValue(key.dptr, val, sizeof(val)) == 0)
 	 && (!strncmp(key.dptr, COMMUNITY_PREFIX, len))) {
 	localAddresses[0] = '\0';
@@ -681,7 +443,7 @@ void setHostCommunity(HostTraffic *el) {
 
 u_short isP2P(HostTraffic *a) {
   if((a != NULL)
-     && ((a->totContactedSentPeers > CONTACTED_PEERS_THRESHOLD) 
+     && ((a->totContactedSentPeers > CONTACTED_PEERS_THRESHOLD)
 	 || (a->totContactedRcvdPeers > CONTACTED_PEERS_THRESHOLD))) {
     /* Now we need to check if this has really been a P2P server */
     int i;
@@ -690,7 +452,7 @@ u_short isP2P(HostTraffic *a) {
       if((a->recentlyUsedServerPorts[i] == -1) || (a->recentlyUsedClientPorts[i] == -1))
 	return(0); /* It's just a busy server */
     }
-    
+
     return(1);
   } else
     return(0);
@@ -716,7 +478,7 @@ char* httpSiteIcon(char *name, char *buf, u_int buf_len, u_short addName) {
 
     i--;
   }
-  
+
   if(addName)
     safe_snprintf(__FILE__, __LINE__, buf, buf_len,
 		  "<IMG width=16 height=16 SRC=\"http://www.%s/favicon.ico\" BORDER=0>&nbsp;<A HREF=http://%s>%s</A>",
@@ -725,8 +487,6 @@ char* httpSiteIcon(char *name, char *buf, u_int buf_len, u_short addName) {
     safe_snprintf(__FILE__, __LINE__, buf, buf_len,
 		  "<IMG width=16 height=16 SRC=\"http://www.%s/favicon.ico\" BORDER=0>&nbsp;",
 		  &name[i]);
-  
+
   return(buf);
 }
-
-

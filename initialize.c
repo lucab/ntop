@@ -291,9 +291,6 @@ void resetDevice(int devIdx, short fullReset) {
   myGlobals.device[devIdx].throughput = 0;
   myGlobals.device[devIdx].packetThroughput = 0;
   myGlobals.device[devIdx].numThptSamples = 0;
-  myGlobals.device[devIdx].last60MinutesThptIdx = 0;
-  myGlobals.device[devIdx].last24HoursThptIdx = 0;
-  myGlobals.device[devIdx].last30daysThptIdx = 0;
 
   if(myGlobals.pcap_file_list == NULL) {
     myGlobals.device[devIdx].lastThptUpdate = myGlobals.device[devIdx].lastMinThptUpdate =
@@ -304,11 +301,8 @@ void resetDevice(int devIdx, short fullReset) {
   memset(&myGlobals.device[devIdx].tcpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
   memset(&myGlobals.device[devIdx].udpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
   memset(&myGlobals.device[devIdx].icmpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
-  memset(myGlobals.device[devIdx].last60MinutesThpt, 0, sizeof(myGlobals.device[devIdx].last60MinutesThpt));
-  memset(myGlobals.device[devIdx].last24HoursThpt, 0, sizeof(myGlobals.device[devIdx].last24HoursThpt));
-  memset(myGlobals.device[devIdx].last30daysThpt, 0, sizeof(myGlobals.device[devIdx].last30daysThpt));
-  myGlobals.device[devIdx].last60MinutesThptIdx=0, myGlobals.device[devIdx].last24HoursThptIdx=0,
-    myGlobals.device[devIdx].last30daysThptIdx=0;
+  memset(myGlobals.device[devIdx].last60MinTopTalkers, 0, sizeof(myGlobals.device[devIdx].last60MinTopTalkers));
+  memset(myGlobals.device[devIdx].last24HoursTopTalkers, 0, sizeof(myGlobals.device[devIdx].last24HoursTopTalkers));
   myGlobals.device[devIdx].hostsno = 1; /* Broadcast entry */
 
   if(fullReset) {

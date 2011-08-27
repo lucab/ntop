@@ -90,6 +90,9 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
 
   initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, FALSE,  &statbuf);
   initSingleGdbm(&myGlobals.fingerprintFile,  "fingerprint.db",  spoolDirectory, FALSE,  &statbuf);
+  initSingleGdbm(&myGlobals.serialFile,       "hostSerials.db",  spoolDirectory, TRUE,   &statbuf);
+  initSingleGdbm(&myGlobals.topTalkersFile,   "topTalkers.db",   spoolDirectory, FALSE,  &statbuf);
+
   createVendorTable(&statbuf);
 
   checkCommunities(); /* Check if communities are defined */
@@ -114,6 +117,8 @@ static void allocateOtherHosts(void) {
   myGlobals.otherHostEntry->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_FAKE;
   strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");
   myGlobals.otherHostEntry->portsUsage = NULL;
+
+  myGlobals.otherHostEntry->serialHostIndex = ++myGlobals.hostSerialCounter; /* Start from 1 (0 = UNKNOWN_SERIAL_INDEX) */
 }
 
 /* ************************************ */
@@ -294,6 +299,8 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   createMutex(&myGlobals.securityItemsMutex);
   createMutex(&myGlobals.hostsHashLockMutex);
 
+  createMutex(&myGlobals.serialLockMutex);  /* Serial host locking */
+
   for(i=0; i<CONST_HASH_INITIAL_SIZE; i++) {
     createMutex(&myGlobals.hostsHashMutex[i]);
     myGlobals.hostsHashMutexNumLocks[i] = 0;
@@ -425,7 +432,8 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   setHostFlag(FLAG_BROADCAST_HOST, myGlobals.broadcastEntry);
   setHostFlag(FLAG_SUBNET_PSEUDO_LOCALHOST, myGlobals.broadcastEntry);
   memset(&myGlobals.broadcastEntry->hostSerial, 0, sizeof(HostSerial));
-
+  myGlobals.broadcastEntry->serialHostIndex = ++myGlobals.hostSerialCounter; /* Start from 1 (0 = UNKNOWN_SERIAL_INDEX) */
+ 
   allocateOtherHosts();
 
   /* ********************************** */
@@ -531,6 +539,10 @@ void initNtop(char *devices) {
   /* ********************************** */
 
   initGdbm(myGlobals.dbPath, myGlobals.spoolPath, 0);
+
+  /* We just initialized gdbm: let's now dump serials */
+  dumpHostSerial(&myGlobals.broadcastEntry->hostSerial, myGlobals.broadcastEntry->serialHostIndex);
+  dumpHostSerial(&myGlobals.otherHostEntry->hostSerial, myGlobals.otherHostEntry->serialHostIndex);
 
   if(myGlobals.runningPref.daemonMode) {
     /*

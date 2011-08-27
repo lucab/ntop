@@ -221,8 +221,13 @@ void str2serial(HostSerial *theSerial, char *buf, int buf_len) {
 
 /* ************************************ */
 
-HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
-  if(emptySerial(&theSerial)) return(NULL);
+HostTraffic* findHostBySerial(HostSerialIndex serialHostIndex, u_int actualDeviceId) {
+  HostSerial theSerial;
+
+  if(emptySerial(&serialHostIndex)) return(NULL);
+
+  getHostSerialFromId(serialHostIndex, &theSerial);
+
   if(theSerial.serialType == SERIAL_IPV4 || theSerial.serialType == SERIAL_IPV6) {
     return(findHostByNumIP(theSerial.value.ipSerial.ipAddress,
 			   theSerial.value.ipSerial.vlanId,
@@ -381,10 +386,10 @@ HostAddr *addrcpy(HostAddr *dst, HostAddr *src) {
   dst->hostFamily = src->hostFamily;
   switch (src->hostFamily) {
   case AF_INET:
-    memcpy(&dst->Ip4Address,&src->Ip4Address,sizeof(struct in_addr));
+    memcpy(&dst->Ip4Address, &src->Ip4Address, sizeof(struct in_addr));
     return(dst);
   case AF_INET6:
-    memcpy(&dst->Ip6Address,&src->Ip6Address,sizeof(struct in6_addr));
+    memcpy(&dst->Ip6Address, &src->Ip6Address, sizeof(struct in6_addr));
     return(dst);
 
   default:
@@ -2472,6 +2477,7 @@ void resetHostsVariables(HostTraffic* el) {
   resetUsageCounter(&el->contactedRcvdPeers);
   resetUsageCounter(&el->contactedRouters);
 
+  el->serialHostIndex = UNKNOWN_SERIAL_INDEX;
   el->vlanId          = NO_VLAN;
   el->ifId            = NO_INTERFACE;
   el->known_subnet_id = UNKNOWN_SUBNET_ID;
@@ -3952,10 +3958,10 @@ int _incrementUsageCounter(UsageCounter *counter,
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
     if(emptySerial(&counter->peersSerials[i])) {
-      copySerial(&counter->peersSerials[i], &theHost->hostSerial);
+      copySerial(&counter->peersSerials[i], &theHost->serialHostIndex);
       return(1);
       break;
-    } else if(cmpSerial(&counter->peersSerials[i], &theHost->hostSerial)) {
+    } else if(cmpSerial(&counter->peersSerials[i], &theHost->serialHostIndex)) {
       found = 1;
       break;
     }
@@ -3966,7 +3972,7 @@ int _incrementUsageCounter(UsageCounter *counter,
       copySerial(&counter->peersSerials[i], &counter->peersSerials[i+1]);
 
     /* Add host serial and not it's index */
-    copySerial(&counter->peersSerials[MAX_NUM_CONTACTED_PEERS-1], &theHost->hostSerial);
+    copySerial(&counter->peersSerials[MAX_NUM_CONTACTED_PEERS-1], &theHost->serialHostIndex);
     return(1); /* New entry added */
   }
 
@@ -4226,19 +4232,6 @@ void escape(char *dest, int destLen, char *src) {
       dest[destIdx++] = src[srcIdx];
     }
   }
-}
-
-/* ******************************** */
-
-void incrementTrafficCounter(TrafficCounter *ctr, Counter value) {
-  if(value > 0)
-    ctr->value += value, ctr->modified = 1;
-}
-
-/* ******************************** */
-
-void resetTrafficCounter(TrafficCounter *ctr) {
-  ctr->value = 0, ctr->modified = 0;
 }
 
 /* ******************************** */
@@ -4526,34 +4519,7 @@ int setSpecifiedUser(void) {
 
 /* ************************************ */
 
-u_int16_t getHostAS(HostTraffic *el) {
-  return (el->hostAS);
-}
-
-/* ************************************ */
-
-int emptySerial(HostSerial *a) {
-  return(a->serialType == 0);
-}
-
-/* ********************************** */
-
-int cmpSerial(HostSerial *a, HostSerial *b) {
-  return(!memcmp(a, b, sizeof(HostSerial)));
-}
-
-/* ********************************** */
-
-int copySerial(HostSerial *a, HostSerial *b) {
-  memcpy(a, b, sizeof(HostSerial));
-  return(!a);
-}
-
-/* ********************************** */
-
-void setEmptySerial(HostSerial *a) {
-  memset(a, 0, sizeof(HostSerial));
-}
+u_int16_t getHostAS(HostTraffic *el) { return (el->hostAS); }
 
 /* ********************************* */
 
@@ -6063,8 +6029,10 @@ static PortUsage* allocatePortUsage(void) {
 
   ptr = (PortUsage*)calloc(1, sizeof(PortUsage));
 
-  if(ptr)
-    setEmptySerial(&ptr->clientUsesLastPeer), setEmptySerial(&ptr->serverUsesLastPeer);
+  if(ptr) {
+    setEmptySerial(&ptr->clientUsesLastPeer);
+    setEmptySerial(&ptr->serverUsesLastPeer);
+  }
 
   return(ptr);
 }
@@ -6298,6 +6266,8 @@ strcasestr (char *haystack, char *needle)
 }
 #endif
 
+/* ***************************************** */
+
 void web_sanitize(char *value) {
   int i;
 
@@ -6311,4 +6281,13 @@ void web_sanitize(char *value) {
       value[i] = '_';
     break;
     }
+}
+
+/* ***************************************** */
+
+extern void _lowMemory(char *file, int line) {
+  if(!myGlobals.lowMemoryMsgShown) {
+    traceEvent(CONST_TRACE_ERROR, "Low memory @ %s:%d", file, line);
+    myGlobals.lowMemoryMsgShown = 1;
+  }
 }

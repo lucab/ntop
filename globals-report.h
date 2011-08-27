@@ -107,7 +107,7 @@ extern void printIcmpv6Stats(HostTraffic *el);
 extern void printIcmpv4Stats(HostTraffic *el);
 extern void printHostFragmentStats(HostTraffic *el, int actualDeviceId);
 extern void printTotalFragmentStats(HostTraffic *el, int actualDeviceId);
-extern HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el);
+extern HostTraffic* quickHostLink(HostSerialIndex theSerial, int deviceId, HostTraffic *el);
 extern void printHostContactedPeers(HostTraffic *el, int actualDeviceId);
 extern void printFcHostContactedPeers(HostTraffic *el, int actualDeviceId);
 extern char *getSessionState(IPSession *session);
@@ -201,7 +201,7 @@ extern void printIpProtocolUsage(void);
 extern void printBar(char *buf, int bufLen, unsigned short percentageS, unsigned short percentageR,
                      unsigned short maxPercentage, unsigned short ratio);
 extern void printIpProtocolDistribution(int mode, int revertOrder, int printGraph);
-
+extern void printTopTalkers(u_int8_t printHourTalkers);
 extern void printProtoTraffic(int printGraph);
 extern void printProcessInfo(int processPid, int actualReportDeviceId);
 extern void printThptStats(int sortedColumn);
@@ -214,7 +214,7 @@ extern void printHostHourlyTraffic(HostTraffic *el);
 extern void printVLANList(unsigned int deviceId);
 extern void showPortTraffic(u_short portNr);
 extern void handleNtopConfig (char *url, UserPrefDisplayPage page, int postLen);
-extern void purgeHost(char *serialized_serial);
+extern void purgeHost(HostSerialIndex theSerial);
 extern void printInterfaceStats(void);
 extern void findHost(char *key);
 extern char* hostRRdGraphLink(HostTraffic *el, 

@@ -59,6 +59,8 @@ extern char *memoryDebug;
 #endif
 
 /* util.c */
+extern void _lowMemory(char *file, int line);
+#define lowMemory() _lowMemory(__FILE__, __LINE__)
 #ifndef HAVE_GETOPT_H
 /* Our own, minimal extract from getopt.h */
 extern char *optarg;
@@ -76,7 +78,6 @@ extern void extractAndAppend(char *userAgent, int userAgentLen, char *title, cha
 extern int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int bufLen);
 extern int processVersionFile(char *buf, int bufLen);
 extern void maximize_socket_buffer(int sock_fd, int buf_type);
-extern void setEmptySerial(HostSerial *a);
 extern FILE* checkForInputFile(char* logTag, char* descr, char* fileName, struct stat *dbStat,
                                u_char* compressedFormat);
 extern int readInputFile(FILE* fd, char* logTag, u_char forceClose, u_char compressedFormat,
@@ -155,7 +156,7 @@ extern u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
 				 const u_char *ipPtr,
                                  DNSHostInfo *hostPtr, short length,
                                  short *isRequest, short *positiveReply);
-extern void checkSpoofing(HostTraffic *el, int actualDeviceId);
+extern void checkSpoofing(HostTraffic *el, int actualDeviceId, const struct pcap_pkthdr *h, const u_char *p);
 extern void cleanupHostEntries(void);
 extern char* subnetId2networkName(int8_t known_subnet_id, char *buf, u_short buf_len);
 extern char* host2networkName(HostTraffic *el, char *buf, u_short buf_len);
@@ -200,6 +201,7 @@ extern void term_python(void);
 #endif
 
 /* hash.c */
+extern void dumpHostSerial(HostSerial *serial, HostSerialIndex serialHostIndex);
 extern u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 		      short* useIPAddressForSearching, HostTraffic **el, int actualDeviceId);
 extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
@@ -211,11 +213,17 @@ extern void setHostSerial(HostTraffic *el);
 extern HostTraffic * _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, 
 				 u_int16_t vlanId, u_char checkForMultihoming, 
 				 u_char forceUsingIPaddress, int actualDeviceId,
-				 char *file, int line);
-#define lookupHost(a, b, c, d, e, f) _lookupHost(a, b, c, d, e, f, __FILE__, __LINE__)
+				 char *file, int line,
+				 const struct pcap_pkthdr *h, const u_char *p);
+#define lookupHost(a, b, c, d, e, f, g, h) _lookupHost(a, b, c, d, e, f, __FILE__, __LINE__, g, h)
+
 extern void add_valid_ptr(void* ptr);
 extern void remove_valid_ptr(void* ptr);
 extern int is_valid_ptr(void* ptr);
+
+extern HostSerial* getHostSerialFromId(HostSerialIndex serialHostIndex, HostSerial *serial);
+extern HostSerialIndex getHostIdFromSerial(HostSerial *serial);
+
 
 /* initialize.c */
 extern void initIPServices(void);
@@ -379,8 +387,15 @@ extern void *scanFingerprintLoop(void *notUsed);
 extern void runningThreads(char *buf, int sizeofbuf, int do_join);
 extern RETSIGTYPE cleanup(int signo);
 
-/* pbuf.c */
-extern void allocateSecurityHostPkts(HostTraffic *srcHost);
+/* ip.c */
+extern void processIpPkt(const u_char *bp,
+			 const struct pcap_pkthdr *h,
+			 const u_char *orig_p,
+			 u_int length,
+			 u_char *ether_src,
+			 u_char *ether_dst,
+			 int actualDeviceId,
+			 int vlanId);
 extern int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 		    const u_int numPkts, const u_int _length,
 		    u_short isPassiveSess, u_short isVoipSess,
@@ -388,6 +403,9 @@ extern int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 		    int actualDeviceId, u_short newSession);
 extern void deleteFragment(IpFragment *fragment, int actualDeviceId);
 extern void purgeOldFragmentEntries(int actualDeviceId);
+
+/* pbuf.c */
+extern void allocateSecurityHostPkts(HostTraffic *srcHost);
 extern void updateHostName(HostTraffic *el);
 extern void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_int length);
 extern void incrementUnknownProto(HostTraffic *host, int direction, u_int16_t eth_type,
@@ -406,8 +424,8 @@ extern void cleanupPacketQueue(void);
 extern void *dequeuePacket(void* notUsed);
 extern void updateDevicePacketStats(u_int length, int actualDeviceId);
 extern void updateFcDevicePacketStats(u_int length, int actualDeviceId);
-extern void dumpSuspiciousPacket(int actualDeviceId);
-extern void dumpOtherPacket(int actualDeviceId);
+extern void dumpSuspiciousPacket(int actualDeviceId, const struct pcap_pkthdr *h, const u_char *p);
+extern void dumpOtherPacket(int actualDeviceId, const struct pcap_pkthdr *h, const u_char *p);
 extern void processPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
                           const u_char *p);
 extern void addNewIpProtocolToHandle(char* name, u_int16_t id, u_int16_t idAlias);
@@ -415,7 +433,8 @@ extern void addNewIpProtocolToHandle(char* name, u_int16_t id, u_int16_t idAlias
 /* protocols.c */
 extern void handleBootp(HostTraffic *srcHost, HostTraffic *dstHost,
 			u_short sport, u_short dport,
-			u_int packetDataLength, u_char* packetData, int actualDeviceId);
+			u_int packetDataLength, u_char* packetData, int actualDeviceId,
+			const struct pcap_pkthdr *h, const u_char *p);
 extern u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
 				  const u_char *bp, u_int length,
 				  short *isRequest, short *positiveReply);
@@ -482,15 +501,12 @@ extern bool processNtopPref(char *key, char *value, bool savePref, UserPref *pre
 extern void initUserPrefs(UserPref *pref);
 
 /* util.c */
-extern void setEmptySerial(HostSerial *a);
 extern void handleAddressLists(char* addresses, NetworkStats theNetworks[MAX_NUM_NETWORKS],
 			       u_short *numNetworks, char *localAddresses,
 			       int localAddressesLen, int flagWhat);
 extern void handleFlowsSpecs(void);
 extern void initPassiveSessions(void);
 extern void termPassiveSessions(void);
-extern void incrementTrafficCounter(TrafficCounter *ctr, Counter value);
-extern void resetTrafficCounter(TrafficCounter *ctr);
 extern HostTraffic* _getFirstHost(u_int actualDeviceId, char *file, int line);
 #define getFirstHost(a) _getFirstHost(a, __FILE__, __LINE__)
 extern HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, int line);
@@ -499,7 +515,7 @@ extern char* serial2str(HostSerial theSerial, char *buf, int buf_len);
 extern void str2serial(HostSerial *theSerial, char *buf, int buf_len);
 extern int ntop_conditional_sched_yield(void);
 extern HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualDeviceId);
-extern HostTraffic* findHostBySerial(HostSerial serial, u_int actualDeviceId);
+extern HostTraffic* findHostBySerial(HostSerialIndex serial, u_int actualDeviceId);
 extern HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId);
 extern unsigned long in6_hash(struct in6_addr *addr);
 extern int in6_isglobal(struct in6_addr *addr);
@@ -737,9 +753,6 @@ extern u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr,
 				int sport, int dport);
 extern int setSpecifiedUser(void);
 extern u_int16_t getHostAS(HostTraffic *el);
-extern int emptySerial(HostSerial *a);
-extern int cmpSerial(HostSerial *a, HostSerial *b);
-extern int copySerial(HostSerial *a, HostSerial *b);
 extern void addPortToList(HostTraffic *host, int *thePorts /* 0...MAX_NUM_RECENT_PORTS */, u_short thePort);
 extern bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref);
 #ifndef WIN32
@@ -829,6 +842,7 @@ extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
 			    u_short sport, u_short dport, u_int length);
 extern void updatePortList(HostTraffic *theHost, int clientPort, int serverPort);
 extern IPSession* handleSession(const struct pcap_pkthdr *h,
+				const u_char *p,
                                 u_short fragmentedData, u_int tcpWin,
                                 HostTraffic *srcHost, u_short sport,
                                 HostTraffic *dstHost, u_short dport,
@@ -839,7 +853,7 @@ extern IPSession* handleSession(const struct pcap_pkthdr *h,
 				u_char real_session /* vs. faked/netflow-session */);
 extern void updateHostUsers(char *userName, int userType, HostTraffic *theHost);
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
-extern void updatePeersDelayStats(HostTraffic *peer_a, HostSerial *peer_b_serial,
+extern void updatePeersDelayStats(HostTraffic *peer_a, HostSerialIndex *peer_b_serial,
 				  u_int16_t port,
 				  struct timeval *nwDelay,
 				  struct timeval *synAckTime, 
@@ -943,12 +957,10 @@ Code "inherited" from nslookup
 
 /* Bit test macros */
 #define theDomainHasBeenComputed(a) FD_ISSET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &(a->flags))
-#define isFcHost(a)                 (a->l2Family == FLAG_HOST_TRAFFIC_AF_FC)
-#define isValidVsanId(a)            ((a > 0) && (a < MAX_USER_VSAN))
 #define subnetLocalHost(a)          ((a != NULL) && FD_ISSET(FLAG_SUBNET_LOCALHOST, &(a->flags)))
 #define privateIPAddress(a)         ((a != NULL) && FD_ISSET(FLAG_PRIVATE_IP_ADDRESS, &(a->flags)))
-#define broadcastHost(a)            ((a != NULL) && (a != myGlobals.otherHostEntry) && (!isFcHost (a)) && ((cmpSerial(&a->hostSerial, &myGlobals.broadcastEntry->hostSerial) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))) || ((a->hostIp4Address.s_addr == 0) && (a->ethAddressString[0] == '\0'))))
-#define multicastHost(a)            ((a != NULL) && (!isFcHost (a)) && FD_ISSET(FLAG_MULTICAST_HOST, &(a->flags)))
+#define broadcastHost(a)            ((a != NULL) && (a != myGlobals.otherHostEntry) && ((cmpSerial(&a->serialHostIndex, &myGlobals.broadcastEntry->serialHostIndex) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))) || ((a->hostIp4Address.s_addr == 0) && (a->ethAddressString[0] == '\0'))))
+#define multicastHost(a)            ((a != NULL) && FD_ISSET(FLAG_MULTICAST_HOST, &(a->flags)))
 #define gatewayHost(a)              ((a != NULL) && FD_ISSET(FLAG_GATEWAY_HOST, &(a->flags)))
 #define nameServerHost(a)           ((a != NULL) && FD_ISSET(FLAG_NAME_SERVER_HOST, &(a->flags)))
 #define subnetPseudoLocalHost(a)    ((a != NULL) && FD_ISSET(FLAG_SUBNET_PSEUDO_LOCALHOST, &(a->flags)))

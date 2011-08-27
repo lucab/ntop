@@ -1265,7 +1265,7 @@ u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
 
 /* **************************************** */
 
-void checkSpoofing(HostTraffic *hostToCheck, int actualDeviceId) {
+void checkSpoofing(HostTraffic *hostToCheck, int actualDeviceId, const struct pcap_pkthdr *h, const u_char *p) {
   HostTraffic *el;
 
   for(el=getFirstHost(actualDeviceId);
@@ -1282,12 +1282,11 @@ void checkSpoofing(HostTraffic *hostToCheck, int actualDeviceId) {
 	  traceEvent(CONST_TRACE_WARNING,
 		     "Two MAC addresses found for the same IP address %s: [%s/%s] (spoofing detected?)",
 		     el->hostNumIpAddress, hostToCheck->ethAddressString, el->ethAddressString);
-	  dumpSuspiciousPacket(actualDeviceId);
+	  dumpSuspiciousPacket(actualDeviceId, h, p);
 	}
       }
     }
   }
-
 }
 
 /* **************************************** */
