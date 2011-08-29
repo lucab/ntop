@@ -1028,7 +1028,7 @@ void processPacket(u_char *_deviceId,
       printf("eth_type:       0x%x\n", eth_type);
 #endif
       ether_src = ether_dst = myGlobals.dummyEthAddress;
-      processIpPkt(p+sizeof(AnyHeader), h, length, ether_src, ether_dst, actualDeviceId, vlanId);
+      processIpPkt(p+sizeof(AnyHeader), h, p, length, ether_src, ether_dst, actualDeviceId, vlanId);
       break;
 #endif
 
