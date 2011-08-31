@@ -721,11 +721,11 @@ static PyObject* python_fingerprint(PyObject *self, PyObject *args) {
 /* **************************************** */
 
 static PyObject* python_pktsSent(PyObject *self, PyObject *args) {
-  return PyLong_FromUnsignedLong((unsigned long)(unsigned long)(ntop_host->pktSent.value));
+  return PyLong_FromUnsignedLong((unsigned long)(unsigned long)(ntop_host->pktsSent.value));
 }
 
 static PyObject* python_pktsRcvd(PyObject *self, PyObject *args) {
-  return PyLong_FromUnsignedLong((unsigned long)(unsigned long)(ntop_host->pktRcvd.value));
+  return PyLong_FromUnsignedLong((unsigned long)(unsigned long)(ntop_host->pktsRcvd.value));
 }
 
 /* **************************************** */

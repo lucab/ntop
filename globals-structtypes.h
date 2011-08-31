@@ -364,7 +364,7 @@ typedef struct trafficCounter {
 
 /* ******************************** */
 
-inline static incrementTrafficCounter(TrafficCounter *ctr, Counter value) { if(value > 0) ctr->value += value, ctr->modified = 1; }
+inline static void incrementTrafficCounter(TrafficCounter *ctr, Counter value) { if(value > 0) ctr->value += value, ctr->modified = 1; }
 inline static void resetTrafficCounter(TrafficCounter *ctr)               { ctr->value = 0, ctr->modified = 0;                    }
 
 /* ************* Types Definition ********************* */

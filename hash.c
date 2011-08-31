@@ -62,7 +62,7 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 	idx = (hostIpAddress->Ip4Address.s_addr & 0xffff)
 	  ^ ((hostIpAddress->Ip4Address.s_addr >> 15) & 0xffff);
       else if(hostIpAddress->hostFamily == AF_INET6)
-	idx = in6_hash(&hostIpAddress->Ip6Address);
+	idx = (u_int)in6_hash(&hostIpAddress->Ip6Address);
     }
 
     (*useIPAddressForSearching) = 1;
@@ -87,7 +87,7 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 	if(hostIpAddress->hostFamily == AF_INET)
 	  idx = (hostIpAddress->Ip4Address.s_addr & 0xffff) ^ ((hostIpAddress->Ip4Address.s_addr >> 15) & 0xffff);
 	else if(hostIpAddress->hostFamily == AF_INET6)
-	  idx = in6_hash(&hostIpAddress->Ip6Address);
+	  idx = (u_int)in6_hash(&hostIpAddress->Ip6Address);
       }
     } else {
       idx = FLAG_NO_PEER;
@@ -413,7 +413,7 @@ int purgeIdleHosts(int actDevice) {
     lastPurgeTime[actDevice] = now;
 
   maxHosts = myGlobals.device[actDevice].hostsno; /* save it as it can change */
-  myGlobals.piMem = maxHosts*sizeof(HostTraffic*);
+  myGlobals.piMem = (u_int)(maxHosts*sizeof(HostTraffic*));
   theFlaggedHosts = (HostTraffic**)calloc(1, myGlobals.piMem);
 
   purgeOldFragmentEntries(actDevice); /* let's do this too */
@@ -866,7 +866,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     if(el->portsUsage != NULL)
       freePortsUsage(el);
 
-    len = (size_t)myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo**);
+    len = (size_t)(myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo**));
     if((el->ipProtosList = (ShortProtoTrafficInfo**)malloc(len)) == NULL) {
       if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);

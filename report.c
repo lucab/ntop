@@ -1911,7 +1911,8 @@ static int printTalker(HostTalker *t) {
 	  makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 	  sizeof(webHostName));
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TD "TD_BG" ALIGN=LEFT>", getRowColor());
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		"<TR "TR_ON" %s><TD "TD_BG" ALIGN=LEFT>", getRowColor());
   sendString(buf);
 
   sendString(webHostName);
@@ -1965,14 +1966,14 @@ void printTopTalkers(u_int8_t printHourTalkers) {
     sendString(ctime(&when));
     sendString("</TH>");
 
-    sendString("<TD "TD_BG">"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">");
+    sendString("<TD "TD_BG">"TABLE_ON"<TABLE BORDER=1 width=100% "TABLE_DEFAULTS">");
     for(j=0; j<MAX_NUM_TOP_TALKERS; j++) 
       if(printTalker(&talkers[i].senders[j]) == -1)
 	break;
 
     sendString("</TABLE>"TABLE_OFF"</TD>");
 
-    sendString("<TD "TD_BG">"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">");
+    sendString("<TD "TD_BG">"TABLE_ON"<TABLE BORDER=1 width=100% "TABLE_DEFAULTS">");
     for(j=0; j<MAX_NUM_TOP_TALKERS; j++)
       if(printTalker(&talkers[i].receivers[j]) == -1)
 	break;

@@ -99,14 +99,18 @@ static void updateTopThptDirection(HostTalker *talkers,
     return; /* We're not a top talker */
 
   for(i=0; i<MAX_NUM_TOP_TALKERS; i++) {
-    if(talkers[i].hostSerial == serialHostIndex) break;
+    if(talkers[i].hostSerial == serialHostIndex) {
+      if(talkers[i].bps < bps) talkers[i].bps = bps;
+      break;
+    }
 
     if(talkers[i].bps < bps) {
       /* 1 - shift other values down */
-      for(j=i+1; j<MAX_NUM_TOP_TALKERS; j++)
-	talkers[j].hostSerial = talkers[j-1].hostSerial, 
-	  talkers[j].bps = talkers[j-1].bps;
-      
+      if(talkers[i].hostSerial != UNKNOWN_SERIAL_INDEX) {
+	for(j=MAX_NUM_TOP_TALKERS-1; j>i; j--)
+	  talkers[j].hostSerial = talkers[j-1].hostSerial, talkers[j].bps = talkers[j-1].bps;	
+      }
+
       /* 2 - set the value at slot i */
       talkers[i].hostSerial = serialHostIndex, talkers[i].bps = bps;
       break;

@@ -334,13 +334,13 @@ int handleIP(u_short port,
 
     if((!myGlobals.runningPref.trackOnlyLocalHosts)
        || (myGlobals.runningPref.trackOnlyLocalHosts && subnetPseudoLocalHost(srcHost))) {
-      allocHostTrafficCounterMemory(srcHost, protoIPTrafficInfos, myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**));
+      allocHostTrafficCounterMemory(srcHost, protoIPTrafficInfos, (u_int)(myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**)));
       allocHostTrafficCounterMemory(srcHost, protoIPTrafficInfos[idx], sizeof(ProtoTrafficInfo));
     }
 
     if((!myGlobals.runningPref.trackOnlyLocalHosts)
        || (myGlobals.runningPref.trackOnlyLocalHosts && subnetPseudoLocalHost(dstHost))) {
-      allocHostTrafficCounterMemory(dstHost, protoIPTrafficInfos, myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**));
+      allocHostTrafficCounterMemory(dstHost, protoIPTrafficInfos, (u_int)(myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**)));
       allocHostTrafficCounterMemory(dstHost, protoIPTrafficInfos[idx], sizeof(ProtoTrafficInfo));
     }
 
@@ -1730,7 +1730,7 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	if((protoList->protocolId == nh)
 	   || ((protoList->protocolIdAlias != 0) && (protoList->protocolIdAlias == nh))) {
 
-	  allocHostTrafficCounterMemory(srcHost, ipProtosList, (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**));
+	  allocHostTrafficCounterMemory(srcHost, ipProtosList, (size_t)(myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**)));
 	  if(srcHost->ipProtosList) {
 	    allocHostTrafficCounterMemory(srcHost, ipProtosList[idx], sizeof(ShortProtoTrafficInfo));
 	    if(srcHost->ipProtosList[idx] == NULL) return;
