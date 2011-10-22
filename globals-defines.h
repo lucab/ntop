@@ -2675,7 +2675,6 @@ struct ip6_hdr
 #define NTOP_PREF_MAXSESSIONS            "ntop.maxNumSessions"
 #define NTOP_PREF_MERGEIF                "ntop.mergeInterfaces"
 #define NTOP_PREF_ENABLE_L7PROTO         "ntop.enableL7Proto"
-#define NTOP_PREF_NO_TRUST_MAC           "ntop.dontTrustMACaddr"
 #define NTOP_PREF_PCAP_LOGBASE           "ntop.pcapLogBasePath"
 #define NTOP_PREF_DBG_MODE               "ntop.debugMode"
 #define NTOP_PREF_TRACE_LVL              "ntop.traceLevel"

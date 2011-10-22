@@ -56,19 +56,19 @@ static char __see__ []    =
    * ('P' option) and so these are processed separately.
    */
 #ifdef WIN32
-static char*  short_options = "46a:bce:f:ghi:jl:m:n:op:qr:st:w:x:zAB:C:D:F:M" 
+static char*  short_options = "46a:bce:f:ghi:jl:m:n:p:qr:st:w:x:zAB:C:D:F:M" 
 #if defined(DARWIN) && (!defined(TIGER))
   "v"
 #endif
   "O:P:Q:S:U:VX:W:";
 #elif defined(MAKE_WITH_SYSLOG)
-static char*  short_options = "46a:bcde:f:ghi:jl:m:n:op:qr:st:u:w:x:zAB:C:D:F:IKLM" 
+static char*  short_options = "46a:bcde:f:ghi:jl:m:n:p:qr:st:u:w:x:zAB:C:D:F:IKLM" 
 #if defined(DARWIN) && (!defined(TIGER))
   "v"
 #endif
   "O:P:Q:S:U:VX:W:";
 #else
-static char*  short_options = "46a:bcde:f:ghi:jl:m:n:op:qr:st:u:w:x:zAB:C:D:F:IKM"
+static char*  short_options = "46a:bcde:f:ghi:jl:m:n:p:qr:st:u:w:x:zAB:C:D:F:IKM"
 #if defined(DARWIN) && (!defined(TIGER))
   "v"
 #endif
@@ -422,10 +422,6 @@ int parseOptions(int argc, char* argv[]) {
 	traceEvent(CONST_TRACE_WARNING, "Invalid value for -n: setting it to 0");
 	myGlobals.runningPref.numericFlag = noDnsResolution;
       }
-      break;
-
-    case 'o': /* Do not trust MAC addresses */
-      myGlobals.runningPref.dontTrustMACaddr = 1;
       break;
 
     case 'p': /* the TCP/UDP protocols being monitored */
@@ -1249,9 +1245,6 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
   } else if(strcmp(key, NTOP_PREF_ENABLE_L7PROTO) == 0) {
     processBoolPref(NTOP_PREF_ENABLE_L7PROTO, value2bool(value),
 		     &pref->enableL7, savePref);
-  } else if(strcmp(key, NTOP_PREF_NO_TRUST_MAC) == 0) {
-    processBoolPref(NTOP_PREF_NO_TRUST_MAC, value2bool(value),
-		     &pref->dontTrustMACaddr, savePref);
   } else if(strcmp(key, NTOP_PREF_PCAP_LOGBASE) == 0) {
     processStrPref(NTOP_PREF_PCAP_LOGBASE, value,
 		    &pref->pcapLogBasePath, savePref);
@@ -1319,7 +1312,6 @@ void initUserPrefs(UserPref *pref) {
   pref->pcapLog = DEFAULT_NTOP_PCAP_LOG_FILENAME;
   pref->localAddresses = DEFAULT_NTOP_LOCAL_SUBNETS;
   pref->numericFlag = DEFAULT_NTOP_NUMERIC_IP_ADDRESSES;
-  pref->dontTrustMACaddr = DEFAULT_NTOP_DONT_TRUST_MAC_ADDR;
   pref->protoSpecs = DEFAULT_NTOP_PROTO_SPECS;
   pref->enableSuspiciousPacketDump = DEFAULT_NTOP_SUSPICIOUS_PKT_DUMP;
   pref->refreshRate = DEFAULT_NTOP_AUTOREFRESH_INTERVAL;

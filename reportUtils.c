@@ -3054,8 +3054,7 @@ void printHostSessions(HostTraffic *el, int actualDeviceId) {
 */
 
 u_short isHostHealthy(HostTraffic *el) {
-  if(((myGlobals.runningPref.dontTrustMACaddr == 0) && hasDuplicatedMac(el)) 
-     || hasSentIpDataOnZeroPort(el))
+  if(hasDuplicatedMac(el) || hasSentIpDataOnZeroPort(el))
     return(3);
 
   if(hasWrongNetmask(el))
@@ -3343,7 +3342,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   sendString("<CENTER>\n<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=80%%>\n");
 
   if(el->hostNumIpAddress[0] != '\0') {
-    char *hostType, tmpBuf[64];
+    char *hostType;
 
     if(broadcastHost(el)) hostType = "broadcast";
     else if(multicastHost(el)) hostType = "multicast";
@@ -3621,11 +3620,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     strcpy(symLink, symMacAddr);
     urlFixupToRFC1945Inplace(symLink);
 
-    if(!myGlobals.runningPref.dontTrustMACaddr) {
-      safe_snprintf(__FILE__, __LINE__, shortBuf, sizeof(shortBuf), "<A HREF=%s.html>%s</A>", symLink, symMacAddr);
-    } else {
-      strcpy(shortBuf, symMacAddr);
-    }    
+    safe_snprintf(__FILE__, __LINE__, shortBuf, sizeof(shortBuf), "<A HREF=%s.html>%s</A>", symLink, symMacAddr);
 
     vendorName = getVendorInfo(el->lastEthAddress, 1);
 
@@ -4627,7 +4622,7 @@ void printHostsStats(int fingerprintRemote) {
     return;
   }
 
-  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno; /* save it as it can change */
   tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "printHostsStats");
   if(tmpTable == NULL)
     return;

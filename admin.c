@@ -127,7 +127,7 @@ void addUser(char* user) {
     sendString("<CENTER>\n");
 
     sendString("<script Language=\"JavaScript\">\nfunction CheckForm(theForm) "
-	       "{\nif (theForm.pw.value != theForm.pw1.value) {\n    alert(\"Passwords do not match. "
+	       "{\nif(theForm.pw.value != theForm.pw1.value) {\n    alert(\"Passwords do not match. "
 	       "Please try again.\");\n    theForm.pw1.focus();\n    return(false);\n  }\n  return(true);"
 	       "\n}\n</script>\n");
 
@@ -1008,7 +1008,7 @@ static void addKeyIfMissing(char* key, char* value,
     /* If not existing, then add user 'admin' and ask for password  */
 
     if(userQuestion != NULL) {
-      if (myGlobals.runningPref.daemonMode) {
+      if(myGlobals.runningPref.daemonMode) {
 	/*
 	 * We need a password for the admin user, but the user requested
 	 * daemon mode.  stdin is already detached; getpass() would fail.
@@ -1026,9 +1026,9 @@ static void addKeyIfMissing(char* key, char* value,
       while(pw1[0] == '\0') {
         thePw = getpass(userQuestion);
 #ifdef WIN32
-        if ( (isWinNT()) || (strlen(thePw) >= 5) ) {
+        if( (isWinNT()) || (strlen(thePw) >= 5) ) {
 #else
-        if (strlen(thePw) >= 5) {
+        if(strlen(thePw) >= 5) {
 #endif
           if(strlen(thePw) > (sizeof(pw1)-1)) thePw[sizeof(pw1)-1] = '\0';
           strcpy(pw1, thePw);
@@ -1099,7 +1099,7 @@ static void addKeyIfMissing(char* key, char* value,
 void setAdminPassword(char* pass) {
   traceEvent(CONST_TRACE_INFO, "Setting administrator password...");
   
-  if (pass == NULL)
+  if(pass == NULL)
     addKeyIfMissing("1admin", NULL, 1, CONST_ADMINPW_QUESTION);
   else
     addKeyIfMissing("1admin", pass, 1, NULL);
@@ -1180,7 +1180,6 @@ void addDefaultAdminUser(void) {
    tmpPrefs.debugMode = tmpPrefs.daemonMode = tmpPrefs.w3c = 0;
    tmpPrefs.numericFlag = dnsResolutionForAll;
    tmpPrefs.mergeInterfaces = tmpPrefs.enableL7 = 0;
-   tmpPrefs.dontTrustMACaddr = 0;
    tmpPrefs.enableOtherPacketDump = tmpPrefs.enableSuspiciousPacketDump = 0;
    tmpPrefs.enableSessionHandling = 0;
 
@@ -1203,7 +1202,7 @@ void addDefaultAdminUser(void) {
      if(key) {
        action = processNtopPref(key, value, savePref, &tmpPrefs);
 
-       if (action) {
+       if(action) {
 	 startCap = TRUE;
        }
 
@@ -1238,70 +1237,66 @@ void addDefaultAdminUser(void) {
     * from the saved preferences file.
     */
 
-     if (basic_prefs && myGlobals.savedPref.enableSessionHandling &&
+     if(basic_prefs && myGlobals.savedPref.enableSessionHandling &&
 	 !tmpPrefs.enableSessionHandling) {
        /* default for enableSessionHandling is TRUE */
        processNtopPref(NTOP_PREF_EN_SESSION, FALSE, savePref, &tmpPrefs);
      }
 
-     if (basic_prefs && myGlobals.savedPref.enablePacketDecoding &&
+     if(basic_prefs && myGlobals.savedPref.enablePacketDecoding &&
 	 !tmpPrefs.enablePacketDecoding) {
        processNtopPref(NTOP_PREF_EN_PROTO_DECODE, FALSE, savePref, &tmpPrefs);
      }
 
-     if (basic_prefs && myGlobals.savedPref.stickyHosts && !tmpPrefs.stickyHosts) {
+     if(basic_prefs && myGlobals.savedPref.stickyHosts && !tmpPrefs.stickyHosts) {
        processNtopPref(NTOP_PREF_STICKY_HOSTS, FALSE, savePref, &tmpPrefs);
      }
 
-     if (basic_prefs && myGlobals.savedPref.trackOnlyLocalHosts &&
+     if(basic_prefs && myGlobals.savedPref.trackOnlyLocalHosts &&
 	 !tmpPrefs.trackOnlyLocalHosts) {
        processNtopPref(NTOP_PREF_TRACK_LOCAL, FALSE, savePref, &tmpPrefs);
      }
 
-     if (basic_prefs && myGlobals.savedPref.disablePromiscuousMode &&
+     if(basic_prefs && myGlobals.savedPref.disablePromiscuousMode &&
 	 !tmpPrefs.disablePromiscuousMode) {
        processNtopPref(NTOP_PREF_NO_PROMISC, FALSE, savePref, &tmpPrefs);
      }
 
-     if (basic_prefs && myGlobals.savedPref.daemonMode && !tmpPrefs.daemonMode) {
+     if(basic_prefs && myGlobals.savedPref.daemonMode && !tmpPrefs.daemonMode) {
        processNtopPref(NTOP_PREF_DAEMON, FALSE, savePref, &tmpPrefs);
      }
 
-   if (display_prefs && myGlobals.savedPref.w3c && !tmpPrefs.w3c) {
+   if(display_prefs && myGlobals.savedPref.w3c && !tmpPrefs.w3c) {
      processNtopPref(NTOP_PREF_W3C, FALSE, savePref, &tmpPrefs);
    }
 
-   if (ip_prefs && myGlobals.savedPref.numericFlag && !tmpPrefs.numericFlag) {
+   if(ip_prefs && myGlobals.savedPref.numericFlag && !tmpPrefs.numericFlag) {
      processNtopPref(NTOP_PREF_NUMERIC_IP, FALSE, savePref, &tmpPrefs);
    }
 
-   if (advanced_prefs && myGlobals.savedPref.mergeInterfaces && !tmpPrefs.mergeInterfaces) {
+   if(advanced_prefs && myGlobals.savedPref.mergeInterfaces && !tmpPrefs.mergeInterfaces) {
      processNtopPref(NTOP_PREF_MERGEIF, FALSE, savePref, &tmpPrefs);
    }
 
-   if (advanced_prefs && myGlobals.savedPref.enableL7 && !tmpPrefs.enableL7) {
+   if(advanced_prefs && myGlobals.savedPref.enableL7 && !tmpPrefs.enableL7) {
      processNtopPref(NTOP_PREF_ENABLE_L7PROTO, FALSE, savePref, &tmpPrefs);
    }
 
-   if (advanced_prefs && myGlobals.savedPref.dontTrustMACaddr && !tmpPrefs.dontTrustMACaddr) {
-     processNtopPref(NTOP_PREF_NO_TRUST_MAC, FALSE, savePref, &tmpPrefs);
-   }
-
-   if (debug_prefs && myGlobals.savedPref.debugMode && !tmpPrefs.debugMode) {
+   if(debug_prefs && myGlobals.savedPref.debugMode && !tmpPrefs.debugMode) {
      processNtopPref(NTOP_PREF_DBG_MODE, FALSE, savePref, &tmpPrefs);
    }
 
-   if (debug_prefs && myGlobals.savedPref.enableOtherPacketDump &&
+   if(debug_prefs && myGlobals.savedPref.enableOtherPacketDump &&
        !tmpPrefs.enableOtherPacketDump) {
      processNtopPref(NTOP_PREF_DUMP_OTHER, FALSE, savePref, &tmpPrefs);
    }
 
-   if (debug_prefs && myGlobals.savedPref.enableSuspiciousPacketDump &&
+   if(debug_prefs && myGlobals.savedPref.enableSuspiciousPacketDump &&
        !tmpPrefs.enableSuspiciousPacketDump) {
      processNtopPref(NTOP_PREF_DUMP_SUSP, FALSE, savePref, &tmpPrefs);
    }
 
-   if (debug_prefs && myGlobals.savedPref.disableMutexExtraInfo &&
+   if(debug_prefs && myGlobals.savedPref.disableMutexExtraInfo &&
        !tmpPrefs.disableMutexExtraInfo) {
      processNtopPref(NTOP_PREF_NO_MUTEX_EXTRA, FALSE, savePref, &tmpPrefs);
    }
@@ -1414,9 +1409,9 @@ char * rindex(const char *p, int ch) {
 
   u.cp = p;
   for (save = NULL;; ++u.p) {
-    if (*u.p == ch)
+    if(*u.p == ch)
       save = u.p;
-    if (*u.p == '\0')
+    if(*u.p == '\0')
       return(save);
   }
   /* NOTREACHED */
@@ -1435,7 +1430,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
   /*
    * Configuration is dealt with via POST method. So read the data first.
    */
-  if (postLen) {
+  if(postLen) {
     if((len = readHTTPpostData (postLen, buf, 1024)) != postLen) {
       traceEvent (CONST_TRACE_WARNING, "handleNtopConfig: Unable to retrieve "
 		  "all POST data (%d, expecting %d). Aborting processing\n",
@@ -1458,30 +1453,30 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 	/* traceEvent (CONST_TRACE_INFO, "BUF='%s'\n", buf); */
 
 	/* locate the last parameter which tells us which button got pressed */
-	if ((token = rindex (buf, '&')) != NULL) {
+	if((token = rindex (buf, '&')) != NULL) {
 	  token++;
       safe_snprintf(__FILE__, __LINE__, token_buf, sizeof(token_buf),
 					"%s", token);
   	  unescape_url(token_buf);
 	  token = token_buf;
 
-	  if (strncmp (token, NTOP_SAVE_PREFS,
+	  if(strncmp (token, NTOP_SAVE_PREFS,
 		       strlen (NTOP_SAVE_PREFS)) == 0) {
 	    savePref = TRUE;
-	  } else if (strncmp (token, NTOP_RESTORE_DEF,
+	  } else if(strncmp (token, NTOP_RESTORE_DEF,
 			    strlen (NTOP_RESTORE_DEF)) == 0) {
 	    restoreDef = TRUE;
 	  }
 	}
 
-	if (restoreDef) {
+	if(restoreDef) {
 	  initUserPrefs (&defaults);
           defaults.samplingRate =  myGlobals.savedPref.samplingRate;
 	  pref = &defaults;
 	} else {
 	  /* process preferences and start capture if necessary */
 	  processNtopConfigData (buf, savePref);
-	  if (startCap) {
+	  if(startCap) {
 	    /* TBD */
 	  }
 	}
@@ -1541,7 +1536,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
     CONFIG_INT_ENTRY(DARK_BG, "Packet sampling rate (-C)", NTOP_PREF_SAMPLING,
 		     50, pref->samplingRate, "Sampling rate [1 = no sampling]");
 
-    if (pref->webAddr == NULL) {
+    if(pref->webAddr == NULL) {
       safe_snprintf (__FILE__, __LINE__, hostStr, sizeof (hostStr),
 		     "%d", pref->webPort);
     } else {
@@ -1553,7 +1548,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		     "HTTP Server [Address:]Port of ntop's web interface");
 
 #ifdef HAVE_OPENSSL
-    if (pref->sslAddr == NULL) {
+    if(pref->sslAddr == NULL) {
       safe_snprintf (__FILE__, __LINE__, hostStr, sizeof (hostStr),
 		     "%d", pref->sslPort);
     } else {
@@ -1677,11 +1672,6 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 		       NTOP_PREF_MERGEIF, pref->mergeInterfaces,
 		       "Yes = merge data from all interfaces (if possible), No = do not merge data from all interfaces");
 
-    CONFIG_RADIO_ENTRY(DARK_BG, "Don't Trust MAC Address (-o)",
-		       NTOP_PREF_NO_TRUST_MAC, pref->dontTrustMACaddr,
-		       "Situations which may require this option include "
-		       "port/VLAN mirror");
-
     CONFIG_STR_ENTRY(DARK_BG, "Pcap Log Base Path (-O)",
 		     NTOP_PREF_PCAP_LOGBASE, 50, pref->pcapLogBasePath,
 		     "Directory where packet dump files are created");
@@ -1734,7 +1724,7 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
 
   sendString ("</TABLE>");
   /* Save Prefs */
-  if (configScr == showPrefDisplayPref) {
+  if(configScr == showPrefDisplayPref) {
     sendString("<tr><td colspan=\"2\" align=\"center\">&nbsp;<p>"
 	       "<input type=submit name=" NTOP_SAVE_PREFS " value=\"Save&nbsp;Prefs\">&nbsp;"
 	       "<input type=submit name=AP value=\"Apply&nbsp;Prefs\">&nbsp;"

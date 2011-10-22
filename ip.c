@@ -626,8 +626,7 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
   }
 
   if(ip6 == NULL) {
-    if((!myGlobals.runningPref.dontTrustMACaddr)
-       && isBroadcastAddress(&dstAddr, NULL, NULL)
+    if(isBroadcastAddress(&dstAddr, NULL, NULL)
        && (ether_src != NULL) && (ether_dst != NULL) /* PPP has no ethernet */
        && (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
       /* forceUsingIPaddress = 1; */
@@ -715,8 +714,7 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
   ctr.value = h->len;
   updatePacketCount(srcHost, &srcAddr, dstHost, &dstAddr, ctr, 1, actualDeviceId);
 
-  if((!myGlobals.runningPref.dontTrustMACaddr)
-     && (!myGlobals.device[actualDeviceId].dummyDevice)) {
+  if(!myGlobals.device[actualDeviceId].dummyDevice) {
     checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId, length, h, p);
     ctr.value = length;
   }
@@ -1120,7 +1118,7 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.malformedPkts, 1);
       }
     } else {
-      udpDataLength = tcpUdpLen - sizeof(struct udphdr);
+      udpDataLength = (u_int)(tcpUdpLen - sizeof(struct udphdr));
       memcpy(&up, bp+hlen, sizeof(struct udphdr));
 
       sport = ntohs(up.uh_sport);

@@ -633,19 +633,19 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   float *s, *r;  
   int icmpColumnSort = 0;
 
-  i = sizeof(float)*myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
+  i = sizeof(float)*myGlobals.device[myGlobals.actualReportDeviceId].hosts.actualHashSize;
   s = (float*)malloc(i); r = (float*)malloc(i);
   memset(s, 0, i); memset(r, 0, i);
 
-  i = sizeof(char*)*myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
+  i = sizeof(char*)*myGlobals.device[myGlobals.actualReportDeviceId].hosts.actualHashSize;
   lbls = malloc(i);
   memset(lbls, 0, i);
 
-  i = sizeof(HostTraffic*)*myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
+  i = sizeof(HostTraffic*)*myGlobals.device[myGlobals.actualReportDeviceId].hosts.actualHashSize;
   hosts = (HostTraffic**)malloc(i);
 
-  for(i=0, num=0; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++) {
-    HostTraffic *el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i];
+  for(i=0, num=0; i<myGlobals.device[myGlobals.actualReportDeviceId].hosts.actualHashSize; i++) {
+    HostTraffic *el = myGlobals.device[myGlobals.actualReportDeviceId].hosts.hash_hostTraffic[i];
 
     while(el != NULL) {
       if((el != myGlobals.broadcastEntry)

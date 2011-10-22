@@ -104,7 +104,6 @@ static void updateHostNameInfo(HostAddr addr, char* symbolic, int type) {
 /* ************************************ */
 
 static void queueAddress(HostAddr elem) {
-  int i;
   HostAddrList *cloned = NULL;
 
   if(myGlobals.runningPref.numericFlag == noDnsResolution) return;
@@ -577,7 +576,7 @@ static int _ns_name_ntop(const u_char *src,
     return (-1);
   }
   *dn++ = '\0';
-  return (dn - dst);
+  return((int)(dn - dst));
 }
 
 /* ************************************ */
@@ -653,8 +652,9 @@ static int _ns_name_unpack(const u_char *msg,
 	errno = EMSGSIZE;
 	return (-1);
       }
+
       if (len < 0)
-	len = srcp - src + 1;
+	len = (int)(srcp - src + 1);
       srcp = msg + (((n & 0x3f) << 8) | (*srcp & 0xff));
       if (srcp < msg || srcp >= eom) {  /* Out of range. */
 	errno = EMSGSIZE;
@@ -679,7 +679,7 @@ static int _ns_name_unpack(const u_char *msg,
   }
   *dstp = '\0';
   if (len < 0)
-    len = srcp - src;
+    len = (int)(srcp - src);
   return (len);
 }
 
@@ -735,13 +735,13 @@ static int _dn_skipname(const u_char *ptr, const u_char *eom) {
 
   if (_ns_name_skip(&ptr, eom) == -1)
     return (-1);
-  return (ptr - saveptr);
+  return((int)(ptr - saveptr));
 }
 
 /* ************************************ */
 
 static void msdns_filter_name(char *msg) {
-  int i, j, max = strlen(msg);
+  int i, j, max = (int)strlen(msg);
 
   for(i=0, j=0; i<max; i++) {
 #ifdef MDNS_DEBUG
@@ -1084,7 +1084,7 @@ u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
       char *a, *b, *c, *d, dnsBuf[128], *strtokState = NULL;
       unsigned long theDNSaddr;
 
-      len = strlen((char*)bp);
+      len = (int)strlen((char*)bp);
 
       if(bp[0] == '_') {
 	/* Multicast DNS */
@@ -1122,7 +1122,7 @@ u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
 	    continue;
 	  }
 	  cp += n;
-	  len = strlen((char *)bp) + 1;
+	  len = (int)(strlen((char *)bp) + 1);
 	  memcpy(hostPtr->name, bp, len);
 	  haveAnswer = TRUE;
 	}
@@ -1155,7 +1155,7 @@ u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
       hostPtr->addrLen = dlen;
       origClass = class;
       hostPtr->addrType = (class == C_IN) ? AF_INET : AF_UNSPEC;
-      len = strlen((char *)bp) + 1;
+      len = (int)(strlen((char *)bp) + 1);
       memcpy(hostPtr->name, bp, len);
     }
 
@@ -1166,7 +1166,7 @@ u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
     {
       u_int32_t     padding;
 
-      padding=((u_int32_t)((long)bp)) % sizeof(u_int32_t);
+      padding = (u_int32_t)(((long)bp) % sizeof(u_int32_t));
       bp += padding;
       buflen -= padding;
     }
@@ -1244,7 +1244,7 @@ u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
       handleMdnsName(srcHost, sport, bp);
 
     cp += n;
-    len = strlen((char *)bp) + 1;
+    len = (int)(strlen((char *)bp) + 1);
 
     if (cp + 3 * INT16SZ + INT32SZ > eom)
       return(transactionId);

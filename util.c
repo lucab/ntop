@@ -58,8 +58,8 @@ static HostTraffic* __getFirstHost(u_int actualDeviceId, u_int beginIdx, char *f
 
   accessMutex(&myGlobals.hostsHashLockMutex, "__getFirstHost");
 
-  for(idx=beginIdx; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
-    HostTraffic *el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+  for(idx=beginIdx; idx<myGlobals.device[actualDeviceId].hosts.actualHashSize; idx++) {
+    HostTraffic *el = myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx];
 
     while(el != NULL) {
       if(broadcastHost(el) || (el == myGlobals.otherHostEntry)) {
@@ -126,7 +126,7 @@ HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, i
 
   /* No host has been found: move to next bucket */
   releaseMutex(&myGlobals.hostsHashLockMutex);
-  if(nextIdx < myGlobals.device[actualDeviceId].actualHashSize)
+  if(nextIdx < myGlobals.device[actualDeviceId].hosts.actualHashSize)
     return(__getFirstHost(actualDeviceId, nextIdx, file, line));
   else
     return(NULL);
@@ -136,15 +136,14 @@ HostTraffic* _getNextHost(u_int actualDeviceId, HostTraffic *host, char *file, i
 
 HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualDeviceId) {
   HostTraffic *el;
-  short dummyShort=1;
-  u_int idx = hashHost(&hostIpAddress, NULL, &dummyShort, &el, actualDeviceId);
+  u_int idx = hashHost(&hostIpAddress, NULL, &el, actualDeviceId);
 
   if(el != NULL)
     return(el); /* Found */
   else if(idx == FLAG_NO_PEER)
     return(NULL);
   else
-    el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+    el = myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx];
 
   for(; el != NULL; el = el->next) {
     if((el->hostNumIpAddress != NULL) && (addrcmp(&el->hostIpAddress,&hostIpAddress) == 0)) {
@@ -160,8 +159,8 @@ HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualD
       address (we should have used a MAC)
     */
 
-    for(idx=0; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
-      el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+    for(idx=0; idx<myGlobals.device[actualDeviceId].hosts.actualHashSize; idx++) {
+      el = myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx];
 
       for(; el != NULL; el = el->next) {
 	if((el->hostNumIpAddress != NULL) && (addrcmp(&el->hostIpAddress,&hostIpAddress) == 0)) {
@@ -244,15 +243,14 @@ HostTraffic* findHostBySerial(HostSerialIndex serialHostIndex, u_int actualDevic
 
 HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId) {
   HostTraffic *el;
-  short dummyShort = 0;
-  u_int idx = hashHost(NULL, (u_char*)macAddr, &dummyShort, &el, actualDeviceId);
+  u_int idx = hashHost(NULL, (u_char*)macAddr, &el, actualDeviceId);
 
   if(el != NULL)
     return(el); /* Found */
   else if(idx == FLAG_NO_PEER)
     return(NULL);
   else
-    el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+    el = myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx];
 
   for(; el != NULL; el = el->next) {
     if(!memcmp((char*)el->ethAddress, macAddr, LEN_ETHERNET_ADDRESS)) {
@@ -2279,7 +2277,7 @@ int _unlockHostsHashMutex(HostTraffic *host, char *file, int line) {
     if(myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket] > 0)
       myGlobals.hostsHashMutexNumLocks[host->hostTrafficBucket]--;
     else
-      traceEvent(CONST_TRACE_WARNING, "NEgative decrement!");
+      traceEvent(CONST_TRACE_WARNING, "Negative decrement!");
     _releaseMutex(&myGlobals.hostsHashMutex[host->hostTrafficBucket], file, line);
 #endif
   } else {

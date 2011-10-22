@@ -333,7 +333,8 @@ void printTrafficSummary (int revertOrder) {
 
     if(stat(buf, &statbuf) != 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Hosts</TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT>[%u active] [%u total]</TD></TR>\n", i, myGlobals.device[myGlobals.actualReportDeviceId].hostsno);
+		    "<TD "TD_BG" ALIGN=RIGHT>[%u active] [%u total]</TD></TR>\n", 
+		    i, myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno);
       sendString(buf);
     } else {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Hosts</TH>"
@@ -350,7 +351,7 @@ void printTrafficSummary (int revertOrder) {
 		    "&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
 		    "<IMG valign=top class=tooltip SRC=/graph.gif border=0></A>]"
 		    "</TD></TR>\n",
-		    myGlobals.device[myGlobals.actualReportDeviceId].hostsno,
+		    myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno,
 		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		    (unsigned int)(myGlobals.actTime-3600), (unsigned int)myGlobals.actTime, "Total+Number+of+Hosts");
       sendString(buf);
@@ -661,7 +662,7 @@ void printTrafficStatistics(int revertOrder) {
 
     if(stat(buf, &statbuf) != 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Hosts</TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT>[%u active] [%u total]</TD></TR>\n", i, myGlobals.device[myGlobals.actualReportDeviceId].hostsno);
+		    "<TD "TD_BG" ALIGN=RIGHT>[%u active] [%u total]</TD></TR>\n", i, myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno);
       sendString(buf);
     } else {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Hosts</TH>"
@@ -678,7 +679,7 @@ void printTrafficStatistics(int revertOrder) {
 		    "&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
 		    "<IMG valign=top class=tooltip SRC=/graph.gif border=0></A>]"
 		    "</TD></TR>\n",
-		    myGlobals.device[myGlobals.actualReportDeviceId].hostsno,
+		    myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno,
 		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		    (unsigned int)(myGlobals.actTime-3600), (unsigned int)myGlobals.actTime, "Total+Number+of+Hosts");
       sendString(buf);
@@ -1330,7 +1331,7 @@ void printHostsTraffic(int reportTypeReq,
   strftime(theDate, 8, CONST_TOD_HOUR_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
 
-  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno;
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno;
   /* save ths as it can change */
 
   tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*),
@@ -1898,7 +1899,7 @@ void printHostsTraffic(int reportTypeReq,
 /* ******************************* */
 
 static int printTalker(HostTalker *t) {
-  char timeBuf[64], formatBuf[64];
+  char formatBuf[64];
   char buf[LEN_GENERAL_WORK_BUFFER];
   HostTraffic *el, tmpEl;
   char webHostName[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
@@ -2002,7 +2003,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   printHTMLheader("Multicast Statistics", NULL, 0);
 
   memset(buf, 0, sizeof(buf));
-  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno; /* save it as it can change */
 
   tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "printMulticastStats");
   if(tmpTable == NULL)
@@ -2322,7 +2323,7 @@ void makeDot() {
 #define NUM_TABLE_COLUMNS 13
 
 void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes,
-		    int vlanId, int ifId, int knownSubnetId) {
+		    int vlanId, int ifId, int knownSubnetId, int showL2Only) {
   u_int idx, numEntries=0, maxHosts;
   int printedEntries=0;
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
@@ -2337,14 +2338,14 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
   vlanList = calloc(1, MAX_VLAN);
   if(vlanList == NULL) {
-    traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for vlan list");
+    traceEvent(CONST_TRACE_WARNING, "Unable to allocate memory for vlan list");
     return;
   }
   vlanId = abs(vlanId);
 
   ifList = calloc(1, MAX_INTERFACE);
   if(ifList == NULL) {
-    traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for if list");
+    traceEvent(CONST_TRACE_WARNING, "Unable to allocate memory for if list");
     free(vlanList);
     return;
   }
@@ -2352,7 +2353,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
   knownSubnets = calloc(sizeof(u_int8_t), myGlobals.numKnownSubnets);
   if(ifList == NULL) {
-    traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for if list");
+    traceEvent(CONST_TRACE_WARNING, "Unable to allocate memory for if list");
     free(vlanList); free(ifList);
     return;
   }
@@ -2362,7 +2363,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   printHTMLheader("Host Information", NULL, 0);
 
   memset(buf, 0, sizeof(buf));
-  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno; /* save it as it can change */
 
   tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "printHostsInfo");
   if(tmpTable == NULL) {
@@ -2380,6 +2381,12 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   for(el = getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     unsigned short actUsage, actUsageS, actUsageR;
+
+    if(showL2Only) {
+      if(!el->l2Host) continue;
+    } else {
+      if(el->l2Host) continue;
+    }
 
     if(broadcastHost(el)) continue;
     if(el->community && (!isAllowedCommunity(el->community))) continue;
@@ -2470,16 +2477,16 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
       if(showBytes)
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<option value=\"/%s?col=%d&unit=1%s%s\" selected>Bytes</option>\n"
-		      "<option value=\"/%s?col=%d&unit=0%s%s\">Packets</option>\n</select>\n",
-		      CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr,
-		      CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr);
+		      "<option value=\"/%s?l2Only=%d&col=%d&unit=1%s%s\" selected>Bytes</option>\n"
+		      "<option value=\"/%s?l2Only=%d&col=%d&unit=0%s%s\">Packets</option>\n</select>\n",
+		      CONST_HOSTS_INFO_HTML, showL2Only, myGlobals.columnSort, vlanStr, ifStr,
+		      CONST_HOSTS_INFO_HTML, showL2Only, myGlobals.columnSort, vlanStr, ifStr);
       else
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<option value=\"/%s?col=%d&unit=1%s%s\">Bytes</option>\n"
-		      "<option value=\"/%s?col=%d&unit=0%s%s\" selected>Packets</option>\n</select>\n",
-		      CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr,
-		      CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr, ifStr);
+		      "<option value=\"/%s?l2Only=%d&col=%d&unit=1%s%s\">Bytes</option>\n"
+		      "<option value=\"/%s?l2Only=%d&col=%d&unit=0%s%s\" selected>Packets</option>\n</select>\n",
+		      CONST_HOSTS_INFO_HTML, showL2Only, myGlobals.columnSort, vlanStr, ifStr,
+		      CONST_HOSTS_INFO_HTML, showL2Only, myGlobals.columnSort, vlanStr, ifStr);
 
       sendString(buf);
       sendString("</td></tr>\n");
@@ -2500,22 +2507,19 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	    selected = 0;
 
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			"<option value=\"/%s?unit=%d&vlan=%d\"%s>%s</option>\n",
-			CONST_HOSTS_INFO_HTML, showBytes, i,
+			"<option value=\"/%s?l2Only=%d&unit=%d&vlan=%d\"%s>%s</option>\n",
+			CONST_HOSTS_INFO_HTML, showL2Only, showBytes, i,
 			selected ? " selected" : "",
 			vlan2name(i, (char*)tmpBuf, sizeof(tmpBuf)));
 
 	  sendString(buf);
 	}
-
-      if(vlanId == NO_VLAN)
-	selected = 1;
-      else
-	selected = 0;
-
+      
+      selected = (vlanId == NO_VLAN) ? 1 : 0;
+      
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<option value=\"/%s?unit=%d\"%s>All</option>\n",
-		    CONST_HOSTS_INFO_HTML, showBytes,
+		    "<option value=\"/%s?l2Only=%d&unit=%d\"%s>All</option>\n",
+		    CONST_HOSTS_INFO_HTML, showL2Only, showBytes,
 		    selected ? " selected" : "");
 
       sendString(buf);
@@ -2550,8 +2554,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
 	  if(alias[0] != '\0') {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			  "<option value=\"/%s?unit=%d&subnet=%d\"%s>%s/%d %s%s%s</option>\n",
-			  CONST_HOSTS_INFO_HTML, showBytes, i,
+			  "<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>%s/%d %s%s%s</option>\n",
+			  CONST_HOSTS_INFO_HTML, showL2Only, showBytes, i,
 			  selected ? " selected" : "", net,
 			  myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY],
 			  (alias[0] != '\0') ? "[" : "",
@@ -2565,21 +2569,42 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
       if(knownSubnetId == UNKNOWN_SUBNET_ID) selected = 1; else selected = 0;
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<option value=\"/%s?unit=%d&subnet=%d\"%s>Unknown Subnets</option>\n",
-		    CONST_HOSTS_INFO_HTML, showBytes, UNKNOWN_SUBNET_ID,
+		    "<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>Unknown Subnets</option>\n",
+		    CONST_HOSTS_INFO_HTML, showL2Only, showBytes, UNKNOWN_SUBNET_ID,
 		    selected ? " selected" : "");
 
       sendString(buf);
 
       if(knownSubnetId == ALL_SUBNET_IDS) selected = 1; else selected = 0;
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<option value=\"/%s?unit=%d&subnet=%d\"%s>All</option>\n"
+		    "<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>All</option>\n"
 		    "</select></form>\n</td></tr>\n",
-		    CONST_HOSTS_INFO_HTML, showBytes, ALL_SUBNET_IDS,
+		    CONST_HOSTS_INFO_HTML, showL2Only, showBytes, ALL_SUBNET_IDS,
 		    selected ? " selected" : "");
 
       sendString(buf);
     }
+
+    /* ********************** */
+
+      sendString("<tr><td valign=middle><p><form action=\"../\">\n<b>Filter</b>:</td><td>"
+		 "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>Show Only L2 Hosts</option>\n",
+		    CONST_HOSTS_INFO_HTML, 1, showBytes, knownSubnetId,
+		    showL2Only ? " selected" : "");
+      sendString(buf);
+
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>Show Only L3 Hosts</option>\n",
+		    CONST_HOSTS_INFO_HTML, 0, showBytes, knownSubnetId,
+		    (!showL2Only) ? " selected" : "");     
+      sendString(buf);
+
+      sendString("</select></form>\n</td></tr>\n");
+
+    /* ********************** */
 
     if(foundIf) {
       u_char found = 0;
@@ -2595,8 +2620,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	  else
 	    selected = 0;
 
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"/%s?unit=%d&if=%d\"%s>%d</option>\n",
-			CONST_HOSTS_INFO_HTML, showBytes, i,
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"/%s?l2Only=%d&unit=%d&if=%d\"%s>%d</option>\n",
+			CONST_HOSTS_INFO_HTML, showL2Only, showBytes, i,
 			selected ? " selected" : "", i);
 
 	  sendString(buf);
@@ -2607,9 +2632,9 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
       else
 	selected = 0;
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"/%s?unit=%d\"%s>All</option>\n"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"/%s?l2Only=%d&unit=%d\"%s>All</option>\n"
 		    "</select>\n</form></td></tr>\n",
-		    CONST_HOSTS_INFO_HTML, showBytes, selected ? " selected" : "", i);
+		    CONST_HOSTS_INFO_HTML, showL2Only, showBytes, selected ? " selected" : "", i);
 
       sendString(buf);
     }
@@ -2948,7 +2973,7 @@ static void printHostFingerprint(HostTraffic *el) {
 	       "%d", value);
   }
 
-  traceEvent (CONST_TRACE_WARNING, "[%s][%s][len=%d]",
+  traceEvent(CONST_TRACE_WARNING, "[%s][%s][len=%d]",
 	      el->hostNumIpAddress, fingerprint,
 	      (int)sizeof(el->flags));
 }
@@ -2966,6 +2991,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     foundFcHost = 0,
     vsanId = 0;
   char *tok;
+  u_int8_t search_mac = strchr(host, ':') ? 1 : 0;
 
   if((tok = strchr(host, '-')) != NULL) {
     vlanId = vsanId = atoi(&tok[1]);
@@ -2977,9 +3003,11 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
   for(el = getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
     if(el->community && (!isAllowedCommunity(el->community))) continue;
-
-    if(((strcmp(el->hostNumIpAddress, host) == 0) || (strcmp(el->ethAddressString, host) == 0))
-       && ((vlanId == NO_VLAN) || ((el->vlanId <= 0) || (el->vlanId == vlanId)))) {
+    
+    if(
+       (((!search_mac) && (strcmp(el->hostNumIpAddress, host) == 0))
+	|| (search_mac && el->l2Host && (strcmp(el->ethAddressString, host) == 0)))
+      && ((vlanId == NO_VLAN) || ((el->vlanId <= 0) || (el->vlanId == vlanId)))) {
       found = 1;
       break;
     }
@@ -3263,11 +3291,6 @@ void printLocalRoutersList(int actualDeviceId) {
 
   printHTMLheader("Local Subnet Routers", NULL, 0);
 
-  if(myGlobals.runningPref.dontTrustMACaddr) {
-    printNotAvailable("-o or --no-mac");
-    return;
-  }
-
   for(el = getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
 
@@ -3384,7 +3407,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
   }
 
   totalBytesSent=0, totalBytesRcvd=0;
-  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno; /* save it as it can change */
 
   tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "printIpAccounting");
   if(tmpTable == NULL)
@@ -3626,7 +3649,7 @@ static char *knownProtocolIdx(IPSession *session, char *buf, u_int buf_len) {
 void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   int idx;
   char buf[1500], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER],
-    hostLinkBuf1[2*LEN_GENERAL_WORK_BUFFER], *voipStr, http_buf[256];
+    hostLinkBuf1[3*LEN_GENERAL_WORK_BUFFER], *voipStr, http_buf[256];
 #ifdef PRINT_SESSION_DETAILS
   char flags_buf[64];
 #endif
@@ -3683,11 +3706,19 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	  continue;
 	}
 
+	if((session->initiator->magic != CONST_MAGIC_NUMBER)
+	   || (session->remotePeer->magic != CONST_MAGIC_NUMBER)) {
+	  traceEvent(CONST_TRACE_WARNING, "Session with expired peer (%d/%d)",
+		     session->initiator->magic, session->remotePeer->magic);
+	  session = session->next;
+	  continue;
+	}
+      
 	if((numSessions++) < pageNum*myGlobals.runningPref.maxNumLines) {
 	  session = session->next;
 	  continue;
 	}
-
+      
 	if(printedSessions == 0) {
 	  if(el == NULL) {
 	    snprintf(buf, sizeof(buf), "%u Active Sessions",
@@ -3841,12 +3872,12 @@ void printIpProtocolUsage(void) {
   memset(serverPorts, 0, sizeof(serverPorts));
 
   hosts = (HostTraffic**)mallocAndInitWithReportWarn(myGlobals.device[myGlobals.actualReportDeviceId].
-						     hostsno*sizeof(HostTraffic*),
+						     hosts.hostsno*sizeof(HostTraffic*),
 						     "printIpProtocolUsage");
   if(hosts == NULL)
     return;
 
-  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno;
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno;
 
   for(el = getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
@@ -4933,7 +4964,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 
   printHTMLheader(buf, NULL, 0);
 
-  maxHosts = max(myGlobals.device[myGlobals.actualReportDeviceId].hostsno, myGlobals.numKnownSubnets);
+  maxHosts = max(myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno, myGlobals.numKnownSubnets);
   tmpStats = (DomainStats*)mallocAndInitWithReportWarn(maxHosts*sizeof(DomainStats), "printDomainStats");
   if(tmpStats == NULL)
     return;
@@ -5421,7 +5452,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		      sym_as_name);
       }
 
-      // traceEvent (CONST_TRACE_WARNING, "--> [%s][%s]", sym_as_name, buf);
+      // traceEvent(CONST_TRACE_WARNING, "--> [%s][%s]", sym_as_name, buf);
 
       if((sym_as_name[0] != '\0') && ((i = stat(buf, &statbuf)) == 0)) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
@@ -5654,7 +5685,7 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   char formatBuf[32], formatBuf1[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
 
-  maxHosts = ifName->hostsno; /* save it as it can change */
+  maxHosts = ifName->hosts.hostsno; /* save it as it can change */
 
   tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*), "dumpHostsCriteria");
   if(tmpTable == NULL)
@@ -5901,8 +5932,8 @@ void purgeHost(HostSerialIndex theSerial) {
   } else {
     int j, found = 0;
 
-    for(j=FIRST_HOSTS_ENTRY; (!found) && (j<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize); j++) {
-      HostTraffic *el1 = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[j];
+    for(j=FIRST_HOSTS_ENTRY; (!found) && (j<myGlobals.device[myGlobals.actualReportDeviceId].hosts.actualHashSize); j++) {
+      HostTraffic *el1 = myGlobals.device[myGlobals.actualReportDeviceId].hosts.hash_hostTraffic[j];
 
       while(el1 != NULL) {
 	if(el1 == el) {
@@ -6018,7 +6049,7 @@ char* hostRRdGraphLink(HostTraffic *el, int network_mode,
     } else
       key = host2networkName(el, subnet_buf, sizeof(subnet_buf));
     } else {
-    if((!myGlobals.runningPref.dontTrustMACaddr) && subnetPseudoLocalHost(el)
+    if(subnetPseudoLocalHost(el)
        && (el->ethAddressString[0] != '\0') /* Really safe in case a host that was supposed to be local isn't really so */)
       key = el->ethAddressString;
     else

@@ -89,7 +89,7 @@ static void setDomainName(void) {
   }
 #endif
 
-  len = strlen(myGlobals.runningPref.domainName)-1;
+  len = (int)(strlen(myGlobals.runningPref.domainName)-1);
 
   while((len > 0) && (myGlobals.runningPref.domainName[len] != '.'))
     len--;
@@ -139,7 +139,7 @@ void initIPServices(void) {
 
   /* ************************************* */
 
-  len = sizeof(ServiceEntry*)*myGlobals.numActServices;
+  len = (int)(sizeof(ServiceEntry*)*myGlobals.numActServices);
   myGlobals.udpSvc = (ServiceEntry**)malloc(len);
   memset(myGlobals.udpSvc, 0, len);
   myGlobals.tcpSvc = (ServiceEntry**)malloc(len);
@@ -230,15 +230,15 @@ void resetDevice(int devIdx, short fullReset) {
 
   if(myGlobals.device[devIdx].dummyDevice) return;
 
-  myGlobals.device[devIdx].actualHashSize = CONST_HASH_INITIAL_SIZE;
+  myGlobals.device[devIdx].hosts.actualHashSize = CONST_HASH_INITIAL_SIZE;
 
   len = CONST_HASH_INITIAL_SIZE * sizeof(HostTraffic*);
-  if(myGlobals.device[devIdx].hash_hostTraffic == NULL) {
+  if(myGlobals.device[devIdx].hosts.hash_hostTraffic == NULL) {
     ptr = calloc(CONST_HASH_INITIAL_SIZE, sizeof(HostTraffic*));
-    myGlobals.device[devIdx].hash_hostTraffic = ptr;
+    myGlobals.device[devIdx].hosts.hash_hostTraffic = ptr;
   }
 
-  memset(myGlobals.device[devIdx].hash_hostTraffic, 0, len);
+  memset(myGlobals.device[devIdx].hosts.hash_hostTraffic, 0, len);
 
   resetTrafficCounter(&myGlobals.device[devIdx].receivedPkts);
   resetTrafficCounter(&myGlobals.device[devIdx].droppedPkts);
@@ -303,7 +303,7 @@ void resetDevice(int devIdx, short fullReset) {
   memset(&myGlobals.device[devIdx].icmpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
   memset(myGlobals.device[devIdx].last60MinTopTalkers, 0, sizeof(myGlobals.device[devIdx].last60MinTopTalkers));
   memset(myGlobals.device[devIdx].last24HoursTopTalkers, 0, sizeof(myGlobals.device[devIdx].last24HoursTopTalkers));
-  myGlobals.device[devIdx].hostsno = 1; /* Broadcast entry */
+  myGlobals.device[devIdx].hosts.hostsno = 1; /* Broadcast entry */
 
   if(fullReset) {
     if(myGlobals.device[devIdx].netflowGlobals != NULL)
@@ -399,16 +399,6 @@ void initCounters(void) {
   myGlobals.numHandledSSIRequests = 0;
 
   myGlobals.webServerRequestQueueLength = DEFAULT_WEBSERVER_REQUEST_QUEUE_LEN;
-
-  myGlobals.hostsCacheLen = 0;
-  myGlobals.hostsCacheLenMax = 0;
-  myGlobals.hostsCacheReused = 0;
-#ifdef PARM_USE_SESSIONS_CACHE
-  myGlobals.sessionsCacheLen = 0;
-  myGlobals.sessionsCacheLenMax = 0;
-  myGlobals.sessionsCacheReused = 0;
-#endif
-
 }
 
 /* ******************************* */
@@ -422,8 +412,8 @@ void resetStats(int deviceId) {
   if(myGlobals.purgeMutex.isInitialized)
     accessMutex(&myGlobals.purgeMutex, "resetStats");
 
-  for(j=FIRST_HOSTS_ENTRY; j<myGlobals.device[deviceId].actualHashSize; j++) {
-    HostTraffic *el = myGlobals.device[deviceId].hash_hostTraffic[j], *elNext;
+  for(j=FIRST_HOSTS_ENTRY; j<myGlobals.device[deviceId].hosts.actualHashSize; j++) {
+    HostTraffic *el = myGlobals.device[deviceId].hosts.hash_hostTraffic[j], *elNext;
 
     if(el) lockExclusiveHostsHashMutex(el, "resetStats");
 
@@ -442,7 +432,7 @@ void resetStats(int deviceId) {
       el = elNext;
     }
 
-    myGlobals.device[deviceId].hash_hostTraffic[j] = NULL;
+    myGlobals.device[deviceId].hosts.hash_hostTraffic[j] = NULL;
   }
 
   resetDevice(deviceId, 0);
@@ -455,14 +445,14 @@ void resetStats(int deviceId) {
       }
   }
   
-  myGlobals.device[deviceId].hash_hostTraffic[BROADCAST_HOSTS_ENTRY] = myGlobals.broadcastEntry;
+  myGlobals.device[deviceId].hosts.hash_hostTraffic[BROADCAST_HOSTS_ENTRY] = myGlobals.broadcastEntry;
   myGlobals.broadcastEntry->hostSerial.serialType = SERIAL_IPV4;
   myGlobals.broadcastEntry->hostSerial.value.ipSerial.ipAddress.Ip4Address.s_addr = -1;
   myGlobals.broadcastEntry->next = NULL;
   setHostFlag(FLAG_BROADCAST_HOST, myGlobals.broadcastEntry);
 
   if(myGlobals.otherHostEntry != myGlobals.broadcastEntry) {
-    myGlobals.device[deviceId].hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;
+    myGlobals.device[deviceId].hosts.hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;
     /* Dirty trick */
     myGlobals.otherHostEntry->hostSerial.serialType = SERIAL_IPV4;
     myGlobals.otherHostEntry->hostSerial.value.ipSerial.ipAddress.Ip4Address.s_addr = -1;
@@ -966,7 +956,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
   mallocLen = 2;
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].name != NULL)
-      mallocLen += strlen(myGlobals.device[i].name) + 2;
+      mallocLen += (int)(strlen(myGlobals.device[i].name) + 2);
   }
 
   workDevices = calloc(mallocLen+1, 1);
@@ -976,7 +966,8 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].name != NULL) {
-      int len = strlen(workDevices);
+      int len = (int)strlen(workDevices);
+
       safe_snprintf(__FILE__, __LINE__, 
 		    &workDevices[len], mallocLen-len, 
 		    "%s%s", (i > 0) ? ", " : "",
@@ -1431,7 +1422,7 @@ u_int createDummyInterface(char *ifName) {
   myGlobals.device[deviceId].name = strdup(ifName);
   myGlobals.device[deviceId].humanFriendlyName = strdup(ifName);
   myGlobals.device[deviceId].datalink = DLT_EN10MB;
-  myGlobals.device[deviceId].hash_hostTraffic[BROADCAST_HOSTS_ENTRY] = myGlobals.broadcastEntry;
+  myGlobals.device[deviceId].hosts.hash_hostTraffic[BROADCAST_HOSTS_ENTRY] = myGlobals.broadcastEntry;
   myGlobals.broadcastEntry->next = NULL;
   myGlobals.device[deviceId].dummyDevice   = 1; /* This is basically a fake device */
   myGlobals.device[deviceId].virtualDevice = 0;
@@ -1440,7 +1431,7 @@ u_int createDummyInterface(char *ifName) {
   calculateUniqueInterfaceName(deviceId); 
 
   if(myGlobals.otherHostEntry != NULL) {
-    myGlobals.device[deviceId].hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;
+    myGlobals.device[deviceId].hosts.hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;
     myGlobals.otherHostEntry->next = NULL;
   }
 

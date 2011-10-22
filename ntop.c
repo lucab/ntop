@@ -360,7 +360,7 @@ static int handleProtocolList(char* protoName, char *protocolList) {
       myGlobals.ipTrafficProtosNames = (char**)malloc(sizeof(char*));
     else
       myGlobals.ipTrafficProtosNames = (char**)realloc(myGlobals.ipTrafficProtosNames,
-						       sizeof(char*)*(myGlobals.numIpProtosToMonitor+1));
+						       (int)(sizeof(char*)*(myGlobals.numIpProtosToMonitor+1)));
 
     rc = myGlobals.numIpProtosToMonitor;
     myGlobals.ipTrafficProtosNames[myGlobals.numIpProtosToMonitor] = strdup(protoName);
@@ -411,7 +411,7 @@ void createPortHash(void) {
     an array to a hash table.
   */
   myGlobals.ipPortMapper.numSlots = 2*myGlobals.ipPortMapper.numElements;
-  theSize = sizeof(PortProtoMapper)*2*myGlobals.ipPortMapper.numSlots;
+  theSize = (int)(sizeof(PortProtoMapper)*2*myGlobals.ipPortMapper.numSlots);
   myGlobals.ipPortMapper.theMapper = (PortProtoMapper*)malloc(theSize);
   memset(myGlobals.ipPortMapper.theMapper, 0, theSize);
   for(i=0; i<myGlobals.ipPortMapper.numSlots; i++) myGlobals.ipPortMapper.theMapper[i].portProto = -1;
@@ -1042,10 +1042,6 @@ RETSIGTYPE cleanup(int signo) {
     }
   }
 
-  for(i=0; i<myGlobals.hostsCacheLen; i++)
-    free(myGlobals.hostsCache[i]);
-  myGlobals.hostsCacheLen = 0;
-
   unloadPlugins();
 
   (void)fflush(stdout);
@@ -1111,8 +1107,8 @@ RETSIGTYPE cleanup(int signo) {
     if(myGlobals.device[i].ipProtosList != NULL)
       free(myGlobals.device[i].ipProtosList);
 
-    if(myGlobals.device[i].hash_hostTraffic != NULL)
-      free(myGlobals.device[i].hash_hostTraffic);
+    if(myGlobals.device[i].hosts.hash_hostTraffic != NULL)
+      free(myGlobals.device[i].hosts.hash_hostTraffic);
 
     if(myGlobals.device[i].ipPorts != NULL) {
       int port;

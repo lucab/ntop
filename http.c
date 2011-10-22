@@ -253,9 +253,9 @@ static int readHTTPheader(char* theRequestedURL,
       if(rc == -1)
 	ntop_ssl_error_report("read");
     } else
-      rc = recv(myGlobals.newSock, aChar, 1, 0);
+      rc = (int)recv(myGlobals.newSock, aChar, 1, 0);
 #else
-    rc = recv(myGlobals.newSock, aChar, 1, 0);
+    rc = (int)recv(myGlobals.newSock, aChar, 1, 0);
 #endif
 
     if(rc != 1) {
@@ -620,8 +620,7 @@ static void ssiMenu_Head(void) {
 		  "				[null,'Remote to Remote','/" CONST_IP_R_2_R_HTML "',null,null],\n"
 		  "		],\n"
 		  "		[null,'Local',null,null,null,\n");
-  if(myGlobals.runningPref.dontTrustMACaddr)
-    sendStringWOssi(
+  sendStringWOssi(
 		    "				[null,'Routers','/" CONST_LOCAL_ROUTERS_LIST_HTML "',null,null],\n");
   sendStringWOssi(
 		  "				[null,'Ports Used','/" CONST_IP_PROTO_USAGE_HTML "',null,null],\n");
@@ -2141,7 +2140,7 @@ static int returnHTTPPage(char* pageName,
   FILE *fd = NULL;
   char tmpStr[512], *domainNameParm = NULL, *communityNameParm = NULL, *minus, *host = NULL;
   char *db_key = NULL, *db_val = NULL;
-  int revertOrder=0, vlanId=NO_VLAN, ifId=NO_INTERFACE, subnetId = ALL_SUBNET_IDS;
+  int revertOrder=0, vlanId=NO_VLAN, ifId=NO_INTERFACE, subnetId = ALL_SUBNET_IDS, showL2Only = 0;
   struct tm t;
   HostsDisplayPolicy showHostsMode = myGlobals.hostsDisplayPolicy;
   LocalityDisplayPolicy showLocalityMode = myGlobals.localityDisplayPolicy;
@@ -2211,6 +2210,8 @@ static int returnHTTPPage(char* pageName,
 	vlanId = atoi(&tkn[5]);
       } else if(strncmp(tkn, "subnet=", 7) == 0) {
 	subnetId = atoi(&tkn[7]);
+      } else if(strncmp(tkn, "l2Only=", 7) == 0) {
+	showL2Only = atoi(&tkn[7]);
       } else if(strncmp(tkn, "if=", 3) == 0) {
 	ifId = atoi(&tkn[3]);
       } else if(strncmp(tkn, "vsan=", 5) == 0) {
@@ -2759,7 +2760,7 @@ static int returnHTTPPage(char* pageName,
 	printThptStats(sortedColumn);
       } else if(strncasecmp(pageName, CONST_HOSTS_INFO_HTML, strlen(CONST_HOSTS_INFO_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vlanId, ifId, subnetId);
+	printHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vlanId, ifId, subnetId, showL2Only);
       } else if(strncasecmp(pageName, CONST_HOSTS_LOCAL_FINGERPRINT_HTML,
 			    strlen(CONST_HOSTS_LOCAL_FINGERPRINT_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);

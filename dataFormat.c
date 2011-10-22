@@ -113,10 +113,10 @@ char* formatAdapterSpeed(Counter numBits, char* outStr, int outStrLen) {
 /* ******************************* */
 
 char* formatSeconds(unsigned long sec, char* outStr, int outStrLen) {
-  unsigned int hour=0, min=0, days=0;
+  u_int hour = 0, min = 0, days = 0;
 
   if(sec >= 3600) {
-    hour = (sec / 3600);
+    hour = (u_int)(sec / 3600);
 
     if(hour > 0) {
       if(hour >= 24) {
@@ -129,7 +129,7 @@ char* formatSeconds(unsigned long sec, char* outStr, int outStrLen) {
       hour = 0;
   }
 
-  min = (sec / 60);
+  min = (u_int)(sec / 60);
   if(min > 0) sec -= min*60;
 
   if(days > 0) {
@@ -214,7 +214,7 @@ char* formatLatency(struct timeval tv, u_short sessionState, char* outStr, int o
     return("&nbsp;");
   } else {
     safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.02f&nbsp;ms",
-	    (float)(tv.tv_sec*1000+(float)tv.tv_usec/1000));
+		  (float)(tv.tv_sec*1000+(float)tv.tv_usec/1000));
     return(outStr);
   }
 }

@@ -30,7 +30,6 @@ ntop \- display top network users
 .RB [ -m | --local-subnets
 .IR <addresses> ]
 .RB [ -n | --numeric-ip-addresses ]
-.RB [ -o | --no-mac ]
 .RB [ -p | --protocols
 .IR <list> ]
 .RB [ -q | --create-suspicious-packets ]
@@ -381,40 +380,6 @@ This parameter causes
 to skip DNS resolution, showing only numeric IP addresses instead of the symbolic
 names.
 This option can useful when the DNS is not present or quite slow.
-
-.It2 -o --no-mac
-.B ntop
-is a hybrid layer 2/3 network monitor.  That is, it uses both the lower level, physical
-device address - the MAC (Media Access Control) address - and the higher level,
-logical, tcp/ip address (the familiar www.ntop.org or 131.114.21.9 address).  
-This allows 
-.B ntop 
-to link the logical addresses to a physical machine with multiple addresses
-(This occurs with virtual hosts or additional addresses assigned to the interface, etc.)
-to present consolidated reporting.
-
-This parameter specifies that
-.B ntop
-should not trust the MAC addresses but just use the IP addresses. 
-
-Normally, since the MAC address must be globally unique, the dual nature of
-.B ntop 
-is a benefit and provides far better information about the network than is available via
-a pure layer 2 or pure layer 3 monitor.
-
-Under certain circumstances - whenever 
-.B ntop
-is started on an interface where MAC addresses cannot be really trusted - you may
-require this option.
-
-Situations which may require this option include port/VLAN mirror, some cases with
-switches and spanning tree protocol, and (reportedly) some specific models of Ethernet
-switches which re-write MAC addresses of the packets they process.
-Normally, you discover that this option is necessary when you observe that hosts seem
-to change their addresses or information about different machines get lumped together.
-
-Note that with this option, information which is dependent upon the MAC 
-addresses (non tcp/ip protocols like IPX) will not be collected nor displayed.
 
 .It2 -p --protocols
 This parameter is used to specify the TCP/UDP protocols that

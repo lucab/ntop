@@ -672,7 +672,7 @@ typedef struct networkDelay {
 typedef struct hostTraffic {
   u_int8_t         to_be_deleted; /* 1 = the host will be deleted in the next purge loop */
   u_short          magic;
-  u_short          l2Family;    /* 0 = Ethernet */
+  u_int8_t         l2Host;    /* 1 = Ethernet, 0 = IP and above */
   u_int            hostTrafficBucket; /* Index in the **hash_hostTraffic list */
   u_short          refCount;         /* Reference counter */
   HostSerial       hostSerial;
@@ -1300,6 +1300,15 @@ typedef struct sFlowGlobals {
 
 /* *********************************** */
 
+typedef struct {
+  u_int  hostsno;        /* # of valid entries in the following table */
+  u_int  actualHashSize;
+  struct hostTraffic **hash_hostTraffic;
+  u_short hashListMaxLookups;
+} HostsHashInfo;
+
+/* *********************************** */
+
 typedef struct ntopInterface {
   char *name;                    /* Interface name (e.g. eth0) */
   char *uniqueIfName;            /* Unique interface name used to save data on disk */
@@ -1433,11 +1442,7 @@ typedef struct ntopInterface {
 
   pthread_t pcapDispatchThreadId;
 
-  u_int  hostsno;        /* # of valid entries in the following table */
-  u_int  actualHashSize;
-  struct hostTraffic **hash_hostTraffic;
-
-  u_short hashListMaxLookups;
+  HostsHashInfo hosts;
 
   /* ************************** */
 
@@ -1832,7 +1837,6 @@ typedef struct _userPref {
   char *pcapLog;                 /* -l | --pcap-log */
   char *localAddresses;          /* -m | --local-subnets */
   DnsResolutionMode numericFlag; /* -n | --numeric-ip-addresses */
-  bool dontTrustMACaddr;         /* -o | --no-mac */
   char *protoSpecs;              /* -p | --protocols */
   bool enableSuspiciousPacketDump;  /* -q | --create-suspicious-packets */
   int  refreshRate;              /* -r | --refresh-time */
@@ -2115,17 +2119,6 @@ typedef struct ntopGlobals {
                 numBadSSIRequests,
                 numHandledSSIRequests;
   u_short webServerRequestQueueLength;
-
-  /* Memory cache */
-  HostTraffic *hostsCache[MAX_HOSTS_CACHE_LEN];
-  u_short      hostsCacheLen, hostsCacheLenMax;
-  int          hostsCacheReused;
-
-#ifdef PARM_USE_SESSIONS_CACHE
-  IPSession   *sessionsCache[MAX_SESSIONS_CACHE_LEN];
-  u_short      sessionsCacheLen, sessionsCacheLenMax;
-  int          sessionsCacheReused;
-#endif
 
   /* Peer2Peer Protocol Indexes */
   u_short SshIdx, HttpIdx, FTPIdx, EdonkeyIdx, BitTorrentIdx, 

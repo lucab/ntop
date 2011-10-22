@@ -58,8 +58,7 @@ void handleBootp(HostTraffic *srcHost,
   char savechar;
 
   if((!myGlobals.runningPref.enablePacketDecoding)
-     || (packetData == NULL) /* packet too short ? */
-     || (myGlobals.runningPref.dontTrustMACaddr))
+     || (packetData == NULL) /* packet too short ? */)
     return;
 
   memset(&bootProto, 0, sizeof(BootProtocol));

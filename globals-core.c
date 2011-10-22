@@ -440,14 +440,14 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
   bufLen = 0;
   for (i=0; i<argc_started; i++) {
-    bufLen += (2 + strlen(argv_started[i]));
+    bufLen += (int)(2 + strlen(argv_started[i]));
   }
 
   startedAs = (char*)malloc(bufLen);
   memset(startedAs, 0, (size_t) bufLen);
   for (i=0; i<argc_started; i++) {
     if (argv_started[i] != NULL) {
-      int displ = strlen(startedAs);
+      int displ = (int)strlen(startedAs);
 
       snprintf(&startedAs[displ], bufLen-displ, "%s ", argv_started[i]);
     }

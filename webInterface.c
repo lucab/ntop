@@ -212,8 +212,7 @@ char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
 /* ******************************* */
 
 char* makeHostLink(HostTraffic *el, short mode,
-		   short cutName, short addCountryFlag,
-		   char *buf, int bufLen) {
+		   short cutName, short addCountryFlag, char *buf, int bufLen) {
   char symIp[256], linkName[256], flag[256], colorSpec[64], vlanStr[8], mapStr[1024];
   char osBuf[128], titleBuf[256], noteBuf[256], noteBufAppend[64], tooltip[256], httpFavico[256];
   char *dhcpBootpStr, *p2pStr, *multihomedStr, *multivlanedStr, *gwStr, *brStr, *dnsStr, *printStr,
@@ -230,12 +229,6 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(fetchPrefsValue(symIp, custom_host_name, sizeof(custom_host_name)) == -1) {
     custom_host_name[0] = '\0';
   }
-
-#ifdef ENABLE_FC
-  if(el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
-    return makeFcHostLink (el, mode, cutName, TRUE, buf, bufLen);
-  }
-#endif
 
   memset(&symIp, 0, sizeof(symIp));
   memset(&linkName, 0, sizeof(linkName));
@@ -437,7 +430,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   if(isMultihomed(el))     multihomedStr = "&nbsp;" CONST_IMG_MULTIHOMED ; else multihomedStr = "";
-  if(isMultivlaned(el))     multivlanedStr = "&nbsp;" CONST_IMG_MULTIVLANED ; else multivlanedStr = "";
+  if(isMultivlaned(el))    multivlanedStr = "&nbsp;" CONST_IMG_MULTIVLANED ; else multivlanedStr = "";
   if(isBridgeHost(el))     brStr = "&nbsp;" CONST_IMG_BRIDGE ; else brStr = "";
   if(gatewayHost(el))      gwStr = "&nbsp;" CONST_IMG_ROUTER ; else gwStr = "";
   if(isVoIPHost(el))       voipHostStr = "&nbsp;" CONST_IMG_VOIP_HOST ; else voipHostStr = "";
@@ -6106,10 +6099,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   printParameterConfigInfo(textPrintFlag, "-n | --numeric-ip-addresses",
                            numeric2str(pref->numericFlag), numeric2str(DEFAULT_NTOP_NUMERIC_IP_ADDRESSES));
 
-  printParameterConfigInfo(textPrintFlag, "-o | --no-mac",
-			   pref->dontTrustMACaddr == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses",
-                           DEFAULT_NTOP_DONT_TRUST_MAC_ADDR == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses");
-
   if(pref->protoSpecs == NULL) {
     printFeatureConfigInfo(textPrintFlag, "-p | --protocols", CONST_REPORT_ITS_DEFAULT "internal list");
   } else {
@@ -6621,32 +6610,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 		"#define MAX_HOSTS_CACHE_LEN %d", MAX_HOSTS_CACHE_LEN);
   printFeatureConfigInfo(textPrintFlag, "Limit", buf);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.hostsCacheLen);
-  printFeatureConfigInfo(textPrintFlag, "Current Size", buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.hostsCacheLenMax);
-  printFeatureConfigInfo(textPrintFlag, "Maximum Size", buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.hostsCacheReused);
-  printFeatureConfigInfo(textPrintFlag, "# Entries Reused", buf);
-
-#ifdef PARM_USE_SESSIONS_CACHE
-  printInfoSectionTitle(textPrintFlag, "Session Memory Cache");
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		"#define MAX_SESSIONS_CACHE_LEN %d", MAX_SESSIONS_CACHE_LEN);
-  printFeatureConfigInfo(textPrintFlag, "Limit", buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.sessionsCacheLen);
-  printFeatureConfigInfo(textPrintFlag, "Current Size", buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.sessionsCacheLenMax);
-  printFeatureConfigInfo(textPrintFlag, "Maximum Size", buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.sessionsCacheReused);
-  printFeatureConfigInfo(textPrintFlag, "# Entries Reused", buf);
-#endif
-
   /* **** */
 
   printInfoSectionTitle(textPrintFlag, "Packets");
@@ -6844,17 +6807,17 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
       printFeatureConfigInfo(textPrintFlag, "Hash Bucket Size",
 			     formatBytes(sizeof(HostTraffic), 0, buf, sizeof(buf)));
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.device[i].actualHashSize);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.device[i].hosts.actualHashSize);
       printFeatureConfigInfo(textPrintFlag, "Actual Host Hash Size", buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.device[i].hostsno);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.device[i].hosts.hostsno);
       printFeatureConfigInfo(textPrintFlag, "Stored hosts", buf);
 
       minLen=-1, maxLen=0;
-      for(idx=0; idx<myGlobals.device[i].actualHashSize; idx++) {
+      for(idx=0; idx<myGlobals.device[i].hosts.actualHashSize; idx++) {
 	HostTraffic *el;
 
-	if((el = myGlobals.device[i].hash_hostTraffic[idx]) != NULL) {
+	if((el = myGlobals.device[i].hosts.hash_hostTraffic[idx]) != NULL) {
 	  unsigned int len=0;
 
 	  nonEmptyBuckets++;
@@ -6872,7 +6835,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 		    minLen, maxLen, (float)totBuckets/(float)nonEmptyBuckets);
       printFeatureConfigInfo(textPrintFlag, "Host Bucket List Length", buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.device[i].hashListMaxLookups);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", 
+		    myGlobals.device[i].hosts.hashListMaxLookups);
       printFeatureConfigInfo(textPrintFlag, "Max host lookup", buf);
 
       if(pref->enableSessionHandling) {

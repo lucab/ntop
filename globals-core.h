@@ -203,7 +203,7 @@ extern void term_python(void);
 /* hash.c */
 extern void dumpHostSerial(HostSerial *serial, HostSerialIndex serialHostIndex);
 extern u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
-		      short* useIPAddressForSearching, HostTraffic **el, int actualDeviceId);
+		      HostTraffic **el, int actualDeviceId);
 extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void readSessionPurgeParams(void);

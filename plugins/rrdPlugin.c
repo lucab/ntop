@@ -4704,9 +4704,7 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
 	  return;
 	}
 
-	if((!myGlobals.runningPref.dontTrustMACaddr)
-	   && subnetPseudoLocalHost(el)
-	   && (el->ethAddressString[0] != '\0'))
+	if(subnetPseudoLocalHost(el) && (el->ethAddressString[0] != '\0'))
 	  /*
 	    NOTE:
 	    MAC address is empty even for local hosts if this host has
@@ -5066,7 +5064,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	if(!strcmp(myGlobals.device[devIdx].name, "none"))      continue;
 
 	/* save this as it may change */
-	maxHosts = myGlobals.device[devIdx].hostsno;
+	maxHosts = myGlobals.device[devIdx].hosts.hostsno;
 	tmpStats = (DomainStats*)mallocAndInitWithReportWarn(maxHosts*sizeof(DomainStats), "rrdMainLoop");
 
 	if (tmpStats == NULL) {
@@ -5236,7 +5234,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	updateCounter(rrdPath, "broadcastPkts", myGlobals.device[devIdx].broadcastPkts.value, 0);
 	updateCounter(rrdPath, "multicastPkts", myGlobals.device[devIdx].multicastPkts.value, 0);
 	updateCounter(rrdPath, "ethernetBytes", myGlobals.device[devIdx].ethernetBytes.value, 0);
-	updateGauge(rrdPath,   "knownHostsNum", myGlobals.device[devIdx].hostsno, 0);
+	updateGauge(rrdPath,   "knownHostsNum", myGlobals.device[devIdx].hosts.hostsno, 0);
 	updateGauge(rrdPath,   "activeHostSendersNum",  numActiveSenders(devIdx), 0);
 	updateCounter(rrdPath, "ipv4Bytes",     myGlobals.device[devIdx].ipv4Bytes.value, 0);
 

@@ -52,9 +52,7 @@ u_int computeEfficiency(u_int pktLen) {
 
 /* ************************************ */
 
-static void addContactedPeers(HostTraffic *sender, HostAddr *srcAddr,
-			      HostTraffic *receiver, HostAddr *dstAddr,
-			      int actualDeviceId) {
+static void addContactedPeers(HostTraffic *sender, HostTraffic *receiver, int actualDeviceId) {
   if((sender == NULL) || (receiver == NULL) || (sender == receiver)) {
     traceEvent(CONST_TRACE_ERROR, "Sanity check failed @ addContactedPeers (%p, %p)",
 	       sender, receiver);
@@ -170,7 +168,7 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
   }
 
   if((dstHost != NULL) /*&& (!broadcastHost(dstHost))*/)
-    addContactedPeers(srcHost, srcAddr, dstHost, dstAddr, actualDeviceId);
+    addContactedPeers(srcHost, dstHost, actualDeviceId);
 }
 
 /* ************************************ */
@@ -500,7 +498,7 @@ void queuePacket(u_char *_deviceId,
     }
   }
 
-  if(myGlobals.runningPref.dontTrustMACaddr && (h->len < 60)) {
+  if(h->len < 60) {
     /* Filter out noise */
     updateDevicePacketStats(h->len, actDeviceId);
     return;
@@ -960,7 +958,7 @@ void processPacket(u_char *_deviceId,
    * # of packets and the associated # of bytes.
    */
 
-  hlen = (myGlobals.device[deviceId].datalink == DLT_NULL) ? CONST_NULL_HDRLEN : sizeof(struct ether_header);
+  hlen = (u_int)((myGlobals.device[deviceId].datalink == DLT_NULL) ? CONST_NULL_HDRLEN : sizeof(struct ether_header));
 
   if(!myGlobals.initialSniffTime && (myGlobals.pcap_file_list != NULL)) {
     myGlobals.initialSniffTime = h->ts.tv_sec;
@@ -971,7 +969,7 @@ void processPacket(u_char *_deviceId,
   memcpy(&myGlobals.lastPktTime, &h->ts, sizeof(myGlobals.lastPktTime));
 
   if(caplen >= hlen) {
-    HostTraffic *srcHost=NULL, *dstHost=NULL;
+    HostTraffic *srcHost = NULL, *dstHost = NULL;
 
     memcpy(&ehdr, p, sizeof(struct ether_header));
 
@@ -1225,7 +1223,6 @@ void processPacket(u_char *_deviceId,
 	char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
 	if((ether_dst != NULL)
-	   && (!myGlobals.runningPref.dontTrustMACaddr)
 	   && (strcmp(etheraddr_string(ether_dst, etherbuf), "FF:FF:FF:FF:FF:FF") == 0)
 	   && (p[sizeof(struct ether_header)] == 0xff)
 	   && (p[sizeof(struct ether_header)+1] == 0xff)
@@ -1254,7 +1251,7 @@ void processPacket(u_char *_deviceId,
 	  allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
 	  allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));
 	  if((srcHost->nonIPTraffic == NULL) || (dstHost->nonIPTraffic == NULL)) return;
-	} else if(!myGlobals.runningPref.dontTrustMACaddr) {
+	} else {
 	  /* MAC addresses are meaningful here */
 	  srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId, h, p);
 	  dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId, h, p);
@@ -1268,6 +1265,7 @@ void processPacket(u_char *_deviceId,
 	  if((srcHost != NULL) && (dstHost != NULL)) {
 	    TrafficCounter ctr;
 	    int llcLen;
+
 	    lockHostsHashMutex(srcHost, "processPacket-src-4");
 	    lockHostsHashMutex(dstHost, "processPacket-dst-4");
 	    if(vlanId != NO_VLAN) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
@@ -1411,14 +1409,14 @@ void processPacket(u_char *_deviceId,
 		   && llcHeader.ctl.snap_ether.snap_ethertype[1] == 0x0
 		   this is Cisco Discovery Protocol
 		*/
-		
+
 		setHostFlag(FLAG_GATEWAY_HOST, srcHost);
 	      }
-	      
+
 	      incrementHostTrafficCounter(srcHost, nonIPTraffic->otherSent, length);
 	      incrementHostTrafficCounter(dstHost, nonIPTraffic->otherRcvd, length);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
-	      
+
 	      incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, llcHeader.dsap /* dsap */,
 				    llcHeader.ssap /* ssap */, 0 /* ip */);
 	      incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */,
@@ -1455,6 +1453,22 @@ void processPacket(u_char *_deviceId,
 	  }
 	}
       } else if((eth_type == ETHERTYPE_IP) || (eth_type == ETHERTYPE_IPv6)) {
+	srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId, h, p);
+	dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId, h, p);
+
+
+	if((srcHost == NULL) || (dstHost == NULL)) {
+	  /* Sanity check */
+	  lowMemory();
+	  return;
+	}
+
+	lockHostsHashMutex(srcHost, "processPacket-src-6"); lockHostsHashMutex(dstHost, "processPacket-dst-ip");
+	incrementHostTrafficCounter(srcHost, pktsSent, 1); incrementHostTrafficCounter(srcHost, bytesSent, h->len);
+	incrementHostTrafficCounter(dstHost, pktsRcvd, 1); incrementHostTrafficCounter(dstHost, bytesRcvd, h->len);
+
+	addContactedPeers(srcHost, dstHost, actualDeviceId);
+
 	if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type > ETHERMTU)) {
 	  processIpPkt(p, h, orig_p, length, ether_src, ether_dst, actualDeviceId, vlanId);
 	} else {
@@ -1472,7 +1486,7 @@ void processPacket(u_char *_deviceId,
           hlen+=8; /* length of pppoe header */
 	  processIpPkt(p+hlen, h, orig_p, length, NULL, NULL, actualDeviceId, vlanId);
         }
-      } else  /* Non IP */ if(!myGlobals.runningPref.dontTrustMACaddr) {
+      } else {
 	  /* MAC addresses are meaningful here */
 	  struct ether_arp arpHdr;
 	  HostAddr addr;

@@ -34,23 +34,11 @@ static u_int sec_idle_with_no_sessions, sec_idle_with_sessions;
 /* ******************************* */
 
 u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
-	       short* useIPAddressForSearching, HostTraffic **el,
-	       int actualDeviceId) {
+	       HostTraffic **el, int actualDeviceId) {
   u_int idx = 0;
   *el = NULL;
 
-  if(myGlobals.runningPref.dontTrustMACaddr)  /* MAC addresses don't make sense here */
-    (*useIPAddressForSearching) = 1;
-
-  if((*useIPAddressForSearching) && (hostIpAddress == NULL)) {
-#if 0
-    traceEvent(CONST_TRACE_WARNING, "Index calculation problem (hostIpAddress=%x, ether_addr=%x)",
-	       hostIpAddress, ether_addr);
-#endif
-    return(FLAG_NO_PEER);
-  }
-
-  if(((*useIPAddressForSearching) == 1) || ((ether_addr == NULL) && (hostIpAddress != NULL))) {
+  if((ether_addr == NULL) && (hostIpAddress != NULL)) {
     if(myGlobals.runningPref.trackOnlyLocalHosts
        && (!isLocalAddress(hostIpAddress, actualDeviceId, NULL, NULL))
        && (!_pseudoLocalAddress(hostIpAddress, NULL, NULL))) {
@@ -65,14 +53,12 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 	idx = (u_int)in6_hash(&hostIpAddress->Ip6Address);
     }
 
-    (*useIPAddressForSearching) = 1;
   } else if(memcmp(ether_addr, myGlobals.broadcastEntry->ethAddress, LEN_ETHERNET_ADDRESS) == 0) {
     *el = myGlobals.broadcastEntry;
     return(BROADCAST_HOSTS_ENTRY);
   } else if((hostIpAddress == NULL)
 	    || isPseudoLocalAddress(hostIpAddress, actualDeviceId, NULL, NULL)) {
     memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(u_int)], sizeof(u_int));
-    (*useIPAddressForSearching) = 0;
   } else if(isBroadcastAddress(hostIpAddress, NULL, NULL)) {
     *el = myGlobals.broadcastEntry;
     return(BROADCAST_HOSTS_ENTRY);
@@ -93,11 +79,9 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
       idx = FLAG_NO_PEER;
       traceEvent(CONST_TRACE_WARNING, "Index calculation problem (1)");
     }
-
-    (*useIPAddressForSearching) = 1;
   }
 
-  idx = idx % myGlobals.device[actualDeviceId].actualHashSize;
+  idx = idx % myGlobals.device[actualDeviceId].hosts.actualHashSize;
 
   /* Skip reserved entries */
   if((idx == BROADCAST_HOSTS_ENTRY) || (idx == OTHER_HOSTS_ENTRY))
@@ -166,7 +150,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   handlePluginHostCreationDeletion(host, (u_short)actualDeviceId, 0 /* host deletion */);
 
-  myGlobals.device[actualDeviceId].hostsno--;
+  myGlobals.device[actualDeviceId].hosts.hostsno--;
 
   if(host->protoIPTrafficInfos != NULL) {
     for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
@@ -307,8 +291,8 @@ void freeHostInstances(int actualDeviceId) {
     hashSanityCheck();
 #endif
 
-    for(idx=FIRST_HOSTS_ENTRY; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
-      HostTraffic *el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+    for(idx=FIRST_HOSTS_ENTRY; idx<myGlobals.device[actualDeviceId].hosts.actualHashSize; idx++) {
+      HostTraffic *el = myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx];
 
     if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN) break;
 
@@ -321,7 +305,7 @@ void freeHostInstances(int actualDeviceId) {
 	el = nextEl;
       }
 
-      myGlobals.device[actualDeviceId].hash_hostTraffic[idx] = NULL;
+      myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx] = NULL;
     } /* for */
 
 #ifdef HASH_DEBUG
@@ -412,7 +396,7 @@ int purgeIdleHosts(int actDevice) {
   else
     lastPurgeTime[actDevice] = now;
 
-  maxHosts = myGlobals.device[actDevice].hostsno; /* save it as it can change */
+  maxHosts = myGlobals.device[actDevice].hosts.hostsno; /* save it as it can change */
   myGlobals.piMem = (u_int)(maxHosts*sizeof(HostTraffic*));
   theFlaggedHosts = (HostTraffic**)calloc(1, myGlobals.piMem);
 
@@ -432,10 +416,10 @@ int purgeIdleHosts(int actDevice) {
 
   accessMutex(&myGlobals.hostsHashLockMutex, "scanIdleLoop");
 
-  for(idx=0; idx<myGlobals.device[actDevice].actualHashSize; idx++) {
+  for(idx=0; idx<myGlobals.device[actDevice].hosts.actualHashSize; idx++) {
     if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN) break;
 
-    if((el = myGlobals.device[actDevice].hash_hostTraffic[idx]) != NULL) {
+    if((el = myGlobals.device[actDevice].hosts.hash_hostTraffic[idx]) != NULL) {
       prev = NULL;
 
       while(el) {
@@ -456,7 +440,7 @@ int purgeIdleHosts(int actDevice) {
 	  if(prev != NULL)
 	    prev->next = next;
 	  else
-	    myGlobals.device[actDevice].hash_hostTraffic[idx] = next;
+	    myGlobals.device[actDevice].hosts.hash_hostTraffic[idx] = next;
 
           el->next = NULL;
 	  el = next;
@@ -649,7 +633,6 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   u_int idx, isMultihomed = 0;
   HostTraffic *el=NULL;
   char buf[MAX_LEN_SYM_HOST_NAME_HTML];
-  short useIPAddressForSearching = forceUsingIPaddress;
   char* symEthName = NULL, *ethAddr;
   u_char setSpoofingFlag = 0, locked_mutex = 0;
   u_short numRuns=0;
@@ -668,8 +651,9 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   hashSanityCheck();
 #endif
 
-  idx = hashHost(hostIpAddress, ether_addr,
-		 &useIPAddressForSearching,
+  idx = hashHost(hostIpAddress, 
+		 /* Either use IP or MAC address */
+		 hostIpAddress ? NULL : ether_addr,
 		 &el, actualDeviceId);
 
 #ifdef DEBUG
@@ -687,25 +671,21 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	       idx);
 #endif
 
-  /* Remember the side effect of above routine - if -o | --no-mac is set,\
-   * useIPAddressForSearching is now 1
-   */
-
   /* If we found it or had an error */
   if(el != NULL)
     return(el); /* Found */
   else if(idx == FLAG_NO_PEER)
     return(NULL);
   else {
-    el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+    el = myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx];
     if(el) {
       lockHostsHashMutex(el, "_lookupHost");
-      el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+      el = myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx];
       locked_mutex = 1;
     }
   }
 
-  while (el != NULL) {
+  while(el != NULL) {
     if(el->magic != CONST_MAGIC_NUMBER) {
       traceEvent(CONST_TRACE_ERROR,
                  "Bad magic number (expected=%d/real=%d) [deviceId=%d] lookupHost()[%s:%d]",
@@ -723,72 +703,19 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     }
 
     if(!is_host_ready_to_purge(actualDeviceId, el, myGlobals.actTime)) {
-      if(useIPAddressForSearching == 0) {
-	/* compare with the ethernet-address then the IP address */
-	if(memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0) {
-	  if((hostIpAddress != NULL) && (hostIpAddress->hostFamily == el->hostIpAddress.hostFamily)) {
-	    if((!isMultihomed) && checkForMultihoming) {
-	      /* This is a local address hence this is a potential multihomed host. */
-
-	      if(!(addrnull(&el->hostIpAddress)) &&
-		 (addrcmp(&el->hostIpAddress,hostIpAddress) != 0)) {
-		isMultihomed = 1;
-		setHostFlag(FLAG_HOST_TYPE_MULTIHOMED, el);
-	      } else {
-		updateIPinfo = 1;
-	      }
-	    }
-	    hostFound = 1;
-	    break;
-	  } else if(hostIpAddress == NULL) {  /* Only Mac Addresses */
-	    hostFound = 1;
-	    break;
-	  } else { /* MAC match found and we have the IP - need to update... */
-	    updateIPinfo = 1;
-	    hostFound = 1;
-	    break;
-	  }
-	} else if((hostIpAddress != NULL) &&
-		  (addrcmp(&el->hostIpAddress, hostIpAddress) == 0)) {
-	  /* Spoofing or duplicated MAC address:
-	     two hosts with the same IP address and different MAC
-	     addresses
-	  */
-
-	  if(!hasDuplicatedMac(el)) {
-	    setHostFlag(FLAG_HOST_DUPLICATED_MAC, el);
-
-	    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-	      char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
-
-	      traceEvent(CONST_TRACE_WARNING,
-			 "Two MAC addresses found for the same IP address "
-			 "%s: [%s/%s] (spoofing detected?)",
-			 el->hostNumIpAddress,
-			 etheraddr_string(ether_addr, etherbuf), el->ethAddressString);
-	      dumpSuspiciousPacket(actualDeviceId, h, p);
-	    }
-	  }
-
-	  setSpoofingFlag = 1;
-	  hostFound = 1;
-	  break;
-	}
-      } else {
-	/* -o | --no-mac (or NetFlow, which doesn't have MACs) - compare with only the IP address */
-	if((addrcmp(&el->hostIpAddress, hostIpAddress) == 0)
-	   || (ether_addr && (memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0))) {
-	  hostFound = 1;
-	  break;
-	}
+      if((el->l2Host && ether_addr && (memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0)) 
+	 || ((!el->l2Host) && hostIpAddress && (addrcmp(&el->hostIpAddress,hostIpAddress) == 0))) {
+	hostFound = 1;
+	break;
       }
     }
+    
     el = el->next;
     numRuns++;
   } /* while */
 
   if(locked_mutex)
-    unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
+    unlockHostsHashMutex(myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx]), locked_mutex = 0;
 
   if((hostFound == 1) && (vlanId != NO_VLAN) && (el->vlanId != NO_VLAN)
      && (vlanId != el->vlanId) && (!isMultivlaned(el))) {
@@ -812,8 +739,8 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     }
   }
 
-  if(numRuns > myGlobals.device[actualDeviceId].hashListMaxLookups)
-    myGlobals.device[actualDeviceId].hashListMaxLookups = numRuns;
+  if(numRuns > myGlobals.device[actualDeviceId].hosts.hashListMaxLookups)
+    myGlobals.device[actualDeviceId].hosts.hashListMaxLookups = numRuns;
 
   if(hostFound) {
     /* Existing host entry */
@@ -836,7 +763,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     /* New host entry */
     int len;
 
-    if(myGlobals.device[actualDeviceId].hostsno >= myGlobals.runningPref.maxNumHashEntries) {
+    if(myGlobals.device[actualDeviceId].hosts.hostsno >= myGlobals.runningPref.maxNumHashEntries) {
       static char messageShown = 0;
 
       if(!messageShown) {
@@ -845,12 +772,12 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 		   myGlobals.runningPref.maxNumHashEntries);
       }
 
-      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }
 
     if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) {
-      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }
 
@@ -868,7 +795,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 
     len = (size_t)(myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo**));
     if((el->ipProtosList = (ShortProtoTrafficInfo**)malloc(len)) == NULL) {
-      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }
     memset(el->ipProtosList, 0, len);
@@ -876,7 +803,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     /*
     len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**);
     if((el->protoIPTrafficInfos = (ProtoTrafficInfo**)malloc(len)) == NULL) {
-      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }
     memset(el->protoIPTrafficInfos, 0, len);
@@ -888,15 +815,17 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     /* traceEvent(CONST_TRACE_INFO, "new entry added at bucket %d", idx); */
 
     /* Put the new entry on top of the list */
-    el->next = myGlobals.device[actualDeviceId].hash_hostTraffic[el->hostTrafficBucket];
-    myGlobals.device[actualDeviceId].hash_hostTraffic[el->hostTrafficBucket] = el;  /* Insert a new entry */
-    myGlobals.device[actualDeviceId].hostsno++;
+    el->next = myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[el->hostTrafficBucket];
+    myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[el->hostTrafficBucket] = el;  /* Insert a new entry */
+    myGlobals.device[actualDeviceId].hosts.hostsno++;
 
     if(0)
       traceEvent(CONST_TRACE_INFO, "-> Allocated(%d) [tot=%d]",
-		 actualDeviceId, myGlobals.device[actualDeviceId].hostsno);
+		 actualDeviceId, myGlobals.device[actualDeviceId].hosts.hostsno);
 
     the_local_network = 0, the_local_network_mask = 0;
+    
+    el->l2Host = (hostIpAddress != NULL) ? 0 : 1;
 
     if(ether_addr != NULL) {
       if((hostIpAddress == NULL)
@@ -991,7 +920,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	*/
 	printf("Added a new hash_hostTraffic entry [%s/%s/%s/%d][idx=%d]\n",
 	       etheraddr_string(ether_addr, etherbuf), el->hostResolvedName,
-	       el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno, idx);
+	       el->hostNumIpAddress, myGlobals.device[actualDeviceId].hosts.hostsno, idx);
       }
 #endif
 
@@ -1002,7 +931,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     }
 
     if(hostIpAddress != NULL) {
-      if(myGlobals.runningPref.dontTrustMACaddr && (ether_addr != NULL))
+      if(ether_addr != NULL)
 	memcpy(el->lastEthAddress, ether_addr, LEN_ETHERNET_ADDRESS);
 
       addrcpy(&el->hostIpAddress, hostIpAddress);
@@ -1039,8 +968,8 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d]"
 		 "[actualHashSize=%d][#hosts=%d]",
 		 el->ethAddressString, el->hostNumIpAddress, idx, actualDeviceId,
-		 myGlobals.device[actualDeviceId].actualHashSize,
-		 myGlobals.device[actualDeviceId].hostsno);
+		 myGlobals.device[actualDeviceId].hosts.actualHashSize,
+		 myGlobals.device[actualDeviceId].hosts.hostsno);
 #endif
 
     setHostSerial(el);
@@ -1062,7 +991,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 	traceEvent(CONST_TRACE_INFO, "lookupHost(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]",
 		   idx, actualDeviceId,
 		   etheraddr_string(ether_addr, etherbuf), el->hostResolvedName,
-		   el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno,
+		   el->hostNumIpAddress, myGlobals.device[actualDeviceId].hosts.hostsno,
 		   useIPAddressForSearching);
       }
     }
@@ -1078,7 +1007,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
   hashSanityCheck();
 #endif
 
-  if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hash_hostTraffic[idx]), locked_mutex = 0;
+  if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx]), locked_mutex = 0;
 
   return(el);
 }
@@ -1104,8 +1033,8 @@ static void dumpHash() {
 static void hashSanityCheck() {
   int i=0;
 
-  for(i=FIRST_HOSTS_ENTRY; i<myGlobals.device[0].actualHashSize; i++) {
-    HostTraffic *el = myGlobals.device[0].hash_hostTraffic[i];
+  for(i=FIRST_HOSTS_ENTRY; i<myGlobals.device[0].hosts.actualHashSize; i++) {
+    HostTraffic *el = myGlobals.device[0].hosts.hash_hostTraffic[i];
 
     while(el != NULL) {
       if(el->hostTrafficBucket != i)
@@ -1122,8 +1051,8 @@ static void hashSanityCheck() {
 static void hostHashSanityCheck(HostTraffic *host) {
   int i=0;
 
-  for(i=FIRST_HOSTS_ENTRY; i<myGlobals.device[0].actualHashSize; i++) {
-    HostTraffic *el = myGlobals.device[0].hash_hostTraffic[i];
+  for(i=FIRST_HOSTS_ENTRY; i<myGlobals.device[0].hosts.actualHashSize; i++) {
+    HostTraffic *el = myGlobals.device[0].hosts.hash_hostTraffic[i];
 
     while(el != NULL) {
       if(el == host)

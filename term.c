@@ -75,11 +75,6 @@ void termIPSessions(void) {
       }
     }
 
-#ifdef PARM_USE_SESSIONS_CACHE
-    for(i=0; i<myGlobals.sessionsCacheLen; i++)
-      free(myGlobals.sessionsCache[i]);
-#endif
-
     myGlobals.device[j].numTcpSessions = 0;
     
     while(myGlobals.device[j].fragmentList != NULL)

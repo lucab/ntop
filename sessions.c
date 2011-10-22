@@ -31,10 +31,10 @@
 /* ************************************ */
 
 u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line) {
-  if(idx > myGlobals.device[actualDeviceId].actualHashSize) {
+  if(idx > myGlobals.device[actualDeviceId].hosts.actualHashSize) {
     traceEvent(CONST_TRACE_ERROR, "Index error idx=%u/deviceId=%d:0-%d @ [%s:%d]",
 	       idx, actualDeviceId,
-	       myGlobals.device[actualDeviceId].actualHashSize-1,
+	       myGlobals.device[actualDeviceId].hosts.actualHashSize-1,
 	       file, line);
     return(0); /* Last resort */
   } else
@@ -336,20 +336,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   myGlobals.numTerminatedSessions++;
   myGlobals.device[actualDeviceId].numTcpSessions--;
 
-#ifdef PARM_USE_SESSIONS_CACHE
-  /* Memory recycle */
-  if(myGlobals.sessionsCacheLen < (MAX_SESSIONS_CACHE_LEN-1)) {
-    sessionToPurge->magic = 0;
-    myGlobals.sessionsCache[myGlobals.sessionsCacheLen++] = sessionToPurge;
-    if(myGlobals.sessionsCacheLen > myGlobals.sessionsCacheLenMax)
-        myGlobals.sessionsCacheLenMax = myGlobals.sessionsCacheLen;
-  } else {
-    /* No room left: it's time to free the bucket */
-    free(sessionToPurge); /* No inner pointers to free */
-  }
-#else
   free(sessionToPurge);
-#endif
 }
 
 /* ************************************ */
@@ -1921,23 +1908,11 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
       We don't check for space here as the datastructure allows
       ntop to store sessions as needed
     */
-#ifdef PARM_USE_SESSIONS_CACHE
-    /* There's enough space left in the hashtable */
-    if(myGlobals.sessionsCacheLen > 0) {
-      theSession = myGlobals.sessionsCache[--myGlobals.sessionsCacheLen];
-      myGlobals.sessionsCacheReused++;
-      /*
-	traceEvent(CONST_TRACE_INFO, "Fetched session from pointers cache (len=%d)",
-	(int)myGlobals.sessionsCacheLen);
-      */
-    } else
-#endif
-
-      if((theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) {
-	releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
-	return(NULL);
-      }
-
+    if((theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) {
+      releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
+      return(NULL);
+    }
+    
     memset(theSession, 0, sizeof(IPSession));
     addedNewEntry = 1;
 
