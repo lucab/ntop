@@ -223,12 +223,12 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(el == NULL)
     return("&nbsp;");
 
+  /* Read custom host name from cache */
   safe_snprintf(__FILE__, __LINE__, symIp, sizeof(symIp), "hostname.%s",
 		(el->hostNumIpAddress[0] != '\0') ? el->hostNumIpAddress : el->ethAddressString);
 
-  if(fetchPrefsValue(symIp, custom_host_name, sizeof(custom_host_name)) == -1) {
-    custom_host_name[0] = '\0';
-  }
+  if(fetchPrefsValue(symIp, custom_host_name, sizeof(custom_host_name)) == -1)
+    custom_host_name[0] = '\0';  
 
   memset(&symIp, 0, sizeof(symIp));
   memset(&linkName, 0, sizeof(linkName));
@@ -271,6 +271,15 @@ char* makeHostLink(HostTraffic *el, short mode,
     }
 
     return(buf);
+  }
+
+  if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE)
+     || (el->hostResolvedName[0] == '\0') /* Safety check */
+     ) {
+    /* Let's search name in cache */
+    if(getHostNameFromCache(&el->hostIpAddress, el->hostResolvedName, sizeof(el->hostResolvedName)) != NULL) {
+      el->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_NAME;
+    }
   }
 
   if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE)
@@ -8236,44 +8245,47 @@ int handlePluginHTTPRequest(char* url) {
 
 #define DEVICE_NAME         "device.name."
 
-void edit_prefs(int postLen) {
+void edit_prefs(int postLen, char *db_key, char *db_val) {
   datum key, nextkey;
   int num_added = 0;
   char buf[1024];
-  char *db_key = NULL, *db_val = NULL;
   char postData[256];
   int idx;
 
-  if((idx = readHTTPpostData(postLen, postData, sizeof(postData))) > 0) {
-    char *tkn = strtok(postData, "&");
+  if(postLen > 0) {
+    db_key = db_val = NULL;
 
-    while(tkn != NULL) {
-      if(strncmp(tkn, "key=", 4) == 0) {
-	db_key = strdup(&tkn[4]);
-      } else if(strncmp(tkn, "val=", 4) == 0) {
-	u_int val = 0;
+    if((idx = readHTTPpostData(postLen, postData, sizeof(postData))) > 0) {
+      char *tkn = strtok(postData, "&");
+
+      while(tkn != NULL) {
+	if(strncmp(tkn, "key=", 4) == 0) {
+	  db_key = strdup(&tkn[4]);
+	} else if(strncmp(tkn, "val=", 4) == 0) {
+	  u_int val = 0;
       
-	if(db_val != NULL) {
-	  if(db_key && (!strcmp(db_key, EVENTS_MASK)))
-	    val = atoi(db_val);
-	  free(db_val);
-	}
+	  if(db_val != NULL) {
+	    if(db_key && (!strcmp(db_key, EVENTS_MASK)))
+	      val = atoi(db_val);
+	    free(db_val);
+	  }
       
-	if(db_key && (!strcmp(db_key, EVENTS_MASK))) {
-	  char str_val[16];
+	  if(db_key && (!strcmp(db_key, EVENTS_MASK))) {
+	    char str_val[16];
 	
-	  val = val | atoi(&tkn[4]);
+	    val = val | atoi(&tkn[4]);
 	
-	  safe_snprintf(__FILE__, __LINE__, 
-			str_val, sizeof(str_val), 
-			"%d", val);
+	    safe_snprintf(__FILE__, __LINE__, 
+			  str_val, sizeof(str_val), 
+			  "%d", val);
 	
-	  db_val = strdup(str_val);
-	} else
-	  db_val = strdup(&tkn[4]);
-      }    
+	    db_val = strdup(str_val);
+	  } else
+	    db_val = strdup(&tkn[4]);
+	}    
     
-      tkn = strtok(NULL, "&");
+	tkn = strtok(NULL, "&");
+      }
     }
   }
 

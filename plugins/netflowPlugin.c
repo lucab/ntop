@@ -1249,15 +1249,23 @@ static void updateSenderFlowSequence(int deviceId, int probeId,
     if(flowSequence < myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lowestSequenceNumber)
       myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lowestSequenceNumber = flowSequence;
 
-    /*check if the code is the same for v5/9*/
+    /* check if the code is the same for v5/9 */
     myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lostFlows =
       (((myGlobals.device[deviceId].netflowGlobals->probeList[probeId].highestSequenceNumber -
 	 myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lowestSequenceNumber) + numFlows) -
        myGlobals.device[deviceId].netflowGlobals->probeList[probeId].totNumFlows);
-   
+
+#ifdef DEBUG_FLOWS
+    traceEvent(CONST_TRACE_WARNING, "[lostFlows=%u][sequenceNumber=%u-%u][totNumFlows=%u]",
+	       myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lostFlows,
+	       myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lowestSequenceNumber,
+	       myGlobals.device[deviceId].netflowGlobals->probeList[probeId].highestSequenceNumber,
+	       myGlobals.device[deviceId].netflowGlobals->probeList[probeId].totNumFlows);
+#endif
+
     if(myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lostFlows 
        >  myGlobals.device[deviceId].netflowGlobals->probeList[probeId].totNumFlows) {
-      reset = 1; /* Somethign wrong: let's reset */
+      reset = 1; /* Something wrong: let's reset */
       goto do_reset;
     }
   }

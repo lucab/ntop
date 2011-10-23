@@ -47,6 +47,61 @@ typedef struct hostAddrList {
 
 static HostAddrList *hostAddrList_head = NULL;
 
+typedef struct {
+  time_t dump_date;
+  char hostname[MAX_LEN_SYM_HOST_NAME];
+} HostNameCache;
+
+/* **************************************************** */
+
+void cacheHostName(HostAddr *addr, char* symbolic) {
+  HostNameCache name;
+  datum data_data, key_data;
+
+  accessMutex(&myGlobals.serialLockMutex, "cacheHostName");
+
+  name.dump_date = myGlobals.actTime;
+  safe_snprintf(__FILE__, __LINE__, name.hostname, sizeof(name.hostname), "%s", symbolic);
+
+  key_data.dptr = (char*)addr, key_data.dsize = sizeof(HostAddr);
+  data_data.dptr = (char*)&name, data_data.dsize = (int)(strlen(name.hostname)+sizeof(name.dump_date)+1);
+
+  if(gdbm_store(myGlobals.resolverCacheFile, key_data, data_data, GDBM_REPLACE) != 0)
+    traceEvent(CONST_TRACE_ERROR, "While adding host name %s", symbolic);
+
+  // traceEvent(CONST_TRACE_INFO, "Cached host name %s", symbolic);
+
+  releaseMutex(&myGlobals.serialLockMutex);
+}
+
+/* **************************************************** */
+
+char* getHostNameFromCache(HostAddr *addr, char *buf, u_int buf_len) {
+  char *ret;
+  datum return_data, key_data;
+
+  accessMutex(&myGlobals.serialLockMutex, "getHostNameFromCache");
+
+  key_data.dptr = (char*)addr, key_data.dsize = sizeof(HostAddr);
+  return_data = gdbm_fetch(myGlobals.resolverCacheFile, key_data);
+
+  if(return_data.dptr != NULL) {
+    HostNameCache *dump = (HostNameCache*)return_data.dptr;
+
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s", dump->hostname);
+    free(return_data.dptr);
+    ret = buf;
+  } else {
+    /* Not found */
+    ret = NULL;
+  }
+
+  releaseMutex(&myGlobals.serialLockMutex);
+
+  // traceEvent(CONST_TRACE_INFO, "Resolved %s", ret ? ret : "<none>");
+
+  return(ret);
+}
 
 /* **************************************** */
 
@@ -94,6 +149,8 @@ static void updateHostNameInfo(HostAddr addr, char* symbolic, int type) {
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "updateDeviceHostNameInfo(%s <--> %s)", symbolic, addrtostr(&addr));
 #endif
+
+  cacheHostName(&addr, symbolic);
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(!myGlobals.device[i].virtualDevice)
@@ -391,6 +448,8 @@ void ipaddr2str(HostTraffic *el, HostAddr hostIpAddress,
     traceEvent(CONST_TRACE_ERROR, "Recycling %s = %s ", addrtostr(&hostIpAddress), el->hostResolvedName);
 #endif
     strcpy(el->hostResolvedName, h->hostResolvedName), el->hostResolvedNameType = h->hostResolvedNameType;
+  } else if(getHostNameFromCache(&el->hostIpAddress, el->hostResolvedName, sizeof(el->hostResolvedName)) != NULL) {
+    el->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_NAME;
   } else
     queueAddress(hostIpAddress);
 }

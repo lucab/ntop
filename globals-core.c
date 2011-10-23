@@ -91,6 +91,7 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
   initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, FALSE,  &statbuf);
   initSingleGdbm(&myGlobals.fingerprintFile,  "fingerprint.db",  spoolDirectory, FALSE,  &statbuf);
   initSingleGdbm(&myGlobals.serialFile,       "hostSerials.db",  spoolDirectory, TRUE,   &statbuf);
+  initSingleGdbm(&myGlobals.resolverCacheFile,"resolverCache.db",spoolDirectory, TRUE,   &statbuf);
   initSingleGdbm(&myGlobals.topTalkersFile,   "topTalkers.db",   spoolDirectory, FALSE,  &statbuf);
 
   createVendorTable(&statbuf);

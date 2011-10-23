@@ -196,6 +196,16 @@ typedef struct hostSerial {
 
 typedef u_int32_t HostSerialIndex;
 
+typedef struct {
+  time_t dump_date;
+  HostSerialIndex idx;
+} HostSerialIndexDump;
+
+typedef struct {
+  time_t dump_date;
+  HostSerial serial;
+} HostSerialDump;
+
 /*
   extern int emptySerial(HostSerialIndex *a);
   extern int cmpSerial(HostSerialIndex *a, HostSerialIndex *b);
@@ -1934,7 +1944,7 @@ typedef struct ntopGlobals {
   NtopInterface *device;   /* pointer to the network interfaces table */
 
   /* Database */
-  GDBM_FILE pwFile, prefsFile, macPrefixFile, fingerprintFile, serialFile, topTalkersFile;
+  GDBM_FILE pwFile, prefsFile, macPrefixFile, fingerprintFile, serialFile, topTalkersFile, resolverCacheFile;
 
   /* the table of broadcast entries */
   HostTraffic *broadcastEntry;

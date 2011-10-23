@@ -2613,8 +2613,9 @@ static int returnHTTPPage(char* pageName,
     findHost(buf);
   } else if(strncasecmp(pageName, CONST_EDIT_PREFS, strlen(CONST_EDIT_PREFS)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    edit_prefs(postLen);
-    printTrailer=1;
+    edit_prefs(postLen, db_key, db_val);
+    db_key = db_val = NULL; /* Avoid double free */
+    printTrailer = 1;
   } else if(strncasecmp(pageName, CONST_PRIVACYCLEAR_HTML, strlen(CONST_PRIVACYCLEAR_HTML)) == 0) {
     storePrefsValue("globals.displayPrivacyNotice", "0");
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PRIVACY: Flag cleared, notice will display next run");

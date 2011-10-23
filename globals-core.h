@@ -132,6 +132,8 @@ extern void resetLeaks();
 #endif
 
 /* address.c */
+extern void cacheHostName(HostAddr *addr, char* symbolic);
+extern char* getHostNameFromCache(HostAddr *addr, char *buf, u_int buf_len);
 extern void initAddressResolution(void);
 extern int printable(int ch);
 extern void cleanupAddressQueue(void);

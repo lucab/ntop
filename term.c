@@ -85,10 +85,11 @@ void termIPSessions(void) {
 /* ************************************************ */
 
 void termGdbm() {
-  if(myGlobals.pwFile)           { gdbm_close(myGlobals.pwFile); myGlobals.pwFile = NULL;                   }
-  if(myGlobals.prefsFile)        { gdbm_close(myGlobals.prefsFile); myGlobals.prefsFile = NULL;             }
-  if(myGlobals.macPrefixFile)    { gdbm_close(myGlobals.macPrefixFile); myGlobals.macPrefixFile = NULL;     }
-  if(myGlobals.fingerprintFile)  { gdbm_close(myGlobals.fingerprintFile); myGlobals.fingerprintFile = NULL; }
-  if(myGlobals.serialFile)       { gdbm_close(myGlobals.serialFile); myGlobals.serialFile = NULL;           }
-  if(myGlobals.topTalkersFile)   { gdbm_close(myGlobals.topTalkersFile); myGlobals.topTalkersFile = NULL;   }
+  if(myGlobals.pwFile)            { gdbm_close(myGlobals.pwFile); myGlobals.pwFile = NULL;                       }
+  if(myGlobals.prefsFile)         { gdbm_close(myGlobals.prefsFile); myGlobals.prefsFile = NULL;                 }
+  if(myGlobals.macPrefixFile)     { gdbm_close(myGlobals.macPrefixFile); myGlobals.macPrefixFile = NULL;         }
+  if(myGlobals.fingerprintFile)   { gdbm_close(myGlobals.fingerprintFile); myGlobals.fingerprintFile = NULL;     }
+  if(myGlobals.serialFile)        { gdbm_close(myGlobals.serialFile); myGlobals.serialFile = NULL;               }
+  if(myGlobals.resolverCacheFile) { gdbm_close(myGlobals.resolverCacheFile); myGlobals.resolverCacheFile = NULL; }
+  if(myGlobals.topTalkersFile)    { gdbm_close(myGlobals.topTalkersFile); myGlobals.topTalkersFile = NULL;       }
 }

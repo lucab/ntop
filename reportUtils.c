@@ -3295,12 +3295,12 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   char formatBuf[LEN_TIMEFORMAT_BUFFER], formatBuf1[LEN_TIMEFORMAT_BUFFER], 
     formatBuf2[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER], custom_host_name[128];
 
+  /* Read custom host name if any */
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "hostname.%s",
 		(el->hostNumIpAddress[0] != '\0') ? el->hostNumIpAddress : el->ethAddressString);
   
-  if(fetchPrefsValue(buf, custom_host_name, sizeof(custom_host_name)) == -1) {
-    custom_host_name[0] = '\0';
-  }
+  if(fetchPrefsValue(buf, custom_host_name, sizeof(custom_host_name)) == -1)
+    custom_host_name[0] = '\0';  
 
   buf1[0] = 0;
 

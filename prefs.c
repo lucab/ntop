@@ -242,9 +242,8 @@ void loadPrefs(int argc, char* argv[]) {
     /* Handle key w/o trailing \0 so valgrind is happy */
     zeroPadMallocString(key.dsize, key.dptr);
 
-    if(fetchPrefsValue(key.dptr, buf, sizeof(buf)) == 0) {
-      processNtopPref(key.dptr, buf, FALSE, &myGlobals.runningPref);
-    }
+    if(fetchPrefsValue(key.dptr, buf, sizeof(buf)) == 0)
+      processNtopPref(key.dptr, buf, FALSE, &myGlobals.runningPref);    
 
     nextkey = gdbm_nextkey (myGlobals.prefsFile, key);
     free (key.dptr);

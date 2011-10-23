@@ -519,21 +519,27 @@ int purgeIdleHosts(int actDevice) {
 
 /* NOTE - myGlobals.serialLockMutex MUST be locked by caller */
 void dumpHostSerial(HostSerial *serial, HostSerialIndex serialHostIndex) {
+  HostSerialIndexDump siDump;
+  HostSerialDump      sDump;
   datum data_data, key_data;
 
   // FIX - Implement periodic serial purging
   // traceEvent(CONST_TRACE_WARNING, "dumpHostSerial(%u)", serialHostIndex);
 
   /* 1 - Dump key(serial) */
+  sDump.dump_date = siDump.dump_date = myGlobals.actTime;
+
+  siDump.idx = serialHostIndex;
   key_data.dptr = (char*)serial, key_data.dsize = sizeof(HostSerial);
-  data_data.dptr = (char*)&serialHostIndex, data_data.dsize = sizeof(serialHostIndex);
+  data_data.dptr = (char*)&siDump, data_data.dsize = sizeof(siDump);
 
   if(gdbm_store(myGlobals.serialFile, key_data, data_data, GDBM_REPLACE) != 0)
     traceEvent(CONST_TRACE_ERROR, "While adding host serial %u", serialHostIndex);
 
   /* 2 - Dump key(serialHostIndex) */
-  key_data.dptr = (char*)&serialHostIndex, key_data.dsize = sizeof(serialHostIndex);
-  data_data.dptr = (char*)serial, data_data.dsize = sizeof(HostSerial);
+  memcpy(&sDump.serial, serial, sizeof(HostSerial));
+  key_data.dptr = (char*)&serialHostIndex, key_data.dsize = sizeof(HostSerialIndex);
+  data_data.dptr = (char*)&sDump, data_data.dsize = sizeof(sDump);
 
   if(gdbm_store(myGlobals.serialFile, key_data, data_data, GDBM_REPLACE) != 0)
     traceEvent(CONST_TRACE_ERROR, "While adding host serial %u", serialHostIndex);
@@ -550,7 +556,9 @@ HostSerial* getHostSerialFromId(HostSerialIndex serialHostIndex, HostSerial *ser
   return_data = gdbm_fetch(myGlobals.serialFile, key_data);
 
   if(return_data.dptr != NULL) {
-    memcpy(serial, return_data.dptr, sizeof(HostSerial));
+    HostSerialDump *dump = (HostSerialDump*)return_data.dptr;
+
+    memcpy(serial, &dump->serial, sizeof(HostSerial));
     free(return_data.dptr);
   } else {
     /* Not found */
@@ -576,7 +584,9 @@ HostSerialIndex getHostIdFromSerial(HostSerial *serial) {
   return_data = gdbm_fetch(myGlobals.serialFile, key_data);
 
   if(return_data.dptr != NULL) {
-    memcpy(&serialHostIndex, return_data.dptr, sizeof(serialHostIndex));
+    HostSerialIndexDump *dump = (HostSerialIndexDump*)return_data.dptr;
+
+    memcpy(&serialHostIndex, &dump->idx, sizeof(serialHostIndex));
     free(return_data.dptr);
   } else {
     /* Not found */

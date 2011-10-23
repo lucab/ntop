@@ -245,7 +245,7 @@ extern bool processNtopPref (char *key, char *value, bool savePref,
 
 extern int printNtopLogReport(int printAsText);
 extern char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize);
-extern void edit_prefs(int postLen);
+extern void edit_prefs(int postLen, char *key, char *value);
 
 /* **************************** */
 
