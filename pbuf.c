@@ -513,10 +513,14 @@ void queuePacket(u_char *_deviceId,
     len = h->caplen;
 
     if(h->caplen >= MAX_PACKET_LEN) {
-      if(h->caplen > myGlobals.device[deviceId].mtuSize) {
+      if(h->caplen > myGlobals.device[deviceId].mtuSize) {	
 #ifndef WIN32
-	traceEvent(CONST_TRACE_WARNING, "packet truncated (%d->%d)",
-		   h->len, MAX_PACKET_LEN);
+	static u_int8_t msg_shown = 0;
+
+	if(!msg_shown) {
+	  traceEvent(CONST_TRACE_WARNING, "Packet truncated (%d->%d): using LRO perhaps ?", h->len, MAX_PACKET_LEN);
+	  msg_shown = 1;
+	}
 #endif
       }
 
@@ -638,7 +642,13 @@ void* dequeuePacket(void* _deviceId) {
     memcpy(p, myGlobals.device[deviceId].packetQueue[myGlobals.device[deviceId].packetQueueTail].p, MAX_PACKET_LEN);
 
     if(h.len > MAX_PACKET_LEN) {
-      traceEvent(CONST_TRACE_WARNING, "packet truncated (%d->%d)", h.len, MAX_PACKET_LEN);
+      static u_int8_t msg_shown = 0;
+      
+      if(!msg_shown) {
+	traceEvent(CONST_TRACE_WARNING, "Packet truncated (%d->%d): using LRO perhaps ?", h.len, MAX_PACKET_LEN);
+	msg_shown = 1;
+      }
+
       h.len = MAX_PACKET_LEN;
     }
 
