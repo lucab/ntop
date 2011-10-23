@@ -2737,9 +2737,17 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	  sendString(makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1, hostLinkBuf, sizeof(hostLinkBuf)));
 
 	  if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			  tmpName1, tmpName3);
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>", tmpName1);
+	    sendString(buf);
+
+	    if(tmpName3 != myGlobals.separator) {
+	      char macBuf[32];
+	      
+	      safe_snprintf(__FILE__, __LINE__, macBuf, sizeof(macBuf), "%s", tmpName3);
+	      macBuf[2] = macBuf[5] = macBuf[8] = macBuf[11] = macBuf[14] = '_';
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<A HREF=\"%s.html\">%s</A></TD>\n", macBuf, tmpName3);
+	    } else
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s</TD>\n", tmpName3);
 	  } else {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 			  tmpName1);
