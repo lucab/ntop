@@ -1751,10 +1751,8 @@ static void decodeIPV4(SFSample *sample, int deviceId)
 	  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "TCPDstPort %u\n",sample->dcd_dport);
 	  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "TCPFlags %u\n", sample->dcd_tcpFlags);
 	  if(sample->dcd_dport == 80) {
-	    int bytesLeft;
 	    int headerBytes = (tcp.th_off_and_unused >> 4) * 4;
 	    ptr += headerBytes;
-	    bytesLeft = sample->header + sample->headerLen - ptr;
 	  }
 	}
 	break;
@@ -4149,7 +4147,6 @@ static void handlesFlowHTTPrequest(char* _url) {
 	  }
 	} else if(strcmp(device, "name") == 0) {
 	  char old_name[256], new_name[256];
-	  int rc;
 	  
 	  sanitize_rrd_string(value);
 		
@@ -4170,7 +4167,11 @@ static void handlesFlowHTTPrequest(char* _url) {
 			myGlobals.device[deviceId].uniqueIfName);
 	  revertSlashIfWIN32(new_name, 0);
 	  
-	  rc = rename(old_name, new_name);
+	  if(rename(old_name, new_name) != 0) {
+	    traceEvent(CONST_TRACE_ERROR, 
+		       "SFLOW: Error renaming %s -> %s", 
+		       old_name, new_name);
+	  }
 	} else if(strcmp(device, "debug") == 0) {
 	  if(deviceId > 0) {
 	    myGlobals.device[deviceId].sflowGlobals->sflowDebug = atoi(value);

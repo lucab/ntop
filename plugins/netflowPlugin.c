@@ -789,15 +789,11 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   myGlobals.device[deviceId].netflowGlobals->flowProcessedBytes += total_bytes;
 
   ctr.value = record->sentOctets;
-  updatePacketCount(srcHost, &srcHost->hostIpAddress,
-		    dstHost, &dstHost->hostIpAddress,
-		    ctr, record->sentPkts, actualDeviceId);
+  updatePacketCount(srcHost, dstHost, ctr, record->sentPkts, actualDeviceId);
 
   if(record->rcvdOctets > 0) {
     ctr.value = record->rcvdOctets;
-    updatePacketCount(dstHost, &dstHost->hostIpAddress,
-		      srcHost, &srcHost->hostIpAddress,
-		      ctr, record->rcvdPkts, actualDeviceId);
+    updatePacketCount(dstHost, srcHost, ctr, record->rcvdPkts, actualDeviceId);
   }
 
   srcPseudoLocal = subnetPseudoLocalHost(srcHost);

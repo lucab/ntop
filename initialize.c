@@ -57,14 +57,11 @@ static void setDomainName(void) {
     if(myGlobals.runningPref.domainName[0] == '\0') {
       char szLclHost[64];
       struct hostent *lpstHostent;
-      struct in_addr stLclAddr;
 
       gethostname(szLclHost, 64);
       lpstHostent = gethostbyname(szLclHost);
       if(lpstHostent) {
 	struct hostent *hp;
-
-	stLclAddr.s_addr = ntohl(*(lpstHostent->h_addr));
 
 	hp = (struct hostent*)gethostbyaddr((char*)lpstHostent->h_addr, 4, AF_INET);
 

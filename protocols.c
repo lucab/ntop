@@ -202,7 +202,6 @@ void handleBootp(HostTraffic *srcHost,
 		  addr.Ip4Address.s_addr = hostIpAddress.s_addr;
 		  trafficHost = findHostByNumIP(addr, srcHost->vlanId, actualDeviceId);
 		  if(trafficHost != NULL) {
-		    incrementUsageCounter(&realDstHost->contactedRouters, trafficHost, actualDeviceId);
 		    setHostFlag(FLAG_GATEWAY_HOST, trafficHost);
 		  }
 
@@ -230,7 +229,7 @@ void handleBootp(HostTraffic *srcHost,
 		    char tmpName[2*MAX_LEN_SYM_HOST_NAME],
 		      tmpHostName[MAX_LEN_SYM_HOST_NAME],
 		      tmpDomainName[MAX_LEN_SYM_HOST_NAME];
-		    int hostLen, i;
+		    int i;
 
 		    memset(tmpHostName, 0, sizeof(tmpHostName));
 		    strncpy(tmpHostName, realDstHost->hostResolvedName, MAX_LEN_SYM_HOST_NAME-1);
@@ -248,7 +247,6 @@ void handleBootp(HostTraffic *srcHost,
 		      rc = safe_snprintf(__FILE__, __LINE__, tmpName, sizeof(tmpName), "%s.%s",
 				  tmpHostName, tmpDomainName);
 		      if (rc >= 0) {
-			hostLen = len;
 			len = strlen(tmpName);
 
 			if(len >= (MAX_LEN_SYM_HOST_NAME-1)) {
@@ -743,25 +741,7 @@ void handleNetbios(HostTraffic *srcHost,
       }
 
       if(!notEnoughData) {      
-	u_int8_t doDecode = 0;
 	nodeType = name_interpret((char*)name, nbName, udpDataLen-displ);
-
-	switch(opcode) {
-	case 0: /* Query */
-	  switch(nodeType) {
-	  case 0x1C: /* Domain Controller */
-	  case 0x1E: /* Domain */
-	  case 0x1B: /* Domain */
-	  case 0x1D: /* Workgroup (I think) */
-	    doDecode = 1;
-	    break;
-	  }
-	  break;
-	case 5: /* Registration */
-	case 6: /* Release      */
-	  doDecode = 1;
-	  break;
-	}
 	
 #ifdef DEBUG
 	traceEvent(CONST_TRACE_INFO, "Found: %s", nbName);

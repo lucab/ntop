@@ -2471,9 +2471,10 @@ void resetHostsVariables(HostTraffic* el) {
   FD_ZERO(&(el->flags));
 
   el->totContactedSentPeers = el->totContactedRcvdPeers = 0;
-  resetUsageCounter(&el->contactedSentPeers);
-  resetUsageCounter(&el->contactedRcvdPeers);
-  resetUsageCounter(&el->contactedRouters);
+  if(el->sent_to_matrix)   { CM_Destroy(el->sent_to_matrix);   el->sent_to_matrix = NULL;   }
+  if(el->recv_from_matrix) { CM_Destroy(el->recv_from_matrix); el->recv_from_matrix = NULL; }  
+  el->sent_to_matrix   = CM_Init(16 /* width */, 16 /* depth */, myGlobals.actTime /* random value */);
+  el->recv_from_matrix = CM_Init(16 /* width */, 16 /* depth */,  myGlobals.actTime+1 /* random value */);
 
   el->serialHostIndex = UNKNOWN_SERIAL_INDEX;
   el->vlanId          = NO_VLAN;
@@ -2509,10 +2510,6 @@ void resetHostsVariables(HostTraffic* el) {
   el->icmpInfo = NULL;
   if (el->protocolInfo != NULL)        free(el->protocolInfo);
   el->protocolInfo = NULL;
-
-  resetUsageCounter(&el->contactedSentPeers);
-  resetUsageCounter(&el->contactedRcvdPeers);
-  resetUsageCounter(&el->contactedRouters);
 
   memset(el->recentlyUsedClientPorts, -1, sizeof(int)*MAX_NUM_RECENT_PORTS);
   memset(el->recentlyUsedServerPorts, -1, sizeof(int)*MAX_NUM_RECENT_PORTS);
@@ -3878,8 +3875,6 @@ void resetSecurityHostTraffic(HostTraffic *el) {
 
   /* ************* */
 
-  resetUsageCounter(&el->contactedRcvdPeers);
-
   resetUsageCounter(&el->secHostPkts->synPktsRcvd);
   resetUsageCounter(&el->secHostPkts->rstPktsRcvd);
   resetUsageCounter(&el->secHostPkts->rstAckPktsRcvd);
@@ -3901,10 +3896,6 @@ void resetSecurityHostTraffic(HostTraffic *el) {
   resetUsageCounter(&el->secHostPkts->icmpProtocolUnreachRcvd);
   resetUsageCounter(&el->secHostPkts->icmpAdminProhibitedRcvd);
   resetUsageCounter(&el->secHostPkts->malformedPktsRcvd);
-
-  resetUsageCounter(&el->contactedSentPeers);
-  resetUsageCounter(&el->contactedRcvdPeers);
-  resetUsageCounter(&el->contactedRouters);
 }
 
 /* ********************************************* */
@@ -6094,6 +6085,12 @@ void setHostFlag(int flag_value, HostTraffic *host) {
     FD_SET(flag_value, &host->flags);
     notifyEvent(hostFlagged, host, NULL, flag_value);
   }
+}
+
+/* *************************************************** */
+
+u_int8_t isSetHostFlag(int flag_value, HostTraffic *host) {
+  return(FD_ISSET(flag_value, &host->flags));
 }
 
 /* *************************************************** */

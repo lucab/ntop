@@ -375,7 +375,7 @@ typedef struct trafficCounter {
 /* ******************************** */
 
 inline static void incrementTrafficCounter(TrafficCounter *ctr, Counter value) { if(value > 0) ctr->value += value, ctr->modified = 1; }
-inline static void resetTrafficCounter(TrafficCounter *ctr)               { ctr->value = 0, ctr->modified = 0;                    }
+inline static void resetTrafficCounter(TrafficCounter *ctr) { ctr->value = 0, ctr->modified = 0; }
 
 /* ************* Types Definition ********************* */
 
@@ -709,6 +709,9 @@ typedef struct hostTraffic {
   TrafficCounter   greSent, greRcvd, grePktSent, grePktRcvd, lastGrePktSent, lastGrePktRcvd;
   TrafficCounter   ipsecSent, ipsecRcvd, ipsecPktSent, ipsecPktRcvd, lastIpsecPktSent, lastIpsecPktRcvd;
 
+  /* Sketches */
+  CM_type          *sent_to_matrix, *recv_from_matrix;
+
   NonIPTraffic     *nonIPTraffic;
   NonIpProtoTrafficInfo *nonIpProtoTrafficInfos; /* Info about further non IP protos */
 
@@ -759,9 +762,6 @@ typedef struct hostTraffic {
   ProtoTrafficInfo      **protoIPTrafficInfos; /* Info about IP traffic generated/rcvd by this host */
 
   Counter          totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
-  UsageCounter     contactedSentPeers;   /* peers that talked with this host */
-  UsageCounter     contactedRcvdPeers;   /* peers that talked with this host */
-  UsageCounter     contactedRouters;     /* routers contacted by this host */
   struct hostTraffic *next;              /* pointer to the next element */
 } HostTraffic;
 

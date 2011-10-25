@@ -272,7 +272,7 @@ int handleIP(u_short port,
 	     u_short l7ProtoSessionIdx,
 	     int actualDeviceId,
 	     u_short newSession) {
-  int idx;
+  int idx = -1;
   Counter length = (Counter)_length;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
@@ -500,8 +500,6 @@ static void checkNetworkRouter(HostTraffic *srcHost, HostTraffic *dstHost,
        )
       return;
 
-    incrementUsageCounter(&srcHost->contactedRouters, router, actualDeviceId);
-
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "(%s/%s/%s) -> (%s/%s/%s) routed by [%s/%s/%s]",
 	       srcHost->ethAddressString, srcHost->hostNumIpAddress, srcHost->hostResolvedName,
@@ -542,7 +540,6 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
   struct udphdr up;
   struct icmp icmpPkt;
   u_int hlen, ip_len,tcpDataLength, udpDataLength, off=0, tcpUdpLen, idx;
-  char *proto;
   HostTraffic *srcHost=NULL, *dstHost=NULL;
   HostAddr srcAddr, dstAddr; /* Protocol Independent addresses */
   u_char forceUsingIPaddress = 0;
@@ -712,7 +709,7 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
   }
 
   ctr.value = h->len;
-  updatePacketCount(srcHost, &srcAddr, dstHost, &dstAddr, ctr, 1, actualDeviceId);
+  updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
 
   if(!myGlobals.device[actualDeviceId].dummyDevice) {
     checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId, length, h, p);
@@ -847,7 +844,6 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.malformedPkts, 1);
       }
     } else {
-      proto = "TCP";
       memcpy(&tp, bp+hlen, sizeof(struct tcphdr));
 
       /* Sanity check */
@@ -1101,7 +1097,6 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
       break;
 
   case IPPROTO_UDP:
-    proto = "UDP";
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, length);
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.totalFlows, 1);
 
@@ -1396,7 +1391,6 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.malformedPkts, 1);
       }
     } else {
-      proto = "ICMP";
       memcpy(&icmpPkt, bp+hlen, sizeof(struct icmp));
 
       incrementHostTrafficCounter(srcHost, icmpSent, length);
@@ -1590,7 +1584,6 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	incrementUsageCounter(&dstHost->secHostPkts->malformedPktsRcvd, srcHost, actualDeviceId);
       }
     } else {
-      proto = "ICMPv6";
       memcpy(&icmp6Pkt, bp+hlen, sizeof(struct icmp6_hdr));
       incrementHostTrafficCounter(srcHost, icmp6Sent, length);
       incrementHostTrafficCounter(dstHost, icmp6Rcvd, length);
@@ -1613,8 +1606,6 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
       /* ************************************************************* */
 
       if(icmp6Pkt.icmp6_type <= ICMP6_MAXTYPE) {
-	short dumpPacket = 1;
-
 	allocHostTrafficCounterMemory(srcHost, icmpInfo, sizeof(IcmpHostInfo));
 	if(srcHost->icmpInfo == NULL) return;
 
@@ -1628,7 +1619,6 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	case ICMP6_ECHO_REPLY:
 	case ICMP6_ECHO_REQUEST:
 	  /* Do not log anything */
-	  dumpPacket = 0;
 	  break;
 	case ICMP6_DST_UNREACH:
 	case ND_REDIRECT:
@@ -1753,7 +1743,6 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
     }
 
     if(!found) {
-      proto = "IP (Other)";
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherIpBytes, length);
       sport = dport = 0;
       if(myGlobals.runningPref.enableOtherPacketDump)

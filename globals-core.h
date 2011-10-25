@@ -412,8 +412,7 @@ extern void updateHostName(HostTraffic *el);
 extern void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_int length);
 extern void incrementUnknownProto(HostTraffic *host, int direction, u_int16_t eth_type,
 				  u_int16_t dsap, u_int16_t ssap, u_int16_t ipProto);
-extern void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
-			      HostTraffic *dstHost, HostAddr *dstAddr,
+extern void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
 			      TrafficCounter length, Counter numPkts,
 			      int actualDeviceId);
 extern u_int computeEfficiency(u_int pktLen);
@@ -814,6 +813,7 @@ extern void freePortsUsage(HostTraffic *el);
 extern PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary);
 extern void setHostFlag(int flag_value, HostTraffic *host);
 extern void clearHostFlag(int flag_value, HostTraffic *host);
+extern u_int8_t isSetHostFlag(int flag_value, HostTraffic *host);
 extern char* vlan2name(u_int16_t vlanId, char *buf, int buf_len);
 extern void mkdir_p(char *tag, char *path, int permission);
 extern char* read_file(char* path, char* buf, u_int buf_len);

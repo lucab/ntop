@@ -2125,6 +2125,7 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 
 /* ****************************************************************** */
 
+#if 0
 #define LOCAL_COLOR     "mistyrose2"
 #define REMOTE_COLOR    "lightsteelblue1"
 
@@ -2140,10 +2141,19 @@ static int addNodeInfo(FILE *fd, HostTraffic *el) {
   }
   return(0);
 }
+#endif
 
 /* ****************************************************************** */
 
 void makeDot() {
+  
+  // FIX - Reimplement host matrix
+  returnHTTPpageNotFound("<b>This feature is not available on your platform</b>");
+  return;
+
+#if 0
+
+
 #ifdef WIN32
   returnHTTPpageNotFound("<b>This feature is not available on your platform</b>");
   return;
@@ -2190,7 +2200,8 @@ void makeDot() {
       if(el->community && (!isAllowedCommunity(el->community))) continue;
 
       if(subnetLocalHost(el)) {
-	makeHostName(el, buf, sizeof(buf));
+	makeHostName(el, buf, sizeof(buf));      
+
 
 	for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	  if(!emptySerial(&el->contactedSentPeers.peersSerials[i])
@@ -2316,6 +2327,8 @@ void makeDot() {
     returnHTTPpageNotFound("Unable to create temporary file");
   }
 #endif
+
+#endif
 }
 
 /* ******************************* */
@@ -2334,7 +2347,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   char htmlAnchor[64], htmlAnchor1[64];
   char formatBuf[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
   u_char *vlanList, foundVlan = 0, vlanStr[16], ifStr[16], foundIf = 0, *ifList;
-  u_int8_t *knownSubnets, foundSubnet = 0;
+  u_int8_t *knownSubnets, selected;
 
   vlanList = calloc(1, MAX_VLAN);
   if(vlanList == NULL) {
@@ -2395,7 +2408,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     if((vlanId != NO_VLAN) && (el->vlanId != vlanId)) continue;
 
     if((el->known_subnet_id < myGlobals.numKnownSubnets) && (el->known_subnet_id != UNKNOWN_SUBNET_ID) )
-      foundSubnet = 1, knownSubnets[el->known_subnet_id] = 1;
+      knownSubnets[el->known_subnet_id] = 1;
 
     if((knownSubnetId != UNKNOWN_SUBNET_ID) && (knownSubnetId != ALL_SUBNET_IDS)
        && (el->known_subnet_id != knownSubnetId))
@@ -2494,7 +2507,6 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
     if(foundVlan) {
       u_char tmpBuf[64];
-      u_int8_t selected;
 
       sendString("<tr><td><form action=\"../\">\n<b>VLAN</b>:</td>"
 		 "<td><select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
@@ -2526,89 +2538,84 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
       sendString("</select>\n</form></td></tr>\n");
     }
 
-    /* if(foundSubnet) */ {
-      u_int8_t selected;
+    sendString("<tr><td><form action=\"../\">\n<b>Subnet</b>:</td>"
+	       "<td><select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
 
-      sendString("<tr><td><form action=\"../\">\n<b>Subnet</b>:</td>"
-		 "<td><select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
+    for(i=0; i<myGlobals.numKnownSubnets; i++)
+      if(knownSubnets[i] == 1) {
+	struct in_addr addr;
+	char addr_buf[32], alias[64], key[64], *net;
 
-      for(i=0; i<myGlobals.numKnownSubnets; i++)
-	if(knownSubnets[i] == 1) {
-	  struct in_addr addr;
-	  char addr_buf[32], alias[64], key[64], *net;
+	addr.s_addr = myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY];
 
-	  addr.s_addr = myGlobals.subnetStats[i].address[CONST_NETWORK_ENTRY];
+	if((knownSubnetId != UNKNOWN_SUBNET_ID) && (i == knownSubnetId))
+	  selected = 1;
+	else
+	  selected = 0;
 
-	  if((knownSubnetId != UNKNOWN_SUBNET_ID) && (i == knownSubnetId))
-	    selected = 1;
-	  else
-	    selected = 0;
+	net = _intoa(addr, addr_buf, sizeof(addr_buf));
 
-	  net = _intoa(addr, addr_buf, sizeof(addr_buf));
+	safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "subnet.name.%s/%d",
+		      net, myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY]);
 
-	  safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "subnet.name.%s/%d",
-			net, myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY]);
+	alias[0] = '\0';
+	fetchPrefsValue(key, alias, sizeof(alias));
 
-	  alias[0] = '\0';
-	  fetchPrefsValue(key, alias, sizeof(alias));
+	if(alias[0] != '\0') {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>%s/%d %s%s%s</option>\n",
+			CONST_HOSTS_INFO_HTML, showL2Only, showBytes, i,
+			selected ? " selected" : "", net,
+			myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY],
+			(alias[0] != '\0') ? "[" : "",
+			alias,
+			(alias[0] != '\0') ? "]" : "");
 
-	  if(alias[0] != '\0') {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			  "<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>%s/%d %s%s%s</option>\n",
-			  CONST_HOSTS_INFO_HTML, showL2Only, showBytes, i,
-			  selected ? " selected" : "", net,
-			  myGlobals.subnetStats[i].address[CONST_NETMASK_V6_ENTRY],
-			  (alias[0] != '\0') ? "[" : "",
-			  alias,
-			  (alias[0] != '\0') ? "]" : "");
-
-	    sendString(buf);
-	  }
+	  sendString(buf);
 	}
+      }
 
-      if(knownSubnetId == UNKNOWN_SUBNET_ID) selected = 1; else selected = 0;
+    if(knownSubnetId == UNKNOWN_SUBNET_ID) selected = 1; else selected = 0;
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>Unknown Subnets</option>\n",
-		    CONST_HOSTS_INFO_HTML, showL2Only, showBytes, UNKNOWN_SUBNET_ID,
-		    selected ? " selected" : "");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		  "<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>Unknown Subnets</option>\n",
+		  CONST_HOSTS_INFO_HTML, showL2Only, showBytes, UNKNOWN_SUBNET_ID,
+		  selected ? " selected" : "");
 
-      sendString(buf);
+    sendString(buf);
 
-      if(knownSubnetId == ALL_SUBNET_IDS) selected = 1; else selected = 0;
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>All</option>\n"
-		    "</select></form>\n</td></tr>\n",
-		    CONST_HOSTS_INFO_HTML, showL2Only, showBytes, ALL_SUBNET_IDS,
-		    selected ? " selected" : "");
+    if(knownSubnetId == ALL_SUBNET_IDS) selected = 1; else selected = 0;
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		  "<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>All</option>\n"
+		  "</select></form>\n</td></tr>\n",
+		  CONST_HOSTS_INFO_HTML, showL2Only, showBytes, ALL_SUBNET_IDS,
+		  selected ? " selected" : "");
 
-      sendString(buf);
-    }
+    sendString(buf);    
 
     /* ********************** */
 
-      sendString("<tr><td valign=middle><p><form action=\"../\">\n<b>Filter</b>:</td><td>"
-		 "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
+    sendString("<tr><td valign=middle><p><form action=\"../\">\n<b>Filter</b>:</td><td>"
+	       "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>Show Only L2 Hosts</option>\n",
-		    CONST_HOSTS_INFO_HTML, 1, showBytes, knownSubnetId,
-		    showL2Only ? " selected" : "");
-      sendString(buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		  "<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>Show Only L2 Hosts</option>\n",
+		  CONST_HOSTS_INFO_HTML, 1, showBytes, knownSubnetId,
+		  showL2Only ? " selected" : "");
+    sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>Show Only L3 Hosts</option>\n",
-		    CONST_HOSTS_INFO_HTML, 0, showBytes, knownSubnetId,
-		    (!showL2Only) ? " selected" : "");     
-      sendString(buf);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		  "<option value=\"/%s?l2Only=%d&unit=%d&subnet=%d\"%s>Show Only L3 Hosts</option>\n",
+		  CONST_HOSTS_INFO_HTML, 0, showBytes, knownSubnetId,
+		  (!showL2Only) ? " selected" : "");     
+    sendString(buf);
 
-      sendString("</select></form>\n</td></tr>\n");
+    sendString("</select></form>\n</td></tr>\n");
 
     /* ********************** */
 
     if(foundIf) {
       u_char found = 0;
-      u_int8_t selected;
 
       sendString("<tr><td><p><form action=\"../\">\n<b>Interface Id</b>:</td><td>"
 		 "<select onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\">\n");
@@ -3293,80 +3300,41 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
 void printLocalRoutersList(int actualDeviceId) {
   char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
-  HostTraffic *el, *router;
-  u_int i, j, numEntries=0;
-  HostSerialIndex routerList[MAX_NUM_ROUTERS];
+  HostTraffic *el;
+  u_int i, numEntries=0;
+  HostTraffic *routerList[MAX_NUM_ROUTERS];
 
   printHTMLheader("Local Subnet Routers", NULL, 0);
 
   for(el = getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
 
-    if(el->community && (!isAllowedCommunity(el->community))) continue;
-
-    if(subnetLocalHost(el)) {
-      for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
-	if(!emptySerial(&el->contactedRouters.peersSerials[j])) {
-	  short found = 0;
-
-	  for(i=0; i<numEntries; i++) {
-	    if(cmpSerial(&el->contactedRouters.peersSerials[j], &routerList[i])) {
-	      found = 1;
-	      break;
-	    }
-	  }
-
-	  if((found == 0) && (numEntries < MAX_NUM_ROUTERS)) {
-	    routerList[numEntries++] = el->contactedRouters.peersSerials[j];
-	  }
-	}
+    if(isSetHostFlag(FLAG_GATEWAY_HOST, el) && (numEntries < MAX_NUM_ROUTERS)) {
+      routerList[numEntries++] = el;
     }
   } /* for */
-
+  
   if(numEntries == 0) {
     printNoDataYet();
     return;
   } else {
     sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG">Router Name</TH>"
-	       "<TH "TH_BG">Used by</TH></TR>\n");
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG">Router Name</TH></TR>\n");
 
     for(i=0; i<numEntries; i++) {
-      HostTraffic tmpEl;
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<TR "TR_ON" %s><TH "TH_BG" align=left>%s</TH></TR>\n",
+		    getRowColor(),
+		    makeHostLink(routerList[i], FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)));
+      sendString(buf);      
 
-      if((router = quickHostLink(routerList[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<TR "TR_ON" %s><TH "TH_BG" align=left>%s</TH><TD "TD_BG" ALIGN=LEFT><UL>\n",
-		      getRowColor(),
-		      makeHostLink(router, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
-				   hostLinkBuf, sizeof(hostLinkBuf)));
-	sendString(buf);
+      sendString("</TABLE>"TABLE_OFF"\n");
+      sendString("</CENTER>\n");
 
+      printHostColorCode(FALSE, 0);
 
-	for(el = getFirstHost(actualDeviceId); el != NULL; el = getNextHost(actualDeviceId, el)) {
-	  if(el->community && (!isAllowedCommunity(el->community))) continue;
-	  if(subnetLocalHost(el)) {
-	    for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
-	      if(cmpSerial(&el->contactedRouters.peersSerials[j], &routerList[i])) {
-		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<LI>%s</LI>\n",
-			      makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
-					   hostLinkBuf, sizeof(hostLinkBuf)));
-		sendString(buf);
-		break;
-	      }
-	  }
-	}
-
-	sendString("</OL></TD></TR>\n");
-      }
+      printFooterHostLink();
     }
-
-    sendString("</TABLE>"TABLE_OFF"\n");
-    sendString("</CENTER>\n");
-
-    printHostColorCode(FALSE, 0);
-
-    printFooterHostLink();
   }
 }
 
@@ -4060,15 +4028,10 @@ static int cmpPortsFctn(const void *_a, const void *_b) {
 
 void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
   int i, buf_len = 8 * LEN_GENERAL_WORK_BUFFER;
-  char *buf, *sign;
+  char *buf;
   float total, partialTotal, remainingTraffic;
   float percentage;
   char formatBuf[32], formatBuf1[32], formatBuf2[32];
-
-  if(revertOrder)
-    sign = "";
-  else
-    sign = "-";
 
   if((buf = calloc(1, buf_len)) == NULL) {
     printFlagedWarning("Not enough memory");

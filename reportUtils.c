@@ -2911,99 +2911,67 @@ HostTraffic* quickHostLink(HostSerialIndex theSerialIdx, int deviceId, HostTraff
 /* ************************************ */
 
 void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
-  u_int i, titleSent = 0;
   char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
-  HostTraffic tmpEl;
+  HostTraffic *theHost;
 
-  if((el->pktsSent.value != 0) || (el->pktsRcvd.value != 0)) {
-      int ok =0;
+  if((el->pktsSent.value == 0) && (el->pktsRcvd.value == 0)) return;
 
-    for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-      if(((!emptySerial(&el->contactedSentPeers.peersSerials[i])
-	   && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->serialHostIndex)))
-	  || ((!emptySerial(&el->contactedRcvdPeers.peersSerials[i])
-	       && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->serialHostIndex)))))) {
-	ok = 1;
-	break;
-      }
+  printSectionTitle("Contact Matrix");
 
-    if(ok) {
-      HostTraffic *el2;
-      int numEntries;
+  sendString("<CENTER>\n<TABLE BORDER=0 "TABLE_DEFAULTS">\n<TR><TD "TD_BG" VALIGN=TOP>\n");  
 
-      for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	  if(!emptySerial(&el->contactedSentPeers.peersSerials[i])
-	     && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->serialHostIndex))) {
-	      if((el2 = quickHostLink(el->contactedSentPeers.peersSerials[i],
-				      myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-		  if(numEntries == 0) {
-		      printSectionTitle("Last Contacted Peers");
-		      titleSent = 1;
-		      sendString("<CENTER>\n<TABLE BORDER=0 "TABLE_DEFAULTS">\n<TR><TD "TD_BG" VALIGN=TOP>\n");
-
-		      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>"
-				 "<TR "TR_ON" "DARK_BG"><TH "TH_BG">Sent To</TH>"
-				 "<TH "TH_BG">IP Address</TH></TR>\n\n");
-		  }
-
-		  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-			      "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n\n",
-			      getRowColor(), makeHostLink(el2, 0, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-			      el2->hostNumIpAddress);
-
-		  sendString(buf);
-		  numEntries++;
-	      }
-	  }
-
-      if(numEntries > 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Total Contacts</TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT "DARK_BG">%lu</TD></TR>\n\n",
-		    getRowColor(), (unsigned long)el->totContactedSentPeers);
-       sendString(buf);
-
-       sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" VALIGN=TOP>\n");
-      } else
-	sendString("&nbsp;</TD><TD "TD_BG">\n");
-
-      /* ***************************************************** */
-
-      for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	  if((!emptySerial(&el->contactedRcvdPeers.peersSerials[i]))
-	     && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->serialHostIndex))) {
-
-	    if((el2 = quickHostLink(el->contactedRcvdPeers.peersSerials[i],
-					myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
-	      if(numEntries == 0) {
-		  if(!titleSent) printSectionTitle("Last Contacted Peers");
-		sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">"
-			   "<TR "TR_ON" "DARK_BG"><TH "TH_BG">Received From</TH>"
-			   "<TH "TH_BG">IP Address</TH></TR>\n\n");
-	      }
-
-	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-			  "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n\n",
-			  getRowColor(), makeHostLink(el2, 0, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
-			  el2->hostNumIpAddress);
-
-	      sendString(buf);
-	      numEntries++;
-	    }
-	  }
-
-      if(numEntries > 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Total Contacts</TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT "DARK_BG">%lu</TD></TR>\n\n",
-		    getRowColor(), (unsigned long)el->totContactedRcvdPeers);
+  if(el->pktsSent.value > 0) {
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>"
+	       "<TR "TR_ON" "DARK_BG"><TH "TH_BG">Sent To</TH><TH "TH_BG"># Contacts</TH></TR>\n\n");
+  
+    for(theHost=getFirstHost(actualDeviceId);
+	theHost != NULL;
+	theHost = getNextHost(actualDeviceId, theHost)) {
+      int val = CM_PointEst(el->sent_to_matrix, theHost->serialHostIndex);
+    
+      if(val > 0) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		      "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%u&nbsp;</TD></TR>\n\n",
+		      getRowColor(), makeHostLink(theHost, 0, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
+		      val);
+      
 	sendString(buf);
-
-	sendString("</TABLE>"TABLE_OFF"\n");
       }
+    }
 
-      sendString("</TD></TR>\n</TABLE>"TABLE_OFF"<P>\n");
-      sendString("</CENTER>\n");
-    } /* ok */
+    sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" VALIGN=TOP>\n");
   }
+
+  /* ************************** */
+
+  if(el->pktsRcvd.value > 0) {
+    sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">"
+	       "<TR "TR_ON" "DARK_BG"><TH "TH_BG">Received From</TH>"
+	       "<TH "TH_BG"># Contacts</TH></TR>\n\n");
+
+    for(theHost=getFirstHost(actualDeviceId);
+	theHost != NULL;
+	theHost = getNextHost(actualDeviceId, theHost)) {
+      int val = CM_PointEst(el->recv_from_matrix, theHost->serialHostIndex);
+    
+      if(val > 0) {
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		      "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%u&nbsp;</TD></TR>\n\n",
+		      getRowColor(), makeHostLink(theHost, 0, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)), val);		    
+      
+	sendString(buf);
+      }
+    }
+
+    sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" VALIGN=TOP>\n");
+    sendString("</TABLE>"TABLE_OFF"\n");
+
+    /* ***************************************************** */
+  }
+
+  sendString("</CENTER>\n");
 }
 
 /* ************************************ */
@@ -3050,7 +3018,7 @@ void printHostSessions(HostTraffic *el, int actualDeviceId) {
    OK          0
    Minor       1
    Warning     2
-   Error       3!
+   Error       3
 */
 
 u_short isHostHealthy(HostTraffic *el) {
@@ -3288,12 +3256,11 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   char buf[4*LEN_GENERAL_WORK_BUFFER], buf1[64], buf2[128], osBuf[512];
   float percentage;
   Counter total;
-  int printedHeader, i;
   char *dynIp, *multihomed, *multivlaned;
   u_short as=0;
-  HostTraffic *theHost, tmpEl;
+  HostTraffic *theHost;
   char formatBuf[LEN_TIMEFORMAT_BUFFER], formatBuf1[LEN_TIMEFORMAT_BUFFER], 
-    formatBuf2[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER], custom_host_name[128];
+    formatBuf2[32], custom_host_name[128];
 
   /* Read custom host name if any */
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "hostname.%s",
@@ -3337,6 +3304,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s", 
 		  (custom_host_name[0] != '\0') ? custom_host_name : el->ethAddressString);
   }
+
+  /* ******************************************* */
 
   printHTMLheader(buf2, buf, 0);
   sendString("<CENTER>\n<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=80%%>\n");
@@ -3591,11 +3560,15 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       sendString(buf);
 
     } else {
-      char * vendorName = getVendorInfo(el->ethAddress, 1);
+      char *vendorName = getVendorInfo(el->ethAddress, 1), macbuf[32];
+
+      safe_snprintf(__FILE__, __LINE__, macbuf, sizeof(macbuf), "%s", el->ethAddressString);
+      macbuf[2] = macbuf[5] = macbuf[8] = macbuf[11] = macbuf[14] = '_';
+
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		    "%s %s%s%s%s</TD></TR>\n\n",
+		    "<A HREF=%s.html>%s</A> %s%s%s%s</TD></TR>\n\n",
 		    getRowColor(), "MAC&nbsp;Address <IMG ALT=\"Network Interface Card (NIC)\" SRC=/card.gif BORDER=0 "TABLE_DEFAULTS">",
-		    el->ethAddressString,
+		    macbuf, el->ethAddressString,
 		    myGlobals.separator /* it avoids empty cells not to be rendered */,
 		    (vendorName[0] != '\0') ? "[" : "",
 		    vendorName,
@@ -3890,42 +3863,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   /* ******************** */
 
-  printedHeader=0;
-  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-    if(!emptySerial(&el->contactedRouters.peersSerials[i])) {
-      HostSerialIndex routerIdx = el->contactedRouters.peersSerials[i];
-
-      if(!emptySerial(&routerIdx)) {
-	HostTraffic *router = quickHostLink(routerIdx, myGlobals.actualReportDeviceId, &tmpEl);
-
-	if(router != NULL) {
-	  if(!printedHeader) {
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">"
-			"Used&nbsp;Subnet&nbsp;Routers</TH><TD "TD_BG" ALIGN=RIGHT>\n",
-			getRowColor());
-	    sendString(buf);
-	  }
-	  printedHeader++;
-
-	  if(printedHeader > 1) sendString("<BR>");
-
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s\n",
-		      makeHostLink(router, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
-				   hostLinkBuf, sizeof(hostLinkBuf)));
-	  sendString(buf);
-	}
-      }
-    }
-  }
-
   checkHostProvidedServices(el);
-
-  /*
-    Fix courtesy of
-    Albert Chin-A-Young <china@thewrittenword.com>
-  */
-  if(printedHeader > 1)
-    sendString("</OL></TD></TR>\n\n");
 
   /* **************************** */
 

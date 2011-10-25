@@ -52,26 +52,6 @@ u_int computeEfficiency(u_int pktLen) {
 
 /* ************************************ */
 
-static void addContactedPeers(HostTraffic *sender, HostTraffic *receiver, int actualDeviceId) {
-  if((sender == NULL) || (receiver == NULL) || (sender == receiver)) {
-    traceEvent(CONST_TRACE_ERROR, "Sanity check failed @ addContactedPeers (%p, %p)",
-	       sender, receiver);
-    return;
-  }
-
-  if((sender != myGlobals.otherHostEntry) && (receiver != myGlobals.otherHostEntry)) {
-    /* The statements below have no effect if the serial has been already computed */
-    setHostSerial(sender); setHostSerial(receiver);
-
-    sender->totContactedSentPeers +=
-      incrementUsageCounter(&sender->contactedSentPeers, receiver, actualDeviceId);
-    receiver->totContactedRcvdPeers +=
-      incrementUsageCounter(&receiver->contactedRcvdPeers, sender, actualDeviceId);
-  }
-}
-
-/* ************************************ */
-
 /* Reset the traffic at every hour */
 static void resetHourTraffic(u_short hourId) {
   int i;
@@ -90,8 +70,7 @@ static void resetHourTraffic(u_short hourId) {
 
 /* ************************************ */
 
-void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
-		       HostTraffic *dstHost, HostAddr *dstAddr,
+void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
 		       TrafficCounter bytes, Counter numPkts,
 		       int actualDeviceId) {
   static u_short lastHourId=0;
@@ -104,6 +83,9 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
     traceEvent(CONST_TRACE_ERROR, "NULL host detected");
     return;
   }
+
+  CM_Update(srcHost->sent_to_matrix, dstHost->serialHostIndex, numPkts);
+  CM_Update(dstHost->recv_from_matrix, srcHost->serialHostIndex, numPkts);
 
   updateASTraffic(actualDeviceId, srcHost->hostAS, dstHost->hostAS, bytes.value);
 
@@ -164,11 +146,9 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
       incrementHostTrafficCounter(dstHost, pktsMulticastRcvd, numPkts);
       incrementHostTrafficCounter(dstHost, bytesMulticastRcvd, bytes.value);
     }
+
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].multicastPkts, numPkts);
   }
-
-  if((dstHost != NULL) /*&& (!broadcastHost(dstHost))*/)
-    addContactedPeers(srcHost, dstHost, actualDeviceId);
 }
 
 /* ************************************ */
@@ -1213,6 +1193,7 @@ void processPacket(u_char *_deviceId,
 	incrementHostTrafficCounter(dstHost, nonIPTraffic->otherRcvd, length);
 	incrementUnknownProto(srcHost, 0 /* sent */, eth_type /* eth */, 0 /* dsap */, 0 /* ssap */, 0 /* ip */);
 	incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */, 0 /* ssap */, 0 /* ip */);
+
 	if(myGlobals.runningPref.enableOtherPacketDump)
 	  dumpOtherPacket(actualDeviceId, h, p);
 
@@ -1223,8 +1204,7 @@ void processPacket(u_char *_deviceId,
 	  fine because it is not used in this special case and I need
 	  a placeholder here.
 	*/
-	updatePacketCount(srcHost, &srcHost->hostIpAddress, dstHost,
-			  &dstHost->hostIpAddress, ctr, 1, actualDeviceId);
+	updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
       } else if((myGlobals.device[deviceId].datalink != DLT_IEEE802)
 		&& (eth_type <= ETHERMTU) && (length > 3)) {
 	/* The code below has been taken from tcpdump */
@@ -1458,14 +1438,14 @@ void processPacket(u_char *_deviceId,
 	      fine because it is not used in this special case and I need
 	      a placeholder here.
 	    */
-	    updatePacketCount(srcHost, &srcHost->hostIpAddress, dstHost,
-			      &dstHost->hostIpAddress, ctr, 1, actualDeviceId);
+	    updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
 	  }
 	}
       } else if((eth_type == ETHERTYPE_IP) || (eth_type == ETHERTYPE_IPv6)) {
+	TrafficCounter ctr;
+
 	srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId, h, p);
 	dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId, h, p);
-
 
 	if((srcHost == NULL) || (dstHost == NULL)) {
 	  /* Sanity check */
@@ -1477,7 +1457,8 @@ void processPacket(u_char *_deviceId,
 	incrementHostTrafficCounter(srcHost, pktsSent, 1); incrementHostTrafficCounter(srcHost, bytesSent, h->len);
 	incrementHostTrafficCounter(dstHost, pktsRcvd, 1); incrementHostTrafficCounter(dstHost, bytesRcvd, h->len);
 
-	addContactedPeers(srcHost, dstHost, actualDeviceId);
+	ctr.value = h->len;
+	updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
 
 	if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type > ETHERMTU)) {
 	  processIpPkt(p, h, orig_p, length, ether_src, ether_dst, actualDeviceId, vlanId);
@@ -1616,8 +1597,7 @@ void processPacket(u_char *_deviceId,
 	    fine because it is not used in this special case and I need
 	    a placeholder here.
 	  */
-	  updatePacketCount(srcHost, &srcHost->hostIpAddress, dstHost,
-			    &dstHost->hostIpAddress, ctr, 1, actualDeviceId);
+	  updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
 	}
     }
 

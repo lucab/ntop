@@ -123,7 +123,8 @@ libntop_la_SOURCES = address.c    argv.c        dataFormat.c   \
                      plugin.c     prefs.c       protocols.c   \
                      sessions.c   term.c        util.c        utildl.c \
                      traffic.c    vendor.c      version.c      \
-                     ntop_darwin.c
+                     ntop_darwin.c \
+		     prng.c countmin.c
 
 libntop_la_DEPENDENCIES =  config.h
 libntop_la_LIBADD       = $(BASE_LIBS)

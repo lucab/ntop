@@ -172,9 +172,6 @@ void loadPrefs(int argc, char* argv[]) {
   datum key, nextkey;
   char buf[1024];
   int opt_index, opt;
-#ifndef WIN32
-  bool userSpecified = FALSE;
-#endif
   bool mergeInterfacesSave = myGlobals.runningPref.mergeInterfaces;
 
   memset(&buf, 0, sizeof(buf));
@@ -206,7 +203,6 @@ void loadPrefs(int argc, char* argv[]) {
 	myGlobals.groupId = pw->pw_gid;
 	endpwent();
       }
-      userSpecified = TRUE;
       break;
 #endif /* WIN32 */
 

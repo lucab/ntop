@@ -1272,9 +1272,9 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 		browser = token = strtok_r(NULL, ";", &tokState);
 		os = token = strtok_r(NULL, ")", &tokState);
 	      } else {
-		char *tok1, *tok2;
+		char *tok2;
 		
-		tok1 = strtok_r(NULL, ";", &tokState);
+		strtok_r(NULL, ";", &tokState);
 		tok2 = strtok_r(NULL, ")", &tokState);
 		
 		if(tok2 == NULL) os = token; else  os = tok2;
@@ -1925,8 +1925,8 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 
     theSession->magic = CONST_MAGIC_NUMBER;
 
-    addrcpy(&theSession->initiatorRealIp,&srcHost->hostIpAddress);
-    addrcpy(&theSession->remotePeerRealIp,&dstHost->hostIpAddress);
+    addrcpy(&theSession->initiatorRealIp,  &srcHost->hostIpAddress);
+    addrcpy(&theSession->remotePeerRealIp, &dstHost->hostIpAddress);
 
 #ifdef SESSION_TRACE_DEBUG
     traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",

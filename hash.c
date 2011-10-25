@@ -93,7 +93,7 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 /* **************************************** */
 
 void freeHostInfo(HostTraffic *host, int actualDeviceId) {
-  u_int i, deleteAddressFromCache = 1;
+  u_int i;
 
   if(host == NULL) {
     traceEvent(CONST_TRACE_WARNING, "Attempting to call freeHostInfo(NULL)");
@@ -133,20 +133,6 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleting a hash_hostTraffic entry [%s/%s/%s][idx=%d]",
 	     host->ethAddressString, host->hostNumIpAddress, host->hostResolvedName, host->hostTrafficBucket);
 #endif
-
-  if(deleteAddressFromCache) {
-    datum key_data;
-
-    if(host->hostIpAddress.hostFamily == AF_INET) {
-      key_data.dptr = (void*)&host->hostIpAddress.Ip4Address.s_addr;
-      key_data.dsize = 4;
-    } else if(host->hostIpAddress.hostFamily == AF_INET6) {
-      key_data.dptr = (void*)&host->hostIpAddress.Ip6Address.s6_addr;
-      key_data.dsize = 16;
-    }
-    else
-      key_data.dsize = 0;
-  }
 
   handlePluginHostCreationDeletion(host, (u_short)actualDeviceId, 0 /* host deletion */);
 
@@ -229,7 +215,11 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     if(host->protocolInfo->httpStats != NULL) free(host->protocolInfo->httpStats);
     if(host->protocolInfo->dhcpStats != NULL) free(host->protocolInfo->dhcpStats);
   }
+
   if(host->protocolInfo != NULL) free(host->protocolInfo);
+
+  if(host->sent_to_matrix)   { CM_Destroy(host->sent_to_matrix);   host->sent_to_matrix = NULL;   }
+  if(host->recv_from_matrix) { CM_Destroy(host->recv_from_matrix); host->recv_from_matrix = NULL; }
 
   /* ************************************* */
 
@@ -819,8 +809,9 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     memset(el->protoIPTrafficInfos, 0, len);
     */
 
-    el->magic = CONST_MAGIC_NUMBER;
-    el->hostTrafficBucket = idx; /* Set the bucket index */
+    el->magic = CONST_MAGIC_NUMBER, el->hostTrafficBucket = idx; /* Set the bucket index */
+    el->sent_to_matrix   = CM_Init(16 /* width */, 16 /* depth */, myGlobals.actTime /* random value */);
+    el->recv_from_matrix = CM_Init(16 /* width */, 16 /* depth */,  myGlobals.actTime+1 /* random value */);
 
     /* traceEvent(CONST_TRACE_INFO, "new entry added at bucket %d", idx); */
 

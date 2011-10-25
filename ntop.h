@@ -415,6 +415,9 @@ ntop.h
 #include "ntop_win32.h"
 #endif
 
+#include "countmin.h"
+#include "prng.h"
+
 #ifdef HAVE_OPENSSL
 #include <openssl/rsa.h>
 #include <openssl/crypto.h>

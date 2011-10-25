@@ -43,8 +43,6 @@ static void updateThptStats(time_t when,
 			    TopTalkers *lastMinTalkers,
 			    TopTalkers *lastHourTalkers) {
   int i;
-  HostTraffic *topHost;
-  float topThpt;
 
 #ifdef DEBUG
   char formatBuf[32];
@@ -134,8 +132,7 @@ static void updateTopThpt(TopTalkers *talkers,
 void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
   int i;
   time_t timeDiff, timeMinDiff, timeHourDiff=0, totalTime, when;
-  HostTraffic *el, *topHost;
-  float topThpt;
+  HostTraffic *el;
   short updateMinThpt=0, updateHourThpt=0;
   TopTalkers lastMinTalkers, lastHourTalkers;
 
