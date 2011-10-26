@@ -194,7 +194,7 @@ static int readHTTPheader(char* theRequestedURL,
   SSL* ssl = getSSLsocket(-myGlobals.newSock);
 #endif
   char aChar[8] /* just in case */, lastChar;
-  char preLastChar, *lineStr;
+  char *lineStr;
   int rc, idxChar=0, contentLen=-1, numLine=0, topSock;
   fd_set mask;
   struct timeval wait_time;
@@ -203,7 +203,6 @@ static int readHTTPheader(char* theRequestedURL,
 
   *isPostMethod = FALSE;        /* Assume GET Method by default */
   thePw[0] = '\0';
-  preLastChar = '\r';
   lastChar = '\n';
   theRequestedURL[0] = '\0';
   memset(httpRequestedURL, 0, sizeof(httpRequestedURL));
@@ -2145,7 +2144,6 @@ static int returnHTTPPage(char* pageName,
   HostsDisplayPolicy showHostsMode = myGlobals.hostsDisplayPolicy;
   LocalityDisplayPolicy showLocalityMode = myGlobals.localityDisplayPolicy;
   int showPrefPage    = showPrefBasicPref;
-  int vsanId = 0;
   int i, showBytes = 1;
 
   *usedFork = 0;
@@ -2214,8 +2212,6 @@ static int returnHTTPPage(char* pageName,
 	showL2Only = atoi(&tkn[7]);
       } else if(strncmp(tkn, "if=", 3) == 0) {
 	ifId = atoi(&tkn[3]);
-      } else if(strncmp(tkn, "vsan=", 5) == 0) {
-	vsanId = atoi(&tkn[5]);
       } else if(strncmp(tkn, "showH=", 6) == 0) {
 	showHostsMode = atoi(&tkn[6]);
 	if((showHostsMode < showAllHosts) || (showHostsMode > showOnlyRemoteHosts))
@@ -2973,17 +2969,19 @@ static int returnHTTPPage(char* pageName,
 	  urlFixupFromRFC1945Inplace(hostName);
 
 #ifdef URL_DEBUG
-	  traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'\r\n", hostName);
+	  traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'", hostName);
 #endif
 
 	  for(el=getFirstHost(myGlobals.actualReportDeviceId);
 	      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+
 	    if((el != myGlobals.broadcastEntry)
 	       && (el->hostNumIpAddress != NULL)
 	       && ((el->vlanId <= 0) || (el->vlanId == vlanId))
-	       && ((strcmp(el->hostNumIpAddress, hostName) == 0)
-		   || (strcmp(el->ethAddressString, hostName) == 0)))
+	       && ((strcmp(el->hostNumIpAddress, hostName) == 0)		   
+		   || (strcmp(el->ethAddressString, hostName) == 0))) {
 	      break;
+	    }
 	  } /* for */
 
 	  if(el == NULL) {
@@ -3127,8 +3125,12 @@ static int returnHTTPPage(char* pageName,
 	  sortedColumn = 1;
 	}
 
-	printAllSessionsHTML(hostName, myGlobals.actualReportDeviceId,
-			     sortedColumn, revertOrder, pageNum, pageName);
+#ifdef URL_DEBUG
+	  traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'", hostName);
+#endif
+
+	  printAllSessionsHTML(hostName, myGlobals.actualReportDeviceId,
+			       sortedColumn, revertOrder, pageNum, pageName);
       } else {
 	printTrailer = 0;
 	errorCode = FLAG_HTTP_INVALID_PAGE;

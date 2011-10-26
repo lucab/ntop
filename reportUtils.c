@@ -2919,7 +2919,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 
   printSectionTitle("Contact Matrix");
 
-  sendString("<CENTER>\n<TABLE BORDER=0 "TABLE_DEFAULTS">\n<TR><TD "TD_BG" VALIGN=TOP>\n");
+  sendString("<CENTER>\n<TABLE BORDER=0 "TABLE_DEFAULTS">\n<TR>\n");
 
   if(el->pktsSent.value > 0) {
     header_sent = 0;
@@ -2927,14 +2927,14 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
     for(theHost=getFirstHost(actualDeviceId);
 	theHost != NULL;
 	theHost = getNextHost(actualDeviceId, theHost)) {
-      if(theHost->l2Host && el->l2Host) {
-	int val = CM_PointEst(el->sent_to_matrix, theHost->serialHostIndex);
+      if(theHost->l2Host == el->l2Host) {
+ 	int val = CM_PointEst(el->sent_to_matrix, theHost->serialHostIndex);
 
 	if(val > 0) {
 
 	  if(!header_sent) {
 	    header_sent = 1;
-	    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>"
+	    sendString("<TD "TD_BG" VALIGN=TOP>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>"
 		       "<TR "TR_ON" "DARK_BG"><TH "TH_BG">Sent To</TH><TH "TH_BG"># Contacts</TH></TR>\n\n");
 	  }
 
@@ -2949,7 +2949,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
       }
     }
 
-    sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" VALIGN=TOP>\n");
+    sendString("</TABLE>"TABLE_OFF"</TD>\n");
   }
 
   /* ************************** */
@@ -2960,31 +2960,33 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
     for(theHost=getFirstHost(actualDeviceId);
 	theHost != NULL;
 	theHost = getNextHost(actualDeviceId, theHost)) {
-      int val = CM_PointEst(el->recv_from_matrix, theHost->serialHostIndex);
+      if(theHost->l2Host == el->l2Host) {
+	int val = CM_PointEst(el->recv_from_matrix, theHost->serialHostIndex);
 
-      if(val > 0) {
-	if(!header_sent) {
-	  header_sent = 1;
-	  sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">"
-		     "<TR "TR_ON" "DARK_BG"><TH "TH_BG">Received From</TH>"
-		     "<TH "TH_BG"># Contacts</TH></TR>\n\n");
+	if(val > 0) {
+	  if(!header_sent) {
+	    header_sent = 1;
+	    sendString("<TD "TD_BG" VALIGN=TOP>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">"
+		       "<TR "TR_ON" "DARK_BG"><TH "TH_BG">Received From</TH>"
+		       "<TH "TH_BG"># Contacts</TH></TR>\n\n");
+	  }
+
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+			"<TD "TD_BG" ALIGN=RIGHT>%u&nbsp;</TD></TR>\n\n",
+			getRowColor(), makeHostLink(theHost, 0, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)), val);
+
+	  sendString(buf);
 	}
-
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%u&nbsp;</TD></TR>\n\n",
-		      getRowColor(), makeHostLink(theHost, 0, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)), val);
-
-	sendString(buf);
       }
     }
 
-    sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" VALIGN=TOP>\n");
-    sendString("</TABLE>"TABLE_OFF"\n");
+    sendString("</TABLE>"TABLE_OFF"</TD>\n");
 
     /* ***************************************************** */
   }
 
+  sendString("</TR></TABLE>"TABLE_OFF"\n");
   sendString("</CENTER>\n");
 }
 
@@ -4214,7 +4216,8 @@ void printHostHourlyTrafficEntry(HostTraffic *el, int i,
   float pctg;
   char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32];
 
-  if(el->trafficDistribution == NULL) return;
+  if(el->trafficDistribution == NULL) 
+    return;
 
   safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 	      formatBytes(el->trafficDistribution->last24HoursBytesSent[i].value, 0, formatBuf, sizeof(formatBuf)));

@@ -2104,6 +2104,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
 /* ****************************************************************** */
 
+#if 0
 static void makeHostName(HostTraffic *el, char *buf, int len) {
   if(el->hostResolvedName[0] != '\0') strcpy(buf, el->hostResolvedName);
   else if(el->hostNumIpAddress[0] != '\0') strcpy(buf, el->hostNumIpAddress);
@@ -2125,7 +2126,6 @@ static void makeHostName(HostTraffic *el, char *buf, int len) {
 
 /* ****************************************************************** */
 
-#if 0
 #define LOCAL_COLOR     "mistyrose2"
 #define REMOTE_COLOR    "lightsteelblue1"
 
@@ -2995,6 +2995,21 @@ static void printHostFingerprint(HostTraffic *el) {
 
 /* ************************************ */
 
+static u_int8_t isMacAddress(char* host) {
+  int fields_num, fields[6];
+
+  if(strlen(host) != 17) return(0);
+  
+  fields_num = sscanf(host, "%X:%X:%X:%X:%X:%X",
+		      &fields[0], &fields[1], 
+		      &fields[2], &fields[3],
+		      &fields[4], &fields[5]);
+
+  return(fields_num == 6 ? 1 : 0);
+}
+
+/* ************************************ */
+
 void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 			  int revertOrder, int pageNum, char *url) {
   u_int idx, i, cols = 0;
@@ -3006,7 +3021,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     foundFcHost = 0,
     vsanId = 0;
   char *tok;
-  u_int8_t search_mac = strchr(host, ':') ? 1 : 0;
+  u_int8_t search_mac = isMacAddress(host);
 
   if((tok = strchr(host, '-')) != NULL) {
     vlanId = vsanId = atoi(&tok[1]);
@@ -5578,7 +5593,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
   int i, hourId, j;
   char theDate[8], macAddr[24], vlanStr[32];
   struct tm t;
-  char buf[LEN_GENERAL_WORK_BUFFER], *targetStr;
+  char buf[LEN_GENERAL_WORK_BUFFER], targetStr[64];
   char hours[][24] = {"12 AM", "1 AM", "2 AM", "3 AM", "4 AM", "5 AM", "6 AM",
 		      "7 AM", "8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM",
 		      "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM",
@@ -5605,9 +5620,16 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
   for (i = 0, j = hourId; i < 24; i++) {
     j = j%24;
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=RIGHT "DARK_BG">%s</TH>\n", hours[j]);
-    sendString(buf);
-    printHostHourlyTrafficEntry(el, j, tcSent, tcRcvd);
+
+    if((el->trafficDistribution->last24HoursBytesSent[j].value > 0) 
+       || (el->trafficDistribution->last24HoursBytesRcvd[j].value > 0)) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TR "TR_ON"><TH "TH_BG" ALIGN=RIGHT "DARK_BG">%s</TH>\n", hours[j]);
+      sendString(buf);
+
+      printHostHourlyTrafficEntry(el, j, tcSent, tcRcvd);
+    }
+
     if(!j)
       j = 23;
     else
@@ -5616,8 +5638,9 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
   sendString("<TR "TR_ON"><TH "TH_BG" "DARK_BG">Total</TH>\n");
   safe_snprintf(__FILE__, __LINE__, macAddr, sizeof(macAddr), "%s", el->ethAddressString);
-  targetStr = el->hostNumIpAddress[0] == '\0' ?  macAddr : el->hostNumIpAddress;
 
+  safe_snprintf(__FILE__, __LINE__, targetStr, sizeof(targetStr), 
+		"%s", el->hostNumIpAddress[0] == '\0' ?  macAddr : el->hostNumIpAddress);
   urlFixupToRFC1945Inplace(targetStr);
 
   if(el->vlanId > 0) {

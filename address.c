@@ -322,7 +322,8 @@ void cleanupAddressQueue(void) {
 /* ************************************ */
 
 char* _intop(struct in6_addr *addr, char *buf, u_short buflen) {
-  return (char *)inet_ntop(AF_INET6, addr, buf, buflen);
+  char *ret = (char *)inet_ntop(AF_INET6, addr, buf, buflen);
+  return(ret);
 }
 
 /* ************************************ */
