@@ -1681,10 +1681,6 @@
 #define BITFLAG_VOIP_USER                   7
 #define BITFLAG_DAAP_USER                   8
 
-#define BITFLAG_P2P_UPLOAD_MODE             1
-#define BITFLAG_P2P_DOWNLOAD_MODE           2
-
-
 
 #define FLAG_HTTP                           1
 /*
@@ -1692,10 +1688,6 @@
  *     Over time, as one p2p system waxes or wanes, this list
  *     will change. It is suggested that you DO NOT reuse old #s
  */
-#define FLAG_P2P_KAZAA                      2
-/* new */
-#define FLAG_P2P_EDONKEY                    3
-#define FLAG_P2P_BITTORRENT                 4
 #define FLAG_VOIP                           5
 #define FLAG_FACEBOOK                       6
 #define FLAG_TWITTER                        7

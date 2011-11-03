@@ -594,7 +594,6 @@ u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
 			   short *isRequest,
 			   short *positiveReply) {
   DNSHostInfo hostPtr;
-  datum key_data, data_data;
   char tmpBuf[96];
   u_int16_t transactionId = 0;
   int i, queryNameLength;
@@ -650,6 +649,7 @@ u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
     if(hostPtr.addrList[i] != 0) {
       StoredAddress addrStore;
       int len;
+      datum key_data, data_data;
 
       memset(&addrStore, 0, sizeof(addrStore));
       addrStore.recordCreationTime = myGlobals.actTime;

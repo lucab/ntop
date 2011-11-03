@@ -268,7 +268,6 @@ int handleIP(u_short port,
 	     const u_int numPkts,
 	     const u_int _length, u_short isPassiveSess,
 	     u_short isVoipSess,
-	     u_short p2pSessionIdx,
 	     u_short l7ProtoSessionIdx,
 	     int actualDeviceId,
 	     u_short newSession) {
@@ -288,32 +287,14 @@ int handleIP(u_short port,
     idx = myGlobals.VoipIdx;
   } else if(l7ProtoSessionIdx != 0) {
     switch(l7ProtoSessionIdx) {
-    case FLAG_FACEBOOK: idx =  myGlobals.FacebookIdx; break;
-    case FLAG_TWITTER:  idx =  myGlobals.TwitterIdx; break;
-    case FLAG_YOUTUBE:  idx =  myGlobals.YouTubeIdx; break;
-    case FLAG_SSH:      idx =  myGlobals.SshIdx; break;
-    case FLAG_SKYPE:    idx =  myGlobals.SkypeIdx; break;
-    case FLAG_HTTP:     idx =  myGlobals.HttpIdx; break;
+    case FLAG_FACEBOOK: idx = myGlobals.FacebookIdx; break;
+    case FLAG_TWITTER:  idx = myGlobals.TwitterIdx; break;
+    case FLAG_YOUTUBE:  idx = myGlobals.YouTubeIdx; break;
+    case FLAG_SSH:      idx = myGlobals.SshIdx; break;
+    case FLAG_SKYPE:    idx = myGlobals.SkypeIdx; break;
+    case FLAG_HTTP:     idx = myGlobals.HttpIdx; break;
     default: idx = -1; break;
     }
-  } else {
-    if(p2pSessionIdx) {
-      switch(p2pSessionIdx) {
-      case FLAG_P2P_EDONKEY:
-	idx = myGlobals.EdonkeyIdx;
-	break;
-      case FLAG_SKYPE:
-	idx = myGlobals.SkypeIdx;
-	break;
-      case FLAG_P2P_BITTORRENT:
-	idx = myGlobals.BitTorrentIdx;
-	break;
-      default:
-	idx = -1;
-	break;
-      }
-    } else if(port > 0)
-      idx = mapGlobalToLocalIdx(port);
   }
 
   if(idx == -1) {
@@ -520,7 +501,7 @@ static void checkNetworkRouter(HostTraffic *srcHost, HostTraffic *dstHost,
 void processIpPkt(const u_char *bp, /* Pointer to IP */
 		  const struct pcap_pkthdr *h,
 		  const u_char *p, /* Original packet */
-		  u_int length,
+		  u_int ip_offset, u_int length,
 		  u_char *ether_src,
 		  u_char *ether_dst,
 		  int actualDeviceId,
@@ -539,7 +520,7 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
   struct tcphdr tp;
   struct udphdr up;
   struct icmp icmpPkt;
-  u_int hlen, ip_len,tcpDataLength, udpDataLength, off=0, tcpUdpLen, idx;
+  u_int hlen, ip_len, tcpDataLength, udpDataLength, off=0, tcpUdpLen, idx;
   HostTraffic *srcHost=NULL, *dstHost=NULL;
   HostAddr srcAddr, dstAddr; /* Protocol Independent addresses */
   u_char forceUsingIPaddress = 0;
@@ -1019,14 +1000,14 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	  if(ip6)
 	    theSession = handleSession(h, p, fragmented, tp.th_win,
 				       srcHost, sport, dstHost,
-				       dport, ntohs(ip6->ip6_plen), 0, &tp,
-				       tcpDataLength,
+				       dport, ntohs(ip6->ip6_plen), 0, 
+				       ip_offset, &tp, tcpDataLength,
 				       theData, actualDeviceId, &newSession, 1);
 	  else
 	    theSession = handleSession(h, p, (off & 0x3fff), tp.th_win,
 				       srcHost, sport, dstHost,
-				       dport, ip_len, 0, &tp,
-				       tcpDataLength,
+				       dport, ip_len, 0, 
+				       ip_offset, &tp, tcpDataLength,
 				       theData, actualDeviceId, &newSession, 1);
 	  if(theSession == NULL)
 	    isPassiveSess = isVoipSess = 0;
@@ -1067,11 +1048,9 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	     sportIdx, dport, dportIdx); */
 
 	  if(handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      theSession != NULL ? theSession->isP2P : 0,
 		      theSession != NULL ? theSession->knownProtocolIdx : 0,
 		      actualDeviceId, newSession) == -1)
 	    handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     theSession != NULL ? theSession->isP2P : 0,
 		     theSession != NULL ? theSession->knownProtocolIdx : 0,
 		     actualDeviceId, newSession);
 	} else {
@@ -1080,11 +1059,9 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	    sport, sportIdx, dport, dportIdx); */
 
 	  if(handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      theSession != NULL ? theSession->isP2P : 0,
-		      theSession != NULL ? theSession->knownProtocolIdx : 0,
+			      theSession != NULL ? theSession->knownProtocolIdx : 0,
 		      actualDeviceId, newSession) == -1)
 	    handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     theSession != NULL ? theSession->isP2P : 0,
 		     theSession != NULL ? theSession->knownProtocolIdx : 0,
 		     actualDeviceId, newSession);
 	}
@@ -1321,14 +1298,15 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	  if(ip6)
 	    theSession = handleSession(h, p, fragmented, 0,
 				       srcHost, sport, dstHost,
-				       dport, ntohs(ip6->ip6_plen), 0, NULL,
-				       udpDataLength,
+				       dport, ntohs(ip6->ip6_plen), 0, 
+				       ip_offset, NULL, udpDataLength,
 				       (u_char*)(bp+hlen+sizeof(struct udphdr)),
 				       actualDeviceId, &newSession, 1);
 	  else
 	    theSession = handleSession(h, p, (off & 0x3fff), 0,
 				       srcHost, sport, dstHost,
-				       dport, ip_len, 0, NULL, udpDataLength,
+				       dport, ip_len, 0, ip_offset, 
+				       NULL, udpDataLength,
 				       (u_char*)(bp+hlen+sizeof(struct udphdr)),
 				       actualDeviceId, &newSession, 1);
 	}
@@ -1357,14 +1335,14 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	*/
         if(dport < sport) {
 	  if(handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      0, 0, actualDeviceId, newSession) == -1)
+		      0, actualDeviceId, newSession) == -1)
 	    handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     0, 0, actualDeviceId, newSession);
+		     0, actualDeviceId, newSession);
         } else {
 	  if(handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      0, 0, actualDeviceId, newSession) == -1)
+		      0, actualDeviceId, newSession) == -1)
 	    handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     0, 0, actualDeviceId, newSession);
+		     0, actualDeviceId, newSession);
         }
       }
     }

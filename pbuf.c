@@ -820,8 +820,6 @@ void processPacket(u_char *_deviceId,
 		   const u_char *p) {
   struct ether_header ehdr;
   struct tokenRing_header *trp;
-  struct fddi_header *fddip;
-  const u_char *p_orig = p;
   u_int hlen, caplen = h->caplen;
   u_int headerDisplacement = 0, length = h->len;
   const u_char *orig_p = p, *p1;
@@ -964,46 +962,6 @@ void processPacket(u_char *_deviceId,
     memcpy(&ehdr, p, sizeof(struct ether_header));
 
     switch(myGlobals.device[deviceId].datalink) {
-    case DLT_FDDI:
-      fddip = (struct fddi_header *)p;
-      length -= FDDI_HDRLEN;
-      p += FDDI_HDRLEN;
-      caplen -= FDDI_HDRLEN;
-
-      extract_fddi_addrs(fddip, (char *)ESRC(&ehdr), (char *)EDST(&ehdr));
-      ether_src = (u_char*)ESRC(&ehdr), ether_dst = (u_char*)EDST(&ehdr);
-
-      if((fddip->fc & CONST_FDDIFC_CLFF) == CONST_FDDIFC_CONST_LLC_ASYNC) {
-	struct llc llc;
-
-	/*
-	  Info on SNAP/LLC:
-	  http://www.erg.abdn.ac.uk/users/gorry/course/lan-pages/llc.html
-	  http://www.ece.wpi.edu/courses/ee535/hwk96/hwk3cd96/li/li.html
-	  http://www.ece.wpi.edu/courses/ee535/hwk96/hwk3cd96/li/li.html
-	*/
-	memcpy((char *)&llc, (char *)p, min(caplen, sizeof(llc)));
-	if(llc.ssap == LLCSAP_SNAP && llc.dsap == LLCSAP_SNAP
-	   && llc.ctl.snap.snap_ui == CONST_LLC_UI) {
-	  if(caplen >= sizeof(llc)) {
-	    caplen -= sizeof(llc);
-	    length -= sizeof(llc);
-	    p += sizeof(llc);
-
-	    if(EXTRACT_16BITS(&llc.ctl.snap_ether.snap_ethertype[0]) == ETHERTYPE_IP) {
-	      /* encapsulated IP packet */
-	      processIpPkt(p, h, p_orig, length, ether_src, ether_dst, actualDeviceId, vlanId);
-	      /*
-		Patch below courtesy of
-		Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>
-	      */
-	      return;
-	    }
-	  }
-	}
-      }
-      break;
-
 #ifdef LINUX
     case DLT_ANY:  /* Linux 'any' device */
       anyHeader = (AnyHeader*)p;
@@ -1016,7 +974,8 @@ void processPacket(u_char *_deviceId,
       printf("eth_type:       0x%x\n", eth_type);
 #endif
       ether_src = ether_dst = myGlobals.dummyEthAddress;
-      processIpPkt(p+sizeof(AnyHeader), h, p, length, ether_src, ether_dst, actualDeviceId, vlanId);
+      processIpPkt(p+sizeof(AnyHeader), h, p, sizeof(struct ether_header), length, 
+		   ether_src, ether_dst, actualDeviceId, vlanId);
       break;
 #endif
 
@@ -1053,7 +1012,8 @@ void processPacket(u_char *_deviceId,
     case DLT_RAW: /* RAW IP (no ethernet header) */
       length -= headerDisplacement; /* don't count PPP header */
       ether_src = ether_dst = NULL;
-      processIpPkt(p+headerDisplacement, h, p, length, NULL, NULL, actualDeviceId, vlanId);
+      processIpPkt(p+headerDisplacement, h, p, sizeof(struct ether_header), 
+		   length, NULL, NULL, actualDeviceId, vlanId);
       break;
 
     case DLT_IEEE802: /* Token Ring */
@@ -1461,9 +1421,9 @@ void processPacket(u_char *_deviceId,
 	updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
 
 	if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type > ETHERMTU)) {
-	  processIpPkt(p, h, orig_p, length, ether_src, ether_dst, actualDeviceId, vlanId);
+	  processIpPkt(p, h, orig_p, hlen, length, ether_src, ether_dst, actualDeviceId, vlanId);
 	} else {
-	  processIpPkt(p+hlen, h, orig_p, length, ether_src, ether_dst, actualDeviceId, vlanId);
+	  processIpPkt(p+hlen, h, orig_p, hlen, length, ether_src, ether_dst, actualDeviceId, vlanId);
 	}
       } else if(eth_type == 0x8864) /* PPPOE */ {
         /* PPPoE - Courtesy of Andreas Pfaller Feb20032
@@ -1475,7 +1435,7 @@ void processPacket(u_char *_deviceId,
         if(pppoe_hdr->ver==1 && pppoe_hdr->type==1 && pppoe_hdr->code==0 &&
 	   protocol==0x0021) {
           hlen+=8; /* length of pppoe header */
-	  processIpPkt(p+hlen, h, orig_p, length, NULL, NULL, actualDeviceId, vlanId);
+	  processIpPkt(p+hlen, h, orig_p, hlen, length, NULL, NULL, actualDeviceId, vlanId);
         }
       } else {
 	  /* MAC addresses are meaningful here */
@@ -1523,7 +1483,9 @@ void processPacket(u_char *_deviceId,
 	  switch(eth_type) {
 	  case ETHERTYPE_ARP: /* ARP - Address resolution Protocol */
 	    memcpy(&arpHdr, p+hlen, sizeof(arpHdr));
-
+	    
+	    hlen += sizeof(arpHdr);
+	    
 	    if(EXTRACT_16BITS(&arpHdr.arp_pro) == ETHERTYPE_IP) {
 	      int arpOp = EXTRACT_16BITS(&arpHdr.arp_op);
 
@@ -1566,7 +1528,7 @@ void processPacket(u_char *_deviceId,
 	    break;
 
 	  case ETHERTYPE_IPv6:
-	    processIpPkt(p+hlen, h, orig_p, length, ether_src, ether_dst, actualDeviceId, vlanId);
+	    processIpPkt(p+hlen, h, orig_p, hlen, length, ether_src, ether_dst, actualDeviceId, vlanId);
 	    incrementHostTrafficCounter(srcHost, ipv6BytesSent, length);
 	    incrementHostTrafficCounter(dstHost, ipv6BytesRcvd, length);
 	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipv6Bytes, length);

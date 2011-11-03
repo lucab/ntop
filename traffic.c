@@ -319,38 +319,9 @@ int isInitialHttpData(char* packetData) {
 
 /* ************************ */
 
-int isInitialSkypeData(char* packetData, int packetDataLen) {
-  int i, num_found = 0;
-
-  if((packetDataLen < 16) || (packetData[2] != 0x02)) return(0);
-
-  for(i=0; i<16; i++) if(packetData[i] == 0x02) num_found++;
-
-  return((num_found == 1) ? 1 : 0);
-}
-
-/* ************************ */
-
-int isInitialEdonkeyData(char* packetData, int packetDataLen) {
-  return(0);  // TODO
-}
-
-/* ************************ */
-
 int isInitialSshData(char* packetData) {
   /* SSH-1.99-OpenSSH_2.1.1 */
   if(strncmp(packetData, "SSH-", 4) == 0)
-    return(1);
-  else
-    return(0);
-}
-
-/* ************************ */
-
-int isInitialFtpData(char* packetData) {
-  /* 220 linux.local FTP server (Version 6.4/OpenBSD/Linux-ftpd-0.16) ready. */
-  if((strncmp(packetData, "220 ", 4) == 0)
-     || (strncmp(packetData, "530", 3) == 0))
     return(1);
   else
     return(0);

@@ -37,7 +37,7 @@ int optopt;
 #endif
 
 #ifdef WIN32
-char *version, *osName, *author, *buildDate, *configureDate,
+char *version, *osName, *ntop_author, *buildDate, *configureDate,
   *configure_parameters,
   *host_system_type,
   *target_system_type,
@@ -515,6 +515,34 @@ static void loadGeoIP(void) {
 
 /* ********************************* */
 
+#ifdef HAVE_LIBOPENDPI
+
+static void debug_printf(u_int32_t protocol, void *id_struct, 
+			 ipq_log_level_t log_level, const char *format, ...) { ; }
+static void *malloc_wrapper(unsigned long size) { return malloc(size); }
+
+static void initL7Discovery(void) {
+  IPOQUE_PROTOCOL_BITMASK all;
+  u32 detection_tick_resolution = 1000;
+
+  myGlobals.l7.l7handler = ipoque_init_detection_module(detection_tick_resolution, malloc_wrapper, debug_printf);
+  if(myGlobals.l7.l7handler == NULL) {
+    traceEvent(CONST_TRACE_ERROR, "Unable to initialize L7 engine: disabling L7 discovery");
+    return;
+  }
+
+  // enable all protocols
+  IPOQUE_BITMASK_SET_ALL(all);
+  ipoque_set_protocol_detection_bitmask2(myGlobals.l7.l7handler, &all);
+
+  myGlobals.l7.proto_size = ipoque_detection_get_sizeof_ipoque_id_struct();
+  myGlobals.l7.flow_struct_size = ipoque_detection_get_sizeof_ipoque_flow_struct();
+}
+#endif
+
+
+/* ********************************* */
+
 void initNtop(char *devices) {
   char value[32];
 
@@ -536,6 +564,10 @@ void initNtop(char *devices) {
 
   if(myGlobals.runningPref.enableSessionHandling)
     initPassiveSessions();
+
+#ifdef HAVE_LIBOPENDPI
+  initL7Discovery();
+#endif
 
   /* ********************************** */
 

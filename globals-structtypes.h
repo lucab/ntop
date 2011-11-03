@@ -675,6 +675,10 @@ typedef struct networkDelay {
 
 /* **************************** */
 
+typedef struct {
+  Counter bytesSent, bytesRcvd;
+} ProtoTraffic;
+
 #define hostIp4Address hostIpAddress.Ip4Address
 #define hostIp6Address hostIpAddress.Ip6Address
 
@@ -763,6 +767,10 @@ typedef struct hostTraffic {
 
   Counter          totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
   struct hostTraffic *next;              /* pointer to the next element */
+
+#ifdef HAVE_LIBOPENDPI
+  ProtoTraffic protoTraffic[IPOQUE_MAX_SUPPORTED_PROTOCOLS];
+#endif
 } HostTraffic;
 
 /* **************************** */
@@ -829,8 +837,6 @@ typedef struct ipSession {
   TrafficCounter bytesRcvd;         /* # bytes rcvd (peer -> initiator)[IP]     */
   TrafficCounter bytesProtoSent;    /* # bytes sent (Protocol [e.g. HTTP])      */
   TrafficCounter bytesProtoRcvd;    /* # bytes rcvd (Protocol [e.g. HTTP])      */
-  TrafficCounter bytesFragmentedSent;     /* IP Fragments                       */
-  TrafficCounter bytesFragmentedRcvd;     /* IP Fragments                       */
   u_int minWindow, maxWindow;       /* TCP window size                          */
   struct timeval synTime, synAckTime, ackTime; /* Used to calcolate nw delay */
   struct timeval clientNwDelay, serverNwDelay; /* Network Delay/Latency         */
@@ -838,8 +844,6 @@ typedef struct ipSession {
   u_short numFinAcked;              /* # ACK pkts rcvd                          */
   u_int32_t lastAckIdI2R;           /* ID of the last ACK rcvd                  */
   u_int32_t lastAckIdR2I;           /* ID of the last ACK rcvd                  */
-  u_short numDuplicatedAckI2R;      /* # duplicated ACKs                        */
-  u_short numDuplicatedAckR2I;      /* # duplicated ACKs                        */
   TrafficCounter bytesRetranI2R;    /* # bytes retransmitted (due to duplicated ACKs) */
   TrafficCounter bytesRetranR2I;    /* # bytes retransmitted (due to duplicated ACKs) */
   u_int32_t finId[MAX_NUM_FIN];     /* ACK ids we're waiting for                */
@@ -854,6 +858,14 @@ typedef struct ipSession {
   char *session_info;               /* Info about this session (if any) */
   char *guessed_protocol;
   struct ipSession *next;
+#ifdef HAVE_LIBOPENDPI
+  u_int16_t l7_major_proto, l7_minor_proto;
+
+  struct {
+    struct ipoque_flow_struct *flow;
+    struct ipoque_id_struct *src, *dst;
+  } l7;
+#endif
 } IPSession;
 
 /* ************************************* */
@@ -2192,4 +2204,12 @@ typedef struct ntopGlobals {
   
   /* Message display */
   u_char lowMemoryMsgShown;
+
+#ifdef HAVE_LIBOPENDPI
+  struct {
+    u_int16_t flow_struct_size, proto_size;
+    struct ipoque_detection_module_struct *l7handler;
+  } l7;
+#endif
+
 } NtopGlobals;

@@ -759,26 +759,26 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
   if((sport != 0) && (dport != 0)) {
     if(dport < sport) {
-      if(handleIP(dport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1) == -1) {
-	if(handleIP(sport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1) == -1) {
+      if(handleIP(dport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, actualDeviceId, 1) == -1) {
+	if(handleIP(sport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, actualDeviceId, 1) == -1) {
 	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
 	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost,
-		     total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1);
+		     total_pkts, total_bytes, 0, 0, 0, actualDeviceId, 1);
 	  }
 	}
       }
     } else {
-      if(handleIP(sport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1) == -1) {
-	if(handleIP(dport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1) == -1) {
+      if(handleIP(sport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, actualDeviceId, 1) == -1) {
+	if(handleIP(dport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, actualDeviceId, 1) == -1) {
 	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
 	    /* If the user wants (via a run-time parm), as a last resort
 	     * we assume it's ftp-data traffic
 	     */
 	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost,
-		     total_pkts, total_bytes, 0, 0, 0, 0, actualDeviceId, 1);
+		     total_pkts, total_bytes, 0, 0, 0, actualDeviceId, 1);
 	  }
 	}
       }
@@ -916,7 +916,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling)
       session = handleSession(&h, NULL, 0, 0, srcHost, sport, dstHost, dport,
 			      record->sentOctets, record->rcvdOctets,
-			      &tp, 0, NULL, actualDeviceId, &newSession, 1 /* FIX 0 */);
+			      0, &tp, 0, NULL, actualDeviceId, &newSession, 1 /* FIX 0 */);
     break;
 
   case IPPROTO_UDP: /* UDP */
@@ -981,7 +981,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling)
       session = handleSession(&h, NULL, 0, 0, srcHost, sport, dstHost, dport,
 			      record->sentOctets, record->rcvdOctets,
-			      NULL, 0, NULL, actualDeviceId, &newSession, 0);
+			      0, NULL, 0, NULL, actualDeviceId, &newSession, 0);
     break;
 
   case IPPROTO_GRE:

@@ -3090,6 +3090,48 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
   /* ***************************************************** */
 
+#ifdef HAVE_LIBOPENDPI
+  {
+    u_int8_t header_sent = 0;
+    char *prot_long_str[] = { IPOQUE_PROTOCOL_LONG_STRING };
+
+    for(i=0, idx=0; i<IPOQUE_MAX_SUPPORTED_PROTOCOLS; i++) {
+      if(el->protoTraffic[i].bytesSent || el->protoTraffic[i].bytesRcvd) {
+	if(!header_sent) {
+	  printSectionTitle("L7&nbsp;Protocols&nbsp;Usage\n");
+	  sendString("<CENTER>\n");
+	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=60%%>\n<TR "TR_ON" "DARK_BG">"
+		     "<TH "TH_BG">L7&nbsp;Protocol</TH>"
+		     "<TH "TH_BG">Sent</TH><TH "TH_BG">Received</TH>"
+		     "</TR>\n");
+	  header_sent = 1;
+	}
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>",
+		      getRowColor(), prot_long_str[i]);
+	sendString(buf);
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<TD "TD_BG" ALIGN=CENTER>%s</TD>", 
+		      formatBytes(el->protoTraffic[i].bytesSent, 1, formatBuf, sizeof(formatBuf)));
+	sendString(buf);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		      "<TD "TD_BG" ALIGN=CENTER>%s</TD></TR>", 
+		      formatBytes(el->protoTraffic[i].bytesRcvd, 1, formatBuf, sizeof(formatBuf)));
+	sendString(buf);
+      }
+    } /* for */
+
+    if(header_sent) {
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("<H5>NOTE: The above table is updated based on protocols detected TCP/UDP sessions using DPI techniques.</H5>\n");
+      sendString("</CENTER>\n");
+    }
+  }
+#endif
+  /* ***************************************************** */
+
   i = 0;
 
   if(el->portsUsage != NULL) {

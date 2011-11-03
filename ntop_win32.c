@@ -82,7 +82,7 @@ void initWinsock32() {
     exit(-1);
   }
 
-  author  = "Luca Deri <deri@ntop.org>";
+  ntop_author  = "Luca Deri <deri@ntop.org>";
 
   if(!isWinNT()) {
     osName = "Win95/98/ME";

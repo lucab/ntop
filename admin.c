@@ -700,10 +700,6 @@ void doAddURL(int len) {
 /* ********************************* */
 
 void setPcapFilter(char* filters, int device_id) {
-  char knownFilters[2048];
-
-  knownFilters[0] = '\0';
-
   if(filters != NULL) {
     char *filters_copy;
     char buf[2048];
@@ -1162,7 +1158,8 @@ void addDefaultAdminUser(void) {
    int startCap = FALSE, action;
    UserPref tmpPrefs;
    char *devices = NULL, *foundDevices = NULL, *token;
-   char basic_prefs = 0, display_prefs = 0, ip_prefs = 0, advanced_prefs = 0, debug_prefs = 0, db_prefs = 0;
+   char basic_prefs = 0, display_prefs = 0, ip_prefs = 0, 
+     advanced_prefs = 0, debug_prefs = 0;
 
    /* traceEvent(CONST_TRACE_INFO, "RRD: buf='%s'", buf); */
 
@@ -1211,7 +1208,6 @@ void addDefaultAdminUser(void) {
        else if(!strcmp(key, "IP_PREFS")) ip_prefs = 1;
        else if(!strcmp(key, "ADVANCED_PREFS")) advanced_prefs = 1;
        else if(!strcmp(key, "DEBUG_PREFS")) debug_prefs = 1;
-       else if(!strcmp(key, "DB_PREFS")) db_prefs = 1;
 
        if(!strcmp(key, NTOP_PREF_DEVICES))
 	 foundDevices = value;

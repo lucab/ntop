@@ -42,7 +42,7 @@ extern struct in6_addr _in6addr_linklocal_allnodes;
 #define releaseAddrResMutex() releaseMutex(&myGlobals.addressResolutionMutex)
 
 /* version.c */
-extern char *version, *osName, *author, *buildDate, *configureDate,
+extern char *version, *osName, *ntop_author, *buildDate, *configureDate,
   *configure_parameters,
   *host_system_type,
   *target_system_type,
@@ -393,7 +393,7 @@ extern RETSIGTYPE cleanup(int signo);
 extern void processIpPkt(const u_char *bp,
 			 const struct pcap_pkthdr *h,
 			 const u_char *orig_p,
-			 u_int length,
+			 u_int ip_offset, u_int length,
 			 u_char *ether_src,
 			 u_char *ether_dst,
 			 int actualDeviceId,
@@ -401,7 +401,7 @@ extern void processIpPkt(const u_char *bp,
 extern int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 		    const u_int numPkts, const u_int _length,
 		    u_short isPassiveSess, u_short isVoipSess,
-		    u_short p2pSessionIdx, u_short httpSessionIdx, 
+		    u_short httpSessionIdx, 
 		    int actualDeviceId, u_short newSession);
 extern void deleteFragment(IpFragment *fragment, int actualDeviceId);
 extern void purgeOldFragmentEntries(int actualDeviceId);
@@ -477,9 +477,6 @@ extern void updateThpt(int quickUpdate);
 extern void updateDbHostsTraffic(int deviceToUpdate);
 extern int isInitialHttpData(char* packetData);
 extern int isInitialSshData(char* packetData);
-extern int isInitialSkypeData(char* packetData, int packetDataLen);
-extern int isInitialEdonkeyData(char* packetData, int packetDataLen);
-extern int isInitialFtpData(char* packetData);
 extern char* findHostCommunity(u_int32_t host_ip, char *buf, u_short buf_len);
 extern void setHostCommunity(HostTraffic *el);
 extern void updateDeviceThpt(int deviceToUpdate, int quickUpdate);
@@ -837,6 +834,9 @@ extern void l7SessionProtoDetection(IPSession *theSession,
 /* sessions.c */
 #define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)
 extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);
+#ifdef HAVE_LIBOPENDPI
+extern void freeOpenDPI(IPSession *sessionToPurge);
+#endif
 extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, 
 			u_char allocateMemoryIfNeeded, u_char lockMutex);
 extern void scanTimedoutTCPSessions(int actualDeviceId);
@@ -849,7 +849,7 @@ extern IPSession* handleSession(const struct pcap_pkthdr *h,
                                 HostTraffic *srcHost, u_short sport,
                                 HostTraffic *dstHost, u_short dport,
                                 u_int sent_length, u_int rcvd_length /* Always 0 except for NetFlow v9 */,
-				struct tcphdr *tp,
+				u_int ip_offset, struct tcphdr *tp,
                                 u_int tcpDataLength, u_char* packetData,
                                 int actualDeviceId, u_short *newSession,
 				u_char real_session /* vs. faked/netflow-session */);

@@ -321,6 +321,7 @@ static void wrtFloatItm(FILE *fDescr, int lang, char *indent, char *name,
 
 /* *************************** */
 
+#if 0
 static void wrtIntFloatItm(FILE *fDescr, int lang, char *indent, int name,
 			   float value, char last, int numEntriesSent) {
   char buf[80];
@@ -328,6 +329,7 @@ static void wrtIntFloatItm(FILE *fDescr, int lang, char *indent, int name,
   wrtFloatItm(fDescr, lang, indent, (lang == FLAG_XML_LANGUAGE) ? "number" : buf,
 	      value, last, numEntriesSent);
 }
+#endif
 
 /* *************************** */
 
@@ -1080,7 +1082,7 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
 
 void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
   char intoabuf[32], key[16], localbuf[32], filter[128], *keyName = NULL;
-  int lang=DEFAULT_FLAG_LANGUAGE, i, numEntries, localView=0;
+  int lang=DEFAULT_FLAG_LANGUAGE, i, numEntries;
   unsigned short shortView = 0;
 
   memset(key, 0, sizeof(key));
@@ -1114,8 +1116,6 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	  strncpy(key, &tmpStr[i+1], sizeof(key));
 	} else if(strcmp(tmpStr, "view") == 0) {
 	  if(!strcmp(&tmpStr[i+1], "short")) shortView = 1;
-	} else if(strcmp(tmpStr, "restrict") == 0) {
-	  if(!strcmp(key, "local")) localView = 1; /* not yet used */
 	} else if(strcmp(tmpStr, "filter") == 0) {
 	  strncpy(filter, &tmpStr[i+1], sizeof(filter));
 	}

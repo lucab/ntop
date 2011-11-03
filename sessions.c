@@ -248,6 +248,18 @@ void updateUsedPorts(HostTraffic *srcHost,
 
 /* ************************************ */
 
+#ifdef HAVE_LIBOPENDPI
+void freeOpenDPI(IPSession *sessionToPurge) {
+  if(sessionToPurge->l7.flow != NULL) {
+    if(sessionToPurge->l7.src != NULL) free(sessionToPurge->l7.src);
+    if(sessionToPurge->l7.dst != NULL) free(sessionToPurge->l7.dst);
+    free(sessionToPurge->l7.flow);
+  }
+}
+#endif
+
+/* ************************************ */
+
 void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 		 u_char allocateMemoryIfNeeded,
 		 u_char lockMutex /* unused so far */) {
@@ -330,11 +342,12 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   if(sessionToPurge->session_info != NULL)
     free(sessionToPurge->session_info);
 
-  if(sessionToPurge->guessed_protocol != NULL)
-    free(sessionToPurge->guessed_protocol);
-
   myGlobals.numTerminatedSessions++;
   myGlobals.device[actualDeviceId].numTcpSessions--;
+
+#ifdef HAVE_LIBOPENDPI
+  freeOpenDPI(sessionToPurge);
+#endif
 
   free(sessionToPurge);
 }
@@ -1102,10 +1115,10 @@ static void handleHTTPSSession(const struct pcap_pkthdr *h,
   if(vhost_name) {
     if (theSession->virtualPeerName == NULL) {
       HostTraffic *server = (theSession->sport == IP_TCP_PORT_HTTPS) ? theSession->initiator : theSession->remotePeer;
-      
+
       setHostName(server, vhost_name);
       theSession->virtualPeerName = vhost_name;
-    } else    
+    } else
       free(vhost_name);
   }
 }
@@ -1252,7 +1265,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 	  int len = strlen(row);
 
 	  if((len > 12) && (strncmp(row, "User-Agent:", 11) == 0)) {
-	    char *token, *tokState = NULL, *browser = NULL, *os = NULL;
+	    char *token, *tokState = NULL, *os = NULL;
 
 	    row[len-1] = '\0';
 
@@ -1264,29 +1277,22 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 #ifdef DEBUG
 	    printf("DEBUG: => '%s' (len=%d)\n", &row[12], packetDataLength);
 #endif
-	    browser = token = strtok_r(&row[12], "(", &tokState);
+	    token = strtok_r(&row[12], "(", &tokState);
 	    if(token != NULL) token = strtok_r(NULL, ";", &tokState);
 
 	    if(token) {
 	      if(strcmp(token, "compatible") == 0) {
-		browser = token = strtok_r(NULL, ";", &tokState);
+		token = strtok_r(NULL, ";", &tokState);
 		os = token = strtok_r(NULL, ")", &tokState);
 	      } else {
 		char *tok2;
-		
+
 		strtok_r(NULL, ";", &tokState);
 		tok2 = strtok_r(NULL, ")", &tokState);
-		
+
 		if(tok2 == NULL) os = token; else  os = tok2;
 	      }
 	    }
-
-#ifdef DEBUG
-	    if(browser != NULL) {
-	      trimString(browser);
-	      printf("DEBUG: Browser='%s'\n", browser);
-	    }
-#endif
 
 	    if(os != NULL) {
 	      trimString(os);
@@ -1411,66 +1417,20 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
       memset(tmpStr, 0, sizeof(tmpStr));
       memcpy(tmpStr, packetData, len);
 
-      if(myGlobals.runningPref.enablePacketDecoding) {
-	if((dport != IP_TCP_PORT_HTTP)
-	    && (dport != IP_TCP_PORT_NTOP)
-	    && (dport != IP_TCP_PORT_SQUID)
-	    && isInitialHttpData(tmpStr)) {
-	  if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-	    traceEvent(CONST_TRACE_WARNING, "HTTP detected at wrong port (trojan?) "
-		       "%s:%d -> %s:%d [%s]",
-		       srcHost->hostResolvedName, sport,
-		       dstHost->hostResolvedName, dport,
-		       tmpStr);
-	    dumpSuspiciousPacket(actualDeviceId, h, p);
-	  }
-	} else if((sport != IP_TCP_PORT_FTP) && (sport != IP_TCP_PORT_SMTP)
-		  && isInitialFtpData(tmpStr)) {
-	  if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-	    traceEvent(CONST_TRACE_WARNING, "FTP/SMTP detected at wrong port (trojan?) "
-		       "%s:%d -> %s:%d [%s]",
-		       dstHost->hostResolvedName, dport,
-		       srcHost->hostResolvedName, sport,
-		       tmpStr);
-	    dumpSuspiciousPacket(actualDeviceId, h, p);
-	  }
-	} else if(((sport == IP_TCP_PORT_FTP) || (sport == IP_TCP_PORT_SMTP)) &&
-		  (!isInitialFtpData(tmpStr))) {
-	  if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-	    traceEvent(CONST_TRACE_WARNING, "Unknown protocol (no FTP/SMTP) detected (trojan?) "
-		       "at port %d %s:%d -> %s:%d [%s]", sport,
-		       dstHost->hostResolvedName, dport,
-		       srcHost->hostResolvedName, sport,
-		       tmpStr);
-	    dumpSuspiciousPacket(actualDeviceId, h, p);
-	  }
-	} else if((sport != IP_TCP_PORT_SSH) && (dport != IP_TCP_PORT_SSH)
-		  &&  isInitialSshData(tmpStr)) {
-	  if(theSession) theSession->knownProtocolIdx = FLAG_SSH;
-	  if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-	    traceEvent(CONST_TRACE_WARNING, "SSH detected at wrong port (trojan?) "
-		       "%s:%d -> %s:%d [%s]  ",
-		       dstHost->hostResolvedName, dport,
-		       srcHost->hostResolvedName, sport,
-		       tmpStr);
-	    dumpSuspiciousPacket(actualDeviceId, h, p);
-	  }
-	} else if(((sport == IP_TCP_PORT_SSH) || (dport == IP_TCP_PORT_SSH)) 
-		  && (!isInitialSshData(tmpStr))) {
-	  if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-	    traceEvent(CONST_TRACE_WARNING, "Unknown protocol (no SSH) detected (trojan?) "
-		       "at port 22 %s:%d -> %s:%d [%s]",
-		       dstHost->hostResolvedName, dport,
-		       srcHost->hostResolvedName, sport,
-		       tmpStr);
-	    dumpSuspiciousPacket(actualDeviceId, h, p);
-	  }
-	} else if((sport > 1024) && (dport > 1024)) { 
-	  if(isInitialEdonkeyData(tmpStr, len)) {
-	    theSession->knownProtocolIdx = FLAG_P2P_EDONKEY;
-	  }
-	}
+      /*
+	FIX - check if se see a protocol on a non standard port
+	and in this case dump it
+      */
+#if 0
+      if(myGlobals.runningPref.enableSuspiciousPacketDump) {
+	traceEvent(CONST_TRACE_WARNING, "Unknown protocol (no SSH) detected (trojan?) "
+		   "at port 22 %s:%d -> %s:%d [%s]",
+		   dstHost->hostResolvedName, dport,
+		   srcHost->hostResolvedName, sport,
+		   tmpStr);
+	dumpSuspiciousPacket(actualDeviceId, h, p);
       }
+#endif
     }
   }
 
@@ -1662,10 +1622,12 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
 
 /* *********************************** */
 
+#if 0
 static int portRange(int sport, int dport, int minPort, int maxPort) {
   return(((sport >= minPort) && (sport <= maxPort))
 	 || ((dport >= minPort) && (dport <= maxPort)));
 }
+#endif
 
 /* ****************************************************** */
 
@@ -1814,7 +1776,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 				      HostTraffic *srcHost, u_short sport,
 				      HostTraffic *dstHost, u_short dport,
 				      u_int sent_length, u_int rcvd_length /* Always 0 except for NetFlow v9 */,
-				      struct tcphdr *tp,
+				      u_int ip_offset, struct tcphdr *tp,
 				      u_int packetDataLength, u_char* packetData,
 				      int actualDeviceId, u_short *newSession) {
   IPSession *prevSession;
@@ -1824,7 +1786,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
   char addedNewEntry = 0;
   u_short check, found=0;
   HostTraffic *hostToUpdate = NULL;
-  u_char *rcStr, tmpStr[256];
+  u_char tmpStr[256];
   int len = 0, mutex_idx;
   char *pnotes = NULL, *snotes = NULL, *dnotes = NULL;
   /* Latency measurement */
@@ -1832,7 +1794,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 
   memset(&buf, 0, sizeof(buf));
   memset(&buf1, 0, sizeof(buf1));
-  
+
   idx = computeIdx(&srcHost->hostIpAddress, &dstHost->hostIpAddress, sport, dport) % MAX_TOT_NUM_SESSIONS;
   mutex_idx = idx % NUM_SESSION_MUTEXES;
 
@@ -1912,9 +1874,43 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
       releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
       return(NULL);
     }
-    
+
     memset(theSession, 0, sizeof(IPSession));
     addedNewEntry = 1;
+
+#ifdef HAVE_LIBOPENDPI
+  if(myGlobals.l7.l7handler != NULL) {
+    static u_int8_t once = 0;
+
+    if((theSession->l7.flow = calloc(1, myGlobals.l7.flow_struct_size)) == NULL) {
+      if(!once) {
+	traceEvent(CONST_TRACE_ERROR, "NULL theSession (not enough memory?)");
+	once = 1;
+      }
+
+      free(theSession);
+      releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
+      return(NULL);
+    }
+
+    theSession->l7.src = calloc(1, myGlobals.l7.proto_size);
+    theSession->l7.dst = calloc(1, myGlobals.l7.proto_size);
+
+    if((theSession->l7.src == NULL) || (theSession->l7.dst == NULL)) {
+      if(!once) {
+	traceEvent(CONST_TRACE_ERROR, "NULL theSession (not enough memory?)");
+	once = 1;
+      }
+
+      if(theSession->l7.src) free(theSession->l7.src);
+      if(theSession->l7.dst) free(theSession->l7.dst);
+      free(theSession);
+
+      releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
+      return(NULL);
+    }
+  }
+#endif
 
     if(tp && (tp->th_flags == TH_SYN)) {
       theSession->synTime.tv_sec = h->ts.tv_sec;
@@ -1947,14 +1943,9 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
     theSession->initiator->numHostSessions++, theSession->remotePeer->numHostSessions++;
     theSession->proto = proto, theSession->sport = sport, theSession->dport = dport;
 
-    if((sport > 1024) && (dport > 1024) && (proto == IPPROTO_UDP)) {
-      if(isInitialSkypeData((char*)packetData, packetDataLength))
-	theSession->knownProtocolIdx = FLAG_SKYPE;	  
-    } else {
-      theSession->passiveFtpSession = isPassiveSession(&dstHost->hostIpAddress, dport, &pnotes);
-      theSession->voipSession       = isVoIPSession(&srcHost->hostIpAddress, sport, &snotes)
-	|| isVoIPSession(&dstHost->hostIpAddress, dport, &dnotes);
-    }
+    theSession->passiveFtpSession = isPassiveSession(&dstHost->hostIpAddress, dport, &pnotes);
+    theSession->voipSession       = isVoIPSession(&srcHost->hostIpAddress, sport, &snotes)
+      || isVoIPSession(&dstHost->hostIpAddress, dport, &dnotes);
 
     if(pnotes) theSession->session_info = pnotes;
     else if(snotes) theSession->session_info = snotes;
@@ -2045,8 +2036,6 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
       handleHTTPSSession(h, p, srcHost, sport, dstHost, dport,
 			 packetDataLength, (char*)packetData, theSession,
 			 actualDeviceId);
-    } else if((dport == IP_TCP_PORT_KAZAA) && (packetDataLength > 0)) {
-      theSession->isP2P = FLAG_P2P_KAZAA;
     } else if(((sport == IP_TCP_PORT_MSMSGR) ||
 	       (dport == IP_TCP_PORT_MSMSGR))
 	      && (packetDataLength > 0)) {
@@ -2080,46 +2069,6 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
       handleIMAPSession(h, srcHost, sport, dstHost, dport,
 			packetDataLength, packetData, theSession,
 			actualDeviceId);
-    } else if((sport == IP_TCP_PORT_IMAPS) || (dport == IP_TCP_PORT_IMAPS)) {
-      if(sport == IP_TCP_PORT_IMAP)
-	setHostFlag(FLAG_HOST_TYPE_SVC_IMAP, srcHost);
-      else
-	setHostFlag(FLAG_HOST_TYPE_SVC_IMAP, dstHost);
-    } else if((sport == IP_TCP_PORT_POPS) || (dport == IP_TCP_PORT_POPS)) {
-      if(sport == IP_TCP_PORT_POPS)
-	setHostFlag(FLAG_HOST_TYPE_SVC_POP, srcHost);
-      else
-	setHostFlag(FLAG_HOST_TYPE_SVC_POP, dstHost);
-    } else {
-      /*
-	T. Karagiannis and others
-
-	File-sharing in the Internet: A characterization of
-	P2P traffic in the backbone
-      */
-
-      /* Further decoders */
-      if((!theSession->isP2P)
-	 && (packetDataLength > 0)
-	 && ((theSession->bytesProtoSent.value > 0)
-	     && (theSession->bytesProtoSent.value < 1400))) {
-	rcStr = (u_char*)malloc(len+1);
-	memcpy(rcStr, packetData, len);
-	rcStr[len-1] = '\0';
-
-	if(portRange(sport, dport, 6881, 6889)
-	   || portRange(sport, dport, 6969, 6969)
-	   || (strstr((char*)rcStr, "BitTorrent protocolex") != NULL)
-	   || (strstr((char*)rcStr, "BitT") != NULL)
-	   || (strstr((char*)rcStr, "GET /announce?info_hash") != NULL)
-	   || (strstr((char*)rcStr, "GET /torrents/") != NULL)
-	   || (strstr((char*)rcStr, "GET TrackPak") != NULL)
-	   || (strstr((char*)rcStr, "BitTorrent") != NULL)) {
-	  theSession->isP2P = FLAG_P2P_BITTORRENT;
-	}
-	
-	free(rcStr);
-      }
     }
   } else {
     /* !myGlobals.enablePacketDecoding */
@@ -2396,7 +2345,6 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 
     if((ack == theSession->lastAckIdI2R) && (ack == theSession->lastAckIdR2I)) {
       if(theSession->initiator == srcHost) {
-	theSession->numDuplicatedAckI2R++;
 	incrementTrafficCounter(&theSession->bytesRetranI2R, sent_length+rcvd_length);
 	incrementTrafficCounter(&theSession->initiator->pktsDuplicatedAckSent, 1);
 	incrementTrafficCounter(&theSession->remotePeer->pktsDuplicatedAckRcvd, 1);
@@ -2407,7 +2355,6 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 		   (int)theSession->bytesRetranI2R.value);
 #endif
       } else {
-	theSession->numDuplicatedAckR2I++;
 	incrementTrafficCounter(&theSession->bytesRetranR2I, sent_length+rcvd_length);
 	incrementTrafficCounter(&theSession->remotePeer->pktsDuplicatedAckSent, 1);
 	incrementTrafficCounter(&theSession->initiator->pktsDuplicatedAckRcvd, 1);
@@ -2518,14 +2465,60 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
     incrementTrafficCounter(&theSession->bytesSent, sent_length);
     incrementTrafficCounter(&theSession->bytesRcvd, rcvd_length);
     theSession->pktSent++;
-    if(fragmentedData) incrementTrafficCounter(&theSession->bytesFragmentedSent, packetDataLength);
   } else {
     incrementTrafficCounter(&theSession->bytesProtoRcvd, packetDataLength);
     incrementTrafficCounter(&theSession->bytesRcvd, sent_length);
     incrementTrafficCounter(&theSession->bytesSent, rcvd_length);
     theSession->pktRcvd++;
-    if(fragmentedData) incrementTrafficCounter(&theSession->bytesFragmentedRcvd, packetDataLength);
   }
+
+#ifdef HAVE_LIBOPENDPI
+  if((ip_offset > 0) && (theSession->l7_major_proto == IPOQUE_PROTOCOL_UNKNOWN)) {
+    u_int64_t when = ((u_int64_t) h->ts.tv_sec) * 1000 /* detection_tick_resolution */ + h->ts.tv_usec / 1000 /* (1000000 / detection_tick_resolution) */;
+    char *prot_long_str[] = { IPOQUE_PROTOCOL_LONG_STRING };
+
+    theSession->l7_major_proto = ipoque_detection_process_packet(myGlobals.l7.l7handler,
+								 theSession->l7.flow, (u_int8_t *)&p[ip_offset],
+								 h->caplen-ip_offset, when,
+								 theSession->l7.src, theSession->l7.dst);
+
+    if(theSession->l7_major_proto != IPOQUE_PROTOCOL_UNKNOWN) {
+      theSession->guessed_protocol = prot_long_str[theSession->l7_major_proto];
+      /* traceEvent(CONST_TRACE_ERROR, "l7_major_proto=%s", theSession->guessed_protocol); */
+      freeOpenDPI(theSession);
+      
+      switch(theSession->l7_major_proto) {
+      case IPOQUE_PROTOCOL_MAIL_SMTP:
+	setHostFlag(FLAG_HOST_TYPE_SVC_SMTP, srcHost);
+	break;
+      case IPOQUE_PROTOCOL_MAIL_POP:
+	setHostFlag(FLAG_HOST_TYPE_SVC_POP, srcHost);
+	break;
+      case IPOQUE_PROTOCOL_MAIL_IMAP:
+	setHostFlag(FLAG_HOST_TYPE_SVC_IMAP, srcHost);
+	break;
+      case IPOQUE_PROTOCOL_LDAP:
+	setHostFlag(FLAG_HOST_TYPE_SVC_DIRECTORY, srcHost);
+	break;
+      case IPOQUE_PROTOCOL_FTP:
+	setHostFlag(FLAG_HOST_TYPE_SVC_FTP, srcHost);
+	break;
+      case IPOQUE_PROTOCOL_HTTP:
+	setHostFlag(FLAG_HOST_TYPE_SVC_HTTP, srcHost);
+	break;
+      case IPOQUE_PROTOCOL_NETBIOS:
+	setHostFlag(FLAG_HOST_TYPE_SVC_WINS, srcHost);
+	break;
+      }
+    }
+  }
+
+  if(theSession->l7_major_proto != IPOQUE_PROTOCOL_UNKNOWN) {
+    srcHost->protoTraffic[theSession->l7_major_proto].bytesSent += h->len;
+    dstHost->protoTraffic[theSession->l7_major_proto].bytesRcvd += h->len;
+  }
+
+#endif
 
   /* Immediately free the session */
   if(theSession->sessionState == FLAG_STATE_TIMEOUT) {
@@ -2549,36 +2542,13 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 
 /* ************************************ */
 
-static void handleUDPSession(const struct pcap_pkthdr *h,
-                             u_short fragmentedData, HostTraffic *srcHost,
-                             u_short sport, HostTraffic *dstHost,
-                             u_short dport,
-			     u_int sent_length, u_int rcvd_length /* Always 0 except for NetFlow v9 */,
-                             u_char* packetData,
-			     int actualDeviceId, u_short *newSession) {
-  /*
-  IPSession tmpSession;
-
-  memset(&tmpSession, 0, sizeof(IPSession));
-  tmpSession.lastSeen = myGlobals.actTime;
-  tmpSession.initiator = srcHost, tmpSession.remotePeer = dstHost;
-  tmpSession.bytesSent.value = length, tmpSession.bytesRcvd.value = 0;
-  tmpSession.sport = sport, tmpSession.dport = dport;
-  if(fragmentedData) incrementTrafficCounter(&tmpSession.bytesFragmentedSent, length);
-  */
-
-  (*newSession) = 1; /* This is always a new session */
-}
-
-/* ************************************ */
-
 IPSession* handleSession(const struct pcap_pkthdr *h,
 			 const u_char *p,
                          u_short fragmentedData, u_int tcpWin,
                          HostTraffic *srcHost, u_short sport,
                          HostTraffic *dstHost, u_short dport,
                          u_int sent_length, u_int rcvd_length /* Always 0 except for NetFlow v9 */,
-			 struct tcphdr *tp,
+			 u_int ip_offset, struct tcphdr *tp,
                          u_int packetDataLength, u_char* packetData,
                          int actualDeviceId, u_short *newSession,
 			 u_char real_session /* vs. faked/netflow-session */) {
@@ -2660,7 +2630,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
       */
       theSession = handleTCPUDPSession(sessionType, h, p, fragmentedData, tcpWin, srcHost, sport,
 				       dstHost, dport, sent_length, rcvd_length,
-				       tp, packetDataLength,
+				       ip_offset, tp, packetDataLength,
 				       packetData, actualDeviceId, newSession);
     } else {
 #ifdef DEBUG
@@ -2672,10 +2642,6 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 		 (tp->th_flags & TH_PUSH) ? " PUSH" : "");
 #endif
     }
-  } else if(sessionType == IPPROTO_UDP) {
-    /* We don't create any permanent structures for UDP sessions */
-    handleUDPSession(h, fragmentedData, srcHost, sport, dstHost, dport,
-		     sent_length, rcvd_length, packetData, actualDeviceId, newSession);
   }
 
   if((sport == IP_L4_PORT_ECHO)       || (dport == IP_L4_PORT_ECHO)

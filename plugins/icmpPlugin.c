@@ -626,9 +626,7 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
 
 static void handleIcmpWatchHTTPrequest(char* url) {
   u_int i, revertOrder=0, num;
-  int icmpId=-1;
   HostTraffic **hosts;
-  struct in_addr hostIpAddress;
   char  **lbls, *strtokState;
   float *s, *r;  
   int icmpColumnSort = 0;
@@ -659,8 +657,6 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     }
   }
 
-  hostIpAddress.s_addr = 0;
-
   if(url[0] == '\0')
     icmpColumnSort = 0;
   else if((url[0] == '-') || isdigit(url[0])) {
@@ -679,12 +675,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     strtok_r(url, "=", &strtokState);
 
     tmpStr = strtok_r(NULL, "&", &strtokState);
-    hostIpAddress.s_addr = strtoul(tmpStr, (char **)NULL, 10);
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "-> %s [%u]", tmpStr, hostIpAddress.s_addr);
-#endif
     strtok_r(NULL, "=", &strtokState);
-    icmpId = atoi(strtok_r(NULL, "&", &strtokState));
   }
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);

@@ -489,6 +489,10 @@ ntop.h
 #include "getopt.h"
 #endif
 
+#ifdef HAVE_LIBOPENDPI
+#include "ipq_api.h"
+#endif
+
 /* **************************************************************************************
  *
  *  Used for debug
