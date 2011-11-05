@@ -326,7 +326,7 @@ install: install-recursive
 install-selinux-policy:
 	chcon -t textrel_shlib_t $(DESTDIR)$(libdir)/*ntop*.so
 
-install-data-local: ntop.txt ntop.html faq.html dnetter
+install-data-local: ntop.txt ntop.html faq.html
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
 	@if ! test -d $(DESTDIR)/$(datadir)/ntop; then \
 	  $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop; \
