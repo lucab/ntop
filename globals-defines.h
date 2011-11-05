@@ -1163,7 +1163,7 @@
  * Symbolic host buffer name length (hostResolvedName, symAddress, etc.)
  * MAX_LEN_SYM_HOST_NAME_HTML is the fully tricked out html version (emitter.c and hash.c)
  */
-#define MAX_LEN_SYM_HOST_NAME               64
+#define MAX_LEN_SYM_HOST_NAME               128
 #define MAX_LEN_SYM_HOST_NAME_HTML          256
 
 /*

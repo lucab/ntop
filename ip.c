@@ -1320,14 +1320,6 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 
 	newSession = 1; /* Trick to account flows anyway */
 
-	if((sport == IP_TCP_PORT_SKYPE) || (dport == IP_TCP_PORT_SKYPE)) {
-	  if(theSession) theSession->voipSession = 1;
-	  isVoipSess = 1;
-
-	  setHostFlag(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, srcHost);
-	  setHostFlag(FLAG_HOST_TYPE_SVC_VOIP_CLIENT, dstHost);
-	}
-
         /* Handle UDP traffic like TCP, above -
 	   That is: if we know about the lower# port, even if it's the destination,
 	   classify the traffic that way.

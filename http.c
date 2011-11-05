@@ -2805,7 +2805,8 @@ static int returnHTTPPage(char* pageName,
 	printTopTalkers(0);
       } else if(strncasecmp(pageName, CONST_HISTORICAL_TALKERS_HTML, strlen(CONST_HISTORICAL_TALKERS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	errorCode = FLAG_HTTP_INVALID_PAGE;
+	/* TODO */
+	returnHTTPpageNotFound("<b>This feature is not YET available on your platform: we're working for you</b>");
       } else if(strcasecmp(pageName, CONST_NET_FLOWS_HTML) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	listNetFlows();
@@ -2897,11 +2898,13 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawGlobalProtoDistribution();
 	printTrailer=0;
+#ifndef WIN32
       } else if(strncasecmp(pageName,CONST_NETWORK_MAP_HTML, 
 			    strlen(CONST_NETWORK_MAP_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	makeDot();
 	printTrailer=1;
+#endif
       } else if(strncasecmp(pageName, CONST_BAR_IPPROTO_DIST,
 			    strlen(CONST_BAR_IPPROTO_DIST)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);

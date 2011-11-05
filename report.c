@@ -2148,7 +2148,7 @@ static int addNodeInfo(FILE *fd, HostTraffic *el) {
 void makeDot() {
   
   // FIX - Reimplement host matrix
-  returnHTTPpageNotFound("<b>This feature is not available on your platform</b>");
+  returnHTTPpageNotFound("<b>This feature is not YET available on your platform: we're working for you</b>");
   return;
 
 #if 0
@@ -5891,11 +5891,12 @@ void showPortTraffic(u_short portNr) {
     if(recentlyUsedPort(el, portNr, 0)) {
       if(numRecords == 0) {
 	sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "DARK_BG"><TH>Client</TH><TH>Server</TH></TR>\n");
-	sendString("<TR>\n<TD nowrap><ul>\n");
+	sendString("<TR>\n<TD nowrap align=right>"
+		   "<div style=\"height:120px;width:500px;overflow-x:hidden;overflow-y:scroll;\">\n");
       }
 
-      sendString("\n<LI> ");
       sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)));
+      sendString("<br>\n");
       numRecords++;
     }
 
@@ -5911,7 +5912,8 @@ void showPortTraffic(u_short portNr) {
   firstRun = 1;
 
   if(numRecords > 0) {
-    sendString("\n&nbsp;\n</ul></TD><TD nowrap><ul>\n");
+    sendString("\n</div></TD>\n");
+    sendString("<TD nowrap align=right><div style=\"height:120px;width:500px;overflow-x:hidden;overflow-y:scroll;\">\n");
   }
 
   for(el = getFirstHost(myGlobals.actualReportDeviceId);
@@ -5920,20 +5922,13 @@ void showPortTraffic(u_short portNr) {
 
   recentlyUsedPortRcvd:
     if(recentlyUsedPort(el, portNr, 1)) {
-      if(numRecords == 0) {
-	sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "DARK_BG"><TH>Client</TH><TH>Server</TH></TR>\n");
-	sendString("<TR>\n<TD>\n");
-	sendString("\n&nbsp;\n</TD><TD nowrap><ul>\n");
-      }
-
-      sendString("\n<LI> ");
       sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)));
+      sendString("<br>\n");
       numRecords++;
     }
 
     if(el == myGlobals.broadcastEntry) break;
   }
-
 
   if(firstRun) {
     firstRun = 0;
@@ -5950,7 +5945,7 @@ void showPortTraffic(u_short portNr) {
 
     sendString(hostLinkBuf);
   } else
-    sendString("\n&nbsp;\n</ul></TD>\n</TR>\n</TABLE>\n</CENTER>");
+    sendString("</div></TD>\n</TR>\n</TABLE>\n</CENTER>");
 
 }
 
