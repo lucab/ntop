@@ -159,7 +159,7 @@ EOF
           
     rm -f plugins/Makefile
     rm -f plugins/Makefile.in
-
+    rm -rf opendpi-ntop
     rm -f *~
 
     exit 0
@@ -209,6 +209,20 @@ WGET=`find_command 'wget*'`
   echo "You must have wget installed to compile $progname."
   echo "Download the appropriate package for your distribution, or get the"
   echo "source tarball from ftp://ftp.gnu.org/pub/gnu/wget"
+  GNU_OR_DIE=0
+}
+
+if test "$GNU_OR_DIE" -eq 0; then
+  exit 1
+fi
+
+SVN=`find_command 'svn'`
+($SVN --version) < /dev/null > /dev/null 2>&1 ||
+{
+  echo
+  echo "You must have svn/subversion installed to compile $progname."
+  echo "Download the appropriate package for your distribution, or get the"
+  echo "source from http://subversion.tigris.org"
   GNU_OR_DIE=0
 }
 
@@ -420,6 +434,23 @@ rm -f /tmp/acin* /tmp/acout*
 rm -f autoha*
 rm -f confdefs.h
 
+# Get OpenDPI
+
+echo "9. Downloading OpenDPI-ntop..."
+
+OPENDPI_URL=https://svn.ntop.org/svn/ntop/trunk/opendpi-ntop/
+if test -d opendpi-ntop; then
+    echo "OpenDPI-ntop already available"
+else
+    svn co $OPENDPI_URL
+
+    echo "10. Compiling OpenDPI-ntop..."
+    cd opendpi-ntop; ./configure; make; cd ..
+fi
+
+
+echo
+echo "Now we're ready to compile ntop"
 
 # Local Variables: 
 # mode:shell-script 

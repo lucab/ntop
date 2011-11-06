@@ -314,11 +314,6 @@ void resetDevice(int devIdx, short fullReset) {
   
   len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(SimpleProtoTrafficInfo);
 
-  if(myGlobals.device[devIdx].ipProtoStats == NULL)
-    myGlobals.device[devIdx].ipProtoStats = (SimpleProtoTrafficInfo*)malloc(len);
-
-  memset(myGlobals.device[devIdx].ipProtoStats, 0, len);
-
   if(myGlobals.device[devIdx].ipProtosList != NULL) {
     free(myGlobals.device[devIdx].ipProtosList);
     myGlobals.device[devIdx].ipProtosList = NULL;
@@ -687,6 +682,8 @@ void allocDeviceMemory(int deviceId) {
   if(!myGlobals.device[deviceId].packetQueue)
     myGlobals.device[deviceId].packetQueue = 
       (PacketInformation*)calloc(sizeof(PacketInformation), (CONST_PACKET_QUEUE_LENGTH+1));
+
+  myGlobals.device[deviceId].l7.protoTraffic = (Counter*)calloc(myGlobals.l7.numSupportedProtocols, sizeof(Counter));
 }
 
 /* ******************************* */
@@ -1426,6 +1423,8 @@ u_int createDummyInterface(char *ifName) {
   myGlobals.device[deviceId].activeDevice  = 0;
   myGlobals.device[deviceId].samplingRate =  myGlobals.runningPref.samplingRate;
   calculateUniqueInterfaceName(deviceId); 
+
+  myGlobals.device[deviceId].l7.protoTraffic = (Counter*)calloc(myGlobals.l7.numSupportedProtocols, sizeof(Counter));
 
   if(myGlobals.otherHostEntry != NULL) {
     myGlobals.device[deviceId].hosts.hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;

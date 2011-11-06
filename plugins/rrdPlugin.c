@@ -3896,22 +3896,6 @@ static void arbitraryActionPage(void) {
     sendString(buf);
   }
 
-  if(myGlobals.device[0].ipProtoStats != NULL) {
-    for(idx=0; idx<myGlobals.numIpProtosToMonitor; idx++) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<option value=\"IP_%sSentBytes\">%s Sent Bytes</option>\n"
-		    "<option value=\"IP_%sRcvdBytes\">%s Rcvd Bytes</option>\n"
-		    "<option value=\"IP_%sBytes\">%s Bytes (interface level)</option>\n",
-                    myGlobals.ipTrafficProtosNames[idx],
-                    myGlobals.ipTrafficProtosNames[idx],
-                    myGlobals.ipTrafficProtosNames[idx],
-                    myGlobals.ipTrafficProtosNames[idx],
-                    myGlobals.ipTrafficProtosNames[idx],
-                    myGlobals.ipTrafficProtosNames[idx]);
-      sendString(buf);
-    }
-  }
-
   sendString("</select>"
              "<br>\n<p>Note: The drop down list shows all possible files - many (most) (all) "
              "of which may not be available for a specific host. Further, the list is "
@@ -4812,33 +4796,24 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       updateCounter(rrdPath, "totPeersSent", el->totContactedSentPeers, 0);
       updateCounter(rrdPath, "totPeersRcvd", el->totContactedRcvdPeers, 0);
 
-      if(el->protoIPTrafficInfos) {
-#if defined(RRD_DEBUG)
-	traceEventRRDebug(0, "Updating %s %s", is_subnet_host ? "subnet" : "hosts", hostKey); 
-#endif
+      safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/%s/%s/IP_",
+		    myGlobals.rrdPath,
+		    myGlobals.device[devIdx].uniqueIfName,
+		    is_subnet_host ? "subnet" : "hosts",
+		    adjHostName);
 
-	safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/%s/%s/IP_",
-		      myGlobals.rrdPath,
-		      myGlobals.device[devIdx].uniqueIfName,
-		      is_subnet_host ? "subnet" : "hosts",
-		      adjHostName);
+      for(j=0; j<IPOQUE_MAX_SUPPORTED_PROTOCOLS; j++) {
+	char key[128];
+	char *prot_long_str[] = { IPOQUE_PROTOCOL_LONG_STRING };
 
-        for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
-          if(el->protoIPTrafficInfos[j]) {
-	    char key[128];
+	if(el->l7.traffic[j].bytesSent) {
+	  safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sBytesSent", prot_long_str[j]);
+	  updateCounter(rrdPath, key, el->l7.traffic[j].bytesSent, 0);
+	}
 
-	    if(el->protoIPTrafficInfos[j] != NULL) {
-	      safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sBytesSent",
-			    myGlobals.ipTrafficProtosNames[j]);
-	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->sentLoc.value+
-			    el->protoIPTrafficInfos[j]->sentRem.value, 0);
-
-	      safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sBytesRcvd",
-			    myGlobals.ipTrafficProtosNames[j]);
-	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->rcvdLoc.value+
-			    el->protoIPTrafficInfos[j]->rcvdFromRem.value, 0);
-	    }
-	  }
+	if(el->l7.traffic[j].bytesRcvd) {
+	  safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sBytesRcvd", prot_long_str[j]);
+	  updateCounter(rrdPath, key, el->l7.traffic[j].bytesRcvd, 0);
 	}
       }
     }
@@ -5347,29 +5322,19 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	}
 
 	if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
-	  if(myGlobals.device[devIdx].ipProtoStats != NULL) {
-	    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/IP_",
-			  myGlobals.rrdPath,  myGlobals.device[devIdx].uniqueIfName);
+	  char *prot_long_str[] = { IPOQUE_PROTOCOL_LONG_STRING };
 
-	    for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
-	      TrafficCounter ctr;
-	      char tmpStr[128];
+	  safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/IP_",
+			myGlobals.rrdPath,  myGlobals.device[devIdx].uniqueIfName);
 
-	      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%sFlows",
-			    myGlobals.ipTrafficProtosNames[j]);
-	      updateCounter(rrdPath, tmpStr, myGlobals.device[devIdx].
-			    ipProtoStats[j].totalFlows.value, 0);
-	      ctr.value =
-		myGlobals.device[devIdx].ipProtoStats[j].local.value+
-		myGlobals.device[devIdx].ipProtoStats[j].local2remote.value+
-		myGlobals.device[devIdx].ipProtoStats[j].remote2local.value+
-		myGlobals.device[devIdx].ipProtoStats[j].remote.value;
+	  for(j=0; j<IPOQUE_MAX_SUPPORTED_PROTOCOLS; j++) {
+	    TrafficCounter ctr;
+	    char tmpStr[128];
 
-	      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%sBytes",
-			    myGlobals.ipTrafficProtosNames[j]);
-	      updateCounter(rrdPath, tmpStr, ctr.value, 0);
-	    }
-	  }
+	    ctr.value = myGlobals.device[devIdx].l7.protoTraffic[j];
+	    safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%sBytes", prot_long_str[j]);
+	    updateCounter(rrdPath, tmpStr, ctr.value, 0);
+	  }	  
 	}
 
 	/* ******************************** */

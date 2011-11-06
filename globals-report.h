@@ -111,7 +111,6 @@ extern HostTraffic* quickHostLink(HostSerialIndex theSerial, int deviceId, HostT
 extern void printHostContactedPeers(HostTraffic *el, int actualDeviceId);
 extern void printFcHostContactedPeers(HostTraffic *el, int actualDeviceId);
 extern char *getSessionState(IPSession *session);
-extern void printHostSessions(HostTraffic *el, int actualDeviceId);
 extern u_short isHostHealthy(HostTraffic *el);
 extern void printHostDetailedInfo(HostTraffic *el, int actualDeviceId);
 extern void printServiceStats(char* svcName, ServiceStats* ss, short printSentStats);
@@ -197,11 +196,10 @@ extern void printIpAccounting(int remoteToLocal, int sortedColumn,
 			      int revertOrder, int pageNum);
 extern void printFcAccounting(int remoteToLocal, int sortedColumn,
 			      int revertOrder, int pageNum);
-extern void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el);
+extern void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el);
 extern void printIpProtocolUsage(void);
 extern void printBar(char *buf, int bufLen, unsigned short percentageS, unsigned short percentageR,
                      unsigned short maxPercentage, unsigned short ratio);
-extern void printIpProtocolDistribution(int mode, int revertOrder, int printGraph);
 extern void printTopTalkers(u_int8_t printHourTalkers);
 extern void printProtoTraffic(int printGraph);
 extern void printProcessInfo(int processPid, int actualReportDeviceId);
@@ -283,7 +281,6 @@ extern char *getHostName(HostTraffic *el, short cutName, char *buf, int bufLen);
 /* graph.c */
 extern void hostTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent);
-extern void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostFragmentDistrib(HostTraffic *theHost, short dataSent);
 extern void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent);
 extern void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent);

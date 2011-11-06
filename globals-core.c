@@ -119,6 +119,7 @@ static void allocateOtherHosts(void) {
   strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");
   myGlobals.otherHostEntry->portsUsage = NULL;
 
+  myGlobals.otherHostEntry->l7.traffic = (ProtoTraffic*)calloc(myGlobals.l7.numSupportedProtocols, sizeof(ProtoTraffic));  
   myGlobals.otherHostEntry->serialHostIndex = ++myGlobals.hostSerialCounter; /* Start from 1 (0 = UNKNOWN_SERIAL_INDEX) */
 }
 
@@ -416,6 +417,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
   myGlobals.broadcastEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
   memset(myGlobals.broadcastEntry, 0, sizeof(HostTraffic));
+  myGlobals.broadcastEntry->l7.traffic = (ProtoTraffic*)calloc(myGlobals.l7.numSupportedProtocols, sizeof(ProtoTraffic));
   resetHostsVariables(myGlobals.broadcastEntry);
 
   /* Set address to FF:FF:FF:FF:FF:FF */
@@ -515,8 +517,6 @@ static void loadGeoIP(void) {
 
 /* ********************************* */
 
-#ifdef HAVE_LIBOPENDPI
-
 static void debug_printf(u_int32_t protocol, void *id_struct, 
 			 ipq_log_level_t log_level, const char *format, ...) { ; }
 static void *malloc_wrapper(unsigned long size) { return malloc(size); }
@@ -538,8 +538,6 @@ static void initL7Discovery(void) {
   myGlobals.l7.proto_size = ipoque_detection_get_sizeof_ipoque_id_struct();
   myGlobals.l7.flow_struct_size = ipoque_detection_get_sizeof_ipoque_flow_struct();
 }
-#endif
-
 
 /* ********************************* */
 
@@ -551,6 +549,8 @@ void initNtop(char *devices) {
 
   initIPServices();
   handleProtocols();
+
+  myGlobals.l7.numSupportedProtocols = IPOQUE_MAX_SUPPORTED_PROTOCOLS;
 
   if(myGlobals.numIpProtosToMonitor == 0)
     addDefaultProtocols();
@@ -565,9 +565,7 @@ void initNtop(char *devices) {
   if(myGlobals.runningPref.enableSessionHandling)
     initPassiveSessions();
 
-#ifdef HAVE_LIBOPENDPI
   initL7Discovery();
-#endif
 
   /* ********************************** */
 

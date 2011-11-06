@@ -763,14 +763,12 @@ typedef struct hostTraffic {
   IcmpHostInfo       *icmpInfo;
 
   ShortProtoTrafficInfo **ipProtosList;        /* List of myGlobals.numIpProtosList entries */
-  ProtoTrafficInfo      **protoIPTrafficInfos; /* Info about IP traffic generated/rcvd by this host */
-
-  Counter          totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
+  Counter                 totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
   struct hostTraffic *next;              /* pointer to the next element */
 
-#ifdef HAVE_LIBOPENDPI
-  ProtoTraffic protoTraffic[IPOQUE_MAX_SUPPORTED_PROTOCOLS];
-#endif
+  struct {
+    ProtoTraffic *traffic;
+  } l7;
 } HostTraffic;
 
 /* **************************** */
@@ -858,14 +856,11 @@ typedef struct ipSession {
   char *session_info;               /* Info about this session (if any) */
   char *guessed_protocol;
   struct ipSession *next;
-#ifdef HAVE_LIBOPENDPI
-  u_int16_t l7_major_proto, l7_minor_proto;
-
   struct {
+    u_int16_t major_proto;
     struct ipoque_flow_struct *flow;
     struct ipoque_id_struct *src, *dst;
   } l7;
-#endif
 } IPSession;
 
 /* ************************************* */
@@ -1185,7 +1180,7 @@ typedef struct netFlowGlobals {
 #ifdef HAVE_SCTP
   int netFlowInSctpSocket;
 #endif
-  u_char netFlowAssumeFTP, enableSessionHandling;
+  u_char enableSessionHandling;
   u_short netFlowInPort;
   struct in_addr netFlowIfAddress, netFlowIfMask;
   char *netFlowWhiteList, *netFlowBlackList;
@@ -1457,7 +1452,6 @@ typedef struct ntopInterface {
   TopTalkers last60MinTopTalkers[60], last24HoursTopTalkers[24];
 
   SimpleProtoTrafficInfo tcpGlobalTrafficStats, udpGlobalTrafficStats, icmpGlobalTrafficStats;
-  SimpleProtoTrafficInfo *ipProtoStats;
   SecurityDeviceProbes securityPkts;
 
   TrafficCounter numEstablishedTCPConnections; /* = # really established connections */
@@ -1482,6 +1476,10 @@ typedef struct ntopInterface {
   
   /* The variable below is used to collect stats concerning interface subnets */
   HostTraffic networkHost[MAX_NUM_INTERFACE_NETWORKS];
+
+  struct {
+    Counter *protoTraffic;
+  } l7;
 } NtopInterface;
 
 /* *********************************** */
@@ -2142,14 +2140,6 @@ typedef struct ntopGlobals {
                 numHandledSSIRequests;
   u_short webServerRequestQueueLength;
 
-  /* Peer2Peer Protocol Indexes */
-  u_short SshIdx, HttpIdx, FTPIdx, EdonkeyIdx, BitTorrentIdx, 
-    VoipIdx, FacebookIdx, TwitterIdx, YouTubeIdx, SkypeIdx;
-
-  /* Hash table collisions - counted during load */
-  int ipxsapHashLoadCollisions;
-  /* Hash table sizes - counted during load */
-  int ipxsapHashLoadSize;
   /* Hash table collisions - counted during use */
   int hashCollisionsLookup;
 
@@ -2205,11 +2195,9 @@ typedef struct ntopGlobals {
   /* Message display */
   u_char lowMemoryMsgShown;
 
-#ifdef HAVE_LIBOPENDPI
   struct {
+    u_short numSupportedProtocols;
     u_int16_t flow_struct_size, proto_size;
     struct ipoque_detection_module_struct *l7handler;
   } l7;
-#endif
-
 } NtopGlobals;

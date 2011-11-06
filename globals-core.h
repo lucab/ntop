@@ -398,11 +398,6 @@ extern void processIpPkt(const u_char *bp,
 			 u_char *ether_dst,
 			 int actualDeviceId,
 			 int vlanId);
-extern int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
-		    const u_int numPkts, const u_int _length,
-		    u_short isPassiveSess, u_short isVoipSess,
-		    u_short httpSessionIdx, 
-		    int actualDeviceId, u_short newSession);
 extern void deleteFragment(IpFragment *fragment, int actualDeviceId);
 extern void purgeOldFragmentEntries(int actualDeviceId);
 
@@ -834,9 +829,7 @@ extern void l7SessionProtoDetection(IPSession *theSession,
 /* sessions.c */
 #define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)
 extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);
-#ifdef HAVE_LIBOPENDPI
 extern void freeOpenDPI(IPSession *sessionToPurge);
-#endif
 extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, 
 			u_char allocateMemoryIfNeeded, u_char lockMutex);
 extern void scanTimedoutTCPSessions(int actualDeviceId);
@@ -852,6 +845,7 @@ extern IPSession* handleSession(const struct pcap_pkthdr *h,
 				u_int ip_offset, struct tcphdr *tp,
                                 u_int tcpDataLength, u_char* packetData,
                                 int actualDeviceId, u_short *newSession,
+				u_int16_t major_proto,
 				u_char real_session /* vs. faked/netflow-session */);
 extern void updateHostUsers(char *userName, int userType, HostTraffic *theHost);
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
@@ -863,6 +857,7 @@ extern void updatePeersDelayStats(HostTraffic *peer_a, HostSerialIndex *peer_b_s
 				  u_char is_client_delay, 
 				  int port_idx);
 extern void updateSessionDelayStats(IPSession* session);
+extern char *getProtoName(u_short protoId);
 
 /* event.c */
 extern void notifyEvent(EventType evt, HostTraffic *el, IPSession *session, int eventValue);

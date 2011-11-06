@@ -1174,7 +1174,7 @@ u_int16_t handleDNSpacket(HostTraffic *srcHost, u_short sport,
 	  if(addr_list_idx >= MAX_ADDRESSES) break; /* Further check */
 	  memcpy(&addr_list[addr_list_idx++], (char*)&theDNSaddr, sizeof(char*));
 	  hostPtr->addrLen = INADDRSZ;
-	  hostPtr->addrList[0] = theDNSaddr;
+	  hostPtr->addrList[0] = (u_int32_t) theDNSaddr;
 
 	  n = (short)dn_expand_(answer.qb2, eom, cp, (char *)bp, buflen);
 	  if (n < 0) {

@@ -558,68 +558,30 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
   }
 }
 
-/* ************************ */
+/* ********************************** */
 
 void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   float p[MAX_NUM_PROTOS];
-  char	*lbl[] = { "", "", "", "", "", "", "", "", "",
-		   "", "", "", "", "", "", "", "", "", "" };
+  char	*lbl[MAX_NUM_PROTOS] = { "" };
   int i, num=0;
-  TrafficCounter traffic, totalIPTraffic, diffTraffic;
+  char *prot_long_str[] = { IPOQUE_PROTOCOL_LONG_STRING };
+  Counter sent, rcvd, traffic;
 
-  if(theHost->protoIPTrafficInfos == NULL) {
-    traceEvent(CONST_TRACE_WARNING, "Graph failure (5)");
-    return;
-  }
+  sent = rcvd = 0;
+  for(i=0; i<myGlobals.l7.numSupportedProtocols; i++)
+    sent += theHost->l7.traffic[i].bytesSent, rcvd += theHost->l7.traffic[i].bytesRcvd;
 
-  totalIPTraffic.value = 0;
-  diffTraffic.value = 0;
+  traffic = dataSent ? sent : rcvd;
 
-  if(dataSent)
-    totalIPTraffic.value = theHost->ipv4BytesSent.value;
-  else
-    totalIPTraffic.value = theHost->ipv4BytesRcvd.value;
+  for(i=0; i<myGlobals.l7.numSupportedProtocols; i++) {
+    Counter val = dataSent ? theHost->l7.traffic[i].bytesSent : theHost->l7.traffic[i].bytesRcvd;
 
-  if(totalIPTraffic.value > 0) {
-    if(dataSent)
-      traffic.value = theHost->ipsecSent.value;    
-    else
-      traffic.value = theHost->ipsecRcvd.value;
- 
-    if(traffic.value > 0) {
-      p[num] = (float)((100*traffic.value)/totalIPTraffic.value);
-      diffTraffic.value += traffic.value;
-      lbl[num++] = "IPSEC";
+    if(val > 0) {
+      p[num] = (float)((100*val)/traffic);
+      lbl[num++] = prot_long_str[i];
     }
-
-    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-      if(theHost->protoIPTrafficInfos[i]) {
-	if(dataSent)
-	  traffic.value = theHost->protoIPTrafficInfos[i]->sentLoc.value+theHost->protoIPTrafficInfos[i]->sentRem.value;
-	else
-	  traffic.value = theHost->protoIPTrafficInfos[i]->rcvdLoc.value+theHost->protoIPTrafficInfos[i]->rcvdFromRem.value;
-      } else
-	traffic.value = 0;
-      
-      if(traffic.value > 0) {
-	p[num] = (float)((100*traffic.value)/totalIPTraffic.value);
-	diffTraffic.value += traffic.value;
-	lbl[num++] = myGlobals.ipTrafficProtosNames[i];
-      }
-
-      if(num >= MAX_NUM_PROTOS) break; /* Too much stuff */
-    }
-  }
-
-  if(num == 0) {
-    p[num] = 1;
-    lbl[num++] = "Other";
-  } else {
-    if(diffTraffic.value < totalIPTraffic.value) {
-      diffTraffic.value = totalIPTraffic.value - diffTraffic.value;
-      p[num] = (float)((100*diffTraffic.value)/totalIPTraffic.value);
-      lbl[num++] = "Other";
-    }
+    
+    if(num >= MAX_NUM_PROTOS) break; /* Too much stuff */    
   }
 
   if(num == 1) p[0] = 100; /* just to be safe */
@@ -972,10 +934,7 @@ void drawGlobalIpProtoDistribution(void) {
     }
 
     for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-      p[idx]  = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local.value
-	+myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote.value;
-      p[idx] += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value
-	+myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value;
+      p[idx]  = (float)myGlobals.device[myGlobals.actualReportDeviceId].l7.protoTraffic[i];
       if((p[idx] > 0) && ((p[idx]*100/total) > 1 /* the proto is at least 1% */)) {
 	partialTotal += p[idx];
 	lbl[idx] = myGlobals.ipTrafficProtosNames[i];
@@ -987,15 +946,6 @@ void drawGlobalIpProtoDistribution(void) {
   }
 
   if(total == 0) total = 1;
-
-  /*  Add a bar for the Other TCP/UDP based protocols
-      Courtesy of Robbert Kouprie <r.kouprie@dto.tudelft.nl>
-  */
-  if (total > partialTotal) {
-    lbl[idx] = "Other";
-    p[idx] = total - partialTotal;
-    idx++;
-  }
 
   for(i=0; i<idx; i++) p[i] = (p[i] * 100)/total;
 

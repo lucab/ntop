@@ -2496,16 +2496,6 @@ void resetHostsVariables(HostTraffic* el) {
   el->routedTraffic = NULL;
   if (el->portsUsage != NULL)          freePortsUsage(el);
   if (el->geo_ip)                      GeoIPRecord_delete(el->geo_ip);
-
-  if (el->protoIPTrafficInfos != NULL) {
-    int i;
-
-    for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
-      if(el->protoIPTrafficInfos[i]) free(el->protoIPTrafficInfos[i]);
-
-    free(el->protoIPTrafficInfos);
-  }
-  el->protoIPTrafficInfos = NULL;
   if (el->icmpInfo != NULL)            free(el->icmpInfo);
   el->icmpInfo = NULL;
   if (el->protocolInfo != NULL)        free(el->protocolInfo);

@@ -263,148 +263,6 @@ void purgeOldFragmentEntries(int actualDeviceId) {
 
 /* ************************************ */
 
-int handleIP(u_short port, 
-	     HostTraffic *srcHost, HostTraffic *dstHost,
-	     const u_int numPkts,
-	     const u_int _length, u_short isPassiveSess,
-	     u_short isVoipSess,
-	     u_short l7ProtoSessionIdx,
-	     int actualDeviceId,
-	     u_short newSession) {
-  int idx = -1;
-  Counter length = (Counter)_length;
-
-  if((srcHost == NULL) || (dstHost == NULL)) {
-    lowMemory();
-    return(-1);
-  }
-
-  if(isPassiveSess) {
-    /* Emulate non passive session */
-    idx = myGlobals.FTPIdx;
-  } else if(isVoipSess || (port == 54045 /* Skype default port */)) {
-    /* Emulate VoIP session */
-    idx = myGlobals.VoipIdx;
-  } else if(l7ProtoSessionIdx != 0) {
-    switch(l7ProtoSessionIdx) {
-    case FLAG_FACEBOOK: idx = myGlobals.FacebookIdx; break;
-    case FLAG_TWITTER:  idx = myGlobals.TwitterIdx; break;
-    case FLAG_YOUTUBE:  idx = myGlobals.YouTubeIdx; break;
-    case FLAG_SSH:      idx = myGlobals.SshIdx; break;
-    case FLAG_SKYPE:    idx = myGlobals.SkypeIdx; break;
-    case FLAG_HTTP:     idx = myGlobals.HttpIdx; break;
-    default: idx = -1; break;
-    }
-  }
-
-  if(idx == -1) {
-    return(-1); /* Unable to locate requested index */
-  } else if(idx >= myGlobals.numIpProtosToMonitor) {
-    traceEvent(CONST_TRACE_ERROR, "Discarding idx=%d for port=%d", idx, port);
-    return(-1);
-  }
-
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "port=%d - isPassiveSess=%d - isVoipSess=%d - p2pSessionIdx=%d - idx=%d",
-	     port, isPassiveSess, isVoipSess, p2pSessionIdx, idx);
-#endif
-
-  if(idx != FLAG_NO_PEER) {
-    if(newSession)
-      incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].totalFlows, 1);
-
-    if((!myGlobals.runningPref.trackOnlyLocalHosts)
-       || (myGlobals.runningPref.trackOnlyLocalHosts && subnetPseudoLocalHost(srcHost))) {
-      allocHostTrafficCounterMemory(srcHost, protoIPTrafficInfos, (u_int)(myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**)));
-      allocHostTrafficCounterMemory(srcHost, protoIPTrafficInfos[idx], sizeof(ProtoTrafficInfo));
-    }
-
-    if((!myGlobals.runningPref.trackOnlyLocalHosts)
-       || (myGlobals.runningPref.trackOnlyLocalHosts && subnetPseudoLocalHost(dstHost))) {
-      allocHostTrafficCounterMemory(dstHost, protoIPTrafficInfos, (u_int)(myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**)));
-      allocHostTrafficCounterMemory(dstHost, protoIPTrafficInfos[idx], sizeof(ProtoTrafficInfo));
-    }
-
-    if(subnetPseudoLocalHost(srcHost)) {
-      if(subnetPseudoLocalHost(dstHost)) {
-	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) {
-	  incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->sentLoc, length);
-
-	  if(newSession)
-	    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->totalFlows, 1);
-	}
-
-	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
-	  incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->rcvdLoc, length);
-
-	  if(newSession)
-	    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->totalFlows, 1);
-	}
-
-	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].local, length);
-      } else {
-	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) {
-	  incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->sentRem, length);
-
-	  if(newSession)
-	    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->totalFlows, 1);
-	}
-
-	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
-	  incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->rcvdLoc, length);
-
-	  if(newSession)
-	    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->totalFlows, 1);
-	}
-
-	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].local2remote, length);
-      }
-    } else {
-      /* srcHost is remote */
-      if(subnetPseudoLocalHost(dstHost)) {
-	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) {
-	  if(newSession)
-	    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->totalFlows, 1);
-
-	  incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->sentLoc, length);
-	}
-
-	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
-	  if(newSession)
-	    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->totalFlows, 1);
-
-	  incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->rcvdFromRem, length);
-	}
-
-	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].remote2local, length);
-      } else {
-	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) {
-	  if(newSession)
-	    incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->totalFlows, 1);
-
-	  incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->sentRem, length);
-	}
-
-	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
-	  if(newSession)
-	    incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->totalFlows, 1);
-
-	  incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->rcvdFromRem, length);
-	}
-
-	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].remote, length);
-      }
-    }
-
-    if(srcHost->protoIPTrafficInfos) incrementHostTrafficCounter(srcHost, protoIPTrafficInfos[idx]->pktSent, numPkts);
-    if(dstHost->protoIPTrafficInfos) incrementHostTrafficCounter(dstHost, protoIPTrafficInfos[idx]->pktRcvd, numPkts);
-  }
-
-  return(idx);
-}
-
-/* ************************************ */
-
 /*
   Fingerprint code courtesy of ettercap
   http://ettercap.sourceforge.net
@@ -1002,13 +860,15 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 				       srcHost, sport, dstHost,
 				       dport, ntohs(ip6->ip6_plen), 0, 
 				       ip_offset, &tp, tcpDataLength,
-				       theData, actualDeviceId, &newSession, 1);
+				       theData, actualDeviceId, &newSession, 
+				       IPOQUE_PROTOCOL_UNKNOWN, 1);
 	  else
 	    theSession = handleSession(h, p, (off & 0x3fff), tp.th_win,
 				       srcHost, sport, dstHost,
 				       dport, ip_len, 0, 
 				       ip_offset, &tp, tcpDataLength,
-				       theData, actualDeviceId, &newSession, 1);
+				       theData, actualDeviceId, &newSession, 
+				       IPOQUE_PROTOCOL_UNKNOWN, 1);
 	  if(theSession == NULL)
 	    isPassiveSess = isVoipSess = 0;
 	  else {
@@ -1026,44 +886,6 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	    "Other TCP/UDP prot." : We dump the packet if requested
 	  */
 	  dumpOtherPacket(actualDeviceId, h, p);
-	}
-
-	/* choose most likely port for protocol traffic accounting
-	 * by trying lower number port first. This is based
-	 * on the assumption that lower port numbers are more likely
-	 * to be the servers and clients usually dont use ports <1024
-	 * This is only relevant if both port numbers are used to
-	 * gather service statistics.
-	 * e.g. traffic between port 2049 (nfsd) and 113 (nntp) will
-	 * be counted as nntp traffic in all directions by this heuristic
-	 * and not as nntp in one direction and nfs in the return direction.
-	 *
-	 * Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>
-	 */
-
-	if((dport < sport)
-	   && ((!((sportIdx != -1) && (dportIdx == -1)))
-	       || ((sportIdx == -1) && (dportIdx != -1)))) {
-	  /* traceEvent(CONST_TRACE_INFO, "[1] sportIdx(%d)=%d - dportIdx(%d)=%d", sport,
-	     sportIdx, dport, dportIdx); */
-
-	  if(handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      theSession != NULL ? theSession->knownProtocolIdx : 0,
-		      actualDeviceId, newSession) == -1)
-	    handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     theSession != NULL ? theSession->knownProtocolIdx : 0,
-		     actualDeviceId, newSession);
-	} else {
-	  /*
-	    traceEvent(CONST_TRACE_INFO, "[2] sportIdx(%d)=%d - dportIdx(%d)=%d",
-	    sport, sportIdx, dport, dportIdx); */
-
-	  if(handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-			      theSession != NULL ? theSession->knownProtocolIdx : 0,
-		      actualDeviceId, newSession) == -1)
-	    handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     theSession != NULL ? theSession->knownProtocolIdx : 0,
-		     actualDeviceId, newSession);
 	}
       }
     }
@@ -1301,14 +1123,16 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 				       dport, ntohs(ip6->ip6_plen), 0, 
 				       ip_offset, NULL, udpDataLength,
 				       (u_char*)(bp+hlen+sizeof(struct udphdr)),
-				       actualDeviceId, &newSession, 1);
+				       actualDeviceId, &newSession, 
+				       IPOQUE_PROTOCOL_UNKNOWN, 1);
 	  else
 	    theSession = handleSession(h, p, (off & 0x3fff), 0,
 				       srcHost, sport, dstHost,
 				       dport, ip_len, 0, ip_offset, 
 				       NULL, udpDataLength,
 				       (u_char*)(bp+hlen+sizeof(struct udphdr)),
-				       actualDeviceId, &newSession, 1);
+				       actualDeviceId, &newSession, 
+				       IPOQUE_PROTOCOL_UNKNOWN, 1);
 	}
 
 	isPassiveSess = 0;
@@ -1319,23 +1143,6 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	  isVoipSess = theSession->voipSession;
 
 	newSession = 1; /* Trick to account flows anyway */
-
-        /* Handle UDP traffic like TCP, above -
-	   That is: if we know about the lower# port, even if it's the destination,
-	   classify the traffic that way.
-	   (BMS 12-2001)
-	*/
-        if(dport < sport) {
-	  if(handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      0, actualDeviceId, newSession) == -1)
-	    handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     0, actualDeviceId, newSession);
-        } else {
-	  if(handleIP(sport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		      0, actualDeviceId, newSession) == -1)
-	    handleIP(dport, srcHost, dstHost, 1, length, isPassiveSess, isVoipSess,
-		     0, actualDeviceId, newSession);
-        }
       }
     }
 

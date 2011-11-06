@@ -1056,52 +1056,6 @@ static PyObject* python_interface_throughputStats(PyObject *self, PyObject *args
   return(obj);
 }
 
-static PyObject* python_interface_SimpleProtoTrafficInfo(SimpleProtoTrafficInfo *info) {
-  PyObject *obj;
-
-  if((obj = PyDict_New()) == NULL) return NULL;
-
-  PyDict_SetItem(obj, PyString_FromString("local"), PyLong_FromUnsignedLong((unsigned long)info->local.value));
-  PyDict_SetItem(obj, PyString_FromString("local2remote"), PyLong_FromUnsignedLong((unsigned long)info->local2remote.value));
-  PyDict_SetItem(obj, PyString_FromString("remote"), PyLong_FromUnsignedLong((unsigned long)info->remote.value));
-  PyDict_SetItem(obj, PyString_FromString("remote2local"), PyLong_FromUnsignedLong((unsigned long)info->remote2local.value));
-
-  return(obj);
-}
-
-static PyObject* python_interface_tcpStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
-
-  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
-  if(interfaceId >= myGlobals.numDevices) return NULL;
-  return(python_interface_SimpleProtoTrafficInfo(&myGlobals.device[interfaceId].tcpGlobalTrafficStats));
-}
-
-static PyObject* python_interface_udpStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
-
-  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
-  if(interfaceId >= myGlobals.numDevices) return NULL;
-  return(python_interface_SimpleProtoTrafficInfo(&myGlobals.device[interfaceId].udpGlobalTrafficStats));
-}
-
-static PyObject* python_interface_icmpStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
-
-  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
-  if(interfaceId >= myGlobals.numDevices) return NULL;
-  return(python_interface_SimpleProtoTrafficInfo(&myGlobals.device[interfaceId].icmpGlobalTrafficStats));
-}
-
-static PyObject* python_interface_ipStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
-
-  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
-  if(interfaceId >= myGlobals.numDevices) return NULL;
-  if(myGlobals.device[interfaceId].ipProtoStats == NULL) return NULL;
-  return(python_interface_SimpleProtoTrafficInfo(myGlobals.device[interfaceId].ipProtoStats));
-}
-
 static PyObject* python_interface_securityPkts(PyObject *self, PyObject *args) {
   u_int interfaceId;
   PyObject *obj;
@@ -1250,10 +1204,6 @@ static PyMethodDef interface_methods[] = {
   { "pktsStats", python_interface_pktsStats, METH_VARARGS, "Get packet statistics " },
   { "bytesStats", python_interface_bytesStats, METH_VARARGS, "Get bytes statistics" },
   { "throughputStats", python_interface_throughputStats, METH_VARARGS, "" },
-  { "tcpStats", python_interface_tcpStats, METH_VARARGS, "Get TCP stats" },
-  { "udpStats", python_interface_udpStats, METH_VARARGS, "Get UDP stats" },
-  { "icmpStats", python_interface_icmpStats, METH_VARARGS, "Get ICMP stats" },
-  { "ipStats", python_interface_ipStats, METH_VARARGS, "Get IP stats" },
   { "securityPkts", python_interface_securityPkts, METH_VARARGS, "Get information about security packets" },
   { "netflowStats", python_interface_netflowStats, METH_VARARGS, "Get NetFlow interface information" },
   { "sflowStats", python_interface_sflowStats, METH_VARARGS, "Get sFlow interface information" },

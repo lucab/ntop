@@ -586,30 +586,14 @@ void handleProtocols(void) {
 /* **************************************** */
 
 void addDefaultProtocols(void) {
-  myGlobals.FTPIdx = handleProtocolList("FTP",      "ftp|ftp-data|");
-  myGlobals.HttpIdx = handleProtocolList("HTTP",     "http|www|https|3128|"); /* 3128 is HTTP cache */
   handleProtocolList("DNS",      "name|domain|");
-  /* 22 == ssh (just to make sure the port is defined) */
-  myGlobals.SshIdx = handleProtocolList("Login",   "telnet|login|22|");
   handleProtocolList("NetBios",  "netbios-ns|netbios-dgm|netbios-ssn|445|");
   handleProtocolList("Mail",     "pop-2|pop-3|pop3|kpop|smtp|imap|imap2|585|993|995|");
   handleProtocolList("DHCP",     "67-68|"); /* Bootp */
   handleProtocolList("SNMP",     "snmp|snmp-trap|");
   handleProtocolList("NNTP",     "nntp|");
   handleProtocolList("NFS/AFS",  "mount|pcnfs|bwnfs|nfsd|nfs|nfsd-status|7000-7009");
-  myGlobals.VoipIdx = handleProtocolList("VoIP", "5060|2000");
   handleProtocolList("X11",      "6000-6010|");
-
-  /* Peer-to-Peer Protocols */
-  myGlobals.SkypeIdx = handleProtocolList("Skype", "41652|13021|54045|"); /* 13021|54045 = Skype default port */
-  myGlobals.EdonkeyIdx = handleProtocolList("eDonkey", "4661-4665|");
-  myGlobals.BitTorrentIdx = handleProtocolList("BitTorrent", "6881-6999|6969|"); /* http://www.dessent.net/btfaq/#ports */
-
-  myGlobals.FacebookIdx = handleProtocolList("Facebook", "0|");
-  myGlobals.TwitterIdx = handleProtocolList("Twitter", "0|");
-  myGlobals.YouTubeIdx = handleProtocolList("YouTube", "0|");
-
-  handleProtocolList("Messenger", "1863|5000|5001|5190-5193|");
 }
 
 /* **************************************** */
@@ -1100,9 +1084,6 @@ RETSIGTYPE cleanup(int signo) {
   for(i=0; i<myGlobals.numDevices; i++) {
     traceEvent(CONST_TRACE_INFO, "CLEANUP: Freeing device %s",
 	       myGlobals.device[i].humanFriendlyName);
-
-    if(myGlobals.device[i].ipProtoStats != NULL)
-      free(myGlobals.device[i].ipProtoStats);
 
     if(myGlobals.device[i].ipProtosList != NULL)
       free(myGlobals.device[i].ipProtosList);

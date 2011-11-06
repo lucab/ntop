@@ -676,30 +676,10 @@ AC_CHECK_HEADERS([capi.h])
  fi
 fi
 
-dnl> OpenDPI
+dnl> OpenDPI (https://code.google.com/p/opendpi/)
+OPENDPI_LIB=./opendpi-ntop/src/lib/.libs/libopendpi.a
+OPENDPI_INC=./opendpi-ntop/src/include/
 
-if test -d /usr/local/include/libopendpi-1.3/libopendpi; then
- CFLAGS="${CFLAGS} -I/usr/local/include/libopendpi-1.3/libopendpi/"
-
- AC_CHECK_HEADERS([ipq_api.h])
- if test "x$ac_cv_header_ipq_api_h" = "xyes"; then
-  AC_CHECK_LIB([opendpi], [ipoque_init_detection_module])
-  if test "x$ac_cv_lib_opendpi_ipoque_init_detection_module" = "xyes"; then
-    AC_DEFINE_UNQUOTED(HAVE_OPENDPI, 1, [use OpenDPI])
- fi
-fi
-fi
-
-dnl> if test "x$ac_cv_lib_opendpi_ipoque_init_detection_module" != "xyes"; then
-dnl>     echo
-dnl>     echo "*******************************************************************"
-dnl>     echo "*"
-dnl>     echo "* ERROR: OpenDPI 1.3 header or library routines are missing"
-dnl>     echo "* Please get it from https://code.google.com/p/opendpi/"
-dnl>     echo "*"
-dnl>     echo "*******************************************************************"
-dnl>     AC_MSG_ERROR(Unable to continue... aborting ./configure)
-dnl> fi
 
 dnl> Define the arguments we accept...
 dnl>
@@ -1937,6 +1917,8 @@ AC_SUBST(RRD_INC)
 AC_SUBST(GEO_DIR)
 AC_SUBST(GETOPT_H)
 AC_SUBST(GETOPT_C)
+AC_SUBST(OPENDPI_LIB)
+AC_SUBST(OPENDPI_INC)
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_MACRO_DIR([m4])

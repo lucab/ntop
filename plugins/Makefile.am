@@ -37,7 +37,7 @@ SUFFIXES    = .so
 # 
 plugindir = $(libdir)/ntop/plugins
 
-INCLUDES = -I.. @INCS@ ${RRD_INC}
+INCLUDES = -I.. @INCS@ ${RRD_INC} -I ../@OPENDPI_INC@
 
 #
 # The meat for ntop

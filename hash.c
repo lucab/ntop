@@ -138,14 +138,6 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   myGlobals.device[actualDeviceId].hosts.hostsno--;
 
-  if(host->protoIPTrafficInfos != NULL) {
-    for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
-      if(host->protoIPTrafficInfos[i] != NULL)
-	free(host->protoIPTrafficInfos[i]);
-
-    free(host->protoIPTrafficInfos);
-  }
-
   if(host->ipProtosList != NULL) {
     for(i=0; i<myGlobals.numIpProtosList; i++)
       if(host->ipProtosList[i] != NULL)
@@ -153,6 +145,8 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
     free(host->ipProtosList);
   }
+
+  if(host->l7.traffic) free(host->l7.traffic);
 
   if(host->nonIPTraffic) {
     if(host->nonIPTraffic->nbHostName != NULL)          free(host->nonIPTraffic->nbHostName);
@@ -792,6 +786,11 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
 
     if(el->portsUsage != NULL)
       freePortsUsage(el);
+
+    if((el->l7.traffic = (ProtoTraffic*)calloc(myGlobals.l7.numSupportedProtocols, sizeof(ProtoTraffic))) == NULL) {
+      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx]), locked_mutex = 0;
+      return(NULL);
+    }
 
     len = (size_t)(myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo**));
     if((el->ipProtosList = (ShortProtoTrafficInfo**)malloc(len)) == NULL) {

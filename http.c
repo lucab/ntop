@@ -2829,7 +2829,7 @@ static int returnHTTPPage(char* pageName,
       } else if(strncasecmp(pageName, CONST_ACTIVE_SESSIONS_HTML,
 			    strlen(CONST_ACTIVE_SESSIONS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printActiveTCPSessions(myGlobals.actualReportDeviceId, pageNum, NULL);
+	printActiveSessions(myGlobals.actualReportDeviceId, pageNum, NULL);
       } else if(strncasecmp(pageName, CONST_MULTICAST_STATS_HTML, strlen(CONST_MULTICAST_STATS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printMulticastStats(sortedColumn, revertOrder, pageNum);
@@ -2844,10 +2844,6 @@ static int returnHTTPPage(char* pageName,
 			    strlen(CONST_SHOW_PORT_TRAFFIC_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	showPortTraffic(portNr);
-      } else if(strcasecmp(pageName, CONST_IP_PROTO_DISTRIB_HTML) == 0) {
-	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printHTMLheader(NULL, NULL, 0);
-	printIpProtocolDistribution(FLAG_HOSTLINK_TEXT_FORMAT, revertOrder, TRUE);
       } else if(strcasecmp(pageName, CONST_LOCAL_ROUTERS_LIST_HTML) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printLocalRoutersList(myGlobals.actualReportDeviceId);

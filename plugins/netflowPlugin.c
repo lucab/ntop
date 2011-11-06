@@ -470,6 +470,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   time_t initTime;
   Counter total_pkts, total_bytes;
   u_int total_flows, ratio;
+  u_int16_t major_proto = IPOQUE_PROTOCOL_UNKNOWN; /* FIX: when we'll support this in nprobe */
 
 #ifdef MAX_NETFLOW_FLOW_BUFFER
   float elapsed;
@@ -757,33 +758,14 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     traceEvent(CONST_TRACE_ERROR, "************* AS %d/%d", srcHost->hostAS, dstHost->hostAS);
 #endif
 
-  if((sport != 0) && (dport != 0)) {
-    if(dport < sport) {
-      if(handleIP(dport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, actualDeviceId, 1) == -1) {
-	if(handleIP(sport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, actualDeviceId, 1) == -1) {
-	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
-	    /* If the user wants (via a run-time parm), as a last resort
-	     * we assume it's ftp-data traffic
-	     */
-	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost,
-		     total_pkts, total_bytes, 0, 0, 0, actualDeviceId, 1);
-	  }
-	}
-      }
-    } else {
-      if(handleIP(sport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, actualDeviceId, 1) == -1) {
-	if(handleIP(dport, srcHost, dstHost, total_pkts, total_bytes, 0, 0, 0, actualDeviceId, 1) == -1) {
-	  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
-	    /* If the user wants (via a run-time parm), as a last resort
-	     * we assume it's ftp-data traffic
-	     */
-	    handleIP((u_short)CONST_FTPDATA, srcHost, dstHost,
-		     total_pkts, total_bytes, 0, 0, 0, actualDeviceId, 1);
-	  }
-	}
-      }
-    }
-  }
+  handleSession(NULL, NULL, 0, 0,
+		srcHost, sport,
+		dstHost, dport,
+		record->sentOctets, record->rcvdOctets,
+		0, NULL,
+		0, NULL,
+		actualDeviceId, &newSession,
+		major_proto, 0);
 
   myGlobals.device[deviceId].netflowGlobals->flowProcessed++;
   myGlobals.device[deviceId].netflowGlobals->flowProcessedBytes += total_bytes;
@@ -916,7 +898,8 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling)
       session = handleSession(&h, NULL, 0, 0, srcHost, sport, dstHost, dport,
 			      record->sentOctets, record->rcvdOctets,
-			      0, &tp, 0, NULL, actualDeviceId, &newSession, 1 /* FIX 0 */);
+			      0, &tp, 0, NULL, actualDeviceId, &newSession, 
+			      major_proto, 1 /* FIX 0 */);
     break;
 
   case IPPROTO_UDP: /* UDP */
@@ -981,7 +964,8 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
     if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling)
       session = handleSession(&h, NULL, 0, 0, srcHost, sport, dstHost, dport,
 			      record->sentOctets, record->rcvdOctets,
-			      0, NULL, 0, NULL, actualDeviceId, &newSession, 0);
+			      0, NULL, 0, NULL, actualDeviceId, &newSession, 
+			      major_proto, 0);
     break;
 
   case IPPROTO_GRE:
@@ -1045,12 +1029,12 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 #ifdef DEBUG_FLOWS
     if(1) {
       unsigned int diff = *lastSeen - *firstSeen;
-      
+
       traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [diff=%u]"
 		 "[recordActTime=%d][last-first=%d]",
 		 srcHost->hostNumIpAddress, sport,
 		 dstHost->hostNumIpAddress, dport,
-		 (unsigned int)timeDiff, (unsigned int)recordActTime, 
+		 (unsigned int)timeDiff, (unsigned int)recordActTime,
 		 diff);
     }
 #endif
@@ -1259,7 +1243,7 @@ static void updateSenderFlowSequence(int deviceId, int probeId,
 	       myGlobals.device[deviceId].netflowGlobals->probeList[probeId].totNumFlows);
 #endif
 
-    if(myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lostFlows 
+    if(myGlobals.device[deviceId].netflowGlobals->probeList[probeId].lostFlows
        >  myGlobals.device[deviceId].netflowGlobals->probeList[probeId].totNumFlows) {
       reset = 1; /* Something wrong: let's reset */
       goto do_reset;
@@ -1388,7 +1372,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
     V9SimpleTemplate template;
     int i;
     u_char handle_ipfix;
-    V9V10TemplateField *fields = NULL;   
+    V9V10TemplateField *fields = NULL;
 
     memset(&template, 0, sizeof(template));
     if(the5Record.flowHeader.version == htons(9)) {
@@ -1399,7 +1383,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
       IPFIXFlowHeader *v10_hdr = (IPFIXFlowHeader*)&the5Record.flowHeader;
       flowSequence = ntohl(v10_hdr->flow_sequence);
       /* traceEvent(CONST_TRACE_INFO, "IPFIX Flow sequence: %u", flowSequence); */
-      handle_ipfix = 1; 
+      handle_ipfix = 1;
     }
 
     numFlows = 1;
@@ -1578,7 +1562,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 #ifdef DEBUG_FLOWS
 		traceEvent(CONST_TRACE_INFO, ">>>>> Defined flow template [id=%d][flowLen=%d][fieldCount=%d]",
-			   cursor->templateInfo.templateId, 
+			   cursor->templateInfo.templateId,
 			   cursor->flowLen, cursor->templateInfo.fieldCount);
 #endif
 	      } else {
@@ -1592,16 +1576,16 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	      if(len == 0) {
 		traceEvent(CONST_TRACE_WARNING, "Flowset %d bytes long: discarding it", len);
 		return;
-	      }	      
-	    }	  
-	    
+	      }
+	    }
+
 	    displ += len, stillToProcess -= (len+sizeof(templateDef));
-	    
+
 #ifdef DEBUG_FLOWS
 	    traceEvent(CONST_TRACE_INFO, "Moving ahead of %d bytes: new offset is %d", len, displ);
 #endif
 	    if(stillToProcess <= 0) templateDone = 1;
-	  }	  
+	  }
 	}
       } else {
 #ifdef DEBUG_FLOWS
@@ -1846,7 +1830,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 #ifdef DEBUG_FLOWS
 	      if(1)
 		traceEvent(CONST_TRACE_INFO,
-			   ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d][pkts=%d/bytes=%d]", 
+			   ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d][pkts=%d/bytes=%d]",
 			   accum_len, record.sentPkts, record.sentOctets);
 #endif
 
@@ -2296,12 +2280,6 @@ static void initNetFlowDevice(int deviceId) {
     storePrefsValue(nfValue(deviceId, "netFlowAggregation", 1), "0" /* noAggregation */);
   else
     myGlobals.device[deviceId].netflowGlobals->netFlowAggregation = atoi(value);
-
-  if(fetchPrefsValue(nfValue(deviceId, "netFlowAssumeFTP", 1), value, sizeof(value)) == -1) {
-    storePrefsValue(nfValue(deviceId, "netFlowAssumeFTP", 1), "0" /* no */);
-    myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = 0;
-  } else
-    myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = atoi(value);
 
   if(fetchPrefsValue(nfValue(deviceId, "enableSessionHandling", 1), value, sizeof(value)) == -1) {
     storePrefsValue(nfValue(deviceId, "enableSessionHandling", 1), "0" /* no */);
@@ -2911,42 +2889,6 @@ static void printNetFlowConfiguration(int deviceId) {
 	     "</td>\n</tr>\n");
 
   /* ****************************************************** */
-
-  sendString("<tr><th colspan=\"2\" "DARK_BG">Assume FTP</th>\n");
-
-  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
-  sendString(netflowPluginInfo->pluginURLname);
-  sendString("\" method=GET>\n<p>");
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
-  sendString(buf);
-
-  if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
-    sendString("<input type=\"radio\" name=\"netFlowAssumeFTP\" value=\"1\" checked>Yes\n"
-               "<input type=\"radio\" name=\"netFlowAssumeFTP\" value=\"0\">No\n");
-  } else {
-    sendString("<input type=\"radio\" name=\"netFlowAssumeFTP\" value=\"1\">Yes\n"
-               "<input type=\"radio\" name=\"netFlowAssumeFTP\" value=\"0\" checked>No\n");
-  }
-  sendString(" <input type=\"submit\" value=\"Set FTP Policy\"></p>\n");
-
-  sendString("</form>\n"
-             "<p><b>ntop</b> handles the FTP protocol differently when using NetFlow data "
-             "vs. the normal full protocol analysis. In the NetFlow data, <b>ntop</b> sees "
-             "only the address and port number and so can not monitor the ftp control channel "
-             "to detect which dynamically assigned ports are being used for ftp data.</p>\n"
-             "<p>This option tells <b>ntop</b> to assume that data from an unknown high "
-             "(&gt;1023) port to an unknown high port should be treated as FTP data.</p>\n"
-             "<p><b>Use this only if you understand your data flows.</b></p>\n"
-             "<p>For most situations this is not a good assumption - for example, "
-             "peer-to-peer traffic also is high port to high port. "
-             "However, in limited situations, this option enables you to obtain a more "
-             "correct view of your traffic.</p>\n"
-             "<p align=\"left\"><i>This option takes effect IMMEDIATELY</i></p>\n"
-	     "</td>\n</tr>\n");
-
-  /* *************************************** */
 
   sendString("<tr><th rowspan=\"3\" "DARK_BG">Flow Dump</th>\n");
 
@@ -3577,11 +3519,6 @@ static void handleNetflowHTTPrequest(char* _url) {
 	  if(deviceId > 0) {
 	    myGlobals.device[deviceId].netflowGlobals->netFlowAggregation = atoi(value);
 	    storePrefsValue(nfValue(deviceId, "netFlowAggregation", 1), value);
-	  }
-	} else if(strcmp(device, "netFlowAssumeFTP") == 0) {
-	  if(deviceId > 0) {
-	    myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = atoi(value);
-	    storePrefsValue(nfValue(deviceId, "netFlowAssumeFTP", 1), value);
 	  }
 	} else if(strcmp(device, "enableSessionHandling") == 0) {
 	  if(deviceId > 0) {

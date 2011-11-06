@@ -1509,9 +1509,6 @@
 
 #define CONST_IMG_NIC_CARD             "<img class=tooltip src=\"/card.gif\" border=\"0\" alt=\"Network Card\" title=\"Network Card\">"
 
-#define CONST_IMG_SCSI_INITIATOR       "<img class=tooltip src=\"/initiator.gif\" border=\"0\" alt=\"SCSI Initiator\" title=\"SCSI Initiator\">"
-#define CONST_IMG_SCSI_DISK            "<img class=tooltip src=\"/disk.gif\" border=\"0\" alt=\"SCSI Block Device (disk)\" title=\"SCSI Block Device (disk)\">"
-
 #define CONST_IMG_ARROW_UP             "<img class=tooltip src=\"/arrow_up.png\" border=\"0\" alt=\"Ascending order, click to reverse\" title=\"Ascending order, click to reverse\">"
 #define CONST_IMG_ARROW_DOWN           "<img class=tooltip src=\"/arrow_down.png\" border=\"0\" alt=\"Descending order, click to reverse\" title=\"Descending order, click to reverse\">"
 
@@ -1521,7 +1518,7 @@
 #define CONST_IMG_OS_SUNOS             "<img class=tooltip alt=\"OS: SunOS\" title=\"OS: SunOS\" align=\"middle\" src=\"/statsicons/os/sun.gif\">"
 #define CONST_IMG_OS_SOLARIS           "<img class=tooltip alt=\"OS: Solaris\" title=\"OS: Solaris\" align=\"middle\" src=\"/statsicons/os/sun.gif\">"
 #define CONST_IMG_OS_HP_JETDIRET       "<img class=tooltip alt=\"OS: HP/JetDirect\" title=\"OS: HP/JetDirect\" align=\"middle\" src=\"/statsicons/os/hp.gif\">"
-#define CONST_IMG_OS_MAC               "<img class=tooltip alt=\"OS: Apple Mac\" title=\"OS: Apple Mac\" align=\"middle\" src=\"/statsicons/os/mac.gif\">"
+#define CONST_IMG_OS_MAC               "<img class=tooltip alt=\"OS: Apple Mac\" title=\"OS: Apple Mac\" align=\"middle\" src=\"/statsicons/os/mac.jpg\">"
 #define CONST_IMG_OS_NOVELL            "<img class=tooltip alt=\"OS: Novell\" title=\"OS: Novell\" align=\"middle\" src=\"/statsicons/os/novell.gif\">"
 #define CONST_IMG_OS_BSD               "<img class=tooltip alt=\"OS: BSD Unix\" title=\"OS: BSD Unix\" align=\"middle\" src=\"/statsicons/os/bsd.gif\">"
 #define CONST_IMG_OS_UNIX              "<img class=tooltip alt=\"OS: BSD Unix\" title=\"OS: BSD Unix\" align=\"middle\" src=\"/statsicons/os/bsd.gif\">"
@@ -1681,20 +1678,6 @@
 #define BITFLAG_VOIP_USER                   7
 #define BITFLAG_DAAP_USER                   8
 
-
-#define FLAG_HTTP                           1
-/*
- * Some defines for the isP2P field of "struct ipSession"
- *     Over time, as one p2p system waxes or wanes, this list
- *     will change. It is suggested that you DO NOT reuse old #s
- */
-#define FLAG_VOIP                           5
-#define FLAG_FACEBOOK                       6
-#define FLAG_TWITTER                        7
-#define FLAG_YOUTUBE                        8
-#define FLAG_LINKEDIN                       9
-#define FLAG_SSH                           10
-#define FLAG_SKYPE                         11
 
 #define UNKNOWN_P2P_FILE                    "&lt;unknown&nbsp;file&gt;"
 

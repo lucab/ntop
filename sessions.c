@@ -248,7 +248,6 @@ void updateUsedPorts(HostTraffic *srcHost,
 
 /* ************************************ */
 
-#ifdef HAVE_LIBOPENDPI
 void freeOpenDPI(IPSession *sessionToPurge) {
   if(sessionToPurge->l7.flow != NULL) {
     if(sessionToPurge->l7.src != NULL) free(sessionToPurge->l7.src);
@@ -256,7 +255,6 @@ void freeOpenDPI(IPSession *sessionToPurge) {
     free(sessionToPurge->l7.flow);
   }
 }
-#endif
 
 /* ************************************ */
 
@@ -345,9 +343,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   myGlobals.numTerminatedSessions++;
   myGlobals.device[actualDeviceId].numTcpSessions--;
 
-#ifdef HAVE_LIBOPENDPI
   freeOpenDPI(sessionToPurge);
-#endif
 
   free(sessionToPurge);
 }
@@ -1330,22 +1326,6 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 	      /* if(server->hostResolvedName[0] == '\0') */ setHostName(server, host);
 	      theSession->virtualPeerName = strdup(host);
 	    }
-
-	  check_site:
-	    if(strstr(row, "facebook.com")) {
-	      setHostFlag(FLAG_HOST_TYPE_SVC_FACEBOOK_CLIENT, (sport == IP_TCP_PORT_HTTP) ? dstHost : srcHost);
-	      theSession->knownProtocolIdx = FLAG_FACEBOOK;
-	    } else if(strstr(row, "twitter.com")) {
-	      setHostFlag(FLAG_HOST_TYPE_SVC_TWITTER_CLIENT, (sport == IP_TCP_PORT_HTTP) ? dstHost : srcHost);
-	      theSession->knownProtocolIdx = FLAG_TWITTER;
-	    } else if(strstr(row, "youtube")) {
-	      theSession->knownProtocolIdx = FLAG_YOUTUBE;
-	    } else if(strstr(row, "linkedin")) {
-	      theSession->knownProtocolIdx = FLAG_LINKEDIN;
-	    }
-	  } else if((len > 8) && (strncmp(row, "Referer:", 8) == 0)) {
-	    /* traceEvent(CONST_TRACE_WARNING, "%s", row); */
-	    goto check_site;
 	  }
 
 	  row = strtok_r(NULL, "\n", &strtokState);
@@ -1367,9 +1347,6 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
       free(rcStr);
     }
   }
-
-  if(theSession->knownProtocolIdx == 0)
-    theSession->knownProtocolIdx = FLAG_HTTP;
 }
 
 /* *********************************** */
@@ -1878,7 +1855,6 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
     memset(theSession, 0, sizeof(IPSession));
     addedNewEntry = 1;
 
-#ifdef HAVE_LIBOPENDPI
   if(myGlobals.l7.l7handler != NULL) {
     static u_int8_t once = 0;
 
@@ -1910,7 +1886,6 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
       return(NULL);
     }
   }
-#endif
 
     if(tp && (tp->th_flags == TH_SYN)) {
       theSession->synTime.tv_sec = h->ts.tv_sec;
@@ -2472,22 +2447,20 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
     theSession->pktRcvd++;
   }
 
-#ifdef HAVE_LIBOPENDPI
-  if((ip_offset > 0) && (theSession->l7_major_proto == IPOQUE_PROTOCOL_UNKNOWN)) {
+  if((ip_offset > 0) && (theSession->l7.major_proto == IPOQUE_PROTOCOL_UNKNOWN)) {
     u_int64_t when = ((u_int64_t) h->ts.tv_sec) * 1000 /* detection_tick_resolution */ + h->ts.tv_usec / 1000 /* (1000000 / detection_tick_resolution) */;
-    char *prot_long_str[] = { IPOQUE_PROTOCOL_LONG_STRING };
-
-    theSession->l7_major_proto = ipoque_detection_process_packet(myGlobals.l7.l7handler,
+    theSession->l7.major_proto = ipoque_detection_process_packet(myGlobals.l7.l7handler,
 								 theSession->l7.flow, (u_int8_t *)&p[ip_offset],
 								 h->caplen-ip_offset, when,
-								 theSession->l7.src, theSession->l7.dst);
+								 (sport == theSession->sport) ? theSession->l7.src : theSession->l7.dst,
+								 (sport == theSession->sport) ? theSession->l7.dst : theSession->l7.src);
 
-    if(theSession->l7_major_proto != IPOQUE_PROTOCOL_UNKNOWN) {
-      theSession->guessed_protocol = prot_long_str[theSession->l7_major_proto];
-      /* traceEvent(CONST_TRACE_ERROR, "l7_major_proto=%s", theSession->guessed_protocol); */
+    if(theSession->l7.major_proto != IPOQUE_PROTOCOL_UNKNOWN) {
+      theSession->guessed_protocol = getProtoName(theSession->l7.major_proto);
+      /* traceEvent(CONST_TRACE_ERROR, "l7.major_proto=%s", theSession->guessed_protocol); */
       freeOpenDPI(theSession);
-      
-      switch(theSession->l7_major_proto) {
+
+      switch(theSession->l7.major_proto) {
       case IPOQUE_PROTOCOL_MAIL_SMTP:
 	setHostFlag(FLAG_HOST_TYPE_SVC_SMTP, srcHost);
 	break;
@@ -2509,16 +2482,19 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
       case IPOQUE_PROTOCOL_NETBIOS:
 	setHostFlag(FLAG_HOST_TYPE_SVC_WINS, srcHost);
 	break;
+      case NTOP_PROTOCOL_FACEBOOK:
+	setHostFlag(FLAG_HOST_TYPE_SVC_FACEBOOK_CLIENT, srcHost);
+	break;
+      case NTOP_PROTOCOL_TWITTER:
+	setHostFlag(FLAG_HOST_TYPE_SVC_TWITTER_CLIENT, srcHost);
+	break;
       }
     }
   }
 
-  if(theSession->l7_major_proto != IPOQUE_PROTOCOL_UNKNOWN) {
-    srcHost->protoTraffic[theSession->l7_major_proto].bytesSent += h->len;
-    dstHost->protoTraffic[theSession->l7_major_proto].bytesRcvd += h->len;
-  }
-
-#endif
+  myGlobals.device[actualDeviceId].l7.protoTraffic[theSession->l7.major_proto] += h->len;
+  srcHost->l7.traffic[theSession->l7.major_proto].bytesSent += h->len;
+  dstHost->l7.traffic[theSession->l7.major_proto].bytesRcvd += h->len;
 
   /* Immediately free the session */
   if(theSession->sessionState == FLAG_STATE_TIMEOUT) {
@@ -2551,6 +2527,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 			 u_int ip_offset, struct tcphdr *tp,
                          u_int packetDataLength, u_char* packetData,
                          int actualDeviceId, u_short *newSession,
+			 u_int16_t major_proto,
 			 u_char real_session /* vs. faked/netflow-session */) {
   IPSession *theSession = NULL;
   u_short sessionType = 0;
@@ -2611,100 +2588,80 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
     memset(tp, 0, sizeof(struct tcphdr));
   }
 
-  if((!multicastHost(dstHost))
-     && ((sessionType == IPPROTO_TCP)
-	 /* Simulate a TCP connection for the SIP protocol */
-	 || ((((sport == IP_UDP_PORT_SIP) && (dport == IP_UDP_PORT_SIP))
-	      || ((sport > 1024) && (dport > 1024)) /* Needed for SIP */))
-	 || ((((sport == IP_TCP_PORT_SCCP) && (dport > 1024))
-	      || ((sport > 1024) && (dport == IP_TCP_PORT_SCCP)) /* Needed for SCCP */))
-	 )) {
-    if((real_session)
-       || ((!tcp_flags(tp->th_flags, TH_SYN|TH_RST))
-	   && (!tcp_flags(tp->th_flags, TH_SYN|TH_FIN)))
+  theSession = handleTCPUDPSession(sessionType, h, p, fragmentedData, tcpWin, srcHost, sport,
+				   dstHost, dport, sent_length, rcvd_length,
+				   ip_offset, tp, packetDataLength,
+				   packetData, actualDeviceId, newSession);
+
+  if(p != NULL) {
+    if((sport == IP_L4_PORT_ECHO)       || (dport == IP_L4_PORT_ECHO)
+       || (sport == IP_L4_PORT_DISCARD) || (dport == IP_L4_PORT_DISCARD)
+       || (sport == IP_L4_PORT_DAYTIME) || (dport == IP_L4_PORT_DAYTIME)
+       || (sport == IP_L4_PORT_CHARGEN) || (dport == IP_L4_PORT_CHARGEN)
        ) {
-      /*
-	If this is a netflow session that is not self-contained (i.e. that started and
-	ended into the same flow. In this case it will not be added as it will be
-	immediately purged
-      */
-      theSession = handleTCPUDPSession(sessionType, h, p, fragmentedData, tcpWin, srcHost, sport,
-				       dstHost, dport, sent_length, rcvd_length,
-				       ip_offset, tp, packetDataLength,
-				       packetData, actualDeviceId, newSession);
-    } else {
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "Discarded session [%s%s%s%s%s]",
-		 (tp->th_flags & TH_SYN) ? " SYN" : "",
-		 (tp->th_flags & TH_ACK) ? " ACK" : "",
-		 (tp->th_flags & TH_FIN) ? " FIN" : "",
-		 (tp->th_flags & TH_RST) ? " RST" : "",
-		 (tp->th_flags & TH_PUSH) ? " PUSH" : "");
-#endif
-    }
-  }
+      char *fmt = "Detected traffic [%s:%d] -> [%s:%d] on "
+	"a diagnostic port (network mapping attempt?)";
 
-  if((sport == IP_L4_PORT_ECHO)       || (dport == IP_L4_PORT_ECHO)
-     || (sport == IP_L4_PORT_DISCARD) || (dport == IP_L4_PORT_DISCARD)
-     || (sport == IP_L4_PORT_DAYTIME) || (dport == IP_L4_PORT_DAYTIME)
-     || (sport == IP_L4_PORT_CHARGEN) || (dport == IP_L4_PORT_CHARGEN)
-     ) {
-    char *fmt = "Detected traffic [%s:%d] -> [%s:%d] on "
-      "a diagnostic port (network mapping attempt?)";
-
-    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-      traceEvent(CONST_TRACE_WARNING, fmt,
-		 srcHost->hostResolvedName, sport,
-		 dstHost->hostResolvedName, dport);
-      dumpSuspiciousPacket(actualDeviceId, h, p);
-    }
-
-    if((dport == IP_L4_PORT_ECHO)
-       || (dport == IP_L4_PORT_DISCARD)
-       || (dport == IP_L4_PORT_DAYTIME)
-       || (dport == IP_L4_PORT_CHARGEN)) {
-      allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-      if(sessionType == IPPROTO_UDP) {
-	incrementUsageCounter(&srcHost->secHostPkts->udpToDiagnosticPortSent, dstHost, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->udpToDiagnosticPortRcvd, srcHost, actualDeviceId);
-	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.udpToDiagnosticPort, 1);
-      } else {
-	incrementUsageCounter(&srcHost->secHostPkts->tcpToDiagnosticPortSent, dstHost, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->tcpToDiagnosticPortRcvd, srcHost, actualDeviceId);
-	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.tcpToDiagnosticPort, 1);
+      if(myGlobals.runningPref.enableSuspiciousPacketDump) {
+	traceEvent(CONST_TRACE_WARNING, fmt,
+		   srcHost->hostResolvedName, sport,
+		   dstHost->hostResolvedName, dport);
+	dumpSuspiciousPacket(actualDeviceId, h, p);
       }
-    } else /* sport == 7 */ {
-      allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-      if(sessionType == IPPROTO_UDP) {
-	incrementUsageCounter(&srcHost->secHostPkts->udpToDiagnosticPortSent, dstHost, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->udpToDiagnosticPortRcvd, srcHost, actualDeviceId);
-	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.udpToDiagnosticPort, 1);
-      } else {
-	incrementUsageCounter(&srcHost->secHostPkts->tcpToDiagnosticPortSent, dstHost, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->tcpToDiagnosticPortRcvd, srcHost, actualDeviceId);
-	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.tcpToDiagnosticPort, 1);
+
+      if((dport == IP_L4_PORT_ECHO)
+	 || (dport == IP_L4_PORT_DISCARD)
+	 || (dport == IP_L4_PORT_DAYTIME)
+	 || (dport == IP_L4_PORT_CHARGEN)) {
+	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	if(sessionType == IPPROTO_UDP) {
+	  incrementUsageCounter(&srcHost->secHostPkts->udpToDiagnosticPortSent, dstHost, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->udpToDiagnosticPortRcvd, srcHost, actualDeviceId);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.udpToDiagnosticPort, 1);
+	} else {
+	  incrementUsageCounter(&srcHost->secHostPkts->tcpToDiagnosticPortSent, dstHost, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->tcpToDiagnosticPortRcvd, srcHost, actualDeviceId);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.tcpToDiagnosticPort, 1);
+	}
+      } else /* sport == 7 */ {
+	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	if(sessionType == IPPROTO_UDP) {
+	  incrementUsageCounter(&srcHost->secHostPkts->udpToDiagnosticPortSent, dstHost, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->udpToDiagnosticPortRcvd, srcHost, actualDeviceId);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.udpToDiagnosticPort, 1);
+	} else {
+	  incrementUsageCounter(&srcHost->secHostPkts->tcpToDiagnosticPortSent, dstHost, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->tcpToDiagnosticPortRcvd, srcHost, actualDeviceId);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.tcpToDiagnosticPort, 1);
+	}
       }
     }
-  }
 
-  if(fragmentedData && (packetDataLength <= 128)) {
-    char *fmt = "Detected tiny fragment (%d bytes) "
-      "[%s:%d] -> [%s:%d] (network mapping attempt?)";
-    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-    incrementUsageCounter(&srcHost->secHostPkts->tinyFragmentSent, dstHost, actualDeviceId);
-    incrementUsageCounter(&dstHost->secHostPkts->tinyFragmentRcvd, srcHost, actualDeviceId);
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.tinyFragment, 1);
+    if(fragmentedData && (packetDataLength <= 128)) {
+      char *fmt = "Detected tiny fragment (%d bytes) "
+	"[%s:%d] -> [%s:%d] (network mapping attempt?)";
+      allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+      incrementUsageCounter(&srcHost->secHostPkts->tinyFragmentSent, dstHost, actualDeviceId);
+      incrementUsageCounter(&dstHost->secHostPkts->tinyFragmentRcvd, srcHost, actualDeviceId);
+      incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.tinyFragment, 1);
 
-    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-      traceEvent(CONST_TRACE_WARNING, fmt, packetDataLength,
-		 srcHost->hostResolvedName, sport,
-		 dstHost->hostResolvedName, dport);
-      dumpSuspiciousPacket(actualDeviceId, h, p);
+      if(myGlobals.runningPref.enableSuspiciousPacketDump) {
+	traceEvent(CONST_TRACE_WARNING, fmt, packetDataLength,
+		   srcHost->hostResolvedName, sport,
+		   dstHost->hostResolvedName, dport);
+	dumpSuspiciousPacket(actualDeviceId, h, p);
+      }
     }
   }
 
   return(theSession);
 }
 
+/* ************************************ */
 
+char *getProtoName(u_short protoId) {
+  char *prot_long_str[] = { IPOQUE_PROTOCOL_LONG_STRING };
+
+  return(prot_long_str[protoId]);
+}
 
