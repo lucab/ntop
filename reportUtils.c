@@ -2491,7 +2491,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
     if((totalSent > 0) || (totalRcvd > 0)) {
       Counter sent, rcvd;
-      int i, headerAlreadySent;
+      int headerAlreadySent;
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 		    "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Protocol Distribution</TH>",

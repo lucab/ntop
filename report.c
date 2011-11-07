@@ -1481,7 +1481,7 @@ void printHostsTraffic(int reportTypeReq,
 #endif
 
     for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
-      int i;
+      /* int i; */
       char webHostName[LEN_GENERAL_WORK_BUFFER];
 
       if(revertOrder)
@@ -4024,6 +4024,7 @@ void printBar(char *buf, int bufLen,
 
 /* ********************************** */
 
+#if 0
 static int cmpPortsFctn(const void *_a, const void *_b) {
   if((_a == NULL) || (_b == NULL))
     return(0);
@@ -4042,6 +4043,7 @@ static int cmpPortsFctn(const void *_a, const void *_b) {
       return(1);
   }
 }
+#endif
 
 /* ************************ */
 

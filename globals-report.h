@@ -284,6 +284,7 @@ extern void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostFragmentDistrib(HostTraffic *theHost, short dataSent);
 extern void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent);
 extern void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent);
+extern void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void pktSizeDistribPie(void);
 extern void fcPktSizeDistribPie(void);
 extern void pktTTLDistribPie(void);
