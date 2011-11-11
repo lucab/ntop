@@ -289,7 +289,8 @@ char* _formatTime(time_t *theTime, char* outStr, int outStrLen, char* file, int 
 
   locTime = localtime_r(theTime, &myLocTime);
   if(strftime(outStr, outStrLen, CONST_LOCALE_TIMESPEC, locTime) == 0)
-    traceEvent(CONST_TRACE_ERROR, "Buffer too short @ %s:%d for formatTime()", file, line);
+    traceEvent(CONST_TRACE_ERROR, "Buffer too short @ %s:%d for formatTime() [%s]",
+	       file, line, outStr);
 
   return(outStr);
 }

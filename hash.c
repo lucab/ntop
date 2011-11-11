@@ -400,6 +400,7 @@ int purgeIdleHosts(int actDevice) {
 
   accessMutex(&myGlobals.hostsHashLockMutex, "scanIdleLoop");
 
+  /* Step 1 - Mark hosts that will be purged */
   for(idx=0; idx<myGlobals.device[actDevice].hosts.actualHashSize; idx++) {
     if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN) break;
 
@@ -417,7 +418,7 @@ int purgeIdleHosts(int actDevice) {
 	  } else {
 	  /* Host selected for deletion */
 	  theFlaggedHosts[numHosts++] = el;
-	  el->magic = CONST_UNMAGIC_NUMBER;
+	  el->magic = CONST_UNMAGIC_NUMBER; /* This means that this host os about to be freed */
 	  remove_valid_ptr(el);
 	  next = el->next;
 
@@ -466,7 +467,12 @@ int purgeIdleHosts(int actDevice) {
 	     "%d [out of %d] hosts selected",
 	     actDevice, myGlobals.device[actDevice].name, numHosts, scannedHosts);
 
-  /* Now free the entries */
+  /* Step 2 - Remove all timedout sessions and all those
+     whose one of the peers has been marked in step 1 */
+  if(myGlobals.runningPref.enableSessionHandling)
+    scanTimedoutTCPSessions(actDevice); /* let's check timedout sessions too */
+
+  /* Step 3 - Now free the entries */
   for(idx=0; idx<numHosts; idx++) {
 #ifdef IDLE_PURGE_DEBUG
     traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Purging host %d [last seen=%d]... %s",
@@ -478,9 +484,6 @@ int purgeIdleHosts(int actDevice) {
   }
 
   free(theFlaggedHosts);
-
-  if(myGlobals.runningPref.enableSessionHandling)
-    scanTimedoutTCPSessions(actDevice); /* let's check timedout sessions too */
 
   gettimeofday(&hiresTimeEnd, NULL);
   hiresDeltaTime = timeval_subtract(hiresTimeEnd, hiresTimeStart);

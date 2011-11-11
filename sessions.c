@@ -360,7 +360,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 /* #define DEBUG */
 
 void scanTimedoutTCPSessions(int actualDeviceId) {
-  u_int _idx, freeSessionCount=0, purgeLimit;
+  u_int _idx, freeSessionCount=0;
   static u_int idx = 0;
 
   /* Patch below courtesy of "Kouprie, Robbert" <R.Kouprie@DTO.TUDelft.NL> */
@@ -374,15 +374,19 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	     actualDeviceId, myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
 
-  purgeLimit = myGlobals.device[actualDeviceId].numTcpSessions/2;
+  /*
+    NOTE
+
+    We need to scan all session and not just a part of them as we need to make
+    sure we have freed sessions whose peers were previously marked for deletion
+    in purgeIdleHosts(int actDevice);
+   */
 
   for(_idx=0; _idx<MAX_TOT_NUM_SESSIONS; _idx++) {
     IPSession *nextSession, *prevSession, *theSession;
     int mutex_idx;
 
     idx = (idx + 1) % MAX_TOT_NUM_SESSIONS;
-
-    if(freeSessionCount > purgeLimit) break;
 
     mutex_idx = idx % NUM_SESSION_MUTEXES;
     accessMutex(&myGlobals.tcpSessionsMutex[mutex_idx], "purgeIdleHosts");
@@ -402,8 +406,13 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
       nextSession = theSession->next;
       free_session = 0;
 
-      if(((theSession->sessionState == FLAG_STATE_TIMEOUT)
-	  && ((theSession->lastSeen+CONST_TWO_MSL_TIMEOUT) < myGlobals.actTime))
+      if(
+	 /* One of the session peers has been marked for deletion */
+	 (theSession->initiator->magic == CONST_UNMAGIC_NUMBER)
+	 || (theSession->remotePeer->magic == CONST_UNMAGIC_NUMBER)
+	 
+	 || ((theSession->sessionState == FLAG_STATE_TIMEOUT)
+	     && ((theSession->lastSeen+CONST_TWO_MSL_TIMEOUT) < myGlobals.actTime))
 	 || /* The branch below allows to flush sessions which have not been
 	       terminated properly (we've received just one FIN (not two). It might be
 	       that we've lost some packets (hopefully not). */
