@@ -790,7 +790,9 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     if(el->portsUsage != NULL)
       freePortsUsage(el);
 
-    if((el->l7.traffic = (ProtoTraffic*)calloc(myGlobals.l7.numSupportedProtocols, sizeof(ProtoTraffic))) == NULL) {
+    /* We need to do +1 as protocol id's are starting from 1 */
+    if((el->l7.traffic = (ProtoTraffic*)calloc(myGlobals.l7.numSupportedProtocols+1,
+					       sizeof(ProtoTraffic))) == NULL) {
       if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx]), locked_mutex = 0;
       return(NULL);
     }

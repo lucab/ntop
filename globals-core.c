@@ -119,7 +119,8 @@ static void allocateOtherHosts(void) {
   strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");
   myGlobals.otherHostEntry->portsUsage = NULL;
 
-  myGlobals.otherHostEntry->l7.traffic = (ProtoTraffic*)calloc(myGlobals.l7.numSupportedProtocols, sizeof(ProtoTraffic));  
+  myGlobals.otherHostEntry->l7.traffic = (ProtoTraffic*)calloc(myGlobals.l7.numSupportedProtocols+1, 
+							       sizeof(ProtoTraffic));  
   myGlobals.otherHostEntry->serialHostIndex = ++myGlobals.hostSerialCounter; /* Start from 1 (0 = UNKNOWN_SERIAL_INDEX) */
 }
 
@@ -417,7 +418,8 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
 
   myGlobals.broadcastEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
   memset(myGlobals.broadcastEntry, 0, sizeof(HostTraffic));
-  myGlobals.broadcastEntry->l7.traffic = (ProtoTraffic*)calloc(myGlobals.l7.numSupportedProtocols, sizeof(ProtoTraffic));
+  myGlobals.broadcastEntry->l7.traffic = (ProtoTraffic*)calloc(myGlobals.l7.numSupportedProtocols+1, 
+							       sizeof(ProtoTraffic));
   resetHostsVariables(myGlobals.broadcastEntry);
 
   /* Set address to FF:FF:FF:FF:FF:FF */
