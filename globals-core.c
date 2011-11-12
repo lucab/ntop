@@ -140,14 +140,15 @@ void extend8021Qmtu(void) {
  */
 void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_started[]) {
   int i, bufLen;
-  char *startedAs, *defaultPath;
+  char *startedAs, *defaultPath, *c;
 
   /*
    * Notice the program name
    */
-  myGlobals.program_name = strrchr(argv[0], CONST_PATH_SEP);
-  myGlobals.program_name =
-    (!myGlobals.program_name || !myGlobals.program_name[0]) ? (argv[0]) : (++myGlobals.program_name);
+  if((c = strrchr(argv[0], CONST_PATH_SEP)) == NULL)
+    myGlobals.program_name = argv[0];
+  else
+    myGlobals.program_name = &c[1];
 
   /*
    * save command line parameters

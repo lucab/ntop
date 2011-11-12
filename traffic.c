@@ -65,18 +65,18 @@ static void updateThptStats(time_t when,
   /* Copy value */
   memcpy(&myGlobals.device[deviceToUpdate].last60MinTopTalkers[0], lastMinTalkers, sizeof(TopTalkers));
 
-  if(!emptySerial(&lastHourTalkers[0].senders)) {
+  if(!emptySerial(&lastHourTalkers[0].senders[0].hostSerial)) {
     /* Shift */
     for(i=22; i>=0; i--)
       memcpy(&myGlobals.device[deviceToUpdate].last24HoursTopTalkers[i+1],
 	     &myGlobals.device[deviceToUpdate].last24HoursTopTalkers[i], sizeof(TopTalkers));
-
+    
     /* Copy value */
     memcpy(&myGlobals.device[deviceToUpdate].last24HoursTopTalkers[0], lastHourTalkers, sizeof(TopTalkers));
   }
 
   myGlobals.device[deviceToUpdate].numThptSamples++;
-
+  
   /* Dump thpt stats on disk */
   dumpTopTalkers(when, lastMinTalkers);
 
@@ -224,8 +224,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 
   totalTime = myGlobals.actTime-myGlobals.initialSniffTime;
 
-  if((timeHourDiff = myGlobals.actTime-myGlobals.
-      device[deviceToUpdate].lastHourThptUpdate) >= 60*60 /* 1 hour */) {
+  if((timeHourDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastHourThptUpdate) >= 3600 /* 1 hour */) {
     updateHourThpt = 1;
     myGlobals.device[deviceToUpdate].lastHourThptUpdate = myGlobals.actTime;
   }
@@ -236,37 +235,37 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
   */
 
   for(el = getFirstHost(deviceToUpdate); el != NULL; el = getNextHost(deviceToUpdate, el)) {
-    if(broadcastHost(el))
-      continue;
+    if(broadcastHost(el)) continue;
 
-    el->actualRcvdThpt       = (float)(el->bytesRcvd.value-el->lastBytesRcvd.value)/timeDiff;
-    if(el->peakRcvdThpt      < el->actualRcvdThpt) el->peakRcvdThpt = el->actualRcvdThpt;
-    el->actualSentThpt       = (float)(el->bytesSent.value-el->lastBytesSent.value)/timeDiff;
-    if(el->peakSentThpt      < el->actualSentThpt) el->peakSentThpt = el->actualSentThpt;
-    el->actualThpt          = (float)(el->bytesRcvd.value-el->lastBytesRcvd.value +
+    /* We just care of L3 only for the time being */
+    if(el->l2Host) continue;
+
+    el->actualRcvdThpt = (float)(el->bytesRcvd.value-el->lastBytesRcvd.value)/timeDiff;
+    if(el->peakRcvdThpt < el->actualRcvdThpt) el->peakRcvdThpt = el->actualRcvdThpt;
+    el->actualSentThpt = (float)(el->bytesSent.value-el->lastBytesSent.value)/timeDiff;
+    if(el->peakSentThpt < el->actualSentThpt) el->peakSentThpt = el->actualSentThpt;
+    el->actualThpt = (float)(el->bytesRcvd.value-el->lastBytesRcvd.value +
 				       el->bytesSent.value-el->lastBytesSent.value)/timeDiff;
-    if(el->peakThpt         < el->actualThpt) el->peakThpt = el->actualThpt;
-    el->lastBytesSent        = el->bytesSent;
-    el->lastBytesRcvd        = el->bytesRcvd;
+    if(el->peakThpt < el->actualThpt) el->peakThpt = el->actualThpt;
+    el->lastBytesSent = el->bytesSent, el->lastBytesRcvd = el->bytesRcvd;
 
     /* ******************************** */
 
     /* 1 Minute Throughput */
     if(updateMinThpt) {
-      el->averageRcvdThpt    = ((float)el->bytesRcvdSession.value)/totalTime;
-      el->averageSentThpt    = ((float)el->bytesSentSession.value)/totalTime;
+      el->averageRcvdThpt = ((float)el->bytesRcvdSession.value)/totalTime;
+      el->averageSentThpt = ((float)el->bytesSentSession.value)/totalTime;
 
       updateTopThpt(&lastMinTalkers, el->serialHostIndex, el->averageSentThpt, el->averageRcvdThpt);
 
       /* 1 Hour Throughput */
       if(updateHourThpt) {
-	el->lastHourRcvdThpt     = (float)(el->bytesRcvd.value-el->lastHourBytesRcvd.value)/timeHourDiff;
-	el->lastHourSentThpt     = (float)(el->bytesSent.value-el->lastHourBytesSent.value)/timeHourDiff;
+	el->lastHourRcvdThpt = (float)(el->bytesRcvd.value-el->lastHourBytesRcvd.value)/timeHourDiff;
+	el->lastHourSentThpt = (float)(el->bytesSent.value-el->lastHourBytesSent.value)/timeHourDiff;
 
 	el->lastHourBytesRcvd = el->bytesRcvd, el->lastHourBytesSent = el->bytesSent;
 
-	updateTopThpt(&lastHourTalkers, el->serialHostIndex,
-		      el->lastHourSentThpt, el->lastHourRcvdThpt);
+	updateTopThpt(&lastHourTalkers, el->serialHostIndex, el->lastHourSentThpt, el->lastHourRcvdThpt);
       }
     }
   }

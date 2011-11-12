@@ -1028,7 +1028,7 @@
 #define CONST_MODIFY_USERS                  "modifyUsers"
 #define CONST_MULTICAST_STATS_HTML          "multicastStats.html"
 #define CONST_LAST_HOUR_TOP_TALKERS_HTML    "lastHourTopTalkers.html"
-#define CONST_LAST_MONTH_TOP_TALKERS_HTML   "lastMonthTopTalkers.html"
+#define CONST_LAST_DAY_TOP_TALKERS_HTML     "lastDayTopTalkers.html"
 #define CONST_HISTORICAL_TALKERS_HTML       "historicalTalkers.html"
 #define CONST_NET_FLOWS_HTML                "NetFlows.html"
 #define CONST_ACTIVE_SESSIONS_HTML          "activeSessions.html"

@@ -1944,7 +1944,8 @@ void printTopTalkers(u_int8_t printHourTalkers) {
     talkers = myGlobals.device[myGlobals.actualReportDeviceId].last24HoursTopTalkers, numTalkers = 24, delta = 3600 - 1;
   }
 
-  if(emptySerial(&talkers[0].senders[0].hostSerial)) {
+  if(emptySerial(&talkers[0].senders[0].hostSerial)
+     && emptySerial(&talkers[numTalkers-1].senders[0].hostSerial)) {
     printNoDataYet();
     return;
   }

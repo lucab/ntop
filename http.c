@@ -597,7 +597,7 @@ static void ssiMenu_Head(void) {
 		  "          [null,'Activity','/" CONST_SORT_DATA_HOST_TRAFFIC_HTML "',null,null],\n"
 		  "	     [null,'Top Talkers',null,null,null,\n"
 		  "		       [null,'Last Hour', '/" CONST_LAST_HOUR_TOP_TALKERS_HTML "',null,null],\n"
-		  "		       [null,'Last Day',  '/" CONST_LAST_MONTH_TOP_TALKERS_HTML "',null,null],\n"
+		  "		       [null,'Last Day',  '/" CONST_LAST_DAY_TOP_TALKERS_HTML "',null,null],\n"
 		  "		       [null,'Historical','/" CONST_HISTORICAL_TALKERS_HTML "',null,null],\n"
 		  "          ],\n"
 
@@ -2800,7 +2800,7 @@ static int returnHTTPPage(char* pageName,
       } else if(strncasecmp(pageName, CONST_LAST_HOUR_TOP_TALKERS_HTML, strlen(CONST_LAST_HOUR_TOP_TALKERS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printTopTalkers(1);
-      } else if(strncasecmp(pageName, CONST_LAST_MONTH_TOP_TALKERS_HTML, strlen(CONST_LAST_MONTH_TOP_TALKERS_HTML)) == 0) {
+      } else if(strncasecmp(pageName, CONST_LAST_DAY_TOP_TALKERS_HTML, strlen(CONST_LAST_DAY_TOP_TALKERS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printTopTalkers(0);
       } else if(strncasecmp(pageName, CONST_HISTORICAL_TALKERS_HTML, strlen(CONST_HISTORICAL_TALKERS_HTML)) == 0) {
