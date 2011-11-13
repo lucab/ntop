@@ -138,6 +138,7 @@ extern void printPluginTrailer(char *left, char *middle);
 
 /* http.c */
 extern char* encodeString(char* in, char* out, u_int out_len);
+extern void sendJSLibraries(int graph_mode);
 extern void printHTMLtrailer(void);
 extern void returnHTTPpageBadCommunity(void);
 extern void returnHTTPredirect(char* destination);
@@ -200,7 +201,7 @@ extern void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el
 extern void printIpProtocolUsage(void);
 extern void printBar(char *buf, int bufLen, unsigned short percentageS, unsigned short percentageR,
                      unsigned short maxPercentage, unsigned short ratio);
-extern void printTopTalkers(u_int8_t printHourTalkers);
+extern void printTopTalkers(u_int8_t printHourTalkers, u_int8_t show_graph);
 extern void printProtoTraffic(int printGraph);
 extern void printProcessInfo(int processPid, int actualReportDeviceId);
 extern void printThptStats(int sortedColumn);

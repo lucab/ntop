@@ -2149,7 +2149,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
      if(totalSent > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		    "\n<iframe frameborder=0 SRC=\""CONST_HOST_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"?1\" width=400 height=250\"></iframe>\n</TD>",
+		    "\n<iframe frameborder=0 SRC=\""CONST_HOST_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"?1\" width=550 height=350\"></iframe>\n</TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -2159,7 +2159,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(totalRcvd > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"\" width=400 height=250></iframe>\n</TD>",
+		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"\" width=550 height=350></iframe>\n</TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -2178,7 +2178,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(totalSent > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_TOT_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"?1\" width=400 height=250></iframe>\n</TD>",
+		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_TOT_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"?1\" width=550 height=350></iframe>\n</TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -2188,7 +2188,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(totalRcvd > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_TOT_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"\" width=400 height=250></iframe>\n</TD>",
+		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_TOT_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"\" width=550 height=350></iframe>\n</TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -2515,7 +2515,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_TRAFFIC_DISTR_HTML"-%s%s"CHART_FORMAT"?1\""
-		      " width=400 height=250></iframe>\n</TD>",
+		      " width=550 height=350></iframe>\n</TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -2526,7 +2526,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_TRAFFIC_DISTR_HTML"-"
-		    "%s%s"CHART_FORMAT"\" width=400 height=250></iframe>\n</TD>",
+		      "%s%s"CHART_FORMAT"\" width=550 height=350></iframe>\n</TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -2570,7 +2570,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 			"<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 			"\n<iframe frameborder=0 SRC=\""CONST_HOST_IP_TRAFFIC_DISTR_HTML"-%s%s"CHART_FORMAT"?1\""
-			"  width=400 height=250></iframe>\n</TD>",
+			"  width=550 height=350></iframe>\n</TD>",
 			linkName, vlanStr);
 	  sendString(buf);
 	} else
@@ -2580,7 +2580,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 			"<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 			"\n<iframe frameborder=0 SRC=\""CONST_HOST_IP_TRAFFIC_DISTR_HTML"-"
-			"%s%s"CHART_FORMAT"\" width=400 height=250></iframe>\n</TD></TR>\n",
+			"%s%s"CHART_FORMAT"\" width=550 height=350></iframe>\n</TD></TR>\n",
 			linkName, vlanStr);
 	  sendString(buf);
 	} else

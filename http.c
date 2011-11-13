@@ -1197,6 +1197,30 @@ void _sendString(char *theString, int allowSSI) {
 
 /* ************************* */
 
+void sendJSLibraries(int graph_mode) {
+
+  if(graph_mode) {
+    /* JQuery */
+    sendString("<script type=\"text/javascript\" src=\"/jquery-1.7.min.js\"></script>\n");
+    /* Highcharts */
+    sendString("<script type=\"text/javascript\" src=\"/highcharts.js\"></script>\n");
+    sendString("<script type=\"text/javascript\" src=\"/exporting.js\"></script>\n");
+  } else {
+    sendString("<script type=\"text/javascript\" src=\"/reflection.js\"></script>\n");
+    sendString("<script TYPE=\"text/javascript\" src=\"/functions.js\"></script>\n");
+    // sendString("<script type=\"text/javascript\" src=\"/domLib.js\"></script>\n");
+    // sendString("<script type=\"text/javascript\" src=\"/domTT.js\"></script>\n");
+    // sendString("<script type=\"text/javascript\">var domTT_styleClass = 'niceTitle';</script>\n");
+    /* JQuery */
+    sendString("<script type=\"text/javascript\" src=\"/jquery-1.7.min.js\"></script>\n");
+    sendString("<link rel=\"stylesheet\" href=\"jquery-ui-1.8.16.custom.css\">\n");
+    /* JQuery UI */
+    sendString("<script type=\"text/javascript\" src=\"/jquery-ui-1.8.16.custom.min.js\"></script>\n");    
+  }
+}
+
+/* ************************* */
+
 void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   char buf[LEN_GENERAL_WORK_BUFFER], *theTitle;
 
@@ -1229,18 +1253,7 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
 
   /* sendString("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"ntop\" href=\"/rss.xml\">"); */
 
-  sendString("<script type=\"text/javascript\" src=\"/reflection.js\"></script>\n");
-  sendString("<script type=\"text/javascript\" src=\"/MochiKit/MochiKit.js\"></script>\n");
-  sendString("<script type=\"text/javascript\" src=\"/PlotKit/excanvas.js\"></script>\n");
-  sendString("<script type=\"text/javascript\" src=\"/PlotKit/Base.js\"></script>\n");
-  sendString("<script type=\"text/javascript\" src=\"/PlotKit/Layout.js\"></script>\n");
-  sendString("<script type=\"text/javascript\" src=\"/PlotKit/Canvas.js\"></script>\n");
-  sendString("<script type=\"text/javascript\" src=\"/PlotKit/SweetCanvas.js\"></script>\n");
-
-  sendString("<SCRIPT SRC=\"/functions.js\" TYPE=\"text/javascript\" LANGUAGE=\"javascript\"></SCRIPT>\n");
-  sendString("<script type=\"text/javascript\" language=\"javascript\" src=\"/domLib.js\"></script>\n");
-  sendString("<script type=\"text/javascript\" language=\"javascript\" src=\"/domTT.js\"></script>\n");
-  sendString("<script type=\"text/javascript\" language=\"javascript\">var domTT_styleClass = 'niceTitle';</script>\n");
+  sendJSLibraries(0);
 
   /* ******************************************************* */
   /*there should be no need to include the style again*/
@@ -2134,7 +2147,7 @@ static int returnHTTPPage(char* pageName,
 			  int isPostMethod) {
   char *questionMark, *pageURI, *token;
   int sortedColumn = 0, printTrailer=1, idx, networkMode = 0 /* DOMAIN_VIEW */;
-  int errorCode=0, pageNum = 0, found=0, portNr=0;
+  int errorCode = 0, pageNum = 0, found = 0, portNr = 0, mode = 0;
   struct stat statbuf;
   FILE *fd = NULL;
   char tmpStr[512], *domainNameParm = NULL, *communityNameParm = NULL, *minus, *host = NULL;
@@ -2212,6 +2225,8 @@ static int returnHTTPPage(char* pageName,
 	showL2Only = atoi(&tkn[7]);
       } else if(strncmp(tkn, "if=", 3) == 0) {
 	ifId = atoi(&tkn[3]);
+      } else if(strncmp(tkn, "mode=", 5) == 0) {
+	mode = atoi(&tkn[5]);
       } else if(strncmp(tkn, "showH=", 6) == 0) {
 	showHostsMode = atoi(&tkn[6]);
 	if((showHostsMode < showAllHosts) || (showHostsMode > showOnlyRemoteHosts))
@@ -2799,10 +2814,12 @@ static int returnHTTPPage(char* pageName,
 			  showHostsMode, showLocalityMode, vlanId);
       } else if(strncasecmp(pageName, CONST_LAST_HOUR_TOP_TALKERS_HTML, strlen(CONST_LAST_HOUR_TOP_TALKERS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printTopTalkers(1);
+	printTopTalkers(1, mode);
+	if(mode == 1) printTrailer=0;
       } else if(strncasecmp(pageName, CONST_LAST_DAY_TOP_TALKERS_HTML, strlen(CONST_LAST_DAY_TOP_TALKERS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printTopTalkers(0);
+	printTopTalkers(0, mode);
+	if(mode == 1) printTrailer=0;
       } else if(strncasecmp(pageName, CONST_HISTORICAL_TALKERS_HTML, strlen(CONST_HISTORICAL_TALKERS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	/* TODO */

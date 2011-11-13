@@ -540,6 +540,14 @@ typedef struct hostTalker {
 
 /* *********************** */
 
+typedef struct hostTalkerSeries {
+  HostSerialIndex hostSerial;
+  float total_bps /* bytes/sec */;
+  float bps_series[60 /* 1 x minute */];
+} HostTalkerSeries;
+
+/* *********************** */
+
 typedef struct topTalkers {
   time_t when;
   HostTalker senders[MAX_NUM_TOP_TALKERS], receivers[MAX_NUM_TOP_TALKERS];

@@ -37,123 +37,92 @@ struct bar_elements {
 
 /* ******************************************************************* */
 
-static void send_graph_header(u_char is_pie) {
+static void send_graph_header(char *title) {
   sendString("<HTML>\n"
 	     "<HEAD>\n"
 	     "<META HTTP-EQUIV=REFRESH CONTENT=30>\n"
 	     "<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n"
-	     "<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n"
-	     "<script type=\"text/javascript\" src=\"/MochiKit/MochiKit.js\"></script>\n"
-	     "<script type=\"text/javascript\" src=\"/PlotKit/excanvas.js\"></script>\n"
-	     "<script type=\"text/javascript\" src=\"/PlotKit/Base.js\"></script>\n"
-	     "<script type=\"text/javascript\" src=\"/PlotKit/Layout.js\"></script>\n"
-	     "<script type=\"text/javascript\" src=\"/PlotKit/Canvas.js\"></script>\n"
-	     "<script type=\"text/javascript\" src=\"/PlotKit/SweetCanvas.js\"></script>\n"
-	     "<script type=\"text/javascript\" src=\"/PlotKit/EasyPlot.js\"></script>\n"
-	     "<style type=\"text/css\">\n"
-	     "body {\n"
-	     "font-family: \"Lucida Grande\", \"Tahoma\", \"Verdana\", \"Sans\", \"sans-serif\";\n"
-	     "font-size: 12px;\n"
-	     "}\n"
-	     "</style>\n"
-	     "<script type=\"text/javascript\">\n"
-	     "//<![CDATA[\n"
-	     "function drawchart() {\n"
-	     "   var hasCanvas = CanvasRenderer.isSupported();\n"
-	     "\n"
-	     "   var opts = {\n"
-	     );
-  
-  if(is_pie) sendString("   \"pieRadius\": 0.42,	  \n");
-  
-  sendString("    \"colorScheme\": PlotKit.Base.palette(PlotKit.Base.baseColors()[0]),\n");
-  if(is_pie) sendString("   \"backgroundColor\": PlotKit.Base.baseColors()[0].lighterColorWithLevel(1),\n" );
-  sendString("   \"xTicks\": [");
-}
- 
-/**********************************************************/
+	     "<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n");
 
-static void send_graph_middle(void) {
-sendString("]\n"
-	     "   };\n"
-	     "\n"
-	     "   var data1 = [");
+  sendJSLibraries(1);
 
-}
-
-/**********************************************************/
-
-static void send_graph_footer(char *the_type, u_int width, u_int height) {
-  char buf[256];
-
-  sendString("];\n"
-	     "   \n"
-	     "   if (hasCanvas) {\n"
-	     "       var pie = new EasyPlot(\"");
-
-sendString(the_type);
-sendString("\", opts, $(\'canvas");
-sendString(the_type);
-sendString("\'), [data1]);\n"
-	     "   }\n"
-	     "}\n"
-	     "\n"
-	     "addLoadEvent(drawchart);\n"
-	     "//]]>\n"
-	     "</script>\n"
-	     "</head>\n"
-	     "<body>\n"
-	     "<div id=\"canvas");
-sendString(the_type);
-
-
- snprintf(buf, sizeof(buf), 
-	  "\" width=\"%d\" height=\"%d\"></div>\n"
-	  "</body>\n"
-	  "</html>\n", 
-	  width, height);
-
- sendString(buf);
+  sendString("<script type=\"text/javascript\">\n");
+  sendString("     var chart;\n");
+  sendString("  $(document).ready(function() {\n");
+  sendString("      chart = new Highcharts.Chart({\n");
+  sendString("	chart: {\n");
+  sendString("	  renderTo: 'container',\n");
+  sendString("	      plotBackgroundColor: null,\n");
+  sendString("	      plotBorderWidth: null,\n");
+  sendString("	      plotShadow: false\n");
+  sendString("	      },\n");
+  sendString("	    title: {\n");
+  sendString("	  text: '");
+  sendString(title);
+  sendString("'\n");
+  sendString("	      },\n");
+  sendString("	    tooltip: {\n");
+  sendString("	  formatter: function() {\n");
+  sendString("	      return '<b>'+ this.point.name +'</b>: '+ this.percentage +' %';\n");
+  sendString("	    }\n");
+  sendString("	  },\n");
+  sendString("	    plotOptions: {\n");
+  sendString("	  pie: {\n");
+  sendString("	    allowPointSelect: true,\n");
+  sendString("		cursor: 'pointer',\n");
+  sendString("		dataLabels: {\n");
+  sendString("	            enabled: true,\n");
+  sendString("	        },\n");
+  sendString("		showInLegend: true,\n");
+  sendString("	      }\n");
+  sendString("	  },\n");
+  sendString("	    series: [{\n");
+  sendString("	    type: 'pie',\n");
+  sendString("		name: '");
+  sendString(title);
+  sendString("',\n");
+  sendString("		data: [\n");  
 }
 
 /**********************************************************/
 
-static void build_chart(u_char is_pie, char *the_type, int num, float *p, 
-			char **lbl, u_int width, u_int height) {
-  int i, num_printed;
+static void send_graph_footer(void) {
+  sendString("		       ]\n");
+  sendString("		}]\n");
+  sendString("	    });\n");
+  sendString("    });\n");
+  sendString("  </script>\n");
+
+
+  sendString("<div id=\"container\" style=\"width: 500px; height: 320px; margin: 0 auto\"></div>\n");
+}
+
+/**********************************************************/
+
+static void build_pie(char *title,
+		      int num, float *p, char **lbl) {
+  int i;
   char buf[64];
+  float tot = 0;
 
-  send_graph_header(is_pie);
+  if(num == 0) return;
 
-  for(i=0, num_printed=0; i<num; i++) {
+  send_graph_header(title);
+
+  for(i=0; i<num; i++) {
     if(p[i] > 0) {
-      snprintf(buf, sizeof(buf), "%c\n\t{v:%d, label:\"%s\"}", (num_printed == 0) ? ' ' : ',', i, lbl[i]);
+      snprintf(buf, sizeof(buf), "\t\t\t['%s',   %.1f],\n",
+	       lbl[i],
+	       p[i]
+	       //(i == (num-1)) ? (100-tot) : p[i]
+	       );
+      tot += p[i];
       sendString(buf);
-      num_printed++;
     }
   }
 
-  send_graph_middle();
-
-  for(i=0, num_printed=0; i<num; i++) {
-    if(p[i] > 0) {
-      snprintf(buf, sizeof(buf), "%c [%d, %.1f]", (num_printed == 0) ? ' ' : ',', i, p[i]);
-      sendString(buf);
-      num_printed++;
-    }
-  }
-
-  if((num_printed == 1) && (p[0] == 100)) {
-	  /* Workaround for an Internet Explorer bug */
-      sendString(", [1, 0.01]");
-  }
-
-  send_graph_footer(the_type, width, height);
+  send_graph_footer();
 }
-
-#define build_pie(a, b, c)  build_chart(1, "pie", a, b, c, 350, 200)
-#define build_line(a, b, c) build_chart(0, "line", a, b, c, 350, 200)
-#define build_bar(a, b, c)  build_chart(0, "bar", a, b, c, 600, 200)
 
 /* ******************************************************************* */
 
@@ -171,7 +140,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
       theHost->udpSentLoc.value+theHost->udpSentRem.value+
       theHost->icmpSent.value+theHost->ipv6BytesSent.value+
       theHost->greSent.value+theHost->ipsecSent.value;
-    
+
     if(theHost->nonIPTraffic != NULL)
       totTraffic.value += theHost->nonIPTraffic->stpSent.value+
 	theHost->nonIPTraffic->dlcSent.value+
@@ -181,7 +150,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
     idx = 0;
     while(protoList != NULL) {
-      if(theHost->ipProtosList[idx] != NULL) 
+      if(theHost->ipProtosList[idx] != NULL)
 	totTraffic.value += theHost->ipProtosList[idx]->sent.value;
       idx++, protoList = protoList->next;
     }
@@ -197,10 +166,10 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	+theHost->nonIPTraffic->arp_rarpRcvd.value
 	+theHost->nonIPTraffic->netbiosRcvd.value
 	+theHost->nonIPTraffic->otherRcvd.value;
-    
+
     idx = 0;
     while(protoList != NULL) {
-      if(theHost->ipProtosList[idx] != NULL) 
+      if(theHost->ipProtosList[idx] != NULL)
 	totTraffic.value += theHost->ipProtosList[idx]->rcvd.value;
       idx++, protoList = protoList->next;
     }
@@ -281,7 +250,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
       if(theHost->icmpRcvd.value > 0) {
 	p[num] = (float)((100*theHost->icmpRcvd.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "ICMP";     
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "ICMP";
       }
 
       if(theHost->ipv6BytesRcvd.value > 0) {
@@ -293,12 +262,12 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	p[num] = (float)((100*theHost->greRcvd.value)/totTraffic.value);
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "GRE";
       }
-      
+
       if(theHost->ipsecRcvd.value > 0) {
 	p[num] = (float)((100*theHost->ipsecRcvd.value)/totTraffic.value);
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPSEC";
       }
-      
+
       if(theHost->nonIPTraffic != NULL) {
 	if(theHost->nonIPTraffic->stpRcvd.value > 0) {
 	  p[num] = (float)((100*theHost->nonIPTraffic->stpRcvd.value)/totTraffic.value);
@@ -353,7 +322,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
     if(num == 1) p[0] = 100; /* just to be safe */
 
-    build_pie(num, p, lbl);
+    build_pie("Traffic Distribution", num, p, lbl);
   }
 }
 
@@ -410,7 +379,8 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     }
 
     if(num == 1) p[0] = 100; /* just to be safe */
-    build_pie(num, p, lbl);
+
+    build_pie("Fragment Distribution", num, p, lbl);
   }
 }
 
@@ -517,9 +487,9 @@ void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
     traceEvent(CONST_TRACE_WARNING, "Graph failure (2)");
     return; /* TODO: this has to be handled better */
   }
-  
+
   if(num == 1) p[0] = 100; /* just to be safe */
-  build_pie(num, p, lbl);
+  build_pie("Time Traffic Distribution", num, p, lbl);
 }
 
 /* ************************ */
@@ -554,7 +524,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     }
 
     if(num == 1) p[0] = 100; /* just to be safe */
-    build_pie(num, p, lbl);
+    build_pie("Fragmented Traffic", num, p, lbl);
   }
 }
 
@@ -580,12 +550,12 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
       p[num] = (float)((100*val)/traffic);
       lbl[num++] = prot_long_str[i];
     }
-    
-    if(num >= MAX_NUM_PROTOS) break; /* Too much stuff */    
+
+    if(num >= MAX_NUM_PROTOS) break; /* Too much stuff */
   }
 
   if(num == 1) p[0] = 100; /* just to be safe */
-  build_pie(num, p, lbl);
+  build_pie("Application Traffic", num, p, lbl);
 }
 
 /* ********************************** */
@@ -598,72 +568,72 @@ void pktSizeDistribPie(void) {
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "<= 64";
+    lbl[num++] = "&lt;= 64";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "<= 128";
+    lbl[num++] = "&lt;= 128";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "<= 256";
+    lbl[num++] = "&lt;= 256";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "<= 512";
+    lbl[num++] = "&lt;= 512";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "<= 1024";
+    lbl[num++] = "&lt;= 1024";
   };
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "<= 1518";
+    lbl[num++] = "&lt;= 1518";
   };
 
 #ifdef MAKE_WITH_JUMBO_FRAMES
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo2500.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo2500.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "<= 2500";
+    lbl[num++] = "&lt;= 2500";
   };
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo6500.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo6500.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "<= 6500";
+    lbl[num++] = "&lt;= 6500";
   };
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo9000.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo9000.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "<= 9000";
+    lbl[num++] = "&lt;= 9000";
   };
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above9000.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above9000.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "> 9000";
+    lbl[num++] = "&gt; 9000";
   };
 #else
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value;
-    lbl[num++] = "> 1518";
+    lbl[num++] = "&gt; 1518";
   };
 #endif
 
 
   if(num == 1) p[0] = 100; /* just to be safe */
-  
-  build_pie(num, p, lbl);
+
+  build_pie("Packet Size Distribution", num, p, lbl);
 }
 
 /* ********************************** */
@@ -722,7 +692,7 @@ void pktTTLDistribPie(void) {
   };
 
   if(num == 1) p[0] = 100; /* just to be safe */
-  build_pie(num, p, lbl);
+  build_pie("TTL Distribution", num, p, lbl);
 }
 
 /* ************************ */
@@ -752,7 +722,7 @@ void ipProtoDistribPie(void) {
 
   if(num == 1) p[0] = 100; /* just to be safe */
 
-  build_pie(num, p, lbl);
+  build_pie("IP Distribution", num, p, lbl);
 }
 
 /* ************************ */
@@ -784,14 +754,14 @@ void interfaceTrafficPie(void) {
     }
   }
 
-  if(myDevices == 1) 
+  if(myDevices == 1)
     p[0] = 100; /* just to be safe */
   else if(myDevices == 0) {
     traceEvent(CONST_TRACE_WARNING, "interfaceTrafficPie: no interfaces to draw");
     return;
   }
 
-  build_pie(myDevices, p, lbl);
+  build_pie("Devices Distribution", myDevices, p, lbl);
 }
 
 /* ************************ */
@@ -828,7 +798,7 @@ void pktCastDistribPie(void) {
     lbl[num++] = "Multicast";
   };
 
-  build_pie(num, p, lbl);
+  build_pie("Packets Distribution", num, p, lbl);
 }
 
 /* ************************ */
@@ -850,7 +820,7 @@ void drawTrafficPie(void) {
     num++;
 
   if(num == 1) p[0] = 100; /* just to be safe */
-  build_pie(num, p, lbl);
+  build_pie("IP vs non IP", num, p, lbl);
 }
 
 /* ************************ */
@@ -908,7 +878,7 @@ void drawGlobalProtoDistribution(void) {
     for(i=0; i<idx; i++) p[i]    = (p[i]*100)/the_max;
   }
 
-  build_bar(idx, p, lbl);
+  build_pie("Protocol Distribution", idx, p, lbl);
 }
 
 /* ************************ */
@@ -949,7 +919,7 @@ void drawGlobalIpProtoDistribution(void) {
 
   for(i=0; i<idx; i++) p[i] = (p[i] * 100)/total;
 
-  build_pie(idx, p, lbl);
+  build_pie("IP Distribution", idx, p, lbl);
 }
 
 /* ******************************** */
@@ -993,10 +963,151 @@ int drawHostsDistanceGraph(int checkOnly) {
     graphData[0]++;
   }
 
-  build_pie(30, graphData, lbls);
+  build_pie("Hosts Distance", 30, graphData, lbls);
 
   return(numPoints);
 }
 
 /* ************************ */
 
+int buildTalkersGraph(char **labels, HostTalkerSeries *talkers,
+		      int num_talkers, int num_datapoints) {
+  int i, j;
+
+  sendString("<HTML>\n"
+	     "<HEAD>\n"
+	     "<META HTTP-EQUIV=REFRESH CONTENT=120>\n"
+	     "<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n"
+	     "<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n");
+
+  sendJSLibraries(1);
+
+  sendString("<script type=\"text/javascript\">\n");
+  sendString("    var chart;\n");
+  sendString("  $(document).ready(function() {\n");
+  sendString("      chart = new Highcharts.Chart({\n");
+  sendString("	chart: {\n");
+  sendString("	  renderTo: 'container',\n");
+  sendString("	      defaultSeriesType: 'column'\n");
+  sendString("	      },\n");
+  sendString("	    title: {\n");
+  sendString("	  text: 'Top Host Talkers'\n");
+  sendString("	      },\n");
+  sendString("	    xAxis: {\n");
+  sendString("	  categories: [\n");
+
+  for(i=0; i<num_datapoints; i++) {
+    char buf[32];
+
+    snprintf(buf, sizeof(buf), "'%u.'", i+1);
+    if(i > 0) sendString(",");
+    sendString(buf);
+  }
+
+  sendString("]\n");
+  sendString("	      },\n");
+  sendString("	    yAxis: {\n");
+  sendString("	  min: 0,\n");
+  sendString("	      title: {\n");
+  sendString("	    text: 'Host Traffic %'\n");
+  sendString("		},\n");
+  sendString("	      stackLabels: {\n");
+  sendString("	    enabled: true,\n");
+  sendString("		style: {\n");
+  sendString("	      fontWeight: 'bold',\n");
+  sendString("		  color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'\n");
+  sendString("		  }\n");
+  sendString("	    }\n");
+  sendString("	  },\n");
+
+#if 0
+  sendString("	    legend: {\n");
+  sendString("	  align: 'right',\n");
+  sendString("	      x: -100,\n");
+  sendString("	      verticalAlign: 'top',\n");
+  sendString("	      y: 20,\n");
+  sendString("	      floating: true,\n");
+  sendString("	      backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColorSolid) || 'white',\n");
+  sendString("	      borderColor: '#CCC',\n");
+  sendString("	      borderWidth: 1,\n");
+  sendString("	      shadow: false\n");
+  sendString("	      },\n");
+#endif
+
+  sendString("	    tooltip: {\n");
+  sendString("	  formatter: function() {\n");
+#if 0
+  sendString("	      return '<b>'+ this.x +'</b><br/>'+\n");
+  sendString("		 this.series.name +': '+ this.y +'<br/>'+\n");
+  sendString("		'Total: '+ this.point.stackTotal;\n");
+#else
+  sendString("        return ''+ this.series.name +': '+ Math.round(this.percentage) +'%';\n");
+#endif
+  sendString("	    }\n");
+  sendString("	  },\n");
+  sendString("	    plotOptions: {\n");
+  sendString("	  column: {\n");
+  sendString("	    stacking: 'percent',\n");
+  sendString("		dataLabels: {\n");
+  sendString("	      enabled: false,\n");
+  sendString("		  color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'white'\n");
+  sendString("		  }\n");
+  sendString("	    }\n");
+  sendString("	  },\n");
+  sendString("	    series: [\n");
+
+  for(i=0; i<num_talkers; i++) {
+    HostTraffic *el, tmpEl;
+    char buf[LEN_GENERAL_WORK_BUFFER], *c;
+
+    el = quickHostLink(talkers[i].hostSerial, myGlobals.actualReportDeviceId, &tmpEl);
+    
+    if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE)
+       || (el->hostResolvedName[0] == '\0') /* Safety check */
+       ) {
+      /* Let's search name in cache */
+      if(getHostNameFromCache(&el->hostIpAddress, el->hostResolvedName, sizeof(el->hostResolvedName)) != NULL) {
+	el->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_NAME;
+      }
+    }
+
+    c = (el->hostResolvedName[0] != '\0') ? el->hostResolvedName : el->hostNumIpAddress;
+    
+    if(el->hostResolvedName[0] != '\0') {
+      c = el->hostResolvedName, j = 0;
+
+      while(c[j] != '\0') {
+	if(c[j] == '.') {
+	  c[j] = '\0';
+	  break;
+	}
+	
+	j++;
+      }
+    } else
+      c = el->hostNumIpAddress;
+    
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "\t\t{\n\t\tname: '%s',\n", c);
+		  
+    sendString(buf);
+
+    sendString("\t\t\tdata: [\n");
+    for(j=0; j<num_datapoints; j++) {
+
+      if(j > 0) sendString(", ");
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.0f", talkers[i].bps_series[j]);
+      sendString(buf);
+    }
+
+    sendString("]\n\t\t},\n");
+  }
+
+  sendString("		       ]\n");
+  sendString("	    });\n");
+  sendString("    });\n");
+  sendString("  </script>\n");
+
+  sendString("<div id=\"container\" style=\"width: 100%; height: 100%; margin: 0 auto\"></div>\n");
+}
+
+/* ************************ */
