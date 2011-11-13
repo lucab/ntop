@@ -445,7 +445,7 @@ else
     svn co $OPENDPI_URL
 
     echo "10. Compiling OpenDPI-ntop..."
-    cd opendpi-ntop; ./configure; make; cd ..
+    cd opendpi-ntop; ./configure --with-pic; make; cd ..
 fi
 
 

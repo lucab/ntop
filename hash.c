@@ -781,6 +781,10 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     memset(el, 0, sizeof(HostTraffic));
     el->firstSeen = myGlobals.actTime;
 
+    /*
+      NOTE: resetHostsVariables allocates some memory thus
+      before re-allcoating is, make sure it's necessary
+    */
     resetHostsVariables(el);
     el->vlanId = vlanId;
 
@@ -791,18 +795,23 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
       freePortsUsage(el);
 
     /* We need to do +1 as protocol id's are starting from 1 */
-    if((el->l7.traffic = (ProtoTraffic*)calloc(myGlobals.l7.numSupportedProtocols+1,
-					       sizeof(ProtoTraffic))) == NULL) {
-      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx]), locked_mutex = 0;
-      return(NULL);
+    if(el->l7.traffic == NULL) {
+      if((el->l7.traffic = (ProtoTraffic*)calloc(myGlobals.l7.numSupportedProtocols+1,
+						 sizeof(ProtoTraffic))) == NULL) {
+	if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx]), locked_mutex = 0;
+	return(NULL);
+      }
     }
 
-    len = (size_t)(myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo**));
-    if((el->ipProtosList = (ShortProtoTrafficInfo**)malloc(len)) == NULL) {
-      if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx]), locked_mutex = 0;
-      return(NULL);
+    if(el->ipProtosList == NULL) {
+      len = (size_t)(myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo**));
+
+      if((el->ipProtosList = (ShortProtoTrafficInfo**)malloc(len)) == NULL) {
+	if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx]), locked_mutex = 0;
+	return(NULL);
+      }
+      memset(el->ipProtosList, 0, len);
     }
-    memset(el->ipProtosList, 0, len);
 
     /*
     len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**);
@@ -814,8 +823,6 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     */
 
     el->magic = CONST_MAGIC_NUMBER, el->hostTrafficBucket = idx; /* Set the bucket index */
-    el->sent_to_matrix   = CM_Init(16 /* width */, 16 /* depth */, myGlobals.actTime /* random value */);
-    el->recv_from_matrix = CM_Init(16 /* width */, 16 /* depth */,  myGlobals.actTime+1 /* random value */);
 
     /* traceEvent(CONST_TRACE_INFO, "new entry added at bucket %d", idx); */
 

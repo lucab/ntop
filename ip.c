@@ -387,8 +387,7 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
   TrafficCounter ctr;
   ProtocolsList *protoList;
   u_short newSession = 0;
-  IPSession *theSession = NULL;
-  u_short isPassiveSess = 0, nonFullyRemoteSession = 1, isVoipSess = 0;
+  u_short nonFullyRemoteSession = 1;
 
   /* Need to copy this over in case bp isn't properly aligned.
    * This occurs on SunOS 4.x at least.
@@ -730,7 +729,7 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
       }
 
       if(srcHost->fingerprint == NULL) {
-	char fingerprint[64];
+	char fingerprint[64] = { 0 } ;
 	int WIN=0, MSS=-1, WS=-1, S=0, N=0, D=0, T=0;
 	int ttl;
 	char WSS[3] = { 0 }, _MSS[5] = { 0 };
@@ -752,7 +751,7 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	      u_short num_loops = 0;
 
 	      while(opt_start < opt_end) {
-		switch(*opt_start) {
+		switch(opt_start[0]) {
 		case TCPOPT_EOL:        /* end option: exit */
 		  opt_start = opt_end;
 		  break;
@@ -856,25 +855,19 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 
 	if(nonFullyRemoteSession) {
 	  if(ip6)
-	    theSession = handleSession(h, p, fragmented, tp.th_win,
-				       srcHost, sport, dstHost,
-				       dport, ntohs(ip6->ip6_plen), 0, 
-				       ip_offset, &tp, tcpDataLength,
-				       theData, actualDeviceId, &newSession, 
-				       IPOQUE_PROTOCOL_UNKNOWN, 1);
+	    handleSession(h, p, fragmented, tp.th_win,
+			  srcHost, sport, dstHost,
+			  dport, ntohs(ip6->ip6_plen), 0, 
+			  ip_offset, &tp, tcpDataLength,
+			  theData, actualDeviceId, &newSession, 
+			  IPOQUE_PROTOCOL_UNKNOWN, 1);
 	  else
-	    theSession = handleSession(h, p, (off & 0x3fff), tp.th_win,
-				       srcHost, sport, dstHost,
-				       dport, ip_len, 0, 
-				       ip_offset, &tp, tcpDataLength,
-				       theData, actualDeviceId, &newSession, 
-				       IPOQUE_PROTOCOL_UNKNOWN, 1);
-	  if(theSession == NULL)
-	    isPassiveSess = isVoipSess = 0;
-	  else {
-	    isPassiveSess = theSession->passiveFtpSession;
-	    isVoipSess    = theSession->voipSession;
-	  }
+	    handleSession(h, p, (off & 0x3fff), tp.th_win,
+			  srcHost, sport, dstHost,
+			  dport, ip_len, 0, 
+			  ip_offset, &tp, tcpDataLength,
+			  theData, actualDeviceId, &newSession, 
+			  IPOQUE_PROTOCOL_UNKNOWN, 1);
 	}
 
 	sportIdx = mapGlobalToLocalIdx(sport), dportIdx = mapGlobalToLocalIdx(dport);
@@ -1118,29 +1111,22 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	if(nonFullyRemoteSession) {
 	  /* There is no session structure returned for UDP sessions */
 	  if(ip6)
-	    theSession = handleSession(h, p, fragmented, 0,
-				       srcHost, sport, dstHost,
-				       dport, ntohs(ip6->ip6_plen), 0, 
-				       ip_offset, NULL, udpDataLength,
-				       (u_char*)(bp+hlen+sizeof(struct udphdr)),
-				       actualDeviceId, &newSession, 
-				       IPOQUE_PROTOCOL_UNKNOWN, 1);
+	    handleSession(h, p, fragmented, 0,
+			  srcHost, sport, dstHost,
+			  dport, ntohs(ip6->ip6_plen), 0, 
+			  ip_offset, NULL, udpDataLength,
+			  (u_char*)(bp+hlen+sizeof(struct udphdr)),
+			  actualDeviceId, &newSession, 
+			  IPOQUE_PROTOCOL_UNKNOWN, 1);
 	  else
-	    theSession = handleSession(h, p, (off & 0x3fff), 0,
-				       srcHost, sport, dstHost,
-				       dport, ip_len, 0, ip_offset, 
-				       NULL, udpDataLength,
-				       (u_char*)(bp+hlen+sizeof(struct udphdr)),
-				       actualDeviceId, &newSession, 
-				       IPOQUE_PROTOCOL_UNKNOWN, 1);
+	    handleSession(h, p, (off & 0x3fff), 0,
+			  srcHost, sport, dstHost,
+			  dport, ip_len, 0, ip_offset, 
+			  NULL, udpDataLength,
+			  (u_char*)(bp+hlen+sizeof(struct udphdr)),
+			  actualDeviceId, &newSession, 
+			  IPOQUE_PROTOCOL_UNKNOWN, 1);
 	}
-
-	isPassiveSess = 0;
-
-	if(theSession == NULL)
-	  isVoipSess = 0;
-	else
-	  isVoipSess = theSession->voipSession;
 
 	newSession = 1; /* Trick to account flows anyway */
       }
