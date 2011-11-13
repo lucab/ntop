@@ -1816,6 +1816,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 	sendString(tableHeader); 
 	headerSent = 1; 
 
+	sendString("<CENTER>\n"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>");
 	sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG">TCP Flags</TH>"
 		   "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Sent</TH>"
 		   "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Rcvd</TH></TR>\n\n");	
@@ -1908,6 +1909,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 	sendString(tableHeader); 
 	headerSent = 1; 
 	
+	sendString("<CENTER>\n"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>");
 	sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG">Anomaly</TH>"
 		   "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Sent&nbsp;to</TH>"
 		   "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Rcvd&nbsp;from</TH>"
@@ -2054,6 +2056,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 	sendString(tableHeader);
 	headerSent = 1;
 
+	sendString("<CENTER>\n"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>");
 	sendString("<TR "TR_ON" "DARK_BG">"
 		   "<TH "TH_BG">ARP</TH>"
 		   "<TH "TH_BG">Packet</TH>"
