@@ -94,7 +94,7 @@ static void send_graph_footer(void) {
   sendString("  </script>\n");
 
 
-  sendString("<div id=\"container\" style=\"width: 500px; height: 320px; margin: 0 auto\"></div>\n");
+  sendString("<div id=\"container\" style=\"width: 350px; height: 320px; margin: 0 auto\"></div>\n");
 }
 
 /**********************************************************/

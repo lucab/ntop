@@ -1208,9 +1208,9 @@ void sendJSLibraries(int graph_mode) {
   } else {
     sendString("<script type=\"text/javascript\" src=\"/reflection.js\"></script>\n");
     sendString("<script TYPE=\"text/javascript\" src=\"/functions.js\"></script>\n");
-    // sendString("<script type=\"text/javascript\" src=\"/domLib.js\"></script>\n");
-    // sendString("<script type=\"text/javascript\" src=\"/domTT.js\"></script>\n");
-    // sendString("<script type=\"text/javascript\">var domTT_styleClass = 'niceTitle';</script>\n");
+    sendString("<script type=\"text/javascript\" src=\"/domLib.js\"></script>\n");
+    sendString("<script type=\"text/javascript\" src=\"/domTT.js\"></script>\n");
+    sendString("<script type=\"text/javascript\">var domTT_styleClass = 'niceTitle';</script>\n");
     /* JQuery */
     sendString("<script type=\"text/javascript\" src=\"/jquery-1.7.min.js\"></script>\n");
     sendString("<link rel=\"stylesheet\" href=\"jquery-ui-1.8.16.custom.css\">\n");

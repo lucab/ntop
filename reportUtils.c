@@ -1058,9 +1058,9 @@ int cmpFctnLocationName(const void *_a, const void *_b) {
 int cmpFctn(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
-  Counter a_=0, b_=0, a_val, b_val;
+  Counter a_=0, b_=0;
   float fa_=0, fb_=0;
-  short floatCompare=0, columnProtoId;
+  short floatCompare=0;
 
   if((a == NULL) && (b != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (1)");
@@ -1765,7 +1765,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 	 el->secHostPkts->synPktsSent.value.value+
 	 el->secHostPkts->synPktsRcvd.value.value) > 0)) {
 
-      if(!headerSent) { printSectionTitle("Packet Statistics"); sendString(tableHeader); headerSent = 1; }
+      if(!headerSent) { sendString(tableHeader); headerSent = 1; }
 
       sendString("<CENTER>\n"
 		 ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>"
@@ -1812,7 +1812,6 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 	+el->secHostPkts->nullPktsSent.value.value+el->secHostPkts->nullPktsRcvd.value.value) > 0) {
 
       if(!headerSent) { 
-	printSectionTitle("Packet Statistics"); 
 	sendString(tableHeader); 
 	headerSent = 1; 
 
@@ -1905,7 +1904,6 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 	 ) > 0)) {
 
       if(!headerSent) {
-	printSectionTitle("Packet Statistics"); 
 	sendString(tableHeader); 
 	headerSent = 1; 
 	
@@ -2050,9 +2048,10 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
   }
 
   if(el->nonIPTraffic) {
-    if(el->nonIPTraffic->arpReqPktsSent.value+el->nonIPTraffic->arpReplyPktsSent.value+el->nonIPTraffic->arpReplyPktsRcvd.value > 0) {
+    if((el->nonIPTraffic->arpReqPktsSent.value
+	+ el->nonIPTraffic->arpReplyPktsSent.value
+	+ el->nonIPTraffic->arpReplyPktsRcvd.value) > 0) {
       if(!headerSent) {
-	printSectionTitle("Packet Statistics");
 	sendString(tableHeader);
 	headerSent = 1;
 
@@ -2063,13 +2062,15 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 		   "</TR>\n\n");       
       }
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Request Sent</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Request Sent</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		    getRowColor(),
 		    formatPkts(el->nonIPTraffic->arpReqPktsSent.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Reply Rcvd</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Reply Rcvd</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s (%.1f %%)</TD></TR>\n",
 		    getRowColor(),
 		    formatPkts(el->nonIPTraffic->arpReplyPktsRcvd.value, formatBuf, sizeof(formatBuf)),
@@ -2103,10 +2104,8 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
   totalSent = el->tcpFragmentsSent.value + el->udpFragmentsSent.value + el->icmpFragmentsSent.value;
   totalRcvd = el->tcpFragmentsRcvd.value + el->udpFragmentsRcvd.value + el->icmpFragmentsRcvd.value;
 
- if((totalSent == 0) && (totalRcvd == 0))
+  if((totalSent == 0) && (totalRcvd == 0))
     return;
-
-  printSectionTitle("IP Fragments Distribution");
 
   sendString("<CENTER>\n"
 	     ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "DARK_BG"><TH "TH_BG" WIDTH=100>Protocol</TH>"
@@ -2152,7 +2151,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
      if(totalSent > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		    "\n<iframe frameborder=0 SRC=\""CONST_HOST_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"?1\" width=550 height=350\"></iframe>\n</TD>",
+		    "\n<iframe frameborder=0 SRC=\""CONST_HOST_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"?1\" width=380 height=350\"></iframe>\n</TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -2162,7 +2161,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(totalRcvd > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"\" width=550 height=350></iframe>\n</TD>",
+		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"\" width=380 height=350></iframe>\n</TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -2181,7 +2180,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(totalSent > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_TOT_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"?1\" width=550 height=350></iframe>\n</TD>",
+		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_TOT_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"?1\" width=380 height=350></iframe>\n</TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -2191,7 +2190,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(totalRcvd > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_TOT_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"\" width=550 height=350></iframe>\n</TD>",
+		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_TOT_FRAGMENT_DISTR_HTML"-%s%s"CHART_FORMAT"\" width=380 height=350></iframe>\n</TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -2364,13 +2363,18 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   actTotalSent = el->tcpSentLoc.value+el->tcpSentRem.value;
   actTotalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value;
 
+  sendString("\n\n<div id=\"tabs-21\">\n");
   printHostHourlyTraffic(el);
+  sendString("</div>\n");
+
+  sendString("\n\n<div id=\"tabs-22\">\n");
   printPacketStats(el, actualDeviceId);
+  sendString("</div>\n");
 
   if((totalSent == 0) && (totalRcvd == 0))
     return;
 
-  printSectionTitle("Protocol Distribution");
+  sendString("\n\n<div id=\"tabs-23\">\n");
 
   sendString("<CENTER>\n"
 	     ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=80%%><TR "DARK_BG"><TH "TH_BG" WIDTH=100>Protocol</TH>"
@@ -2518,7 +2522,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_TRAFFIC_DISTR_HTML"-%s%s"CHART_FORMAT"?1\""
-		      " width=550 height=350></iframe>\n</TD>",
+		      " width=380 height=350></iframe>\n</TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -2529,7 +2533,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 		      "\n<iframe frameborder=0 SRC=\""CONST_HOST_TRAFFIC_DISTR_HTML"-"
-		      "%s%s"CHART_FORMAT"\" width=550 height=350></iframe>\n</TD>",
+		      "%s%s"CHART_FORMAT"\" width=380 height=350></iframe>\n</TD>",
 		      linkName, vlanStr);
 	sendString(buf);
       } else {
@@ -2573,7 +2577,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 			"<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 			"\n<iframe frameborder=0 SRC=\""CONST_HOST_IP_TRAFFIC_DISTR_HTML"-%s%s"CHART_FORMAT"?1\""
-			"  width=550 height=350></iframe>\n</TD>",
+			"  width=380 height=350></iframe>\n</TD>",
 			linkName, vlanStr);
 	  sendString(buf);
 	} else
@@ -2583,7 +2587,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 			"<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 			"\n<iframe frameborder=0 SRC=\""CONST_HOST_IP_TRAFFIC_DISTR_HTML"-"
-			"%s%s"CHART_FORMAT"\" width=550 height=350></iframe>\n</TD></TR>\n",
+			"%s%s"CHART_FORMAT"\" width=380 height=350></iframe>\n</TD></TR>\n",
 			linkName, vlanStr);
 	  sendString(buf);
 	} else
@@ -2660,6 +2664,8 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       sendString("</CENTER>\n");
     }
   }
+
+  sendString("</div>\n");
 }
 
 /* ************************************ */
@@ -2736,7 +2742,9 @@ void printIcmpv6Stats(HostTraffic *el) {
                 formatPkts(el->icmpInfo->icmpMsgRcvd[ND_NEIGHBOR_ADVERT].value, formatBuf1, sizeof(formatBuf1)));
     sendString(buf);
   }
+
   sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
+  sendString("</div>\n");
 }
 
 /* ******************************************** */
@@ -2745,7 +2753,6 @@ void printIcmpv4Stats(HostTraffic *el) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   char formatBuf[32], formatBuf1[32];
 
-  printSectionTitle("ICMP Traffic");
   sendString("<CENTER><TABLE BORDER=1 "TABLE_DEFAULTS">\n");
   sendString("<TR "TR_ON" "DARK_BG"><th>Type</th>"
 	     "<TH "TH_BG" ALIGN=LEFT>Pkt&nbsp;Sent</TH>"
@@ -2958,8 +2965,6 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
   u_int8_t header_sent;
 
   if((el->pktsSent.value == 0) && (el->pktsRcvd.value == 0)) return;
-
-  printSectionTitle("Contact Matrix");
 
   sendString("<CENTER>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR>\n");
 
@@ -3309,7 +3314,7 @@ void checkHostProvidedServices(HostTraffic *el) {
 /* ************************************ */
 
 void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
-  char buf[4*LEN_GENERAL_WORK_BUFFER], buf1[64], buf2[128], osBuf[512];
+  char buf[4*LEN_GENERAL_WORK_BUFFER], buf1[64], osBuf[512];
   float percentage;
   Counter total;
   char *dynIp, *multihomed, *multivlaned;
@@ -3318,52 +3323,6 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   char formatBuf[LEN_TIMEFORMAT_BUFFER], formatBuf1[LEN_TIMEFORMAT_BUFFER],
     formatBuf2[32], custom_host_name[128];
 
-  /* Read custom host name if any */
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "hostname.%s",
-		(el->hostNumIpAddress[0] != '\0') ? el->hostNumIpAddress : el->ethAddressString);
-
-  if(fetchPrefsValue(buf, custom_host_name, sizeof(custom_host_name)) == -1)
-    custom_host_name[0] = '\0';
-
-  buf1[0] = 0;
-
-  if((el->hostResolvedName[0] != '\0') && (strcmp(el->hostResolvedName, el->hostNumIpAddress))) {
-    char httpSiteIconBuf[128] = { 0 };
-
-    if(isHTTPhost(el))
-      httpSiteIcon((custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName,
-		   httpSiteIconBuf, sizeof(httpSiteIconBuf), 0);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
-		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
-		  "TITLE=\"Link to web server on host, if available\" class=external>%s%s</A>\n",
-		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName,
-		  httpSiteIconBuf,
-		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName);
-
-    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s", el->hostResolvedName);
-  } else if(el->hostNumIpAddress[0] != '\0') {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
-		  " <A HREF=\"http://%s%s%s/\" TARGET=\"_blank\" "
-		  "TITLE=\"Link to web server on host, if available\" class=tooltip>%s</A>\n",
-		  el->hostIpAddress.hostFamily == AF_INET6 ? "[" : "",
-		  el->hostNumIpAddress,
-		  el->hostIpAddress.hostFamily == AF_INET6 ? "]" : "",
-		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostNumIpAddress);
-
-    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s",
-		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostNumIpAddress);
-  } else {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about %s",
-		  (custom_host_name[0] != '\0') ? custom_host_name : el->ethAddressString);
-
-    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s",
-		  (custom_host_name[0] != '\0') ? custom_host_name : el->ethAddressString);
-  }
-
-  /* ******************************************* */
-
-  printHTMLheader(buf2, buf, 0);
   sendString("<CENTER>\n<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=80%%>\n");
 
   if(el->hostNumIpAddress[0] != '\0') {
@@ -3568,6 +3527,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	sendString("</DIV></TD></TR>\n");
     }
   }
+
+  /* Read custom host name if any */
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "hostname.%s",
+		(el->hostNumIpAddress[0] != '\0') ? el->hostNumIpAddress : el->ethAddressString);
+
+  if(fetchPrefsValue(buf, custom_host_name, sizeof(custom_host_name)) == -1)
+    custom_host_name[0] = '\0';
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Custom Host Name</TH>"
@@ -4094,7 +4060,8 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
   Counter tot;
 
   if((el->protocolInfo == NULL)
-     || ((el->protocolInfo->dnsStats == NULL) && (el->protocolInfo->httpStats == NULL)))
+     || ((el->protocolInfo->dnsStats == NULL)
+	 && (el->protocolInfo->httpStats == NULL)))
     return;
 
   tot = 0;

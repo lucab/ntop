@@ -379,7 +379,7 @@ void printTrafficSummary (int revertOrder) {
 
     if(found) {
       sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		 "<iframe frameborder=0 SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" width=550 height=350></iframe></TH></TR>\n");
+		 "<iframe frameborder=0 SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" width=380 height=350></iframe></TH></TR>\n");
     }
   }
 
@@ -725,13 +725,13 @@ void printTrafficStatistics(int revertOrder) {
 
     if(found) {
       sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		 "<iframe frameborder=0 SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" width=550 height=350></iframe></TH></TR>\n");
+		 "<iframe frameborder=0 SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" width=380 height=350></iframe></TH></TR>\n");
     }
   }
 
   sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
   sendString("</div>\n");
-  sendString("<div id=\"tabs-2\">\n");
+  sendString("\n\n<div id=\"tabs-2\">\n");
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
     Counter dummyCounter;
@@ -822,7 +822,7 @@ void printTrafficStatistics(int revertOrder) {
     if(myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value > 0)
       sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
 		 "<iframe frameborder=0 SRC=\"" CONST_PIE_PKT_CAST_DIST CHART_FORMAT "\" "
-		 "width=550 height=350></iframe></TH></TR>\n");
+		 "width=380 height=350></iframe></TH></TR>\n");
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       /*
@@ -934,7 +934,7 @@ void printTrafficStatistics(int revertOrder) {
 
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value > 0)
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		   "<iframe frameborder=0 SRC=\"" CONST_PIE_PKT_SIZE_DIST  CHART_FORMAT "\" width=550 height=350></iframe></TH></TR>\n");
+		   "<iframe frameborder=0 SRC=\"" CONST_PIE_PKT_SIZE_DIST  CHART_FORMAT "\" width=380 height=350></iframe></TH></TR>\n");
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Packets&nbsp;too&nbsp;long [> %d]</th>"
 		    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
@@ -986,7 +986,7 @@ void printTrafficStatistics(int revertOrder) {
 
     if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value > 0)
       sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		 "<iframe frameborder=0 SRC=\"" CONST_PIE_IP_TRAFFIC  CHART_FORMAT "\" width=550 height=350></iframe></TH></TR>\n");
+		 "<iframe frameborder=0 SRC=\"" CONST_PIE_IP_TRAFFIC  CHART_FORMAT "\" width=380 height=350></iframe></TH></TR>\n");
 
     /* ********************* */
 
@@ -1074,7 +1074,7 @@ void printTrafficStatistics(int revertOrder) {
 	sendString(buf);
 
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		   "<iframe frameborder=0 SRC=\"" CONST_PIE_TTL_DIST  CHART_FORMAT "\" width=550 height=350></iframe></TH></TR>\n");
+		   "<iframe frameborder=0 SRC=\"" CONST_PIE_TTL_DIST  CHART_FORMAT "\" width=380 height=350></iframe></TH></TR>\n");
       }
     }
 
@@ -1085,20 +1085,23 @@ void printTrafficStatistics(int revertOrder) {
     if(myGlobals.runningPref.enableSessionHandling && drawHostsDistanceGraph(1))
       sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Remote Hosts Distance</TH>"
                  "<TD BGCOLOR=white ALIGN=CENTER>"
-		 "<iframe frameborder=0 SRC=\"" CONST_BAR_HOST_DISTANCE CHART_FORMAT "\" width=550 height=350></iframe>"
+		 "<iframe frameborder=0 SRC=\"" CONST_BAR_HOST_DISTANCE CHART_FORMAT "\" width=380 height=350></iframe>"
                  "</TD></TR>\n");
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       updateThpt(0);
 
-      sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Actual</th><TD "TD_BG" align=right>%s</td>"
+      sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Network Load</TH><TD "TH_BG">\n"
+		 "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Actual</th><TD "TD_BG" align=right>%s</td>"
 		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkt/s</td></TR>\n",
 		    getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt,
 						    1, formatBuf, sizeof(formatBuf)),
 		    myGlobals.device[myGlobals.actualReportDeviceId].actualPktsThpt);
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Last Minute</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Last Minute</th>"
 		    "<TD "TD_BG" align=right>%s</td>"
 		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkt/s</td></TR>\n",
 		    getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastMinThpt,
@@ -1106,7 +1109,8 @@ void printTrafficStatistics(int revertOrder) {
 		    myGlobals.device[myGlobals.actualReportDeviceId].lastMinPktsThpt);
       sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Last 5 Minutes</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Last 5 Minutes</th>"
 		    "<TD "TD_BG" align=right>%s</td>"
 		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkt/s</td></TR>\n",
 		    getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsThpt,
@@ -1114,7 +1118,8 @@ void printTrafficStatistics(int revertOrder) {
 		    myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsPktsThpt);
       sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Peak</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Peak</th>"
 		    "<TD "TD_BG" align=right>%s</td>"
 		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkt/s</td></TR>\n",
 		    getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput,
@@ -1122,7 +1127,8 @@ void printTrafficStatistics(int revertOrder) {
 		    myGlobals.device[myGlobals.actualReportDeviceId].peakPacketThroughput);
       sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Average</th>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Average</th>"
 		    "<TD "TD_BG" align=right>%s</td>"
 		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkt/s</td></TR>\n",
 		    getRowColor(),
@@ -1184,7 +1190,7 @@ void printTrafficStatistics(int revertOrder) {
   sendString("</TABLE></CENTER>\n");
   sendString("</div>\n");
 
-  sendString("<div id=\"tabs-3\">\n");
+  sendString("\n\n<div id=\"tabs-3\">\n");
   printProtoTraffic(TRUE);
   sendString("</div>\n");
 
@@ -1953,7 +1959,7 @@ static int printTalker(HostTalker *t) {
 
 #define MAX_NUM_TALKERS            64
 
-int cmpTalkersFctn(const void *_a, const void *_b) {
+static int cmpTalkersFctn(const void *_a, const void *_b) {
   HostTalkerSeries *a = (HostTalkerSeries*)_a;
   HostTalkerSeries *b = (HostTalkerSeries*)_b;
 
@@ -1985,8 +1991,6 @@ void printTopTalkers(u_int8_t printHourTalkers, u_int8_t show_graph) {
 
     for(i=0; i<numTalkers; i++) {
       int k;
-
-      time_t when;
       u_int8_t found;
 
       if(emptySerial(&talkers[i].senders[0].hostSerial)) break;
@@ -2031,7 +2035,7 @@ void printTopTalkers(u_int8_t printHourTalkers, u_int8_t show_graph) {
     qsort(ttalkers, tot_talkers, sizeof(HostTalkerSeries), cmpTalkersFctn);
 
     buildTalkersGraph(NULL /* labels */, ttalkers, 
-		      min(tot_talkers, 8), /* max # talkers */
+		      min(tot_talkers, 14), /* max # talkers */
 		      num_series);
     free(ttalkers);
   } else {
@@ -2051,7 +2055,12 @@ void printTopTalkers(u_int8_t printHourTalkers, u_int8_t show_graph) {
     sendString("<TR><TD COLSPAN=4>\n");	       
     sendString("<iframe frameborder=0 SRC=\"");
     sendString(printHourTalkers ? CONST_LAST_HOUR_TOP_TALKERS_HTML : CONST_LAST_DAY_TOP_TALKERS_HTML);
-    sendString("?mode=1\" width=750 height=550></iframe>\n");
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "?mode=1\" width=750 height=%u></iframe>\n",
+		  min(350+10*numTalkers, 900));
+    sendString(buf);
+
     sendString("</TD></TR>\n");
     
     sendString("<TR "TR_ON" "DARK_BG">"
@@ -2199,7 +2208,8 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("</CENTER>\n");
-    addPageIndicator(CONST_MULTICAST_STATS_HTML, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
+    addPageIndicator(CONST_MULTICAST_STATS_HTML, pageNum, 
+		     numEntries, myGlobals.runningPref.maxNumLines,
 		     revertOrder, abs(sortedColumn), -1);
 
     printFooterHostLink();
@@ -2209,7 +2219,9 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
   free(tmpTable);
 
-  sendString("<P ALIGN=right><A class=external HREF=http://www.iana.org/assignments/multicast-addresses>List</A> of multicast addresses</P>\n");
+  sendString("<P ALIGN=right><A class=external "
+	     "HREF=http://www.iana.org/assignments/multicast-addresses>List</A> "
+	     "of multicast addresses</P>\n");
 }
 
 /* ****************************************************************** */
@@ -3126,15 +3138,15 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
   u_int16_t vlanId = NO_VLAN;
   HostTraffic *el=NULL;
   char buf[LEN_GENERAL_WORK_BUFFER];
-  char formatBuf[32], portBuf[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
-  u_short found = 0,
-    foundFcHost = 0,
-    vsanId = 0;
+  char formatBuf[32], portBuf[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER],
+    custom_host_name[128], buf2[128];
+  u_short found = 0;
   char *tok;
-  u_int8_t search_mac = isMacAddress(host);
+  u_int8_t search_mac = isMacAddress(host), showServices;
+  Counter fragments;
 
   if((tok = strchr(host, '-')) != NULL) {
-    vlanId = vsanId = atoi(&tok[1]);
+    vlanId = atoi(&tok[1]);
     *tok = '\0';
   }
 
@@ -3183,19 +3195,140 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     return;
   }
 
+  fragments = el->tcpFragmentsSent.value 
+    + el->udpFragmentsSent.value 
+    + el->icmpFragmentsSent.value
+    + el->tcpFragmentsRcvd.value
+    + el->udpFragmentsRcvd.value 
+    + el->icmpFragmentsRcvd.value;
+
+  if((el->protocolInfo == NULL)
+     || ((el->protocolInfo->dnsStats == NULL)
+	 && (el->protocolInfo->httpStats == NULL)))
+    showServices = 0;
+  else
+    showServices = 1;
+
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
   /* ************************************ */
 
-  if(found && !foundFcHost) {
-    printHostDetailedInfo(el, actualDeviceId);
-    printHostTrafficStats(el, actualDeviceId);
-    printHostIcmpStats(el);
+  /* Read custom host name if any */
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "hostname.%s",
+		(el->hostNumIpAddress[0] != '\0') ? el->hostNumIpAddress : el->ethAddressString);
+
+  if(fetchPrefsValue(buf, custom_host_name, sizeof(custom_host_name)) == -1)
+    custom_host_name[0] = '\0';
+
+  if((el->hostResolvedName[0] != '\0') && (strcmp(el->hostResolvedName, el->hostNumIpAddress))) {
+    char httpSiteIconBuf[128] = { 0 };
+
+    if(isHTTPhost(el))
+      httpSiteIcon((custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName,
+		   httpSiteIconBuf, sizeof(httpSiteIconBuf), 0);
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
+		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
+		  "TITLE=\"Link to web server on host, if available\" class=external>%s%s</A>\n",
+		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName,
+		  httpSiteIconBuf,
+		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName);
+
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s", el->hostResolvedName);
+  } else if(el->hostNumIpAddress[0] != '\0') {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
+		  " <A HREF=\"http://%s%s%s/\" TARGET=\"_blank\" "
+		  "TITLE=\"Link to web server on host, if available\" class=tooltip>%s</A>\n",
+		  el->hostIpAddress.hostFamily == AF_INET6 ? "[" : "",
+		  el->hostNumIpAddress,
+		  el->hostIpAddress.hostFamily == AF_INET6 ? "]" : "",
+		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostNumIpAddress);
+
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s",
+		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostNumIpAddress);
+  } else {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about %s",
+		  (custom_host_name[0] != '\0') ? custom_host_name : el->ethAddressString);
+
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s",
+		  (custom_host_name[0] != '\0') ? custom_host_name : el->ethAddressString);
+  }
+
+  printHTMLheader(buf2, buf, 0);
+  
+  /* ************************************ */
+  
+  sendString("<script>\n"
+	     "   $(function() {\n"
+	     "	 $( \"#tabs\" ).tabs();\n"
+	     "     });\n\n"
+	     "</script>\n"
+	     "<center>\n"
+	     "<div id=\"tabs\" style=\"width: 95%; \">\n"
+	     "    <ul>\n"
+	     "    <li><a href=\"#tabs-1\">Host Details</a></li>\n");
+
+  sendString("<li><a href=\"#tabs-21\">Hourly Distribution</a></li>\n");
+  sendString("<li><a href=\"#tabs-22\">Packet Stats</a></li>\n");
+  sendString("<li><a href=\"#tabs-23\">Protocols</a></li>\n");
+
+  sendString("<li><a href=\"#tabs-3\">ICMP Stats</a></li>\n");
+
+  if(fragments > 0)
+    sendString("<li><a href=\"#tabs-4\">Fragment Stats</a></li>\n");
+
+  sendString("<li><a href=\"#tabs-5\">Contacts</a></li>\n");
+
+  if((el->protocolInfo != NULL) 
+     && (el->protocolInfo->httpVirtualHosts != NULL))
+  sendString("<li><a href=\"#tabs-6\">HTTP Stats</a></li>\n");
+
+  if(showServices)
+    sendString("<li><a href=\"#tabs-7\">Services</a></li>\n");
+
+  if(el->portsUsage != NULL)
+    sendString("<li><a href=\"#tabs-8\">Ports</a></li>\n");
+
+  if(el->clientDelay || el->serverDelay)
+    sendString("<li><a href=\"#tabs-9\">Network Delay</a></li>\n");
+
+  if((myGlobals.device[actualDeviceId].tcpSession != NULL) &&
+     (myGlobals.device[actualDeviceId].numTcpSessions > 0))
+    sendString("<li><a href=\"#tabs-10\">Active Sessions</a></li>\n");
+
+  sendString("</ul>\n");
+  
+  sendString("\n\n<div id=\"tabs-1\">\n");
+  printHostDetailedInfo(el, actualDeviceId);
+  sendString("</div>\n");
+
+  printHostTrafficStats(el, actualDeviceId);
+
+  sendString("\n\n<div id=\"tabs-3\">\n");
+  printHostIcmpStats(el);
+  sendString("</div>\n");
+
+  if(fragments > 0) {
+    sendString("\n\n<div id=\"tabs-4\">\n");
     printHostFragmentStats(el, actualDeviceId);
-    printHostContactedPeers(el, actualDeviceId);
+    sendString("</div>\n");
+  }
+
+  sendString("\n\n<div id=\"tabs-5\">\n");
+  printHostContactedPeers(el, actualDeviceId);
+  sendString("</div>\n");
+
+  if((el->protocolInfo != NULL) && (el->protocolInfo->httpVirtualHosts != NULL)) {
+    sendString("\n\n<div id=\"tabs-6\">\n");
     printHostHTTPVirtualHosts(el, actualDeviceId);
+    sendString("</div>\n");
+  }
+
+  if(showServices) {
+    sendString("\n\n<div id=\"tabs-7\">\n");
     printHostUsedServices(el, actualDeviceId);
     printHostFingerprint(el); /* ----- **** ----- */
+    sendString("</div>\n");
   }
 
   /* ***************************************************** */
@@ -3203,6 +3336,8 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
   i = 0;
 
   if(el->portsUsage != NULL) {
+    sendString("\n\n<div id=\"tabs-8\">\n");
+
     for(idx=1; idx<MAX_ASSIGNED_IP_PORTS /* 1024 */; idx++) {
       PortUsage *ports = getPortsUsage(el, idx, 0);
       if(ports != NULL) {
@@ -3294,10 +3429,10 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     sendString("</CENTER>\n");
   }
 
-  /* *********************************
-********************************* */
+  /* ****************************************************************** */
 
-  if((el->otherIpPortsRcvd[MAX_NUM_RECENT_PORTS-1] >= 0) || (el->otherIpPortsSent[MAX_NUM_RECENT_PORTS-1] >= 0)) {
+  if((el->otherIpPortsRcvd[MAX_NUM_RECENT_PORTS-1] >= 0)
+     || (el->otherIpPortsSent[MAX_NUM_RECENT_PORTS-1] >= 0)) {
     /* We have something to show */
     int numPrinted;
 
@@ -3382,10 +3517,12 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     if(numPrinted == 0) sendString("&nbsp;");
     sendString("</UL></TR></TABLE>"TABLE_OFF"</CENTER>");
   }
+  sendString("</div>\n");
 
   /* *************************************************** */
 
   if(el->clientDelay || el->serverDelay) {
+    sendString("\n\n<div id=\"tabs-9\">\n");
     printSectionTitle("Recent Sessions: Network Delay");
 
     sendString("<P>\n<CENTER>\n");
@@ -3416,13 +3553,19 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 	       "<li>All times are majored during TCP 3-way handshake"
 	       "</td></tr>\n");
     sendString("</TABLE></CENTER>\n<P>\n");
+    sendString("</div>\n");
   }
 
   if((myGlobals.device[actualDeviceId].tcpSession == NULL) ||
      (myGlobals.device[actualDeviceId].numTcpSessions == 0))
     ;
-  else
+  else {
+    sendString("\n\n<div id=\"tabs-10\">\n");
     printActiveSessions(actualDeviceId, 0, el);
+    sendString("</div>\n");
+  }
+
+  sendString("</div>\n");
 }
 
 /* ************************************ */
@@ -3827,8 +3970,7 @@ void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	    snprintf(buf, sizeof(buf), "%u Active Sessions",
 		     myGlobals.device[actualDeviceId].numTcpSessions);
 	    printHTMLheader(buf, NULL, 0);
-	  } else
-	    printSectionTitle("Active Sessions");
+	  }
 
 	  sendString("<CENTER>\n"
 		     ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
@@ -3916,9 +4058,11 @@ void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
 		      formatLatency(session->clientNwDelay, session->sessionState, formatBuf6, sizeof(formatBuf6)),
 		      formatLatency(session->serverNwDelay, session->sessionState, formatBuf7, sizeof(formatBuf7)),
-		      (session->guessed_protocol == NULL) ? knownProtocolIdx(session, http_buf, sizeof(http_buf)) : session->guessed_protocol
+		      (session->guessed_protocol == NULL) ? knownProtocolIdx(session, http_buf, sizeof(http_buf)) : 
+		      session->guessed_protocol
 #ifdef PRINT_SESSION_DETAILS
-		      , session->session_info ? session->session_info : print_flags(session, flags_buf, sizeof(flags_buf)) /* "&nbsp;" */
+		      , session->session_info ? session->session_info : 
+		      print_flags(session, flags_buf, sizeof(flags_buf)) /* "&nbsp;" */
 #endif
 		      );
 	sendString(buf);
@@ -5285,10 +5429,9 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
   strftime(theDate, 8, CONST_TOD_HOUR_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
-  printSectionTitle("Host Traffic Stats");
 
   sendString("<CENTER>\n");
-  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\">\n<TR "TR_ON" "DARK_BG">");
+  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">");
   sendString("<TH "TH_BG">Time</TH>");
   sendString("<TH "TH_BG">Tot. Traffic Sent</TH>");
   sendString("<TH "TH_BG">% Traffic Sent</TH>");
@@ -5333,7 +5476,8 @@ void printHostHourlyTraffic(HostTraffic *el) {
   if(tcSent > 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<TD ALIGN=CENTER COLSPAN=2 "TD_BG" BGCOLOR=white>"
-		  "<iframe frameborder=0 SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"?1\" width=550 height=350></iframe></TD>\n",
+		  "<iframe frameborder=0 SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"?1\" "
+		  "width=450 height=350></iframe></TD>\n",
 		  targetStr, vlanStr);
     sendString(buf);
   } else
@@ -5341,7 +5485,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
   if(tcRcvd > 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG" BGCOLOR=white>"
-		  "<iframe frameborder=0 SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"\" width=550 height=350></iframe>"
+		  "<iframe frameborder=0 SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"\" width=450 height=350></iframe>"
 		  "</TD>\n",
 		  targetStr, vlanStr);
     sendString(buf);
