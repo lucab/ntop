@@ -2051,7 +2051,7 @@ void printTopTalkers(u_int8_t printHourTalkers, u_int8_t show_graph) {
     sendString("<TR><TD COLSPAN=4>\n");	       
     sendString("<iframe frameborder=0 SRC=\"");
     sendString(printHourTalkers ? CONST_LAST_HOUR_TOP_TALKERS_HTML : CONST_LAST_DAY_TOP_TALKERS_HTML);
-    sendString("?mode=1\" width=950 height=350></iframe>\n");
+    sendString("?mode=1\" width=750 height=550></iframe>\n");
     sendString("</TD></TR>\n");
     
     sendString("<TR "TR_ON" "DARK_BG">"

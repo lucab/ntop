@@ -298,6 +298,8 @@ extern void drawThptGraph(int sortedColumn);
 extern void drawGlobalProtoDistribution(void);
 extern int  drawHostsDistanceGraph(int);
 extern void drawGlobalIpProtoDistribution(void);
+extern void buildTalkersGraph(char **labels, HostTalkerSeries *talkers,
+			      int num_talkers, int num_datapoints);
 
 /* python.c */
 #ifdef HAVE_PYTHON

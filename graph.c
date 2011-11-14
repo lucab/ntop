@@ -970,7 +970,7 @@ int drawHostsDistanceGraph(int checkOnly) {
 
 /* ************************ */
 
-int buildTalkersGraph(char **labels, HostTalkerSeries *talkers,
+void buildTalkersGraph(char **labels, HostTalkerSeries *talkers,
 		      int num_talkers, int num_datapoints) {
   int i, j;
 
@@ -988,7 +988,7 @@ int buildTalkersGraph(char **labels, HostTalkerSeries *talkers,
   sendString("      chart = new Highcharts.Chart({\n");
   sendString("	chart: {\n");
   sendString("	  renderTo: 'container',\n");
-  sendString("	      defaultSeriesType: 'column'\n");
+  sendString("	      defaultSeriesType: 'bar'\n");
   sendString("	      },\n");
   sendString("	    title: {\n");
   sendString("	  text: 'Top Host Talkers'\n");
@@ -1046,7 +1046,7 @@ int buildTalkersGraph(char **labels, HostTalkerSeries *talkers,
   sendString("	    }\n");
   sendString("	  },\n");
   sendString("	    plotOptions: {\n");
-  sendString("	  column: {\n");
+  sendString("	  series: {\n");
   sendString("	    stacking: 'percent',\n");
   sendString("		dataLabels: {\n");
   sendString("	      enabled: false,\n");
