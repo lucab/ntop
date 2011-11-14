@@ -2468,6 +2468,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     *theAnchor[NUM_TABLE_COLUMNS], osBuf[160];
   char htmlAnchor[64], htmlAnchor1[64];
   char formatBuf[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
+  char htmlTitle[64];
+  char totalHosts[128];
   u_char *vlanList, foundVlan = 0, vlanStr[16], ifStr[16], foundIf = 0, *ifList;
   u_int8_t *knownSubnets, selected;
 
@@ -3020,6 +3022,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
       printFooterHostLink();
 
       printBandwidthFooter();
+      sprintf(totalHosts,"Total Filtered Host Count: %u. Total Hosts Seen on Interface: %u.",numEntries,maxHosts);
+      sendString(totalHosts);
 
       addPageIndicator(CONST_HOSTS_INFO_HTML, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
 		       revertOrder, abs(sortedColumn), -1);

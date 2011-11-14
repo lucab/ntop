@@ -26,6 +26,8 @@ extern PluginInfo* sflowPluginEntryFctn(void);
 extern PluginInfo* rrdPluginEntryFctn(void);
 extern PluginInfo* cpacketPluginEntryFctn(void);
 extern PluginInfo* netflowPluginEntryFctn(void);
+extern PluginInfo* lsPluginEntryFctn(void);
+extern PluginInfo* wapPluginEntryFctn(void);
 #endif
 
 /* ******************* */
@@ -88,6 +90,10 @@ static void loadPlugin(char* dirName, char* pluginName) {
     pluginInfo = rrdPluginEntryFctn();
   else if(strcmp(pluginName, "cpacketPlugin") == 0)
     pluginInfo = cpacketPluginEntryFctn();
+  else if(strcmp(pluginName, "lastSeenPlugin") == 0)
+    pluginInfo = lsPluginEntryFctn();
+  else if(strcmp(pluginName, "pdaPlugin") == 0)
+    pluginInfo = wapPluginEntryFctn();
   else
     pluginInfo = NULL;
 
@@ -244,6 +250,8 @@ void loadPlugins(void) {
   loadPlugin(NULL, "netflowPlugin");
   loadPlugin(NULL, "rrdPlugin");
   loadPlugin(NULL, "cpacketPlugin");
+  loadPlugin(NULL, "lastSeenPlugin");
+  loadPlugin(NULL, "pdaPlugin");
 #endif /* MAKE_STATIC_PLUGIN */
 }
 

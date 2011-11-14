@@ -330,23 +330,30 @@ int is_host_ready_to_purge(int actDevice, HostTraffic *el, time_t now) {
   /* Time used to decide whether a host need to be purged */
   time_t noSessionPurgeTime   = now-sec_idle_with_no_sessions;
   time_t withSessionPurgeTime = now-sec_idle_with_sessions;
-
+if(!myGlobals.runningPref.stickyHosts){
+  if(el->to_be_deleted){
+       if(el->numHostSessions > 0) {
+               return(0);
+       }
+}
   if(el->to_be_deleted
      || ((myGlobals.pcap_file_list == NULL)
 	 && (el->refCount == 0)
-	 && ((((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
-	      || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime))))
+	 && (((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
+	      || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime)))
 	 && (!broadcastHost(el)) && (el != myGlobals.otherHostEntry)
-	 && (myGlobals.device[actDevice].virtualDevice /* e.g. sFlow/NetFlow */
+	 && ((myGlobals.device[actDevice].virtualDevice) /* e.g. sFlow/NetFlow */
 	     || (!myGlobals.runningPref.stickyHosts)
-	     || (((el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
-		  || (!subnetPseudoLocalHost(el)))) /* Purge remote hosts only */
+	     || ((el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
+		  || (!subnetPseudoLocalHost(el))) /* Purge remote hosts only */
 	     )
 	 )
      )
     return(1);
   else
     return(0);
+}
+else return(0);
 }
 
 /* ************************************ */
@@ -419,7 +426,7 @@ int purgeIdleHosts(int actDevice) {
 	  /* Host selected for deletion */
 	  theFlaggedHosts[numHosts++] = el;
 	  el->magic = CONST_UNMAGIC_NUMBER; /* This means that this host os about to be freed */
-	  remove_valid_ptr(el);
+	  //remove_valid_ptr(el);
 	  next = el->next;
 
 	  if(prev != NULL)

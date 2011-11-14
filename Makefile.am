@@ -60,6 +60,9 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
 SUBDIRS = . @PLUGINS@
 
 ETTER_PASSIVE_FILE = etter.finger.os
+ETTER_PASSIVE = $(ETTER_PASSIVE_FILE).gz
+ETTER_PASSIVE_DOWNLOAD_FROM = "http://ettercap.cvs.sourceforge.net/ettercap/ettercap_ng/share"
+ETTER_PASSIVE_DOWNLOAD_PARMS = "rev=HEAD"
 
 NTOPDATA = ntop-cert.pem \
            $(ETTER_PASSIVE) \
@@ -389,6 +392,47 @@ dnvt:
 #dnsapt:
 #	@(cd Internet; wget -c http://www.iana.org/assignments/novell-sap-numbers)
 
+# download the passive ethernet fingerprint database
+dnetter:
+	@echo ""
+	@echo ""
+	@echo "Preparing "
+	@echo ""
+
+	@if test -f $(ETTER_PASSIVE).old; then \
+	  echo "...Deleting prior file, $(ETTER_PASSIVE).old..."; \
+	  rm -rf $(ETTER_PASSIVE).old; \
+	fi;
+	@if test -f $(ETTER_PASSIVE); then \
+	  echo "...Moving current $(ETTER_PASSIVE) to $(ETTER_PASSIVE).old"; \
+	  mv $(ETTER_PASSIVE) $(ETTER_PASSIVE).old; \
+	fi;
+	@for file in $(ETTER_PASSIVE) $(ETTER_PASSIVE).gz \
+		$(ETTER_PASSIVE_FILE) $(ETTER_PASSIVE_FILE).gz; do \
+          if test -f $$file; then \
+	     echo "...Deleting prior file, $$file..."; \
+             rm -rf $$file; \
+          fi; \
+        done
+	@echo ""
+	@echo "...Downloading new file..."
+	@wget -O $(ETTER_PASSIVE_FILE) \
+		$(ETTER_PASSIVE_DOWNLOAD_FROM)/$(ETTER_PASSIVE_FILE)?$(ETTER_PASSIVE_DOWNLOAD_PARMS)
+	@echo ""
+	@echo "gziping downloaded file..."
+	@gzip $(ETTER_PASSIVE_FILE)
+	@echo ""
+	@echo ""
+	@if test -f $(ETTER_PASSIVE).old; then \
+	  echo -n "Old file lines were: "; \
+	  gunzip -c $(ETTER_PASSIVE).old | wc -l; \
+	fi;
+	@echo -n "New file lines are:  "
+	@gunzip -c $(ETTER_PASSIVE) | wc -l
+	@echo ""
+	@echo ""
+	@echo "New file is:"
+	@ls -l $(ETTER_PASSIVE)
 
 # ntop census
 census-fail:

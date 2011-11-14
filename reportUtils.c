@@ -2047,20 +2047,23 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
     }
   }
 
+  if(headerSent) { 
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");
+    sendString("</TD></TR>\n</TABLE>"TABLE_OFF"</CENTER>"); 
+  }
+
   if(el->nonIPTraffic) {
     if((el->nonIPTraffic->arpReqPktsSent.value
 	+ el->nonIPTraffic->arpReplyPktsSent.value
 	+ el->nonIPTraffic->arpReplyPktsRcvd.value) > 0) {
-      if(!headerSent) {
-	sendString(tableHeader);
-	headerSent = 1;
 
+      //if(headerSent) sendString(tableHeader);
 	sendString("<CENTER>\n"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>");
 	sendString("<TR "TR_ON" "DARK_BG">"
 		   "<TH "TH_BG">ARP</TH>"
-		   "<TH "TH_BG">Packet</TH>"
+		   "<TH "TH_BG">Packets</TH>"
 		   "</TR>\n\n");       
-      }
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 		    "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Request Sent</TH>"
@@ -2084,14 +2087,10 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 		    formatPkts(el->nonIPTraffic->arpReplyPktsSent.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
 
+      sendString("</TABLE>"TABLE_OFF"<P>\n</CENTER>\n");
     }
   }
 
-  if(headerSent) { 
-    sendString("</TABLE>"TABLE_OFF"<P>\n");
-    sendString("</CENTER>\n");
-    sendString("</TD></TR>\n</TABLE>"TABLE_OFF"</CENTER>"); 
-  }
 }
 
 /* ************************************ */

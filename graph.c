@@ -102,7 +102,7 @@ static void send_graph_footer(void) {
 static void build_pie(char *title,
 		      int num, float *p, char **lbl) {
   int i;
-  char buf[64];
+  char buf[256];
   float tot = 0;
 
   if(num == 0) return;

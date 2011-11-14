@@ -21,12 +21,16 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-#define MAX_NUM_MAP_HOSTS 512
+#define MAX_NUM_MAP_HOSTS 5120
 
-const char *map_head = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n  <head>\n    <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"/>\n    <script src=\"http://maps.google.com/maps?file=api&amp;v=2&amp;key=";
-const char *map_head2 = "\"\n      type=\"text/javascript\"></script>\n    <script type=\"text/javascript\">\n\n    //<![CDATA[\n\n    function load() {\n      if (GBrowserIsCompatible()) {\n\n       function createMarker(point,html) {\n        var marker = new GMarker(point);\n        GEvent.addListener(marker, \"click\", function() {\n          marker.openInfoWindowHtml(html);\n        });\n        return marker;\n      }\n\n        var map = new GMap2(document.getElementById(\"map\"));\n\n        map.addControl(new GLargeMapControl()); map.addControl(new GMapTypeControl());\n        map.addControl(new GMapTypeControl(true));\n        map.setCenter(new GLatLng(43.72, 10.40), 2);\n";
+//const char *map_head = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n  <head>\n    <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"/>\n    <script src=\"http://maps.google.com/maps?file=api&amp;v=2&amp;key=";
+//const char *map_head2 = "\"\n      type=\"text/javascript\"></script>\n    <script type=\"text/javascript\">\n\n    //<![CDATA[\n\n    function load() {\n      if (GBrowserIsCompatible()) {\n\n       function createMarker(point,html) {\n        var marker = new GMarker(point);\n        GEvent.addListener(marker, \"click\", function() {\n          marker.openInfoWindowHtml(html);\n        });\n        return marker;\n      }\n\n        var map = new GMap2(document.getElementById(\"map\"));\n\n        map.addControl(new GLargeMapControl()); map.addControl(new GMapTypeControl());\n        map.addControl(new GMapTypeControl(true));\n        map.setCenter(new GLatLng(43.72, 10.40), 2);\n";
+//const char *map_tail = "\n      }\n    }\n\n    //]]>\n    </script>\n  </head>\n  <body onload=\"load()\" onunload=\"GUnload()\">\n    <center><div id=\"map\" style=\"width: 800px; height: 600px\"></div></center>\n\n  </body>\n</html>\n";
 
-const char *map_tail = "\n      }\n    }\n\n    //]]>\n    </script>\n  </head>\n  <body onload=\"load()\" onunload=\"GUnload()\">\n    <center><div id=\"map\" style=\"width: 800px; height: 600px\"></div></center>\n\n  </body>\n</html>\n";
+const char *map_head = "<script type=\"text/javascript\" src=\"http://maps.googleapis.com/maps/api/js?sensor=false";
+const char *map_head2 = "\"></script>\n    <script type=\"text/javascript\"><!--\n\n    function load() { \n addReflections();\n \n function createMarker(point,html) { \n var infowindow = new google.maps.InfoWindow({ \n content: html \n }); \n var marker = new google.maps.Marker({ \n position: point \n }); \n google.maps.event.addListener(marker, \"click\", function() { \n infowindow.open(map,marker); \n }); \n marker.setMap(map); \n } \n \n var myOptions = { \n zoom: 2, \n center: new google.maps.LatLng(43.72, 10.40), \n panControl: true, \n zoomControl: true, \n scaleControl: true, \n mapTypeId: google.maps.MapTypeId.ROADMAP \n };\n \n var map = new google.maps.Map(document.getElementById(\"map\"),myOptions); \n";
+const char *map_tail = "\n      }\n\n        --></script>\n  </head>\n  <body onload=\"load()\">\n    <center><div id=\"map\" style=\"width: 800px; height: 600px\"></div></center>\n\n";
+
 
 /* ******************************************** */
 
@@ -72,7 +76,7 @@ void create_host_map() {
   int num_hosts = 0;
 
   sendString((char*)map_head);
-  sendString(googleMapsKey);
+  //sendString(googleMapsKey);
   sendString((char*)map_head2);
   
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
@@ -88,8 +92,8 @@ void create_host_map() {
       else
 	showSymIp = 0;
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
-		    "map.addOverlay(createMarker(new GLatLng(%.2f, %.2f), \"%s%s<A HREF=/%s.html>%s</A><br>%s<br>%s\"));\n",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+ 		    "createMarker(new google.maps.LatLng(%.2f, %.2f), \"%s%s<A HREF=/%s.html>%s</A><br>%s<br>%s\");\n", 
 		    el->geo_ip->latitude, el->geo_ip->longitude,
 		    showSymIp ? escape_string(el->hostResolvedName, buf1, sizeof(buf1)) : "", 
 		    showSymIp ? "<br>" : "",
@@ -107,8 +111,8 @@ void create_host_map() {
   if(num_hosts > MAX_NUM_MAP_HOSTS)
     sendString("<p><center><b><font color=red>WARNING:</font></b>You have more hosts to display than the number typically supported by Google maps. Some hosts have not been rendered.</center></p>");
 
-  sendString("<p><center><b><font color=red>NOTE:</font></b> ");
-  sendString("make sure you get your key <a href=http://code.google.com/apis/maps/>here</A>"
-	  " for using Google Maps from ntop and register it as \'google_maps.key\' key <A href=/"CONST_EDIT_PREFS"#google_maps.key>here</A>.</center></p>\n"); 
+//  sendString("<p><center><b><font color=red>NOTE:</font></b> ");
+//  sendString("make sure you get your key <a href=http://code.google.com/apis/maps/>here</A>"
+//	  " for using Google Maps from ntop and register it as \'google_maps.key\' key <A href=/"CONST_EDIT_PREFS"#google_maps.key>here</A>.</center></p>\n"); 
 }
 
