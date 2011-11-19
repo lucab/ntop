@@ -489,6 +489,9 @@ ntop.h
 #include "getopt.h"
 #endif
 
+/* Needed to enable ntop extensions in OpenDPI-ntop */
+#define HAVE_NTOP
+
 #include "ipq_api.h"
 
 /* **************************************************************************************

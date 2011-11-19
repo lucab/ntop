@@ -105,7 +105,7 @@ void updateHostUsers(char *userName, int userType, HostTraffic *theHost) {
   if(userName[0] == '\0') return;
 
   /* Convert to lowercase */
-  for(i=strlen(userName)-1; i>=0; i--) userName[i] = tolower(userName[i]);
+  for(i=(int)strlen(userName)-1; i>=0; i--) userName[i] = tolower(userName[i]);
 
   if(isSMTPhost(theHost)) {
     /*
@@ -1099,7 +1099,7 @@ static void handleHTTPSSession(const struct pcap_pkthdr *h,
 		  break;
 	      }
 
-	      len = min(extension_len-begin, sizeof(buffer)-1);
+	      len = (int)min(extension_len-begin, sizeof(buffer)-1);
 	      strncpy(buffer, &server_name[begin], len);
 	      buffer[len] = '\0';
 
@@ -1267,7 +1267,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 	row = strtok_r(rcStr, "\n", &strtokState);
 
 	while(row != NULL) {
-	  int len = strlen(row);
+	  int len = (int)strlen(row);
 
 	  if((len > 12) && (strncmp(row, "User-Agent:", 11) == 0)) {
 	    char *token, *tokState = NULL, *os = NULL;
@@ -1958,7 +1958,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 	This value seems to be wrong so it's better to ignore it
 	rather than showing a false/wrong/dummy value
       */
-      theSession->serverNwDelay.tv_usec = theSession->serverNwDelay.tv_sec = 0;
+      theSession->serverNwDelay.tv_usec = 0, theSession->serverNwDelay.tv_sec = 0;
     }
 
     theSession->sessionState = FLAG_STATE_SYN_ACK;
@@ -1979,7 +1979,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 	  This value seems to be wrong so it's better to ignore it
 	  rather than showing a false/wrong/dummy value
 	*/
-	theSession->clientNwDelay.tv_usec = theSession->clientNwDelay.tv_sec = 0;
+	theSession->clientNwDelay.tv_usec = 0, theSession->clientNwDelay.tv_sec = 0;
       }
 
       updateSessionDelayStats(theSession);

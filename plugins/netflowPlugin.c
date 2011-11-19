@@ -1748,10 +1748,19 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		  case 24: /* OUT_PKTS */
 		    memcpy(&record.sentPkts, &buffer[displ], 4);
 		    break;
+		  
+		  case 56: /* IN_SRC_MAC */
+		    memcpy(&record.src_mac, &buffer[displ], LEN_ETHERNET_ADDRESS), record.src_mac_set = 1;
+		    break;
+
 		  case 58: /* SRC_VLAN */
 		  case 59: /* DST_VLAN */
 		    memcpy(&record.vlanId, &buffer[displ], 2);
 		    record.vlanId = ntohs(record.vlanId);
+		    break;
+
+		  case 80: /* OUT_DST_MAC */
+		    memcpy(&record.dst_mac, &buffer[displ], LEN_ETHERNET_ADDRESS), record.dst_mac_set = 1;
 		    break;
 		  }
 		} else {
