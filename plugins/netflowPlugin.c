@@ -461,9 +461,6 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   u_short sport, dport, proto, newSession = 0;
   TrafficCounter ctr;
   int skipSRC=0, skipDST=0;
-#ifdef DEBUG_FLOWS
-  int debug = 1;
-#endif
   struct pcap_pkthdr h;
   struct tcphdr tp;
   IPSession *session = NULL;
@@ -482,10 +479,9 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
   if(deEndianize) de_endianFlow(record);
 
-#ifdef DEBUG_FLOWS
-  if(debug) traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: handleGenericFlow() called");
-#endif
-
+  if(myGlobals.runningPref.debugMode)
+    traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: handleGenericFlow() called");
+  
   myGlobals.device[deviceId].netflowGlobals->numNetFlowsRcvd++;
 
   /* Bad flow(zero packets) */
@@ -528,8 +524,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   srcAS    = record->src_as;
   dstAS    = record->dst_as;
 
-#ifdef DEBUG_FLOWS
-  if(1) {
+if(myGlobals.runningPref.debugMode) {
     char buf1[256], buf[256];
 
     traceEvent(CONST_TRACE_INFO,
@@ -540,7 +535,6 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 	       record->rcvdPkts, record->rcvdOctets,
 	       srcAS, dstAS, proto);
   }
-#endif
 
   switch(myGlobals.device[deviceId].netflowGlobals->netFlowAggregation) {
   case noAggregation:
@@ -1406,21 +1400,21 @@ static void dissectFlow(u_int32_t netflow_device_ip,
       int16_t stillToProcess; /* Do not change to uint: this way I can catch template length issues */
 
       /* 1st byte */
-#ifdef DEBUG_FLOWS
-      traceEvent(CONST_TRACE_INFO, "[displ=%d][%02X %02X %02X]",
-		 displ, buffer[displ] & 0xFF,
-		 buffer[displ+1] & 0xFF,
-		 buffer[displ+2] & 0xFF);
-#endif
+      if(myGlobals.runningPref.debugMode) {
+	traceEvent(CONST_TRACE_INFO, "[displ=%d][%02X %02X %02X]",
+		   displ, buffer[displ] & 0xFF,
+		   buffer[displ+1] & 0xFF,
+		   buffer[displ+2] & 0xFF);
+      }
 
       if(buffer[displ] == 0) {
 	isOptionTemplate = (u_char)buffer[displ+1];
 
 	/* Template */
-#ifdef DEBUG_FLOWS
-	traceEvent(CONST_TRACE_INFO, "Found Template [displ=%d]", displ);
-	traceEvent(CONST_TRACE_INFO, "Found Template Type: %d", isOptionTemplate);
-#endif
+	if(myGlobals.runningPref.debugMode) {
+	  traceEvent(CONST_TRACE_INFO, "Found Template [displ=%d]", displ);
+	  traceEvent(CONST_TRACE_INFO, "Found Template Type: %d", isOptionTemplate);
+	}
 
 	myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9TemplRcvd++;
 
@@ -1428,7 +1422,6 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 	if(bufferLen > (displ+sizeof(V9TemplateHeader))) {
 	  V9TemplateHeader header;
-	  u_short stillToGo;
 	  u_int8_t templateDone = 0;
 
 	  memcpy(&header, &buffer[displ], sizeof(V9TemplateHeader));
@@ -1436,9 +1429,8 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	  header.flowsetLen = ntohs(header.flowsetLen);
 	  stillToProcess = header.flowsetLen-sizeof(V9TemplateHeader);
 	  displ += sizeof(V9TemplateHeader);
-	  stillToGo = header.flowsetLen-sizeof(V9TemplateHeader);
 
-	  while((bufferLen >= (displ+stillToGo)) && (!templateDone)) {
+	  while((bufferLen >= (displ+stillToProcess)) && (!templateDone)) {
 	    V9TemplateDef templateDef;
 	    FlowSetV9 *cursor = myGlobals.device[deviceId].netflowGlobals->templates;
 	    u_char found = 0;
@@ -1455,7 +1447,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	      template.templateId = templateDef.templateId, template.fieldCount = templateDef.fieldCount;
 
 	      if(handle_ipfix) {
-		fields = (V9V10TemplateField*)malloc(templateDef.fieldCount * sizeof(V9V10TemplateField));
+		fields = (V9V10TemplateField*)malloc(templateDef.fieldCount * (int)sizeof(V9V10TemplateField));
 		if(fields == NULL) {
 		  traceEvent(CONST_TRACE_WARNING, "Not enough memory");
 		  break;
@@ -1483,28 +1475,27 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		    fields[fieldId].isPenField = is_enterprise_specific;
 		    accumulatedLen += fields[fieldId].fieldLen;
 
-#ifdef DEBUG_FLOWS
-		    traceEvent(CONST_TRACE_INFO, "[%d] fieldType=%d/PEN=%d/len=%d [tot=%d]",
-			       1+fieldId, fields[fieldId].fieldType,
-			       is_enterprise_specific, pen_len+fields[fieldId].fieldLen, len);
-#endif
+		    if(myGlobals.runningPref.debugMode) {
+		      traceEvent(CONST_TRACE_INFO, "[%d] fieldType=%d/PEN=%d/len=%d [tot=%d]",
+				 1+fieldId, fields[fieldId].fieldType,
+				 is_enterprise_specific, pen_len+fields[fieldId].fieldLen, len);
+		    }
 		  }
 
 		  template.flowsetLen = len;
 		}
 	      } else {
 		/* NetFlow */
-		fields = (V9V10TemplateField*)malloc(template.fieldCount * sizeof(V9V10TemplateField));
+		fields = (V9V10TemplateField*)malloc(template.fieldCount * (int)sizeof(V9V10TemplateField));
 		if(fields == NULL) {
 		  traceEvent(CONST_TRACE_WARNING, "Not enough memory");
 		  break;
 		}
 
-#ifdef DEBUG_FLOWS
-		if(1)
+		if(myGlobals.runningPref.debugMode) {
 		  traceEvent(CONST_TRACE_INFO, "Template [id=%d] fields: %d [len=%d]",
 			     template.templateId, template.fieldCount, template.flowsetLen);
-#endif
+		}
 
 		goodTemplate = 1;
 
@@ -1518,12 +1509,11 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		  len += 4; /* Field Type (2) + Field Length (2) */
 		  accumulatedLen +=  fields[fieldId].fieldLen;
 
-#ifdef DEBUG_FLOWS
-		  if(1)
+		  if(myGlobals.runningPref.debugMode) {
 		    traceEvent(CONST_TRACE_INFO, "[%d] fieldType=%d/fieldLen=%d/totLen=%d [stillToProcess=%u]",
 			       1+fieldId, fields[fieldId].fieldType, fields[fieldId].fieldLen,
 			       accumulatedLen, stillToProcess);
-#endif
+		  }
 		}
 	      }
 
@@ -1537,17 +1527,15 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		}
 
 		if(found) {
-#ifdef DEBUG_FLOWS
-		  traceEvent(CONST_TRACE_INFO, ">>>>> Redefined existing template [id=%d]",
-			     template.templateId);
-#endif
+		  if(myGlobals.runningPref.debugMode)
+		    traceEvent(CONST_TRACE_INFO, ">>>>> Redefined existing template [id=%d]",
+			       template.templateId);
 
 		  free(cursor->fields);
 		} else {
-#ifdef DEBUG_FLOWS
-		  traceEvent(CONST_TRACE_INFO, ">>>>> Found new flow template definition [id=%d]",
-			     template.templateId);
-#endif
+		  if(myGlobals.runningPref.debugMode) 
+		    traceEvent(CONST_TRACE_INFO, ">>>>> Found new flow template definition [id=%d]",
+			       template.templateId);
 
 		  cursor = (FlowSetV9*)malloc(sizeof(FlowSetV9));
 		  cursor->next = myGlobals.device[deviceId].netflowGlobals->templates;
@@ -1560,15 +1548,13 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		cursor->flowLen                 = accumulatedLen;
 		cursor->fields                  = fields;
 
-#ifdef DEBUG_FLOWS
-		traceEvent(CONST_TRACE_INFO, ">>>>> Defined flow template [id=%d][flowLen=%d][fieldCount=%d]",
-			   cursor->templateInfo.templateId,
-			   cursor->flowLen, cursor->templateInfo.fieldCount);
-#endif
+		if(myGlobals.runningPref.debugMode) 
+		  traceEvent(CONST_TRACE_INFO, ">>>>> Defined flow template [id=%d][flowLen=%d][fieldCount=%d]",
+			     cursor->templateInfo.templateId,
+			     cursor->flowLen, cursor->templateInfo.fieldCount);
 	      } else {
-#ifdef DEBUG_FLOWS
-		traceEvent(CONST_TRACE_INFO, ">>>>> Skipping bad template [id=%d]", template.templateId);
-#endif
+		if(myGlobals.runningPref.debugMode)
+		  traceEvent(CONST_TRACE_INFO, ">>>>> Skipping bad template [id=%d]", template.templateId);
 	      }
 	    } else {
 	      len = header.flowsetLen;
@@ -1581,16 +1567,16 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 	    displ += len, stillToProcess -= (len+sizeof(templateDef));
 
-#ifdef DEBUG_FLOWS
-	    traceEvent(CONST_TRACE_INFO, "Moving ahead of %d bytes: new offset is %d", len, displ);
-#endif
+	    if(myGlobals.runningPref.debugMode) 
+	      traceEvent(CONST_TRACE_INFO, "Moving ahead of %d bytes: new offset is %d", len, displ);
+
 	    if(stillToProcess <= 0) templateDone = 1;
 	  }
 	}
       } else {
-#ifdef DEBUG_FLOWS
-	traceEvent(CONST_TRACE_INFO, "Found FlowSet [displ=%d]", displ);
-#endif
+	if(myGlobals.runningPref.debugMode)
+	  traceEvent(CONST_TRACE_INFO, "Found FlowSet [displ=%d]", displ);
+
 	foundRecord = 1;
       }
 
@@ -1621,11 +1607,9 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	    init_displ = displ;
 	    displ += sizeof(V9FlowSet);
 
-#ifdef DEBUG_FLOWS
-	    if(1)
+	    if(myGlobals.runningPref.debugMode)
 	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d [%d...%d]",
 			 fs.templateId, displ, fs.flowsetLen);
-#endif
 
 	    while(displ < (init_displ + fs.flowsetLen)) {
 	      u_short accum_len = 0;
@@ -1639,16 +1623,13 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	      record.server_nw_latency_sec = record.server_nw_latency_usec = htonl(0);
 	      record.appl_latency_sec = record.appl_latency_usec = htonl(0);
 
-#ifdef DEBUG_FLOWS
-	      if(1)
+	      if(myGlobals.runningPref.debugMode)
 		traceEvent(CONST_TRACE_INFO, ">>>>> Stats [%d...%d]", displ, (init_displ + fs.flowsetLen));
-#endif
 
 	      for(fieldId=0; fieldId<cursor->templateInfo.fieldCount; fieldId++) {
 		if(!(displ < (init_displ + fs.flowsetLen))) break; /* Flow too short */
 
-#ifdef DEBUG_FLOWS
-		if(1)
+		if(myGlobals.runningPref.debugMode)
 		  traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting flow field "
 			     "[displ=%d/%d][template=%d][fieldType=%d][fieldLen=%d][isPenField=%d][field=%d/%d] [%d...%d] [tot len=%d]" /* "[%s]" */,
 			     displ, fs.flowsetLen,
@@ -1658,7 +1639,6 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 			     fieldId, cursor->templateInfo.fieldCount,
 			     displ, (init_displ + fs.flowsetLen), accum_len+fields[fieldId].fieldLen
 			     /* ,nf_hex_dump(&buffer[displ], ntohs(fields[fieldId].fieldLen)) */);
-#endif
 
 		if(fields[fieldId].isPenField == 0) {
 		  switch(fields[fieldId].fieldType) {
@@ -1788,21 +1768,18 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		    /* VoIP Extensions */
 		  case NTOP_BASE_ID+130: /* SIP_CALL_ID */
 		    memcpy(&record.sip_call_id, &buffer[displ], 50);
-#ifdef DEBUG_FLOWS
-		    traceEvent(CONST_TRACE_INFO, "SIP: sip_call_id=%s", record.sip_call_id);
-#endif
+		    if(myGlobals.runningPref.debugMode)
+		      traceEvent(CONST_TRACE_INFO, "SIP: sip_call_id=%s", record.sip_call_id);
 		    break;
 		  case NTOP_BASE_ID+131: /* SIP_CALLING_PARTY */
 		    memcpy(&record.sip_calling_party, &buffer[displ], 50);
-#ifdef DEBUG_FLOWS
-		    traceEvent(CONST_TRACE_INFO, "SIP: sip_calling_party=%s", record.sip_calling_party);
-#endif
+		    if(myGlobals.runningPref.debugMode)
+		      traceEvent(CONST_TRACE_INFO, "SIP: sip_calling_party=%s", record.sip_calling_party);
 		    break;
 		  case NTOP_BASE_ID+132: /* SIP_CALLED_PARTY */
 		    memcpy(&record.sip_called_party, &buffer[displ], 50);
-#ifdef DEBUG_FLOWS
-		    traceEvent(CONST_TRACE_INFO, "SIP: sip_called_party=%s", record.sip_called_party);
-#endif
+		    if(myGlobals.runningPref.debugMode)
+		      traceEvent(CONST_TRACE_INFO, "SIP: sip_called_party=%s", record.sip_called_party);
 		    break;
 		  }
 		}
@@ -1836,12 +1813,10 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 				recordSysUpTime, &record, deviceId, &firstSeen, &lastSeen, 1);
 	      myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd++;
 
-#ifdef DEBUG_FLOWS
-	      if(1)
+	      if(myGlobals.runningPref.debugMode)	      
 		traceEvent(CONST_TRACE_INFO,
 			   ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d][pkts=%d/bytes=%d]",
 			   accum_len, record.sentPkts, record.sentOctets);
-#endif
 
 	      tot_len += accum_len;
 
@@ -1870,18 +1845,18 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		traceEvent(CONST_TRACE_WARNING, "Template len mismatch [tot_len=%d][flow_len=%d][padding=%d]",
 			   tot_len, fs.flowsetLen, padding);
 	      } else {
-#ifdef DEBUG_FLOWS
-		traceEvent(CONST_TRACE_INFO, ">>>>> %d bytes padding [tot_len=%d][flow_len=%d]",
-			   padding, tot_len, fs.flowsetLen);
-#endif
+		if(myGlobals.runningPref.debugMode) 
+		  traceEvent(CONST_TRACE_INFO, ">>>>> %d bytes padding [tot_len=%d][flow_len=%d]",
+			     padding, tot_len, fs.flowsetLen);
+
 		displ += padding;
 	      }
 	    }
 	  } else {
-#ifdef DEBUG_FLOWS
-	    traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with UNKNOWN template %d [displ=%d][len=%d]",
-		       fs.templateId, displ, fs.flowsetLen);
-#endif
+	    if(myGlobals.runningPref.debugMode) 
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with UNKNOWN template %d [displ=%d][len=%d]",
+			 fs.templateId, displ, fs.flowsetLen);
+
 	    displ += fs.flowsetLen;
 	  }
 	}
@@ -1897,9 +1872,8 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
     if(numFlows > CONST_V5FLOWS_PER_PAK) numFlows = CONST_V5FLOWS_PER_PAK;
 
-#ifdef DEBUG_FLOWS
-    if(1) traceEvent(CONST_TRACE_INFO, "dissectNetFlow(%d flows)", numFlows);
-#endif
+    if(myGlobals.runningPref.debugMode) 
+      traceEvent(CONST_TRACE_INFO, "dissectNetFlow(%d flows)", numFlows);
 
     /* Lock white/black lists for duration of this flow packet */
     accessMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex, "flowPacket");
@@ -2099,8 +2073,10 @@ static void* netflowMainLoop(void* _deviceId) {
       if(FD_ISSET(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, &netflowMask)){
 	len = sizeof(fromHost);
 	rc = recvfrom(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket,
-		      (char*)&buffer, sizeof(buffer),
-		      0, (struct sockaddr*)&fromHost, (socklen_t*)&len);
+		      (char*)&buffer, 
+		      (int)sizeof(buffer),
+		      0, (struct sockaddr*)&fromHost, 
+		      (socklen_t*)&len);
       }
 #ifdef HAVE_SCTP
       else {
@@ -2125,10 +2101,9 @@ static void* netflowMainLoop(void* _deviceId) {
 #endif
 
 
-#ifdef DEBUG_FLOWS
-      traceEvent(CONST_TRACE_INFO, "NETFLOW_DEBUG: Received NetFlow packet(len=%d)(deviceId=%d)",
-		 rc,  deviceId);
-#endif
+      if(myGlobals.runningPref.debugMode)
+	traceEvent(CONST_TRACE_INFO, "NETFLOW_DEBUG: Received NetFlow packet(len=%d)(deviceId=%d)",
+		   rc,  deviceId);
 
       if(rc > 0) {
 	int i;
@@ -3142,13 +3117,13 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
   sendString(buf);
 
   if(myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd > 0) {
-    totFlows = myGlobals.device[deviceId].netflowGlobals->numNetFlowsV5Rcvd +
-      myGlobals.device[deviceId].netflowGlobals->numNetFlowsV7Rcvd +
-      myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd +
-      myGlobals.device[deviceId].netflowGlobals->numBadFlowPkts +
-      myGlobals.device[deviceId].netflowGlobals->numBadFlowBytes +
-      myGlobals.device[deviceId].netflowGlobals->numBadFlowReality +
-      myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd;
+    totFlows = (u_int)(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV5Rcvd +
+		       myGlobals.device[deviceId].netflowGlobals->numNetFlowsV7Rcvd +
+		       myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd +
+		       myGlobals.device[deviceId].netflowGlobals->numBadFlowPkts +
+		       myGlobals.device[deviceId].netflowGlobals->numBadFlowBytes +
+		       myGlobals.device[deviceId].netflowGlobals->numBadFlowReality +
+		       myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<tr " TR_ON ">\n"
