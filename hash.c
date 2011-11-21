@@ -104,14 +104,17 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   /* If this is one of the special ones, let's clear the other pointer to it
    * to prevent a free of freed memory error later.
    */
-  if(host == myGlobals.otherHostEntry) {
-    traceEvent(CONST_TRACE_WARNING, "Attempting to call freeHostInfo(otherHostEntry)");
-    return;
-  }
 
-  if(host == myGlobals.broadcastEntry) {
-    traceEvent(CONST_TRACE_WARNING, "Attempting to call freeHostInfo(broadcastEntry)");
-    return;
+  if(myGlobals.ntopRunState < FLAG_NTOPSTATE_SHUTDOWN) {
+    if(host == myGlobals.otherHostEntry) {
+      traceEvent(CONST_TRACE_WARNING, "Attempting to call freeHostInfo(otherHostEntry)");
+      return;
+    }
+    
+    if(host == myGlobals.broadcastEntry) {
+      traceEvent(CONST_TRACE_WARNING, "Attempting to call freeHostInfo(broadcastEntry)");
+      return;
+    }
   }
 
   if((host->magic != CONST_MAGIC_NUMBER) && (host->magic != CONST_UNMAGIC_NUMBER)) {
@@ -231,6 +234,8 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   if(host->community != NULL) free(host->community);
   if(host->geo_ip) GeoIPRecord_delete(host->geo_ip);
 
+  
+
   /* ********** */
   /*
     #ifdef HASH_DEBUG
@@ -276,9 +281,11 @@ void freeHostInstances(int actualDeviceId) {
 #endif
 
     for(idx=FIRST_HOSTS_ENTRY; idx<myGlobals.device[actualDeviceId].hosts.actualHashSize; idx++) {
-      HostTraffic *el = myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx];
+      HostTraffic *el;
 
-    if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN) break;
+      // if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN) break;
+
+      el = myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx];
 
       while(el != NULL) {
 	HostTraffic *nextEl = el->next;

@@ -2168,7 +2168,7 @@ int timedwaitCondvar(ConditionalVariable *condvarId, struct timespec *expiration
 
 /* ************************************ */
 
-int signalCondvar(ConditionalVariable *condvarId) {
+int signalCondvar(ConditionalVariable *condvarId, u_int8_t broadcast) {
   int rc;
 
   rc = pthread_mutex_lock(&condvarId->mutex);
@@ -2176,7 +2176,11 @@ int signalCondvar(ConditionalVariable *condvarId) {
   condvarId->predicate++;
 
   rc = pthread_mutex_unlock(&condvarId->mutex);
-  rc = pthread_cond_signal(&condvarId->condvar);
+
+  if(broadcast)
+    rc = pthread_cond_broadcast(&condvarId->condvar);
+  else
+    rc = pthread_cond_signal(&condvarId->condvar);
 
   return rc;
 }

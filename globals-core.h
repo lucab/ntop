@@ -652,7 +652,7 @@ extern int createCondvar(ConditionalVariable *condvarId);
 extern void deleteCondvar(ConditionalVariable *condvarId);
 extern int waitCondvar(ConditionalVariable *condvarId);
 extern int timedwaitCondvar(ConditionalVariable *condvarId, struct timespec *expiration);
-extern int signalCondvar(ConditionalVariable *condvarId);
+extern int signalCondvar(ConditionalVariable *condvarId, u_int8_t broadcast);
 extern void setNBnodeNameType(HostTraffic *theHost, char nodeType, char isQuery, char* nbName);
 extern void trimString(char*);
 extern FILE* getNewRandomFile(char* fileName, int len);

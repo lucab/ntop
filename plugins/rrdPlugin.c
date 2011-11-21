@@ -78,7 +78,7 @@ static unsigned long numRuns = 0, numRRDerrors = 0, lastRRDupdateNum = 0,
 static float rrdcmaxDuration = 0, lastRRDupdateDuration = 0, maxRRDupdateDuration = 0;
 static time_t start_tm, end_tm;
 
-static u_short dumpDomains, dumpFlows, dumpHosts, dumpSubnets,
+static u_short dumpDomains, dumpFlows, dumpHosts,
   dumpInterfaces, dumpASs, enableAberrant, shownCreate=0;
 
 static Counter rrdGraphicRequests=0;
@@ -3042,13 +3042,6 @@ static void commonRRDinit(void) {
     dumpFlows = atoi(value);
   }
 
-  if(fetchPrefsValue("rrd.dataDumpSubnets", value, sizeof(value)) == -1) {
-    storePrefsValue("rrd.dataDumpSubnets", "0");
-    dumpSubnets = 0;
-  } else {
-    dumpSubnets = atoi(value);
-  }
-
   if(fetchPrefsValue("rrd.dataDumpHosts", value, sizeof(value)) == -1) {
     storePrefsValue("rrd.dataDumpHosts", "0");
     dumpHosts = 0;
@@ -3193,7 +3186,6 @@ static void commonRRDinit(void) {
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpMonths %d months by day", dumpMonths);
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpDomains %s", dumpDomains == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpFlows %s", dumpFlows == 0 ? "no" : "yes");
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpSubnets %s", dumpSubnets == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpHosts %s", dumpHosts == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterfaces %s", dumpInterfaces == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpASs %s", dumpASs == 0 ? "no" : "yes");
@@ -4020,7 +4012,7 @@ static void handleRRDHTTPrequest(char* url) {
   char rrdPath[512] = { '\0' }, mode[32] = { '\0' }, community[32] = { '\0' }, filterString[64] = { '\0' };
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;
-  int _dumpDomains, _dumpFlows, _dumpSubnets, _dumpHosts, _dumpInterfaces, _dumpASs, _enableAberrant, _delay,
+  int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces, _dumpASs, _enableAberrant, _delay,
     _dumpDetail, _dumpInterval, _dumpShortInterval, _dumpHours, _dumpDays, _dumpMonths, graphId = 0,
     _heartbeat;
   int i, len, idx;
@@ -4049,7 +4041,6 @@ static void handleRRDHTTPrequest(char* url) {
   /* Initial values - remember, for checkboxes these need to be OFF (there's no html UNCHECKED option) */
   _dumpDomains=0;
   _dumpFlows=0;
-  _dumpSubnets=0;
   _dumpHosts=0;
   _dumpInterfaces=0;
   _dumpASs=0;
@@ -4190,8 +4181,6 @@ static void handleRRDHTTPrequest(char* url) {
 	  _dumpDomains = 1;
 	} else if(strcmp(key, "dumpFlows") == 0) {
 	  _dumpFlows = 1;
-	} else if(strcmp(key, "dumpSubnets") == 0) {
-	  _dumpSubnets = 1;
 	} else if(strcmp(key, "dumpDetail") == 0) {
 	  _dumpDetail = atoi(value);
 	  if(_dumpDetail > FLAG_RRD_DETAIL_HIGH) _dumpDetail = FLAG_RRD_DETAIL_HIGH;
@@ -4257,7 +4246,6 @@ static void handleRRDHTTPrequest(char* url) {
       dumpMonths = _dumpMonths;
       dumpDomains = _dumpDomains;
       dumpFlows = _dumpFlows;
-      dumpSubnets = _dumpSubnets;
       dumpHosts = _dumpHosts;
       dumpInterfaces = _dumpInterfaces;
       dumpASs = _dumpASs;
@@ -4285,8 +4273,6 @@ static void handleRRDHTTPrequest(char* url) {
       storePrefsValue("rrd.dataDumpDomains", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpFlows);
       storePrefsValue("rrd.dataDumpFlows", buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpSubnets);
-      storePrefsValue("rrd.dataDumpSubnets", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpHosts);
       storePrefsValue("rrd.dataDumpHosts", buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpInterfaces);
@@ -4457,10 +4443,6 @@ static void handleRRDHTTPrequest(char* url) {
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpFlows VALUE=1 %s> Flows<br>\n",
 		dumpFlows ? "CHECKED" : "" );
-  sendString(buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpSubnets VALUE=1 %s> Subnets<br>\n",
-		dumpSubnets ? "CHECKED" : "" );
   sendString(buf);
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpHosts VALUE=1 %s> Hosts<br>\n",
@@ -5159,19 +5141,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     }
 
     /* ****************************************************** */
-
-    if(dumpSubnets) {
-      for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
-	int subnetIdx;
-
-	for(subnetIdx=0; subnetIdx<myGlobals.numKnownSubnets; subnetIdx++) {
-	  myGlobals.device[devIdx].networkHost[subnetIdx].known_subnet_id = subnetIdx;
-	  rrdUpdateIPHostStats(&myGlobals.device[devIdx].networkHost[subnetIdx], devIdx, 1);
-	}
-      }
-    }
-
-    /* ************************** */
 
     if(dumpFlows) {
       FlowFilterList *list = myGlobals.flowsList;

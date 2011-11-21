@@ -418,10 +418,11 @@ int waitCondvar(ConditionalVariable *condvarId) {
 
 /* ************************************ */
 
-int signalCondvar(ConditionalVariable *condvarId) {
+int signalCondvar(ConditionalVariable *condvarId, u_int8_t broadcast) {
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Signaling (%x)...", condvarId->condVar);
 #endif
+  /* FIX: handle "u_int8_t broadcast" */
   return((int)PulseEvent(condvarId->condVar));
 }
 

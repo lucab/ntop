@@ -2468,7 +2468,6 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     *theAnchor[NUM_TABLE_COLUMNS], osBuf[160];
   char htmlAnchor[64], htmlAnchor1[64];
   char formatBuf[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER];
-  char htmlTitle[64];
   char totalHosts[128];
   u_char *vlanList, foundVlan = 0, vlanStr[16], ifStr[16], foundIf = 0, *ifList;
   u_int8_t *knownSubnets, selected;

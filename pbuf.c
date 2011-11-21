@@ -562,7 +562,7 @@ void queuePacket(u_char *_deviceId,
 #endif
   }
 
-  signalCondvar(&myGlobals.device[deviceId].queueCondvar);
+  signalCondvar(&myGlobals.device[deviceId].queueCondvar, 0);
 
   ntop_conditional_sched_yield(); /* Allow other threads (dequeue) to run */
 }

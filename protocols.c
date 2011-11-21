@@ -649,7 +649,7 @@ u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
     if(hostPtr.addrList[i] != 0) {
       StoredAddress addrStore;
       int len;
-      datum key_data, data_data;
+      datum key_data;
 
       memset(&addrStore, 0, sizeof(addrStore));
       addrStore.recordCreationTime = myGlobals.actTime;
@@ -662,18 +662,9 @@ u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%u", ntohl(hostPtr.addrList[i]));
       key_data.dptr = (void*)&tmpBuf;
       key_data.dsize = strlen(key_data.dptr)+1;
-      data_data.dptr = (void*)&addrStore;
-      data_data.dsize = sizeof(addrStore);
 
       // FIX
       //updateHostNameInfo(elem->addr, storedAddress.symAddress, storedAddress.symAddressType);  	  
-
-#ifdef DNS_SNIFF_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: Sniffed DNS response: %s(%d) = %s(t=%d)",
-                 key_data.dptr, key_data.dsize,
-                 ((StoredAddress *)data_data.dptr)->symAddress,
-                 ((StoredAddress *)data_data.dptr)->recordCreationTime);
-#endif
 
       myGlobals.dnsSniffStoredInCache++;
     }

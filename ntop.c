@@ -843,10 +843,13 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
         safe_strncat(buf, sizeofbuf, buf2);
       } else {
         /* Wake up thread */
-        signalCondvar(&myGlobals.queueAddressCondvar);
+        traceEvent(CONST_TRACE_INFO, "Signaling thread DNSAR%d", i+1);
+        signalCondvar(&myGlobals.queueAddressCondvar, 1);
+#if 0
         traceEvent(CONST_TRACE_INFO, "Joining thread DNSAR%d", i+1);
         if(joinThread(&myGlobals.dequeueAddressThreadId[i]) != 0)
           traceEvent(CONST_TRACE_INFO, "joinThread() returned %s", strerror(errno));
+#endif
       }
     }
   }
@@ -880,7 +883,7 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 	  traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (by ntop)",
 		     formatPkts(myGlobals.device[i].droppedPkts.value, buf2, sizeof(buf2)));
 
-	  /* signalCondvar(&myGlobals.device[i].queueCondvar); */
+	  /* signalCondvar(&myGlobals.device[i].queueCondvar, 1); */
 	  /* pcap_close(myGlobals.device[i].pcapPtr); */
 
 	  traceEvent(CONST_TRACE_INFO, "Joining thread NPS(%s) [t%lu]",
@@ -932,7 +935,7 @@ void runningThreads(char *buf, int sizeofbuf, int do_join) {
 	} else {
 	  traceEvent(CONST_TRACE_INFO, "Signaling thread NPA(%s)",
 		     myGlobals.device[i].humanFriendlyName);
-	  signalCondvar(&myGlobals.device[i].queueCondvar);
+	  signalCondvar(&myGlobals.device[i].queueCondvar, 1);
 	  /*
 	  traceEvent(CONST_TRACE_INFO, "Joining thread NPA(%s)",
 		     myGlobals.device[i].humanFriendlyName);
@@ -969,7 +972,7 @@ RETSIGTYPE cleanup(int signo) {
 
 #ifndef WIN32
   signal(SIGALRM, cleanup);
-  alarm(10);
+  alarm(20);
 #endif
 
   if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_SHUTDOWN) {
@@ -1026,6 +1029,8 @@ RETSIGTYPE cleanup(int signo) {
     }
   }
 
+  freeHostInfo(myGlobals.broadcastEntry, 0); myGlobals.broadcastEntry = NULL;
+  freeHostInfo(myGlobals.otherHostEntry, 0); myGlobals.otherHostEntry = NULL;
   unloadPlugins();
 
   (void)fflush(stdout);

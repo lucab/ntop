@@ -198,7 +198,7 @@ static void queueAddress(HostAddr elem) {
       memcpy(&cloned->addr, &elem, sizeof(HostAddr));
       cloned->next = hostAddrList_head;
       hostAddrList_head = cloned;
-      signalCondvar(&myGlobals.queueAddressCondvar);
+      signalCondvar(&myGlobals.queueAddressCondvar, 0);
       myGlobals.addressQueuedCurrent++;
       if(myGlobals.addressQueuedCurrent > myGlobals.addressQueuedMax)
 	myGlobals.addressQueuedMax = myGlobals.addressQueuedCurrent;

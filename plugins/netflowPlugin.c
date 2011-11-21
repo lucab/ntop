@@ -3473,7 +3473,6 @@ static void handleNetflowHTTPrequest(char* _url) {
 	  }
 	} else if(strcmp(device, "name") == 0) {
 	  char old_name[256], new_name[256];
-	  int rc;
 
 	  sanitize_rrd_string(value);
 
@@ -3493,7 +3492,10 @@ static void handleNetflowHTTPrequest(char* _url) {
 			myGlobals.device[deviceId].uniqueIfName);
 	  revertSlashIfWIN32(new_name, 0);
 
-	  rc = rename(old_name, new_name);
+	  if(rename(old_name, new_name) != 0)
+	    traceEvent(CONST_TRACE_WARNING, 
+		       "Error while renaming %s -> %s [%s]",
+		       old_name, new_name, strerror(errno));
 	} else if(strcmp(device, "debug") == 0) {
 	  if(deviceId > 0) {
 	    myGlobals.device[deviceId].netflowGlobals->netFlowDebug = atoi(value);

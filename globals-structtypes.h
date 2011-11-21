@@ -1482,9 +1482,6 @@ typedef struct ntopInterface {
 
   /* ********************* */
   
-  /* The variable below is used to collect stats concerning interface subnets */
-  HostTraffic networkHost[MAX_NUM_INTERFACE_NETWORKS];
-
   struct {
     Counter *protoTraffic;
   } l7;

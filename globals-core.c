@@ -122,6 +122,7 @@ static void allocateOtherHosts(void) {
   myGlobals.otherHostEntry->l7.traffic = (ProtoTraffic*)calloc(myGlobals.l7.numSupportedProtocols+1, 
 							       sizeof(ProtoTraffic));  
   myGlobals.otherHostEntry->serialHostIndex = ++myGlobals.hostSerialCounter; /* Start from 1 (0 = UNKNOWN_SERIAL_INDEX) */
+  myGlobals.otherHostEntry->magic = CONST_MAGIC_NUMBER;
 }
 
 /* ************************************ */
@@ -439,7 +440,8 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   setHostFlag(FLAG_SUBNET_PSEUDO_LOCALHOST, myGlobals.broadcastEntry);
   memset(&myGlobals.broadcastEntry->hostSerial, 0, sizeof(HostSerial));
   myGlobals.broadcastEntry->serialHostIndex = ++myGlobals.hostSerialCounter; /* Start from 1 (0 = UNKNOWN_SERIAL_INDEX) */
- 
+  myGlobals.broadcastEntry->magic = CONST_MAGIC_NUMBER;
+
   allocateOtherHosts();
 
   /* ********************************** */
