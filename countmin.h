@@ -5,12 +5,15 @@
 #define min(x,y)	((x) < (y) ? (x) : (y))
 #define max(x,y)	((x) > (y) ? (x) : (y))
 
+#include "prng.h"
+
 typedef struct CM_type{
   long long count;
   int depth;
   int width;
   int ** counts;
   unsigned int *hasha, *hashb;
+  prng_type * prng; /* L. Deri */
 } CM_type;
 
 typedef struct CMF_type{ // shadow of above stucture with floats

@@ -15,10 +15,6 @@ to Creative Commons, 559 Nathan Abbott Way, Stanford, California
 *********************************************************************/
 
 #include <stdlib.h>
-#include "prng.h"
-#if 0
-#include "massdal.h"
-#endif
 #include "countmin.h"
 
 #define min(x,y)	((x) < (y) ? (x) : (y))
@@ -48,6 +44,7 @@ CM_type * CM_Init(int width, int depth, int seed)
       cm->depth=depth;
       cm->width=width;
       cm->count=0;
+      cm->prng = prng; /* L. Deri */
       cm->counts=(int **)calloc(sizeof(int *),cm->depth);
       cm->counts[0]=(int *)calloc(sizeof(int), cm->depth*cm->width);
       cm->hasha=(unsigned int *)calloc(sizeof(unsigned int),cm->depth);
@@ -108,6 +105,7 @@ void CM_Destroy(CM_type * cm)
     }
   if (cm->hasha) free(cm->hasha); cm->hasha=NULL;
   if (cm->hashb) free(cm->hashb); cm->hashb=NULL;
+  prng_Destroy(cm->prng); /* L.Deri */
   free(cm);  cm=NULL;
 }
 
@@ -313,6 +311,8 @@ void CMF_Destroy(CMF_type * cm)
       free(cm->counts);
       cm->counts=NULL;
     }
+
+  
   if (cm->hasha) free(cm->hasha); cm->hasha=NULL;
   if (cm->hashb) free(cm->hashb); cm->hashb=NULL;
   free(cm);  cm=NULL;
