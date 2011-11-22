@@ -73,10 +73,6 @@ NTOPDATA = ntop-cert.pem \
 
 NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png \
            html/*.css html/*.dtd \
-	   html/PlotKit \
-	   html/PlotKit/*js \
-	   html/MochiKit \
-	   html/MochiKit/*js \
 	   html/img_inquisitor \
 	   html/img_inquisitor/*gif \
 	   html/jscalendar \
@@ -85,9 +81,7 @@ NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.p
 	   html/jscalendar/lang/*js \
            html/statsicons \
            html/statsicons/flags html/statsicons/os \
-           html/statsicons/flags/*.gif html/statsicons/os/*.gif \
-           html/PlotKit html/PlotKit/*.js \
-           html/MochiKit html/MochiKit/*.js
+           html/statsicons/flags/*.gif html/statsicons/os/*.gif
 
 WEBFILES       = `cat www/FILES`
 PLUGINSFILES   = `cat plugins/FILES`

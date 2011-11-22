@@ -554,11 +554,11 @@ if test ".${PCAPRING_DIR}" != .; then
 else
 if test ".${PCAP_ROOT}" != .; then
   if test -d $PCAP_ROOT &&
-     test -r $PCAP_ROOT/libpcap.a &&
-     test -r $PCAP_ROOT/pcap.h; then
+     test -r $PCAP_ROOT/lib/libpcap.a &&
+     test -r $PCAP_ROOT/include/pcap.h; then
        PCAP_ROOT=`cd ${PCAP_ROOT} && pwd`
-       CORELIBS="${CORELIBS} -L$PCAP_ROOT -lpcap"
-       INCS="${INCS} -I$PCAP_ROOT"
+       CORELIBS="${CORELIBS} -L ${PCAP_ROOT}/lib -lpcap"
+       INCS="${INCS} -I ${PCAP_ROOT}/include"
        AC_MSG_RESULT([found in $PCAP_ROOT])
   else
     AC_MSG_RESULT([not found in ${PCAP_ROOT}])
