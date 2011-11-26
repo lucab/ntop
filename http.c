@@ -2911,6 +2911,11 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawGlobalProtoDistribution();
 	printTrailer=0;
+      } else if(strncasecmp(pageName, CONST_SERVICE_DISTR_HTML,
+			    strlen(CONST_SERVICE_DISTR_HTML)) == 0) {
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+	drawDeviceServiceDistribution();
+	printTrailer=0;
 #ifndef WIN32
       } else if(strncasecmp(pageName,CONST_NETWORK_MAP_HTML, 
 			    strlen(CONST_NETWORK_MAP_HTML)) == 0) {

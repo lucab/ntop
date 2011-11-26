@@ -1182,8 +1182,6 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
       wrtLlongItm(fDescr, lang, "\t", "otherIpBytes",myGlobals.device[i].otherIpBytes, ',', numEntries);
     if(checkFilter(filter, "icmpBytes"))
       wrtLlongItm(fDescr, lang, "\t", "icmpBytes",myGlobals.device[i].icmpBytes, ',', numEntries);
-    if(checkFilter(filter, "dlcBytes"))
-      wrtLlongItm(fDescr, lang, "\t", "dlcBytes",myGlobals.device[i].dlcBytes, ',', numEntries);
 
     if(checkFilter(filter, "stpBytes"))
       wrtLlongItm(fDescr, lang, "\t", "stpBytes",myGlobals.device[i].stpBytes, ',', numEntries);
@@ -1193,8 +1191,6 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
       wrtLlongItm(fDescr, lang, "\t", "netbiosBytes",myGlobals.device[i].netbiosBytes, ',', numEntries);
     if(checkFilter(filter, "arpRarpBytes"))
       wrtLlongItm(fDescr, lang, "\t", "arpRarpBytes",myGlobals.device[i].arpRarpBytes, ',', numEntries);
-    if(checkFilter(filter, "egpBytes"))
-      wrtLlongItm(fDescr, lang, "\t", "egpBytes",myGlobals.device[i].egpBytes, ',', numEntries);
     if(checkFilter(filter, "greBytes"))
       wrtLlongItm(fDescr, lang, "\t", "greBytes",myGlobals.device[i].greBytes, ',', numEntries);
     if(checkFilter(filter, "ipv6Bytes"))

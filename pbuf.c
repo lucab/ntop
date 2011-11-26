@@ -1329,15 +1329,6 @@ void processPacket(u_char *_deviceId,
 	      incrementHostTrafficCounter(srcHost, nonIPTraffic->netbiosSent, length);
 	      incrementHostTrafficCounter(dstHost, nonIPTraffic->netbiosRcvd, length);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].netbiosBytes, length);
-	    } else if((sap_type == 0xF0)
-		      || (sap_type == 0xB4)
-		      || (sap_type == 0xC4)
-		      || (sap_type == 0xF8)) {
-	      /* DLC (protocol used for printers) */
-	      incrementHostTrafficCounter(srcHost, nonIPTraffic->dlcSent, length);
-	      incrementHostTrafficCounter(dstHost, nonIPTraffic->dlcRcvd, length);
-	      setHostFlag(FLAG_HOST_TYPE_PRINTER, dstHost);
-	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].dlcBytes, length);
 	    } else if(sap_type == 0xAA /* SNAP */) {
 	      u_int16_t snapType;
 

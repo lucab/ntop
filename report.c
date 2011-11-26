@@ -3267,7 +3267,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 	     "     });\n\n"
 	     "</script>\n"
 	     "<center>\n"
-	     "<div id=\"tabs\" style=\"width: 95%; \">\n"
+	     "<div id=\"tabs\" style=\"width: 100%; \">\n"
 	     "    <ul>\n"
 	     "    <li><a href=\"#tabs-1\">Host Details</a></li>\n");
 
@@ -3287,10 +3287,10 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
   sendString("<li><a href=\"#tabs-6\">HTTP Stats</a></li>\n");
 
   if(showServices)
-    sendString("<li><a href=\"#tabs-7\">Services</a></li>\n");
+    sendString("<li><a href=\"#tabs-7\">Service Stats</a></li>\n");
 
   if(el->portsUsage != NULL)
-    sendString("<li><a href=\"#tabs-8\">Ports</a></li>\n");
+    sendString("<li><a href=\"#tabs-8\">Monitored Ports</a></li>\n");
 
   if(el->clientDelay || el->serverDelay)
     sendString("<li><a href=\"#tabs-9\">Network Delay</a></li>\n");
@@ -3349,7 +3349,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 	HostTraffic *peerHost;
 
 	if(i == 0) {
-	  printSectionTitle("TCP/UDP&nbsp;Service/Port&nbsp;Usage\n");
+	  printSectionTitle("Port Usage\n");
 	  sendString("<CENTER>\n");
 	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
 		     "<TH "TH_BG">IP&nbsp;Service</TH>"
@@ -3439,7 +3439,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     /* We have something to show */
     int numPrinted;
 
-    printSectionTitle("TCP/UDP - Traffic on Other Ports\n");
+    printSectionTitle("Traffic on <i>Other</i> Port(s)\n");
     sendString("<CENTER>\n");
     sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG">Client Port</TH><TH "TH_BG">Server Port</TH>"
@@ -3483,7 +3483,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     /* We have something to show */
     int numPrinted;
 
-    printSectionTitle("TCP/UDP Recently Used Ports\n");
+    printSectionTitle("Recently Used Ports\n");
     sendString("<CENTER>\n");
     sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG">Client Port</TH><TH "TH_BG">Server Port</TH>"
@@ -4375,10 +4375,6 @@ void printProtoTraffic(int printGraph) {
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value/
 		       myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value), 0, 0, 0);
-  printTableEntry(buf, sizeof(buf), "DLC", CONST_COLOR_1,
-		  (float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0, 0);
   printTableEntry(buf, sizeof(buf), "IPsec", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipsecBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipsecBytes.value/
@@ -4432,6 +4428,11 @@ void printProtoTraffic(int printGraph) {
 			v1, v2, 0, 0, 0);
       } /* if */
     } /* for */
+
+    sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
+	       "<iframe frameborder=0 SRC=\"" CONST_SERVICE_DISTR_HTML CHART_FORMAT "\" "
+	       "width=650 height=350></iframe>"
+	       "</TD></TR>\n");
   }
 
   sendString("</TABLE>"TABLE_OFF"<P></CENTER>\n");

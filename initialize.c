@@ -250,12 +250,10 @@ void resetDevice(int devIdx, short fullReset) {
   resetTrafficCounter(&myGlobals.device[devIdx].udpBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].otherIpBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].icmpBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].dlcBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].stpBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].ipsecBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].netbiosBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].arpRarpBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].egpBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].greBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].ipv6Bytes);
   resetTrafficCounter(&myGlobals.device[devIdx].otherBytes);

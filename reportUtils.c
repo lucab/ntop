@@ -4072,7 +4072,7 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
     tot += el->protocolInfo->httpStats->numLocalReqSent.value + el->protocolInfo->httpStats->numRemReqSent.value;
 
   if(tot > 0) {
-    printSectionTitle("IP&nbsp;Service&nbsp;Stats:&nbsp;Client&nbsp;Role");
+    printSectionTitle("Client&nbsp;Role");
     sendString("<CENTER>\n");
     sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG">&nbsp;</TH>"
@@ -4102,7 +4102,7 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
     tot += el->protocolInfo->httpStats->numLocalReqRcvd.value+el->protocolInfo->httpStats->numRemReqRcvd.value;
 
   if(tot > 0) {
-    printSectionTitle("IP&nbsp;Service&nbsp;Stats:&nbsp;Server&nbsp;Role");
+    printSectionTitle("Server&nbsp;Role");
     sendString("<CENTER>\n");
     sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG">&nbsp;</TH>"

@@ -281,16 +281,14 @@ extern char *getHostName(HostTraffic *el, short cutName, char *buf, int bufLen);
 
 /* graph.c */
 extern void hostTrafficDistrib(HostTraffic *theHost, short dataSent);
-extern void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostFragmentDistrib(HostTraffic *theHost, short dataSent);
+extern void drawDeviceServiceDistribution(void);
 extern void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent);
 extern void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent);
 extern void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void pktSizeDistribPie(void);
-extern void fcPktSizeDistribPie(void);
 extern void pktTTLDistribPie(void);
 extern void ipProtoDistribPie(void);
-extern void fcProtoDistribPie(void);
 extern void interfaceTrafficPie(void);
 extern void pktCastDistribPie(void);
 extern void drawTrafficPie(void);

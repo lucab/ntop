@@ -1413,13 +1413,10 @@ typedef struct ntopInterface {
   TrafficCounter otherIpBytes;
 
   TrafficCounter icmpBytes;
-  TrafficCounter dlcBytes;
-  TrafficCounter ipxBytes;
   TrafficCounter stpBytes;        /* Spanning Tree */
   TrafficCounter ipsecBytes;
   TrafficCounter netbiosBytes;
   TrafficCounter arpRarpBytes;
-  TrafficCounter egpBytes;
   TrafficCounter greBytes;
   TrafficCounter ipv6Bytes;
   TrafficCounter icmp6Bytes;

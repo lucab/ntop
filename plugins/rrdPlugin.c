@@ -5259,12 +5259,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  updateCounter(rrdPath, "udpBytes", myGlobals.device[devIdx].udpBytes.value, 0);
 	  updateCounter(rrdPath, "otherIpBytes", myGlobals.device[devIdx].otherIpBytes.value, 0);
 	  updateCounter(rrdPath, "icmpBytes", myGlobals.device[devIdx].icmpBytes.value, 0);
-	  updateCounter(rrdPath, "dlcBytes", myGlobals.device[devIdx].dlcBytes.value, 0);
 	  updateCounter(rrdPath, "stpBytes", myGlobals.device[devIdx].stpBytes.value, 0);
 	  updateCounter(rrdPath, "ipsecBytes", myGlobals.device[devIdx].ipsecBytes.value, 0);
 	  updateCounter(rrdPath, "netbiosBytes", myGlobals.device[devIdx].netbiosBytes.value, 0);
 	  updateCounter(rrdPath, "arpRarpBytes", myGlobals.device[devIdx].arpRarpBytes.value, 0);
-	  updateCounter(rrdPath, "egpBytes", myGlobals.device[devIdx].egpBytes.value, 0);
 	  updateCounter(rrdPath, "greBytes", myGlobals.device[devIdx].greBytes.value, 0);
 	  updateCounter(rrdPath, "ipv6Bytes", myGlobals.device[devIdx].ipv6Bytes.value, 0);
 	  updateCounter(rrdPath, "otherBytes", myGlobals.device[devIdx].otherBytes.value, 0);

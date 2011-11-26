@@ -2671,6 +2671,9 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 char *getProtoName(u_short protoId) {
   char *prot_long_str[] = { IPOQUE_PROTOCOL_LONG_STRING };
 
-  return(prot_long_str[protoId]);
+  if(protoId < IPOQUE_MAX_SUPPORTED_PROTOCOLS)
+    return(prot_long_str[protoId]);
+  else
+    return(prot_long_str[IPOQUE_PROTOCOL_UNKNOWN]);
 }
 

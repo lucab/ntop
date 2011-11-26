@@ -1078,6 +1078,7 @@
 #define CONST_FIND_HOST_JSON                "findHost.json"
 #define CONST_W3C_P3P_XML                   "w3c/p3p.xml"
 #define CONST_XMLDUMP_PLUGIN_NAME           "xmldump"
+#define CONST_SERVICE_DISTR_HTML            "hostServiceDistrib.html"
 
 #define CONST_HOST_TRAFFIC_DISTR_HTML       "hostTrafficDistrib"
 #define CONST_HOST_IP_TRAFFIC_DISTR_HTML    "hostIPTrafficDistrib"

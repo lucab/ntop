@@ -1021,12 +1021,10 @@ static PyObject* python_interface_bytesStats(PyObject *self, PyObject *args) {
   PyDict_SetItem(obj, PyString_FromString("udp"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].udpBytes.value));
   PyDict_SetItem(obj, PyString_FromString("otherIp"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].otherIpBytes.value));
   PyDict_SetItem(obj, PyString_FromString("icmp"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].icmpBytes.value));
-  PyDict_SetItem(obj, PyString_FromString("dlc"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].dlcBytes.value));
   PyDict_SetItem(obj, PyString_FromString("stp"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].stpBytes.value));
   PyDict_SetItem(obj, PyString_FromString("ipsec"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].ipsecBytes.value));
   PyDict_SetItem(obj, PyString_FromString("netbios"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].netbiosBytes.value));
   PyDict_SetItem(obj, PyString_FromString("arp_rarp"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].arpRarpBytes.value));
-  PyDict_SetItem(obj, PyString_FromString("egp"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].egpBytes.value));
   PyDict_SetItem(obj, PyString_FromString("gre"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].greBytes.value));
   PyDict_SetItem(obj, PyString_FromString("ipv6"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].ipv6Bytes.value));
   PyDict_SetItem(obj, PyString_FromString("icmp6"), PyLong_FromUnsignedLong((unsigned long)myGlobals.device[interfaceId].icmp6Bytes.value));

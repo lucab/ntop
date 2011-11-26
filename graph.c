@@ -40,6 +40,7 @@ struct bar_elements {
 static void send_graph_header(char *title) {
   sendString("<HTML>\n"
 	     "<HEAD>\n"
+	     "<TITLE>ntop chart</TITLE>\n"
 	     "<META HTTP-EQUIV=REFRESH CONTENT=30>\n"
 	     "<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n"
 	     "<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n");
@@ -324,6 +325,43 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
     build_pie("Traffic Distribution", num, p, lbl);
   }
+}
+
+/* ******************************************************************* */
+
+void drawDeviceServiceDistribution(void) {
+  float p[20];
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "", "",
+		   "", "", "", "", "", "", "", "", "", "" };
+  int num = 0;
+  Counter totTraffic = 0;
+  int idx = 0, i;
+  ProtocolsList *protoList = myGlobals.ipProtosList;
+
+  for(i=0; i<myGlobals.l7.numSupportedProtocols; i++)
+    totTraffic += myGlobals.device[myGlobals.actualReportDeviceId].l7.protoTraffic[i];
+
+  for(i=0; i<myGlobals.l7.numSupportedProtocols; i++) {
+    float val;
+    
+    val = myGlobals.device[myGlobals.actualReportDeviceId].l7.protoTraffic[i];
+    if(val > 0) {
+      val = (val * 100) / totTraffic;
+      p[num] = val, lbl[num] = getProtoName(i);
+      num++;
+
+      if(num == 20) break;
+    }
+  }
+  
+  if(num == 0) {
+    traceEvent(CONST_TRACE_WARNING, "Graph failure (1)");
+    return; /* TODO: this has to be handled better */
+  }
+  
+  if(num == 1) p[0] = 100; /* just to be safe */
+  
+  build_pie("Service Distribution", num, p, lbl);
 }
 
 /* ************************ */
@@ -840,8 +878,6 @@ void drawGlobalProtoDistribution(void) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value; lbl[idx] = "Other IP"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value; lbl[idx] = "(R)ARP"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value; lbl[idx] = "DLC"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].ipsecBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipsecBytes.value;lbl[idx] = "IPsec";  idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value > 0) {
