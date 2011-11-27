@@ -1855,7 +1855,6 @@ typedef struct _userPref {
   int  maxNumLines;              /* -e | --max-table-rows */
   bool trackOnlyLocalHosts;      /* -g | --track-local-hosts */
   char *devices;                 /* -i | --interface */
-  bool enableOtherPacketDump;    /* -j | --create-other-packets */
   char *pcapLog;                 /* -l | --pcap-log */
   char *localAddresses;          /* -m | --local-subnets */
   DnsResolutionMode numericFlag; /* -n | --numeric-ip-addresses */

@@ -1177,7 +1177,7 @@ void addDefaultAdminUser(void) {
    tmpPrefs.debugMode = tmpPrefs.daemonMode = tmpPrefs.w3c = 0;
    tmpPrefs.numericFlag = dnsResolutionForAll;
    tmpPrefs.mergeInterfaces = tmpPrefs.enableL7 = 0;
-   tmpPrefs.enableOtherPacketDump = tmpPrefs.enableSuspiciousPacketDump = 0;
+   tmpPrefs.enableSuspiciousPacketDump = 0;
    tmpPrefs.enableSessionHandling = 0;
 
    devices = tmpPrefs.devices;
@@ -1280,11 +1280,6 @@ void addDefaultAdminUser(void) {
 
    if(debug_prefs && myGlobals.savedPref.debugMode && !tmpPrefs.debugMode) {
      processNtopPref(NTOP_PREF_DBG_MODE, FALSE, savePref, &tmpPrefs);
-   }
-
-   if(debug_prefs && myGlobals.savedPref.enableOtherPacketDump &&
-       !tmpPrefs.enableOtherPacketDump) {
-     processNtopPref(NTOP_PREF_DUMP_OTHER, FALSE, savePref, &tmpPrefs);
    }
 
    if(debug_prefs && myGlobals.savedPref.enableSuspiciousPacketDump &&
@@ -1683,11 +1678,6 @@ void handleNtopConfig(char* url, UserPrefDisplayPage configScr,
     CONFIG_INT_ENTRY(DARK_BG, "Trace Level (-t)<br><i>&nbsp;&nbsp;&nbsp;(takes effect immediately)</i>", NTOP_PREF_TRACE_LVL, 5,
 		     pref->traceLevel,
 		     "Level of detailed messages ntop will display");
-
-    CONFIG_RADIO_ENTRY(DARK_BG, "Save Other Packets (-j)",
-		       NTOP_PREF_DUMP_OTHER, pref->enableOtherPacketDump,
-		       "Useful for understanding packets unclassified by "
-		       "Ntop");
 
     CONFIG_RADIO_ENTRY(DARK_BG, "Save Suspicious Packets (-q)",
 		       NTOP_PREF_DUMP_SUSP,

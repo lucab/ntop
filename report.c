@@ -13,7 +13,7 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have rleceived a copy of the GNU General Public License
+ *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
@@ -1093,14 +1093,14 @@ void printTrafficStatistics(int revertOrder) {
 
       sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Network Load</TH><TD "TH_BG">\n"
 		 "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Actual</th><TD "TD_BG" align=right>%s</td>"
 		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkt/s</td></TR>\n",
 		    getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt,
 						    1, formatBuf, sizeof(formatBuf)),
 		    myGlobals.device[myGlobals.actualReportDeviceId].actualPktsThpt);
       sendString(buf);
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Last Minute</th>"
 		    "<TD "TD_BG" align=right>%s</td>"
 		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkt/s</td></TR>\n",
@@ -1109,7 +1109,7 @@ void printTrafficStatistics(int revertOrder) {
 		    myGlobals.device[myGlobals.actualReportDeviceId].lastMinPktsThpt);
       sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Last 5 Minutes</th>"
 		    "<TD "TD_BG" align=right>%s</td>"
 		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkt/s</td></TR>\n",
@@ -1118,7 +1118,7 @@ void printTrafficStatistics(int revertOrder) {
 		    myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsPktsThpt);
       sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Peak</th>"
 		    "<TD "TD_BG" align=right>%s</td>"
 		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkt/s</td></TR>\n",
@@ -1127,7 +1127,7 @@ void printTrafficStatistics(int revertOrder) {
 		    myGlobals.device[myGlobals.actualReportDeviceId].peakPacketThroughput);
       sendString(buf);
 
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Average</th>"
 		    "<TD "TD_BG" align=right>%s</td>"
 		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkt/s</td></TR>\n",
@@ -1601,6 +1601,7 @@ void printHostsTraffic(int reportTypeReq,
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->otherRcvd.value, 1, formatBuf, sizeof(formatBuf)));
 	  sendString(buf);
 	  break;
+
 	case SORT_DATA_SENT_PROTOS:
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
@@ -1650,6 +1651,7 @@ void printHostsTraffic(int reportTypeReq,
 			);
 	  sendString(buf);
 	  break;
+
 	case SORT_DATA_PROTOS:
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
@@ -1711,10 +1713,9 @@ void printHostsTraffic(int reportTypeReq,
 
 	  break;
 
-#if 0
 	case SORT_DATA_RECEIVED_IP:
 	  {
-	    Counter totalIPTraffic=0;
+	    int i;
 
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
@@ -1723,33 +1724,21 @@ void printHostsTraffic(int reportTypeReq,
 			  rcvdPercent, myGlobals.separator);
 	    sendString(buf);
 
-	    if(el->protoIPTrafficInfos) {
-	      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-		if(el->protoIPTrafficInfos[i])
-		  totalIPTraffic += el->protoIPTrafficInfos[i]->rcvdLoc.value+
-		    el->protoIPTrafficInfos[i]->rcvdFromRem.value;
+	    for(i=0; i<myGlobals.l7.numSupportedProtocols; i++) {
+	      if(myGlobals.device[myGlobals.actualReportDeviceId].l7.protoTraffic[i]) {
 		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			      el->protoIPTrafficInfos[i] ?
-			      formatBytes(el->protoIPTrafficInfos[i]->rcvdLoc.value+
-					  el->protoIPTrafficInfos[i]->rcvdFromRem.value, 1,
-					  formatBuf, sizeof(formatBuf)) : "0");
+			      formatBytes(el->l7.traffic[i].bytesRcvd, 1, formatBuf, sizeof(formatBuf)));
 		sendString(buf);
 	      }
 	    }
 
-	    /* Rounding may cause troubles */
-	    if(el->ipv4BytesRcvd.value > totalIPTraffic)
-	      totalIPTraffic = el->ipv4BytesRcvd.value - totalIPTraffic;
-	    else
-	      totalIPTraffic = 0;
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			  formatBytes(totalIPTraffic, 1, formatBuf, sizeof(formatBuf)));
-	    sendString(buf);
-	  }
+	    sendString("</TR>\n");
+	  }	      
 	  break;
+
 	case SORT_DATA_SENT_IP:
 	  {
-	    Counter totalIPTraffic=0;
+	    int i;
 
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
@@ -1758,34 +1747,21 @@ void printHostsTraffic(int reportTypeReq,
 			  sentPercent, myGlobals.separator);
 	    sendString(buf);
 
-	    if(el->protoIPTrafficInfos) {
-	      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-		if(el->protoIPTrafficInfos[i])
-		  totalIPTraffic += el->protoIPTrafficInfos[i]->sentLoc.value+
-		    el->protoIPTrafficInfos[i]->sentRem.value;
-
+	    for(i=0; i<myGlobals.l7.numSupportedProtocols; i++) {
+	      if(myGlobals.device[myGlobals.actualReportDeviceId].l7.protoTraffic[i] > 0) {
 		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			      el->protoIPTrafficInfos[i] ?
-			      formatBytes(el->protoIPTrafficInfos[i]->sentLoc.value+
-					  el->protoIPTrafficInfos[i]->sentRem.value, 1,
-					  formatBuf, sizeof(formatBuf)) : "0");
+			      formatBytes(el->l7.traffic[i].bytesSent, 1, formatBuf, sizeof(formatBuf)));
 		sendString(buf);
 	      }
 	    }
 
-	    /* Rounding may cause troubles */
-	    if(el->ipv4BytesSent.value > totalIPTraffic)
-	      totalIPTraffic = el->ipv4BytesSent.value - totalIPTraffic;
-	    else
-	      totalIPTraffic = 0;
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			  formatBytes(totalIPTraffic, 1, formatBuf, sizeof(formatBuf)));
-	    sendString(buf);
+	    sendString("</TR>\n");
 	  }
 	  break;
+
 	case SORT_DATA_IP:
 	  {
-	    Counter totalIPTraffic=0;
+	    int i;
 
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>%s"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
@@ -1793,40 +1769,18 @@ void printHostsTraffic(int reportTypeReq,
 			  formatBytes(el->ipv4BytesSent.value+el->ipv4BytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
 			  totPercent, myGlobals.separator);
 	    sendString(buf);
-
-	    if(el->protoIPTrafficInfos) {
-	      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-		if(el->protoIPTrafficInfos[i])
-		  totalIPTraffic += el->protoIPTrafficInfos[i]->sentLoc.value+
-		    el->protoIPTrafficInfos[i]->rcvdLoc.value+
-		    el->protoIPTrafficInfos[i]->sentRem.value+
-		    el->protoIPTrafficInfos[i]->rcvdFromRem.value;
+	    
+	    for(i=0; i<myGlobals.l7.numSupportedProtocols; i++) {
+	      if(myGlobals.device[myGlobals.actualReportDeviceId].l7.protoTraffic[i] > 0) {
 		safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			      el->protoIPTrafficInfos[i] ?
-			      formatBytes(el->protoIPTrafficInfos[i]->sentLoc.value+
-					  el->protoIPTrafficInfos[i]->rcvdLoc.value+
-					  el->protoIPTrafficInfos[i]->sentRem.value+
-					  el->protoIPTrafficInfos[i]->rcvdFromRem.value, 1,
-					  formatBuf, sizeof(formatBuf)) : "0");
+			      formatBytes(el->l7.traffic[i].bytesSent + el->l7.traffic[i].bytesRcvd, 1, formatBuf, sizeof(formatBuf)));
 		sendString(buf);
 	      }
-	    } else {
-	      /* No protocol traffic just print empty cells */
-	      for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
-		sendString("<TD "TD_BG" ALIGN=RIGHT>0</TD>");
 	    }
 
-	    /* Rounding may cause troubles */
-	    if(el->ipv4BytesSent.value+el->ipv4BytesRcvd.value > totalIPTraffic)
-	      totalIPTraffic = el->ipv4BytesSent.value + el->ipv4BytesRcvd.value - totalIPTraffic;
-	    else
-	      totalIPTraffic = 0;
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			  formatBytes(totalIPTraffic, 1, formatBuf, sizeof(formatBuf)));
-	    sendString(buf);
+	    sendString("</TR>\n");
 	  }
 	  break;
-#endif
 
 	case SORT_DATA_RECEIVED_THPT:
 	  {
@@ -1978,7 +1932,7 @@ void printTopTalkers(u_int8_t printHourTalkers, u_int8_t show_graph) {
   } else {
     talkers = myGlobals.device[myGlobals.actualReportDeviceId].last24HoursTopTalkers, numTalkers = 24, delta = 3600 - 1;
   }
-    
+
   if(show_graph) {
     HostTalkerSeries *ttalkers;
     int tot_talkers = 0, num_series = 0;
@@ -2016,7 +1970,7 @@ void printTopTalkers(u_int8_t printHourTalkers, u_int8_t show_graph) {
       /* Receivers */
       for(k=0; k<MAX_NUM_TOP_TALKERS; k++) {
 	for(j=0, found=0; j<tot_talkers; j++) {
-	  if(memcmp(&ttalkers[j].hostSerial, &talkers[i].receivers[k].hostSerial, sizeof(HostSerialIndex)) == 0) {	    
+	  if(memcmp(&ttalkers[j].hostSerial, &talkers[i].receivers[k].hostSerial, sizeof(HostSerialIndex)) == 0) {
 	    ttalkers[j].total_bps += talkers[i].receivers[k].bps, ttalkers[j].bps_series[i] += talkers[i].receivers[k].bps, found = 1;
 	    break;
 	  }
@@ -2034,7 +1988,7 @@ void printTopTalkers(u_int8_t printHourTalkers, u_int8_t show_graph) {
 
     qsort(ttalkers, tot_talkers, sizeof(HostTalkerSeries), cmpTalkersFctn);
 
-    buildTalkersGraph(NULL /* labels */, ttalkers, 
+    buildTalkersGraph(NULL /* labels */, ttalkers,
 		      min(tot_talkers, 14), /* max # talkers */
 		      num_series);
     free(ttalkers);
@@ -2051,24 +2005,24 @@ void printTopTalkers(u_int8_t printHourTalkers, u_int8_t show_graph) {
 
     sendString("<CENTER>\n");
     sendString(TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
-    
-    sendString("<TR><TD COLSPAN=4>\n");	       
+
+    sendString("<TR><TD COLSPAN=4>\n");
     sendString("<iframe frameborder=0 SRC=\"");
     sendString(printHourTalkers ? CONST_LAST_HOUR_TOP_TALKERS_HTML : CONST_LAST_DAY_TOP_TALKERS_HTML);
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "?mode=1\" width=750 height=%u></iframe>\n",
 		  min(350+10*numTalkers, 900));
     sendString(buf);
 
     sendString("</TD></TR>\n");
-    
+
     sendString("<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG" COLSPAN=2>Time Period</A></TH>\n"
 	       "<TH "TH_BG">Top Senders</A></TH>\n"
 	       "<TH "TH_BG">Top Receivers</A></TH>\n"
 	       "</TR>\n");
-    
+
     for(i=0; i<numTalkers; i++) {
       time_t when;
 
@@ -2208,7 +2162,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("</CENTER>\n");
-    addPageIndicator(CONST_MULTICAST_STATS_HTML, pageNum, 
+    addPageIndicator(CONST_MULTICAST_STATS_HTML, pageNum,
 		     numEntries, myGlobals.runningPref.maxNumLines,
 		     revertOrder, abs(sortedColumn), -1);
 
@@ -3198,11 +3152,11 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     return;
   }
 
-  fragments = el->tcpFragmentsSent.value 
-    + el->udpFragmentsSent.value 
+  fragments = el->tcpFragmentsSent.value
+    + el->udpFragmentsSent.value
     + el->icmpFragmentsSent.value
     + el->tcpFragmentsRcvd.value
-    + el->udpFragmentsRcvd.value 
+    + el->udpFragmentsRcvd.value
     + el->icmpFragmentsRcvd.value;
 
   if((el->protocolInfo == NULL)
@@ -3258,9 +3212,9 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
   }
 
   printHTMLheader(buf2, buf, 0);
-  
+
   /* ************************************ */
-  
+
   sendString("<script>\n"
 	     "   $(function() {\n"
 	     "	 $( \"#tabs\" ).tabs();\n"
@@ -3287,7 +3241,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
   sendString("<li><a href=\"#tabs-5\">Contacts</a></li>\n");
 
-  if((el->protocolInfo != NULL) 
+  if((el->protocolInfo != NULL)
      && (el->protocolInfo->httpVirtualHosts != NULL))
   sendString("<li><a href=\"#tabs-6\">HTTP Stats</a></li>\n");
 
@@ -3295,9 +3249,9 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     sendString("<li><a href=\"#tabs-7\">Service Stats</a></li>\n");
 
   if((el->portsUsage != NULL)
-     || (el->otherIpPortsRcvd[MAX_NUM_RECENT_PORTS-1] >= 0) 
+     || (el->otherIpPortsRcvd[MAX_NUM_RECENT_PORTS-1] >= 0)
      || (el->otherIpPortsSent[MAX_NUM_RECENT_PORTS-1] >= 0)
-     || (el->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] >= 0) 
+     || (el->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] >= 0)
      || (el->recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS-1] >= 0)) {
     sendString("<li><a href=\"#tabs-8\">Monitored Ports</a></li>\n");
     show_div_8 = 1;
@@ -3306,48 +3260,48 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
   if(el->clientDelay || el->serverDelay)
     sendString("<li><a href=\"#tabs-9\">Network Delay</a></li>\n");
 
-  if((myGlobals.device[actualDeviceId].tcpSession != NULL) 
+  if((myGlobals.device[actualDeviceId].tcpSession != NULL)
      && (myGlobals.device[actualDeviceId].numTcpSessions > 0))
     sendString("<li><a href=\"#tabs-10\">Active Sessions</a></li>\n");
 
   sendString("</ul>\n");
 
-  sendString("\n\n<!------ DIV ------>\n");  
+  sendString("\n\n<!------ DIV ------>\n");
   sendString("\n\n<div id=\"tabs-1\">\n");
   printHostDetailedInfo(el, actualDeviceId);
   sendString("\n</div>\n");
 
-  sendString("\n\n<!------ DIV ------>\n");  
+  sendString("\n\n<!------ DIV ------>\n");
   printHostTrafficStats(el, actualDeviceId);
 
   if(el->icmpInfo) {
-    sendString("\n\n<!------ DIV ------>\n");  
+    sendString("\n\n<!------ DIV ------>\n");
     sendString("\n\n<div id=\"tabs-3\">\n");
     printHostIcmpStats(el);
     sendString("\n</div>\n");
   }
 
   if(fragments > 0) {
-    sendString("\n\n<!------ DIV ------>\n");  
+    sendString("\n\n<!------ DIV ------>\n");
     sendString("\n\n<div id=\"tabs-4\">\n");
     printHostFragmentStats(el, actualDeviceId);
     sendString("\n</div>\n");
   }
 
-  sendString("\n\n<!------ DIV ------>\n");  
+  sendString("\n\n<!------ DIV ------>\n");
   sendString("\n\n<div id=\"tabs-5\">\n");
   printHostContactedPeers(el, actualDeviceId);
   sendString("\n</div>\n");
 
   if((el->protocolInfo != NULL) && (el->protocolInfo->httpVirtualHosts != NULL)) {
-    sendString("\n\n<!------ DIV ------>\n");  
+    sendString("\n\n<!------ DIV ------>\n");
     sendString("\n\n<div id=\"tabs-6\">\n");
     printHostHTTPVirtualHosts(el, actualDeviceId);
     sendString("\n</div>\n");
   }
 
   if(showServices) {
-    sendString("\n\n<!------ DIV ------>\n");  
+    sendString("\n\n<!------ DIV ------>\n");
     sendString("\n\n<div id=\"tabs-7\">\n");
     printHostUsedServices(el, actualDeviceId);
     printHostFingerprint(el); /* ----- **** ----- */
@@ -3357,11 +3311,11 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
   /* ***************************************************** */
 
   i = 0;
-  
+
   if(show_div_8) {
-    sendString("\n\n<!------ DIV ------>\n");  
+    sendString("\n\n<!------ DIV ------>\n");
     sendString("\n\n<div id=\"tabs-8\">\n");
-  
+
     if(el->portsUsage != NULL) {
       for(idx=1; idx<MAX_ASSIGNED_IP_PORTS /* 1024 */; idx++) {
 	PortUsage *ports = getPortsUsage(el, idx, 0);
@@ -3446,14 +3400,14 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 	  } else
 	    sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD></TR>");
 	}
-      }  
+      }
     }
-  
+
     if(i > 0) {
       sendString("</TABLE>"TABLE_OFF"<P>\n");
       sendString("</CENTER>\n");
-    }  
-  
+    }
+
     if((el->otherIpPortsRcvd[MAX_NUM_RECENT_PORTS-1] >= 0)
        || (el->otherIpPortsSent[MAX_NUM_RECENT_PORTS-1] >= 0)) {
       /* We have something to show */
@@ -3585,7 +3539,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
      || (myGlobals.device[actualDeviceId].numTcpSessions == 0))
     ;
   else {
-    sendString("\n\n<!------ DIV ------>\n");  
+    sendString("\n\n<!------ DIV ------>\n");
     sendString("\n\n<div id=\"tabs-10\">\n");
     printActiveSessions(actualDeviceId, 0, el);
     sendString("\n</div>\n");
@@ -4088,10 +4042,10 @@ void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
 		      formatLatency(session->clientNwDelay, session->sessionState, formatBuf6, sizeof(formatBuf6)),
 		      formatLatency(session->serverNwDelay, session->sessionState, formatBuf7, sizeof(formatBuf7)),
-		      (session->guessed_protocol == NULL) ? knownProtocolIdx(session, http_buf, sizeof(http_buf)) : 
+		      (session->guessed_protocol == NULL) ? knownProtocolIdx(session, http_buf, sizeof(http_buf)) :
 		      session->guessed_protocol
 #ifdef PRINT_SESSION_DETAILS
-		      , session->session_info ? session->session_info : 
+		      , session->session_info ? session->session_info :
 		      print_flags(session, flags_buf, sizeof(flags_buf)) /* "&nbsp;" */
 #endif
 		      );

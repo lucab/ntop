@@ -2654,7 +2654,6 @@ struct ip6_hdr
 #define NTOP_PREF_PCAP_LOGBASE           "ntop.pcapLogBasePath"
 #define NTOP_PREF_DBG_MODE               "ntop.debugMode"
 #define NTOP_PREF_TRACE_LVL              "ntop.traceLevel"
-#define NTOP_PREF_DUMP_OTHER             "ntop.enableOtherPacketDump"
 #define NTOP_PREF_DUMP_SUSP              "ntop.enableSuspiciousPacketDump"
 #define NTOP_PREF_ACCESS_LOG             "ntop.accessLogFile"
 #define NTOP_PREF_USE_SYSLOG             "ntop.useSyslog"

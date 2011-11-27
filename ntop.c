@@ -371,6 +371,8 @@ static int handleProtocolList(char* protoName, char *protocolList) {
 #endif
   }
 
+  myGlobals.l7.numSupportedProtocols = IPOQUE_MAX_SUPPORTED_PROTOCOLS + myGlobals.numIpProtosToMonitor;
+
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "handleProtocolList(%s) = %d", protoName, rc);
 #endif
@@ -597,6 +599,8 @@ void addDefaultProtocols(void) {
 }
 
 /* **************************************** */
+
+/* Maps a given port to an id that represents the known protocol myGlobals.ipTrafficProtosNames[ID] */
 
 int mapGlobalToLocalIdx(int port) {
   if((port < 0) || (port >= MAX_IP_PORT))

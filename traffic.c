@@ -432,14 +432,12 @@ u_short isP2P(HostTraffic *a) {
 /* ********************************** */
 
 char* httpSiteIcon(char *name, char *buf, u_int buf_len, u_short addName) {
-  int i, num_dot = 0;
-  char c;
-
   if(name == NULL)
     return("&nbsp;");
-
+  
   safe_snprintf(__FILE__, __LINE__, buf, buf_len,
-		"<IMG width=16 height=16 SRC=\"http://www.google.com/s2/favicons?domain=%s\" BORDER=0>", name);
+		"<IMG width=16 height=16 SRC=\"http://www.google.com/s2/favicons?domain=%s\" BORDER=0>", 
+		name);
 
   return(buf);
 }

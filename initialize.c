@@ -855,24 +855,6 @@ void addDevice(char* deviceName, char* deviceDescr) {
         } else
 	  traceEvent(CONST_TRACE_NOISY, "Saving packets into file %s", myName);
       }
-
-      if(myGlobals.runningPref.enableOtherPacketDump) {
-        safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-other-pkts.%s.pcap",
-		      myGlobals.runningPref.pcapLogBasePath,
-		      CONST_PATH_SEP,
-		      myGlobals.device[deviceId].uniqueIfName != NULL ?
-		      myGlobals.device[deviceId].uniqueIfName :
-		      myGlobals.device[deviceId].name);
-
-	myGlobals.device[deviceId].pcapOtherDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
-
-	if(myGlobals.device[deviceId].pcapOtherDumper == NULL) {
-          myGlobals.runningPref.enableOtherPacketDump = 0;
-	  traceEvent(CONST_TRACE_ERROR, "pcap_dump_open(..., '%s') failed (other (unknown) packets)", myName);
-	  traceEvent(CONST_TRACE_INFO, "Continuing without other (unknown) packet dump");
-        } else
-	  traceEvent(CONST_TRACE_NOISY, "Saving packets into file %s", myName);
-      }
     } else {
       myGlobals.device[deviceId].virtualDevice = 1;
       if(column != NULL) column[0] = ':';

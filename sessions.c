@@ -1830,6 +1830,8 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 
   if(!found) {
     /* New Session */
+    int rc;
+
     (*newSession) = 1; /* This is a new session */
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.totalFlows,
 			    2 /* 2 x monodirectional flows */);
@@ -1864,37 +1866,46 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
     memset(theSession, 0, sizeof(IPSession));
     addedNewEntry = 1;
 
-  if(myGlobals.l7.l7handler != NULL) {
-    static u_int8_t once = 0;
+    rc = mapGlobalToLocalIdx(sport);
+    if(rc == -1) 
+      rc = mapGlobalToLocalIdx(dport);
 
-    if((theSession->l7.flow = calloc(1, myGlobals.l7.flow_struct_size)) == NULL) {
-      if(!once) {
-	traceEvent(CONST_TRACE_ERROR, "NULL theSession (not enough memory?)");
-	once = 1;
+    if(rc != -1) {
+      /* We have found a protocol defined thus we map the protocol */
+      theSession->l7.major_proto = IPOQUE_MAX_SUPPORTED_PROTOCOLS + rc;
+    } else {
+      if(myGlobals.l7.l7handler != NULL) {
+	static u_int8_t once = 0;
+
+	if((theSession->l7.flow = calloc(1, myGlobals.l7.flow_struct_size)) == NULL) {
+	  if(!once) {
+	    traceEvent(CONST_TRACE_ERROR, "NULL theSession (not enough memory?)");
+	    once = 1;
+	  }
+
+	  free(theSession);
+	  releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
+	  return(NULL);
+	}
+
+	theSession->l7.src = calloc(1, myGlobals.l7.proto_size);
+	theSession->l7.dst = calloc(1, myGlobals.l7.proto_size);
+
+	if((theSession->l7.src == NULL) || (theSession->l7.dst == NULL)) {
+	  if(!once) {
+	    traceEvent(CONST_TRACE_ERROR, "NULL theSession (not enough memory?)");
+	    once = 1;
+	  }
+
+	  if(theSession->l7.src) free(theSession->l7.src);
+	  if(theSession->l7.dst) free(theSession->l7.dst);
+	  free(theSession);
+
+	  releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
+	  return(NULL);
+	}
       }
-
-      free(theSession);
-      releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
-      return(NULL);
     }
-
-    theSession->l7.src = calloc(1, myGlobals.l7.proto_size);
-    theSession->l7.dst = calloc(1, myGlobals.l7.proto_size);
-
-    if((theSession->l7.src == NULL) || (theSession->l7.dst == NULL)) {
-      if(!once) {
-	traceEvent(CONST_TRACE_ERROR, "NULL theSession (not enough memory?)");
-	once = 1;
-      }
-
-      if(theSession->l7.src) free(theSession->l7.src);
-      if(theSession->l7.dst) free(theSession->l7.dst);
-      free(theSession);
-
-      releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
-      return(NULL);
-    }
-  }
 
     if(tp && (tp->th_flags == TH_SYN)) {
       theSession->synTime.tv_sec = h->ts.tv_sec;
@@ -1984,12 +1995,6 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 
       updateSessionDelayStats(theSession);
     }
-
-    /*
-      traceEvent(CONST_TRACE_ERROR, "DEBUG: ** FLAG_STATE_ACTIVE ** [client=%d.%d][server=%d.%d]",
-      theSession->clientNwDelay.tv_sec, theSession->clientNwDelay.tv_usec,
-      theSession->serverNwDelay.tv_sec, theSession->serverNwDelay.tv_usec);
-    */
 
     theSession->sessionState = FLAG_STATE_ACTIVE;
   }
@@ -2673,7 +2678,10 @@ char *getProtoName(u_short protoId) {
 
   if(protoId < IPOQUE_MAX_SUPPORTED_PROTOCOLS)
     return(prot_long_str[protoId]);
-  else
+  else if(protoId < (IPOQUE_MAX_SUPPORTED_PROTOCOLS + myGlobals.numIpProtosToMonitor)) {
+    u_int id = protoId - IPOQUE_MAX_SUPPORTED_PROTOCOLS;
+    return(myGlobals.ipTrafficProtosNames[id]);
+  } else
     return(prot_long_str[IPOQUE_PROTOCOL_UNKNOWN]);
 }
 

@@ -24,7 +24,6 @@ ntop \- display top network users
 .IR file> ]
 .RB [ -g | --track-local-hosts ]
 .RB [ -h | --help ]
-.RB [ -j | --create-other-packets ]
 .RB [ -l | --pcap-log 
 .IR <path> ]
 .RB [ -m | --local-subnets
@@ -317,16 +316,6 @@ Under Windows, the parameter value is either the number of the interface or its 
 Run 
 .B ntop
 -h to see a list of interface name-number mappings (at the end of the help information).
-
-.It2 -j --create-other-packets
-This parameter causes 
-.B ntop
-to create a dump file of the 'other' network traffic captured.
-One file is created for each network interface where 
-'other' packets are found. The file is in tcpdump (pcap) format and is named
-<path>/ntop-other-pkts.<device>.pcap, where <path> is defined by the 
--O | --output-packet-path parameter.
-This file is useful for understanding these unclassifed packets.
 
 .It2 -l --pcap-log
 This parameter causes a dump file to be created of the network traffic captured by 

@@ -6102,10 +6102,6 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                            pref->devices,
                            DEFAULT_NTOP_DEVICES);
 
-  printParameterConfigInfo(textPrintFlag, "-j | --create-other-packets",
-                           pref->enableOtherPacketDump == 1 ? "Enabled" : "Disabled",
-                           DEFAULT_NTOP_OTHER_PKT_DUMP == 1 ? "Enabled" : "Disabled");
-
   if(pref->pcapLog == NULL) {
     printParameterConfigInfo(textPrintFlag, "-l | --pcap-log",
 			     pref->pcapLog,

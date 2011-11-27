@@ -56,19 +56,19 @@ static char __see__ []    =
    * ('P' option) and so these are processed separately.
    */
 #ifdef WIN32
-static char*  short_options = "46a:bce:f:ghi:jl:m:n:p:qr:st:w:x:zAB:C:D:F:M" 
+static char*  short_options = "46a:bce:f:ghi:l:m:n:p:qr:st:w:x:zAB:C:D:F:M" 
 #if defined(DARWIN) && (!defined(TIGER))
   "v"
 #endif
   "O:P:Q:S:U:VX:W:";
 #elif defined(MAKE_WITH_SYSLOG)
-static char*  short_options = "46a:bcde:f:ghi:jl:m:n:p:qr:st:u:w:x:zAB:C:D:F:IKLM" 
+static char*  short_options = "46a:bcde:f:ghi:l:m:n:p:qr:st:u:w:x:zAB:C:D:F:IKLM" 
 #if defined(DARWIN) && (!defined(TIGER))
   "v"
 #endif
   "O:P:Q:S:U:VX:W:";
 #else
-static char*  short_options = "46a:bcde:f:ghi:jl:m:n:p:qr:st:u:w:x:zAB:C:D:F:IKM"
+static char*  short_options = "46a:bcde:f:ghi:l:m:n:p:qr:st:u:w:x:zAB:C:D:F:IKM"
 #if defined(DARWIN) && (!defined(TIGER))
   "v"
 #endif
@@ -91,7 +91,6 @@ static struct option const long_options[] = {
   { "track-local-hosts",                no_argument,       NULL, 'g' },
   { "help",                             no_argument,       NULL, 'h' },
   { "interface",                        required_argument, NULL, 'i' },
-  { "create-other-packets",             no_argument,       NULL, 'j' },
   { "pcap-log",                         required_argument, NULL, 'l' },
   { "local-subnets",                    required_argument, NULL, 'm' },
   { "numeric-ip-addresses",             required_argument, NULL, 'n' },
@@ -395,10 +394,6 @@ int parseOptions(int argc, char* argv[]) {
       stringSanityCheck(optarg, "-i | --interface");
 #endif
       myGlobals.runningPref.devices = strdup(optarg);
-      break;
-
-    case 'j': /* save other (unknown) packets in a file */
-      myGlobals.runningPref.enableOtherPacketDump = 1;
       break;
 
     case 'l':
@@ -1255,9 +1250,6 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
     }
     processIntPref(NTOP_PREF_TRACE_LVL, value, &pref->traceLevel,
 		    savePref);
-  } else if(strcmp(key, NTOP_PREF_DUMP_OTHER) == 0) {
-    processBoolPref(NTOP_PREF_DUMP_OTHER, value2bool(value),
-		     &pref->enableOtherPacketDump, savePref);
   } else if(strcmp(key, NTOP_PREF_DUMP_SUSP) == 0) {
     processBoolPref(NTOP_PREF_DUMP_SUSP, value2bool(value),
 		     &pref->enableSuspiciousPacketDump, savePref);
@@ -1303,7 +1295,6 @@ void initUserPrefs(UserPref *pref) {
   pref->daemonMode = DEFAULT_NTOP_DAEMON_MODE;
   pref->trackOnlyLocalHosts    = DEFAULT_NTOP_TRACK_ONLY_LOCAL;
   pref->devices = DEFAULT_NTOP_DEVICES;
-  pref->enableOtherPacketDump = DEFAULT_NTOP_OTHER_PKT_DUMP;
   pref->pcapLog = DEFAULT_NTOP_PCAP_LOG_FILENAME;
   pref->localAddresses = DEFAULT_NTOP_LOCAL_SUBNETS;
   pref->numericFlag = DEFAULT_NTOP_NUMERIC_IP_ADDRESSES;

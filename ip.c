@@ -869,17 +869,6 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 			  theData, actualDeviceId, &newSession, 
 			  IPOQUE_PROTOCOL_UNKNOWN, 1);
 	}
-
-	sportIdx = mapGlobalToLocalIdx(sport), dportIdx = mapGlobalToLocalIdx(dport);
-
-	if((myGlobals.runningPref.enableOtherPacketDump) &&
-	   ((sportIdx == -1) && (dportIdx == -1))) {
-	  /*
-	    Both source & destination port are unknown. The packet will be counted to
-	    "Other TCP/UDP prot." : We dump the packet if requested
-	  */
-	  dumpOtherPacket(actualDeviceId, h, p);
-	}
       }
     }
 
@@ -1098,17 +1087,7 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	  }
 	}
 
-        sportIdx = mapGlobalToLocalIdx(sport), dportIdx = mapGlobalToLocalIdx(dport);
-
-        if((myGlobals.runningPref.enableOtherPacketDump) && ((sportIdx == -1) && (dportIdx == -1))) {
-	  /*
-	    Both source & destination port are unknown.
-	    The packet will be counted to "Other TCP/UDP prot.".
-	    We dump the packet if requested */
-	  dumpOtherPacket(actualDeviceId, h, p);
-	}
-
-	if(nonFullyRemoteSession) {
+	/* if(nonFullyRemoteSession) */ {
 	  /* There is no session structure returned for UDP sessions */
 	  if(ip6)
 	    handleSession(h, p, fragmented, 0,
@@ -1508,8 +1487,6 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
     if(!found) {
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherIpBytes, length);
       sport = dport = 0;
-      if(myGlobals.runningPref.enableOtherPacketDump)
-	dumpOtherPacket(actualDeviceId, h, p);
 
       allocHostTrafficCounterMemory(srcHost, nonIPTraffic, sizeof(NonIPTraffic));
       allocHostTrafficCounterMemory(dstHost, nonIPTraffic, sizeof(NonIPTraffic));

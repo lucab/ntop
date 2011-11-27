@@ -136,7 +136,7 @@ void printTableDoubleEntry(char *buf, int bufLen,
     int_perc = 100;
     percentageS = 100;
   } else {
-    int_perc = (int) percentageS + 0.5;
+    int_perc = (int)(percentageS + 0.5);
   }
 
   switch(int_perc) {
@@ -176,7 +176,7 @@ void printTableDoubleEntry(char *buf, int bufLen,
     int_perc = 100;
     percentageR = 100;
   } else {
-    int_perc = (int) percentageR + 0.5;
+    int_perc = (int)(percentageR + 0.5);
   }
 
   switch(int_perc) {
@@ -416,7 +416,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
 		 char *vlanList, u_short vlanId) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   char *sign, *arrowGif, *arrow[128], *theAnchor[128], *url=NULL;
-  int i, soFar=2, idx, j, hourId, useVlans = 0;
+  int i, idx, j, hourId, useVlans = 0;
   char htmlAnchor[128], htmlAnchor1[128], theLink[128], theVlanLink[128];
   ProtocolsList *protoList;
   char theDate[8];
@@ -588,7 +588,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
     sendString(buf);
     sendString("</TD></TR>\n</TABLE></CENTER><p>");
   }
-
+  
   switch(reportType) {
   case SORT_DATA_RECEIVED_PROTOS:
   case SORT_DATA_SENT_PROTOS:
@@ -644,12 +644,12 @@ void printHeader(int reportType, int revertOrder, u_int column,
 	arrow[BASE_PROTOS_IDX+idx] = "";
 	theAnchor[BASE_PROTOS_IDX+idx] = htmlAnchor1;
       }
-
+      
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TH "TH_BG">%s%d\">%s%s</A></TH>",
-		  theAnchor[BASE_PROTOS_IDX+idx], BASE_PROTOS_IDX+idx,
-		  protoList->protocolName, arrow[BASE_PROTOS_IDX+idx]);
+		    theAnchor[BASE_PROTOS_IDX+idx], BASE_PROTOS_IDX+idx,
+		    protoList->protocolName, arrow[BASE_PROTOS_IDX+idx]);
       sendString(buf);
-
+      
       idx++, protoList = protoList->next;
     }
 
@@ -677,29 +677,22 @@ void printHeader(int reportType, int revertOrder, u_int column,
       arrow[0] = "";
       theAnchor[0] = htmlAnchor1;
     }
+   
 
-    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-      if(abs(column) == soFar) {
-	arrow[0] = arrowGif;
-	theAnchor[0] = htmlAnchor;
-      } else {
-	arrow[0] = "";
-	theAnchor[0] = htmlAnchor1;
+    for(i=0; i<myGlobals.l7.numSupportedProtocols; i++) {
+      if(myGlobals.device[myGlobals.actualReportDeviceId].l7.protoTraffic[i] > 0) {
+	if(abs(column) == (i+2)) {
+	  arrow[0] = arrowGif;
+	  theAnchor[0] = htmlAnchor;
+	} else {
+	  arrow[0] = "";
+	  theAnchor[0] = htmlAnchor1;
+	}
+	safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s%d\">%s%s</A></TH>",
+		      theAnchor[0], i+2, getProtoName(i), arrow[0]);
+	sendString(buf);
       }
-      safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s%d\">%s%s</A></TH>",
-		  theAnchor[0], i+2, myGlobals.ipTrafficProtosNames[i], arrow[0]);
-      sendString(buf);
-      soFar++;
     }
-
-    if(abs(column) == soFar) {
-      arrow[0] = arrowGif; theAnchor[0] = htmlAnchor;
-    } else {
-      arrow[0] = "";  theAnchor[0] = htmlAnchor1;
-    }
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s%d\">Other&nbsp;IP%s</A></TH>",
-		theAnchor[0], i+2, arrow[0]);
-    sendString(buf);
     break;
 
   case SORT_DATA_RCVD_HOST_TRAFFIC:
@@ -888,8 +881,8 @@ int sortHostFctn(const void *_a, const void *_b) {
       return(0);
     break;
   case 8:
-    n_a = (*a)->totContactedSentPeers+(*a)->totContactedRcvdPeers;
-    n_b = (*b)->totContactedSentPeers+(*b)->totContactedRcvdPeers;
+    n_a = (int)((*a)->totContactedSentPeers+(*a)->totContactedRcvdPeers);
+    n_b = (int)((*b)->totContactedSentPeers+(*b)->totContactedRcvdPeers);
 
     if(n_a < n_b)
       return(1);
@@ -899,8 +892,8 @@ int sortHostFctn(const void *_a, const void *_b) {
       return(0);
     break;
   case 9:
-    n_a = (*a)->lastSeen-(*a)->firstSeen;
-    n_b = (*b)->lastSeen-(*b)->firstSeen;
+    n_a = (int)((*a)->lastSeen-(*a)->firstSeen);
+    n_b = (int)((*b)->lastSeen-(*b)->firstSeen);
 
     if(n_a < n_b)
       return(1);
@@ -1060,8 +1053,8 @@ int cmpFctn(const void *_a, const void *_b) {
   HostTraffic **b = (HostTraffic **)_b;
   Counter a_=0, b_=0;
   float fa_=0, fb_=0;
-  short floatCompare=0;
-
+  short floatCompare = 0, columnProtoId;
+  
   if((a == NULL) && (b != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (1)");
     return(1);
@@ -1179,53 +1172,19 @@ int cmpFctn(const void *_a, const void *_b) {
     }
     break;
 
-#if 0
   case SORT_DATA_RECEIVED_IP:
     columnProtoId = myGlobals.columnSort - 1;
-    if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
+    if((columnProtoId != -1) && (columnProtoId <= myGlobals.l7.numSupportedProtocols)) {
       if(columnProtoId <= 0) {
 	a_ = b_ = 0;
       } else {
-	if((*a)->protoIPTrafficInfos[columnProtoId-1])
-	  a_ = (*a)->protoIPTrafficInfos[columnProtoId-1]->rcvdLoc.value+
-	    (*a)->protoIPTrafficInfos[columnProtoId-1]->rcvdFromRem.value;
-	else
-	  a_ = 0;
-
-	if((*b)->protoIPTrafficInfos[columnProtoId-1])
-	  b_ = (*b)->protoIPTrafficInfos[columnProtoId-1]->rcvdLoc.value+
-	    (*b)->protoIPTrafficInfos[columnProtoId-1]->rcvdFromRem.value;
-	else
-	  b_ = 0;
+	a_ = (*a)->l7.traffic[columnProtoId-1].bytesRcvd;
+	b_ = (*b)->l7.traffic[columnProtoId-1].bytesRcvd;	
       }
     } else {
       a_ = (*a)->ipv4BytesRcvd.value, b_ = (*b)->ipv4BytesRcvd.value;
-
-      if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
-	/* other IP */
-	int i;
-
-	for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	  if((*a)->protoIPTrafficInfos && (*a)->protoIPTrafficInfos[i])
-	    a_val = ((*a)->protoIPTrafficInfos[i]->rcvdLoc.value
-		     +(*a)->protoIPTrafficInfos[i]->rcvdFromRem.value);
-	  else
-	    a_val = 0;
-
-	  if((*b)->protoIPTrafficInfos && (*b)->protoIPTrafficInfos[i])
-	    b_val = ((*b)->protoIPTrafficInfos[i]->rcvdLoc.value
-		     +(*b)->protoIPTrafficInfos[i]->rcvdFromRem.value);
-	  else
-	    b_val = 0;
-
-	  /* Better be safe... */
-	  if(a_ > a_val) a_ -= a_val; else a_ = 0;
-	  if(b_ > b_val) b_ -= b_val; else b_ = 0;
-	}
-      }
     }
     break;
-#endif
 
   case SORT_DATA_RECEIVED_THPT:
     switch(myGlobals.columnSort) {
@@ -1240,6 +1199,7 @@ int cmpFctn(const void *_a, const void *_b) {
       break;
     }
     break;
+
   case SORT_DATA_RCVD_HOST_TRAFFIC:
   case SORT_DATA_SENT_HOST_TRAFFIC:
   case SORT_DATA_HOST_TRAFFIC:
@@ -1314,53 +1274,19 @@ int cmpFctn(const void *_a, const void *_b) {
     }
     break;
 
-#if 0
   case SORT_DATA_SENT_IP:
     columnProtoId = myGlobals.columnSort - 1;
-    if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
+    if((columnProtoId != -1) && (columnProtoId <= myGlobals.l7.numSupportedProtocols)) {
       if(columnProtoId <= 0) {
 	a_ = b_ = 0;
       } else {
-	if((*a)->protoIPTrafficInfos[columnProtoId-1])
-	  a_ = (*a)->protoIPTrafficInfos[columnProtoId-1]->sentLoc.value
-	    +(*a)->protoIPTrafficInfos[columnProtoId-1]->sentRem.value;
-	else
-	  a_ = 0;
-
-	if((*b)->protoIPTrafficInfos[columnProtoId-1])
-	  b_ = (*b)->protoIPTrafficInfos[columnProtoId-1]->sentLoc.value
-	    +(*b)->protoIPTrafficInfos[columnProtoId-1]->sentRem.value;
-	else
-	  b_ = 0;
+	a_ = (*a)->l7.traffic[columnProtoId-1].bytesSent;
+        b_ = (*b)->l7.traffic[columnProtoId-1].bytesSent;
       }
     } else {
       a_ = (*a)->ipv4BytesSent.value, b_ = (*b)->ipv4BytesSent.value;
-
-      if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
-	/* other IP */
-	int i;
-
-	for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	  if((*a)->protoIPTrafficInfos[i])
-	    a_val = ((*a)->protoIPTrafficInfos[i]->sentLoc.value
-		     +(*a)->protoIPTrafficInfos[i]->sentRem.value);
-	  else
-	    a_val = 0;
-
-	  if((*b)->protoIPTrafficInfos[i])
-	    b_val = ((*b)->protoIPTrafficInfos[i]->sentLoc.value
-		     +(*b)->protoIPTrafficInfos[i]->sentRem.value);
-	  else
-	    b_val = 0;
-
-	  /* Better be safe... */
-	  if(a_ > a_val) a_ -= a_val; else a_ = 0;
-	  if(b_ > b_val) b_ -= b_val; else b_ = 0;
-	}
-      }
     }
     break;
-#endif
 
   case SORT_DATA_SENT_THPT:
     switch(myGlobals.columnSort) {
@@ -1375,6 +1301,7 @@ int cmpFctn(const void *_a, const void *_b) {
       break;
     }
     break;
+
   case TRAFFIC_STATS:
     /* Nothing */
     break;
@@ -1454,63 +1381,21 @@ int cmpFctn(const void *_a, const void *_b) {
     }
     break;
 
-#if 0
   case SORT_DATA_IP:
     columnProtoId = myGlobals.columnSort - 1;
 
-    if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
+    if((columnProtoId != -1) && (columnProtoId <= myGlobals.l7.numSupportedProtocols)) {
       if(columnProtoId <= 0) {
         a_ = b_ = 0;
       } else {
-	if((*a)->protoIPTrafficInfos && (*a)->protoIPTrafficInfos[columnProtoId-1])
-	  a_ = (*a)->protoIPTrafficInfos[columnProtoId-1]->rcvdLoc.value+
-	    (*a)->protoIPTrafficInfos[columnProtoId-1]->rcvdFromRem.value+
-	    (*a)->protoIPTrafficInfos[columnProtoId-1]->sentLoc.value+
-	    (*a)->protoIPTrafficInfos[columnProtoId-1]->sentRem.value;
-	else
-	  a_ = 0;
-
-	if((*b)->protoIPTrafficInfos && (*b)->protoIPTrafficInfos[columnProtoId-1])
-	  b_ = (*b)->protoIPTrafficInfos[columnProtoId-1]->rcvdLoc.value+
-	    (*b)->protoIPTrafficInfos[columnProtoId-1]->rcvdFromRem.value+
-	    (*b)->protoIPTrafficInfos[columnProtoId-1]->sentLoc.value+
-	    (*b)->protoIPTrafficInfos[columnProtoId-1]->sentRem.value;
-	else
-	  b_ = 0;
+	a_ = (*a)->l7.traffic[columnProtoId-1].bytesSent + (*a)->l7.traffic[columnProtoId-1].bytesRcvd;
+	b_ = (*b)->l7.traffic[columnProtoId-1].bytesSent + (*b)->l7.traffic[columnProtoId-1].bytesRcvd;
       }
     } else {
       a_ = (*a)->ipv4BytesRcvd.value+(*a)->ipv4BytesSent.value;
       b_ = (*b)->ipv4BytesRcvd.value+(*b)->ipv4BytesSent.value;
-
-      if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
-        /* other IP */
-        int i;
-
-        for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	  if((*a)->protoIPTrafficInfos && (*a)->protoIPTrafficInfos[i])
-	    a_val = ((*a)->protoIPTrafficInfos[i]->rcvdLoc.value
-		     +(*a)->protoIPTrafficInfos[i]->rcvdFromRem.value
-		     +(*a)->protoIPTrafficInfos[i]->sentLoc.value
-		     +(*a)->protoIPTrafficInfos[i]->sentRem.value);
-	  else
-	    a_val = 0;
-
-	  if((*b)->protoIPTrafficInfos && (*b)->protoIPTrafficInfos[i])
-	    b_val = ((*b)->protoIPTrafficInfos[i]->rcvdLoc.value
-		     +(*b)->protoIPTrafficInfos[i]->rcvdFromRem.value
-		     +(*b)->protoIPTrafficInfos[i]->sentLoc.value
-		     +(*b)->protoIPTrafficInfos[i]->sentRem.value);
-	  else
-	    b_val = 0;
-
-          /* Better be safe... */
-          if(a_ > a_val) a_ -= a_val; else a_ = 0;
-          if(b_ > b_val) b_ -= b_val; else b_ = 0;
-        }
-      }
     }
     break;
-#endif
 
   case SORT_DATA_THPT:
     switch(myGlobals.columnSort) {

@@ -1154,9 +1154,6 @@ void processPacket(u_char *_deviceId,
 	incrementUnknownProto(srcHost, 0 /* sent */, eth_type /* eth */, 0 /* dsap */, 0 /* ssap */, 0 /* ip */);
 	incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */, 0 /* ssap */, 0 /* ip */);
 
-	if(myGlobals.runningPref.enableOtherPacketDump)
-	  dumpOtherPacket(actualDeviceId, h, p);
-
 	ctr.value = length;
 
 	/*
@@ -1362,8 +1359,6 @@ void processPacket(u_char *_deviceId,
 				    llcHeader.ssap /* ssap */, 0 /* ip */);
 	      incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */,
 				    llcHeader.ssap /* ssap */, 0 /* ip */);
-	      if(myGlobals.runningPref.enableOtherPacketDump)
-		dumpOtherPacket(actualDeviceId, h, p);
 	    } else {
 	      /* Unknown Protocol */
 #ifdef UNKNOWN_PACKET_DEBUG
@@ -1379,8 +1374,6 @@ void processPacket(u_char *_deviceId,
 				    llcHeader.ssap /* ssap */, 0 /* ip */);
 	      incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */,
 				    llcHeader.ssap /* ssap */, 0 /* ip */);
-	      if(myGlobals.runningPref.enableOtherPacketDump)
-		dumpOtherPacket(actualDeviceId, h, p);
 	    }
 
 	    ctr.value = length;
@@ -1539,8 +1532,6 @@ void processPacket(u_char *_deviceId,
 				  0 /* ssap */, 0 /* ip */);
 	    incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */,
 				  0 /* ssap */, 0 /* ip */);
-	    if(myGlobals.runningPref.enableOtherPacketDump)
-	      dumpOtherPacket(actualDeviceId, h, p);
 	    break;
 	  }
 
