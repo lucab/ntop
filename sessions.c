@@ -321,7 +321,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   {
     char buf[32], buf1[32];
 
-    traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: Session terminated: %s:%d<->%s:%d (lastSeend=%d) (# sessions = %d)",
+    traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: Session terminated: %s:%d <-> %s:%d (lastSeend=%d) (# sessions = %d)",
 	       _addrtostr(&sessionToPurge->initiatorRealIp, buf, sizeof(buf)), sessionToPurge->sport,
 	       _addrtostr(&sessionToPurge->remotePeerRealIp, buf1, sizeof(buf1)), sessionToPurge->dport,
 	       sessionToPurge->lastSeen,  myGlobals.device[actualDeviceId].numTcpSessions-1);
@@ -1534,7 +1534,7 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
 	incrementUsageCounter(&srcHost->secHostPkts->rejectedTCPConnRcvd, dstHost, actualDeviceId);
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.rejectedTCPConn, 1);
 
-	traceEvent(CONST_TRACE_INFO, "Host %s rejected TCP session from %s [%s:%d]<->[%s:%d] (port closed?)",
+	traceEvent(CONST_TRACE_INFO, "Host %s rejected TCP session from %s [%s:%d] <-> [%s:%d] (port closed?)",
 		   srcHost->hostResolvedName, dstHost->hostResolvedName,
 		   dstHost->hostResolvedName, dport,
 		   srcHost->hostResolvedName, sport);

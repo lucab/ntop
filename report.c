@@ -730,7 +730,7 @@ void printTrafficStatistics(int revertOrder) {
   }
 
   sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
-  sendString("</div>\n");
+  sendString("\n</div>\n");
   sendString("\n\n<div id=\"tabs-2\">\n");
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
@@ -1188,11 +1188,11 @@ void printTrafficStatistics(int revertOrder) {
   /* ********************* */
 
   sendString("</TABLE></CENTER>\n");
-  sendString("</div>\n");
+  sendString("\n</div>\n");
 
   sendString("\n\n<div id=\"tabs-3\">\n");
   printProtoTraffic(TRUE);
-  sendString("</div>\n");
+  sendString("\n</div>\n");
 
   sendString("</div>\n</center>\n");
 }
@@ -3137,7 +3137,7 @@ static u_int8_t isMacAddress(char* host) {
 
 void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 			  int revertOrder, int pageNum, char *url) {
-  u_int idx, i, cols = 0;
+  u_int idx, i, cols = 0, show_div_8 = 0;
   u_int16_t vlanId = NO_VLAN;
   HostTraffic *el=NULL;
   char buf[LEN_GENERAL_WORK_BUFFER];
@@ -3271,11 +3271,16 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 	     "    <ul>\n"
 	     "    <li><a href=\"#tabs-1\">Host Details</a></li>\n");
 
-  sendString("<li><a href=\"#tabs-21\">Hourly Distribution</a></li>\n");
-  sendString("<li><a href=\"#tabs-22\">Packet Stats</a></li>\n");
+  if(el->trafficDistribution)
+    sendString("<li><a href=\"#tabs-21\">Hourly Distribution</a></li>\n");
+
+  if(el->secHostPkts || el->nonIPTraffic)
+    sendString("<li><a href=\"#tabs-22\">Packet Stats</a></li>\n");
+
   sendString("<li><a href=\"#tabs-23\">Protocols</a></li>\n");
 
-  sendString("<li><a href=\"#tabs-3\">ICMP Stats</a></li>\n");
+  if(el->icmpInfo)
+    sendString("<li><a href=\"#tabs-3\">ICMP Stats</a></li>\n");
 
   if(fragments > 0)
     sendString("<li><a href=\"#tabs-4\">Fragment Stats</a></li>\n");
@@ -3289,238 +3294,255 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
   if(showServices)
     sendString("<li><a href=\"#tabs-7\">Service Stats</a></li>\n");
 
-  if(el->portsUsage != NULL)
+  if((el->portsUsage != NULL)
+     || (el->otherIpPortsRcvd[MAX_NUM_RECENT_PORTS-1] >= 0) 
+     || (el->otherIpPortsSent[MAX_NUM_RECENT_PORTS-1] >= 0)
+     || (el->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] >= 0) 
+     || (el->recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS-1] >= 0)) {
     sendString("<li><a href=\"#tabs-8\">Monitored Ports</a></li>\n");
+    show_div_8 = 1;
+  }
 
   if(el->clientDelay || el->serverDelay)
     sendString("<li><a href=\"#tabs-9\">Network Delay</a></li>\n");
 
-  if((myGlobals.device[actualDeviceId].tcpSession != NULL) &&
-     (myGlobals.device[actualDeviceId].numTcpSessions > 0))
+  if((myGlobals.device[actualDeviceId].tcpSession != NULL) 
+     && (myGlobals.device[actualDeviceId].numTcpSessions > 0))
     sendString("<li><a href=\"#tabs-10\">Active Sessions</a></li>\n");
 
   sendString("</ul>\n");
-  
+
+  sendString("\n\n<!------ DIV ------>\n");  
   sendString("\n\n<div id=\"tabs-1\">\n");
   printHostDetailedInfo(el, actualDeviceId);
-  sendString("</div>\n");
+  sendString("\n</div>\n");
 
+  sendString("\n\n<!------ DIV ------>\n");  
   printHostTrafficStats(el, actualDeviceId);
 
-  sendString("\n\n<div id=\"tabs-3\">\n");
-  printHostIcmpStats(el);
-  sendString("</div>\n");
-
-  if(fragments > 0) {
-    sendString("\n\n<div id=\"tabs-4\">\n");
-    printHostFragmentStats(el, actualDeviceId);
-    sendString("</div>\n");
+  if(el->icmpInfo) {
+    sendString("\n\n<!------ DIV ------>\n");  
+    sendString("\n\n<div id=\"tabs-3\">\n");
+    printHostIcmpStats(el);
+    sendString("\n</div>\n");
   }
 
+  if(fragments > 0) {
+    sendString("\n\n<!------ DIV ------>\n");  
+    sendString("\n\n<div id=\"tabs-4\">\n");
+    printHostFragmentStats(el, actualDeviceId);
+    sendString("\n</div>\n");
+  }
+
+  sendString("\n\n<!------ DIV ------>\n");  
   sendString("\n\n<div id=\"tabs-5\">\n");
   printHostContactedPeers(el, actualDeviceId);
-  sendString("</div>\n");
+  sendString("\n</div>\n");
 
   if((el->protocolInfo != NULL) && (el->protocolInfo->httpVirtualHosts != NULL)) {
+    sendString("\n\n<!------ DIV ------>\n");  
     sendString("\n\n<div id=\"tabs-6\">\n");
     printHostHTTPVirtualHosts(el, actualDeviceId);
-    sendString("</div>\n");
+    sendString("\n</div>\n");
   }
 
   if(showServices) {
+    sendString("\n\n<!------ DIV ------>\n");  
     sendString("\n\n<div id=\"tabs-7\">\n");
     printHostUsedServices(el, actualDeviceId);
     printHostFingerprint(el); /* ----- **** ----- */
-    sendString("</div>\n");
+    sendString("\n</div>\n");
   }
 
   /* ***************************************************** */
 
   i = 0;
-
-  if(el->portsUsage != NULL) {
+  
+  if(show_div_8) {
+    sendString("\n\n<!------ DIV ------>\n");  
     sendString("\n\n<div id=\"tabs-8\">\n");
+  
+    if(el->portsUsage != NULL) {
+      for(idx=1; idx<MAX_ASSIGNED_IP_PORTS /* 1024 */; idx++) {
+	PortUsage *ports = getPortsUsage(el, idx, 0);
+	if(ports != NULL) {
+	  char *svc = getAllPortByNum(idx, portBuf, sizeof(portBuf));
+	  char webHostName[LEN_GENERAL_WORK_BUFFER];
+	  HostTraffic *peerHost;
 
-    for(idx=1; idx<MAX_ASSIGNED_IP_PORTS /* 1024 */; idx++) {
-      PortUsage *ports = getPortsUsage(el, idx, 0);
-      if(ports != NULL) {
-	char *svc = getAllPortByNum(idx, portBuf, sizeof(portBuf));
-	char webHostName[LEN_GENERAL_WORK_BUFFER];
-	HostTraffic *peerHost;
+	  if(i == 0) {
+	    printSectionTitle("Port Usage\n");
+	    sendString("<CENTER>\n");
+	    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
+		       "<TH "TH_BG">IP&nbsp;Service</TH>"
+		       "<TH "TH_BG">Port</TH>"
+		       "<TH "TH_BG">#&nbsp;Client&nbsp;Sess.</TH>"
+		       "<TH "TH_BG">Last&nbsp;Client&nbsp;Peer</TH>"
+		       "<TH "TH_BG">#&nbsp;Server&nbsp;Sess.</TH>"
+		       "<TH "TH_BG">Last&nbsp;Server&nbsp;Peer</TH>"
+		       "</TR>\n");
+	    i++;
+	  }
 
-	if(i == 0) {
-	  printSectionTitle("Port Usage\n");
-	  sendString("<CENTER>\n");
-	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-		     "<TH "TH_BG">IP&nbsp;Service</TH>"
-		     "<TH "TH_BG">Port</TH>"
-		     "<TH "TH_BG">#&nbsp;Client&nbsp;Sess.</TH>"
-		     "<TH "TH_BG">Last&nbsp;Client&nbsp;Peer</TH>"
-		     "<TH "TH_BG">#&nbsp;Server&nbsp;Sess.</TH>"
-		     "<TH "TH_BG">Last&nbsp;Server&nbsp;Peer</TH>"
-		     "</TR>\n");
-	  i++;
-	}
+	  if(svc != NULL) {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+			  "<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), svc, idx);
+	  } else {
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%d</TH>"
+			  "<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), idx, idx);
+	  }
 
-	if(svc != NULL) {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			"<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-			"<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), svc, idx);
-	} else {
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			"<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%d</TH>"
-			"<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), idx, idx);
-	}
-
-	sendString(buf);
-
-	if(ports->clientUses > 0) {
-	  /* Fix below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
-	  HostTraffic tmpEl;
-
-	  if(emptySerial(&ports->clientUsesLastPeer))
-	    peerHost = NULL;
-	  else
-	    peerHost = quickHostLink(ports->clientUsesLastPeer, actualDeviceId, &tmpEl);
-
-	  if(peerHost == NULL) {
-	    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
-	    strncpy(webHostName, "&nbsp;", sizeof(webHostName));
-	  } else
-	    strncpy(webHostName, makeHostLink(peerHost, FLAG_HOSTLINK_TEXT_FORMAT, 0,
-					      0, hostLinkBuf, sizeof(hostLinkBuf)),
-		    sizeof(webHostName));
-
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
-			"<TD "TD_BG" ALIGN=CENTER>%s</TD>",
-			ports->clientUses,
-			formatBytes(ports->clientTraffic.value, 1, formatBuf, sizeof(formatBuf)),
-			webHostName);
 	  sendString(buf);
-	} else
-	  sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD>");
 
-	if(ports->serverUses > 0) {
-	  HostTraffic tmpEl;
+	  if(ports->clientUses > 0) {
+	    /* Fix below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
+	    HostTraffic tmpEl;
 
-	  if(emptySerial(&ports->serverUsesLastPeer))
-	    peerHost = NULL;
-	  else
-	    peerHost = quickHostLink(ports->serverUsesLastPeer, actualDeviceId, &tmpEl);
+	    if(emptySerial(&ports->clientUsesLastPeer))
+	      peerHost = NULL;
+	    else
+	      peerHost = quickHostLink(ports->clientUsesLastPeer, actualDeviceId, &tmpEl);
 
-	  if(peerHost == NULL) {
-	    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
-	    strncpy(webHostName, "&nbsp;", sizeof(webHostName));
+	    if(peerHost == NULL) {
+	      /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
+	      strncpy(webHostName, "&nbsp;", sizeof(webHostName));
+	    } else
+	      strncpy(webHostName, makeHostLink(peerHost, FLAG_HOSTLINK_TEXT_FORMAT, 0,
+						0, hostLinkBuf, sizeof(hostLinkBuf)),
+		      sizeof(webHostName));
+
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
+			  "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
+			  ports->clientUses,
+			  formatBytes(ports->clientTraffic.value, 1, formatBuf, sizeof(formatBuf)),
+			  webHostName);
+	    sendString(buf);
 	  } else
-	    strncpy(webHostName, makeHostLink(peerHost, FLAG_HOSTLINK_TEXT_FORMAT, 0,
-					      0, hostLinkBuf, sizeof(hostLinkBuf)), sizeof(webHostName));
+	    sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD>");
 
-	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
-			"<TD "TD_BG" ALIGN=CENTER>%s</TD></TR>",
-			ports->serverUses,
-			formatBytes(ports->serverTraffic.value, 1, formatBuf, sizeof(formatBuf)),
-			webHostName);
+	  if(ports->serverUses > 0) {
+	    HostTraffic tmpEl;
+
+	    if(emptySerial(&ports->serverUsesLastPeer))
+	      peerHost = NULL;
+	    else
+	      peerHost = quickHostLink(ports->serverUsesLastPeer, actualDeviceId, &tmpEl);
+
+	    if(peerHost == NULL) {
+	      /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
+	      strncpy(webHostName, "&nbsp;", sizeof(webHostName));
+	    } else
+	      strncpy(webHostName, makeHostLink(peerHost, FLAG_HOSTLINK_TEXT_FORMAT, 0,
+						0, hostLinkBuf, sizeof(hostLinkBuf)), sizeof(webHostName));
+
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
+			  "<TD "TD_BG" ALIGN=CENTER>%s</TD></TR>",
+			  ports->serverUses,
+			  formatBytes(ports->serverTraffic.value, 1, formatBuf, sizeof(formatBuf)),
+			  webHostName);
+	    sendString(buf);
+	  } else
+	    sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD></TR>");
+	}
+      }  
+    }
+  
+    if(i > 0) {
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
+    }  
+  
+    if((el->otherIpPortsRcvd[MAX_NUM_RECENT_PORTS-1] >= 0)
+       || (el->otherIpPortsSent[MAX_NUM_RECENT_PORTS-1] >= 0)) {
+      /* We have something to show */
+      int numPrinted;
+
+      printSectionTitle("Traffic on <i>Other</i> Port(s)\n");
+      sendString("<CENTER>\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG">Client Port</TH><TH "TH_BG">Server Port</TH>"
+		 "</TR>\n");
+
+      sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=LEFT><UL>");
+
+      for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
+	if(el->otherIpPortsSent[idx] >= 0) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
+			el->otherIpPortsSent[idx],
+			getAllPortByNum(el->otherIpPortsSent[idx], portBuf, sizeof(portBuf)));
 	  sendString(buf);
-	} else
-	  sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD></TR>");
+	  numPrinted++;
+	}
       }
+
+      if(numPrinted == 0) sendString("&nbsp;");
+      sendString("</UL></TD><TD "TD_BG" ALIGN=LEFT><UL>");
+
+      for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
+	if(el->otherIpPortsRcvd[idx] >= 0) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
+			el->otherIpPortsRcvd[idx],
+			getAllPortByNum(el->otherIpPortsRcvd[idx], portBuf, sizeof(portBuf)));
+	  sendString(buf);
+	  numPrinted++;
+	}
+      }
+
+      if(numPrinted == 0) sendString("&nbsp;");
+      sendString("</UL></TR></TABLE>"TABLE_OFF"</CENTER>");
     }
+
+    /* ****************************************************************** */
+
+    if((el->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] >= 0)
+       || (el->recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS-1] >= 0)) {
+      /* We have something to show */
+      int numPrinted;
+
+      printSectionTitle("Recently Used Ports\n");
+      sendString("<CENTER>\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG">Client Port</TH><TH "TH_BG">Server Port</TH>"
+		 "</TR>\n");
+
+      sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=LEFT><UL>");
+
+      for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
+	if(el->recentlyUsedClientPorts[idx] >= 0) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
+			el->recentlyUsedClientPorts[idx],
+			getAllPortByNum(el->recentlyUsedClientPorts[idx], portBuf, sizeof(portBuf)));
+	  sendString(buf);
+	  numPrinted++;
+	}
+      }
+
+      if(numPrinted == 0) sendString("&nbsp;");
+
+      sendString("</UL></TD><TD "TD_BG" ALIGN=LEFT><UL>");
+
+      for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
+	if(el->recentlyUsedServerPorts[idx] >= 0) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			"<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
+			el->recentlyUsedServerPorts[idx],
+			getAllPortByNum(el->recentlyUsedServerPorts[idx], portBuf, sizeof(portBuf)));
+	  sendString(buf);
+	  numPrinted++;
+	}
+      }
+
+      if(numPrinted == 0) sendString("&nbsp;");
+      sendString("</UL></TR></TABLE>"TABLE_OFF"</CENTER>\n");
+    }
+
+    sendString("\n</div>\n");
   }
-
-  if(i > 0){
-    sendString("</TABLE>"TABLE_OFF"<P>\n");
-    sendString("</CENTER>\n");
-  }
-
-  /* ****************************************************************** */
-
-  if((el->otherIpPortsRcvd[MAX_NUM_RECENT_PORTS-1] >= 0)
-     || (el->otherIpPortsSent[MAX_NUM_RECENT_PORTS-1] >= 0)) {
-    /* We have something to show */
-    int numPrinted;
-
-    printSectionTitle("Traffic on <i>Other</i> Port(s)\n");
-    sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-	       "<TH "TH_BG">Client Port</TH><TH "TH_BG">Server Port</TH>"
-	       "</TR>\n");
-
-    sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=LEFT><UL>");
-
-    for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
-      if(el->otherIpPortsSent[idx] >= 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
-		      el->otherIpPortsSent[idx],
-		      getAllPortByNum(el->otherIpPortsSent[idx], portBuf, sizeof(portBuf)));
-	sendString(buf);
-	numPrinted++;
-      }
-    }
-
-    if(numPrinted == 0) sendString("&nbsp;");
-    sendString("</UL></TD><TD "TD_BG" ALIGN=LEFT><UL>");
-
-    for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
-      if(el->otherIpPortsRcvd[idx] >= 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
-		      el->otherIpPortsRcvd[idx],
-		      getAllPortByNum(el->otherIpPortsRcvd[idx], portBuf, sizeof(portBuf)));
-	sendString(buf);
-	numPrinted++;
-      }
-    }
-
-    if(numPrinted == 0) sendString("&nbsp;");
-    sendString("</UL></TR></TABLE>"TABLE_OFF"</CENTER>");
-  }
-
-  /* ****************************************************************** */
-
-  if((el->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] >= 0)
-     || (el->recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS-1] >= 0)) {
-    /* We have something to show */
-    int numPrinted;
-
-    printSectionTitle("Recently Used Ports\n");
-    sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-	       "<TH "TH_BG">Client Port</TH><TH "TH_BG">Server Port</TH>"
-	       "</TR>\n");
-
-    sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=LEFT><UL>");
-
-    for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
-      if(el->recentlyUsedClientPorts[idx] >= 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<li><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
-		      el->recentlyUsedClientPorts[idx],
-		      getAllPortByNum(el->recentlyUsedClientPorts[idx], portBuf, sizeof(portBuf)));
-	sendString(buf);
-	numPrinted++;
-      }
-    }
-
-    if(numPrinted == 0) sendString("&nbsp;");
-
-    sendString("</UL></TD><TD "TD_BG" ALIGN=LEFT><UL>");
-
-    for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
-      if(el->recentlyUsedServerPorts[idx] >= 0) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<LI><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>\n",
-		      el->recentlyUsedServerPorts[idx],
-		      getAllPortByNum(el->recentlyUsedServerPorts[idx], portBuf, sizeof(portBuf)));
-	sendString(buf);
-	numPrinted++;
-      }
-    }
-
-    if(numPrinted == 0) sendString("&nbsp;");
-    sendString("</UL></TR></TABLE>"TABLE_OFF"</CENTER>");
-  }
-  sendString("</div>\n");
 
   /* *************************************************** */
 
@@ -3556,19 +3578,20 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 	       "<li>All times are majored during TCP 3-way handshake"
 	       "</td></tr>\n");
     sendString("</TABLE></CENTER>\n<P>\n");
-    sendString("</div>\n");
+    sendString("\n</div>\n");
   }
 
-  if((myGlobals.device[actualDeviceId].tcpSession == NULL) ||
-     (myGlobals.device[actualDeviceId].numTcpSessions == 0))
+  if((myGlobals.device[actualDeviceId].tcpSession == NULL)
+     || (myGlobals.device[actualDeviceId].numTcpSessions == 0))
     ;
   else {
+    sendString("\n\n<!------ DIV ------>\n");  
     sendString("\n\n<div id=\"tabs-10\">\n");
     printActiveSessions(actualDeviceId, 0, el);
-    sendString("</div>\n");
+    sendString("\n</div>\n");
   }
 
-  sendString("</div>\n");
+  sendString("\n<!------ END ------>\n</div>\n");
 }
 
 /* ************************************ */
@@ -4041,6 +4064,10 @@ void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 					    sizeof(hostLinkBuf1)),
 		      dport);
 	sendString(buf);
+
+	/* Sanitize */
+	if(myGlobals.actTime < session->lastSeen)
+	  session->lastSeen = myGlobals.actTime;
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>"

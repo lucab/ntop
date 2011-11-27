@@ -211,6 +211,22 @@ char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
 
 /* ******************************* */
 
+static void copyShortHostName(char* buf, u_int buf_len, char *name) {
+  u_int max_len = 20, len = strlen(name);
+
+  if(len > (max_len+4)) {
+    safe_snprintf(__FILE__, __LINE__, 
+		  buf, buf_len, "%c%c%c%c...%s",
+		  name[0], name[1], name[2], name[3],
+		  &name[len-max_len]);
+  } else
+    safe_snprintf(__FILE__, __LINE__, buf, buf_len, "%s", name);
+  
+  /* traceEvent(CONST_TRACE_WARNING, "--> [%s][%s]\n", name, buf); */
+}
+
+/* ******************************* */
+
 char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag, char *buf, int bufLen) {
   char symIp[256], linkName[256], flag[256], colorSpec[64], vlanStr[8], mapStr[1024];
@@ -349,6 +365,8 @@ char* makeHostLink(HostTraffic *el, short mode,
   } else {
     /* Got it? Use it! */
     strncpy(symIp, el->hostResolvedName, sizeof(symIp));
+
+    copyShortHostName(symIp, sizeof(symIp), el->hostResolvedName);
 
     if((el->ethAddressString[0] != '\0')
        && subnetPseudoLocalHost(el)

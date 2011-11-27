@@ -41,7 +41,7 @@ static void send_graph_header(char *title) {
   sendString("<HTML>\n"
 	     "<HEAD>\n"
 	     "<TITLE>ntop chart</TITLE>\n"
-	     "<META HTTP-EQUIV=REFRESH CONTENT=30>\n"
+	     "<META HTTP-EQUIV=REFRESH CONTENT=60>\n"
 	     "<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n"
 	     "<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n");
 

@@ -1749,10 +1749,10 @@ int cmpHostsFctn(const void *_a, const void *_b) {
 
 /* ************************************ */
 
-void printPacketStats(HostTraffic *el, int actualDeviceId) {
+int printPacketStats(HostTraffic *el, int actualDeviceId) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   char formatBuf[32];
-  int headerSent = 0;
+  int headerSent = 0, rc = 0;
   char *tableHeader = "<center><TABLE BORDER=0 "TABLE_DEFAULTS">\n<TR><TD>";
 
   /* *********************** */
@@ -2043,7 +2043,6 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 	formatUsageCounter(el->secHostPkts->malformedPktsRcvd, 0, actualDeviceId);
 	sendString("</TR>\n\n");
       }
-
     }
   }
 
@@ -2051,6 +2050,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
     sendString("</TABLE>"TABLE_OFF"<P>\n");
     sendString("</CENTER>\n");
     sendString("</TD></TR>\n</TABLE>"TABLE_OFF"</CENTER>"); 
+    rc = 1;
   }
 
   if(el->nonIPTraffic) {
@@ -2058,6 +2058,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 	+ el->nonIPTraffic->arpReplyPktsSent.value
 	+ el->nonIPTraffic->arpReplyPktsRcvd.value) > 0) {
 
+      rc = 1;
       //if(headerSent) sendString(tableHeader);
 	sendString("<CENTER>\n"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>");
 	sendString("<TR "TR_ON" "DARK_BG">"
@@ -2091,6 +2092,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
     }
   }
 
+  return(rc);
 }
 
 /* ************************************ */
@@ -2362,17 +2364,24 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   actTotalSent = el->tcpSentLoc.value+el->tcpSentRem.value;
   actTotalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value;
 
-  sendString("\n\n<div id=\"tabs-21\">\n");
-  printHostHourlyTraffic(el);
-  sendString("</div>\n");
+  if(el->trafficDistribution) {
+    sendString("\n\n<div id=\"tabs-21\">\n");
+    printHostHourlyTraffic(el);
+    sendString("\n</div>\n");
+  }
 
+  sendString("\n\n<!------ DIV ------>\n");  
   sendString("\n\n<div id=\"tabs-22\">\n");
-  printPacketStats(el, actualDeviceId);
-  sendString("</div>\n");
+  if(printPacketStats(el, actualDeviceId) == 0)
+    printNoDataYet();
+  sendString("\n</div>\n");
 
+  /*
   if((totalSent == 0) && (totalRcvd == 0))
     return;
+  */
 
+  sendString("\n\n<!------ DIV ------>\n");  
   sendString("\n\n<div id=\"tabs-23\">\n");
 
   sendString("<CENTER>\n"
@@ -2664,7 +2673,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
     }
   }
 
-  sendString("</div>\n");
+  sendString("\n</div>\n");
 }
 
 /* ************************************ */
@@ -2743,7 +2752,6 @@ void printIcmpv6Stats(HostTraffic *el) {
   }
 
   sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
-  sendString("</div>\n");
 }
 
 /* ******************************************** */
@@ -2888,9 +2896,6 @@ void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
   if((el->protocolInfo != NULL) && (el->protocolInfo->httpVirtualHosts != NULL)) {
     VirtualHostList *list = el->protocolInfo->httpVirtualHosts;
 
-    printSectionTitle("HTTP Virtual Hosts Traffic");
-    sendString("<CENTER>\n<TABLE BORDER=0 "TABLE_DEFAULTS">\n<TR><TD "TD_BG" VALIGN=TOP>\n");
-
     sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>"
 	       "<TR "TR_ON" "DARK_BG"><TH "TH_BG">Virtual Host</TH>"
 	       "<TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>\n\n");
@@ -2997,7 +3002,10 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
       }
     }
 
-    sendString("</TABLE>"TABLE_OFF"</DIV></TD>\n");
+    sendString("</TABLE>"TABLE_OFF);
+
+    if(header_sent) sendString("\n</div>\n");
+    sendString("</TD>\n");
   }
 
   /* ************************** */
@@ -3031,7 +3039,9 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
       }
     }
 
-    sendString("</TABLE>"TABLE_OFF"</DIV></TD>\n");
+    sendString("</TABLE>"TABLE_OFF);
+    if(header_sent) sendString("\n</div>\n");
+    sendString("</TD>\n");
 
     /* ***************************************************** */
   }
@@ -4948,16 +4958,6 @@ void buildMapLink(HostTraffic *el, char *buf, int buf_len) {
   if(privateIPAddress(el))
     buf[0] = '\0';
   else {
-#if 0
-    safe_snprintf(__FILE__, __LINE__, buf, buf_len,
-		" <A class=external href=\"#\" title=\"Physical Host Location\" "
-		  "onclick=\"window.open(\'%s?host=%s@%s\', "
-		  "\'Host Map\', \'height=210, width=320,toolbar=nodirectories=no,status=no,"
-		  "menubar=no,scrollbars=no,resizable=no\'); return false;\">"
-		  "<IMG SRC=/marker.png border=0></A>\n",
-		  myGlobals.runningPref.mapperURL,
-		  el->hostResolvedName, el->hostNumIpAddress);
-#else
     safe_snprintf(__FILE__, __LINE__, buf, buf_len,
 		  " <A class=external href=\"#\" title=\"Physical Host Location\" "
 		  "onclick=\"window.open(\'%s?host=%s&IP=%s\', "
@@ -4966,7 +4966,6 @@ void buildMapLink(HostTraffic *el, char *buf, int buf_len) {
 		  "<IMG SRC=/marker.png border=0></A>\n",
 		  myGlobals.runningPref.mapperURL,
 		  el->hostResolvedName, el->hostNumIpAddress);
-#endif
   }
 }
 

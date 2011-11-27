@@ -99,7 +99,7 @@ extern int cmpMulticastFctn(const void *_a, const void *_b);
 extern void printHostThtpShort(HostTraffic *el, int reportType, u_int hourId);
 extern int cmpHostsFctn(const void *_a, const void *_b);
 extern int cmpFcHostsFctn(const void *_a, const void *_b);
-extern void printPacketStats(HostTraffic *el, int actualDeviceId);
+extern int printPacketStats(HostTraffic *el, int actualDeviceId);
 extern void printFcPacketStats(HostTraffic *el, int actualDeviceId);
 extern void printHostTrafficStats(HostTraffic *el, int actualDeviceId);
 extern void printFcHostTrafficStats(HostTraffic *el, int actualDeviceId);
