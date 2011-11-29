@@ -59,7 +59,9 @@ static void updateHTTPVirtualHosts(char *virtualHostName,
 				   HostTraffic *theRemHost,
 				   TrafficCounter bytesSent, TrafficCounter bytesRcvd) {
 
-  if(virtualHostName != NULL) {
+  if((virtualHostName != NULL) 
+     && (strlen(virtualHostName) > 3) /* Sanity */
+     ) {
     VirtualHostList *list;
     int numEntries = 0;
 

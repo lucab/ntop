@@ -230,8 +230,9 @@ void printTableEntryPercentage(char *buf, int bufLen,
   switch(int_perc) {
   case 0:
     if(total == -1) {
-      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-		    "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, 
+		    "\n<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+		    "<TD "TD_BG">\n<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
 		    "\n<TR>"
 		    "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 0&nbsp;%%</TD>"
 		    "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\">\n<TR>"
@@ -241,9 +242,10 @@ void printTableEntryPercentage(char *buf, int bufLen,
 		    getRowColor(), label, CONST_COLOR_1, flowBuf, /* label_1, */
 		    CONST_COLOR_2, CONST_COLOR_2, label_2);
     } else {
-      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, 
+		    "\n<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s %s</TD>"
-		    "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+		    "<TD "TD_BG">\n<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
 		    "\n<TR>"
 		    "<TD ALIGN=LEFT WIDTH=\"10%%\"  BGCOLOR=\"%s\">%s 0&nbsp;%%</TD>"
 		    "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\">\n<TR>"
@@ -258,8 +260,9 @@ void printTableEntryPercentage(char *buf, int bufLen,
     break;
   case 100:
     if(total == -1) {
-      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-		    "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "\n<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+		    "<TD "TD_BG">"
+		    "\n<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
 		    "\n<TR>"
 		    "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD>"
 		    "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\">\n<TR>"
@@ -271,9 +274,10 @@ void printTableEntryPercentage(char *buf, int bufLen,
 		    CONST_COLOR_1,
 		    CONST_COLOR_2, label_2);
     } else {
-      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen,
+		    "\n<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s %s</TD>"
-		    "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+		    "<TD "TD_BG">\n<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
 		    "\n<TR>"
 		    "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD>"
 		    "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\">\n<TR>"
@@ -289,8 +293,10 @@ void printTableEntryPercentage(char *buf, int bufLen,
     break;
   default:
     if(total == -1) {
-      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-		    "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen,
+		    "\n<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+		    "<TD "TD_BG">\n"
+		    "<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
 		    "\n<TR>"
 		    "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%%</TD>"
 		    "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\">\n<TR>"
@@ -305,8 +311,9 @@ void printTableEntryPercentage(char *buf, int bufLen,
 		    CONST_COLOR_2, label_2, (100-percentage));
     } else {
       safe_snprintf(__FILE__, __LINE__, buf, bufLen,
-		    "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>%s %s</TD>"
-		    "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+		    "\n<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>%s %s</TD>"
+		    "<TD "TD_BG">\n"
+		    "<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
 		    "\n<TR><TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%%</TD>"
 		    "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\">\n<TR>"
 		    "<TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
@@ -2797,7 +2804,6 @@ void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
     }
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("<H5>NOTE: The above table is not updated in realtime but when connections are terminated.</H5>\n");
-    sendString("</CENTER><P>\n");
   }
 }
 
@@ -4070,7 +4076,8 @@ void printTableEntry(char *buf, int bufLen,
 		    "<p><table border=0>"
 		    "<tr><td align=left><IMG SRC=\"/plugins/rrdPlugin?action=arbreq&which=graph"
 		    "&arbfile=IP_%sBytes&arbiface=%s&arbip=&start=now-12h&end=now&counter=&title=\" BORDER=0></td><td>"
-		    "<A HREF=\"/plugins/rrdPlugin?mode=zoom&action=arbreq&which=graph&arbfile=IP_%sBytes&arbiface=%s&arbip=&start=%d&end=%d&counter=&title=\">"
+		    "<A HREF=\"/plugins/rrdPlugin?mode=zoom&action=arbreq&which=graph&arbfile=IP_%sBytes"
+		    "&arbiface=%s&arbip=&start=%d&end=%d&counter=&title=\">"
 		    "&nbsp;<IMG valign=top class=tooltip SRC=graph_zoom.gif border=0></A></td></tr></table>\n",
 		    _label, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 		    _label, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
@@ -4081,6 +4088,11 @@ void printTableEntry(char *buf, int bufLen,
     }
   }
 
+  if(showRRD && (rrdBuf[0] != '\0')) {
+    int_perc = 0; /* Trick for avoid showing the bar */
+  } 
+
+  
   switch(int_perc) {
   case 0:
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
@@ -4106,11 +4118,11 @@ void printTableEntry(char *buf, int bufLen,
 		  flowBuf, percentage,
 		  percentage, (260*int_perc)/100, rrdBuf,
 		  (260*(100-int_perc))/100, getActualRowColor());
-  }
+  }  
 
   sendString(buf);
 }
-
+ 
 /* *********************************** */
 
 void printHostHourlyTrafficEntry(HostTraffic *el, int i,

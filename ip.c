@@ -365,7 +365,6 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 		  int actualDeviceId,
 		  int vlanId) {
   u_short sport=0, dport=0;
-  int sportIdx, dportIdx;
   struct ip ip;
   struct ip6_hdr *ip6;
   struct icmp6_hdr icmp6Pkt;

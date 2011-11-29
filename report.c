@@ -549,7 +549,9 @@ void printTrafficStatistics(int revertOrder) {
     sendString("    <li><a href=\"#tabs-2\">");
     sendString(myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
     sendString(" Report</a></li>\n"
-	       "    <li><a href=\"#tabs-3\">Protocol Distribution</a></li>\n");
+	       "    <li><a href=\"#tabs-3\">Protocol Distribution</a></li>\n"
+	       "    <li><a href=\"#tabs-4\">Application Protocols</a></li>\n"
+	       );
   }
 
   sendString("    </ul>\n"
@@ -4393,8 +4395,21 @@ void printProtoTraffic(int printGraph) {
     total += myGlobals.device[myGlobals.actualReportDeviceId].l7.protoTraffic[i];
 
   if(total > 0) {
-    sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>L7 Protocol</TH>"
+    if(printGraph)
+      sendString(
+		 "\n</table>"TABLE_OFF"\n"
+		 "\n</div>\n"
+		 "<div id=\"tabs-4\">\n"
+		 TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">"
+		 );
+    
+    sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>Application Protocol</TH>"
 	       "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
+
+    sendString("\n<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
+	       "<iframe frameborder=0 SRC=\"" CONST_SERVICE_DISTR_HTML CHART_FORMAT "\" "
+	       "width=650 height=350></iframe>"
+	       "</TD></TR>\n");
 
     for(i=0; i<myGlobals.l7.numSupportedProtocols; i++) {
       float val;
@@ -4406,14 +4421,28 @@ void printProtoTraffic(int printGraph) {
 
 	printTableEntry(buf, sizeof(buf), getProtoName(i),
 			(i % 2) ? CONST_COLOR_1 : CONST_COLOR_2,
-			v1, v2, 0, 0, 0);
+			v1, v2, 0, 0, 1);
       } /* if */
     } /* for */
 
-    sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
-	       "<iframe frameborder=0 SRC=\"" CONST_SERVICE_DISTR_HTML CHART_FORMAT "\" "
-	       "width=650 height=350></iframe>"
-	       "</TD></TR>\n");
+    {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Aggregated View</TH>"
+		    "<TD "TD_BG" COLSPAN=4 ALIGN=center BGCOLOR=white>"
+		    "<table border=0><tr><td><IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=4&"
+		    "key=interfaces/%s/&start=now-12h&end=now\" BORDER=0>",
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+      sendString(buf);
+      
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "</td><td><A HREF=\"/plugins/rrdPlugin?mode=zoom&action=graphSummary&graphId=4&"
+		    "key=interfaces/%s/&start=%u&end=%u\"><IMG valign=middle class=tooltip SRC=/graph_zoom.gif "
+		    "border=0></A></tr></table></TD></TR>",
+		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, 
+		    (u_int)(myGlobals.actTime - 12 * 3600), (u_int)myGlobals.actTime);
+      sendString(buf);
+    }
+    
   }
 
   sendString("</TABLE>"TABLE_OFF"<P></CENTER>\n");
