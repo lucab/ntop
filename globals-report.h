@@ -306,4 +306,5 @@ extern int handlePythonHTTPRequest(char *url, u_int postLen);
 
 /* map.c */
 extern void init_maps(void);
-extern void create_host_map(void);
+extern void createAllHostsMap(void);
+extern void createHostMap(HostTraffic *host);

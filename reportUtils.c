@@ -2265,7 +2265,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   sendString("\n\n<!------ DIV ------>\n");  
   sendString("\n\n<div id=\"tabs-22\">\n");
   if(printPacketStats(el, actualDeviceId) == 0)
-    printNoDataYet();
+    sendString("\n<i>"CONST_NO_DATA_YET"</i>");
   sendString("\n</div>\n");
 
   /*
@@ -4181,10 +4181,10 @@ void printFlagedWarning(char *text) {
   char buf[LEN_GENERAL_WORK_BUFFER];
 
   safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
- 	   "<center>\n"
+		"<center>\n"
 		"<p><img class=reflect alt=\"Warning\" src=\"/warning.gif\"></p>\n"
- 	   "<p><font color=\"#FF0000\" size=\"+1\">%s</font></p>\n"
- 	   "</center>\n", text);
+		"<p><font color=\"#FF0000\" size=\"+1\">%s</font></p>\n"
+		"</center>\n", text);
   sendString(buf);
 }
 

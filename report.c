@@ -302,14 +302,14 @@ void printTrafficSummary (int revertOrder) {
   }
 
   if(myGlobals.pcap_file_list == NULL) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Capturing Since</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
 		  ctime(&myGlobals.initialSniffTime),
 		  formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
     sendString(buf);
   }
   else {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Capturing Since</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  ctime(&myGlobals.initialSniffTime));
     sendString(buf);
@@ -654,7 +654,7 @@ void printTrafficStatistics(int revertOrder) {
   }
 
   if(myGlobals.pcap_file_list == NULL) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Capturing Since</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
 		  ctime(&myGlobals.initialSniffTime),
 		  formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
@@ -663,15 +663,18 @@ void printTrafficStatistics(int revertOrder) {
   else {
     time_t t = myGlobals.lastPktTime.tv_sec;
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Sampling Since</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Capturing Since</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  ctime(&myGlobals.initialSniffTime));
     sendString(buf);
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" align=left "DARK_BG">Last Packet Seen</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		  "<TR "TR_ON"><TH "TH_BG" align=left "DARK_BG">Last Packet Seen</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
 		  ctime(&t),
-		  formatSeconds(myGlobals.lastPktTime.tv_sec-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
+		  formatSeconds(myGlobals.lastPktTime.tv_sec-myGlobals.initialSniffTime, 
+				formatBuf, sizeof(formatBuf)));
     sendString(buf);
   }
 
@@ -683,16 +686,20 @@ void printTrafficStatistics(int revertOrder) {
     revertSlashIfWIN32(buf, 0);
 
     if(stat(buf, &statbuf) != 0) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Hosts</TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT>[%u active] [%u total]</TD></TR>\n", i, myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Hosts</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT>[%u active] [%u total]</TD></TR>\n", i, 
+		    myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno);
       sendString(buf);
     } else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Hosts</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		    "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Hosts</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>"
 		    "[%u active <A HREF=\"/plugins/rrdPlugin?action=arbreq&which=graph&arbfile=activeHostSendersNum"
 		    "&arbiface=%s&start=%u&end=%u&counter=&title=%s&mode=zoom\">"
 		    "<IMG valign=top class=tooltip SRC=/graph.gif border=0></A>]",
-		    i, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(myGlobals.actTime-3600),
+		    i, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, 
+		    (unsigned int)(myGlobals.actTime-3600),
 		    (unsigned int)myGlobals.actTime, "Active+End+Nodes");
       sendString(buf);
 
@@ -715,6 +722,13 @@ void printTrafficStatistics(int revertOrder) {
 		  myGlobals.runningPref.currentFilterExpression);
     sendString(buf);
   }
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+		"<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Active Sessions</TH>"
+		"<TD "TD_BG" ALIGN=RIGHT>%u [Max: %u]</TD></TR>\n",
+		myGlobals.device[myGlobals.actualReportDeviceId].numTcpSessions,
+		myGlobals.device[myGlobals.actualReportDeviceId].maxNumTcpSessions);
+  sendString(buf);
 
   if(myGlobals.numDevices > 1) {
     int found = 0;
@@ -3098,7 +3112,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
   HostTraffic *el=NULL;
   char buf[LEN_GENERAL_WORK_BUFFER];
   char formatBuf[32], portBuf[32], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER],
-    custom_host_name[128], buf2[128];
+    custom_host_name[128], buf2[128], linkName[64], vlanStr[16];
   u_short found = 0;
   char *tok;
   u_int8_t search_mac = isMacAddress(host), showServices;
@@ -3118,7 +3132,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     if(
        (((!search_mac) && (strcmp(el->hostNumIpAddress, host) == 0))
 	|| (search_mac && el->l2Host && (strcmp(el->ethAddressString, host) == 0)))
-      && ((vlanId == NO_VLAN) || ((el->vlanId <= 0) || (el->vlanId == vlanId)))) {
+       && ((vlanId == NO_VLAN) || ((el->vlanId <= 0) || (el->vlanId == vlanId)))) {
       found = 1;
       break;
     }
@@ -3187,7 +3201,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 		   httpSiteIconBuf, sizeof(httpSiteIconBuf), 0);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
-		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
+		  " <A HREF=\"http://%s/\" TARGET=\"_blank\" "
 		  "TITLE=\"Link to web server on host, if available\" class=external>%s%s</A>\n",
 		  (custom_host_name[0] != '\0') ? custom_host_name : el->hostResolvedName,
 		  httpSiteIconBuf,
@@ -3245,7 +3259,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
 
   if((el->protocolInfo != NULL)
      && (el->protocolInfo->httpVirtualHosts != NULL))
-  sendString("<li><a href=\"#tabs-6\">HTTP Stats</a></li>\n");
+    sendString("<li><a href=\"#tabs-6\">HTTP Stats</a></li>\n");
 
   if(showServices)
     sendString("<li><a href=\"#tabs-7\">Service Stats</a></li>\n");
@@ -3265,6 +3279,27 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
   if((myGlobals.device[actualDeviceId].tcpSession != NULL)
      && (myGlobals.device[actualDeviceId].numTcpSessions > 0))
     sendString("<li><a href=\"#tabs-10\">Active Sessions</a></li>\n");
+
+  if(el->hostNumIpAddress[0] != '\0') {
+    strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
+  } else {
+    strncpy(linkName, el->ethAddressString, sizeof(linkName));
+  }
+
+  /* For Ethernet and IPv6 addresses */
+  urlFixupToRFC1945Inplace(linkName);
+
+  if(el->vlanId > 0) {
+    safe_snprintf(__FILE__, __LINE__, vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
+  } else
+    vlanStr[0] = '\0';
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		"<li><a href=\"/%s-%s%s%s\"><span>Contacts Map</span></a></li>\n",
+		CONST_HOST_IP_MAP_HTML, linkName, vlanStr, CHART_FORMAT);
+
+  //sendString("<li><a href=\"#tabs-11\">Contacts Map</a></li>\n");
+  sendString(buf);
 
   sendString("</ul>\n");
 
@@ -3546,6 +3581,13 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     printActiveSessions(actualDeviceId, 0, el);
     sendString("\n</div>\n");
   }
+
+#if 0  
+  sendString("\n\n<!------ DIV ------>\n");
+  sendString("\n\n<div id=\"tabs-11\">\n");
+  createHostMap(el);
+  sendString("\n</div>\n");
+#endif
 
   sendString("\n<!------ END ------>\n</div>\n");
 }
@@ -4289,6 +4331,7 @@ void printProtoTraffic(int printGraph) {
   float total, perc;
   char buf[2*LEN_GENERAL_WORK_BUFFER], formatBuf[32];
   int i;
+  struct stat statbuf;
 
   total = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value/1024; /* total is expressed in KBytes.value */
 
@@ -4425,7 +4468,13 @@ void printProtoTraffic(int printGraph) {
       } /* if */
     } /* for */
 
-    {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s",
+		  myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
+		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+
+    revertSlashIfWIN32(buf, 0);
+
+    if(stat(buf, &statbuf) == 0) {    
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TR "TR_ON" "DARK_BG"><TH "TH_BG" "DARK_BG">Aggregated View</TH>"
 		    "<TD "TD_BG" COLSPAN=4 ALIGN=center BGCOLOR=white>"
@@ -4472,108 +4521,119 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   printHTMLheader("Network Load Statistics", NULL, 0);
 
-  if(strcmp(myGlobals.device[0].name, "pcap-file")) {
-    /*
-      if(myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
-      printFlagedWarning("<I>Network load statistics are not available for virtual interfaces</I>");
-      return;
-      }
-    */
 
-    /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-#ifdef WIN32
-    {
-      unsigned long driveSerial;
-
-      get_serial(&driveSerial);
-
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/%u/interfaces/%s/throughput.rrd",
-		    myGlobals.rrdPath != NULL ? myGlobals.rrdVolatilePath : ".", driveSerial,
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
-    }
-#else
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/interfaces/%s/throughput.rrd",
-		  myGlobals.rrdPath != NULL ? myGlobals.rrdVolatilePath : ".",
-		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
-#endif
-
-    revertSlashIfWIN32(tmpBuf, 0);
-
-    if((i = stat(tmpBuf, &statbuf)) != 0) {
-      useRRD = 0;
-      rrdNotOperational();
-      return;
-    }
-
-    if(useRRD) {
-      sendString("<CENTER>\n<table border=0>\n");
-
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-600),
-		    (unsigned int)now, "Last+10+Minutes+Throughput",
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-600),
-		    (unsigned int)now, "Throughput"
-		    );
-      sendString(tmpBuf);
-
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
-		    formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
-		    formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
-      sendString(tmpBuf);
-
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-3600),
-		    (unsigned int)now, "Last+Hour+Throughput",
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-3600),
-		    (unsigned int)now, "Throughput");
-      sendString(tmpBuf);
-    }
-
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
-		  formatTimeStamp(0, 0, 60, formatBuf, sizeof(formatBuf)),
-		  formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
-    sendString(tmpBuf);
-
-    if(useRRD) {
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-86400),
-		    (unsigned int)now, "Current+Day+Throughput",
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-86400),
-		    (unsigned int)now, "Throughput");
-      sendString(tmpBuf);
-    }
-
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
-		  formatTimeStamp(0, 24, 0, formatBuf, sizeof(formatBuf)),
-		  formatTimeStamp(0,  0, 0, formatBuf1, sizeof(formatBuf1)));
-    sendString(tmpBuf);
-
-    if(useRRD) {
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
-		    (unsigned int)(now-86400*30), (unsigned int)now, "Last+Month+Throughput",
-		    myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
-		    (unsigned int)(now-86400*30), (unsigned int)now, "Throughput");
-      sendString(tmpBuf);
-    }
-
-    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
-		  formatTimeStamp(30, 0, 0, formatBuf, sizeof(formatBuf)),
-		  formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1)));
-    sendString(tmpBuf);
-
-    sendString("</table></CENTER>\n");
-
-    if(useRRD) {
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<p align=right>"
-		    "[ <A HREF=\"/" CONST_PLUGINS_HEADER"rrdPlugin\">Change Throughput Granularity</A> ]</p>",
-		    formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
-		    formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
-      sendString(tmpBuf);
-    }
+  if(!strcmp(myGlobals.device[0].name, "pcap-file")) {
+    rrdNotOperational();
+    return;
   }
 
-  rrdNotOperational();
+  sendString("<script>\n"
+	     "   $(function() {\n"
+	     "	 $( \"#tabs\" ).tabs();\n"
+	     "     });\n\n"
+	     "</script>\n"
+	     "<center>\n"
+	     "<div id=\"tabs\" style=\"width: 80%; \">\n"
+	     "    <ul>\n"
+	     "    <li><a href=\"#tabs-1\">Last 10 Mins</a></li>\n"
+	     "    <li><a href=\"#tabs-2\">Last Hour</a></li>\n"
+	     "    <li><a href=\"#tabs-3\">Last Day</a></li>\n"
+	     "    <li><a href=\"#tabs-4\">Last Month</a></li>\n"
+	     "</ul>\n"
+	     );
+
+  /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+#ifdef WIN32
+  {
+    unsigned long driveSerial;
+
+    get_serial(&driveSerial);
+
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/%u/interfaces/%s/throughput.rrd",
+		  myGlobals.rrdPath != NULL ? myGlobals.rrdVolatilePath : ".", driveSerial,
+		  myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+  }
+#else
+  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/interfaces/%s/throughput.rrd",
+		myGlobals.rrdPath != NULL ? myGlobals.rrdVolatilePath : ".",
+		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName);
+#endif
+
+  revertSlashIfWIN32(tmpBuf, 0);
+
+  if((i = stat(tmpBuf, &statbuf)) != 0) {
+    useRRD = 0;
+    rrdNotOperational();
+    return;
+  }
+
+  sendString("<div id=\"tabs-1\">\n<table border=0>\n");
+
+  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
+		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-600),
+		(unsigned int)now, "Last+10+Minutes+Throughput",
+		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-600),
+		(unsigned int)now, "Throughput"
+		);
+  sendString(tmpBuf);
+
+  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
+		formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
+		formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
+  sendString(tmpBuf);
+
+  sendString("</table></div><div id=\"tabs-2\">\n<table border=0>\n");
+
+  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
+		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-3600),
+		(unsigned int)now, "Last+Hour+Throughput",
+		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-3600),
+		(unsigned int)now, "Throughput");
+  sendString(tmpBuf);
+    
+
+  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
+		formatTimeStamp(0, 0, 60, formatBuf, sizeof(formatBuf)),
+		formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
+  sendString(tmpBuf);
+
+  sendString("</table></div><div id=\"tabs-3\">\n<table border=0>\n");
+    
+  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
+		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-86400),
+		(unsigned int)now, "Current+Day+Throughput",
+		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, (unsigned int)(now-86400),
+		(unsigned int)now, "Throughput");
+  sendString(tmpBuf);
+    
+
+  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
+		formatTimeStamp(0, 24, 0, formatBuf, sizeof(formatBuf)),
+		formatTimeStamp(0,  0, 0, formatBuf1, sizeof(formatBuf1)));
+  sendString(tmpBuf);
+
+  sendString("</table></div><div id=\"tabs-4\">\n<table border=0>\n");
+
+  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
+		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
+		(unsigned int)(now-86400*30), (unsigned int)now, "Last+Month+Throughput",
+		myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
+		(unsigned int)(now-86400*30), (unsigned int)now, "Throughput");
+  sendString(tmpBuf);
+
+
+  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<tr><td align=center colspan=2><H4>Time [ %s through %s]</H4></td></tr>",
+		formatTimeStamp(30, 0, 0, formatBuf, sizeof(formatBuf)),
+		formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1)));
+  sendString(tmpBuf);
+
+  sendString("</table></div>\n</div>\n<p>\n");
+
+  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<p align=right>"
+		"[ <A HREF=\"/" CONST_PLUGINS_HEADER"rrdPlugin\">Change Throughput Granularity</A> ]</p>",
+		formatTimeStamp(0, 0, 10, formatBuf, sizeof(formatBuf)),
+		formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
+  sendString(tmpBuf);
 }
 
 /* ************************ */
@@ -5366,7 +5426,7 @@ void printDomainStats(char* domain_network_name, int network_mode,
 /* ************************* */
 
 void printNoDataYet(void) {
-  printFlagedWarning("<I>No Data To Display (yet)</I>");
+  printFlagedWarning(CONST_NO_DATA_YET);
 }
 
 /* ************************* */

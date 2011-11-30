@@ -801,6 +801,8 @@ static void ssiMenu_Head(void) {
 		  "--></script>\n");
 }
 
+/* ************************* */
+
 static void ssiMenu_Body(void) {
   sendStringWOssi(
 		  "<table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
@@ -1217,6 +1219,8 @@ void sendJSLibraries(int graph_mode) {
     /* JQuery UI */
     sendString("<script type=\"text/javascript\" src=\"/jquery-ui-1.8.16.custom.min.js\"></script>\n");    
   }
+
+  sendString("<script type=\"text/javascript\" src=\"http://maps.googleapis.com/maps/api/js?sensor=false\"></script>\n");
 }
 
 /* ************************* */
@@ -1373,7 +1377,7 @@ void printHTMLtrailer(void) {
   } else {
     buf[0] = '\0';
 
-    for(i=len=numRealDevices=0; i<myGlobals.numDevices; i++, len=strlen(buf)) {
+    for(i = len = numRealDevices=0; i<myGlobals.numDevices; i++, len=strlen(buf)) {
       if((!myGlobals.device[i].virtualDevice) && myGlobals.device[i].activeDevice) {
 	safe_snprintf(__FILE__, __LINE__, &buf[len], LEN_GENERAL_WORK_BUFFER - len, "%s%s",
 		      (numRealDevices>0) ? "," : "Listening on [", 
@@ -1418,9 +1422,7 @@ void printHTMLtrailer(void) {
 /* ******************************* */
 
 void initAccessLog(void) {
-
   if(myGlobals.runningPref.accessLogFile) {
-
 #ifdef WIN32
     _umask(0137);
 #else
@@ -2943,6 +2945,8 @@ static int returnHTTPPage(char* pageName,
 				strlen(CONST_HOST_IP_TRAFFIC_DISTR_HTML)) == 0)
 		|| (strncasecmp(pageName, CONST_HOST_TIME_TRAFFIC_DISTR_HTML, 
 				strlen(CONST_HOST_TIME_TRAFFIC_DISTR_HTML)) == 0)
+		|| (strncasecmp(pageName, CONST_HOST_IP_MAP_HTML, 
+				strlen(CONST_HOST_IP_MAP_HTML)) == 0)
 		) {
 	char hostName[47], *theHost;
 
@@ -2962,9 +2966,14 @@ static int returnHTTPPage(char* pageName,
 			      strlen(CONST_HOST_TIME_TRAFFIC_DISTR_HTML)) == 0) {
 	  idx = 3;
 	  theHost = &pageName[strlen(CONST_HOST_TIME_TRAFFIC_DISTR_HTML)+1];
-	} else {
+	} else if(strncasecmp(pageName, CONST_HOST_IP_TRAFFIC_DISTR_HTML, 
+			     strlen(CONST_HOST_IP_TRAFFIC_DISTR_HTML)) == 0) {
 	  idx = 4;
 	  theHost = &pageName[strlen(CONST_HOST_IP_TRAFFIC_DISTR_HTML)+1];
+	} else if(strncasecmp(pageName, CONST_HOST_IP_MAP_HTML, 
+			     strlen(CONST_HOST_IP_MAP_HTML)) == 0) {
+	  idx = 5;
+	  theHost = &pageName[strlen(CONST_HOST_IP_MAP_HTML)+1];
 	}
 
 	if(strlen(theHost) <= strlen(CHART_FORMAT)) {
@@ -3029,6 +3038,10 @@ static int returnHTTPPage(char* pageName,
 		break;
 	      case 4:
 		hostIPTrafficDistrib(el, sortedColumn);
+		break;
+	      case 5:
+		sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 0);
+		createHostMap(el);
 		break;
 	      }
 	    }
@@ -3126,7 +3139,7 @@ static int returnHTTPPage(char* pageName,
       } else if(strncasecmp(pageName, CONST_HOST_MAP, strlen(CONST_HOST_MAP)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printHTMLheader("Hosts World Map", NULL, 0);
-	create_host_map();
+	createAllHostsMap();
 	printTrailer = 1;
       } else if(strlen(pageName) > 5) {
 	char hostName[32];

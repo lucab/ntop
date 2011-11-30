@@ -3177,7 +3177,6 @@ void sanitize_rrd_string(char* name) {
 
 int fileSanityCheck(char* string, char* parm, int nonFatal) {
   int i, j, k;
-
   static char fnChar[256];
 
   // Common:

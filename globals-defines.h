@@ -1085,7 +1085,7 @@
 #define CONST_HOST_FRAGMENT_DISTR_HTML      "hostFragmentDistrib"
 #define CONST_HOST_TOT_FRAGMENT_DISTR_HTML  "hostTotalFragmentDistrib"
 #define CONST_HOST_TIME_TRAFFIC_DISTR_HTML  "hostTimeTrafficDistribution"
-
+#define CONST_HOST_IP_MAP_HTML              "hostIPMap"
 
 
 #define CONST_NTOP_LOGO                     "ntop_logo.png"
@@ -1108,6 +1108,7 @@
 #define CONST_MAILTO_BURTON                 "<a class=mailto href=\"mailto:&#098;&#117;&#114;&#116;&#111;&#110;&#064;&#110;&#116;&#111;&#112;&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#046;&#099;&#111;&#109;\" title=\"Send email to Burton Strauss\">Burton Strauss</a>"
 #define CONST_MAILTO_MEDICI                 "<a class=mailto href=\"mailto:gianluca_medici@tin.it\" title=\"Send email to Gianluca Medici\">Gianluca Medici</a>"
 
+#define CONST_NO_DATA_YET                   "<I>No Data To Display (yet)</I>"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Static - don't change unless you REALLY, REALLY, know what you are doing.

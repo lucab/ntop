@@ -335,8 +335,7 @@ void drawDeviceServiceDistribution(void) {
 		   "", "", "", "", "", "", "", "", "", "" };
   int num = 0;
   Counter totTraffic = 0;
-  int idx = 0, i;
-  ProtocolsList *protoList = myGlobals.ipProtosList;
+  int i;
 
   for(i=0; i<myGlobals.l7.numSupportedProtocols; i++)
     totTraffic += myGlobals.device[myGlobals.actualReportDeviceId].l7.protoTraffic[i];

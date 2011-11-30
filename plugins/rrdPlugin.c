@@ -2426,7 +2426,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	      argv[argc++] = formatTitle(filename, title_buf, sizeof(title_buf));
 	    } else if(graphId == 4) {
 	      argv[argc++] = "--title";
-	      argv[argc++] = "Protocols: Historical View";
+	      argv[argc++] = "Protocols: Aggregated View";
 	    }
 	  }
 	}
@@ -3382,10 +3382,12 @@ static void arbitraryAction(char *rrdName,
   memset(&buf, 0, sizeof(buf));
   memset(&rrdKey, 0, sizeof(rrdKey));
 
-  /* Security check... it's a file name */
-  if(fileSanityCheck(rrdName, "arbitrary rrd request", 1) != 0) {
-    traceEvent(CONST_TRACE_ERROR, "SECURITY: Invalid arbitrary rrd request(filename[%s])... ignored", rrdName);
-    return;
+  if(strchr(rrdName, '.') || strchr(rrdName, '/')) {
+    /* Security check... it's a file name */
+    if(fileSanityCheck(rrdName, "arbitrary rrd request", 1) != 0) {
+      traceEvent(CONST_TRACE_ERROR, "SECURITY: Invalid arbitrary rrd request(filename[%s])... ignored", rrdName);
+      return;
+    }
   }
 
   /*
