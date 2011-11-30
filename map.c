@@ -134,7 +134,8 @@ void createHostMap(HostTraffic *host) {
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
 
     if((el->l2Host == host->l2Host) && (el->hostIpAddress.hostFamily == host->hostIpAddress.hostFamily)) {
-      if(CM_PointEst(host->sent_to_matrix, el->serialHostIndex) > 0) {
+      if((CM_PointEst(host->sent_to_matrix, el->serialHostIndex) > 0)
+	 || (CM_PointEst(host->recv_from_matrix, el->serialHostIndex) > 0)) {
 	if(el->geo_ip) {
 	  char buf[512], buf1[256] = { 0 };
 	  int showSymIp;

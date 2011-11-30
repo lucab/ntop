@@ -568,10 +568,9 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
 /* ********************************** */
 
 void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
-  float p[MAX_NUM_PROTOS];
+  float p[MAX_NUM_PROTOS] = { 0 };
   char	*lbl[MAX_NUM_PROTOS] = { "" };
   int i, num=0;
-  char *prot_long_str[] = { IPOQUE_PROTOCOL_LONG_STRING };
   Counter sent, rcvd, traffic;
 
   sent = rcvd = 0;
@@ -585,7 +584,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
     if(val > 0) {
       p[num] = (float)((100*val)/traffic);
-      lbl[num++] = prot_long_str[i];
+      lbl[num++] = getProtoName(i);
     }
 
     if(num >= MAX_NUM_PROTOS) break; /* Too much stuff */
