@@ -358,7 +358,7 @@ static void updateNetFlowIfStats(u_int32_t netflow_device_ip,
       if(myGlobals.device[deviceId].netflowGlobals->ifStatsQueue_len < (MAX_INTERFACE_STATS_QUEUE_LEN-1)) {
 	myGlobals.device[deviceId].netflowGlobals->ifStatsQueue[myGlobals.device[deviceId].
 								netflowGlobals->ifStatsQueue_len++] = ifStats;
-	signalCondvar(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueCondvar);
+	signalCondvar(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueCondvar, 0);
       }
       releaseMutex(&myGlobals.device[deviceId].netflowGlobals->ifStatsQueueMutex);
 #else
