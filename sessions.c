@@ -2463,47 +2463,49 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
     theSession->pktRcvd++;
   }
 
-  if((ip_offset > 0) && (theSession->l7.major_proto == IPOQUE_PROTOCOL_UNKNOWN)) {
-    u_int64_t when = ((u_int64_t) h->ts.tv_sec) * 1000 /* detection_tick_resolution */ + h->ts.tv_usec / 1000 /* (1000000 / detection_tick_resolution) */;
-    theSession->l7.major_proto = ipoque_detection_process_packet(myGlobals.l7.l7handler,
-								 theSession->l7.flow, (u_int8_t *)&p[ip_offset],
-								 h->caplen-ip_offset, when,
-								 (sport == theSession->sport) ? theSession->l7.src : theSession->l7.dst,
-								 (sport == theSession->sport) ? theSession->l7.dst : theSession->l7.src);
+  if((theSession->pktRcvd < 20) && (theSession->pktSent < 20)) {
+    if((ip_offset > 0) && (theSession->l7.major_proto == IPOQUE_PROTOCOL_UNKNOWN)) {
+      u_int64_t when = ((u_int64_t) h->ts.tv_sec) * 1000 /* detection_tick_resolution */ + h->ts.tv_usec / 1000 /* (1000000 / detection_tick_resolution) */;
+      theSession->l7.major_proto = ipoque_detection_process_packet(myGlobals.l7.l7handler,
+								   theSession->l7.flow, (u_int8_t *)&p[ip_offset],
+								   h->caplen-ip_offset, when,
+								   (sport == theSession->sport) ? theSession->l7.src : theSession->l7.dst,
+								   (sport == theSession->sport) ? theSession->l7.dst : theSession->l7.src);
 
-    if(theSession->l7.major_proto != IPOQUE_PROTOCOL_UNKNOWN) {
-      theSession->guessed_protocol = getProtoName(theSession->l7.major_proto);
-      /* traceEvent(CONST_TRACE_ERROR, "l7.major_proto=%s", theSession->guessed_protocol); */
-      freeOpenDPI(theSession);
+      if(theSession->l7.major_proto != IPOQUE_PROTOCOL_UNKNOWN) {
+	theSession->guessed_protocol = getProtoName(theSession->l7.major_proto);
+	/* traceEvent(CONST_TRACE_ERROR, "l7.major_proto=%s", theSession->guessed_protocol); */
+	freeOpenDPI(theSession);
 
-      switch(theSession->l7.major_proto) {
-      case IPOQUE_PROTOCOL_MAIL_SMTP:
-	setHostFlag(FLAG_HOST_TYPE_SVC_SMTP, srcHost);
-	break;
-      case IPOQUE_PROTOCOL_MAIL_POP:
-	setHostFlag(FLAG_HOST_TYPE_SVC_POP, srcHost);
-	break;
-      case IPOQUE_PROTOCOL_MAIL_IMAP:
-	setHostFlag(FLAG_HOST_TYPE_SVC_IMAP, srcHost);
-	break;
-      case IPOQUE_PROTOCOL_LDAP:
-	setHostFlag(FLAG_HOST_TYPE_SVC_DIRECTORY, srcHost);
-	break;
-      case IPOQUE_PROTOCOL_FTP:
-	setHostFlag(FLAG_HOST_TYPE_SVC_FTP, srcHost);
-	break;
-      case IPOQUE_PROTOCOL_HTTP:
-	setHostFlag(FLAG_HOST_TYPE_SVC_HTTP, srcHost);
-	break;
-      case IPOQUE_PROTOCOL_NETBIOS:
-	setHostFlag(FLAG_HOST_TYPE_SVC_WINS, srcHost);
-	break;
-      case NTOP_PROTOCOL_FACEBOOK:
-	setHostFlag(FLAG_HOST_TYPE_SVC_FACEBOOK_CLIENT, srcHost);
-	break;
-      case NTOP_PROTOCOL_TWITTER:
-	setHostFlag(FLAG_HOST_TYPE_SVC_TWITTER_CLIENT, srcHost);
-	break;
+	switch(theSession->l7.major_proto) {
+	case IPOQUE_PROTOCOL_MAIL_SMTP:
+	  setHostFlag(FLAG_HOST_TYPE_SVC_SMTP, srcHost);
+	  break;
+	case IPOQUE_PROTOCOL_MAIL_POP:
+	  setHostFlag(FLAG_HOST_TYPE_SVC_POP, srcHost);
+	  break;
+	case IPOQUE_PROTOCOL_MAIL_IMAP:
+	  setHostFlag(FLAG_HOST_TYPE_SVC_IMAP, srcHost);
+	  break;
+	case IPOQUE_PROTOCOL_LDAP:
+	  setHostFlag(FLAG_HOST_TYPE_SVC_DIRECTORY, srcHost);
+	  break;
+	case IPOQUE_PROTOCOL_FTP:
+	  setHostFlag(FLAG_HOST_TYPE_SVC_FTP, srcHost);
+	  break;
+	case IPOQUE_PROTOCOL_HTTP:
+	  setHostFlag(FLAG_HOST_TYPE_SVC_HTTP, srcHost);
+	  break;
+	case IPOQUE_PROTOCOL_NETBIOS:
+	  setHostFlag(FLAG_HOST_TYPE_SVC_WINS, srcHost);
+	  break;
+	case NTOP_PROTOCOL_FACEBOOK:
+	  setHostFlag(FLAG_HOST_TYPE_SVC_FACEBOOK_CLIENT, srcHost);
+	  break;
+	case NTOP_PROTOCOL_TWITTER:
+	  setHostFlag(FLAG_HOST_TYPE_SVC_TWITTER_CLIENT, srcHost);
+	  break;
+	}
       }
     }
   }
