@@ -4460,7 +4460,13 @@ void printProtoTraffic(int printGraph) {
       val = myGlobals.device[myGlobals.actualReportDeviceId].l7.protoTraffic[i];
       if(val > 0) {
 	float v1 = val/1024;
-	float v2 = 100*((float)val/total);
+	float v2 = (val*100)/((float)total);
+
+	/*
+	traceEvent(CONST_TRACE_WARNING, "%s %f/%f %f/%f", 
+		   getProtoName(i), val, total,
+		   v1, v2);
+	*/
 
 	printTableEntry(buf, sizeof(buf), getProtoName(i),
 			(i % 2) ? CONST_COLOR_1 : CONST_COLOR_2,
@@ -4516,7 +4522,7 @@ BORDER=0 BGCOLOR=white>&nbsp;<IMG valign=middle class=tooltip SRC=/graph_zoom.gi
 void printThptStats(int sortedColumn _UNUSED_) {
   char tmpBuf[1024], formatBuf[32], formatBuf1[32];
   struct stat statbuf;
-  int i, useRRD = 1;
+  int i;
   time_t now = time(NULL);
 
   printHTMLheader("Network Load Statistics", NULL, 0);
@@ -4562,7 +4568,6 @@ void printThptStats(int sortedColumn _UNUSED_) {
   revertSlashIfWIN32(tmpBuf, 0);
 
   if((i = stat(tmpBuf, &statbuf)) != 0) {
-    useRRD = 0;
     rrdNotOperational();
     return;
   }
