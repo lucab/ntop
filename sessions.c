@@ -280,9 +280,6 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
     sessionToPurge->initiator->numHostSessions--, sessionToPurge->remotePeer->numHostSessions--;
   }
 
-  /* Flag in delete process */
-  sessionToPurge->magic = CONST_UNMAGIC_NUMBER;
-
   if(((sessionToPurge->bytesProtoSent.value == 0)
       || (sessionToPurge->bytesProtoRcvd.value == 0))
      && ((sessionToPurge->clientNwDelay.tv_sec != 0) || (sessionToPurge->clientNwDelay.tv_usec != 0)
@@ -334,7 +331,8 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
    * Having updated the session information, 'theSession'
    * can now be purged.
    */
-  sessionToPurge->magic = 0;
+  /* Flag in delete process */
+  sessionToPurge->magic = CONST_UNMAGIC_NUMBER;
 
   if(sessionToPurge->virtualPeerName != NULL)
     free(sessionToPurge->virtualPeerName);
@@ -346,6 +344,8 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   myGlobals.device[actualDeviceId].numTcpSessions--;
 
   freeOpenDPI(sessionToPurge);
+
+  memset(sessionToPurge, 0, sizeof(IPSession));
 
   free(sessionToPurge);
 }
@@ -387,6 +387,8 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
     IPSession *nextSession, *prevSession, *theSession;
     int mutex_idx;
 
+    if(myGlobals.device[actualDeviceId].tcpSession[idx] == NULL) continue;
+
     mutex_idx = idx % NUM_SESSION_MUTEXES;
     accessMutex(&myGlobals.tcpSessionsMutex[mutex_idx], "purgeIdleHosts");
     prevSession = NULL, theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
@@ -404,7 +406,6 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	continue;
       }
 
-      nextSession = theSession->next;
       free_session = 0;
 
       if(
@@ -438,6 +439,8 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
       } else /* This session will NOT be freed */ {
 	free_session = 0;
       }
+
+      nextSession = theSession->next;
 
       if(free_session) {
 	if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
