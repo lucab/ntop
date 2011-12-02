@@ -4747,8 +4747,6 @@ static void rrdUpdateIPHostStats(HostTraffic *el, int devIdx, u_int8_t is_subnet
       if(el->nonIPTraffic) {
 	updateTrafficCounter(rrdPath, "stpSent", &el->nonIPTraffic->stpSent, 0);
 	updateTrafficCounter(rrdPath, "stpRcvd", &el->nonIPTraffic->stpRcvd, 0);
-	updateTrafficCounter(rrdPath, "dlcSent", &el->nonIPTraffic->dlcSent, 0);
-	updateTrafficCounter(rrdPath, "dlcRcvd", &el->nonIPTraffic->dlcRcvd, 0);
 	updateTrafficCounter(rrdPath, "arpRarpSent", &el->nonIPTraffic->arp_rarpSent, 0);
 	updateTrafficCounter(rrdPath, "arpRarpRcvd", &el->nonIPTraffic->arp_rarpRcvd, 0);
 	updateTrafficCounter(rrdPath, "arpReqPktsSent", &el->nonIPTraffic->arpReqPktsSent, 0);

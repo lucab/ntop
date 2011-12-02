@@ -1299,7 +1299,7 @@ void printHostsTraffic(int reportTypeReq,
   Counter totEthBytesSent=0, totEthBytesRcvd=0, totEthBytes=0;
   ProtocolsList *protoList;
   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32],
-    formatBuf4[32], formatBuf5[32], formatBuf7[32],
+    formatBuf4[32], formatBuf7[32],
     formatBuf8[32];
   int reportType;
   u_char *vlanList;
@@ -1326,7 +1326,7 @@ void printHostsTraffic(int reportTypeReq,
   case SORT_DATA_RECEIVED_IP:
   case SORT_DATA_SENT_IP:
   case SORT_DATA_IP:
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Network Traffic [TCP/IP]: ");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Network Traffic [IP]: ");
     break;
   case SORT_DATA_RECEIVED_THPT:
   case SORT_DATA_SENT_THPT:
@@ -1340,13 +1340,13 @@ void printHostsTraffic(int reportTypeReq,
 
   switch(showHostsMode) {
   case showAllHosts:
-    strncat(buf, "All Hosts", (sizeof(buf) - strlen(buf) - 1));
+    strncat(buf, "All L3 Hosts", (sizeof(buf) - strlen(buf) - 1));
     break;
   case showOnlyLocalHosts:
-    strncat(buf, "Local Hosts", (sizeof(buf) - strlen(buf) - 1));
+    strncat(buf, "Local L3 Hosts", (sizeof(buf) - strlen(buf) - 1));
     break;
   case showOnlyRemoteHosts:
-    strncat(buf, "Remote Hosts", (sizeof(buf) - strlen(buf) - 1));
+    strncat(buf, "Remote L3 Hosts", (sizeof(buf) - strlen(buf) - 1));
     break;
   }
 
@@ -1362,6 +1362,7 @@ void printHostsTraffic(int reportTypeReq,
     break;
   }
 
+  /* Compute VLANs */
   for(el = getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el))
     if((el->vlanId > 0) && (el->vlanId < MAX_VLAN)) vlanList[el->vlanId] = 1;
@@ -1375,7 +1376,7 @@ void printHostsTraffic(int reportTypeReq,
   hourId = atoi(theDate);
 
   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno;
-  /* save ths as it can change */
+  /* Save ths as it can change */
 
   tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(maxHosts*sizeof(HostTraffic*),
 							"printHostsTraffic");
@@ -1386,6 +1387,10 @@ void printHostsTraffic(int reportTypeReq,
 
   for(el = getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+
+    /* Ignore L2 hosts */ 
+    if(el->l2Host) continue;
+
     if(broadcastHost(el) == 0) {
       u_char addHost;
 
@@ -1578,7 +1583,6 @@ void printHostsTraffic(int reportTypeReq,
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			getRowColor(), webHostName,
 			formatBytes(el->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
@@ -1587,7 +1591,6 @@ void printHostsTraffic(int reportTypeReq,
 			formatBytes(el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1, formatBuf2, sizeof(formatBuf2)),
 			formatBytes(el->icmpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
 			formatBytes(el->icmp6Rcvd.value, 1, formatBuf4, sizeof(formatBuf4)),
-			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->dlcRcvd.value, 1, formatBuf5, sizeof(formatBuf5)),
 			formatBytes(el->ipsecRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpRcvd.value, 1, formatBuf8, sizeof(formatBuf8))
 			);
@@ -1624,7 +1627,7 @@ void printHostsTraffic(int reportTypeReq,
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			getRowColor(), webHostName,
@@ -1633,7 +1636,6 @@ void printHostsTraffic(int reportTypeReq,
 			formatBytes(el->udpSentLoc.value+el->udpSentRem.value, 1, formatBuf2, sizeof(formatBuf2)),
 			formatBytes(el->icmpSent.value, 1, formatBuf3, sizeof(formatBuf3)),
 			formatBytes(el->icmp6Sent.value, 1, formatBuf4, sizeof(formatBuf4)),
-			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->dlcSent.value, 1, formatBuf5, sizeof(formatBuf5)),
 			formatBytes(el->ipsecSent.value, 1, formatBuf7, sizeof(formatBuf7)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpSent.value, 1, formatBuf8, sizeof(formatBuf8))
 			);
@@ -1674,7 +1676,7 @@ void printHostsTraffic(int reportTypeReq,
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			getRowColor(), webHostName,
@@ -1686,8 +1688,6 @@ void printHostsTraffic(int reportTypeReq,
 				    el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1, formatBuf2, sizeof(formatBuf2)),
 			formatBytes(el->icmpSent.value+el->icmpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
 			formatBytes(el->icmp6Sent.value+el->icmp6Rcvd.value, 1, formatBuf4, sizeof(formatBuf4)),
-			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->dlcSent.value+el->nonIPTraffic->dlcRcvd.value,
-				    1, formatBuf5, sizeof(formatBuf5)),
 			formatBytes(el->ipsecSent.value+el->ipsecRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
 			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpSent.value+el->nonIPTraffic->arp_rarpRcvd.value,
 				    1, formatBuf8, sizeof(formatBuf8))

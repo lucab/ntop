@@ -507,7 +507,6 @@ typedef struct nonIPTraffic {
 
   /* Non IP */
   TrafficCounter   stpSent, stpRcvd; /* Spanning Tree */
-  TrafficCounter   dlcSent, dlcRcvd;
   TrafficCounter   arp_rarpSent, arp_rarpRcvd;
   TrafficCounter   arpReqPktsSent, arpReplyPktsSent, arpReplyPktsRcvd;
   TrafficCounter   netbiosSent, netbiosRcvd;

@@ -144,7 +144,6 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
     if(theHost->nonIPTraffic != NULL)
       totTraffic.value += theHost->nonIPTraffic->stpSent.value+
-	theHost->nonIPTraffic->dlcSent.value+
 	theHost->nonIPTraffic->arp_rarpSent.value+
 	theHost->nonIPTraffic->netbiosSent.value+
 	theHost->nonIPTraffic->otherSent.value;
@@ -163,7 +162,6 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
     if(theHost->nonIPTraffic != NULL)
       totTraffic.value += theHost->nonIPTraffic->stpRcvd.value
-	+theHost->nonIPTraffic->dlcRcvd.value
 	+theHost->nonIPTraffic->arp_rarpRcvd.value
 	+theHost->nonIPTraffic->netbiosRcvd.value
 	+theHost->nonIPTraffic->otherRcvd.value;
@@ -214,11 +212,6 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	if(theHost->nonIPTraffic->stpSent.value > 0) {
 	  p[num] = (float)((100*theHost->nonIPTraffic->stpSent.value)/totTraffic.value);
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "STP";
-	}
-
-	if(theHost->nonIPTraffic->dlcSent.value > 0) {
-	  p[num] = (float)((100*theHost->nonIPTraffic->dlcSent.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DLC";
 	}
 
 	if(theHost->nonIPTraffic->arp_rarpSent.value > 0) {
@@ -273,11 +266,6 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	if(theHost->nonIPTraffic->stpRcvd.value > 0) {
 	  p[num] = (float)((100*theHost->nonIPTraffic->stpRcvd.value)/totTraffic.value);
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "STP";
-	}
-
-	if(theHost->nonIPTraffic->dlcRcvd.value > 0) {
-	  p[num] = (float)((100*theHost->nonIPTraffic->dlcRcvd.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DLC";
 	}
 
 	if(theHost->nonIPTraffic->arp_rarpRcvd.value > 0) {

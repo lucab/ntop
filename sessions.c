@@ -362,8 +362,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 /* #define DEBUG */
 
 void scanTimedoutTCPSessions(int actualDeviceId) {
-  u_int _idx, freeSessionCount=0;
-  static u_int idx = 0;
+  u_int idx, freeSessionCount = 0, tot_sessions = 0;
 
   /* Patch below courtesy of "Kouprie, Robbert" <R.Kouprie@DTO.TUDelft.NL> */
      if((!myGlobals.runningPref.enableSessionHandling)
@@ -384,11 +383,9 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
     in purgeIdleHosts(int actDevice);
    */
 
-  for(_idx=0; _idx<MAX_TOT_NUM_SESSIONS; _idx++) {
+  for(idx=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
     IPSession *nextSession, *prevSession, *theSession;
     int mutex_idx;
-
-    idx = (idx + 1) % MAX_TOT_NUM_SESSIONS;
 
     mutex_idx = idx % NUM_SESSION_MUTEXES;
     accessMutex(&myGlobals.tcpSessionsMutex[mutex_idx], "purgeIdleHosts");
@@ -397,10 +394,12 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
     while(theSession != NULL) {
       u_char free_session;
 
+      tot_sessions++;
+
       if(theSession->magic != CONST_MAGIC_NUMBER) {
 	myGlobals.device[actualDeviceId].numTcpSessions--;
-        traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) scanTimedoutTCPSessions()",
-	           CONST_MAGIC_NUMBER, theSession->magic);
+        traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) scanTimedoutTCPSessions() [idx=%u][head=%p][session=%p]",
+	           CONST_MAGIC_NUMBER, theSession->magic, idx, myGlobals.device[actualDeviceId].tcpSession[idx], theSession);
 	theSession = NULL;
 	continue;
       }
@@ -463,7 +462,8 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
   } /* end for */
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: scanTimedoutTCPSessions: freed %u sessions", freeSessionCount);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: scanTimedoutTCPSessions: freed %u sessions [total: %u sessions]",
+	     freeSessionCount, tot_sessions);
 #endif
 }
 

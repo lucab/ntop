@@ -1129,10 +1129,6 @@ int cmpFctn(const void *_a, const void *_b) {
     case 4:
       a_ = (*a)->icmp6Rcvd.value, b_ = (*b)->icmp6Rcvd.value;
       break;
-    case 5:
-      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->dlcRcvd.value;
-      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->dlcRcvd.value;
-      break;
     case 7:
       a_ = (*a)->ipsecRcvd.value;
       b_ = (*b)->ipsecRcvd.value;
@@ -1230,10 +1226,6 @@ int cmpFctn(const void *_a, const void *_b) {
       break;
     case 4:
       a_ = (*a)->icmp6Sent.value, b_ = (*b)->icmp6Sent.value;
-      break;
-    case 5:
-      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->dlcSent.value;
-      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->dlcSent.value;
       break;
     case 7:
       a_ = (*a)->ipsecSent.value;
@@ -2230,7 +2222,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   totalSent += el->greSent.value + el->ipsecSent.value;
 
   if(el->nonIPTraffic != NULL)
-    totalSent += el->nonIPTraffic->dlcSent.value+el->nonIPTraffic->arp_rarpSent.value +
+    totalSent += el->nonIPTraffic->arp_rarpSent.value +
       el->nonIPTraffic->netbiosSent.value+el->nonIPTraffic->stpSent.value+el->nonIPTraffic->otherSent.value;
 
   totalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value;
@@ -2239,7 +2231,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   totalRcvd += el->greRcvd.value + el->ipsecRcvd.value;
 
   if(el->nonIPTraffic != NULL)
-    totalRcvd += el->nonIPTraffic->dlcRcvd.value+el->nonIPTraffic->arp_rarpRcvd.value +
+    totalRcvd += el->nonIPTraffic->arp_rarpRcvd.value +
       el->nonIPTraffic->netbiosRcvd.value+el->nonIPTraffic->stpRcvd.value+el->nonIPTraffic->otherRcvd.value;
 
   protoList = myGlobals.ipProtosList;
@@ -2326,11 +2318,6 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 			  (float)el->nonIPTraffic->arp_rarpRcvd.value/1024,
 			  100*((float)SD(el->nonIPTraffic->arp_rarpRcvd.value, totalRcvd)));
 
-    printTableDoubleEntry(buf, sizeof(buf), "DLC", CONST_COLOR_1, (float)el->nonIPTraffic->dlcSent.value/1024,
-			  100*((float)SD(el->nonIPTraffic->dlcSent.value, totalSent)),
-			  (float)el->nonIPTraffic->dlcRcvd.value/1024,
-			  100*((float)SD(el->nonIPTraffic->dlcRcvd.value, totalRcvd)));
-
     printTableDoubleEntry(buf, sizeof(buf), "NetBios", CONST_COLOR_1, (float)el->nonIPTraffic->netbiosSent.value/1024,
 			  100*((float)SD(el->nonIPTraffic->netbiosSent.value, totalSent)),
 			  (float)el->nonIPTraffic->netbiosRcvd.value/1024,
@@ -2374,12 +2361,10 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
     if(el->nonIPTraffic) {
       totalSent += el->nonIPTraffic->stpSent.value+
-	el->nonIPTraffic->dlcSent.value+
 	el->nonIPTraffic->arp_rarpSent.value+
 	el->nonIPTraffic->netbiosSent.value+el->nonIPTraffic->otherSent.value;
 
       totalRcvd += el->nonIPTraffic->stpRcvd.value+
-	el->nonIPTraffic->dlcRcvd.value+
 	el->nonIPTraffic->arp_rarpRcvd.value+
 	el->nonIPTraffic->netbiosRcvd.value+el->nonIPTraffic->otherRcvd.value;
     }

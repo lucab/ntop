@@ -96,10 +96,15 @@ void createAllHostsMap(void) {
 	showSymIp = 0;
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
- 		    "createMarker(new google.maps.LatLng(%.2f, %.2f), \"%s%s<A HREF=/%s.html>%s</A><br>%s<br>%s\");\n", 
+ 		    "createMarker(new google.maps.LatLng(%.2f, %.2f), \""
+#if 0
+		    "%s%s"
+#endif
+		    "<A HREF=/%s.html>%s</A><br>%s<br>%s\");\n", 
 		    el->geo_ip->latitude, el->geo_ip->longitude,
-		    showSymIp ? escape_string(el->hostResolvedName, buf1, sizeof(buf1)) : "", 
-		    showSymIp ? "<br>" : "",
+#if 0
+		    showSymIp ? escape_string(el->hostResolvedName, buf1, sizeof(buf1)) : "", showSymIp ? "<br>" : "",
+#endif
 		    el->hostNumIpAddress, el->hostNumIpAddress,
 		    el->geo_ip->city ? el->geo_ip->city : "", 
 		    el->geo_ip->country_name ? el->geo_ip->country_name : "");
@@ -148,10 +153,16 @@ void createHostMap(HostTraffic *host) {
 	    showSymIp = 0;
 
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			"createMarker(new google.maps.LatLng(%.2f, %.2f), \"%s%s<A HREF=/%s.html>%s</A><br>%s<br>%s\");\n", 
+			"createMarker(new google.maps.LatLng(%.2f, %.2f), \""
+#if 0
+			"%s%s"
+#endif
+			"<A HREF=/%s.html>%s</A><br>%s<br>%s\");\n", 
 			el->geo_ip->latitude, el->geo_ip->longitude,
+#if 0
 			showSymIp ? escape_string(el->hostResolvedName, buf1, sizeof(buf1)) : "", 
 			showSymIp ? "<br>" : "",
+#endif
 			el->hostNumIpAddress, el->hostNumIpAddress,
 			el->geo_ip->city ? el->geo_ip->city : "", 
 			el->geo_ip->country_name ? el->geo_ip->country_name : "");
