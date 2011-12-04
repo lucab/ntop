@@ -74,7 +74,7 @@ static void send_graph_header(char *title) {
   sendString("		dataLabels: {\n");
   sendString("	            enabled: true,\n");
   sendString("	        },\n");
-  sendString("		showInLegend: true,\n");
+  sendString("		showInLegend: true\n");
   sendString("	      }\n");
   sendString("	  },\n");
   sendString("	    series: [{\n");
@@ -94,7 +94,6 @@ static void send_graph_footer(void) {
   sendString("    });\n");
   sendString("  </script>\n");
 
-
   sendString("<div id=\"container\" style=\"width: 350px; height: 320px; margin: 0 auto\"></div>\n");
 }
 
@@ -102,7 +101,7 @@ static void send_graph_footer(void) {
 
 static void build_pie(char *title,
 		      int num, float *p, char **lbl) {
-  int i;
+  int i, elems = 0;
   char buf[256];
   float tot = 0;
 
@@ -112,16 +111,21 @@ static void build_pie(char *title,
 
   for(i=0; i<num; i++) {
     if(p[i] > 0) {
-      snprintf(buf, sizeof(buf), "\t\t\t['%s',   %.1f],\n",
+      if(elems > 0)
+	sendString(",\n");
+
+      snprintf(buf, sizeof(buf), "\t\t\t['%s',   %.1f]",
 	       lbl[i],
 	       p[i]
 	       //(i == (num-1)) ? (100-tot) : p[i]
 	       );
       tot += p[i];
       sendString(buf);
+      elems++;
     }
   }
 
+  sendString("\n");
   send_graph_footer();
 }
 

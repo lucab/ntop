@@ -231,10 +231,12 @@ static int readHTTPheader(char* theRequestedURL,
 	Call select only for HTTP.
 	Fix courtesy of Olivier Maul <oli@42.nu>
       */
-
+      
       /* select returns immediately */
       wait_time.tv_sec = 10; wait_time.tv_usec = 0;
-      if(select(myGlobals.newSock+1, &mask, 0, 0, &wait_time) == 0) {
+      rc = select(myGlobals.newSock+1, &mask, 0, 0, &wait_time);
+
+      if(rc == 0) {
 	errorCode = FLAG_HTTP_REQUEST_TIMEOUT; /* Timeout */
 #ifdef URL_DEBUG
 	traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Timeout while reading from socket.");
@@ -249,8 +251,10 @@ static int readHTTPheader(char* theRequestedURL,
 #ifdef HAVE_OPENSSL
     if(myGlobals.newSock < 0) {
       rc = SSL_read(ssl, aChar, 1);
-      if(rc == -1)
+      if(rc == -1) {
+	/* traceEvent(CONST_TRACE_ERROR, "[SSL] [error=%d]", SSL_get_error(ssl, rc)); */
 	ntop_ssl_error_report("read");
+      }
     } else
       rc = (int)recv(myGlobals.newSock, aChar, 1, 0);
 #else

@@ -51,7 +51,12 @@ void ntop_ssl_error_report(char * whyMe) {
   int line,flags;
   unsigned long es;
 
-  es=CRYPTO_thread_id();
+  if(myGlobals.newSock != 0) {
+    if(SSL_get_error(getSSLsocket(-myGlobals.newSock), -1) == SSL_ERROR_SSL) 
+      return; /* Internale OpenSSL failure: can't do much */
+  }
+
+  es = CRYPTO_thread_id();
   while ((l=ERR_get_error_line_data(&file,&line,&data,&flags)) != 0) {
     ERR_error_string_n(l, buf, sizeof buf);
     traceEvent(CONST_TRACE_INFO, "SSL(%s)ERROR [Thread %lu]: %s at %s(%d) %s",
