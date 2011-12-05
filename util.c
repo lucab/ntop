@@ -3374,10 +3374,10 @@ int safe_snprintf(char* file, int line,
 
   rc = vsnprintf(buf, sizeofbuf, format, va_ap);
   if(rc < 0)
-    traceEvent(CONST_TRACE_ERROR, "Buffer too short @ %s:%d", file, line);
+    traceEvent(CONST_TRACE_ERROR, "Buffer too short @ %s:%d [%s]", file, line, buf);
   else if(rc >= sizeofbuf) {
-    traceEvent(CONST_TRACE_ERROR, "Buffer too short @ %s:%d (increase to at least %d)",
-               file, line, rc);
+    traceEvent(CONST_TRACE_ERROR, "Buffer too short @ %s:%d (increase to at least %d) [%s]",
+               file, line, rc, buf);
     rc = 0 - rc;
   }
 

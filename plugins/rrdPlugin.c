@@ -1706,7 +1706,7 @@ static char* spacer(char* str, char *tmpStr, int tmpStrLen,
 		    char *metric_name, int metric_name_len,
 		    int max_spacer_len) {
   int len = strlen(str), i;
-  char *token, *token_name, buf[32], debug = 0, *found, *key;
+  char *token, *token_name, buf[128], debug = 0, *found, *key;
 
   if((strlen(str) > 3) && (!strncmp(str, "IP_", 3))) str += 3;
 
