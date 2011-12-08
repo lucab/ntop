@@ -52,7 +52,7 @@ void ntop_ssl_error_report(char * whyMe) {
   unsigned long es;
 
   if(myGlobals.newSock != 0) {
-    if(SSL_get_error(getSSLsocket(-myGlobals.newSock), -1) == SSL_ERROR_SSL) 
+    if(SSL_get_error(getSSLsocket(myGlobals.newSock), -1) == SSL_ERROR_SSL) 
       return; /* Internale OpenSSL failure: can't do much */
   }
 
