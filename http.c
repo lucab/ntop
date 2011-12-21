@@ -1915,8 +1915,8 @@ static int checkURLsecurity(char *url) {
   /* Prohibited characters? */
   if((len = strcspn(workURL, CONST_URL_PROHIBITED_CHARACTERS)) < strlen(workURL)) {
     traceEvent(CONST_TRACE_NOISY,
-               "URL security(4): Prohibited character(s) at %d [%c] in URL... rejecting request",
-               len, workURL[len]);
+               "URL security(4): Prohibited character(s) at %d [%c] in URL... rejecting request [%s]",
+               len, workURL[len], workURL);
     free(workURL);
     return(4);
   }
@@ -3340,40 +3340,6 @@ static int checkHTTPpassword(char *theRequestedURL,
   }
   free(nextkey.dptr);
 
-#ifdef HAVE_CRYPTGETFORMAT
-  /* If we have the routine retrieve the format and do the crypt_set_format first... */
-  {
-    datum fmtkey, fmtdata;
-    char users3[LEN_GENERAL_WORK_BUFFER];
-
-    memset(&fmtdata, 0, sizeof(fmtdata));
-
-    safe_snprintf(__FILE__, __LINE__, users3, sizeof(users3), "3%s", user);
-
-#ifdef URL_DEBUG
-    traceEvent(CONST_TRACE_NOISY, "URL_DEBUG: Checking for crypt_set_format() for %s", users3);
-#endif
-
-    fmtkey.dptr = users3;
-    fmtkey.dsize = strlen(users3) + 1;
-    fmtdata = gdbm_fetch(myGlobals.pwFile, fmtkey);
-    if(fmtdata.dptr != NULL) {
-      rc = crypt_set_format(fmtdata.dptr);
-      if(rc == 0)
-        traceEvent(CONST_TRACE_WARNING, "Unable to set crypt format ... password compare may fail");
-#ifdef URL_DEBUG
-      else
-        traceEvent(CONST_TRACE_NOISY, "URL_DEBUG: crypt_set_format(%d) ok", fmtdata.dptr);
-#endif
-      free (fmtdata.dptr);
-    }
-#ifdef URL_DEBUG
-    else
-      traceEvent(CONST_TRACE_NOISY, "URL_DEBUG: '3' record for %s(%d) not found", fmtkey.dptr, fmtkey.dsize);
-#endif
-  }
-#endif
-
   key.dptr = users;
   key.dsize = strlen(users)+1;
   nextkey = gdbm_fetch(myGlobals.pwFile, key);
@@ -3390,7 +3356,7 @@ static int checkHTTPpassword(char *theRequestedURL,
     rc = !strcmp(nextkey.dptr,
 		 (char*)crypt((const char*)thePw, (const char*)CONST_CRYPT_SALT));
 #endif
-    free (nextkey.dptr);
+    free(nextkey.dptr);
   } else
     rc = 0;
 

@@ -1541,7 +1541,8 @@ void processPacket(u_char *_deviceId,
 	    fine because it is not used in this special case and I need
 	    a placeholder here.
 	  */
-	  updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
+	  if(srcHost && dstHost)
+	    updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
 	}
     }
 

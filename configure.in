@@ -1138,7 +1138,6 @@ esac
 
 AC_CHECK_LIB([c], [backtrace])
 AC_CHECK_LIB([c], [crypt], , [AC_CHECK_LIB([crypt], [crypt])])
-AC_CHECK_LIB([c], [crypt_get_format_get_format], , [AC_CHECK_LIB([crypt], [crypt_get_format])])
 AC_CHECK_LIB([c], [getopt_long])
 
 dnl> Plugin load routine...

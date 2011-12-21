@@ -1343,14 +1343,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "HAVE_CRYPTGETFORMAT",
-#ifdef HAVE_CRYPTGETFORMAT
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "HAVE_CRYPT_H",
 #ifdef HAVE_CRYPT_H
                          "yes"
