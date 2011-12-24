@@ -813,6 +813,10 @@ void addDevice(char* deviceName, char* deviceDescr) {
         exit(10); /* Just in case */
       }
 
+#ifdef HAVE_PF_RING
+      pcap_set_appl_name_linux(myGlobals.device[deviceId].pcapPtr, "ntop");
+#endif
+
       if(myGlobals.runningPref.pcapLog != NULL) {
 	if(strlen(myGlobals.runningPref.pcapLog) > 64)
 	  myGlobals.runningPref.pcapLog[64] = '\0';

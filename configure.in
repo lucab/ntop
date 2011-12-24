@@ -523,8 +523,6 @@ LDFLAGS="${LDFLAGS}"
 
 dnl> NTOPCONFIGDEBUG_SETTINGS([After presets])
 
-AC_CHECK_LIB([pfring], [pfring_open], LDFLAGS="${LDFLAGS} -lpfring")
-
 echo
 echo "Critical library/include tests..."
 echo
@@ -552,7 +550,16 @@ if test ".${PCAPRING_DIR}" != .; then
      echo
    fi
 else
-if test ".${PCAP_ROOT}" != .; then
+
+TMP_ROOT=${HOME}/PF_RING/userland/libpcap/
+if test ".${PCAP_ROOT}" == . &&
+   test -d ${TMP_ROOT} &&
+   test -r ${TMP_ROOT}/libpcap.a; then
+       PCAP_ROOT=${TMP_ROOT}
+       CORELIBS="${CORELIBS} -L${TMP_ROOT} -lpcap"
+       INCS="${INCS} -I ${PCAP_ROOT}"
+       AC_MSG_RESULT([found in $PCAP_ROOT])
+elif test ".${PCAP_ROOT}" != .; then
   if test -d $PCAP_ROOT &&
      test -r $PCAP_ROOT/lib/libpcap.a &&
      test -r $PCAP_ROOT/include/pcap.h; then
@@ -1522,6 +1529,13 @@ if test ".${ac_cv_header_pthread_h}" = ".yes"; then
         ac_has_pthread_atfork=no)
 else
     ac_has_pthread_atfork=no
+fi
+
+dnl> Leave this check after pthreads (required lib for pf_ring)
+AC_CHECK_LIB([pfring], [pfring_open], CORELIBS="${CORELIBS} -lpfring")
+
+if test "x$ac_cv_lib_pfring_pfring_open" = x""yes; then
+AC_DEFINE_UNQUOTED(HAVE_PF_RING, 1, [pf_ring support is enabled])
 fi
 
 echo
