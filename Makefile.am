@@ -81,7 +81,7 @@ NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.p
 	   html/jscalendar/lang/*js \
            html/statsicons \
            html/statsicons/flags html/statsicons/os \
-           html/statsicons/flags/*.gif html/statsicons/os/*.gif
+           html/statsicons/flags/*.gif html/statsicons/os/*.gif 
 
 WEBFILES       = `cat www/FILES`
 PLUGINSFILES   = `cat plugins/FILES`
@@ -323,7 +323,7 @@ install: install-recursive
 install-selinux-policy:
 	chcon -t textrel_shlib_t $(DESTDIR)$(libdir)/*ntop*.so
 
-install-data-local: ntop.txt ntop.html faq.html
+install-data-local: ntop.txt ntop.html faq.html 
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
 	@if ! test -d $(DESTDIR)/$(datadir)/ntop; then \
 	  $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop; \

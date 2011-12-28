@@ -187,9 +187,12 @@ static int setNetFlowInSocket(int deviceId) {
   if(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket > 0) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Collector terminated");
     closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSocket);
+    shutdown(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, SHUT_RDWR);
 #ifdef HAVE_SCTP
-    if(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket > 0)
-      closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket);
+    if(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket > 0) {
+	closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket);
+	shutdown(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket, SHUT_RDWR);
+	}
 #endif
   }
 
@@ -239,10 +242,13 @@ static int setNetFlowInSocket(int deviceId) {
       traceEvent(CONST_TRACE_ERROR, "NETFLOW: Collector port %d already in use",
 		 myGlobals.device[deviceId].netflowGlobals->netFlowInPort);
       closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSocket);
+      shutdown(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, SHUT_RDWR);
       myGlobals.device[deviceId].netflowGlobals->netFlowInSocket = 0;
 #ifdef HAVE_SCTP
-      if(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket)
+      if(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket) {
 	closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket);
+	shutdown(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket, SHUT_RDWR);
+	}
       myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket = 0;
 #endif
       return(0);
@@ -3822,10 +3828,13 @@ static void termNetflowDevice(int deviceId) {
     deleteMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex);
 
     if(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket > 0) {
-      closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSocket);
+	closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSocket);
+	shutdown(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, SHUT_RDWR);
 #ifdef HAVE_SCTP
-      if(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket > 0)
+      if(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket > 0) {
 	closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket);
+	shutdown(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket, SHUT_RDWR);
+	}
 #endif
     }
 

@@ -2475,6 +2475,10 @@ void resetHostsVariables(HostTraffic* el) {
   FD_ZERO(&(el->flags));
 
   el->totContactedSentPeers = el->totContactedRcvdPeers = 0;
+
+  resetUsageCounter(&el->contactedSentPeers);
+  resetUsageCounter(&el->contactedRcvdPeers);
+
   if(el->sent_to_matrix)   { CM_Destroy(el->sent_to_matrix);   el->sent_to_matrix = NULL;   }
   if(el->recv_from_matrix) { CM_Destroy(el->recv_from_matrix); el->recv_from_matrix = NULL; }  
   el->sent_to_matrix   = CM_Init(16 /* width */, (int)16 /* depth */, myGlobals.actTime /* random value */);
@@ -2504,6 +2508,9 @@ void resetHostsVariables(HostTraffic* el) {
   el->icmpInfo = NULL;
   if (el->protocolInfo != NULL)        free(el->protocolInfo);
   el->protocolInfo = NULL;
+
+  resetUsageCounter(&el->contactedSentPeers);
+  resetUsageCounter(&el->contactedRcvdPeers);
 
   memset(el->recentlyUsedClientPorts, -1, sizeof(int)*MAX_NUM_RECENT_PORTS);
   memset(el->recentlyUsedServerPorts, -1, sizeof(int)*MAX_NUM_RECENT_PORTS);
@@ -3888,6 +3895,10 @@ void resetSecurityHostTraffic(HostTraffic *el) {
   resetUsageCounter(&el->secHostPkts->icmpProtocolUnreachRcvd);
   resetUsageCounter(&el->secHostPkts->icmpAdminProhibitedRcvd);
   resetUsageCounter(&el->secHostPkts->malformedPktsRcvd);
+
+  resetUsageCounter(&el->contactedSentPeers);
+  resetUsageCounter(&el->contactedRcvdPeers);
+
 }
 
 /* ********************************************* */
@@ -4950,6 +4961,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
     traceEvent(CONST_TRACE_ERROR,
 	       "CHKVER: Unable to connect socket: %s(%d)", strerror(errno), errno);
     closesocket(sock);
+    shutdown(sock, SHUT_RDWR);
     return 1;
   }
 #ifdef CHKVER_DEBUG
@@ -5080,6 +5092,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
     traceEvent(CONST_TRACE_ERROR,
 	       "CHKVER: Unable to send http request: %s(%d)", strerror(errno), errno);
     closesocket(sock);
+    shutdown(sock, SHUT_RDWR);
     return 1;
   }
 
@@ -5098,6 +5111,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
     traceEvent(CONST_TRACE_ERROR,
 	       "CHKVER: Unable to receive http response: %s(%d)", strerror(errno), errno);
     closesocket(sock);
+    shutdown(sock, SHUT_RDWR);
     return 1;
   }
 
@@ -5107,6 +5121,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
 	       rc,
 	       bufLen);
     closesocket(sock);
+    shutdown(sock, SHUT_RDWR);
     return 1;
   }
 
@@ -5115,6 +5130,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
 #endif
 
   closesocket(sock);
+  shutdown(sock, SHUT_RDWR);
   return 0;
 }
 

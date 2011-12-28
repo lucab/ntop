@@ -70,6 +70,33 @@ static void resetHourTraffic(u_short hourId) {
 
 /* ************************************ */
 
+static void addContactedPeers(HostTraffic *sender, HostAddr *srcAddr,
+                              HostTraffic *receiver, HostAddr *dstAddr,
+                              int actualDeviceId) {
+  if((sender == NULL) || (receiver == NULL) || (sender == receiver)) {
+    if(sender != NULL) {
+      /* This is normal. Return without warning */
+      return;
+    }
+    traceEvent(CONST_TRACE_ERROR, "Sanity check failed @ addContactedPeers (%p, %p)",
+               sender, receiver);
+    return;
+  }
+
+  if((sender != myGlobals.otherHostEntry) && (receiver != myGlobals.otherHostEntry)) {
+    /* The statements below have no effect if the serial has been already computed */
+    setHostSerial(sender); setHostSerial(receiver);
+
+    sender->totContactedSentPeers +=
+      incrementUsageCounter(&sender->contactedSentPeers, receiver, actualDeviceId);
+    receiver->totContactedRcvdPeers +=
+      incrementUsageCounter(&receiver->contactedRcvdPeers, sender, actualDeviceId);
+  }
+}
+
+
+/* ************************************ */
+
 void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
 		       TrafficCounter bytes, Counter numPkts,
 		       int actualDeviceId) {
@@ -97,6 +124,12 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
   }
 
   thisTime = localtime_r(&myGlobals.actTime, &t);
+
+  if(thisTime == NULL) {
+        myGlobals.actTime = time(NULL);
+        thisTime = localtime_r(&myGlobals.actTime, &t);
+        }
+
   hourId = thisTime->tm_hour % 24 /* just in case... */;;
 
   if(lastHourId != hourId) {
@@ -149,6 +182,9 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
 
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].multicastPkts, numPkts);
   }
+  if((dstHost != NULL) /*&& (!broadcastHost(dstHost))*/)
+  addContactedPeers(srcHost, &srcHost->hostIpAddress, dstHost, &dstHost->hostIpAddress, actualDeviceId);
+
 }
 
 /* ************************************ */

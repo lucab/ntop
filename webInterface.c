@@ -761,18 +761,11 @@ char* getActualRowColor(void) {
 
 /* ******************************* */
 
-void switchNwInterface(int _interface) {
-  int i, mwInterface=_interface-1, found = 0;
-  char buf[LEN_GENERAL_WORK_BUFFER], *selected;
+void printSwitchNwInterfaceHeader(void) {
+  char buf[LEN_GENERAL_WORK_BUFFER];
 
   printHTMLheader("Network Interface Switch", NULL, BITFLAG_HTML_NO_REFRESH);
   sendString("<HR>\n");
-
-  for(i=0; i<myGlobals.numDevices; i++)
-    if(myGlobals.device[i].activeDevice) {
-      found = 1;
-      break;
-    }
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\">Note that "
 		"the NetFlow and sFlow plugins - if enabled - force -M to be set (i.e. "
@@ -780,16 +773,32 @@ void switchNwInterface(int _interface) {
   sendString(buf);
 
   sendString("<P>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\"><B>\n");
+}
+
+/* ******************************* */
+
+void switchNwInterface(int _interface) {
+  int i, mwInterface=_interface-1, found = 0;
+  char buf[LEN_GENERAL_WORK_BUFFER], *selected;
+
+  for(i=0; i<myGlobals.numDevices; i++)
+    if(myGlobals.device[i].activeDevice) {
+      found = 1;
+      break;
+    }
 
   if(myGlobals.runningPref.mergeInterfaces) {
+    printSwitchNwInterfaceHeader();
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sorry, but you cannot switch among different interfaces "
 		  "unless the -M command line switch is specified at run time.");
     sendString(buf);
   } else if((mwInterface != -1) &&
 	    ((mwInterface >= myGlobals.numDevices) || myGlobals.device[mwInterface].virtualDevice)) {
+    printSwitchNwInterfaceHeader();
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sorry, invalid interface selected.");
     sendString(buf);
   } else if((myGlobals.numDevices == 1) || (!found)) {
+    printSwitchNwInterfaceHeader();
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sorry, you are currently capturing traffic from only a "
 		  "single/dummy interface [%s].<br><br>"
 		  "</b> This interface switch feature is meaningful only when your ntop "
@@ -799,14 +808,15 @@ void switchNwInterface(int _interface) {
     sendString(buf);
   } else if(mwInterface >= 0) {
     char value[8];
-
+    
     myGlobals.actualReportDeviceId = (mwInterface)%myGlobals.numDevices;
+    storePrefsValue("actualReportDeviceId", value);
+    printSwitchNwInterfaceHeader();
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "The current interface is now [%s].",
 		  myGlobals.device[myGlobals.actualReportDeviceId].name);
     sendString(buf);
-
+    
     safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", myGlobals.actualReportDeviceId);
-    storePrefsValue("actualReportDeviceId", value);
   } else {
     u_short do_enable;
     sendString("Available Network Interfaces:</B><P>\n<FORM ACTION=" CONST_SWITCH_NIC_HTML ">\n");
@@ -7764,6 +7774,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 
   if((rc < 0) || (errno != 0)) {
     closeNwSocket(&myGlobals.sock);
+    shutdown(myGlobals.sock, SHUT_RDWR);
     traceEvent(CONST_TRACE_ERROR,
                "INITWEB:%s binding problem - '%s'(%d)",
                sslOrNot, strerror(errno), errno);
@@ -7781,6 +7792,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   rc = listen(*sock, myGlobals.webServerRequestQueueLength);
   if((rc < 0) || (errno != 0)) {
     closeNwSocket(&myGlobals.sock);
+    shutdown(myGlobals.sock, SHUT_RDWR);
     traceEvent(CONST_TRACE_FATALERROR, "INITWEB:%s listen(%d, %d) error %s(%d)",
                sslOrNot,
                *sock,
@@ -7858,8 +7870,9 @@ void closeNwSocket(int *sockId) {
 #ifdef HAVE_OPENSSL
   if(*sockId < 0)
     term_ssl_connection(-(*sockId));
-  else
+  else {
     closesocket(*sockId);
+    }
 #else
   closesocket(*sockId);
 #endif
@@ -8184,6 +8197,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 	if(accept_ssl_connection(myGlobals.newSock) == -1) {
 	  traceEvent(CONST_TRACE_WARNING, "Unable to accept SSL connection");
 	  closeNwSocket(&myGlobals.newSock);
+	  shutdown(myGlobals.newSock, SHUT_RDWR);
 	  return;
 	} else {
 	  myGlobals.newSock = -myGlobals.newSock;
@@ -8193,6 +8207,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 
     handleHTTPrequest(remote_ipaddr);
     closeNwSocket(&myGlobals.newSock);
+    shutdown(myGlobals.newSock, SHUT_RDWR);
   } else {
     traceEvent(CONST_TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d: %s)", errno, strerror(errno));
   }

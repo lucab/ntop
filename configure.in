@@ -592,6 +592,14 @@ elif test -r /usr/lib/libpcap.a &&
        CORELIBS="${CORELIBS} -lpcap"
        AC_MSG_RESULT([found in $PCAP_ROOT])
 dnl>
+dnl> installation used by most packagers 64-bit
+dnl>
+elif test -r /usr/lib64/libpcap.a &&
+     test -r /usr/include/pcap.h; then
+       PCAP_ROOT="standard installation"
+       CORELIBS="${CORELIBS} -lpcap"
+       AC_MSG_RESULT([found in $PCAP_ROOT])
+dnl>
 dnl> installation used by OSX
 dnl>
 elif test -r /usr/lib/libpcap.A.dylib &&

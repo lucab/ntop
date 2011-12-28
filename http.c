@@ -814,7 +814,7 @@ static void ssiMenu_Body(void) {
 		  "  <td align=\"left\">\n"
 		  "   <table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
 		  "    <tr>\n"
-		  "     <td align=\"left\" style=\"width: 103px; height: 75px;\">");
+ 		  "     <td align=\"left\"><div style=\"width: 103px; height: 75px;\">\n");
   if(myGlobals.runningPref.instance != NULL) {
     sendStringWOssi(
 		    "      <table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
@@ -837,7 +837,7 @@ static void ssiMenu_Body(void) {
   }
 
   sendStringWOssi(
-		  "     </td><td></td>\n"
+		  "     </div></td><td></td>\n"
 		  "    </tr>\n"
 		  "   </table></td>\n"
 
@@ -1186,6 +1186,7 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
       // traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes, '%s'", strlen(theString), theString);
       if(errno != 0) traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes", (int)strlen(theString));
       closeNwSocket(&myGlobals.newSock);
+      shutdown(myGlobals.newSock, SHUT_RDWR);
       return;
     } else {
       len -= rc;
@@ -2735,9 +2736,15 @@ static int returnHTTPPage(char* pageName,
 
 	  /* Close inherited sockets */
 #ifdef HAVE_OPENSSL
-	  if(myGlobals.sslInitialized) closeNwSocket(&myGlobals.sock_ssl);
+	  if(myGlobals.sslInitialized) {
+		closeNwSocket(&myGlobals.sock_ssl);
+		shutdown(myGlobals.sock_ssl, SHUT_RDWR);
+		}
 #endif /* HAVE_OPENSSL */
-	  if(myGlobals.runningPref.webPort > 0) closeNwSocket(&myGlobals.sock);
+	  if(myGlobals.runningPref.webPort > 0) {
+		closeNwSocket(&myGlobals.sock);
+		shutdown(myGlobals.sock, SHUT_RDWR);
+		}
 
 #if defined(HAVE_ALARM) && defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
 	  signal(SIGALRM, quitNow);
@@ -3189,6 +3196,7 @@ static int returnHTTPPage(char* pageName,
       compressAndSendData(&gzipBytesSent);
 #endif
     closeNwSocket(&myGlobals.newSock);
+    shutdown(myGlobals.newSock, SHUT_RDWR);
     logHTTPaccess(200, httpRequestedAt, gzipBytesSent);
     exit(0);
   }

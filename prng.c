@@ -311,6 +311,7 @@ void prng_Reseed(prng_type * prng, long seed)
 void prng_Destroy(prng_type * prng)
 { 
   free(prng);
+  prng=NULL;
 }
 
 /**********************************************************************/

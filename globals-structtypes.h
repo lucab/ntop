@@ -773,6 +773,9 @@ typedef struct hostTraffic {
   Counter                 totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
   struct hostTraffic *next;              /* pointer to the next element */
 
+  UsageCounter     contactedSentPeers;   /* peers that talked with this host */
+  UsageCounter     contactedRcvdPeers;   /* peers that talked with this host */
+
   struct {
     ProtoTraffic *traffic;
   } l7;

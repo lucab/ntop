@@ -230,6 +230,7 @@ extern void initWeb(void);
 extern char *calculateCellColor(Counter actualValue, Counter avgTrafficLow, Counter avgTrafficHigh);
 extern char *getHostCountryIconURL(HostTraffic *el);
 extern char *getActualRowColor(void);
+extern void printSwitchNwInterfaceHeader(void);
 extern void switchNwInterface(int _interface);
 extern void shutdownNtop(void);
 extern void printHostHourlyTraffic(HostTraffic *el);

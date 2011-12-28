@@ -3235,7 +3235,7 @@ static void arbitraryAction(char *rrdName,
                             char _which,
 			    char *mode) {
   int i, len, rc=0, argc = 0, argc1 = 0, countOK=0, countZERO=0;
-  char buf[LEN_GENERAL_WORK_BUFFER], rrdKey[64], *startTime, *endTime, time_buf[32];
+  char buf[LEN_GENERAL_WORK_BUFFER], rrdKey[256], *startTime, *endTime, time_buf[32];
   time_t the_time;
   struct tm *the_tm;
   char rrd_height[RRD_GRAPH_SIZE], rrd_width[RRD_GRAPH_SIZE];
@@ -4010,7 +4010,7 @@ static void handleRRDHTTPrequest(char* url) {
   char buf[1024] = { '\0' }, *strtokState, *mainState, *urlPiece;
   char rrdKey[512] = { '\0' }, rrdName[64] = { '\0' }, rrdTitle[128] = { '\0' };
   char rrdCounter[64] = { '\0' }, startTime[32] = { '\0' }, endTime[32] = { '\0' };
-  char rrdPrefix[32] = { '\0' }, rrdIP[32] = { '\0' }, rrdInterface[64] = { '\0' };
+  char rrdPrefix[32] = { '\0' }, rrdIP[32] = { '\0' }, rrdInterface[256] = { '\0' };
   char rrdPath[512] = { '\0' }, mode[32] = { '\0' }, community[32] = { '\0' }, filterString[64] = { '\0' };
   u_char action = FLAG_RRD_ACTION_NONE;
   char _which;

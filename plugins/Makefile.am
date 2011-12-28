@@ -45,12 +45,12 @@ INCLUDES = -I.. @INCS@ ${RRD_INC} -I ../@OPENDPI_INC@
 noinst_PROGRAMS = \
                   netflowPlugin.so \
                   rrdPlugin.so \
-                  sflowPlugin.so
+                  sflowPlugin.so 
 
 lib_LTLIBRARIES = \
                   libnetflowPlugin.la \
                   librrdPlugin.la \
-                  libsflowPlugin.la
+                  libsflowPlugin.la 
 
 libnetflowPlugin_la_SOURCES = netflowPlugin.c
 libnetflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@

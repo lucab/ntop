@@ -1305,7 +1305,8 @@ static int setsFlowInSocket(int deviceId) {
 
   if(myGlobals.device[deviceId].sflowGlobals->sflowInSocket > 0) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Collector terminated");
-    closeNwSocket(&myGlobals.device[deviceId].sflowGlobals->sflowInSocket);
+	closeNwSocket(&myGlobals.device[deviceId].sflowGlobals->sflowInSocket);
+	shutdown(myGlobals.device[deviceId].sflowGlobals->sflowInSocket, SHUT_RDWR);
   }
 
   if(myGlobals.device[deviceId].sflowGlobals->sflowInPort > 0) {
@@ -1335,7 +1336,8 @@ static int setsFlowInSocket(int deviceId) {
        ) {
       traceEvent(CONST_TRACE_ERROR, "SFLOW: Collector port %d already in use",
 		 myGlobals.device[deviceId].sflowGlobals->sflowInPort);
-      closeNwSocket(&myGlobals.device[deviceId].sflowGlobals->sflowInSocket);
+	closeNwSocket(&myGlobals.device[deviceId].sflowGlobals->sflowInSocket);
+	shutdown(myGlobals.device[deviceId].sflowGlobals->sflowInSocket, SHUT_RDWR);
       myGlobals.device[deviceId].sflowGlobals->sflowInSocket = 0;
       return(0);
     }
@@ -4537,7 +4539,8 @@ static void termsFlowDevice(int deviceId) {
     deleteMutex(&myGlobals.device[deviceId].sflowGlobals->whiteblackListMutex);
 
     if(myGlobals.device[deviceId].sflowGlobals->sflowInSocket > 0) {
-      closeNwSocket(&myGlobals.device[deviceId].sflowGlobals->sflowInSocket);
+	closeNwSocket(&myGlobals.device[deviceId].sflowGlobals->sflowInSocket);
+	shutdown(myGlobals.device[deviceId].sflowGlobals->sflowInSocket, SHUT_RDWR);
     }
 
     while(myGlobals.device[deviceId].sflowGlobals->ifCounters != NULL) {

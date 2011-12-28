@@ -2200,7 +2200,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
 /* ****************************************************************** */
 
-#if 0
+//#if 0
 static void makeHostName(HostTraffic *el, char *buf, int len) {
   if(el->hostResolvedName[0] != '\0') strcpy(buf, el->hostResolvedName);
   else if(el->hostNumIpAddress[0] != '\0') strcpy(buf, el->hostNumIpAddress);
@@ -2237,17 +2237,17 @@ static int addNodeInfo(FILE *fd, HostTraffic *el) {
   }
   return(0);
 }
-#endif
+//#endif
 
 /* ****************************************************************** */
 
 void makeDot() {
 
   // FIX - Reimplement host matrix
-  returnHTTPpageNotFound("<b>This feature is not YET available on your platform: we're working for you</b>");
-  return;
+  //returnHTTPpageNotFound("<b>This feature is not YET available on your platform: we're working for you</b>");
+  //return;
 
-#if 0
+//#if 0
 
 
 #ifdef WIN32
@@ -2291,7 +2291,8 @@ void makeDot() {
   if(fd != NULL) {
     for(el = getFirstHost(myGlobals.actualReportDeviceId);
 	el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-      int numEntries, i, urlSent = 0;
+      int numEntries;
+      int i, urlSent = 0;
 
       if(el->community && (!isAllowedCommunity(el->community))) continue;
 
@@ -2368,7 +2369,7 @@ void makeDot() {
     }
 
     /* Added -c courtesy of Max Waterman <davidmaxwaterman@fastmail.co.uk> */
-    snprintf(path, sizeof(path), "%s -Tpng -Goverlap=false %s/ntop.dot -o %s/"CONST_NETWORK_IMAGE_MAP " 2>&1 ",
+    snprintf(path, sizeof(path), "%s -Tsvg -Goverlap=false %s/ntop.dot -o %s/"CONST_NETWORK_IMAGE_MAP " 2>&1 ",
 	     dotPath, myGlobals.spoolPath, myGlobals.spoolPath);
     sendString("<!-- dot(generate) command is ");
     sendString(path);
@@ -2422,7 +2423,7 @@ void makeDot() {
   } else {
     returnHTTPpageNotFound("Unable to create temporary file");
   }
-#endif
+//#endif
 
 #endif
 }

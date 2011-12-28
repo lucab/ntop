@@ -908,7 +908,7 @@ static void handleSCCPSession(const struct pcap_pkthdr *h,
     && (packetDataLength > 200)) {
       char *calling_party_name, *calling_party;
       char *called_party_name, *called_party;
-      char caller[64], called[64];
+      char caller[1024], called[1024];
 
       if((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
 	traceEvent(CONST_TRACE_WARNING, "handleSCCPSession: Unable to "
@@ -943,7 +943,7 @@ static void handleSCCPSession(const struct pcap_pkthdr *h,
 	safe_snprintf(__FILE__, __LINE__, called, sizeof(called), "%s", called_party);
 
       if(theSession->session_info == NULL) {
-	char tmpStr[256];
+	char tmpStr[1024];
 
 	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%s called %s", caller, called);
 	theSession->session_info = strdup(tmpStr);

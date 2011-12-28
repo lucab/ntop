@@ -488,7 +488,8 @@ int parseOptions(int argc, char* argv[]) {
       break;
 
     case 'x':
-      myGlobals.runningPref.maxNumHashEntries = atoi(optarg);
+      //myGlobals.runningPref.maxNumHashEntries = atoi(optarg);
+      myGlobals.runningPref.maxNumHashEntries = strtoul(optarg,NULL,0);
       break;
 
     case 'z':
@@ -573,7 +574,8 @@ int parseOptions(int argc, char* argv[]) {
       exit(0);
 
     case 'X':
-      myGlobals.runningPref.maxNumSessions = atoi(optarg);
+      //myGlobals.runningPref.maxNumSessions = atoi(optarg);
+      myGlobals.runningPref.maxNumSessions = strtoul(optarg,NULL,0);
       break;
 
 #ifdef HAVE_OPENSSL
@@ -1217,7 +1219,7 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
       value = buf;
     }
     processIntPref(NTOP_PREF_MAXHASH, value,
-		   (int*)&pref->maxNumHashEntries, savePref);
+		   (u_int*)&pref->maxNumHashEntries, savePref);
   } else if(strcmp(key, NTOP_PREF_MAXSESSIONS) == 0) {
     if(value == NULL) {
       safe_snprintf (__FILE__, __LINE__, buf, sizeof(buf), "%d",
@@ -1225,7 +1227,7 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
       value = buf;
     }
     processIntPref(NTOP_PREF_MAXSESSIONS, value,
-		    (int*)&pref->maxNumSessions, savePref);
+		    (u_int*)&pref->maxNumSessions, savePref);
   } else if(strcmp(key, NTOP_PREF_MERGEIF) == 0) {
     processBoolPref(NTOP_PREF_MERGEIF, value2bool(value),
 		     &pref->mergeInterfaces, savePref);
