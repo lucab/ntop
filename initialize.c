@@ -310,7 +310,7 @@ void resetDevice(int devIdx, short fullReset) {
     myGlobals.device[devIdx].sflowGlobals = NULL;
   }
   
-  len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(SimpleProtoTrafficInfo);
+  len = (int)(myGlobals.numIpProtosToMonitor*sizeof(SimpleProtoTrafficInfo));
 
   if(myGlobals.device[devIdx].ipProtosList != NULL) {
     free(myGlobals.device[devIdx].ipProtosList);
@@ -352,17 +352,14 @@ void initCounters(void) {
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.runningPref.enableSessionHandling) {
-      len = sizeof(IPSession*)*MAX_TOT_NUM_SESSIONS;
-      myGlobals.device[i].tcpSession = (IPSession**)malloc(len);
-      memset(myGlobals.device[i].tcpSession, 0, len);
-    } else {
-      myGlobals.device[i].tcpSession     = NULL;
-    }
+      myGlobals.device[i].sessions = (IPSession**)calloc(sizeof(IPSession*), MAX_TOT_NUM_SESSIONS);
+    } else
+      myGlobals.device[i].sessions = NULL;    
 
     myGlobals.device[i].fragmentList = NULL;
   }
 
-  myGlobals.hashCollisionsLookup     = 0;
+  myGlobals.hashCollisionsLookup = 0;
 
   if(myGlobals.pcap_file_list == NULL)
     myGlobals.initialSniffTime = myGlobals.lastRefreshTime = time(NULL);  
@@ -427,11 +424,11 @@ void resetStats(int deviceId) {
 
   resetDevice(deviceId, 0);
 
-  if(myGlobals.device[deviceId].tcpSession != NULL) {
+  if(myGlobals.device[deviceId].sessions != NULL) {
     for(j=0; j<MAX_TOT_NUM_SESSIONS; j++)
-      if(myGlobals.device[deviceId].tcpSession[j] != NULL) {
-	free(myGlobals.device[deviceId].tcpSession[j]);
-	myGlobals.device[deviceId].tcpSession[j] = NULL;
+      if(myGlobals.device[deviceId].sessions[j] != NULL) {
+	free(myGlobals.device[deviceId].sessions[j]);
+	myGlobals.device[deviceId].sessions[j] = NULL;
       }
   }
   
@@ -461,7 +458,7 @@ void initSingleGdbm(GDBM_FILE *database,
   char tmpBuf[200], theDate[48];
   time_t st_time, now;
   struct tm t;
-  int d;
+  double d;
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
   memset(&tmpBuf, 0, sizeof(tmpBuf));
@@ -491,7 +488,6 @@ void initSingleGdbm(GDBM_FILE *database,
     if(stat(tmpBuf, statbuf) == 0) {
       /* File already exists */
       if((doUnlink != TRUE) && (doUnlink != FALSE)) {
-
 	traceEvent(CONST_TRACE_INFO, "Checking age of database %s", tmpBuf);
 
 	/* Some systems or mounts don't maintain atime so fox 'em */
@@ -508,7 +504,7 @@ void initSingleGdbm(GDBM_FILE *database,
 	theDate[sizeof(theDate)-1] = '\0';
 	now  = time(NULL);
 	traceEvent(CONST_TRACE_NOISY,
-		   "...last create/modify/access was %s, %d second(s) ago",
+		   "...last create/modify/access was %s, %.1f second(s) ago",
 		   theDate,
 		   d = difftime(now, st_time));
 
@@ -580,7 +576,7 @@ void reinitMutexes (void) {
   createMutex(&myGlobals.portsMutex);       /* Avoid race conditions while handling ports */
 
   for(i=0; i<NUM_SESSION_MUTEXES; i++)
-    createMutex(&myGlobals.tcpSessionsMutex[i]); /* data to synchronize TCP sessions access */
+    createMutex(&myGlobals.sessionsMutex[i]); /* data to synchronize TCP sessions access */
 
     createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
   createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
@@ -900,7 +896,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
        * is designed to ensure a certain minimal # even for smaller networks
        */
       myGlobals.device[deviceId].numHosts +=
-	ceil(log((double)(0xFFFFFFFF - myGlobals.device[deviceId].netmask.s_addr + 1))+1.0)*50;
+	(int)(ceil(log((double)(0xFFFFFFFF - myGlobals.device[deviceId].netmask.s_addr + 1))+1.0)*50);
     }
 
     if(myGlobals.device[deviceId].numHosts > MAX_SUBNET_HOSTS) {

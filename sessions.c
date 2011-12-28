@@ -323,7 +323,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
     traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: Session terminated: %s:%d <-> %s:%d (lastSeend=%d) (# sessions = %d)",
 	       _addrtostr(&sessionToPurge->initiatorRealIp, buf, sizeof(buf)), sessionToPurge->sport,
 	       _addrtostr(&sessionToPurge->remotePeerRealIp, buf1, sizeof(buf1)), sessionToPurge->dport,
-	       sessionToPurge->lastSeen,  myGlobals.device[actualDeviceId].numTcpSessions-1);
+	       sessionToPurge->lastSeen,  myGlobals.device[actualDeviceId].numSessions-1);
   }
 #endif
 
@@ -341,7 +341,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
     free(sessionToPurge->session_info);
 
   myGlobals.numTerminatedSessions++;
-  myGlobals.device[actualDeviceId].numTcpSessions--;
+  myGlobals.device[actualDeviceId].numSessions--;
 
   freeOpenDPI(sessionToPurge);
 
@@ -366,13 +366,13 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 
   /* Patch below courtesy of "Kouprie, Robbert" <R.Kouprie@DTO.TUDelft.NL> */
      if((!myGlobals.runningPref.enableSessionHandling)
-	|| (myGlobals.device[actualDeviceId].tcpSession == NULL)
-	|| (myGlobals.device[actualDeviceId].numTcpSessions == 0))
+	|| (myGlobals.device[actualDeviceId].sessions == NULL)
+	|| (myGlobals.device[actualDeviceId].numSessions == 0))
      return;
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: Called scanTimedoutTCPSessions (device=%d, sessions=%d)",
-	     actualDeviceId, myGlobals.device[actualDeviceId].numTcpSessions);
+	     actualDeviceId, myGlobals.device[actualDeviceId].numSessions);
 #endif
 
   /*
@@ -387,11 +387,11 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
     IPSession *nextSession, *prevSession, *theSession;
     int mutex_idx;
 
-    if(myGlobals.device[actualDeviceId].tcpSession[idx] == NULL) continue;
+    if(myGlobals.device[actualDeviceId].sessions[idx] == NULL) continue;
 
     mutex_idx = idx % NUM_SESSION_MUTEXES;
-    accessMutex(&myGlobals.tcpSessionsMutex[mutex_idx], "purgeIdleHosts");
-    prevSession = NULL, theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
+    accessMutex(&myGlobals.sessionsMutex[mutex_idx], "purgeIdleHosts");
+    prevSession = NULL, theSession = myGlobals.device[actualDeviceId].sessions[idx];
 
     while(theSession != NULL) {
       u_char free_session;
@@ -399,9 +399,9 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
       tot_sessions++;
 
       if(theSession->magic != CONST_MAGIC_NUMBER) {
-	myGlobals.device[actualDeviceId].numTcpSessions--;
+	myGlobals.device[actualDeviceId].numSessions--;
         traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) scanTimedoutTCPSessions() [idx=%u][head=%p][session=%p]",
-	           CONST_MAGIC_NUMBER, theSession->magic, idx, myGlobals.device[actualDeviceId].tcpSession[idx], theSession);
+	           CONST_MAGIC_NUMBER, theSession->magic, idx, myGlobals.device[actualDeviceId].sessions[idx], theSession);
 	theSession = NULL;
 	continue;
       }
@@ -443,8 +443,8 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
       nextSession = theSession->next;
 
       if(free_session) {
-	if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
-          myGlobals.device[actualDeviceId].tcpSession[idx] = nextSession, prevSession = NULL;
+	if(myGlobals.device[actualDeviceId].sessions[idx] == theSession) {
+          myGlobals.device[actualDeviceId].sessions[idx] = nextSession, prevSession = NULL;
         } else {
           if(prevSession)
 	    prevSession->next = nextSession;
@@ -461,7 +461,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
       }
     } /* while */
 
-    releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
+    releaseMutex(&myGlobals.sessionsMutex[mutex_idx]);
   } /* end for */
 
 #ifdef DEBUG
@@ -1789,8 +1789,8 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
   idx = computeIdx(&srcHost->hostIpAddress, &dstHost->hostIpAddress, sport, dport) % MAX_TOT_NUM_SESSIONS;
   mutex_idx = idx % NUM_SESSION_MUTEXES;
 
-  accessMutex(&myGlobals.tcpSessionsMutex[mutex_idx], "handleTCPUDPSession");
-  prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
+  accessMutex(&myGlobals.sessionsMutex[mutex_idx], "handleTCPUDPSession");
+  prevSession = theSession = myGlobals.device[actualDeviceId].sessions[idx];
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "handleTCPUDPSession [%s%s%s%s%s]",
@@ -1841,7 +1841,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.totalFlows,
 			    2 /* 2 x monodirectional flows */);
 
-    if(myGlobals.device[actualDeviceId].numTcpSessions >= myGlobals.runningPref.maxNumSessions) {
+    if(myGlobals.device[actualDeviceId].numSessions >= myGlobals.runningPref.maxNumSessions) {
       static char messageShown = 0;
 
       if(!messageShown) {
@@ -1850,13 +1850,13 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 		   myGlobals.runningPref.maxNumSessions);
       }
 
-      releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
+      releaseMutex(&myGlobals.sessionsMutex[mutex_idx]);
       return(NULL);
     }
 
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: TCP hash [act size: %d]",
-	       myGlobals.device[actualDeviceId].numTcpSessions);
+	       myGlobals.device[actualDeviceId].numSessions);
 #endif
 
     /*
@@ -1864,7 +1864,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
       ntop to store sessions as needed
     */
     if((theSession = (IPSession*)malloc(sizeof(IPSession))) == NULL) {
-      releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
+      releaseMutex(&myGlobals.sessionsMutex[mutex_idx]);
       return(NULL);
     }
 
@@ -1889,7 +1889,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 	  }
 
 	  free(theSession);
-	  releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
+	  releaseMutex(&myGlobals.sessionsMutex[mutex_idx]);
 	  return(NULL);
 	}
 
@@ -1906,7 +1906,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 	  if(theSession->l7.dst) free(theSession->l7.dst);
 	  free(theSession);
 
-	  releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
+	  releaseMutex(&myGlobals.sessionsMutex[mutex_idx]);
 	  return(NULL);
 	}
       }
@@ -1928,16 +1928,16 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
     traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
 	       dstHost->hostNumIpAddress, dport,
 	       srcHost->hostNumIpAddress, sport,
-	       myGlobals.device[actualDeviceId].numTcpSessions);
+	       myGlobals.device[actualDeviceId].numSessions);
 #endif
 
-    myGlobals.device[actualDeviceId].numTcpSessions++;
+    myGlobals.device[actualDeviceId].numSessions++;
 
-    if(myGlobals.device[actualDeviceId].numTcpSessions > myGlobals.device[actualDeviceId].maxNumTcpSessions)
-      myGlobals.device[actualDeviceId].maxNumTcpSessions = myGlobals.device[actualDeviceId].numTcpSessions;
+    if(myGlobals.device[actualDeviceId].numSessions > myGlobals.device[actualDeviceId].maxNumSessions)
+      myGlobals.device[actualDeviceId].maxNumSessions = myGlobals.device[actualDeviceId].numSessions;
 
-    theSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
-    myGlobals.device[actualDeviceId].tcpSession[idx] = theSession;
+    theSession->next = myGlobals.device[actualDeviceId].sessions[idx];
+    myGlobals.device[actualDeviceId].sessions[idx] = theSession;
 
     theSession->initiator  = srcHost, theSession->remotePeer = dstHost;
     theSession->initiator->numHostSessions++, theSession->remotePeer->numHostSessions++;
@@ -2519,8 +2519,8 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 
   /* Immediately free the session */
   if(theSession->sessionState == FLAG_STATE_TIMEOUT) {
-    if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
-      myGlobals.device[actualDeviceId].tcpSession[idx] = theSession->next;
+    if(myGlobals.device[actualDeviceId].sessions[idx] == theSession) {
+      myGlobals.device[actualDeviceId].sessions[idx] = theSession->next;
     } else
       prevSession->next = theSession->next;
 
@@ -2529,11 +2529,11 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 #else
     freeSession(theSession, actualDeviceId, 1, 1 /* lock purgeMutex */);
 #endif
-    releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
+    releaseMutex(&myGlobals.sessionsMutex[mutex_idx]);
     return(NULL);
   }
 
-  releaseMutex(&myGlobals.tcpSessionsMutex[mutex_idx]);
+  releaseMutex(&myGlobals.sessionsMutex[mutex_idx]);
   return(theSession);
 }
 
@@ -2556,8 +2556,14 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 
   (*newSession) = 0; /* Default */
 
-  if((!myGlobals.runningPref.enableSessionHandling)
-     || (myGlobals.device[actualDeviceId].tcpSession == NULL))
+  if(!myGlobals.runningPref.enableSessionHandling)
+    return(NULL);
+  else {
+    if(myGlobals.device[actualDeviceId].sessions == NULL)
+      myGlobals.device[actualDeviceId].sessions = (IPSession**)calloc(sizeof(IPSession*), MAX_TOT_NUM_SESSIONS);
+  }
+
+  if(myGlobals.device[actualDeviceId].sessions == NULL)
     return(NULL);
 
   if((srcHost == NULL) || (dstHost == NULL)) {

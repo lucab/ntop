@@ -468,9 +468,9 @@ static int decodeString(char *bufcoded,
   /* static */ int first = 1;
 
   int nbytesdecoded, j;
-  register char *bufin = bufcoded;
-  register unsigned char *bufout = bufplain;
-  register int nprbytes;
+  char *bufin = bufcoded;
+  unsigned char *bufout = bufplain;
+  int nprbytes;
 
   /* If this is the first call, initialize the mapping table.
    * This code should work even on non-ASCII machines.
@@ -494,7 +494,7 @@ static int decodeString(char *bufcoded,
   while(pr2six[(int)*(bufin++)] <= MAXVAL)
     ;
 
-  nprbytes = bufin - bufcoded - 1;
+  nprbytes = (int)(bufin - bufcoded - 1);
   nbytesdecoded = ((nprbytes+3)/4) * 3;
   if(nbytesdecoded > outbufsize) {
     nprbytes = (outbufsize*4)/3;
@@ -814,7 +814,7 @@ static void ssiMenu_Body(void) {
 		  "  <td align=\"left\">\n"
 		  "   <table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
 		  "    <tr>\n"
-		  "     <td colspan=\"2\" align=\"left\">");
+		  "     <td align=\"left\" style=\"width: 103px; height: 75px;\">");
   if(myGlobals.runningPref.instance != NULL) {
     sendStringWOssi(
 		    "      <table border=\"0\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n"
@@ -837,7 +837,7 @@ static void ssiMenu_Body(void) {
   }
 
   sendStringWOssi(
-		  "     </td>\n"
+		  "     </td><td></td>\n"
 		  "    </tr>\n"
 		  "   </table></td>\n"
 
@@ -1003,9 +1003,8 @@ static void processSSI(const char *ssiRequest) {
 
 void sendFile(char* fileName, int doNotUnlink) {
   FILE *fd;
-  int len;
   char tmpStr[256];
-  int bufSize=sizeof(tmpStr)-1, totLen = 0;
+  int len, bufSize = (int)(sizeof(tmpStr)-1), totLen = 0;
 
   memset(&tmpStr, 0, sizeof(tmpStr));
 
@@ -1142,9 +1141,9 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
     if(myGlobals.newSock < 0) {
       rc = SSL_write(getSSLsocket(-myGlobals.newSock), &theString[bytesSent], len);
     } else
-      rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, 0);
+      rc = (int)send(myGlobals.newSock, &theString[bytesSent], (size_t)len, 0);
 #else
-    rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, 0);
+    rc = (int)send(myGlobals.newSock, &theString[bytesSent], (size_t)len, 0);
 #endif
 
     //traceEvent(CONST_TRACE_INFO, "[sent=%d][supposed to send=%d]", rc, len);
@@ -1198,7 +1197,7 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
 /* ************************* */
 
 void _sendString(char *theString, int allowSSI) {
-  _sendStringLen(theString, strlen(theString), allowSSI);
+  _sendStringLen(theString, (unsigned int)strlen(theString), allowSSI);
 }
 
 /* ************************* */

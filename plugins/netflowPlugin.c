@@ -91,6 +91,9 @@ struct generic_netflow_record {
   char src_mac[LEN_ETHERNET_ADDRESS], src_mac_set, dst_mac[LEN_ETHERNET_ADDRESS], dst_mac_set;
   u_int16_t vlanId;
 
+  /* L7 */
+  u_int16_t l7_proto;
+
   /* Latency extensions */
   u_int32_t client_nw_latency_sec, client_nw_latency_usec;
   u_int32_t server_nw_latency_sec, server_nw_latency_usec;
@@ -426,6 +429,7 @@ static void updateInterfaceStats(u_int32_t netflow_device_ip,
 static void de_endianFlow(struct generic_netflow_record *record) {
   NTOHL(record->srcaddr); NTOHL(record->dstaddr);
   NTOHL(record->nexthop);
+  NTOHS(record->l7_proto);
   NTOHS(record->input); NTOHS(record->output);
   NTOHL(record->sentPkts); NTOHL(record->rcvdPkts);
   NTOHL(record->sentOctets); NTOHL(record->rcvdOctets);
@@ -436,6 +440,9 @@ static void de_endianFlow(struct generic_netflow_record *record) {
   NTOHL(record->client_nw_latency_sec); NTOHL(record->client_nw_latency_usec);
   NTOHL(record->server_nw_latency_sec); NTOHL(record->server_nw_latency_usec);
   NTOHL(record->appl_latency_sec); NTOHL(record->appl_latency_usec);
+
+  if(record->l7_proto >= IPOQUE_MAX_SUPPORTED_PROTOCOLS)
+    record->l7_proto = IPOQUE_PROTOCOL_UNKNOWN; /* Just to be safe */
 }
 
 /* *************************** */
@@ -481,7 +488,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
   if(myGlobals.runningPref.debugMode)
     traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: handleGenericFlow() called");
-  
+
   myGlobals.device[deviceId].netflowGlobals->numNetFlowsRcvd++;
 
   /* Bad flow(zero packets) */
@@ -752,7 +759,9 @@ if(myGlobals.runningPref.debugMode) {
     traceEvent(CONST_TRACE_ERROR, "************* AS %d/%d", srcHost->hostAS, dstHost->hostAS);
 #endif
 
-  handleSession(NULL, NULL, 0, 0,
+  memset(&h, 0, sizeof(h));
+  h.len = record->sentOctets + record->rcvdOctets;
+  handleSession((const struct pcap_pkthdr*)&h, NULL, 0, 0,
 		srcHost, sport,
 		dstHost, dport,
 		record->sentOctets, record->rcvdOctets,
@@ -889,11 +898,10 @@ if(myGlobals.runningPref.debugMode) {
     /* traceEvent(CONST_TRACE_INFO, "handleSession(TCP)"); */
 #endif
 
-    if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling)
-      session = handleSession(&h, NULL, 0, 0, srcHost, sport, dstHost, dport,
-			      record->sentOctets, record->rcvdOctets,
-			      0, &tp, 0, NULL, actualDeviceId, &newSession, 
-			      major_proto, 1 /* FIX 0 */);
+    session = handleSession(&h, NULL, 0, 0, srcHost, sport, dstHost, dport,
+			    record->sentOctets, record->rcvdOctets,
+			    0, &tp, 0, NULL, actualDeviceId, &newSession,
+			    major_proto, 1 /* FIX 0 */);
     break;
 
   case IPPROTO_UDP: /* UDP */
@@ -955,11 +963,10 @@ if(myGlobals.runningPref.debugMode) {
     /* traceEvent(CONST_TRACE_INFO, "handleSession(UDP)"); */
 #endif
 
-    if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling)
-      session = handleSession(&h, NULL, 0, 0, srcHost, sport, dstHost, dport,
-			      record->sentOctets, record->rcvdOctets,
-			      0, NULL, 0, NULL, actualDeviceId, &newSession, 
-			      major_proto, 0);
+    session = handleSession(&h, NULL, 0, 0, srcHost, sport, dstHost, dport,
+			    record->sentOctets, record->rcvdOctets,
+			    0, NULL, 0, NULL, actualDeviceId, &newSession,
+			    major_proto, 0);
     break;
 
   case IPPROTO_GRE:
@@ -1052,6 +1059,8 @@ if(myGlobals.runningPref.debugMode) {
 	session->serverNwDelay.tv_usec = record->server_nw_latency_usec;
       updateSessionDelayStats(session);
     }
+
+    session->l7.major_proto = record->l7_proto;
   } else {
     /* The session has been discarded (e.g. the NetFlow plugins might has
        been configured to discard sessions) so in case we have network delay
@@ -1533,7 +1542,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 		  free(cursor->fields);
 		} else {
-		  if(myGlobals.runningPref.debugMode) 
+		  if(myGlobals.runningPref.debugMode)
 		    traceEvent(CONST_TRACE_INFO, ">>>>> Found new flow template definition [id=%d]",
 			       template.templateId);
 
@@ -1548,7 +1557,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		cursor->flowLen                 = accumulatedLen;
 		cursor->fields                  = fields;
 
-		if(myGlobals.runningPref.debugMode) 
+		if(myGlobals.runningPref.debugMode)
 		  traceEvent(CONST_TRACE_INFO, ">>>>> Defined flow template [id=%d][flowLen=%d][fieldCount=%d]",
 			     cursor->templateInfo.templateId,
 			     cursor->flowLen, cursor->templateInfo.fieldCount);
@@ -1567,7 +1576,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 	    displ += len, stillToProcess -= (len+sizeof(templateDef));
 
-	    if(myGlobals.runningPref.debugMode) 
+	    if(myGlobals.runningPref.debugMode)
 	      traceEvent(CONST_TRACE_INFO, "Moving ahead of %d bytes: new offset is %d", len, displ);
 
 	    if(stillToProcess <= 0) templateDone = 1;
@@ -1619,6 +1628,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	      /* Defaults */
 	      memset(&record, 0, sizeof(record));
 	      record.vlanId = NO_VLAN; /* No VLAN */
+	      record.l7_proto = IPOQUE_PROTOCOL_UNKNOWN;
 	      record.client_nw_latency_sec = record.client_nw_latency_usec = htonl(0);
 	      record.server_nw_latency_sec = record.server_nw_latency_usec = htonl(0);
 	      record.appl_latency_sec = record.appl_latency_usec = htonl(0);
@@ -1728,7 +1738,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		  case 24: /* OUT_PKTS */
 		    memcpy(&record.sentPkts, &buffer[displ], 4);
 		    break;
-		  
+
 		  case 56: /* IN_SRC_MAC */
 		    memcpy(&record.src_mac, &buffer[displ], LEN_ETHERNET_ADDRESS), record.src_mac_set = 1;
 		    break;
@@ -1763,6 +1773,9 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		    break;
 		  case NTOP_BASE_ID+87: /* APPL_LATENCY_USEC */
 		    memcpy(&record.appl_latency_usec, &buffer[displ], 4);
+		    break;
+		  case NTOP_BASE_ID+118: /* L7_PROTO */
+		    memcpy(&record.l7_proto, &buffer[displ], 2);
 		    break;
 
 		    /* VoIP Extensions */
@@ -1813,7 +1826,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 				recordSysUpTime, &record, deviceId, &firstSeen, &lastSeen, 1);
 	      myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd++;
 
-	      if(myGlobals.runningPref.debugMode)	      
+	      if(myGlobals.runningPref.debugMode)
 		traceEvent(CONST_TRACE_INFO,
 			   ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d][pkts=%d/bytes=%d]",
 			   accum_len, record.sentPkts, record.sentOctets);
@@ -1845,7 +1858,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		traceEvent(CONST_TRACE_WARNING, "Template len mismatch [tot_len=%d][flow_len=%d][padding=%d]",
 			   tot_len, fs.flowsetLen, padding);
 	      } else {
-		if(myGlobals.runningPref.debugMode) 
+		if(myGlobals.runningPref.debugMode)
 		  traceEvent(CONST_TRACE_INFO, ">>>>> %d bytes padding [tot_len=%d][flow_len=%d]",
 			     padding, tot_len, fs.flowsetLen);
 
@@ -1853,7 +1866,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 	      }
 	    }
 	  } else {
-	    if(myGlobals.runningPref.debugMode) 
+	    if(myGlobals.runningPref.debugMode)
 	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with UNKNOWN template %d [displ=%d][len=%d]",
 			 fs.templateId, displ, fs.flowsetLen);
 
@@ -1872,7 +1885,7 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
     if(numFlows > CONST_V5FLOWS_PER_PAK) numFlows = CONST_V5FLOWS_PER_PAK;
 
-    if(myGlobals.runningPref.debugMode) 
+    if(myGlobals.runningPref.debugMode)
       traceEvent(CONST_TRACE_INFO, "dissectNetFlow(%d flows)", numFlows);
 
     /* Lock white/black lists for duration of this flow packet */
@@ -2072,11 +2085,12 @@ static void* netflowMainLoop(void* _deviceId) {
     if(rc > 0) {
       if(FD_ISSET(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, &netflowMask)){
 	len = sizeof(fromHost);
-	rc = recvfrom(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket,
-		      (char*)&buffer, 
-		      (int)sizeof(buffer),
-		      0, (struct sockaddr*)&fromHost, 
-		      (socklen_t*)&len);
+	rc = (int)recvfrom(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket,
+			   (char*)&buffer,
+			   (size_t)sizeof(buffer),
+			   (int)0,
+			   (struct sockaddr*)&fromHost,
+			   (socklen_t*)&len);
       }
 #ifdef HAVE_SCTP
       else {
@@ -2264,12 +2278,6 @@ static void initNetFlowDevice(int deviceId) {
     storePrefsValue(nfValue(deviceId, "netFlowAggregation", 1), "0" /* noAggregation */);
   else
     myGlobals.device[deviceId].netflowGlobals->netFlowAggregation = atoi(value);
-
-  if(fetchPrefsValue(nfValue(deviceId, "enableSessionHandling", 1), value, sizeof(value)) == -1) {
-    storePrefsValue(nfValue(deviceId, "enableSessionHandling", 1), "0" /* no */);
-    myGlobals.device[deviceId].netflowGlobals->enableSessionHandling = 0;
-  } else
-    myGlobals.device[deviceId].netflowGlobals->enableSessionHandling = atoi(value);
 
   if(fetchPrefsValue(nfValue(deviceId, "netFlowDumpInterval", 1), value, sizeof(value)) == -1) {
     storePrefsValue(nfValue(deviceId, "netFlowDumpInterval", 1), "0" /* no */);
@@ -2642,6 +2650,13 @@ static void printNetFlowConfiguration(int deviceId) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), " [ <A HREF=\"/plugins/%s\"/>List NetFlow Interfaces</A> ]</p>\n</form>",
 		netflowPluginInfo->pluginName);
   sendString(buf);
+
+
+  if(deviceId != myGlobals.actualReportDeviceId) {
+    sendString("<p><font color=red><b>NOTE: Your web view is not set on this interface. "
+	       "<A HREF=/"CONST_SWITCH_NIC_HTML">Click here</A> to switch NIC view</b></font>\n");
+  }
+
   sendString("</td></tr>\n");
 
   sendString("<tr><th rowspan=\"2\" "DARK_BG">Flow<br>Collection</th>\n");
@@ -2856,21 +2871,6 @@ static void printNetFlowConfiguration(int deviceId) {
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
 		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
-
-  if(myGlobals.device[deviceId].netflowGlobals->enableSessionHandling) {
-    sendString("<input type=\"radio\" name=\"enableSessionHandling\" value=\"1\" checked>Yes\n"
-               "<input type=\"radio\" name=\"enableSessionHandling\" value=\"0\">No\n");
-  } else {
-    sendString("<input type=\"radio\" name=\"enableSessionHandling\" value=\"1\">Yes\n"
-               "<input type=\"radio\" name=\"enableSessionHandling\" value=\"0\" checked>No\n");
-  }
-
-  sendString("<input type=\"submit\" value=\"Change Session Handling\"></p>\n</form>\n"
-	     "<p>If enabled, incoming flows will be added to the list of active TCP/UDP"
-	     " sessions. If you have a large network, make sure you enable this option "
-	     "only if the ntop host has enough computing resources as this can lead "
-	     "to high CPU and memory consumption.</p>\n"
-	     "</td>\n</tr>\n");
 
   /* ****************************************************** */
 
@@ -3411,7 +3411,6 @@ static void flushDevicePrefs(int deviceId) {
   delPrefsValue(nfValue(deviceId, "netFlowDumpPath", 1));
   delPrefsValue(nfValue(deviceId, "netFlowDumpInterval", 1));
   delPrefsValue(nfValue(deviceId, "blackList", 1));
-  delPrefsValue(nfValue(deviceId, "enableSessionHandling", 1));
   delPrefsValue(nfValue(deviceId, "saveFlowsIntoDB", 1));
   delPrefsValue(nfValue(deviceId, "netFlowAssumeFTP", 1));
   delPrefsValue(nfValue(deviceId, "netFlowAggregation", 1));
@@ -3493,7 +3492,7 @@ static void handleNetflowHTTPrequest(char* _url) {
 	  revertSlashIfWIN32(new_name, 0);
 
 	  if(rename(old_name, new_name) != 0)
-	    traceEvent(CONST_TRACE_WARNING, 
+	    traceEvent(CONST_TRACE_WARNING,
 		       "Error while renaming %s -> %s [%s]",
 		       old_name, new_name, strerror(errno));
 	} else if(strcmp(device, "debug") == 0) {
@@ -3505,11 +3504,6 @@ static void handleNetflowHTTPrequest(char* _url) {
 	  if(deviceId > 0) {
 	    myGlobals.device[deviceId].netflowGlobals->netFlowAggregation = atoi(value);
 	    storePrefsValue(nfValue(deviceId, "netFlowAggregation", 1), value);
-	  }
-	} else if(strcmp(device, "enableSessionHandling") == 0) {
-	  if(deviceId > 0) {
-	    myGlobals.device[deviceId].netflowGlobals->enableSessionHandling = atoi(value);
-	    storePrefsValue(nfValue(deviceId, "enableSessionHandling", 1), value);
 	  }
 	} else if(strcmp(device, "ifNetMask") == 0) {
 	  int a, b, c, d, a1, b1, c1, d1;
@@ -3716,6 +3710,7 @@ static void handleNetflowHTTPrequest(char* _url) {
      * Print Configuration stuff  *
      ****************************** */
     printHTMLheader("NetFlow Configuration", NULL, 0);
+
     printNetFlowConfiguration(deviceId);
 
     sendString("<br><hr><p>\n");

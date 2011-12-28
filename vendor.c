@@ -117,7 +117,7 @@ static char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
   if(special == TRUE) {
       /* Search the database for the specified MAC address - full 48 bit */
       key_data.dptr = tmpBuf;
-      key_data.dsize = strlen(tmpBuf)+1;
+      key_data.dsize = (int)(strlen(tmpBuf)+1);
 
 #ifdef VENDOR_DEBUG
       traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Fetching 48bit '%s'", tmpBuf);
@@ -145,7 +145,7 @@ static char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
 
   tmpBuf[LEN_ETHERNET_VENDOR_DISPLAY-1] = '\0';   /* Mask off left 24 bits */
   key_data.dptr = tmpBuf;
-  key_data.dsize = strlen(tmpBuf)+1;
+  key_data.dsize = (int)(strlen(tmpBuf)+1);
 
 #ifdef VENDOR_DEBUG
   traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Fetching 24bit '%s'", tmpBuf);
@@ -334,7 +334,7 @@ void createVendorTable(struct stat *dbStat) {
 	    strncat(tmpMACkey, &tmpMAC[10], 2); len +=2; tmpMACkey[len] = '\0';
 	  }
 	  key_data.dptr = tmpMACkey;
-	  key_data.dsize = strlen(tmpMACkey)+1;
+	  key_data.dsize = (int)(strlen(tmpMACkey)+1);
 	  if(gdbm_store(myGlobals.macPrefixFile, key_data, data_data, GDBM_REPLACE) != 0) {
 	    traceEvent(CONST_TRACE_WARNING,
 		       "VENDOR: unable to add record '%s': {%d, %s} - skipped",
@@ -382,10 +382,10 @@ void createVendorTable(struct stat *dbStat) {
               
 	safe_snprintf(__FILE__, __LINE__, lineKey, sizeof(lineKey), "%d", numEntries++);
 	memset(&key_data, 0, sizeof(key_data));
-	key_data.dptr   = lineKey; key_data.dsize  = strlen(key_data.dptr);
+	key_data.dptr = lineKey; key_data.dsize = (int)(strlen(key_data.dptr));
               
 	memset(&data_data, 0, sizeof(data_data));
-	data_data.dptr  = line; data_data.dsize = strlen(line);
+	data_data.dptr = line; data_data.dsize = (int)(strlen(line));
               
 	if(gdbm_store(myGlobals.fingerprintFile, key_data, data_data, GDBM_REPLACE) != 0)
 	  traceEvent(CONST_TRACE_ERROR, "While adding %s=%s.", lineKey, line);       

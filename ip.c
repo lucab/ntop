@@ -1459,14 +1459,16 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	if((protoList->protocolId == nh)
 	   || ((protoList->protocolIdAlias != 0) && (protoList->protocolIdAlias == nh))) {
 
-	  allocHostTrafficCounterMemory(srcHost, ipProtosList, (size_t)(myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**)));
+	  allocHostTrafficCounterMemory(srcHost, ipProtosList, 
+					(size_t)(myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**)));
 	  if(srcHost->ipProtosList) {
 	    allocHostTrafficCounterMemory(srcHost, ipProtosList[idx], sizeof(ShortProtoTrafficInfo));
 	    if(srcHost->ipProtosList[idx] == NULL) return;
 	    incrementHostTrafficCounter(srcHost, ipProtosList[idx]->sent, length);
 	  }
 
-	  allocHostTrafficCounterMemory(dstHost, ipProtosList, (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**));
+	  allocHostTrafficCounterMemory(dstHost, ipProtosList, 
+					(size_t)(myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**)));
 	  if(dstHost->ipProtosList) {
 	    allocHostTrafficCounterMemory(dstHost, ipProtosList[idx], sizeof(ShortProtoTrafficInfo));
 	    if(dstHost->ipProtosList[idx] == NULL) return;

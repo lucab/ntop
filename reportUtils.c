@@ -4081,9 +4081,9 @@ void printTableEntry(char *buf, int bufLen,
   switch(int_perc) {
   case 0:
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
-		  "<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s %s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>0%%</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s %s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>%.1f%%</TD>"
 		  "<TD "TD_BG" WIDTH=260 nowrap>&nbsp;%s</TD></TR>\n\n",
-		  getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf, rrdBuf);
+		  getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf, percentage, rrdBuf);
     break;
   case 100:
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"

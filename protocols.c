@@ -247,7 +247,7 @@ void handleBootp(HostTraffic *srcHost,
 		      rc = safe_snprintf(__FILE__, __LINE__, tmpName, sizeof(tmpName), "%s.%s",
 				  tmpHostName, tmpDomainName);
 		      if (rc >= 0) {
-			len = strlen(tmpName);
+			len = (int)strlen(tmpName);
 
 			if(len >= (MAX_LEN_SYM_HOST_NAME-1)) {
 			  tmpName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
@@ -634,7 +634,7 @@ u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
     return(transactionId);
   }
 
-  queryNameLength = strlen(hostPtr.queryName);
+  queryNameLength = (int)strlen(hostPtr.queryName);
   strtolower(hostPtr.queryName);
 
   if((queryNameLength > 5)
@@ -653,7 +653,7 @@ u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
 
       memset(&addrStore, 0, sizeof(addrStore));
       addrStore.recordCreationTime = myGlobals.actTime;
-      len = min(sizeof(addrStore.symAddress)-1, strlen(hostPtr.queryName));
+      len = (int)min(sizeof(addrStore.symAddress)-1, strlen(hostPtr.queryName));
       memcpy(&addrStore.symAddress,
              hostPtr.queryName, len);
       addrStore.symAddress[len] = '\0';
@@ -661,7 +661,7 @@ u_int16_t processDNSPacket(HostTraffic *srcHost, u_short sport,
 
       safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%u", ntohl(hostPtr.addrList[i]));
       key_data.dptr = (void*)&tmpBuf;
-      key_data.dsize = strlen(key_data.dptr)+1;
+      key_data.dsize = (int)strlen(key_data.dptr)+1;
 
       // FIX
       //updateHostNameInfo(elem->addr, storedAddress.symAddress, storedAddress.symAddressType);  	  
@@ -694,7 +694,7 @@ void handleNetbios(HostTraffic *srcHost,
      || (packetData == NULL)) /* packet too short ? */
     return;
   
-  udpDataLen = length - (hlen + sizeof(struct udphdr));
+  udpDataLen = (int)(length - (hlen + sizeof(struct udphdr)));
   
   if(dport == 137 /*  NetBIOS */) {
     if(udpDataLen > 32) {
@@ -726,7 +726,7 @@ void handleNetbios(HostTraffic *srcHost,
 	}
 
 	if(displ < udpDataLen)
-	  offset = ((char*)p - (char*)data) + 1;
+	  offset = (int)(((char*)p - (char*)data) + 1);
 	else
 	  notEnoughData = 1;
       }
@@ -770,7 +770,7 @@ void handleNetbios(HostTraffic *srcHost,
 	}
 
 	if(displ < udpDataLen)
-	  offset = ((char*)p - (char*)data) + 1;
+	  offset = (int)(((char*)p - (char*)data) + 1);
 	else
 	  notEnoughData = 1;
       }
@@ -861,7 +861,7 @@ void handleNetbios(HostTraffic *srcHost,
 	if((decodedStr[0] != '\0') && (dstHost->nonIPTraffic->nbHostName == NULL))
 	  dstHost->nonIPTraffic->nbHostName = strdup(decodedStr); /* dst before src */
 
-	pos = 5+(2*strlen(decodedStr))+2;
+	pos = (int)(5+(2*strlen(decodedStr))+2);
 	decodeNBstring((char*)&data[pos], decodedStr);
 
 	if((decodedStr[0] != '\0') && (srcHost->nonIPTraffic->nbHostName == NULL))

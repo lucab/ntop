@@ -335,9 +335,9 @@ void drawDeviceServiceDistribution(void) {
   for(i=0; i<myGlobals.l7.numSupportedProtocols; i++) {
     float val;
     
-    val = myGlobals.device[myGlobals.actualReportDeviceId].l7.protoTraffic[i];
+    val = (float)myGlobals.device[myGlobals.actualReportDeviceId].l7.protoTraffic[i];
     if(val > 0) {
-      val = (val * 100) / totTraffic;
+      val = (float)((val * 100) / totTraffic);
       p[num] = val, lbl[num] = getProtoName(i);
       num++;
 
@@ -434,7 +434,7 @@ void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
       traf.value = 0;
 
     if(traf.value > 0) {
-      p[num] = traf.value;
+      p[num] = (float)traf.value;
       switch(i) {
       case 0:
 	lbl[num++] = "12-1AM";
@@ -544,7 +544,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     p[num] = (float)((100*totFragmentedTraffic.value)/totTraffic.value);
     lbl[num++] = "Frag";
 
-    p[num] = 100-((float)(100*totFragmentedTraffic.value)/totTraffic.value);
+    p[num] = (float)(100-((float)(100*totFragmentedTraffic.value)/totTraffic.value));
     if(p[num] > 0) { lbl[num++] = "Non Frag"; }
 
     if(num == 0) {
@@ -776,7 +776,7 @@ void interfaceTrafficPie(void) {
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].activeDevice) {
-      p[myDevices]   = 100*(((float)p[i])/totPkts.value);
+      p[myDevices]   = (float)(100*(((float)p[i])/totPkts.value));
       lbl[myDevices] = myGlobals.device[i].humanFriendlyName;
       myDevices++;
     }
@@ -835,13 +835,14 @@ void drawTrafficPie(void) {
   TrafficCounter ip;
   float p[2];
   char	*lbl[] = { "IP", "Non IP" };
-  int num=0;
+  int num = 0;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value == 0) return;
 
   ip.value = myGlobals.device[myGlobals.actualReportDeviceId].ipv4Bytes.value;
 
-  p[0] = ip.value*100/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value; num++;
+  p[0] = (float)(ip.value*100/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value);
+  num++;
   p[1] = 100-p[0];
 
   if(p[1] > 0)
@@ -859,27 +860,27 @@ void drawGlobalProtoDistribution(void) {
   int idx = 0;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value; lbl[idx] = "TCP";  idx++; }
+    p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value; lbl[idx] = "TCP";  idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value; lbl[idx] = "UDP"; idx++; }
+    p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value; lbl[idx] = "UDP"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value; lbl[idx] = "ICMP"; idx++; }
+    p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value; lbl[idx] = "ICMP"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value; lbl[idx] = "Other IP"; idx++; }
+    p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value; lbl[idx] = "Other IP"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value; lbl[idx] = "(R)ARP"; idx++; }
+    p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value; lbl[idx] = "(R)ARP"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].ipsecBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipsecBytes.value;lbl[idx] = "IPsec";  idx++; }
+    p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipsecBytes.value;lbl[idx] = "IPsec";  idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value; lbl[idx] = "NetBios"; idx++; }
+    p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value; lbl[idx] = "NetBios"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].greBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].greBytes.value; lbl[idx] = "GRE"; idx++; }
+    p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].greBytes.value; lbl[idx] = "GRE"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value; lbl[idx] = "IPv6"; idx++; }
+    p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value; lbl[idx] = "IPv6"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value; lbl[idx] = "STP"; idx++; }
+    p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value; lbl[idx] = "STP"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value; lbl[idx] = "Other"; idx++; }
+    p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value; lbl[idx] = "Other"; idx++; }
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList) {
     ProtocolsList *protoList = myGlobals.ipProtosList;
@@ -887,7 +888,7 @@ void drawGlobalProtoDistribution(void) {
 
     while(protoList != NULL) {
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value > 0) {
-	p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value;
+	p[idx] = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value;
 	lbl[idx] = protoList->protocolName; idx++;
       }
 
@@ -898,7 +899,7 @@ void drawGlobalProtoDistribution(void) {
 
   {
     int i;
-    float the_max = 0.1;
+    float the_max = (float)0.1;
 
     for(i=0; i<idx; i++) the_max = max(the_max, p[i]);
     for(i=0; i<idx; i++) p[i]    = (p[i]*100)/the_max;

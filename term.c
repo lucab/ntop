@@ -62,10 +62,10 @@ void termIPSessions(void) {
   int i, j;
 
   for(j=0; j<myGlobals.numDevices; j++) {
-    if(myGlobals.device[j].tcpSession == NULL) continue;
+    if(myGlobals.device[j].sessions == NULL) continue;
   
     for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
-      IPSession *session = myGlobals.device[j].tcpSession[i];
+      IPSession *session = myGlobals.device[j].sessions[i];
 
       while(session != NULL) {
 	IPSession *nextSession;
@@ -75,7 +75,7 @@ void termIPSessions(void) {
       }
     }
 
-    myGlobals.device[j].numTcpSessions = 0;
+    myGlobals.device[j].numSessions = 0;
     
     while(myGlobals.device[j].fragmentList != NULL)
       deleteFragment(myGlobals.device[j].fragmentList, j);

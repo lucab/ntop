@@ -522,7 +522,7 @@ int parseOptions(int argc, char* argv[]) {
 
 #ifndef WIN32
     case 'K':
-      myGlobals.runningPref.debugMode = 1;
+      // myGlobals.runningPref.debugMode = 1;
       break;
 #endif
 
@@ -839,7 +839,7 @@ static int fetchGdbmValue(GDBM_FILE gdbmfile, char *key, char *value, int valueL
   value[0] = '\0';
 
   key_data.dptr  = key;
-  key_data.dsize = strlen(key_data.dptr)+1;
+  key_data.dsize = (int)(strlen(key_data.dptr)+1);
 
   if(gdbmfile == NULL) {
 #ifdef DEBUG
@@ -891,11 +891,11 @@ static void storeGdbmValue(GDBM_FILE gdbmfile, char *key, char *value) {
 
   memset(&key_data, 0, sizeof(key_data));
   key_data.dptr   = key;
-  key_data.dsize  = strlen(key_data.dptr)+1;
+  key_data.dsize  = (int)(strlen(key_data.dptr)+1);
 
   memset(&data_data, 0, sizeof(data_data));
   data_data.dptr  = value;
-  data_data.dsize = strlen(value)+1;
+  data_data.dsize = (int)(strlen(value)+1);
 
   if(gdbmfile == NULL) {
 #ifdef DEBUG
@@ -940,7 +940,7 @@ static void delGdbmValue(GDBM_FILE gdbmfile, char *key) {
 
   memset(&key_data, 0, sizeof(key_data));
   key_data.dptr   = key;
-  key_data.dsize  = strlen(key_data.dptr)+1;
+  key_data.dsize  = (int)(strlen(key_data.dptr)+1);
 
   if(gdbmfile == NULL) {
 #ifdef DEBUG

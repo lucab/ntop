@@ -214,7 +214,7 @@ char* formatLatency(struct timeval tv, u_short sessionState, char* outStr, int o
     return("&nbsp;");
   } else {
     safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%.02f&nbsp;ms",
-		  (float)(tv.tv_sec*1000+(float)tv.tv_usec/1000));
+		  ((float)tv.tv_sec*1000+(float)tv.tv_usec/1000));
     return(outStr);
   }
 }

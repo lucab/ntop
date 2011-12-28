@@ -838,7 +838,7 @@ void switchNwInterface(int _interface) {
   }
 
   sendString("</B>");
-  sendString("</font><p>\n");
+  sendString("</font><p><hr>!\n");
 }
 
 /* **************************************** */
@@ -6862,20 +6862,20 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", MAX_TOT_NUM_SESSIONS);
 	printFeatureConfigInfo(textPrintFlag, "Session Actual Hash Size", buf);
 
-	if(myGlobals.device[i].tcpSession != NULL) {
+	if(myGlobals.device[i].sessions != NULL) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
-			formatPkts(myGlobals.device[i].numTcpSessions, buf2, sizeof(buf2)));
+			formatPkts(myGlobals.device[i].numSessions, buf2, sizeof(buf2)));
 	  printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
 
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
-			formatPkts(myGlobals.device[i].maxNumTcpSessions, buf2, sizeof(buf2)));
+			formatPkts(myGlobals.device[i].maxNumSessions, buf2, sizeof(buf2)));
 	  printFeatureConfigInfo(textPrintFlag, "Max Num. Sessions", buf);
 
 	  minLen=-1, maxLen=0;
 	  for(idx=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
 	    IPSession *sess;
 
-	    if((sess = myGlobals.device[i].tcpSession[idx]) != NULL) {
+	    if((sess = myGlobals.device[i].sessions[idx]) != NULL) {
 	      unsigned int len=0;
 
 	      nonEmptyBuckets++;

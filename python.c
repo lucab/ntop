@@ -1133,21 +1133,6 @@ static PyObject* python_interface_sflowStats(PyObject *self, PyObject *args) {
   return(obj);
 }
 
-
-static PyObject* python_interface_cpacketStats(PyObject *self, PyObject *args) {
-  u_int interfaceId;
-  PyObject *obj;
-
-  if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
-  if(interfaceId >= myGlobals.numDevices) return NULL;
-  if(myGlobals.device[interfaceId].cpacketGlobals == NULL) return PyDict_New();
-  if((obj = PyDict_New()) == NULL) return NULL;
-
-  PyDict_SetItem(obj, PyString_FromString("total"), PyLong_FromUnsignedLong(myGlobals.device[interfaceId].cpacketGlobals->statsProcessed));
-
-  return(obj);
-}
-
 /* **************************************** */
 
 static PyMethodDef ntop_methods[] = {
@@ -1202,7 +1187,6 @@ static PyMethodDef interface_methods[] = {
   { "securityPkts", python_interface_securityPkts, METH_VARARGS, "Get information about security packets" },
   { "netflowStats", python_interface_netflowStats, METH_VARARGS, "Get NetFlow interface information" },
   { "sflowStats", python_interface_sflowStats, METH_VARARGS, "Get sFlow interface information" },
-  { "cpacketStats", python_interface_cpacketStats, METH_VARARGS, "Get cPacket counter information" },
   { NULL, NULL, 0, NULL }
 };
 

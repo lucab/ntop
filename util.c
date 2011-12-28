@@ -561,7 +561,7 @@ char* copy_argv(register char **argv) {
     return 0;
 
   while (*p)
-    len += strlen(*p++) + 1;
+    len += (int)(strlen(*p++) + 1);
 
   buf = (char*)malloc(len);
   if(buf == NULL) {
@@ -1143,7 +1143,7 @@ char* read_file(char* path, char* buf, u_int buf_len) {
       }
 
       safe_snprintf(__FILE__, __LINE__, &buf[idx], buf_len-idx-2, "%s%s", (idx > 0) ? "," : "", line);
-      idx = strlen(buf);
+      idx = (int)strlen(buf);
     }
 
     fclose(fd);
@@ -1545,7 +1545,7 @@ void handleFlowsSpecs(void) {
     buffer = (char*)malloc(buf.st_size+8) /* just to be safe */;
 
     for(i=0;i<buf.st_size;) {
-      len = fread(&buffer[i], sizeof(char), buf.st_size-i, fd);
+      len = (int)fread(&buffer[i], sizeof(char), buf.st_size-i, fd);
       if(len <= 0) break;
       i += len;
     }
@@ -1572,7 +1572,7 @@ void handleFlowsSpecs(void) {
       flowSpec[0] = '\0';
       flowSpec++;
       /* flowSpec should now point to 'host jake' */
-      len = strlen(flowSpec);
+      len = (int)strlen(flowSpec);
 
       if((len <= 2)
 	 || (flowSpec[0] != '\'')
@@ -2377,7 +2377,7 @@ int checkCommand(char* commandName) {
 /* ************************************ */
 
 char* decodeNBstring(char* theString, char *theBuffer) {
-  int i=0, j = 0, len=strlen(theString);
+  int i=0, j = 0, len = (int)strlen(theString);
 
   while((i<len) && (theString[i] != '\0')) {
     char encodedChar, decodedChar;
@@ -2477,8 +2477,8 @@ void resetHostsVariables(HostTraffic* el) {
   el->totContactedSentPeers = el->totContactedRcvdPeers = 0;
   if(el->sent_to_matrix)   { CM_Destroy(el->sent_to_matrix);   el->sent_to_matrix = NULL;   }
   if(el->recv_from_matrix) { CM_Destroy(el->recv_from_matrix); el->recv_from_matrix = NULL; }  
-  el->sent_to_matrix   = CM_Init(16 /* width */, 16 /* depth */, myGlobals.actTime /* random value */);
-  el->recv_from_matrix = CM_Init(16 /* width */, 16 /* depth */,  myGlobals.actTime+1 /* random value */);
+  el->sent_to_matrix   = CM_Init(16 /* width */, (int)16 /* depth */, myGlobals.actTime /* random value */);
+  el->recv_from_matrix = CM_Init(16 /* width */, (int)16 /* depth */,  myGlobals.actTime+1 /* random value */);
 
   el->serialHostIndex = UNKNOWN_SERIAL_INDEX;
   el->vlanId          = NO_VLAN;
@@ -3394,7 +3394,7 @@ int safe_snprintf(char* file, int line,
 int _safe_strncat(char* file, int line,
 		  char* dest, size_t sizeofdest,
 		  char* src) {
-  int rc = strlen(dest) + strlen(src) + 1;
+  int rc = (int)(strlen(dest) + strlen(src) + 1);
 
   if(rc > sizeofdest) {
     traceEvent(CONST_TRACE_ERROR, "strncat buffer too short @ %s:%d (increase to at least %d)",
@@ -3403,9 +3403,8 @@ int _safe_strncat(char* file, int line,
   }
 
   strncat(dest, src, (sizeofdest - strlen(dest) - 1));
-  return(strlen(dest));
+  return((int)strlen(dest));
 }
-
 
 /* ************************ */
 
@@ -3429,7 +3428,7 @@ void fillDomainName(HostTraffic *el) {
   }
 
   /* Walk back to the last . */
-  i = strlen(el->hostResolvedName)-1;
+  i = (int)(strlen(el->hostResolvedName)-1);
   while(i > 0)
     if(el->hostResolvedName[i] == '.')
       break;
@@ -3444,7 +3443,7 @@ void fillDomainName(HostTraffic *el) {
   else if((myGlobals.shortDomainName != NULL)
 	  && (myGlobals.shortDomainName[0] != '\0')) {
     /* Walk back to the last . */
-    i = strlen(myGlobals.shortDomainName)-1;
+    i = (int)(strlen(myGlobals.shortDomainName)-1);
     while(i > 0)
       if(myGlobals.shortDomainName[i] == '.')
         break;
@@ -3478,7 +3477,7 @@ void fillDomainName(HostTraffic *el) {
 
 /* similar to Java.String.trim() */
 void trimString(char* str) {
-  int len = strlen(str), i, idx;
+  int len = (int)strlen(str), i, idx;
   char *out = (char *) malloc(sizeof(char) * (len+1));
 
   if(out == NULL) {
@@ -4126,9 +4125,7 @@ unsigned long _ntopSleepMSWhileSameState(char *file, int line, unsigned long ulD
 /* ----- */
 
 unsigned int _ntopSleepWhileSameState(char *file, int line, unsigned int secs) {
-  unsigned int rc;
-  rc = _ntopSleepMSWhileSameState(file, line, 1000L*secs) / 1000L;
-  return(rc);
+  return(_ntopSleepMSWhileSameState(file, line, (int)(1000L*secs)));
 }
 
 /* ---------- */
@@ -4178,7 +4175,7 @@ void unescape(char *dest, int destLen, char *url) {
   unsigned int val;
   char hex[3] = {0};
 
-  len = strlen(url);
+  len = (int)strlen(url);
   at = 0;
   memset(dest, 0, destLen);
   for (i = 0; i < len && at < destLen; i++) {
@@ -4204,7 +4201,7 @@ void escape(char *dest, int destLen, char *src) {
   int srcIdx, destIdx, len;
 
   memset(dest, 0, destLen);
-  len = strlen(src);
+  len = (int)strlen(src);
   for (srcIdx = 0, destIdx = 0; srcIdx < len && destIdx < destLen; src++) {
     switch (src[srcIdx]) {
     case ' ':
@@ -4322,7 +4319,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
     safe_snprintf(__FILE__, __LINE__, lineKey, sizeof(lineKey), "%d", numEntries++);
     memset(&key_data, 0, sizeof(key_data));
-    key_data.dptr = lineKey; key_data.dsize = strlen(key_data.dptr);
+    key_data.dptr = lineKey; key_data.dsize = (int)strlen(key_data.dptr);
 
     data_data = gdbm_fetch(myGlobals.fingerprintFile, key_data);
 
@@ -4488,7 +4485,8 @@ int setSpecifiedUser(void) {
     p += (unsigned long)rrd_test_error;
     p += (unsigned long)rrd_get_error;
     p += (unsigned long)rrd_clear_error;
-    return(p);
+
+    return((int)p);
 #else
     return(1);
 #endif
@@ -5077,7 +5075,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
 
   /* Send the request to server.  */
   traceEvent(CONST_TRACE_NOISY, "CHKVER: Sending request: %s", buf);
-  rc = send(sock, buf, strlen(buf), 0);
+  rc = send(sock, buf, (int)strlen(buf), 0);
   if (rc < 0) {
     traceEvent(CONST_TRACE_ERROR,
 	       "CHKVER: Unable to send http request: %s(%d)", strerror(errno), errno);
@@ -5089,13 +5087,13 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
    * remember, buf/bufLen better be big enough to handle the whole response
    */
   memset(buf, 0, bufLen);
-  rc = recv(sock, buf, bufLen,
+  rc = (int)recv(sock, buf, bufLen,
 #ifdef WIN32
-	    0
+		 0
 #else
-	    MSG_WAITALL
+		 MSG_WAITALL
 #endif
-	    );
+		 );
   if (rc < 0) {
     traceEvent(CONST_TRACE_ERROR,
 	       "CHKVER: Unable to receive http response: %s(%d)", strerror(errno), errno);
@@ -5339,7 +5337,7 @@ void* checkVersion(void* notUsed _UNUSED_) {
   }
 
   if (rc == 0) {
-    rc = processVersionFile(buf, min(sizeof(buf), strlen(buf)));
+    rc = (int)processVersionFile(buf, min(sizeof(buf), strlen(buf)));
 
     if (rc == 0) {
       traceEvent(CONST_TRACE_INFO,

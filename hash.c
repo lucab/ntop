@@ -818,7 +818,7 @@ HostTraffic* _lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, u_int16_t 
     }
 
     if(el->ipProtosList == NULL) {
-      len = (size_t)(myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo**));
+      len = (int)(myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo**));
 
       if((el->ipProtosList = (ShortProtoTrafficInfo**)malloc(len)) == NULL) {
 	if(locked_mutex) unlockHostsHashMutex(myGlobals.device[actualDeviceId].hosts.hash_hostTraffic[idx]), locked_mutex = 0;

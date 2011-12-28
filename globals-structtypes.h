@@ -1187,7 +1187,6 @@ typedef struct netFlowGlobals {
 #ifdef HAVE_SCTP
   int netFlowInSctpSocket;
 #endif
-  u_char enableSessionHandling;
   u_short netFlowInPort;
   struct in_addr netFlowIfAddress, netFlowIfMask;
   char *netFlowWhiteList, *netFlowBlackList;
@@ -1227,33 +1226,6 @@ typedef struct netFlowGlobals {
   ConditionalVariable ifStatsQueueCondvar;
 #endif
 } NetFlowGlobals;
-
-/* *********************************** */
-
-typedef struct cpacket_counter {
-  char *name;
-  u_long bytes, packets;
-  struct cpacket_counter *next;
-} cPacketCounter;
-
-typedef struct cpacket_globals {
-  u_char cpacketDebug;
-
-  /* Flow reception */
-  int cpacketInSocket, cpacketDeviceId;
-  u_short cpacketInPort;
-  u_long numPktsRcvd;
-
-  /* Stats */
-  ProbeInfo deviceList[MAX_NUM_PROBES];
-  u_int32_t statsProcessed;
-  
-  /* Counters */
-  cPacketCounter *counter_list_head, *last_head;
-
-  pthread_t cpacketThread;
-  int threadActive;
-} cPacketGlobals;
 
 /* *********************************** */
 
@@ -1467,14 +1439,13 @@ typedef struct ntopInterface {
   /* ************************** */
 
   IpFragment *fragmentList;
-  IPSession **tcpSession;
-  u_short numTcpSessions, maxNumTcpSessions;
+  IPSession **sessions;
+  u_short numSessions, maxNumSessions;
 
   /* ************************** */
 
   NetFlowGlobals *netflowGlobals;  /* NetFlow */
   SflowGlobals   *sflowGlobals;    /* sFlow */
-  cPacketGlobals *cpacketGlobals;  /* cPacket */
 
   /* ********************* */
   
@@ -2020,7 +1991,7 @@ typedef struct ntopGlobals {
    * Control mutexes
    */
   PthreadMutex gdbmMutex, portsMutex;
-  PthreadMutex tcpSessionsMutex[NUM_SESSION_MUTEXES];
+  PthreadMutex sessionsMutex[NUM_SESSION_MUTEXES];
   PthreadMutex purgePortsMutex;
   PthreadMutex securityItemsMutex;
 #ifdef FORPRENPTL

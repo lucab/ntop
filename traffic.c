@@ -157,9 +157,9 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
   /* ******************************** */
 
   myGlobals.device[deviceToUpdate].throughput =
-    myGlobals.device[deviceToUpdate].ethernetBytes.value - myGlobals.device[deviceToUpdate].throughput;
-  myGlobals.device[deviceToUpdate].packetThroughput = myGlobals.device[deviceToUpdate].ethernetPkts.value -
-    myGlobals.device[deviceToUpdate].lastNumEthernetPkts.value;
+    (float)(myGlobals.device[deviceToUpdate].ethernetBytes.value - myGlobals.device[deviceToUpdate].throughput);
+  myGlobals.device[deviceToUpdate].packetThroughput = (float)(myGlobals.device[deviceToUpdate].ethernetPkts.value -
+							      myGlobals.device[deviceToUpdate].lastNumEthernetPkts.value);
   myGlobals.device[deviceToUpdate].lastNumEthernetPkts = myGlobals.device[deviceToUpdate].ethernetPkts;
 
   /* timeDiff++; */
@@ -173,8 +173,8 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
   if(myGlobals.device[deviceToUpdate].actualPktsThpt > myGlobals.device[deviceToUpdate].peakPacketThroughput)
     myGlobals.device[deviceToUpdate].peakPacketThroughput = myGlobals.device[deviceToUpdate].actualPktsThpt;
 
-  myGlobals.device[deviceToUpdate].throughput = myGlobals.device[deviceToUpdate].ethernetBytes.value;
-  myGlobals.device[deviceToUpdate].packetThroughput = myGlobals.device[deviceToUpdate].ethernetPkts.value;
+  myGlobals.device[deviceToUpdate].throughput = (float)myGlobals.device[deviceToUpdate].ethernetBytes.value;
+  myGlobals.device[deviceToUpdate].packetThroughput = (float)myGlobals.device[deviceToUpdate].ethernetPkts.value;
 
   if((timeMinDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastMinThptUpdate) >= 60 /* 1 minute */) {
     updateMinThpt = 1;
@@ -240,12 +240,11 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
     /* We just care of L3 only for the time being */
     if(el->l2Host) continue;
 
-    el->actualRcvdThpt = (float)(el->bytesRcvd.value-el->lastBytesRcvd.value)/timeDiff;
+    el->actualRcvdThpt = (float)((el->bytesRcvd.value-el->lastBytesRcvd.value)/timeDiff);
     if(el->peakRcvdThpt < el->actualRcvdThpt) el->peakRcvdThpt = el->actualRcvdThpt;
-    el->actualSentThpt = (float)(el->bytesSent.value-el->lastBytesSent.value)/timeDiff;
+    el->actualSentThpt = (float)((el->bytesSent.value-el->lastBytesSent.value)/timeDiff);
     if(el->peakSentThpt < el->actualSentThpt) el->peakSentThpt = el->actualSentThpt;
-    el->actualThpt = (float)(el->bytesRcvd.value-el->lastBytesRcvd.value +
-				       el->bytesSent.value-el->lastBytesSent.value)/timeDiff;
+    el->actualThpt = (float)((el->bytesRcvd.value-el->lastBytesRcvd.value + el->bytesSent.value-el->lastBytesSent.value)/timeDiff);
     if(el->peakThpt < el->actualThpt) el->peakThpt = el->actualThpt;
     el->lastBytesSent = el->bytesSent, el->lastBytesRcvd = el->bytesRcvd;
 
@@ -253,16 +252,16 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 
     /* 1 Minute Throughput */
     if(updateMinThpt) {
-      el->averageRcvdThpt = ((float)el->bytesRcvdSession.value)/totalTime;
-      el->averageSentThpt = ((float)el->bytesSentSession.value)/totalTime;
+      el->averageRcvdThpt = (float)(((float)el->bytesRcvdSession.value)/totalTime);
+      el->averageSentThpt = (float)(((float)el->bytesSentSession.value)/totalTime);
 
       updateTopThpt(&lastMinTalkers, el->serialHostIndex, el->averageSentThpt, el->averageRcvdThpt);
 
       /* 1 Hour Throughput */
       if(updateHourThpt) {
-	el->lastHourRcvdThpt = (float)(el->bytesRcvd.value-el->lastHourBytesRcvd.value)/timeHourDiff;
-	el->lastHourSentThpt = (float)(el->bytesSent.value-el->lastHourBytesSent.value)/timeHourDiff;
-
+	el->lastHourRcvdThpt = (float)((float)(el->bytesRcvd.value-el->lastHourBytesRcvd.value)/timeHourDiff);
+	el->lastHourSentThpt = (float)((float)(el->bytesSent.value-el->lastHourBytesSent.value)/timeHourDiff);
+	
 	el->lastHourBytesRcvd = el->bytesRcvd, el->lastHourBytesSent = el->bytesSent;
 
 	updateTopThpt(&lastHourTalkers, el->serialHostIndex, el->lastHourSentThpt, el->lastHourRcvdThpt);

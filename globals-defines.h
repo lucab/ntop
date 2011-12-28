@@ -1485,7 +1485,6 @@
 /*
  * html img tags for various devices
  */
-#define CONST_IMG_FIBRECHANNEL_SWITCH  "<img class=tooltip src=\"/switch.gif\" border=\"0\" alt=\"FibreChannel Switch\" title=\"FibreChannel Switch\">"
 #define CONST_IMG_DHCP_CLIENT          "<img class=tooltip src=\"/bulb.gif\" border=\"0\" alt=\"DHCP Client\" title=\"DHCP Client\">"
 #define CONST_IMG_DHCP_SERVER          "<img class=tooltip src=\"/antenna.gif\" border=\"0\" alt=\"DHCP Server\" title=\"DHCP Server\">"
 #define CONST_IMG_MULTIHOMED           "<img class=tooltip src=\"/multihomed.png\" border=\"0\" alt=\"Multihomed\" title=\"Multihomed\">"
@@ -1609,10 +1608,10 @@
 #define BITFLAG_HTTP_NEED_AUTHENTICATION    (1<<3)
 #define BITFLAG_HTTP_MORE_FIELDS            (1<<4)
 
-#define BITFLAG_HTML_NO_REFRESH             (1<<0)
-#define BITFLAG_HTML_NO_STYLESHEET          (1<<1)
-#define BITFLAG_HTML_NO_BODY                (1<<2)
-#define BITFLAG_HTML_NO_HEADING             (1<<3)
+#define BITFLAG_HTML_NO_REFRESH             (1<<5)
+#define BITFLAG_HTML_NO_STYLESHEET          (1<<6)
+#define BITFLAG_HTML_NO_BODY                (1<<7)
+#define BITFLAG_HTML_NO_HEADING             (1<<8)
 
 #define FLAG_HTTP_INVALID_REQUEST           -2
 #define FLAG_HTTP_INVALID_METHOD            -3
@@ -2695,20 +2694,20 @@ struct ip6_hdr
 
 /* ******************************** */
 
-#define quickLock(_a_, _b_) accessMutex(&myGlobals.device[_b_].counterMutex, "quickLock");
-#define quickUnlock(_a_, _b_) releaseMutex(&myGlobals.device[_b_].counterMutex);
+#define quickLock(_b_) accessMutex(&myGlobals.device[_b_].counterMutex, "quickLock");
+#define quickUnlock(_b_) releaseMutex(&myGlobals.device[_b_].counterMutex);
 
 #define incrementHostTrafficCounter(_a_, _b_, _c_) { \
-    quickLock(_a_, actualDeviceId); \
+    quickLock(actualDeviceId); \
     incrementTrafficCounter(&_a_->_b_, _c_); \
-    quickUnlock(_a_, actualDeviceId); \
+    quickUnlock(actualDeviceId); \
 }
 
 #define allocHostTrafficCounterMemory(_a_, _b_, _c_) { \
-    quickLock(_a_, actualDeviceId); \
+    quickLock(actualDeviceId); \
     if(_a_->_b_ == NULL) \
-      _a_->_b_ = calloc(_c_, 1); \
-    quickUnlock(_a_, actualDeviceId); \
+      _a_->_b_ = calloc((size_t)_c_, (size_t)1); \
+    quickUnlock(actualDeviceId); \
   }
 
 /* *************************** */

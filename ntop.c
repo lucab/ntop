@@ -491,7 +491,7 @@ void handleProtocols(void) {
 	       tmpStr, (long)(buf.st_size+8));
 
     for (;;) {
-      bufferCurrent = fgets(bufferCurrent, buf.st_size, fd);
+      bufferCurrent = fgets(bufferCurrent, (int)buf.st_size, fd);
       /* On EOF, we're finished */
       if(bufferCurrent == NULL) {
 	break;
@@ -543,7 +543,7 @@ void handleProtocols(void) {
 
     ignore_protocol = 0;
 
-    len = strlen(proto);
+    len = (int)strlen(proto);
     for(i=0; i<len; i++) {
       if(iscntrl(proto[i]) || (!isascii(proto[i]))) {
 	ignore_protocol = 1;
@@ -562,7 +562,7 @@ void handleProtocols(void) {
       else {
 	protoName[0] = '\0';
 	strncpy(protoStr, &protoName[1], sizeof(protoStr));
-	len = strlen(protoStr);
+	len = (int)strlen(protoStr);
 
 	if(protoStr[len-1] != '|') {
 	  /* Make sure that the string ends with '|' */
@@ -1114,7 +1114,7 @@ RETSIGTYPE cleanup(int signo) {
     if(myGlobals.device[i].packetQueue)
       free(myGlobals.device[i].packetQueue);
 
-    if(myGlobals.device[i].tcpSession) free(myGlobals.device[i].tcpSession);
+    if(myGlobals.device[i].sessions) free(myGlobals.device[i].sessions);
 
     free(myGlobals.device[i].humanFriendlyName);
     free(myGlobals.device[i].uniqueIfName);
@@ -1159,8 +1159,8 @@ RETSIGTYPE cleanup(int signo) {
   if(myGlobals.startedAs != NULL) free(myGlobals.startedAs);
 
     for(idx=0; idx<NUM_SESSION_MUTEXES; idx++) {
-      tryLockMutex(&myGlobals.tcpSessionsMutex[idx], "cleanup");
-      deleteMutex(&myGlobals.tcpSessionsMutex[idx]);
+      tryLockMutex(&myGlobals.sessionsMutex[idx], "cleanup");
+      deleteMutex(&myGlobals.sessionsMutex[idx]);
     }
 
   tryLockMutex(&myGlobals.purgePortsMutex, "cleanup");

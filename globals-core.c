@@ -163,12 +163,6 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
     myGlobals.runningPref.daemonMode = 1;
   }
 
-  /* note that by default ntop will merge network interfaces */
-  if(myGlobals.runningPref.mergeInterfaces == 0)
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Interface merge disabled by default");
-  else
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Interface merge enabled by default");
-
   myGlobals.checkVersionStatus = FLAG_CHECKVERSION_NOTCHECKED;
   myGlobals.checkVersionStatusAgain = 1;
 
@@ -296,7 +290,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   createMutex(&myGlobals.portsMutex);       /* Avoid race conditions while handling ports */
 
   for(i=0; i<NUM_SESSION_MUTEXES; i++)
-    createMutex(&myGlobals.tcpSessionsMutex[i]); /* data to synchronize TCP sessions access */
+    createMutex(&myGlobals.sessionsMutex[i]); /* data to synchronize sessions access */
 
   createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
   createMutex(&myGlobals.purgeMutex);       /* synchronize purging */
@@ -563,7 +557,7 @@ void initNtop(char *devices) {
     addDefaultProtocols();
 
   /*
-   * initialize memory and data.
+   * Initialize memory and data.
    */
   initDevices(devices);
 
@@ -660,6 +654,12 @@ void initNtop(char *devices) {
 
   init_maps();
   loadGeoIP();
+
+  /* Note that by default ntop will merge network interfaces */
+  if(myGlobals.runningPref.mergeInterfaces == 0)
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Interface merge disabled by default");
+  else
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NOTE: Interface merge enabled by default");
 
   if(fetchPrefsValue("globals.displayPolicy", value, sizeof(value)) == -1) {
     myGlobals.hostsDisplayPolicy = showAllHosts /* 0 */;

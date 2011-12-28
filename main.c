@@ -44,8 +44,8 @@ void welcome (FILE * fp) {
 	   myGlobals.program_name, version, sizeof(long) == 8 ? 64 : 32,
 	   configureDate, buildDate);
 
-  fprintf (fp, "Copyright 1998-2011 by %s.\n", ntop_author);
-  fprintf (fp, "Get the freshest ntop from http://www.ntop.org/\n");
+  fprintf (fp, "Copyright 1998-2011 by %s\n", ntop_author);
+  fprintf (fp, "\nGet the freshest ntop from http://www.ntop.org/\n");
 }
 
 

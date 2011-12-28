@@ -84,10 +84,10 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
     return;
   }
 
-  CM_Update(srcHost->sent_to_matrix, dstHost->serialHostIndex, numPkts);
-  CM_Update(dstHost->recv_from_matrix, srcHost->serialHostIndex, numPkts);
+  CM_Update(srcHost->sent_to_matrix, dstHost->serialHostIndex, (int)numPkts);
+  CM_Update(dstHost->recv_from_matrix, srcHost->serialHostIndex, (int)numPkts);
 
-  updateASTraffic(actualDeviceId, srcHost->hostAS, dstHost->hostAS, bytes.value);
+  updateASTraffic(actualDeviceId, srcHost->hostAS, dstHost->hostAS, (u_int)bytes.value);
 
   if(srcHost == dstHost) {
     return;
@@ -1110,7 +1110,7 @@ void processPacket(u_char *_deviceId,
 	vlanId = ntohs(islHdr.vlanId);
 	hlen = sizeof(IslHeader); /* Skip the ISL header */
 	memcpy(&ehdr, p+hlen, sizeof(struct ether_header));
-	hlen += sizeof(struct ether_header);
+	hlen += (u_int)sizeof(struct ether_header);
 	ether_src = ESRC(&ehdr), ether_dst = EDST(&ehdr);
 	eth_type = ntohs(ehdr.ether_type);
       }
@@ -1219,7 +1219,8 @@ void processPacket(u_char *_deviceId,
 	    p1 = (u_char*)(p+hlen);
 
 	    /* Watch out for possible alignment problems */
-	    memcpy(&llcHeader, (char*)p1, (llcLen = min(length, sizeof(llcHeader))));
+	    llcLen = (int)min(length, sizeof(llcHeader));
+	    memcpy(&llcHeader, (char*)p1, llcLen);
 
 	    sap_type = llcHeader.ssap & ~CONST_LLC_GSAP;
 	    llcsap_string(sap_type);
@@ -1250,7 +1251,7 @@ void processPacket(u_char *_deviceId,
 
   		  memcpy(&element, &cdp[cdp_idx], sizeof(struct cdp_element));
 
-		  cdp_idx += sizeof(struct cdp_element);
+		  cdp_idx += (int)sizeof(struct cdp_element);
 		  element.cdp_len  = ntohs(element.cdp_len);
 		  element.cdp_type  = ntohs(element.cdp_type);
 		  if(element.cdp_len == 0) break; /* Sanity check */
@@ -1300,7 +1301,7 @@ void processPacket(u_char *_deviceId,
 		    break;
 		  }
 
-		  cdp_idx += (element.cdp_len-sizeof(struct cdp_element));
+		  cdp_idx += (int)(element.cdp_len-sizeof(struct cdp_element));
 		}
 
 
@@ -1468,7 +1469,7 @@ void processPacket(u_char *_deviceId,
 	  case ETHERTYPE_ARP: /* ARP - Address resolution Protocol */
 	    memcpy(&arpHdr, p+hlen, sizeof(arpHdr));
 	    
-	    hlen += sizeof(arpHdr);
+	    hlen += (u_int)sizeof(arpHdr);
 	    
 	    if(EXTRACT_16BITS(&arpHdr.arp_pro) == ETHERTYPE_IP) {
 	      int arpOp = EXTRACT_16BITS(&arpHdr.arp_op);

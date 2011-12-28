@@ -331,7 +331,7 @@ static void expandRRDList(char *rrdName,
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/hosts/%s",
 		    myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, str);
 
-      for(j=strlen(path)-strlen(str); j<strlen(path); j++)
+      for(j=(int)(strlen(path)-strlen(str)); j<(int)strlen(path); j++)
 	if((path[j] == '.') || (path[j] == ':')) path[j] = '/';
 
       revertSlashIfWIN32(path, 0);
@@ -667,7 +667,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 	safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/interfaces/%s/hosts/%s",
 		      myGlobals.rrdPath, myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName, str);
 
-	for(j=strlen(path)-strlen(str); j<strlen(path); j++)
+	for(j=(int)(strlen(path)-strlen(str)); j<(int)strlen(path); j++)
 	  if((path[j] == '.') || (path[j] == ':')) path[j] = '/';
 
 	revertSlashIfWIN32(path, 0);
@@ -1238,7 +1238,7 @@ static void netflowSummary(char *rrdPath, int graphId, char *startTime,
   argv[argc++] = title;
 
   str = "interfaces/";
-  i = strlen(str);
+  i = (int)strlen(str);
   if(!strncmp(rrdPath, str, i))
     pathIdx = i;
   else
@@ -1533,7 +1533,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
     return;
   }
 
-  for(i=strlen(rrdPath)-1; i>0; i--)
+  for(i=(int)strlen(rrdPath)-1; i>0; i--)
     if(rrdPath[i] == '/')
       break;
 
@@ -1705,7 +1705,7 @@ static void interfaceSummary(char *rrdPath, int graphId, char *startTime,
 static char* spacer(char* str, char *tmpStr, int tmpStrLen,
 		    char *metric_name, int metric_name_len,
 		    int max_spacer_len) {
-  int len = strlen(str), i;
+  int len = (int)strlen(str), i;
   char *token, *token_name, buf[128], debug = 0, *found, *key;
 
   if((strlen(str) > 3) && (!strncmp(str, "IP_", 3))) str += 3;
@@ -1748,7 +1748,7 @@ static char* spacer(char* str, char *tmpStr, int tmpStrLen,
       token[0] = save_char;
     } else {
       if(debug) traceEvent(CONST_TRACE_WARNING,  "-- 2 --> (%s)", str);
-      len = strlen(str)-strlen(token);
+      len = (int)(strlen(str)-strlen(token));
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", str);
       buf[len] = '\0';
     }
@@ -1774,7 +1774,7 @@ static char* spacer(char* str, char *tmpStr, int tmpStrLen,
     found[i] = '\0';
   }
 
-  len = strlen(buf); if(len > max_spacer_len) len = max_spacer_len;
+  len = (int)strlen(buf); if(len > max_spacer_len) len = max_spacer_len;
   snprintf(tmpStr, len+1, "%s", buf);
 
   for(i=len; i<max_spacer_len; i++) tmpStr[i] = ' ';
@@ -1904,7 +1904,7 @@ static char* formatTitle(char *str, char *buf, u_short buf_len) {
     else if(strstr(&str[shift], "Fragments"))
       safe_snprintf(__FILE__, __LINE__, &buf[strlen(buf)], buf_len-strlen(buf), ": Fragmented Traffic");
   } else if(!done) {
-    len = strlen(str), buf_len = strlen(buf);
+    len = (int)strlen(str), buf_len = (int)strlen(buf);
 
     //traceEvent(CONST_TRACE_WARNING,  "-- ** --> (%s)", &str[2]);
 
@@ -1998,7 +1998,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
   u_char titleAlreadySent = 0;
 
   // if((!active) || (!initialized)) return;
-  i = strlen(rrdPath); if((i > 1) && (rrdPath[i-1] == '/')) rrdPath[i-1] = '\0';
+  i = (int)strlen(rrdPath); if((i > 1) && (rrdPath[i-1] == '/')) rrdPath[i-1] = '\0';
 
   path[0] = '\0', label = "";
   safe_snprintf(__FILE__, __LINE__, _rrdName, sizeof(_rrdName), "%s", rrdName);
@@ -2040,7 +2040,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
       i = 0;
 
       while((dp = readdir(directoryPointer)) != NULL) {
-	int len = strlen(dp->d_name);
+	int len = (int)strlen(dp->d_name);
 
 	if(dp->d_name[0] == '.') continue;
 	else if(len < 7 /* IP_ + .rrd */ ) continue;
@@ -2087,14 +2087,14 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	  if((the_num_host == NULL) || (the_num_host[0] == '\0')) the_num_host = "no_name";
 
 	  rrd_hosts[num_rrd_hosts_path] = strdup(the_num_host);
-	  for(y=0; y<strlen(host); y++) if(host[y] == '.') host[y] = '/';
+	  for(y=0; y<(int)strlen(host); y++) if(host[y] == '.') host[y] = '/';
 
 	  safe_snprintf(__FILE__, __LINE__, tmpPath, sizeof(tmpPath),
 			"interfaces/%s/hosts/%s",
 			myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName,
 			the_host);
 
-	  for(y=strlen(tmpPath)-strlen(the_host); y<strlen(tmpPath); y++)
+	  for(y=(int)strlen(tmpPath)-(int)strlen(the_host); y<(int)strlen(tmpPath); y++)
 	    if((path[y] == '.') || (path[y] == ':')) path[y] = '/';
 
 	  rrd_hosts_path[num_rrd_hosts_path++] = strdup(tmpPath);
@@ -2128,7 +2128,7 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 	/* traceEvent(CONST_TRACE_WARNING, "RRD: [%s][%s]", file_a, file_b); */
       } else {
 	snprintf(file_a, sizeof(file_a), "%s", rrdName);
-	file_a[strlen(file_a)-strlen(CONST_RRD_EXTENSION)] = '\0';
+	file_a[(int)strlen(file_a)-(int)strlen(CONST_RRD_EXTENSION)] = '\0';
 	rrd_custom[0] = file_a;
 	rrd_custom[1] = NULL;
 	rrds = (char**)rrd_custom;
@@ -2414,8 +2414,8 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId,
 
 	  safe_snprintf(__FILE__, __LINE__, ip_buf, sizeof(ip_buf),
 			"%s", (!strncmp(rrdName, "IP_", 3)) ? &rrdName[3] : rrdName);
-	  if(strlen(ip_buf) > strlen(metric_name))
-	    ip_buf[strlen(ip_buf)-strlen(metric_name)] = '\0';
+	  if((int)strlen(ip_buf) > (int)strlen(metric_name))
+	    ip_buf[(int)strlen(ip_buf)-(int)strlen(metric_name)] = '\0';
 
 	  if(!titleAlreadySent) {
 	    titleAlreadySent = 1;
@@ -2552,7 +2552,7 @@ static void deleteRRD(char *basePath, char *key) {
   safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s%s.rrd", basePath, key);
 
   /* Avoid path problems */
-  for(i=strlen(basePath); i<strlen(path); i++)
+  for(i=(int)strlen(basePath); i<(int)strlen(path); i++)
     if(path[i] == '/') path[i]='_';
 
   revertSlashIfWIN32(path, 0);
@@ -2579,7 +2579,7 @@ static int updateRRD(char *hostPath, char *key, Counter value, int isCounter, ch
     safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s%s.rrd", hostPath, key);
 
     /* Avoid path problems */
-    for(i=strlen(hostPath); i<strlen(path); i++)
+    for(i=(int)strlen(hostPath); i<(int)strlen(path); i++)
       if(path[i] == '/') path[i]='_';
 
     revertSlashIfWIN32(path, 0);
@@ -2878,7 +2878,7 @@ static int updateRRD(char *hostPath, char *key, Counter value, int isCounter, ch
       if(rc != -1) {
 	datai  = data, _total = 0;
 
-	for(i = start; i <= end; i += step) {
+	for(i = (int)start; i <= (int)end; i += (int)step) {
 	  _val = *(datai++);
 
 	  if(_val > 0)
@@ -3087,8 +3087,8 @@ static void commonRRDinit(void) {
 		    (int) ((netmask >> 24) & 0xff), (int) ((netmask >> 16) & 0xff),
 		    (int) ((netmask >>  8) & 0xff), (int) ((netmask >>  0) & 0xff));
 
-      if(value[0] != '\0') snprintf(&value[strlen(value)], sizeof(value)-strlen(value)-1, ",");
-      snprintf(&value[strlen(value)], sizeof(value)-strlen(value)-1, "%s", buf);
+      if(value[0] != '\0') snprintf(&value[(int)strlen(value)], sizeof(value)-(int)strlen(value)-1, ",");
+      snprintf(&value[(int)strlen(value)], sizeof(value)-(int)strlen(value)-1, "%s", buf);
     }
 
     hostsFilter = strdup(value);
@@ -3112,7 +3112,7 @@ static void commonRRDinit(void) {
 
   if(fetchPrefsValue("rrd.rrdPath", value, sizeof(value)) == -1) {
     char *thePath = "/rrd";
-    int len = strlen(myGlobals.dbPath)+strlen(thePath)+16, idx = 0;
+    int len = (int)strlen(myGlobals.dbPath)+(int)strlen(thePath)+16, idx = 0;
 
     if(myGlobals.rrdPath) free(myGlobals.rrdPath);
     myGlobals.rrdPath = (char*)malloc(len);
@@ -3125,11 +3125,11 @@ static void commonRRDinit(void) {
 		  len, "%s%s", &myGlobals.dbPath[idx], thePath);
 #endif
 
-    len = strlen(myGlobals.rrdPath);
+    len = (int)strlen(myGlobals.rrdPath);
     if(myGlobals.rrdPath[len-1] == '/') myGlobals.rrdPath[len-1] = '\0';
     storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
   } else {
-    int vlen = strlen(value)+1;
+    int vlen = (int)strlen(value)+1;
 
     myGlobals.rrdPath  = (char*)malloc(vlen);
     unescape(myGlobals.rrdPath, vlen, value);
@@ -3137,7 +3137,7 @@ static void commonRRDinit(void) {
 
   if(fetchPrefsValue("rrd.rrdVolatilePath", value, sizeof(value)) == -1) {
     char *thePath = "/rrd";
-    int len = strlen(myGlobals.spoolPath)+strlen(thePath)+16;
+    int len = (int)strlen(myGlobals.spoolPath)+(int)strlen(thePath)+16;
 
     if(myGlobals.rrdVolatilePath) free(myGlobals.rrdVolatilePath);
     myGlobals.rrdVolatilePath = (char*)malloc(len);
@@ -3151,11 +3151,11 @@ static void commonRRDinit(void) {
 		  len, "%s%s", myGlobals.spoolPath, thePath);
 #endif
 
-    len = strlen(myGlobals.rrdVolatilePath);
+    len = (int)strlen(myGlobals.rrdVolatilePath);
     if(myGlobals.rrdVolatilePath[len-1] == '/') myGlobals.rrdVolatilePath[len-1] = '\0';
     storePrefsValue("rrd.myGlobals.rrdVolatilePath", myGlobals.rrdVolatilePath);
   } else {
-    int vlen = strlen(value)+1;
+    int vlen = (int)strlen(value)+1;
 
     myGlobals.rrdVolatilePath  = (char*)malloc(vlen);
     unescape(myGlobals.rrdVolatilePath, vlen, value);
@@ -3407,7 +3407,7 @@ static void arbitraryAction(char *rrdName,
       return;
     }
 
-    len=strlen(rrdIP);
+    len=(int)strlen(rrdIP);
     for(i=0; i<len; i++) if(rrdIP[i] == '.') rrdIP[i] = CONST_PATH_SEP;
     safe_snprintf(__FILE__, __LINE__, rrdKey, sizeof(rrdKey), "interfaces/%s/hosts/%s/", rrdInterface, rrdIP);
   }
@@ -4030,11 +4030,11 @@ static void handleRRDHTTPrequest(char* url) {
     commonRRDinit();
 
   /* Specialty pages */
-  if(strncasecmp(url, CONST_RRD_STATISTICS_HTML, strlen(CONST_RRD_STATISTICS_HTML)) == 0) {
+  if(strncasecmp(url, CONST_RRD_STATISTICS_HTML, (int)strlen(CONST_RRD_STATISTICS_HTML)) == 0) {
     statisticsPage();
     printRRDPluginTrailer();
     return;
-  } else if(strncasecmp(url, CONST_RRD_ARBGRAPH_HTML, strlen(CONST_RRD_ARBGRAPH_HTML)) == 0) {
+  } else if(strncasecmp(url, CONST_RRD_ARBGRAPH_HTML, (int)strlen(CONST_RRD_ARBGRAPH_HTML)) == 0) {
     arbitraryActionPage();
     printRRDPluginTrailer();
     return;
@@ -4094,13 +4094,13 @@ static void handleRRDHTTPrequest(char* url) {
 	  safe_snprintf(__FILE__, __LINE__, filterString, sizeof(filterString), "%s", value);
 	} else if(strcmp(key, "key") == 0) {
 	  safe_snprintf(__FILE__, __LINE__, rrdKey, sizeof(rrdKey), "%s", value);
-	  len = strlen(rrdKey);
+	  len = (int)strlen(rrdKey);
 	  for(i=0; i<len; i++) if(rrdKey[i] == '+') rrdKey[i] = ' ';
 
-	  if(strncmp(value, "hosts/", strlen("hosts/")) == 0) {
+	  if(strncmp(value, "hosts/", (int)strlen("hosts/")) == 0) {
 	    int plen, ii;
 	    safe_snprintf(__FILE__, __LINE__, rrdPrefix, sizeof(rrdPrefix), "ip_%s_", &value[6]);
-	    plen=strlen(rrdPrefix);
+	    plen=(int)strlen(rrdPrefix);
 	    for (ii=0; ii<plen; ii++)
 	      if( (rrdPrefix[ii] == '.') || (rrdPrefix[ii] == '/') )
 		rrdPrefix[ii]='_';
@@ -4129,11 +4129,11 @@ static void handleRRDHTTPrequest(char* url) {
 	  storePrefsValue("rrd.rrdDumpDelay", value);
 	} else if(strcmp(key, "name") == 0) {
 	  safe_snprintf(__FILE__, __LINE__, rrdName, sizeof(rrdName), "%s", value);
-	  len = strlen(rrdName);
+	  len = (int)strlen(rrdName);
 	  for(i=0; i<len; i++) if(rrdName[i] == '+') rrdName[i] = ' ';
 	} else if(strcmp(key, "counter") == 0) {
 	  safe_snprintf(__FILE__, __LINE__, rrdCounter, sizeof(rrdCounter), "%s", value);
-	  len = strlen(rrdCounter);
+	  len = (int)strlen(rrdCounter);
 	  for(i=0; i<len; i++) if(rrdCounter[i] == '+') rrdCounter[i] = ' ';
 	} else if(strcmp(key, "title") == 0) {
 	  unescape(rrdTitle, sizeof(rrdTitle), value);
@@ -4162,7 +4162,7 @@ static void handleRRDHTTPrequest(char* url) {
 	} else if(strcmp(key, "hostsFilter") == 0) {
 	  _hostsFilter = strdup(value);
 	} else if(strcmp(key, "rrdPath") == 0) {
-	  int vlen = strlen(value)+1;
+	  int vlen = (int)strlen(value)+1;
 	  idx = 0;
 	  vlen -= idx;
 	  if(myGlobals.rrdPath != NULL) free(myGlobals.rrdPath);
@@ -4171,7 +4171,7 @@ static void handleRRDHTTPrequest(char* url) {
 	  revertSlashIfWIN32(myGlobals.rrdPath, 0);
 	  storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
 	} else if(strcmp(key, "rrdVolatilePath") == 0) {
-	  int vlen = strlen(value)+1;
+	  int vlen = (int)strlen(value)+1;
 	  idx = 0;
 	  vlen -= idx;
 	  if(myGlobals.rrdVolatilePath != NULL) free(myGlobals.rrdVolatilePath);
@@ -4970,7 +4970,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
       end_tm += dumpInterval;
     } while (end_tm < (start_tm = time(NULL)));
 
-    sleep_tm = end_tm - start_tm;
+    sleep_tm = (int)(end_tm - start_tm);
     strftime(endTime, sizeof(endTime), CONST_LOCALE_TIMESPEC, localtime_r(&end_tm, &workT));
 
 #if defined(RRD_DEBUG)
@@ -5022,14 +5022,14 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	/* save this as it may change */
 	maxHosts = myGlobals.device[devIdx].hosts.hostsno;
-	tmpStats = (DomainStats*)mallocAndInitWithReportWarn(maxHosts*sizeof(DomainStats), "rrdMainLoop");
+	tmpStats = (DomainStats*)mallocAndInitWithReportWarn((int)(maxHosts*sizeof(DomainStats)), "rrdMainLoop");
 
 	if (tmpStats == NULL) {
           traceEvent(CONST_TRACE_WARNING, "RRD: Out of memory, skipping domain RRD dumps");
 	  continue;
 	}
 
-	stats = (DomainStats**)mallocAndInitWithReportWarn(maxHosts*sizeof(DomainStats*),"rrdMainLoop(2)");
+	stats = (DomainStats**)mallocAndInitWithReportWarn((int)(maxHosts*sizeof(DomainStats*)),"rrdMainLoop(2)");
 
 	if (stats == NULL) {
 	  traceEvent(CONST_TRACE_WARNING, "RRD: Out of memory, skipping domain RRD dumps");
@@ -5413,22 +5413,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    updateCounter(rrdIfPath, "ifOutErrors", ifName->ifOutErrors, 0);
 
 	    ifName = ifName->next;
-	  }
-	}
-
-	if(myGlobals.device[devIdx].cpacketGlobals) {
-	  cPacketCounter *elem = myGlobals.device[devIdx].cpacketGlobals->counter_list_head;
-
-	  while(elem != NULL) {
-	    char rrdIfPath[512];
-
-	    safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
-			  "%s/interfaces/%s/cTap/%s/", myGlobals.rrdPath,
-			  myGlobals.device[devIdx].uniqueIfName, elem->name);
-	    mkdir_p("RRD", rrdIfPath, myGlobals.rrdDirectoryPermissions);
-	    updateCounter(rrdIfPath, "bytes", elem->bytes, 0);
-	    updateCounter(rrdIfPath, "pkts", elem->packets, 0);
-	    elem = elem->next;
 	  }
 	}
       }
