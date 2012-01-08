@@ -1,5 +1,5 @@
 /*
- *  Copyright(C) 2002-10 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 2002-12 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -4702,7 +4702,7 @@ PluginInfo* sflowPluginEntryFctn(void)
 #endif
 {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
-	     "SFLOW: Welcome to %s.(C) 2002-11 by Luca Deri",
+	     "SFLOW: Welcome to %s.(C) 2002-12 by Luca Deri",
 	     sflowPluginInfo->pluginName);
 
   return(sflowPluginInfo);

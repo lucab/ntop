@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2001-04  Luca Deri <deri@ntop.org>
+ *  Copyright (C) 2001-12  Luca Deri <deri@ntop.org>
  *
  *  			   http://www.ntop.org/
  *

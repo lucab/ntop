@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2012 Luca Deri <deri@ntop.org>
  *
  *		 	    http://www.ntop.org/
  *
@@ -6006,7 +6006,9 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     }
   }
 
-  printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.tcpdump.org>libpcap</A> Version", "??");
+#ifdef HAVE_PCAP_LIB_VERSION
+  printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.tcpdump.org>libpcap</A> Version", pcap_lib_version());
+#endif
 
   snprintf(buf, sizeof(buf), "%1.4f", rrd_version());
   printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.rrdtool.org/>RRD</A> Version", buf);

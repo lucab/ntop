@@ -3,7 +3,7 @@
  *
  *                          http://www.ntop.org
  *
- *           Copyright (C) 1998-2011 Luca Deri <deri@ntop.org>
+ *           Copyright (C) 1998-2012 Luca Deri <deri@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *

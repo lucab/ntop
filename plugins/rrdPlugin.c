@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-11 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 2002-12 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -5583,7 +5583,7 @@ PluginInfo* rrdPluginEntryFctn(void)
 #endif
 {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-	     "RRD: Welcome to %s. (C) 2002-11 by Luca Deri.",
+	     "RRD: Welcome to %s. (C) 2002-12 by Luca Deri.",
 	     rrdPluginInfo->pluginName);
 
   return(rrdPluginInfo);
