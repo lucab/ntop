@@ -8414,7 +8414,8 @@ void edit_prefs(int postLen, char *db_key, char *db_val) {
 
   if(((db_key == NULL) && (num_added > 0))
      || ((db_key != NULL) && (num_added == 0))) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<FORM ACTION="CONST_EDIT_PREFS">"
+    /* Fix courtesy of Adrian Irving-Beer <wisq@wisq.net> */
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<FORM ACTION="CONST_EDIT_PREFS" METHOD=POST>"
 		  "<TR><TH ALIGN=LEFT "DARK_BG"><INPUT TYPE=TEXT NAME=key VALUE=\"%s\" size=30></TH>"
 		  "<TD><INPUT TYPE=TEXT NAME=val VALUE=\"\" size=30></TD>"
 		  "<TD ALIGN=CENTER><INPUT TYPE=SUBMIT VALUE=Add></TD></TR></FORM>\n",
