@@ -147,7 +147,7 @@ void createHostMap(HostTraffic *host) {
 
 	  if((el->hostResolvedName[0] != '\0')
 	     && strcmp(el->hostResolvedName, el->hostNumIpAddress)
-	     && (!subnetPseudoLocalHost(el)))
+	     && (!privateIPAddress(el)))
 	    showSymIp = 1;
 	  else
 	    showSymIp = 0;

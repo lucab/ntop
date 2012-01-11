@@ -1066,7 +1066,10 @@ if(myGlobals.runningPref.debugMode) {
       updateSessionDelayStats(session);
     }
 
-    session->l7.major_proto = record->l7_proto;
+    if(record->l7_proto == IPOQUE_PROTOCOL_UNKNOWN)
+      session->l7.major_proto = ntop_guess_undetected_protocol(proto, sport, dport);
+    else
+      session->l7.major_proto = record->l7_proto;
   } else {
     /* The session has been discarded (e.g. the NetFlow plugins might has
        been configured to discard sessions) so in case we have network delay
