@@ -767,7 +767,8 @@ if(myGlobals.runningPref.debugMode) {
 
   memset(&h, 0, sizeof(h));
   h.len = record->sentOctets + record->rcvdOctets;
-  handleSession((const struct pcap_pkthdr*)&h, NULL, 0, 0,
+  handleSession((const struct pcap_pkthdr*)&h, NULL, 
+		record->proto, 0, 0,
 		srcHost, sport,
 		dstHost, dport,
 		record->sentOctets, record->rcvdOctets,
@@ -904,7 +905,8 @@ if(myGlobals.runningPref.debugMode) {
     /* traceEvent(CONST_TRACE_INFO, "handleSession(TCP)"); */
 #endif
 
-    session = handleSession(&h, NULL, 0, 0, srcHost, sport, dstHost, dport,
+    session = handleSession(&h, NULL, record->proto,
+			    0, 0, srcHost, sport, dstHost, dport,
 			    record->sentOctets, record->rcvdOctets,
 			    0, &tp, 0, NULL, actualDeviceId, &newSession,
 			    major_proto, 1 /* FIX 0 */);
@@ -969,7 +971,8 @@ if(myGlobals.runningPref.debugMode) {
     /* traceEvent(CONST_TRACE_INFO, "handleSession(UDP)"); */
 #endif
 
-    session = handleSession(&h, NULL, 0, 0, srcHost, sport, dstHost, dport,
+    session = handleSession(&h, NULL, record->proto,
+			    0, 0, srcHost, sport, dstHost, dport,
 			    record->sentOctets, record->rcvdOctets,
 			    0, NULL, 0, NULL, actualDeviceId, &newSession,
 			    major_proto, 0);
@@ -1070,6 +1073,8 @@ if(myGlobals.runningPref.debugMode) {
       session->l7.major_proto = ntop_guess_undetected_protocol(proto, sport, dport);
     else
       session->l7.major_proto = record->l7_proto;
+
+    /* traceEvent(CONST_TRACE_WARNING, "l7.major_proto=%d", session->l7.major_proto); */
   } else {
     /* The session has been discarded (e.g. the NetFlow plugins might has
        been configured to discard sessions) so in case we have network delay

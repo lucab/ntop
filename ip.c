@@ -717,7 +717,7 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
       if(myGlobals.enableFragmentHandling && (fragmented)) {
 	/* Handle fragmented packets */
 	if(ip6)
-	  length = handleFragment(srcHost, dstHost, &sport,&dport,
+	  length = handleFragment(srcHost, dstHost, &sport, &dport,
 				  (u_short)(ip6->ip6_flow & 0xffff),fragmented,
 				  length,ntohs(ip6->ip6_plen),
 				  actualDeviceId, h, p);
@@ -854,14 +854,14 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 
 	if(nonFullyRemoteSession) {
 	  if(ip6)
-	    handleSession(h, p, fragmented, tp.th_win,
+	    handleSession(h, p, nh, fragmented, tp.th_win,
 			  srcHost, sport, dstHost,
 			  dport, ntohs(ip6->ip6_plen), 0, 
 			  ip_offset, &tp, tcpDataLength,
 			  theData, actualDeviceId, &newSession, 
 			  IPOQUE_PROTOCOL_UNKNOWN, 1);
 	  else
-	    handleSession(h, p, (off & 0x3fff), tp.th_win,
+	    handleSession(h, p, nh, (off & 0x3fff), tp.th_win,
 			  srcHost, sport, dstHost,
 			  dport, ip_len, 0, 
 			  ip_offset, &tp, tcpDataLength,
@@ -1089,7 +1089,7 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	/* if(nonFullyRemoteSession) */ {
 	  /* There is no session structure returned for UDP sessions */
 	  if(ip6)
-	    handleSession(h, p, fragmented, 0,
+	    handleSession(h, p, nh, fragmented, 0,
 			  srcHost, sport, dstHost,
 			  dport, ntohs(ip6->ip6_plen), 0, 
 			  ip_offset, NULL, udpDataLength,
@@ -1097,7 +1097,7 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 			  actualDeviceId, &newSession, 
 			  IPOQUE_PROTOCOL_UNKNOWN, 1);
 	  else
-	    handleSession(h, p, (off & 0x3fff), 0,
+	    handleSession(h, p, nh, (off & 0x3fff), 0,
 			  srcHost, sport, dstHost,
 			  dport, ip_len, 0, ip_offset, 
 			  NULL, udpDataLength,

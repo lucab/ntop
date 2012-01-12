@@ -3896,36 +3896,6 @@ static char* print_flags(IPSession *session, char *buf, int buf_len) {
 
 /* ********************************** */
 
-static char *knownProtocolIdx(IPSession *session, char *buf, u_int buf_len) {
-  if(session == NULL)
-    return("&nbsp;");
-
-  switch(session->l7.major_proto) {
-  case NTOP_PROTOCOL_FACEBOOK:
-    return(CONST_FACEBOOK_ICON);
-    break;
-  case NTOP_PROTOCOL_TWITTER:
-    return(CONST_TWITTER_ICON);
-    break;
-  case NTOP_PROTOCOL_YOUTUBE:
-    return(CONST_YOUTUBE_ICON);
-    break;
-  case IPOQUE_PROTOCOL_SSH:
-    return("SSH");
-    break;
-  case IPOQUE_PROTOCOL_HTTP:
-    return("HTTP");
-    break;
-  case NTOP_PROTOCOL_SKYPE:
-    return(CONST_SKYPE_ICON);
-    break;
-  }
-
-  return(httpSiteIcon(session->virtualPeerName, buf, buf_len, 1));
-}
-
-/* ********************************** */
-
 void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   int idx;
   char buf[1500], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER],
@@ -4097,8 +4067,7 @@ void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
 		      formatLatency(session->clientNwDelay, session->sessionState, formatBuf6, sizeof(formatBuf6)),
 		      formatLatency(session->serverNwDelay, session->sessionState, formatBuf7, sizeof(formatBuf7)),
-		      (session->guessed_protocol == NULL) ? knownProtocolIdx(session, http_buf, sizeof(http_buf)) :
-		      session->guessed_protocol
+		      getProtoName(session->l7.major_proto)
 #ifdef PRINT_SESSION_DETAILS
 		      , session->session_info ? session->session_info :
 		      print_flags(session, flags_buf, sizeof(flags_buf)) /* "&nbsp;" */

@@ -848,7 +848,7 @@ void switchNwInterface(int _interface) {
   }
 
   sendString("</B>");
-  sendString("</font><p><hr>!\n");
+  sendString("</font><p><hr>\n");
 }
 
 /* **************************************** */

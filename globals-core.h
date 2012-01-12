@@ -838,6 +838,7 @@ extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
 extern void updatePortList(HostTraffic *theHost, int clientPort, int serverPort);
 extern IPSession* handleSession(const struct pcap_pkthdr *h,
 				const u_char *p,
+				u_int8_t proto,
                                 u_short fragmentedData, u_int tcpWin,
                                 HostTraffic *srcHost, u_short sport,
                                 HostTraffic *dstHost, u_short dport,

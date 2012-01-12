@@ -1384,6 +1384,8 @@ static void tcpSessionSecurityChecks(const struct pcap_pkthdr *h,
   int len;
   char tmpStr[256];
 
+  if(tp == NULL) return; /* No TCP */
+
   if((theSession->sessionState == FLAG_STATE_ACTIVE)
      && ((theSession->clientNwDelay.tv_sec != 0) || (theSession->clientNwDelay.tv_usec != 0)
 	 || (theSession->serverNwDelay.tv_sec != 0) || (theSession->serverNwDelay.tv_usec != 0)
@@ -2274,183 +2276,185 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
   }
 
-  /* Don't move the following call from here unless you know what you're
-   * doing.
-   *
-   * This routine takes care of almost all the security checks such as:
-   * - Dumping suspicious packets based on certain invalid TCP Flag combos
-   * - Counting packets & bytes based on certain invalid TCP Flag combos
-   * - Checking if a known protocol is running at a not well-known port
-   */
-  tcpSessionSecurityChecks(h, p, srcHost, sport, dstHost, dport, tp,
-			   packetDataLength, packetData, addedNewEntry,
-			   theSession, actualDeviceId);
-  /*
-   *
-   * In this case the session is over hence the list of
-   * sessions initiated/received by the hosts can be updated
-   *
-   */
-  if(theSession->lastFlags & TH_FIN) {
-    u_int32_t fin = ntohl(tp->th_seq);
-
-    if(sport < dport) /* Server->Client */
-      check = (fin != theSession->lastSCFin);
-    else /* Client->Server */
-      check = (fin != theSession->lastCSFin);
-
-    if(check) {
-      /* This is not a duplicated (retransmitted) FIN */
-      theSession->finId[theSession->numFin] = fin;
-      theSession->numFin = (theSession->numFin+1) % MAX_NUM_FIN;
+  if(tp != NULL) {
+    /* Don't move the following call from here unless you know what you're
+     * doing.
+     *
+     * This routine takes care of almost all the security checks such as:
+     * - Dumping suspicious packets based on certain invalid TCP Flag combos
+     * - Counting packets & bytes based on certain invalid TCP Flag combos
+     * - Checking if a known protocol is running at a not well-known port
+     */
+    tcpSessionSecurityChecks(h, p, srcHost, sport, dstHost, dport, tp,
+			     packetDataLength, packetData, addedNewEntry,
+			     theSession, actualDeviceId);
+    /*
+     *
+     * In this case the session is over hence the list of
+     * sessions initiated/received by the hosts can be updated
+     *
+     */
+    if(theSession->lastFlags & TH_FIN) {
+      u_int32_t fin = ntohl(tp->th_seq);
 
       if(sport < dport) /* Server->Client */
-	theSession->lastSCFin = fin;
+	check = (fin != theSession->lastSCFin);
       else /* Client->Server */
-	theSession->lastCSFin = fin;
+	check = (fin != theSession->lastCSFin);
 
-      if(theSession->lastFlags & TH_ACK) {
-	/* This is a FIN_ACK */
-	theSession->sessionState = FLAG_STATE_FIN2_ACK2;
-      } else {
-	switch(theSession->sessionState) {
-	case FLAG_STATE_ACTIVE:
-	  theSession->sessionState = FLAG_STATE_FIN1_ACK0;
-	  break;
-	case FLAG_STATE_FIN1_ACK0:
-	  theSession->sessionState = FLAG_STATE_FIN2_ACK1;
-	  break;
-	case FLAG_STATE_FIN1_ACK1:
-	  theSession->sessionState = FLAG_STATE_FIN2_ACK1;
-	  break;
+      if(check) {
+	/* This is not a duplicated (retransmitted) FIN */
+	theSession->finId[theSession->numFin] = fin;
+	theSession->numFin = (theSession->numFin+1) % MAX_NUM_FIN;
+
+	if(sport < dport) /* Server->Client */
+	  theSession->lastSCFin = fin;
+	else /* Client->Server */
+	  theSession->lastCSFin = fin;
+
+	if(theSession->lastFlags & TH_ACK) {
+	  /* This is a FIN_ACK */
+	  theSession->sessionState = FLAG_STATE_FIN2_ACK2;
+	} else {
+	  switch(theSession->sessionState) {
+	  case FLAG_STATE_ACTIVE:
+	    theSession->sessionState = FLAG_STATE_FIN1_ACK0;
+	    break;
+	  case FLAG_STATE_FIN1_ACK0:
+	    theSession->sessionState = FLAG_STATE_FIN2_ACK1;
+	    break;
+	  case FLAG_STATE_FIN1_ACK1:
+	    theSession->sessionState = FLAG_STATE_FIN2_ACK1;
+	    break;
 #ifdef DEBUG
-	default:
-	  traceEvent(CONST_TRACE_ERROR, "DEBUG: Unable to handle received FIN (%u) !", fin);
+	  default:
+	    traceEvent(CONST_TRACE_ERROR, "DEBUG: Unable to handle received FIN (%u) !", fin);
+#endif
+	  }
+	}
+      } else {
+#ifdef DEBUG
+	printf("DEBUG: Rcvd Duplicated FIN %u\n", fin);
+#endif
+      }
+    } else if(theSession->lastFlags == TH_ACK) {
+      u_int32_t ack = ntohl(tp->th_ack);
+
+      if((ack == theSession->lastAckIdI2R) && (ack == theSession->lastAckIdR2I)) {
+	if(theSession->initiator == srcHost) {
+	  incrementTrafficCounter(&theSession->bytesRetranI2R, sent_length+rcvd_length);
+	  incrementTrafficCounter(&theSession->initiator->pktsDuplicatedAckSent, 1);
+	  incrementTrafficCounter(&theSession->remotePeer->pktsDuplicatedAckRcvd, 1);
+
+#ifdef DEBUG
+	  traceEvent(CONST_TRACE_INFO, "DEBUG: Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
+		     ack, theSession->numDuplicatedAckI2R,
+		     (int)theSession->bytesRetranI2R.value);
+#endif
+	} else {
+	  incrementTrafficCounter(&theSession->bytesRetranR2I, sent_length+rcvd_length);
+	  incrementTrafficCounter(&theSession->remotePeer->pktsDuplicatedAckSent, 1);
+	  incrementTrafficCounter(&theSession->initiator->pktsDuplicatedAckRcvd, 1);
+#ifdef DEBUG
+	  traceEvent(CONST_TRACE_INFO, "Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
+		     ack, theSession->numDuplicatedAckR2I,
+		     (int)theSession->bytesRetranR2I.value);
 #endif
 	}
       }
-    } else {
-#ifdef DEBUG
-      printf("DEBUG: Rcvd Duplicated FIN %u\n", fin);
-#endif
-    }
-  } else if(theSession->lastFlags == TH_ACK) {
-    u_int32_t ack = ntohl(tp->th_ack);
 
-    if((ack == theSession->lastAckIdI2R) && (ack == theSession->lastAckIdR2I)) {
-      if(theSession->initiator == srcHost) {
-	incrementTrafficCounter(&theSession->bytesRetranI2R, sent_length+rcvd_length);
-	incrementTrafficCounter(&theSession->initiator->pktsDuplicatedAckSent, 1);
-	incrementTrafficCounter(&theSession->remotePeer->pktsDuplicatedAckRcvd, 1);
+      if(theSession->initiator == srcHost)
+	theSession->lastAckIdI2R = ack;
+      else
+	theSession->lastAckIdR2I = ack;
 
-#ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
-		   ack, theSession->numDuplicatedAckI2R,
-		   (int)theSession->bytesRetranI2R.value);
-#endif
-      } else {
-	incrementTrafficCounter(&theSession->bytesRetranR2I, sent_length+rcvd_length);
-	incrementTrafficCounter(&theSession->remotePeer->pktsDuplicatedAckSent, 1);
-	incrementTrafficCounter(&theSession->initiator->pktsDuplicatedAckRcvd, 1);
-#ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "Duplicated ACK %ld [ACKs=%d/bytes=%d]: ",
-		   ack, theSession->numDuplicatedAckR2I,
-		   (int)theSession->bytesRetranR2I.value);
-#endif
-      }
-    }
-
-    if(theSession->initiator == srcHost)
-      theSession->lastAckIdI2R = ack;
-    else
-      theSession->lastAckIdR2I = ack;
-
-    if(theSession->numFin > 0) {
-      int i;
-
-      if(sport < dport) /* Server->Client */
-	check = (ack != theSession->lastSCAck);
-      else /* Client->Server */
-	check = (ack != theSession->lastCSAck);
-
-      if(check) {
-	/* This is not a duplicated ACK */
+      if(theSession->numFin > 0) {
+	int i;
 
 	if(sport < dport) /* Server->Client */
-	  theSession->lastSCAck = ack;
+	  check = (ack != theSession->lastSCAck);
 	else /* Client->Server */
-	  theSession->lastCSAck = ack;
+	  check = (ack != theSession->lastCSAck);
 
-	for(i=0; i<theSession->numFin; i++) {
-	  if((theSession->finId[i]+1) == ack) {
-	    theSession->numFinAcked++;
-	    theSession->finId[i] = 0;
+	if(check) {
+	  /* This is not a duplicated ACK */
 
-	    switch(theSession->sessionState) {
-	    case FLAG_STATE_FIN1_ACK0:
-	      theSession->sessionState = FLAG_STATE_FIN1_ACK1;
-	      break;
-	    case FLAG_STATE_FIN2_ACK0:
-	      theSession->sessionState = FLAG_STATE_FIN2_ACK1;
-	      break;
-	    case FLAG_STATE_FIN2_ACK1:
-	      theSession->sessionState = FLAG_STATE_FIN2_ACK2;
-	      break;
+	  if(sport < dport) /* Server->Client */
+	    theSession->lastSCAck = ack;
+	  else /* Client->Server */
+	    theSession->lastCSAck = ack;
+
+	  for(i=0; i<theSession->numFin; i++) {
+	    if((theSession->finId[i]+1) == ack) {
+	      theSession->numFinAcked++;
+	      theSession->finId[i] = 0;
+
+	      switch(theSession->sessionState) {
+	      case FLAG_STATE_FIN1_ACK0:
+		theSession->sessionState = FLAG_STATE_FIN1_ACK1;
+		break;
+	      case FLAG_STATE_FIN2_ACK0:
+		theSession->sessionState = FLAG_STATE_FIN2_ACK1;
+		break;
+	      case FLAG_STATE_FIN2_ACK1:
+		theSession->sessionState = FLAG_STATE_FIN2_ACK2;
+		break;
 #ifdef DEBUG
-	    default:
-	      printf("ERROR: unable to handle received ACK (%u) !\n", ack);
+	      default:
+		printf("ERROR: unable to handle received ACK (%u) !\n", ack);
 #endif
-	    }
+	      }
 
-	    break;
+	      break;
+	    }
 	  }
 	}
       }
-    }
-  } else if(theSession->lastFlags & TH_RST) {
-    theSession->sessionState = FLAG_STATE_TIMEOUT;
-  }
-
-#if 0
-  traceEvent(CONST_TRACE_NOISY, "==> %s%s%s%s%s",
-	     (theSession->lastFlags & TH_SYN) ? " SYN" : "",
-	     (theSession->lastFlags & TH_ACK) ? " ACK" : "",
-	     (theSession->lastFlags & TH_FIN) ? " FIN" : "",
-	     (theSession->lastFlags & TH_RST) ? " RST" : "",
-	     (theSession->lastFlags & TH_PUSH) ? " PUSH" : "");
-
-  traceEvent(CONST_TRACE_NOISY, "==> %s [len=%d]",
-	     print_flags(theSession, buf, sizeof(buf)), length);
-#endif
-
-  if((theSession->sessionState == FLAG_STATE_FIN2_ACK2)
-     || (theSession->lastFlags & TH_RST)) /* abortive release */ {
-    if(theSession->sessionState == FLAG_STATE_SYN_ACK) {
-      /*
-	Rcvd RST packet before to complete the 3-way handshake.
-	Note that the message is emitted only of the reset is received
-	while in FLAG_STATE_SYN_ACK. In fact if it has been received in
-	FLAG_STATE_SYN this message has not to be emitted because this is
-	a rejected session.
-      */
-      if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-	traceEvent(CONST_TRACE_WARNING, "TCP session [%s:%d]<->[%s:%d] reset by %s "
-		   "without completing 3-way handshake",
-		   srcHost->hostResolvedName, sport,
-		   dstHost->hostResolvedName, dport,
-		   srcHost->hostResolvedName);
-	dumpSuspiciousPacket(actualDeviceId, h, p);
-      }
-
+    } else if(theSession->lastFlags & TH_RST) {
       theSession->sessionState = FLAG_STATE_TIMEOUT;
     }
 
-    if(sport == IP_TCP_PORT_HTTP)
-      updateHTTPVirtualHosts(theSession->virtualPeerName, srcHost,
-			     theSession->bytesSent, theSession->bytesRcvd);
-    else
-      updateHTTPVirtualHosts(theSession->virtualPeerName, dstHost,
-			     theSession->bytesRcvd, theSession->bytesSent);
+#if 0
+    traceEvent(CONST_TRACE_NOISY, "==> %s%s%s%s%s",
+	       (theSession->lastFlags & TH_SYN) ? " SYN" : "",
+	       (theSession->lastFlags & TH_ACK) ? " ACK" : "",
+	       (theSession->lastFlags & TH_FIN) ? " FIN" : "",
+	       (theSession->lastFlags & TH_RST) ? " RST" : "",
+	       (theSession->lastFlags & TH_PUSH) ? " PUSH" : "");
+
+    traceEvent(CONST_TRACE_NOISY, "==> %s [len=%d]",
+	       print_flags(theSession, buf, sizeof(buf)), length);
+#endif
+
+    if((theSession->sessionState == FLAG_STATE_FIN2_ACK2)
+       || (theSession->lastFlags & TH_RST)) /* abortive release */ {
+      if(theSession->sessionState == FLAG_STATE_SYN_ACK) {
+	/*
+	  Rcvd RST packet before to complete the 3-way handshake.
+	  Note that the message is emitted only of the reset is received
+	  while in FLAG_STATE_SYN_ACK. In fact if it has been received in
+	  FLAG_STATE_SYN this message has not to be emitted because this is
+	  a rejected session.
+	*/
+	if(myGlobals.runningPref.enableSuspiciousPacketDump) {
+	  traceEvent(CONST_TRACE_WARNING, "TCP session [%s:%d]<->[%s:%d] reset by %s "
+		     "without completing 3-way handshake",
+		     srcHost->hostResolvedName, sport,
+		     dstHost->hostResolvedName, dport,
+		     srcHost->hostResolvedName);
+	  dumpSuspiciousPacket(actualDeviceId, h, p);
+	}
+
+	theSession->sessionState = FLAG_STATE_TIMEOUT;
+      }
+
+      if(sport == IP_TCP_PORT_HTTP)
+	updateHTTPVirtualHosts(theSession->virtualPeerName, srcHost,
+			       theSession->bytesSent, theSession->bytesRcvd);
+      else
+	updateHTTPVirtualHosts(theSession->virtualPeerName, dstHost,
+			       theSession->bytesRcvd, theSession->bytesSent);
+    }
   }
 
   /* Update session stats */
@@ -2476,8 +2480,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 								   (sport == theSession->sport) ? theSession->l7.dst : theSession->l7.src);
 
       if(theSession->l7.major_proto != IPOQUE_PROTOCOL_UNKNOWN) {
-	theSession->guessed_protocol = getProtoName(theSession->l7.major_proto);
-	/* traceEvent(CONST_TRACE_ERROR, "l7.major_proto=%s", theSession->guessed_protocol); */
+	/* traceEvent(CONST_TRACE_ERROR, "l7.major_proto=%d", theSession->l7.major_proto); */
 	freeOpenDPI(theSession);
 
 	switch(theSession->l7.major_proto) {
@@ -2541,6 +2544,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 
 IPSession* handleSession(const struct pcap_pkthdr *h,
 			 const u_char *p,
+			 u_int8_t proto,
                          u_short fragmentedData, u_int tcpWin,
                          HostTraffic *srcHost, u_short sport,
                          HostTraffic *dstHost, u_short dport,
@@ -2576,18 +2580,17 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
     because BOOTP uses broadcast addresses hence
     it would be filtered out by the (**) check
   */
-  if(myGlobals.runningPref.enablePacketDecoding && (tp == NULL /* UDP session */) &&
-     (srcHost->hostIpAddress.hostFamily == AF_INET &&
-      dstHost->hostIpAddress.hostFamily == AF_INET))
+  if(myGlobals.runningPref.enablePacketDecoding 
+     && (proto == IPPROTO_UDP)
+     && (p != NULL)
+     && (srcHost->hostIpAddress.hostFamily == AF_INET)
+     && (dstHost->hostIpAddress.hostFamily == AF_INET))
     handleBootp(srcHost, dstHost, sport, dport, packetDataLength, packetData, actualDeviceId, h, p);
 
   if(broadcastHost(srcHost) || broadcastHost(dstHost)) /* (**) */
     return(theSession);
 
-  if(tp == NULL)
-    sessionType = IPPROTO_UDP;
-  else
-    sessionType = IPPROTO_TCP;
+  sessionType = proto;
 
 #ifdef SESSION_TRACE_DEBUG
   {
@@ -2689,9 +2692,9 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 char *getProtoName(u_short protoId) {
   char *prot_long_str[] = { IPOQUE_PROTOCOL_LONG_STRING };
 
-  if(protoId < IPOQUE_MAX_SUPPORTED_PROTOCOLS)
+  if(protoId <= IPOQUE_MAX_SUPPORTED_PROTOCOLS)
     return(prot_long_str[protoId]);
-  else if(protoId < (IPOQUE_MAX_SUPPORTED_PROTOCOLS + myGlobals.numIpProtosToMonitor)) {
+  else if(protoId <= (IPOQUE_MAX_SUPPORTED_PROTOCOLS + myGlobals.numIpProtosToMonitor)) {
     u_int id = protoId - IPOQUE_MAX_SUPPORTED_PROTOCOLS;
     return(myGlobals.ipTrafficProtosNames[id]);
   } else
