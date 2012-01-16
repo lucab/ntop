@@ -338,7 +338,7 @@ void drawDeviceServiceDistribution(void) {
     val = (float)myGlobals.device[myGlobals.actualReportDeviceId].l7.protoTraffic[i];
     if(val > 0) {
       val = (float)((val * 100) / totTraffic);
-      p[num] = val, lbl[num] = getProtoName(i);
+      p[num] = val, lbl[num] = getProtoName(0, i);
       num++;
 
       if(num == 20) break;
@@ -576,7 +576,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
     if(val > 0) {
       p[num] = (float)((100*val)/traffic);
-      lbl[num++] = getProtoName(i);
+      lbl[num++] = getProtoName(0, i);
     }
 
     if(num >= MAX_NUM_PROTOS) break; /* Too much stuff */

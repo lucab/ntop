@@ -2689,15 +2689,21 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 
 /* ************************************ */
 
-char *getProtoName(u_short protoId) {
-  char *prot_long_str[] = { IPOQUE_PROTOCOL_LONG_STRING };
-
-  if(protoId <= IPOQUE_MAX_SUPPORTED_PROTOCOLS)
-    return(prot_long_str[protoId]);
-  else if(protoId <= (IPOQUE_MAX_SUPPORTED_PROTOCOLS + myGlobals.numIpProtosToMonitor)) {
-    u_int id = protoId - IPOQUE_MAX_SUPPORTED_PROTOCOLS;
-    return(myGlobals.ipTrafficProtosNames[id]);
-  } else
-    return(prot_long_str[IPOQUE_PROTOCOL_UNKNOWN]);
+char *getProtoName(u_int8_t proto, u_short protoId) {
+  if((proto == IPPROTO_TCP) 
+     || (proto == IPPROTO_UDP) 
+     || (proto == 0 /* any */)) {
+    char *prot_long_str[] = { IPOQUE_PROTOCOL_LONG_STRING };
+    
+    if(protoId < IPOQUE_MAX_SUPPORTED_PROTOCOLS)
+      return(prot_long_str[protoId]);
+    else if(protoId <= (IPOQUE_MAX_SUPPORTED_PROTOCOLS + myGlobals.numIpProtosToMonitor)) {
+      u_int id = protoId - IPOQUE_MAX_SUPPORTED_PROTOCOLS;
+      return(myGlobals.ipTrafficProtosNames[id]);
+    } else
+      return(prot_long_str[IPOQUE_PROTOCOL_UNKNOWN]);
+  } else {
+    return("");
+  }
 }
 

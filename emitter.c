@@ -1275,7 +1275,7 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	  TrafficCounter tc;
 	  
 	  if(j > 0) endWriteKey(fDescr, lang, "\t\t", hostKey, ',');
-	  initWriteKey(fDescr, lang, "\t\t", (hostKey = getProtoName(j)), numEntries);
+	  initWriteKey(fDescr, lang, "\t\t", (hostKey = getProtoName(0, j)), numEntries);
 	  tc.value = myGlobals.device[i].l7.protoTraffic[j];
 	  wrtLlongItm(fDescr, lang, "\t\t\t", "bytes", tc, ',', numEntries);
 	} else {
@@ -1283,7 +1283,7 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 
 	  ctr.value = myGlobals.device[i].l7.protoTraffic[j];
 
-	  wrtLlongItm(fDescr, lang, "\t", getProtoName(j), ctr, ',', numEntries);
+	  wrtLlongItm(fDescr, lang, "\t", getProtoName(0, j), ctr, ',', numEntries);
 	}
       }
 

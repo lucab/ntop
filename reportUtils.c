@@ -696,7 +696,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
 	  theAnchor[0] = htmlAnchor1;
 	}
 	safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s%d\">%s%s</A></TH>",
-		      theAnchor[0], i+2, getProtoName(i), arrow[0]);
+		      theAnchor[0], i+2, getProtoName(0, i), arrow[0]);
 	sendString(buf);
       }
     }
@@ -2444,7 +2444,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	  }
 
 	  printTableDoubleEntry(buf, sizeof(buf), 
-				getProtoName(i), CONST_COLOR_1, 
+				getProtoName(0, i), CONST_COLOR_1, 
 				(float)el->l7.traffic[i].bytesSent/1024,
 				100*((float)SD(el->l7.traffic[i].bytesSent, sent)),
 				(float)el->l7.traffic[i].bytesRcvd/1024,

@@ -1220,7 +1220,7 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
       value = buf;
     }
     processIntPref(NTOP_PREF_MAXHASH, value,
-		   (u_int*)&pref->maxNumHashEntries, savePref);
+		   (int*)&pref->maxNumHashEntries, savePref);
   } else if(strcmp(key, NTOP_PREF_MAXSESSIONS) == 0) {
     if(value == NULL) {
       safe_snprintf (__FILE__, __LINE__, buf, sizeof(buf), "%d",
@@ -1228,7 +1228,7 @@ bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref) {
       value = buf;
     }
     processIntPref(NTOP_PREF_MAXSESSIONS, value,
-		    (u_int*)&pref->maxNumSessions, savePref);
+		   (int*)&pref->maxNumSessions, savePref);
   } else if(strcmp(key, NTOP_PREF_MERGEIF) == 0) {
     processBoolPref(NTOP_PREF_MERGEIF, value2bool(value),
 		     &pref->mergeInterfaces, savePref);

@@ -637,7 +637,9 @@ int main(int argc, char *argv[]) {
   }
 
   if((ifStr == NULL) || (ifStr[0] == '\0')) {
-    traceEvent(CONST_TRACE_ERROR, "No interface has been selected. Capture not started...");
+    traceEvent(CONST_TRACE_ERROR, 
+	       "No interface has been selected [%d defined interfaces]", myGlobals.numDevices);
+    traceEvent(CONST_TRACE_NOISY, "Creating interface 'none'");
     createDummyInterface("none");
   } else
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Listening on [%s]", ifStr);
@@ -655,6 +657,23 @@ int main(int argc, char *argv[]) {
   addDefaultAdminUser();
   readSessionPurgeParams();
   initReports();
+
+  /* Sanity checks */
+  if(myGlobals.actualReportDeviceId >= myGlobals.numDevices)
+    myGlobals.actualReportDeviceId = myGlobals.numDevices;
+
+  /*
+    In case the initial device is "none" and there are other defined devices
+    we switch to another device.
+    
+    TODO In the future we should remember the last value for 
+         myGlobals.actualReportDeviceId and use it at next start
+	 in case such device is still present
+  */
+
+  if((strcmp(myGlobals.device[myGlobals.actualReportDeviceId].name, "none") == 0)
+     && ((myGlobals.actualReportDeviceId+1) < myGlobals.numDevices))
+     myGlobals.actualReportDeviceId++;
 
   traceEvent(CONST_TRACE_NOISY, "MEMORY: Base interface structure (no hashes loaded) is %.2fMB each",
 	     xvertDOT00MB(sizeof(NtopInterface)));

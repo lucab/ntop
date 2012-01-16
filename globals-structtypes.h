@@ -828,7 +828,7 @@ typedef struct portCounter {
 /* IP Session Information */
 typedef struct ipSession {
   u_short magic;
-  u_int8_t proto;                   /* IPPROTO_TCP / IPPROTO_UDP                  */
+  u_int8_t proto;                   /* IPPROTO_TCP / IPPROTO_UDP...               */
   u_char isP2P;                     /* Set to 1 if this is a P2P session          */
   u_int8_t knownProtocolIdx;        /* Mark this as a special protocol session    */
   HostTraffic* initiator;           /* initiator address                          */

@@ -28,7 +28,7 @@ static void* netflowMainLoop(void* _deviceId);
 static void* netflowUtilsLoop(void* _deviceId);
 #endif
 
-/* #define DEBUG_FLOWS  */
+/* #define DEBUG_FLOWS */
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -694,7 +694,7 @@ if(myGlobals.runningPref.debugMode) {
 
   if((srcHost == NULL) ||(dstHost == NULL)) {
 #ifdef DEBUG_FLOWS
-    if(debug)
+    if(myGlobals.runningPref.debugMode)
       traceEvent(CONST_TRACE_INFO, "DEBUG: srcHost=%p, dstHost=%p\n",
 		 (void*)srcHost, (void*)dstHost);
 #endif
@@ -722,7 +722,7 @@ if(myGlobals.runningPref.debugMode) {
   if(dstHost->lastSeen < *lastSeen)   dstHost->lastSeen = *lastSeen;
 
 #ifdef DEBUG_FLOWS
-  if(debug || 1)
+  if(myGlobals.runningPref.debugMode)
     traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [last=%u][first=%u][last-first=%d]",
 	       srcHost->hostNumIpAddress, sport,
 	       dstHost->hostNumIpAddress, dport, record->last, record->first,
@@ -3905,7 +3905,6 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
     u_int caplen = h->caplen;
     u_int length = h->len;
     unsigned short eth_type;
-    u_int8_t debug = 0;
     struct ip ip;
 
     deviceId = 1; /* Dummy value */
@@ -3916,7 +3915,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 
       ++numPkt;
 
-      if(debug)
+      if(myGlobals.runningPref.debugMode)
 	traceEvent(CONST_TRACE_INFO, "Rcvd packet to dissect [caplen=%d][len=%d][num_pkt=%lu]",
 		   caplen, length, numPkt);
     }
@@ -3930,7 +3929,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 	u_int plen, hlen;
 
 #ifdef DEBUG_FLOWS
-	if(debug)
+	if(myGlobals.runningPref.debugMode)
 	  traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect");
 #endif
 
@@ -3941,7 +3940,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 	plen = length-sizeof(struct ether_header);
 
 #ifdef DEBUG_FLOWS
-	if(debug)
+	if(myGlobals.runningPref.debugMode)
 	  traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect "
 		     "[deviceId=%d][sender=%s][proto=%d][len=%d][hlen=%d]",
 		     deviceId, intoa(ip.ip_src), ip.ip_p, plen, hlen);
@@ -3953,7 +3952,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 	    int   rawSampleLen = h->caplen-(sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
 
 #ifdef DEBUG_FLOWS
-	    if(debug)
+	    if(myGlobals.runningPref.debugMode)
 	      traceEvent(CONST_TRACE_INFO, "Rcvd from from %s", intoa(ip.ip_src));
 #endif
 
@@ -3963,7 +3962,7 @@ static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 	}
       } else {
 #ifdef DEBUG_FLOWS
-	if(debug)
+	if(myGlobals.runningPref.debugMode)
 	  traceEvent(CONST_TRACE_INFO, "Rcvd non-IP [0x%04X] packet to dissect", eth_type);
 #endif
       }

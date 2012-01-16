@@ -858,7 +858,7 @@ extern void updatePeersDelayStats(HostTraffic *peer_a, HostSerialIndex *peer_b_s
 				  u_char is_client_delay, 
 				  int port_idx);
 extern void updateSessionDelayStats(IPSession* session);
-extern char *getProtoName(u_short protoId);
+extern char *getProtoName(u_int8_t proto, u_short protoId);
 
 /* event.c */
 extern void notifyEvent(EventType evt, HostTraffic *el, IPSession *session, int eventValue);

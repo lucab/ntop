@@ -3896,6 +3896,27 @@ static char* print_flags(IPSession *session, char *buf, int buf_len) {
 
 /* ********************************** */
 
+static char* proto2name(u_int8_t proto) {
+  static char p[8];
+  
+  switch(proto) {
+  case IPPROTO_TCP:
+    return("TCP");
+    break;
+  case IPPROTO_UDP:
+    return("UDP");
+    break;
+  case IPPROTO_ICMP:
+    return("ICMP");
+    break;
+  default:
+    safe_snprintf(__FILE__, __LINE__, p, sizeof(p), "%d", proto);
+    return(p);
+  }
+}
+
+/* ********************************** */
+
 void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   int idx;
   char buf[1500], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER],
@@ -3998,8 +4019,8 @@ void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	  sendString("</TR>\n");
 	}
 
-	sport = getPortByNum(session->sport, IPPROTO_TCP);
-	dport = getPortByNum(session->dport, IPPROTO_TCP);
+	sport = getPortByNum(session->sport, session->proto);
+	dport = getPortByNum(session->dport, session->proto);
 	dataSent = session->bytesSent.value;
 	dataRcvd = session->bytesRcvd.value;
 
@@ -4033,7 +4054,7 @@ void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s%s%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s:%s</TD>",
 		      getRowColor(),
-		      (session->proto == IPPROTO_TCP) ? "TCP" : "UDP",
+		      proto2name(session->proto),
 		      makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT,
 				   0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 		      sport, session->isP2P == 1 ? "&nbsp&lt;P2P&gt;" : "",
@@ -4067,7 +4088,7 @@ void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		      formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
 		      formatLatency(session->clientNwDelay, session->sessionState, formatBuf6, sizeof(formatBuf6)),
 		      formatLatency(session->serverNwDelay, session->sessionState, formatBuf7, sizeof(formatBuf7)),
-		      getProtoName(session->l7.major_proto)
+		      getProtoName(session->proto, session->l7.major_proto)
 #ifdef PRINT_SESSION_DETAILS
 		      , session->session_info ? session->session_info :
 		      print_flags(session, flags_buf, sizeof(flags_buf)) /* "&nbsp;" */
@@ -4441,9 +4462,9 @@ void printProtoTraffic(int printGraph) {
 	float v1 = val/1024;
 	float v2 = (val*100)/((float)total);
 
-	/* traceEvent(CONST_TRACE_WARNING, "%s %f/%f %f/%f", getProtoName(i), val, total, v1, v2); */
+	/* traceEvent(CONST_TRACE_WARNING, "%s %f/%f %f/%f", getProtoName(0, i), val, total, v1, v2); */
 
-	printTableEntry(buf, sizeof(buf), getProtoName(i),
+	printTableEntry(buf, sizeof(buf), getProtoName(0, i),
 			(i % 2) ? CONST_COLOR_1 : CONST_COLOR_2,
 			v1, v2, 0, 0, 1);
       } /* if */
