@@ -787,18 +787,17 @@ void switchNwInterface(int _interface) {
       break;
     }
 
+  printSwitchNwInterfaceHeader();
+
   if(myGlobals.runningPref.mergeInterfaces) {
-    printSwitchNwInterfaceHeader();
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sorry, but you cannot switch among different interfaces "
 		  "unless the -M command line switch is specified at run time.");
     sendString(buf);
   } else if((mwInterface != -1) &&
 	    ((mwInterface >= myGlobals.numDevices) || myGlobals.device[mwInterface].virtualDevice)) {
-    printSwitchNwInterfaceHeader();
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sorry, invalid interface selected.");
     sendString(buf);
   } else if((myGlobals.numDevices == 1) || (!found)) {
-    printSwitchNwInterfaceHeader();
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sorry, you are currently capturing traffic from only a "
 		  "single/dummy interface [%s].<br><br>"
 		  "</b> This interface switch feature is meaningful only when your ntop "
@@ -811,7 +810,7 @@ void switchNwInterface(int _interface) {
     
     myGlobals.actualReportDeviceId = (mwInterface)%myGlobals.numDevices;
     storePrefsValue("actualReportDeviceId", value);
-    printSwitchNwInterfaceHeader();
+
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "The current interface is now [%s].",
 		  myGlobals.device[myGlobals.actualReportDeviceId].name);
     sendString(buf);
@@ -819,6 +818,7 @@ void switchNwInterface(int _interface) {
     safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", myGlobals.actualReportDeviceId);
   } else {
     u_short do_enable;
+
     sendString("Available Network Interfaces:</B><P>\n<FORM ACTION=" CONST_SWITCH_NIC_HTML ">\n");
 
     if(((!myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice)

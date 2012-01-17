@@ -1442,7 +1442,7 @@ typedef struct ntopInterface {
 
   IpFragment *fragmentList;
   IPSession **sessions;
-  u_short numSessions, maxNumSessions;
+  u_int numSessions, maxNumSessions;
 
   /* ************************** */
 

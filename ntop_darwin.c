@@ -97,7 +97,7 @@ struct dlopen_handle {
     struct dlopen_handle *next;
 };
 static struct dlopen_handle *dlopen_handles = NULL;
-static const struct dlopen_handle main_program_handle = {NULL};
+static const struct dlopen_handle main_program_handle = { NULL };
 static char *dlerror_pointer = NULL;
 
 /*

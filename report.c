@@ -3924,7 +3924,7 @@ void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 #ifdef PRINT_SESSION_DETAILS
   char flags_buf[64];
 #endif
-  int numSessions, printedSessions;
+  u_int numSessions, printedSessions;
   char formatBuf[64], formatBuf1[64], formatBuf2[64],
     formatBuf4[64], formatBuf5[64], formatBuf6[64], formatBuf7[64];
 

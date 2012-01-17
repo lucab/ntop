@@ -489,6 +489,7 @@ extern void delPrefsValue(char *key);
 extern void delPwValue(char *key);
 extern void processStrPref(char *key, char *value, char **globalVar, bool savePref);
 extern void processIntPref(char *key, char *value, int *globalVar, bool savePref);
+extern void processUIntPref(char *key, char *value, u_int *globalVar, bool savePref);
 extern void processBoolPref(char *key, bool value, bool *globalVar, bool savePref);
 extern bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref);
 extern void initUserPrefs(UserPref *pref);
