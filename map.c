@@ -50,6 +50,7 @@ void init_maps() {
 
 /* ************************************************** */
 
+#if 0
 static char* escape_string(char *in, char *out, u_int out_len) {
   int i, i_max=strlen(in), j;
 
@@ -69,6 +70,7 @@ static char* escape_string(char *in, char *out, u_int out_len) {
 
   return(out);
 }
+#endif
 
 /* ************************************************** */
 
@@ -85,7 +87,9 @@ void createAllHostsMap(void) {
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if(el->geo_ip) {
-      char buf[512], buf1[256] = { 0 };
+      char buf[512];
+#if 0
+      char buf1[256] = { 0 };
       int showSymIp;
 
       if((el->hostResolvedName[0] != '\0')
@@ -94,6 +98,7 @@ void createAllHostsMap(void) {
 	showSymIp = 1;
       else
 	showSymIp = 0;
+#endif
 
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
  		    "createMarker(new google.maps.LatLng(%.2f, %.2f), \""
@@ -142,7 +147,9 @@ void createHostMap(HostTraffic *host) {
       if((CM_PointEst(host->sent_to_matrix, el->serialHostIndex) > 0)
 	 || (CM_PointEst(host->recv_from_matrix, el->serialHostIndex) > 0)) {
 	if(el->geo_ip) {
-	  char buf[512], buf1[256] = { 0 };
+	  char buf[512];
+#if 0
+	  char buf1[256] = { 0 };
 	  int showSymIp;
 
 	  if((el->hostResolvedName[0] != '\0')
@@ -151,6 +158,7 @@ void createHostMap(HostTraffic *host) {
 	    showSymIp = 1;
 	  else
 	    showSymIp = 0;
+#endif
 
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 			"createMarker(new google.maps.LatLng(%.2f, %.2f), \""

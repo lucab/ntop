@@ -2291,7 +2291,6 @@ void makeDot() {
   if(fd != NULL) {
     for(el = getFirstHost(myGlobals.actualReportDeviceId);
 	el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-      int numEntries;
       int i, urlSent = 0;
 
       if(el->community && (!isAllowedCommunity(el->community))) continue;
@@ -2299,8 +2298,7 @@ void makeDot() {
       if(subnetLocalHost(el)) {
 	makeHostName(el, buf, sizeof(buf));
 
-
-	for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+	for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	  if(!emptySerial(&el->contactedSentPeers.peersSerials[i])
 	     && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->serialHostIndex))) {
 	    if((el2 = quickHostLink(el->contactedSentPeers.peersSerials[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
@@ -2315,7 +2313,7 @@ void makeDot() {
 
 	/* ****************************** */
 
-	for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+	for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	  if(!emptySerial(&el->contactedRcvdPeers.peersSerials[i])
 	     && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->serialHostIndex))) {
 	    if((el2 = quickHostLink(el->contactedRcvdPeers.peersSerials[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
@@ -3920,7 +3918,7 @@ static char* proto2name(u_int8_t proto) {
 void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   int idx;
   char buf[1500], hostLinkBuf[3*LEN_GENERAL_WORK_BUFFER],
-    hostLinkBuf1[3*LEN_GENERAL_WORK_BUFFER], *voipStr, http_buf[256];
+    hostLinkBuf1[3*LEN_GENERAL_WORK_BUFFER], *voipStr;
 #ifdef PRINT_SESSION_DETAILS
   char flags_buf[64];
 #endif
@@ -3949,13 +3947,12 @@ void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     Due to the way sessions are handled, sessions before those to
     display need to be skipped
   */
-  for(idx=1, numSessions=0, printedSessions=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
+  for(idx=0, numSessions=0, printedSessions=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
     int mutex_idx;
 
     /* if(el && (printedSessions >= el->numHostSessions)) break; */
 
     mutex_idx = idx % NUM_SESSION_MUTEXES;
-
     accessMutex(&myGlobals.sessionsMutex[mutex_idx], "printActiveSessions");
 
     if(myGlobals.device[myGlobals.actualReportDeviceId].sessions[idx] != NULL) {

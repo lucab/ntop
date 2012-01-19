@@ -331,8 +331,6 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
    * Having updated the session information, 'theSession'
    * can now be purged.
    */
-  /* Flag in delete process */
-  sessionToPurge->magic = CONST_UNMAGIC_NUMBER;
 
   if(sessionToPurge->virtualPeerName != NULL)
     free(sessionToPurge->virtualPeerName);
@@ -345,7 +343,9 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 
   freeOpenDPI(sessionToPurge);
 
+  /* Flag in delete process */
   memset(sessionToPurge, 0, sizeof(IPSession));
+  sessionToPurge->magic = CONST_UNMAGIC_NUMBER;
 
   free(sessionToPurge);
 }
@@ -384,25 +384,25 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
    */
 
   for(idx=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
-    IPSession *nextSession, *prevSession, *theSession;
+    IPSession *nextSession, *prevSession, *headSession;
     int mutex_idx;
 
     if(myGlobals.device[actualDeviceId].sessions[idx] == NULL) continue;
 
     mutex_idx = idx % NUM_SESSION_MUTEXES;
     accessMutex(&myGlobals.sessionsMutex[mutex_idx], "purgeIdleHosts");
-    prevSession = NULL, theSession = myGlobals.device[actualDeviceId].sessions[idx];
+    prevSession = NULL, headSession = myGlobals.device[actualDeviceId].sessions[idx];
 
-    while(theSession != NULL) {
+    while(headSession != NULL) {
       u_char free_session;
 
       tot_sessions++;
 
-      if(theSession->magic != CONST_MAGIC_NUMBER) {
+      if(headSession->magic != CONST_MAGIC_NUMBER) {
 	myGlobals.device[actualDeviceId].numSessions--;
         traceEvent(CONST_TRACE_ERROR, "Bad magic number (expected=%d/real=%d) scanTimedoutTCPSessions() [idx=%u][head=%p][session=%p]",
-	           CONST_MAGIC_NUMBER, theSession->magic, idx, myGlobals.device[actualDeviceId].sessions[idx], theSession);
-	theSession = NULL;
+	           CONST_MAGIC_NUMBER, headSession->magic, idx, myGlobals.device[actualDeviceId].sessions[idx], headSession);
+	headSession = NULL;
 	continue;
       }
 
@@ -410,40 +410,39 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 
       if(
 	 /* One of the session peers has been marked for deletion */
-	 (theSession->initiator->magic == CONST_UNMAGIC_NUMBER)
-	 || (theSession->remotePeer->magic == CONST_UNMAGIC_NUMBER)
-	 
-	 || ((theSession->sessionState == FLAG_STATE_TIMEOUT)
-	     && ((theSession->lastSeen+CONST_TWO_MSL_TIMEOUT) < myGlobals.actTime))
+	 (headSession->initiator->magic == CONST_UNMAGIC_NUMBER)
+	 || (headSession->remotePeer->magic == CONST_UNMAGIC_NUMBER)	 
+	 || ((headSession->sessionState == FLAG_STATE_TIMEOUT)
+	     && ((headSession->lastSeen+CONST_TWO_MSL_TIMEOUT) < myGlobals.actTime))
 	 || /* The branch below allows to flush sessions which have not been
 	       terminated properly (we've received just one FIN (not two). It might be
 	       that we've lost some packets (hopefully not). */
-	 ((theSession->sessionState >= FLAG_STATE_FIN1_ACK0)
-	  && ((theSession->lastSeen+CONST_DOUBLE_TWO_MSL_TIMEOUT) < myGlobals.actTime))
+	 ((headSession->sessionState >= FLAG_STATE_FIN1_ACK0)
+	  && ((headSession->lastSeen+CONST_DOUBLE_TWO_MSL_TIMEOUT) < myGlobals.actTime))
 	 /* The line below allows to avoid keeping very old sessions that
 	    might be still open, but that are probably closed and we've
 	    lost some packets */
-	 || ((theSession->lastSeen+PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES) < myGlobals.actTime)
-	 || ((theSession->lastSeen+PARM_SESSION_PURGE_MINIMUM_IDLE) < myGlobals.actTime)
+	 || ((headSession->lastSeen+PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES) < myGlobals.actTime)
+	 || ((headSession->lastSeen+PARM_SESSION_PURGE_MINIMUM_IDLE) < myGlobals.actTime)
 	 /* Purge sessions that are not yet active and that have not completed
 	    the 3-way handshave within 1 minute */
-	 || ((theSession->sessionState < FLAG_STATE_ACTIVE) && ((theSession->lastSeen+60) < myGlobals.actTime))
+	 || ((headSession->sessionState < FLAG_STATE_ACTIVE) && ((headSession->lastSeen+60) < myGlobals.actTime))
 	 /* Purge active sessions where one of the two peers has not sent any data
 	    (it might be that ntop has created the session bucket because it has
 	    thought that the session was already started) since 120 seconds */
-	 || ((theSession->sessionState >= FLAG_STATE_ACTIVE)
-	     && ((theSession->bytesSent.value == 0) || (theSession->bytesRcvd.value == 0))
-	     && ((theSession->lastSeen+120) < myGlobals.actTime))
+	 || ((headSession->sessionState >= FLAG_STATE_ACTIVE)
+	     && ((headSession->bytesSent.value == 0) || (headSession->bytesRcvd.value == 0))
+	     && ((headSession->lastSeen+120) < myGlobals.actTime))
 	 ) {
 	free_session = 1;
       } else /* This session will NOT be freed */ {
 	free_session = 0;
       }
 
-      nextSession = theSession->next;
+      nextSession = headSession->next;
 
       if(free_session) {
-	if(myGlobals.device[actualDeviceId].sessions[idx] == theSession) {
+	if(myGlobals.device[actualDeviceId].sessions[idx] == headSession) {
           myGlobals.device[actualDeviceId].sessions[idx] = nextSession, prevSession = NULL;
         } else {
           if(prevSession)
@@ -453,21 +452,22 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
         }
 
 	freeSessionCount++;
-        freeSession(theSession, actualDeviceId, 1, 0 /* locked by the purge thread */);
-	theSession = prevSession;
+        freeSession(headSession, actualDeviceId, 1, 0 /* locked by the purge thread */);
       } else {
-	prevSession = theSession;
-	theSession = nextSession;
+	/* This session is not for free */
+	prevSession = headSession;
       }
+
+      headSession = nextSession;
     } /* while */
 
     releaseMutex(&myGlobals.sessionsMutex[mutex_idx]);
   } /* end for */
 
-#ifdef DEBUG
+  //#ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: scanTimedoutTCPSessions: freed %u sessions [total: %u sessions]",
 	     freeSessionCount, tot_sessions);
-#endif
+  //#endif
 }
 
 /* #undef DEBUG */
@@ -1804,7 +1804,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 #endif
 
   while(theSession != NULL) {
-    if(theSession && (theSession->next == theSession)) {
+    if(theSession->next == theSession) {
       traceEvent(CONST_TRACE_WARNING, "Internal Error (4) (idx=%d)", idx);
       theSession->next = NULL;
     }
@@ -1938,6 +1938,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
     if(myGlobals.device[actualDeviceId].numSessions > myGlobals.device[actualDeviceId].maxNumSessions)
       myGlobals.device[actualDeviceId].maxNumSessions = myGlobals.device[actualDeviceId].numSessions;
 
+    /* Add it to the list as head element */
     theSession->next = myGlobals.device[actualDeviceId].sessions[idx];
     myGlobals.device[actualDeviceId].sessions[idx] = theSession;
 
