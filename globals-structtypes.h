@@ -289,11 +289,8 @@ typedef struct protocolsList {
 #define pthread_rwlock_wrlock    pthread_mutex_lock
 #define pthread_rwlock_unlock    pthread_mutex_unlock
 #define pthread_rwlock_destroy   pthread_mutex_destroy
-#ifdef SOLARIS
+/* Fix courtesy of Mark Gibbons <mgibbons@oemcomp.com> */
 #define pthread_rwlock_trywrlock pthread_mutex_trylock
-#else /* SOLARIS */
-#define pthread_rwlock_trywrlock pthread_mutex_trywrlock
-#endif /* SOLARIS */
 #endif
 #endif
 
