@@ -5,7 +5,6 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # Luca Deri     <deri@ntop.org>
-# Rocco Carbone <rocco@ntop.org>
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
@@ -37,7 +36,7 @@ SUFFIXES    = .so
 # 
 plugindir = $(libdir)/ntop/plugins
 
-INCLUDES = -I.. @INCS@ ${RRD_INC} -I ../@OPENDPI_INC@
+INCLUDES = -I.. @INCS@ ${RRD_INC} -I ../@NDPI_INC@
 
 #
 # The meat for ntop

@@ -692,9 +692,9 @@ AC_CHECK_HEADERS([capi.h])
  fi
 fi
 
-dnl> OpenDPI (https://code.google.com/p/opendpi/)
-OPENDPI_LIB=./opendpi-ntop/src/lib/.libs/libopendpi.a
-OPENDPI_INC=./opendpi-ntop/src/include/
+dnl> nDPI based on OpenDPI (https://code.google.com/p/opendpi/)
+NDPI_LIB=./nDPI/src/lib/.libs/libopendpi.a
+NDPI_INC=./nDPI/src/include/
 
 
 dnl> Define the arguments we accept...
@@ -1939,8 +1939,8 @@ AC_SUBST(RRD_INC)
 AC_SUBST(GEO_DIR)
 AC_SUBST(GETOPT_H)
 AC_SUBST(GETOPT_C)
-AC_SUBST(OPENDPI_LIB)
-AC_SUBST(OPENDPI_INC)
+AC_SUBST(NDPI_LIB)
+AC_SUBST(NDPI_INC)
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_MACRO_DIR([m4])

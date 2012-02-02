@@ -26,9 +26,9 @@ PROGRAM  = $(PKGNAME)-$(VERSION)
 DEFS      = @DEFS@
 INCS      = @INCS@
 
-INCLUDES  = -I. $(INCS) ${RRD_INC} -I @OPENDPI_INC@
+INCLUDES  = -I. $(INCS) ${RRD_INC} -I @NDPI_INC@
 LIBS      = 
-BASE_LIBS = @LIBS@ @CORELIBS@  ${RRD_LIB} @OPENDPI_LIB@
+BASE_LIBS = @LIBS@ @CORELIBS@  ${RRD_LIB} @NDPI_LIB@
 AS        = @AS@
 AWK       = @AWK@
 CC        = @CC@

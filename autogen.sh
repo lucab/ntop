@@ -159,7 +159,7 @@ EOF
           
     rm -f plugins/Makefile
     rm -f plugins/Makefile.in
-    rm -rf opendpi-ntop
+    rm -rf nDPI
     rm -f *~
 
     exit 0
@@ -434,18 +434,18 @@ rm -f /tmp/acin* /tmp/acout*
 rm -f autoha*
 rm -f confdefs.h
 
-# Get OpenDPI
+# Get nDPI
 
-echo "9. Downloading OpenDPI-ntop..."
+echo "9. Downloading nDPI..."
 
-OPENDPI_URL=https://svn.ntop.org/svn/ntop/trunk/opendpi-ntop/
-if test -d opendpi-ntop; then
-    echo "OpenDPI-ntop already available"
+NDPI_URL=https://svn.ntop.org/svn/ntop/trunk/nDPI/
+if test -d nDPI; then
+    echo "nDPI already available"
 else
-    svn co $OPENDPI_URL
+    svn co $NDPI_URL
 
-    echo "10. Compiling OpenDPI-ntop..."
-    cd opendpi-ntop; ./configure --with-pic; make; cd ..
+    echo "10. Compiling nDPI..."
+    cd nDPI; ./configure --with-pic; make; cd ..
 fi
 
 
