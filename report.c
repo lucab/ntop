@@ -5966,7 +5966,7 @@ char* hostRRdGraphLink(HostTraffic *el, int network_mode,
   if(rc == 0) {
     safe_snprintf(__FILE__, __LINE__, tmpStr, tmpStrLen,
                   "[ <a href=\"/" CONST_PLUGINS_HEADER
-		  "rrdPlugin?action=list&amp;key=interfaces%s/%s/%s&amp;title=%s+%s\">"
+		  "rrdPlugin?action=list&amp;key=interfaces/%s/%s/%s&amp;title=%s+%s\">"
                   "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
 		  " class=tooltip alt=\"view rrd graphs of historical data for this %s\"></a> ]",
                   &myGlobals.device[myGlobals.actualReportDeviceId].uniqueIfName[beginUnique],
