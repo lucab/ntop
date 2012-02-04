@@ -556,7 +556,7 @@ if test ".${PCAP_ROOT}" == . &&
    test -d ${TMP_ROOT} &&
    test -r ${TMP_ROOT}/libpcap.a; then
        PCAP_ROOT=${TMP_ROOT}
-       CORELIBS="${CORELIBS} -L${TMP_ROOT} -lpcap"
+       CORELIBS="${CORELIBS} -L${TMP_ROOT} -lpcap -L${HOME}/PF_RING/userland/lib -lpfring"
        INCS="${INCS} -I ${PCAP_ROOT}"
        AC_MSG_RESULT([found in $PCAP_ROOT])
 elif test ".${PCAP_ROOT}" != .; then
@@ -693,7 +693,7 @@ AC_CHECK_HEADERS([capi.h])
 fi
 
 dnl> nDPI based on OpenDPI (https://code.google.com/p/opendpi/)
-NDPI_LIB=./nDPI/src/lib/.libs/libopendpi.a
+NDPI_LIB=./nDPI/src/lib/.libs/libndpi.a
 NDPI_INC=./nDPI/src/include/
 
 
