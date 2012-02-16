@@ -1754,13 +1754,42 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		    break;
 		  case 23: /* OUT_BYTES */
 		  case 85: /* NF_F_FLOW_BYTES */
-		    memcpy(&record.sentOctets, &buffer[displ], 4);
-		    if(fields[fieldId].fieldType == 85) {
-		      /* In ASA We don't have the number of packets so in order
-			 to let ntop not discard this flow we need to put a reasonable
-			 value there (avg 512 bytes packet)
-		      */
-		      record.sentPkts = htonl(1 + (ntohl(record.sentOctets)/512));
+		    {
+		      u_int32_t value32;
+		      
+		      if(fields[fieldId].fieldLen == 8) {
+			/* Barracuda Networks: we ignore the first 32 bits */
+			memcpy(&value32, &buffer[displ+4], 4);
+		      } else {
+			/* Cisco (4 bytes) 
+			   http://www.cisco.com/en/US/docs/security/asa/asa82/netflow/netflow.pdf
+			*/
+			memcpy(&value32, &buffer[displ], 4);
+		      }
+
+		      if(record.sentOctets != 0) {
+			/* In case the same field is sent twice it means that
+			   it is the reverse direction
+			*/
+
+			record.rcvdOctets = value32;
+			if(fields[fieldId].fieldType == 85) {
+			  /* In ASA We don't have the number of packets so in order
+			     to let ntop not discard this flow we need to put a reasonable
+			     value there (avg 512 bytes packet)
+			  */
+			  record.rcvdPkts = htonl(1 + (ntohl(record.rcvdOctets)/512));
+			}
+		      } else {
+			record.sentOctets = value32;
+			if(fields[fieldId].fieldType == 85) {
+			  /* In ASA We don't have the number of packets so in order
+			     to let ntop not discard this flow we need to put a reasonable
+			     value there (avg 512 bytes packet)
+			  */
+			  record.sentPkts = htonl(1 + (ntohl(record.sentOctets)/512));
+			}
+		      }
 		    }
 		    break;
 		  case 24: /* OUT_PKTS */
@@ -1784,6 +1813,28 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		} else {
 		  /* PEN fields */
 		  switch(fields[fieldId].fieldType) {
+		    /* Barracuda Networks (PEN 12326)
+
+		       -------------------------------------------------------------------------------
+		       Enterprise ID Barracuda Networks: 12326
+		       -------------------------------------------------------------------------------
+		       Field ID  Length (octets)  Type     Name                Description
+		       -------------------------------------------------------------------------------
+		       1         4                Int      Timestamp           Seconds since epoch
+		       13        variable         String   ServerAddress
+		       14        4                Int      ResponseTime
+		       15        variable         String   RequestedURL
+		    */
+
+		  case 13: 
+		    {
+		      char *dstAddress = &buffer[displ+1];
+		      in_addr_t addr = inet_addr(dstAddress);
+
+		      record.dstaddr = addr, record.dstport = htons(80), record.proto = IPPROTO_TCP;
+		    }
+		    break;
+		    /* ntop */
 		  case NTOP_BASE_ID+82: /* CLIENT_NW_LATENCY_SEC */
 		    memcpy(&record.client_nw_latency_sec, &buffer[displ], 4);
 		    break;

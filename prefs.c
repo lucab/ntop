@@ -524,7 +524,7 @@ int parseOptions(int argc, char* argv[]) {
 
 #ifndef WIN32
     case 'K':
-      //myGlobals.runningPref.debugMode = 1;
+      myGlobals.runningPref.debugMode = 1;
       break;
 #endif
 
