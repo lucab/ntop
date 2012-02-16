@@ -28,7 +28,7 @@ static void* netflowMainLoop(void* _deviceId);
 static void* netflowUtilsLoop(void* _deviceId);
 #endif
 
-/* #define DEBUG_FLOWS */
+//#define DEBUG_FLOWS
 
 #define CONST_NETFLOW_STATISTICS_HTML       "statistics.html"
 
@@ -480,7 +480,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   time_t initTime;
   Counter total_pkts, total_bytes;
   u_int total_flows, ratio;
-  u_int16_t major_proto = IPOQUE_PROTOCOL_UNKNOWN; /* FIX: when we'll support this in nprobe */
+  u_int16_t major_proto = record->l7_proto;
 
 #ifdef MAX_NETFLOW_FLOW_BUFFER
   float elapsed;
@@ -500,12 +500,20 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   /* Bad flow(zero packets) */
   if((record->sentPkts == 0) && (record->rcvdPkts == 0)) {
     myGlobals.device[deviceId].netflowGlobals->numBadFlowPkts++;
+
+    if(myGlobals.runningPref.debugMode)
+      traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: handleGenericFlow(): discarded zero packets flow");
+
     return(0);
   }
 
   /* Bad flow(zero length) */
   if((record->sentOctets == 0) && (record->rcvdOctets == 0)) {
     myGlobals.device[deviceId].netflowGlobals->numBadFlowBytes++;
+
+    if(myGlobals.runningPref.debugMode)
+      traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: handleGenericFlow(): discarded zero length flow");
+
     return(0);
   }
 
@@ -513,6 +521,9 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   if((record->sentPkts > record->sentOctets)
      || (record->rcvdPkts > record->rcvdOctets)) {
     myGlobals.device[deviceId].netflowGlobals->numBadFlowReality++;
+
+    if(myGlobals.runningPref.debugMode)
+      traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: handleGenericFlow(): discarded invalid packet/bytes ratio flow");
     return(0);
   }
 
@@ -764,6 +775,9 @@ if(myGlobals.runningPref.debugMode) {
   if((srcAS == 13018) || (dstAS == 13018))
     traceEvent(CONST_TRACE_ERROR, "************* AS %d/%d", srcHost->hostAS, dstHost->hostAS);
 #endif
+
+  if(major_proto == IPOQUE_PROTOCOL_UNKNOWN)
+    major_proto = ntop_guess_undetected_protocol(record->proto, record->srcport, record->dstport);
 
   memset(&h, 0, sizeof(h));
   h.len = record->sentOctets + record->rcvdOctets;
