@@ -6007,7 +6007,8 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
   }
 
 #ifdef HAVE_PCAP_LIB_VERSION
-  printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.tcpdump.org>libpcap</A> Version", pcap_lib_version());
+  printFeatureConfigInfo(textPrintFlag, "<A HREF=http://www.tcpdump.org>libpcap</A> Version", 
+			 (char*)pcap_lib_version());
 #endif
 
   snprintf(buf, sizeof(buf), "%1.4f", rrd_version());

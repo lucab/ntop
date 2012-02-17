@@ -863,6 +863,7 @@ typedef struct ipSession {
   char *session_info;               /* Info about this session (if any) */
   struct ipSession *next;
   struct {
+    u_int8_t proto_guessed;
     u_int16_t major_proto;
     struct ipoque_flow_struct *flow;
     struct ipoque_id_struct *src, *dst;

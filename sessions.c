@@ -252,9 +252,18 @@ void updateUsedPorts(HostTraffic *srcHost,
 
 void freeOpenDPI(IPSession *sessionToPurge) {
   if(sessionToPurge->l7.flow != NULL) {
-    if(sessionToPurge->l7.src != NULL) free(sessionToPurge->l7.src);
-    if(sessionToPurge->l7.dst != NULL) free(sessionToPurge->l7.dst);
+    if(sessionToPurge->l7.src != NULL) {
+      free(sessionToPurge->l7.src);
+      sessionToPurge->l7.src = NULL;
+    }
+
+    if(sessionToPurge->l7.dst != NULL) {
+      free(sessionToPurge->l7.dst);
+      sessionToPurge->l7.dst = NULL;
+    }
+
     free(sessionToPurge->l7.flow);
+    sessionToPurge->l7.flow = NULL;
   }
 }
 
@@ -2520,7 +2529,14 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 	}
       }
     }
+  } else if((!theSession->l7.proto_guessed)
+	    && (theSession->l7.major_proto == IPOQUE_PROTOCOL_UNKNOWN)) {
+    theSession->l7.major_proto = ntop_guess_undetected_protocol(proto, sport, dport);
+    theSession->l7.proto_guessed = 1;
   }
+
+  if(theSession->l7.major_proto != IPOQUE_PROTOCOL_UNKNOWN)
+    freeOpenDPI(theSession);
 
   myGlobals.device[actualDeviceId].l7.protoTraffic[theSession->l7.major_proto] += h->len;
   srcHost->l7.traffic[theSession->l7.major_proto].bytesSent += h->len;
