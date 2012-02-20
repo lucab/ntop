@@ -443,7 +443,12 @@ if test -d nDPI; then
     echo "nDPI already available"
 else
     svn co $NDPI_URL
+fi
 
+dnl> nDPI compilation
+if test -f NDPI_LIB; then
+    echo "nDPI already compiled"
+else
     echo "10. Compiling nDPI..."
     cd nDPI; ./configure --with-pic; make; cd ..
 fi
