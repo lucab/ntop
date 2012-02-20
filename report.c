@@ -2500,7 +2500,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     if(broadcastHost(el)) continue;
     if(el->community && (!isAllowedCommunity(el->community))) continue;
 
-    if((el->vlanId != NO_VLAN) && (el->vlanId < MAX_VLAN))       { vlanList[el->vlanId] = 1, foundVlan = 1; }
+    if((el->vlanId != NO_VLAN) && (el->vlanId < MAX_VLAN))  { vlanList[el->vlanId] = 1, foundVlan = 1; }
     if((vlanId != NO_VLAN) && (el->vlanId != vlanId)) continue;
 
     if((el->known_subnet_id < myGlobals.numKnownSubnets) && (el->known_subnet_id != UNKNOWN_SUBNET_ID) )

@@ -620,13 +620,11 @@ void printHeader(int reportType, int revertOrder, u_int column,
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s1\">TCP%s</A></TH>"
 		  "<TH "TH_BG">%s2\">UDP%s</A></TH><TH "TH_BG">%s3\">ICMP%s</A></TH>"
 		  "<TH "TH_BG">%s4\">ICMPv6%s</A></TH>"
-		  "<TH "TH_BG">%s5\">DLC%s</A></TH>"
 		  "</TH><TH "TH_BG">%s7\">IPsec%s</A></TH>"
 		  "<TH "TH_BG">%s8\">(R)ARP%s</A></TH></TH>",
 		  theAnchor[0], arrow[0], theAnchor[1], arrow[1],
 		  theAnchor[2], arrow[2], theAnchor[3], arrow[3],
 		  theAnchor[4], arrow[4],
-		  theAnchor[5], arrow[5],
 		  theAnchor[7], arrow[7], theAnchor[8], arrow[8]);
     sendString(buf);
 
