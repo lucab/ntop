@@ -2958,7 +2958,7 @@ static int returnHTTPPage(char* pageName,
 		|| (strncasecmp(pageName, CONST_HOST_IP_MAP_HTML, 
 				strlen(CONST_HOST_IP_MAP_HTML)) == 0)
 		) {
-	char hostName[47], *theHost;
+	char hostName[47], *theHost = "";
 
 	if(strncasecmp(pageName, CONST_HOST_TRAFFIC_DISTR_HTML, 
 		       strlen(CONST_HOST_TRAFFIC_DISTR_HTML)) == 0) {

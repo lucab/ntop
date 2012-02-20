@@ -2531,7 +2531,10 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
     }
   } else if((!theSession->l7.proto_guessed)
 	    && (theSession->l7.major_proto == IPOQUE_PROTOCOL_UNKNOWN)) {
-    theSession->l7.major_proto = ntop_guess_undetected_protocol(proto, sport, dport);
+    theSession->l7.major_proto = 
+      ntop_guess_undetected_protocol(proto, 
+				     srcHost->hostIp4Address.s_addr, sport, 
+				     dstHost->hostIp4Address.s_addr, dport);
     theSession->l7.proto_guessed = 1;
   }
 

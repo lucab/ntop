@@ -777,7 +777,9 @@ if(myGlobals.runningPref.debugMode) {
 #endif
 
   if(major_proto == IPOQUE_PROTOCOL_UNKNOWN)
-    major_proto = ntop_guess_undetected_protocol(record->proto, record->srcport, record->dstport);
+    major_proto = ntop_guess_undetected_protocol(record->proto, 						 
+						 record->srcaddr, record->srcport, 
+						 record->dstaddr, record->dstport);
 
   memset(&h, 0, sizeof(h));
   h.len = record->sentOctets + record->rcvdOctets;
@@ -1084,7 +1086,10 @@ if(myGlobals.runningPref.debugMode) {
     }
 
     if(record->l7_proto == IPOQUE_PROTOCOL_UNKNOWN)
-      session->l7.major_proto = ntop_guess_undetected_protocol(proto, sport, dport);
+      session->l7.major_proto = 
+	ntop_guess_undetected_protocol(proto, 
+				       record->srcaddr, record->srcport, 
+				       record->dstaddr, record->dstport);
     else
       session->l7.major_proto = record->l7_proto;
 
