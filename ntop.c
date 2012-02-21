@@ -1129,6 +1129,7 @@ RETSIGTYPE cleanup(int signo) {
     if(myGlobals.device[i].pcapOtherDumper != NULL)
       pcap_dump_close(myGlobals.device[i].pcapOtherDumper);
 
+#ifdef INET6
     {
       NtopIfaceAddr * tmp;
       while(myGlobals.device[i].v6Addrs) {
@@ -1137,6 +1138,7 @@ RETSIGTYPE cleanup(int signo) {
         free(tmp);
       }
     }
+#endif
 
     while(myGlobals.device[i].asStats) {
       AsStats *next = myGlobals.device[i].asStats->next;

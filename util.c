@@ -627,6 +627,7 @@ unsigned short in6_isMulticastAddress(struct in6_addr *addr,
 
 /*******************************************/
 
+#ifdef INET6
 unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId,
 				  u_int32_t *the_local_network,
 				  u_int32_t *the_local_network_mask) {
@@ -655,6 +656,7 @@ unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId,
   /* Link Local Addresses are local */
   return(isLinkLocalAddress(addr, the_local_network, the_local_network_mask));
 }
+#endif
 
 /* ******************************************* */
 
@@ -869,8 +871,10 @@ unsigned short isLocalAddress(HostAddr *addr, u_int deviceId,
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_isLocalAddress(&addr->Ip4Address, deviceId, the_local_network, the_local_network_mask));
+#ifdef INET6
   case AF_INET6:
     return (in6_isLocalAddress(&addr->Ip6Address, deviceId, NULL, NULL));
+#endif
   default: return(0);
   }
 }
@@ -1187,6 +1191,7 @@ void handleKnownAddresses(char* addresses) {
 
 /* ********************************* */
 
+#ifdef INET6
 unsigned short in6_pseudoLocalAddress(struct in6_addr *addr,
 				      u_int32_t *the_local_network,
 				      u_int32_t *the_local_network_mask) {
@@ -1199,6 +1204,7 @@ unsigned short in6_pseudoLocalAddress(struct in6_addr *addr,
   }
   return(0);
 }
+#endif
 
 /* ******************************************************* */
 
@@ -1255,6 +1261,7 @@ unsigned short in_pseudoLocalAddress(struct in_addr *addr,
 
 /* ********************************* */
 
+#ifdef INET6
 unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId,
 				      u_int32_t *the_local_network,
 				      u_int32_t *the_local_network_mask) {
@@ -1267,6 +1274,7 @@ unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId,
 
   return(rc);
 }
+#endif
 
 /* ********************************* */
 
@@ -1294,6 +1302,7 @@ unsigned short in_deviceLocalAddress(struct in_addr *addr, u_int deviceId,
 
 /* ********************************* */
 
+#ifdef INET6
 unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId,
 					u_int32_t *the_local_network,
 					u_int32_t *the_local_network_mask) {
@@ -1309,6 +1318,7 @@ unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId,
     return 1; /* This is a real local address */
   }
 
+
   if(in6_pseudoLocalAddress(addr, the_local_network, the_local_network_mask))
     return 1;
 
@@ -1323,6 +1333,7 @@ unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId,
 
   return(0);
 }
+#endif
 
 /* ******************************************** */
 
@@ -1402,8 +1413,10 @@ unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId,
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_deviceLocalAddress(&addr->Ip4Address, deviceId, the_local_network, the_local_network_mask));
+#ifdef INET6
   case AF_INET6:
     return (in6_deviceLocalAddress(&addr->Ip6Address, deviceId, NULL, NULL));
+#endif
   default: return(0);
   }
 }
@@ -1420,8 +1433,10 @@ unsigned short isPseudoLocalAddress(HostAddr *addr, u_int deviceId,
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_isPseudoLocalAddress(&addr->Ip4Address, deviceId, the_local_network, the_local_network_mask));
+#ifdef INET6
   case AF_INET6:
-    return (in6_isPseudoLocalAddress(&addr->Ip6Address, deviceId, NULL, NULL));
+	  return (in6_isPseudoLocalAddress(&addr->Ip6Address, deviceId, NULL, NULL));
+#endif
   default: return(0);
   }
 }
@@ -1448,8 +1463,10 @@ unsigned short _pseudoLocalAddress(HostAddr *addr,
   switch(addr->hostFamily) {
   case AF_INET:
     return (in_pseudoLocalAddress(&addr->Ip4Address, the_local_network, the_local_network_mask));
+#ifdef INET6
   case AF_INET6:
     return (in6_pseudoLocalAddress(&addr->Ip6Address, NULL, NULL));
+#endif
   default: return(0);
   }
 }

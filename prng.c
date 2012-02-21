@@ -225,7 +225,7 @@ long prng_int(prng_type * prng) {
     {
     case 1 : response=(ran2(prng)); break;
     case 2 : response=(ran3(prng)); break;
-    case 3 : response=(lrand48()); break;
+  //  case 3 : response=(lrand48()); break;
     }
   return response;
 }
@@ -241,7 +241,7 @@ float prng_float(prng_type * prng) {
     {
     case 1 : result=(ran1(prng)); break;
     case 2 : result=(ran4(prng)); break;
-    case 3 : result=(drand48()); break;
+   // case 3 : result=(drand48()); break;
     }
   return result;
 }
@@ -276,7 +276,7 @@ prng_type * prng_Init(long seed, int nric) {
       }
       break;
     case 3 : 
-      srand48(seed);
+      srand(seed);
       break;
     }
 
@@ -303,7 +303,7 @@ void prng_Reseed(prng_type * prng, long seed)
       }
       break;
     case 3 : 
-      srand48(seed);
+      srand(seed);
       break;
     }
 } 

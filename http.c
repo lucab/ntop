@@ -1186,8 +1186,10 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
       // traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes, '%s'", strlen(theString), theString);
       if(errno != 0) traceEvent(CONST_TRACE_VERYNOISY, "Failed text was %d bytes", (int)strlen(theString));
       closeNwSocket(&myGlobals.newSock);
-      shutdown(myGlobals.newSock, SHUT_RDWR);
-      return;
+#if !defined(WIN32)
+	  shutdown(myGlobals.newSock, SHUT_RDWR);
+#endif
+	  return;
     } else {
       len -= rc;
       bytesSent += rc;
@@ -3681,7 +3683,7 @@ int readHTTPpostData(int len, char *buf, int buflen) {
 #endif
 
   memset(buf, 0, buflen);
-
+  
   if(len > (buflen-8)) {
     BufferTooSmall(buf, buflen);
     return (-1);

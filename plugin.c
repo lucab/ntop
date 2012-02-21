@@ -21,12 +21,9 @@
 #include "ntop.h"
 
 #ifdef MAKE_STATIC_PLUGIN
-extern PluginInfo* icmpPluginEntryFctn(void);
 extern PluginInfo* sflowPluginEntryFctn(void);
 extern PluginInfo* rrdPluginEntryFctn(void);
 extern PluginInfo* netflowPluginEntryFctn(void);
-extern PluginInfo* lsPluginEntryFctn(void);
-extern PluginInfo* wapPluginEntryFctn(void);
 #endif
 
 /* ******************* */
@@ -79,18 +76,12 @@ static void loadPlugin(char* dirName, char* pluginName) {
   pluginInfo = pluginJumpFunc();
 #else /* MAKE_STATIC_PLUGIN */
 
-  if(strcmp(pluginName, "icmpPlugin") == 0)
-    pluginInfo = icmpPluginEntryFctn();
-  else if(strcmp(pluginName, "sflowPlugin") == 0)
+ if(strcmp(pluginName, "sflowPlugin") == 0)
     pluginInfo = sflowPluginEntryFctn();
   else if(strcmp(pluginName, "netflowPlugin") == 0)
     pluginInfo = netflowPluginEntryFctn();
   else if(strcmp(pluginName, "rrdPlugin") == 0)
     pluginInfo = rrdPluginEntryFctn();
-  else if(strcmp(pluginName, "lastSeenPlugin") == 0)
-    pluginInfo = lsPluginEntryFctn();
-  else if(strcmp(pluginName, "pdaPlugin") == 0)
-    pluginInfo = wapPluginEntryFctn();
   else
     pluginInfo = NULL;
 

@@ -7795,7 +7795,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   rc = listen(*sock, myGlobals.webServerRequestQueueLength);
   if((rc < 0) || (errno != 0)) {
     closeNwSocket(&myGlobals.sock);
-    shutdown(myGlobals.sock, SHUT_RDWR);
+	shutdown(myGlobals.sock, SHUT_RDWR);
     traceEvent(CONST_TRACE_FATALERROR, "INITWEB:%s listen(%d, %d) error %s(%d)",
                sslOrNot,
                *sock,
@@ -8210,7 +8210,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 
     handleHTTPrequest(remote_ipaddr);
     closeNwSocket(&myGlobals.newSock);
-    shutdown(myGlobals.newSock, SHUT_RDWR);
+	shutdown(myGlobals.newSock, SHUT_RDWR);
   } else {
     traceEvent(CONST_TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d: %s)", errno, strerror(errno));
   }

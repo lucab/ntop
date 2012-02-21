@@ -114,6 +114,8 @@ extern ULONG GetHostIPAddr();
 
 #define pthread_self GetCurrentThreadId
 
+#define SHUT_RDWR SD_BOTH
+#define in_addr_t u_int32_t 
 
 /* *************************************************************** */
 
@@ -152,7 +154,7 @@ typedef struct DIR
 
 DIR           *opendir(const char *);
 int           closedir(DIR *);
-struct dirent *readdir(DIR *);
+fstruct dirent *readdir(DIR *);
 void          rewinddir(DIR *);
 
 #endif
@@ -461,10 +463,10 @@ extern char* strptime(const char *buf, const char *fmt, struct tm *tm);
 /* ********************************************* */
 
 // Max number of packets handled by the public version
-#define MAX_NUM_PACKETS   1000
+#define MAX_NUM_PACKETS   2000
 
 extern short isWinNT();
 extern void get_serial(unsigned long *driveSerial);
 
-/* #define WIN32_DEMO */
+//#define WIN32_DEMO
 #endif

@@ -929,11 +929,16 @@ static PyObject* python_interface_ipv6Address(PyObject *self, PyObject *args) {
 
   if(!PyArg_ParseTuple(args, "i", &interfaceId)) return NULL;
   if(interfaceId >= myGlobals.numDevices) return NULL;
+
+#ifdef INET6
   if(myGlobals.device[interfaceId].v6Addrs == NULL) return PyString_FromString("");
 
   return PyString_FromFormat("%s/%d",
 			     _intop(&myGlobals.device[interfaceId].v6Addrs->af.inet6.ifAddr, buf, sizeof(buf)),
 			     myGlobals.device[interfaceId].v6Addrs->af.inet6.prefixlen);
+#else
+  return NULL;
+#endif
 }
 
 static PyObject* python_interface_time(PyObject *self, PyObject *args) {

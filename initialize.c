@@ -915,18 +915,19 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
   /* ********************************************* */
 
+  #ifdef INET6
   if(!(myGlobals.device[deviceId].dummyDevice || myGlobals.device[deviceId].virtualDevice)) {
     u_int8_t netmask_v6;
     
     getLocalHostAddress(&myGlobals.device[deviceId].ifAddr, &netmask_v6, myGlobals.device[deviceId].name);
-    myGlobals.device[deviceId].v6Addrs = getLocalHostAddressv6(myGlobals.device[deviceId].v6Addrs, 
-							       myGlobals.device[deviceId].name);
+    myGlobals.device[deviceId].v6Addrs = getLocalHostAddressv6(myGlobals.device[deviceId].v6Addrs, myGlobals.device[deviceId].name);
 	if(myGlobals.device[deviceId].network.s_addr == 0) {
 		myGlobals.device[deviceId].netmask.s_addr = 0xFFFFFF00;/* /24 */
 		myGlobals.device[deviceId].network.s_addr = myGlobals.device[deviceId].ifAddr.s_addr 
 		  & myGlobals.device[deviceId].netmask.s_addr;
 	}
   }
+#endif
 
   mallocLen = 2;
   for(i=0; i<myGlobals.numDevices; i++) {

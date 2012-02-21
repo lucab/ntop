@@ -274,6 +274,7 @@ void printTrafficSummary (int revertOrder) {
       sendString(buf);
 
       sendString("<TD ALIGN=LEFT>");
+#ifdef INET6
       if(myGlobals.device[i].v6Addrs > 0) {
 	NtopIfaceAddr *ifaddr;
 
@@ -285,6 +286,7 @@ void printTrafficSummary (int revertOrder) {
 	  sendString(buf);
 	}
       } else
+#endif
 	sendString("&nbsp;");
 
       sendString("</TD>");
@@ -629,6 +631,7 @@ void printTrafficStatistics(int revertOrder) {
       sendString(buf);
 
       sendString("<TD ALIGN=LEFT>");
+#ifdef INET6
       if(myGlobals.device[i].v6Addrs > 0) {
 	NtopIfaceAddr *ifaddr;
 
@@ -640,6 +643,7 @@ void printTrafficStatistics(int revertOrder) {
 	  sendString(buf);
 	}
       } else
+#endif
 	sendString("&nbsp;");
 
       sendString("</TD>");
@@ -3996,7 +4000,7 @@ void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	  }
 
 	  sendString("<CENTER>\n"
-		     ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
+		     TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
 		     "<TH "TH_BG">Proto</TH>"
 		     "<TH "TH_BG">Client</TH>"
 		     "<TH "TH_BG">Server</TH>"
@@ -4006,13 +4010,16 @@ void printActiveSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		     "<TH "TH_BG">Inactive</TH>"
 		     "<TH "TH_BG" COLSPAN=2>Client/Server Nw Delay</TH>"
 		     "<TH "TH_BG">L7 Proto</TH>"
+			 );
+
+
 #ifdef PRINT_SESSION_DETAILS
-		     "<TH "TH_BG">Note</TH>"
-#ifdef PARM_PRINT_ALL_SESSIONS
-		     "<TH "TH_BG">State</TH>"
+		     sendString("<TH "TH_BG">Note</TH>");
+#if defined(PARM_PRINT_ALL_SESSIONS)
+		     sendString("<TH "TH_BG">State</TH>");
 #endif
 #endif
-		     );
+		 
 	  sendString("</TR>\n");
 	}
 

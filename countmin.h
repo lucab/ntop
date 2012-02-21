@@ -2,8 +2,13 @@
 //   1 -- The basic CM Sketch
 //   2 -- The hierarchical CM Sketch: with log n levels, for range sums etc. 
 
+#ifndef min
 #define min(x,y)	((x) < (y) ? (x) : (y))
+#endif
+
+#ifndef max
 #define max(x,y)	((x) > (y) ? (x) : (y))
+#endif
 
 #include "prng.h"
 
