@@ -129,8 +129,8 @@ libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN
 
 # Archive for http representation, or the 'viewer'
 libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
-                           http.c            \
-                           report.c        reportUtils.c     ssl.c   \
+                           httpd.c            \
+                           report.c        reportUtils.c     ssl_utils.c   \
                            webInterface.c  map.c	     \
 		           python.c
 
