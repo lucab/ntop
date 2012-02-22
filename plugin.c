@@ -233,12 +233,9 @@ void loadPlugins(void) {
 
   closedir(directoryPointer);
 #else /* MAKE_STATIC_PLUGIN */
-  loadPlugin(NULL, "icmpPlugin");
   loadPlugin(NULL, "sflowPlugin");
   loadPlugin(NULL, "netflowPlugin");
   loadPlugin(NULL, "rrdPlugin");
-  loadPlugin(NULL, "lastSeenPlugin");
-  loadPlugin(NULL, "pdaPlugin");
 #endif /* MAKE_STATIC_PLUGIN */
 }
 
