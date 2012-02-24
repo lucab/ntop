@@ -480,7 +480,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   time_t initTime;
   Counter total_pkts, total_bytes;
   u_int total_flows, ratio;
-  u_int16_t major_proto = record->l7_proto;
+  u_int16_t major_proto;
 
 #ifdef MAX_NETFLOW_FLOW_BUFFER
   float elapsed;
@@ -491,6 +491,8 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 #endif
 
   if(deEndianize) de_endianFlow(record);
+
+  major_proto = record->l7_proto;
 
   if(myGlobals.runningPref.debugMode)
     traceEvent(CONST_TRACE_INFO, ">>>> NETFLOW: handleGenericFlow() called");
