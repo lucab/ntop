@@ -322,6 +322,9 @@ static void checkNetworkRouter(HostTraffic *srcHost, HostTraffic *dstHost,
 			       u_char *ether_dst, int actualDeviceId,
 			       Counter bytes,
 			       const struct pcap_pkthdr *h, const u_char *p) {
+
+  if(ether_dst == NULL) return;
+
   if((subnetLocalHost(srcHost) && (!subnetLocalHost(dstHost))
       && (!broadcastHost(dstHost)) && (!multicastHost(dstHost)))
      || (subnetLocalHost(dstHost) && (!subnetLocalHost(srcHost))

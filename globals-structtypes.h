@@ -1450,6 +1450,7 @@ typedef struct ntopInterface {
   /* ********************* */
   
   struct {
+    PthreadMutex l7Mutex;
     struct ipoque_detection_module_struct *l7handler;
     Counter *protoTraffic;
   } l7;

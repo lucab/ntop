@@ -4103,7 +4103,7 @@ unsigned long _ntopSleepMSWhileSameState(char *file, int line, unsigned long ulD
 
   ntopRunStateSave = myGlobals.ntopRunState;
 
-  traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "ntopSleepMS(%lu)", ulDelay);
+  /* traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line, "ntopSleepMS(%lu)", ulDelay); */
 
   while(ulDelay > 0L) {
     if(ulDelay < ulSlice)
@@ -4121,11 +4121,12 @@ unsigned long _ntopSleepMSWhileSameState(char *file, int line, unsigned long ulD
         memcpy(&sleepAmount, &remAmount, sizeof(sleepAmount));
         memset(&remAmount, 0, sizeof(remAmount));
 
+	/*
         traceEvent(CONST_BEYONDNOISY_TRACE_LEVEL, file, line,
 		   "nanosleep({%d, %d}, )",
 		   (int)sleepAmount.tv_sec,
 		   (int)sleepAmount.tv_nsec);
-
+	*/
         if((nanosleep(&sleepAmount, &remAmount) != 0) && (errno == EINTR)) {
           if(ntopRunStateSave != myGlobals.ntopRunState) {
             ulDelay = ulDelay - ulSlice + remAmount.tv_sec * 1000L + remAmount.tv_nsec / 1000L;

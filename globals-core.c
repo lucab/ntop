@@ -538,6 +538,10 @@ void initL7DeviceDiscovery(int deviceId) {
   // enable all protocols
   IPOQUE_BITMASK_SET_ALL(all);
   ipoque_set_protocol_detection_bitmask2(myGlobals.device[deviceId].l7.l7handler, &all);
+
+  /* ************************** */
+
+  createMutex(&myGlobals.device[deviceId].l7.l7Mutex);
 }
 
 /* ********************************* */
