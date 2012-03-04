@@ -1450,6 +1450,7 @@ typedef struct ntopInterface {
   /* ********************* */
   
   struct {
+    struct ipoque_detection_module_struct *l7handler;
     Counter *protoTraffic;
   } l7;
 } NtopInterface;
@@ -2167,6 +2168,5 @@ typedef struct ntopGlobals {
   struct {
     u_short numSupportedProtocols;
     u_int16_t flow_struct_size, proto_size;
-    struct ipoque_detection_module_struct *l7handler;
   } l7;
 } NtopGlobals;

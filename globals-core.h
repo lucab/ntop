@@ -130,6 +130,7 @@ extern void initNtop(char *devices);
 #if defined(MEMORY_DEBUG)
 extern void resetLeaks();
 #endif
+extern void initL7DeviceDiscovery(int deviceId);
 
 /* address.c */
 extern void cacheHostName(HostAddr *addr, char* symbolic);

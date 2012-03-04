@@ -1894,7 +1894,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 	/* We have found a protocol defined thus we map the protocol */
 	theSession->l7.major_proto = IPOQUE_MAX_SUPPORTED_PROTOCOLS + rc;
       } else {
-	if(myGlobals.l7.l7handler != NULL) {
+	if(myGlobals.device[actualDeviceId].l7.l7handler != NULL) {
 	  static u_int8_t once = 0;
 
 	  if((theSession->l7.flow = calloc(1, myGlobals.l7.flow_struct_size)) == NULL) {
@@ -2488,7 +2488,7 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
   if((theSession->pktRcvd < 20) && (theSession->pktSent < 20)) {
     if((ip_offset > 0) && (theSession->l7.major_proto == IPOQUE_PROTOCOL_UNKNOWN)) {
       u_int64_t when = ((u_int64_t) h->ts.tv_sec) * 1000 /* detection_tick_resolution */ + h->ts.tv_usec / 1000 /* (1000000 / detection_tick_resolution) */;
-      theSession->l7.major_proto = ipoque_detection_process_packet(myGlobals.l7.l7handler,
+      theSession->l7.major_proto = ipoque_detection_process_packet(myGlobals.device[actualDeviceId].l7.l7handler,
 								   theSession->l7.flow, (u_int8_t *)&p[ip_offset],
 								   h->caplen-ip_offset, when,
 								   (sport == theSession->sport) ? theSession->l7.src : theSession->l7.dst,

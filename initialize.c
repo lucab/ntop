@@ -678,6 +678,7 @@ void allocDeviceMemory(int deviceId) {
     myGlobals.device[deviceId].packetQueue = 
       (PacketInformation*)calloc(sizeof(PacketInformation), (CONST_PACKET_QUEUE_LENGTH+1));
 
+  initL7DeviceDiscovery(deviceId);
   myGlobals.device[deviceId].l7.protoTraffic = (Counter*)calloc(myGlobals.l7.numSupportedProtocols, sizeof(Counter));
 }
 
@@ -1391,6 +1392,8 @@ u_int createDummyInterface(char *ifName) {
   memset(&myGlobals.device[deviceId], 0, sizeof(NtopInterface));
 
   resetDevice(deviceId, 1);
+  initL7DeviceDiscovery(deviceId);
+
   myGlobals.device[deviceId].network.s_addr = 0xFFFFFFFF;
   myGlobals.device[deviceId].netmask.s_addr = 0xFFFFFFFF;
   myGlobals.device[deviceId].numHosts = myGlobals.device[0].numHosts;
