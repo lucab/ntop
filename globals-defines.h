@@ -1976,11 +1976,6 @@
 #define DEFAULT_SFLOW_PORT        atoi(DEFAULT_SFLOW_COLLECTOR_PORT_STR)
 
 /*
- * Default port to use for cPacket.
- */
-#define DEFAULT_CPACKET_PORT_STR   "20167"
-
-/*
  *  Sampling rate - sflow samples every n-th packet
  */
 #define DEFAULT_SFLOW_SAMPLING_RATE  "400"
@@ -1988,7 +1983,8 @@
 /*
  * Text string to lookup an ASN
  */
-#define DEFAULT_AS_LOOKUP_URL          "http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS"
+#define DEFAULT_AS_LOOKUP_URL          "https://apps.db.ripe.net/search/query.html?searchtext=AS%d&searchSubmit=search#resultsAnchor"
+#define DEFAULT_WHOIS_LOOKUP_URL       "https://apps.db.ripe.net/search/query.html?searchtext=%s&searchSubmit=search#resultsAnchor"
 
 /*
  * img tag for lock (secure URL)

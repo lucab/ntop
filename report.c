@@ -2967,7 +2967,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 	  } else {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 			  "<TD "TD_BG" ALIGN=RIGHT NOWRAP>"
-			  "<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\" title=\"Lookup ASN (offsite)\">%d</a>"
+			  "<a href=\"" DEFAULT_AS_LOOKUP_URL "\" title=\"Lookup ASN (offsite)\">%d</a>"
 			  "</TD>",
 			  el->hostAS, el->hostAS);
 	    sendString(buf);
@@ -3159,7 +3159,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     char errorAdditionalText[1024], whois[256];
 
     safe_snprintf(__FILE__, __LINE__, whois, sizeof(whois),
-		  "[ <A class=external HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=%s\">Whois</A> ]</TD></TR>\n",
+		  "[ <A class=external HREF=\""DEFAULT_WHOIS_LOOKUP_URL"\">Whois</A> ]</TD></TR>\n",
 		  host);
 
     safe_snprintf(__FILE__, __LINE__, errorAdditionalText, sizeof(errorAdditionalText),
@@ -4764,15 +4764,11 @@ void printDomainStats(char* domain_network_name, int network_mode,
 		      "src=/"CONST_EDIT_IMG" border=\"0\">");
       }
 
-      if(network_mode == AS_VIEW) {
+      if((network_mode == AS_VIEW) 
+	 || (network_mode == AS_GRAPH_VIEW)) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "Statistics for hosts in AS <A HREF=http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%s>%s</A> %s",
-		      domain_network_name, (sym_nw_name[0] == '\0') ? domain_network_name : sym_nw_name,
-		      link_name);
-      } else if(network_mode == AS_GRAPH_VIEW) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "Statistics for AS <A HREF=http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%s>%s</A> %s",
-		      domain_network_name, (sym_nw_name[0] == '\0') ? domain_network_name : sym_nw_name,
+		      "Statistics for hosts in AS <A HREF=\"" DEFAULT_AS_LOOKUP_URL "\">%s</A> %s",
+		      atoi(domain_network_name), (sym_nw_name[0] == '\0') ? domain_network_name : sym_nw_name,
 		      link_name);
       } else {
 	char tmp_buf[64], key[64], my_domain_network_name[64], *placeholder = domain_network_name;

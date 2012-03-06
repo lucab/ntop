@@ -4231,12 +4231,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONTACTED_PEERS_THRESHOLD", "undefined");
 #endif
 
-#ifdef DEFAULT_AS_LOOKUP_URL
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_AS_LOOKUP_URL", DEFAULT_AS_LOOKUP_URL);
-#else
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_AS_LOOKUP_URL", "undefined");
-#endif
-
 #ifdef DEFAULT_NETFLOW_PORT_STR
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NETFLOW_PORT_STR", DEFAULT_NETFLOW_PORT_STR);
 #else

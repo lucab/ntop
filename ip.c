@@ -736,8 +736,8 @@ void processIpPkt(const u_char *bp, /* Pointer to IP */
 	int ttl;
 	char WSS[3] = { 0 }, _MSS[5] = { 0 };
 	struct tcphdr *tcp = (struct tcphdr*)(bp+hlen);
-	u_char *tcp_opt = (u_char *)(tcp + 1);
-        u_char *tcp_data = (u_char *)(tcp + tp.th_off * 4);
+	u_char *tcp_opt = (u_char *)(bp + hlen + 1);
+        u_char *tcp_data = (u_char *)(bp + hlen + tp.th_off * 4);
 
 	if(tcp->th_flags & TH_SYN) {   /* only SYN or SYN-2ACK packets */
 	  if(tcpUdpLen > 0) {

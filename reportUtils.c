@@ -3444,7 +3444,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if(el->hostAS != 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		  "<A class=external HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%d\">%d</A>"
+		  "<A class=external HREF=\"" DEFAULT_AS_LOOKUP_URL "\">%d</A>"
 		  "&nbsp;[%s]</TD></TR>\n\n",
 		  getRowColor(), "Autonomous System",
 		  el->hostAS, el->hostAS, (el->hostASDescr != NULL) ? el->hostASDescr : "No AS info");
@@ -3815,10 +3815,9 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
      && (!subnetPseudoLocalHost(el))
      && (!multicastHost(el))
      && (!privateIPAddress(el))) {
-
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">"
 		  "%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		  "[ <A class=external HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=%s\">Whois</A> ]\n",
+		  "[ <A class=external HREF=\""DEFAULT_WHOIS_LOOKUP_URL"\">Whois</A> ]\n",
 		  getRowColor(), "Further Host Information", el->hostNumIpAddress);
     sendString(buf);
 
