@@ -82,14 +82,18 @@ struct generic_netflow_record {
   u_int8_t  tcp_flags;  /* Cumulative OR of tcp flags */
   u_int8_t  proto;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
   u_int8_t  tos;        /* IP Type-of-Service */
-  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
-  u_int16_t src_as;     /* source peer/origin Autonomous System */
+  u_int32_t dst_as;     /* dst peer/origin Autonomous System */
+  u_int32_t src_as;     /* source peer/origin Autonomous System */
   u_int8_t  dst_mask;   /* destination route's mask bits */
   u_int8_t  src_mask;   /* source route's mask bits */
 
   /* v9 */
   char src_mac[LEN_ETHERNET_ADDRESS], src_mac_set, dst_mac[LEN_ETHERNET_ADDRESS], dst_mac_set;
   u_int16_t vlanId;
+  /* IPv6 support courtesy of John_Poland@boces.monroe.edu */
+  u_int8_t  srcaddr6[16];   /* Source IPv6 Address */
+  u_int8_t  dstaddr6[16];   /* Destination IPv6 Address */
+
 
   /* L7 */
   u_int16_t l7_proto;
@@ -441,7 +445,7 @@ static void de_endianFlow(struct generic_netflow_record *record) {
   NTOHL(record->sentOctets); NTOHL(record->rcvdOctets);
   NTOHL(record->first); NTOHL(record->last);
   NTOHS(record->srcport); NTOHS(record->dstport);
-  NTOHS(record->src_as); NTOHS(record->dst_as);
+  NTOHL(record->src_as); NTOHL(record->dst_as);
   NTOHS(record->vlanId);
   NTOHL(record->client_nw_latency_sec); NTOHL(record->client_nw_latency_usec);
   NTOHL(record->server_nw_latency_sec); NTOHL(record->server_nw_latency_usec);
@@ -469,6 +473,7 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
   char theFlags[256], srcPseudoLocal, dstPseudoLocal;
   u_int16_t srcAS, dstAS;
   struct in_addr a, b;
+  struct in6_addr a6, b6;
   HostAddr addr1, addr2;
   HostTraffic *srcHost=NULL, *dstHost=NULL;
   u_short sport, dport, proto, newSession = 0;
@@ -541,9 +546,13 @@ static int handleGenericFlow(u_int32_t netflow_device_ip,
 
   myGlobals.device[deviceId].netflowGlobals->numNetFlowsProcessed++;
 
-  /* FIX : handle IPv6 */
-  a.s_addr = record->srcaddr;
-  b.s_addr = record->dstaddr;
+  if ((record->srcaddr==0) && (record->dstaddr==0)) {
+    memcpy(a6.s6_addr,record->srcaddr6,sizeof(a6.s6_addr));
+    memcpy(b6.s6_addr,record->dstaddr6,sizeof(b6.s6_addr));
+  } else {
+    a.s_addr = record->srcaddr;
+    b.s_addr = record->dstaddr;
+  }
   sport    = record->srcport;
   dport    = record->dstport;
   proto    = record->proto;
@@ -568,6 +577,8 @@ if(myGlobals.runningPref.debugMode) {
     break;
   case portAggregation:
     a.s_addr = b.s_addr = 0; /* 0.0.0.0 */
+    memset(a6.s6_addr,0,sizeof(a6.s6_addr));
+    memset(b6.s6_addr,0,sizeof(b6.s6_addr));
     break;
   case hostAggregation:
     sport = dport = 0;
@@ -575,12 +586,16 @@ if(myGlobals.runningPref.debugMode) {
   case protocolAggregation:
     skipDST = skipSRC = 1;
     a.s_addr = b.s_addr = 0; /* 0.0.0.0 */
+    memset(a6.s6_addr,0,sizeof(a6.s6_addr));
+    memset(b6.s6_addr,0,sizeof(b6.s6_addr));
     sport = dport = 0;
     srcAS = dstAS = 0;
     break;
   case asAggregation:
     skipDST = skipSRC = 1;
     a.s_addr = b.s_addr = 0; /* 0.0.0.0 */
+    memset(a6.s6_addr,0,sizeof(a6.s6_addr));
+    memset(b6.s6_addr,0,sizeof(b6.s6_addr));
     sport = dport = 0;
     proto = 17; /* UDP */
     break;
@@ -624,7 +639,12 @@ if(myGlobals.runningPref.debugMode) {
   updateDevicePacketStats(ratio, actualDeviceId);
 
   myGlobals.device[actualDeviceId].ethernetBytes.value += total_bytes;
-  myGlobals.device[actualDeviceId].ipv4Bytes.value     += total_bytes;
+  if ((record->srcaddr==0) && (record->dstaddr==0)) {
+    myGlobals.device[actualDeviceId].ipv6Bytes.value     += total_bytes;
+  } else {
+    myGlobals.device[actualDeviceId].ipv4Bytes.value     += total_bytes;
+  }
+
 
   if (ratio > 0) {
     if(ratio <= 64)
@@ -692,8 +712,14 @@ if(myGlobals.runningPref.debugMode) {
   }
 #endif
 
-  addrput(AF_INET, &addr1, &b);
-  addrput(AF_INET, &addr2, &a);
+  if ((a.s_addr == 0) && (b.s_addr == 0)) {
+     addrput(AF_INET6, &addr1, &b6);
+     addrput(AF_INET6, &addr2, &a6);
+  }
+  else {
+     addrput(AF_INET, &addr1, &b);
+     addrput(AF_INET, &addr2, &a);
+  }
 
   if(!skipDST)
     dstHost = lookupHost(&addr1, NULL, record->vlanId, 0, 1, deviceId, NULL, NULL);
@@ -747,8 +773,15 @@ if(myGlobals.runningPref.debugMode) {
   /* [NOTE: this has to be repeated for the reverse direction ]
      srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;
   */
-  srcHost->ipv4BytesSent.value += record->sentOctets, dstHost->ipv4BytesRcvd.value += record->sentOctets;
-  dstHost->ipv4BytesSent.value += record->rcvdOctets, srcHost->ipv4BytesRcvd.value += record->rcvdOctets;
+  if (addr2.hostFamily==AF_INET6) {
+    srcHost->ipv6BytesSent.value += record->sentOctets, dstHost->ipv6BytesRcvd.value += record->sentOctets;
+    dstHost->ipv6BytesSent.value += record->rcvdOctets, srcHost->ipv6BytesRcvd.value += record->rcvdOctets;
+  }
+  else {
+    srcHost->ipv4BytesSent.value += record->sentOctets, dstHost->ipv4BytesRcvd.value += record->sentOctets;
+    dstHost->ipv4BytesSent.value += record->rcvdOctets, srcHost->ipv4BytesRcvd.value += record->rcvdOctets;
+  }
+
 
   if(srcAS != 0) srcHost->hostAS = srcAS;
   if(dstAS != 0) dstHost->hostAS = dstAS;
@@ -1802,7 +1835,12 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 		  case 24: /* OUT_PKTS */
 		    memcpy(&record.sentPkts, &buffer[displ], 4);
 		    break;
-
+                  case 27: /* IPV6_SRC_ADDR */
+                     memcpy(&record.srcaddr6, &buffer[displ], 16);
+                     break;
+                  case 28: /* IPV6_DST_ADDR */
+                     memcpy(&record.dstaddr6, &buffer[displ], 16);
+                     break;
 		  case 56: /* IN_SRC_MAC */
 		    memcpy(&record.src_mac, &buffer[displ], LEN_ETHERNET_ADDRESS), record.src_mac_set = 1;
 		    break;
@@ -1914,23 +1952,38 @@ static void dissectFlow(u_int32_t netflow_device_ip,
 
 	      if(myGlobals.runningPref.debugMode)
 		traceEvent(CONST_TRACE_INFO,
-			   ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d][pkts=%d/bytes=%d]",
-			   accum_len, record.sentPkts, record.sentOctets);
+			   ">>>> NETFLOW: Calling insert_flow_record() [accum_len=%d][sent pkts=%d/bytes=%d][rcvd pkts=%d/bytes=%d]",
+			   accum_len, record.sentPkts, record.sentOctets,record.rcvdPkts,record.rcvdOctets);
 
 	      tot_len += accum_len;
 
 	      if(record.rcvdPkts > 0) {
-		u_int32_t tmp;
+                u_int16_t tmpPort;
+                u_int32_t tmpAS;
+                u_int32_t tmpAddr;
+                u_int8_t  tmp6[16];   
 
 		record.sentPkts   = record.rcvdPkts;
 		record.sentOctets = record.rcvdOctets;
 
-		tmp = record.srcaddr;
-		record.srcaddr = record.dstaddr;
-		record.dstaddr = tmp;
-		tmp = record.srcport;
-		record.srcport = record.dstport;
-		record.dstport = tmp;
+                if ((record.srcaddr==0) && (record.dstaddr==0)) {
+                      memcpy(tmp6,record.srcaddr6,sizeof(tmp6));
+                      memcpy(record.srcaddr6,record.dstaddr6,sizeof(record.srcaddr6));
+                      memcpy(record.dstaddr6,tmp6,sizeof(record.dstaddr6));
+                }
+                else {
+                     tmpAddr = record.srcaddr;
+                     record.srcaddr = record.dstaddr;
+                     record.dstaddr = tmpAddr;
+                }
+                tmpPort = record.srcport;
+                record.srcport = record.dstport;
+                record.dstport = tmpPort;
+
+                tmpAS = record.src_as;
+                record.src_as = record.dst_as;
+                record.dst_as = tmpAS;
+
 
 		handleGenericFlow(netflow_device_ip, netflow_device_port, recordActTime, recordSysUpTime,
 				  &record, deviceId, &firstSeen, &lastSeen, 0);
