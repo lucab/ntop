@@ -42,10 +42,10 @@ static void updateHostNameInfo(HostAddr addr, char* symbolic, int type);
 
 typedef struct hostAddrList {
   HostAddr addr;
-  struct hostAddrList *next;
+  struct hostAddrList *next, *prev;
 } HostAddrList;
 
-static HostAddrList *hostAddrList_head = NULL;
+static HostAddrList *hostAddrList_head = NULL, *hostAddrList_tail = NULL;
 
 typedef struct {
   time_t dump_date;
@@ -178,7 +178,8 @@ static void queueAddress(HostAddr elem) {
   if(myGlobals.addressQueuedCurrent > 16384) {
     myGlobals.addressUnresolvedDrops++;
   } else {
-    /* First check if the address we want to resolve is already in queue */
+    /* First check if the address we want to resolve is already in queue 
+       waiting to be resolved */
     HostAddrList *head = hostAddrList_head;
 
     while(head != NULL) {
@@ -194,10 +195,15 @@ static void queueAddress(HostAddr elem) {
     traceEvent(CONST_TRACE_ERROR, "queueAddress(%s)", addrtostr(&elem));
 #endif
 
-    if((cloned = (HostAddrList*)malloc(sizeof(HostAddrList))) != NULL) {
+    if((cloned = (HostAddrList*)calloc(1, sizeof(HostAddrList))) != NULL) {
       memcpy(&cloned->addr, &elem, sizeof(HostAddr));
-      cloned->next = hostAddrList_head;
+      if(hostAddrList_head) hostAddrList_head->prev = cloned;
+      cloned->next = hostAddrList_head, cloned->prev = NULL;
       hostAddrList_head = cloned;
+
+      if(hostAddrList_tail == NULL)
+	hostAddrList_tail = cloned; /* First element of the list */
+
       signalCondvar(&myGlobals.queueAddressCondvar, 0);
       myGlobals.addressQueuedCurrent++;
       if(myGlobals.addressQueuedCurrent > myGlobals.addressQueuedMax)
@@ -224,7 +230,7 @@ void* dequeueAddress(void *_i) {
     traceEvent(CONST_TRACE_INFO, "DEBUG: Waiting for address to resolve...");
 #endif
 
-    while(hostAddrList_head == NULL) {
+    while(hostAddrList_tail == NULL) {
       if(myGlobals.ntopRunState > FLAG_NTOPSTATE_RUN) break;
       waitCondvar(&myGlobals.queueAddressCondvar);
     }
@@ -237,9 +243,16 @@ void* dequeueAddress(void *_i) {
 
     accessAddrResMutex("dequeueAddress");
 
-    if(hostAddrList_head != NULL) {
-      elem = hostAddrList_head;
-      hostAddrList_head = hostAddrList_head->next;
+    if(hostAddrList_tail != NULL) {
+      elem = hostAddrList_tail;
+      hostAddrList_tail = hostAddrList_tail->prev;
+
+      if(hostAddrList_head == elem)
+	hostAddrList_head = NULL;
+
+      if(elem->prev != NULL)
+	elem->prev->next = NULL;
+
       if(myGlobals.addressQueuedCurrent > 0) myGlobals.addressQueuedCurrent--;
     } else
       elem = NULL;
