@@ -191,6 +191,7 @@ static u_int handleFragment(HostTraffic *srcHost,
     fragment->fragmentOrder = FLAG_UNKNOWN_FRAGMENT_ORDER;
     fragment->next = myGlobals.device[actualDeviceId].fragmentList;
     fragment->prev = NULL;
+    if(fragment->next) fragment->next->prev = fragment;
     myGlobals.device[actualDeviceId].fragmentList = fragment;
   } else
     checkFragmentOverlap(srcHost, dstHost, fragment,

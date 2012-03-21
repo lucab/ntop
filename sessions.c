@@ -1009,8 +1009,9 @@ static void handleMsnMsgrSession (const struct pcap_pkthdr *h,
       /* traceEvent(CONST_TRACE_INFO, "User='%s' [%s]@[%s->%s]", row, rcStr, srcHost->hostResolvedName, dstHost->hostResolvedName); */
       updateHostUsers(row, BITFLAG_MESSENGER_USER, srcHost);
     }
-    free(rcStr);
   }
+
+  free(rcStr);
 }
 
 /* *********************************** */
