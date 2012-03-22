@@ -103,7 +103,6 @@ void usage(FILE * fp) {
   fprintf(fp, "                                                          %s  %d - %s\n", newLine, 0, "No DNS resolution at all");
   fprintf(fp, "                                                          %s  %d - %s\n", newLine, 1, "DNS resolution for local hosts only");
   fprintf(fp, "                                                          %s  %d - %s\n", newLine, 2, "DNS resolution for remote hosts only");
-  fprintf(fp, "    [-o             | --no-mac]                           %sntop will trust just IP addresses (no MACs)\n", newLine);
   fprintf(fp, "    [-p <list>      | --protocols <list>]                 %sList of IP protocols to monitor (see man page)\n", newLine);
   fprintf(fp, "    [-q             | --create-suspicious-packets]        %sCreate file ntop-suspicious-pkts.XXX.pcap file\n", newLine);
   fprintf(fp, "    [-r <number>    | --refresh-time <number>]            %sRefresh time in seconds, default is %d\n",

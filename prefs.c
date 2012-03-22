@@ -95,7 +95,7 @@ static struct option const long_options[] = {
   { "pcap-log",                         required_argument, NULL, 'l' },
   { "local-subnets",                    required_argument, NULL, 'm' },
   { "numeric-ip-addresses",             required_argument, NULL, 'n' },
-  { "no-mac",                           no_argument,       NULL, 'o' },
+  /* 'o' is free */
 
   { "protocols",                        required_argument, NULL, 'p' },
   { "create-suspicious-packets",        no_argument,       NULL, 'q' },
