@@ -1956,6 +1956,7 @@ typedef struct ntopGlobals {
    * HTS - Hash Purge
    */
   PthreadMutex purgeMutex;
+  PthreadMutex fragmentMutex;
 
   /*
    * HTS - Host Traffic Statistics

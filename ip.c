@@ -175,6 +175,8 @@ static u_int handleFragment(HostTraffic *srcHost,
   if(!myGlobals.enableFragmentHandling)
     return(0);
 
+  accessMutex(&myGlobals.fragmentMutex, "handleFragment");
+
   fragmentOffset = (off & 0x1FFF)*8;
 
   fragment = searchFragment(srcHost, dstHost, fragmentId, actualDeviceId);
@@ -230,6 +232,8 @@ static u_int handleFragment(HostTraffic *srcHost,
     length = 0;
   }
 
+  releaseMutex(&myGlobals.fragmentMutex);
+
   return length;
 }
 
@@ -238,6 +242,8 @@ static u_int handleFragment(HostTraffic *srcHost,
 void purgeOldFragmentEntries(int actualDeviceId) {
   IpFragment *fragment, *next;
   u_int fragcnt=0, expcnt=0;
+
+  accessMutex(&myGlobals.fragmentMutex, "purgeOldFragmentEntries");
 
   fragment = myGlobals.device[actualDeviceId].fragmentList;
 
@@ -253,6 +259,8 @@ void purgeOldFragmentEntries(int actualDeviceId) {
     }
     fragment=next;
   }
+
+  releaseMutex(&myGlobals.fragmentMutex);
 
 #ifdef FRAGMENT_DEBUG
   if(fragcnt) {

@@ -296,6 +296,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   createMutex(&myGlobals.purgeMutex);       /* synchronize purging */
   createMutex(&myGlobals.securityItemsMutex);
   createMutex(&myGlobals.hostsHashLockMutex);
+  createMutex(&myGlobals.fragmentMutex);
 
   createMutex(&myGlobals.serialLockMutex);  /* Serial host locking */
 
