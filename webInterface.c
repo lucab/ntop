@@ -6906,6 +6906,10 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   /* **** */
 
+  printInfoSectionTitle(textPrintFlag, "Fragments Handling");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u", myGlobals.num_queued_fragments);
+  printFeatureConfigInfo(textPrintFlag, "Queued Fragments", buf);
+
   printInfoSectionTitle(textPrintFlag, "----- Address Resolution -----");
 
   printInfoSectionTitle(textPrintFlag, "DNS Sniffing (other hosts requests)");

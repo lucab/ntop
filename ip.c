@@ -111,6 +111,7 @@ void deleteFragment(IpFragment *fragment, int actualDeviceId) {
     fragment->prev->next = fragment->next;
 
   free(fragment);
+  myGlobals.num_queued_fragments--;
 }
 
 /* ************************************ */
@@ -183,22 +184,20 @@ static u_int handleFragment(HostTraffic *srcHost,
 
   if(fragment == NULL) {
     /* new fragment */
-    fragment = (IpFragment*) malloc(sizeof(IpFragment));
+    fragment = (IpFragment*)calloc(1, sizeof(IpFragment));
     if(fragment == NULL) return(0); /* out of memory, not much we can do */
     memset(fragment, 0, sizeof(IpFragment));
-    fragment->src = srcHost;
-    fragment->dest = dstHost;
-    fragment->fragmentId = fragmentId;
-    fragment->firstSeen = myGlobals.actTime;
+    fragment->src = srcHost, fragment->dest = dstHost;
+    fragment->fragmentId = fragmentId, fragment->firstSeen = myGlobals.actTime;
     fragment->fragmentOrder = FLAG_UNKNOWN_FRAGMENT_ORDER;
-    fragment->next = myGlobals.device[actualDeviceId].fragmentList;
-    fragment->prev = NULL;
+    fragment->next = myGlobals.device[actualDeviceId].fragmentList, fragment->prev = NULL;
     if(fragment->next) fragment->next->prev = fragment;
     myGlobals.device[actualDeviceId].fragmentList = fragment;
+    myGlobals.num_queued_fragments++;
   } else
     checkFragmentOverlap(srcHost, dstHost, fragment,
-			 fragmentOffset, dataLength, actualDeviceId,
-			 h, p);
+			 fragmentOffset, dataLength,
+			 actualDeviceId, h, p);
 
   fragment->lastOffset = fragmentOffset;
   fragment->totalPacketLength += packetLength;
@@ -241,23 +240,32 @@ static u_int handleFragment(HostTraffic *srcHost,
 
 void purgeOldFragmentEntries(int actualDeviceId) {
   IpFragment *fragment, *next;
+#ifdef FRAGMENT_DEBUG 
   u_int fragcnt=0, expcnt=0;
+#endif
 
   accessMutex(&myGlobals.fragmentMutex, "purgeOldFragmentEntries");
 
   fragment = myGlobals.device[actualDeviceId].fragmentList;
 
   while(fragment != NULL) {
-    fragcnt++;
-    next = fragment->next;
-    if((fragment->firstSeen + CONST_DOUBLE_TWO_MSL_TIMEOUT) < myGlobals.actTime) {
-      expcnt++;
 #ifdef FRAGMENT_DEBUG
+    fragcnt++;
+#endif
+    next = fragment->next;
+    if((fragment->firstSeen + 30 /* sec */) < myGlobals.actTime) {
+#ifdef FRAGMENT_DEBUG
+      expcnt++;
       dumpFragmentData(fragment);
 #endif
+
+      if(fragment->prev) fragment->prev = next;
+      if(next)           next->prev = fragment->prev;
+
       deleteFragment(fragment, actualDeviceId);
     }
-    fragment=next;
+
+    fragment = next;
   }
 
   releaseMutex(&myGlobals.fragmentMutex);

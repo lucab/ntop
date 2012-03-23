@@ -214,6 +214,7 @@ void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_start
   myGlobals.runningPref.sslPort = 0; /* Disabled by default: enabled via -W */
 #endif
 
+  myGlobals.num_queued_fragments = 0;
   myGlobals.dnsSniffCount = 0;
   myGlobals.dnsSniffRequestCount = 0;
   myGlobals.dnsSniffFailedCount = 0;

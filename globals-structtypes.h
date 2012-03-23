@@ -1956,6 +1956,9 @@ typedef struct ntopGlobals {
    * HTS - Hash Purge
    */
   PthreadMutex purgeMutex;
+
+  /* Fragments */
+  u_int num_queued_fragments;
   PthreadMutex fragmentMutex;
 
   /*
