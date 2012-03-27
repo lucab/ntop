@@ -4588,6 +4588,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
 		formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
   sendString(tmpBuf);
 
+
+  sendString("<tr><th align=right>[ <A HREF="CONST_LAST_HOUR_TOP_TALKERS_HTML">Top Talkers</A> ]</th></tr>\n");
   sendString("</table></div><div id=\"tabs-2\">\n<table border=0>\n");
 
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
@@ -4602,6 +4604,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
 		formatTimeStamp(0, 0, 60, formatBuf, sizeof(formatBuf)),
 		formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1)));
   sendString(tmpBuf);
+
+  sendString("<tr><th align=right>[ <A HREF="CONST_LAST_HOUR_TOP_TALKERS_HTML">Top Talkers</A> ]</th></tr>\n");
 
   sendString("</table></div><div id=\"tabs-3\">\n<table border=0>\n");
 
@@ -4618,6 +4622,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 		formatTimeStamp(0,  0, 0, formatBuf1, sizeof(formatBuf1)));
   sendString(tmpBuf);
 
+  sendString("<tr><th align=right>[ <A HREF="CONST_LAST_DAY_TOP_TALKERS_HTML">Top Talkers</A> ]</th></tr>\n");
   sendString("</table></div><div id=\"tabs-4\">\n<table border=0>\n");
 
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), RRD_THPT_STR,
@@ -4633,6 +4638,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 		formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1)));
   sendString(tmpBuf);
 
+  sendString("<tr><th align=right>[ <A HREF="CONST_HISTORICAL_TALKERS_HTML">Top Talkers</A> ]</th></tr>\n");
   sendString("</table></div>\n</div>\n<p>\n");
 
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<p align=right>"
