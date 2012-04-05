@@ -974,6 +974,10 @@ RETSIGTYPE cleanup(int signo) {
     exit(0);
   }
 
+  traceEvent(CONST_TRACE_INFO, "Active sessions=%u/Active hosts=%u",
+	     myGlobals.device[myGlobals.actualReportDeviceId].numSessions,
+	     myGlobals.device[myGlobals.actualReportDeviceId].hosts.hostsno);
+
 #ifndef WIN32
   signal(SIGALRM, cleanup);
   alarm(20);
@@ -1025,6 +1029,7 @@ RETSIGTYPE cleanup(int signo) {
 
   for(i=0; i<myGlobals.numDevices; i++) {
     freeHostInstances(i);
+    freeDeviceSessions(i);
 
     while(myGlobals.device[i].fragmentList != NULL) {
       IpFragment *fragment = myGlobals.device[i].fragmentList->next;

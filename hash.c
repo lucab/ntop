@@ -234,8 +234,6 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   if(host->community != NULL) free(host->community);
   if(host->geo_ip) GeoIPRecord_delete(host->geo_ip);
 
-  
-
   /* ********** */
   /*
     #ifdef HASH_DEBUG

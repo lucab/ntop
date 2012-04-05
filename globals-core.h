@@ -835,6 +835,7 @@ extern void freeOpenDPI(IPSession *sessionToPurge);
 extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, 
 			u_char allocateMemoryIfNeeded, u_char lockMutex);
 extern void scanTimedoutTCPSessions(int actualDeviceId);
+extern void freeDeviceSessions(int actualDeviceId);
 extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
 			    u_short sport, u_short dport, u_int length);
 extern void updatePortList(HostTraffic *theHost, int clientPort, int serverPort);

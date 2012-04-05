@@ -251,6 +251,11 @@ void updateUsedPorts(HostTraffic *srcHost,
 /* ************************************ */
 
 void freeOpenDPI(IPSession *sessionToPurge) {
+#ifdef DEBUG
+  if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_RUN) 
+    traceEvent(CONST_TRACE_WARNING, "freeOpenDPI(%p)", sessionToPurge);
+#endif
+
   if(sessionToPurge->l7.flow != NULL) {
     if(sessionToPurge->l7.src != NULL) {
       free(sessionToPurge->l7.src);
@@ -273,6 +278,11 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 		 u_char allocateMemoryIfNeeded,
 		 u_char lockMutex /* unused so far */) {
   /* Session to purge */
+
+#ifdef DEBUG
+  if(myGlobals.ntopRunState >= FLAG_NTOPSTATE_RUN) 
+    traceEvent(CONST_TRACE_WARNING, "freeSession(%p)", sessionToPurge);
+#endif
 
   notifyEvent(sessionDeletion, NULL, sessionToPurge, 0);
 
@@ -332,7 +342,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
     traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: Session terminated: %s:%d <-> %s:%d (lastSeend=%d) (# sessions = %d)",
 	       _addrtostr(&sessionToPurge->initiatorRealIp, buf, sizeof(buf)), sessionToPurge->sport,
 	       _addrtostr(&sessionToPurge->remotePeerRealIp, buf1, sizeof(buf1)), sessionToPurge->dport,
-	       sessionToPurge->lastSeen,  myGlobals.device[actualDeviceId].numSessions-1);
+	       sessionToPurge->lastSeen, myGlobals.device[actualDeviceId].numSessions-1);
   }
 #endif
 
@@ -480,6 +490,53 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 }
 
 /* #undef DEBUG */
+
+/* *********************************** */
+
+void freeDeviceSessions(int actualDeviceId) {
+  u_int idx, freeSessionCount = 0;
+
+  /* Patch below courtesy of "Kouprie, Robbert" <R.Kouprie@DTO.TUDelft.NL> */
+  if((!myGlobals.runningPref.enableSessionHandling)
+     || (myGlobals.device[actualDeviceId].sessions == NULL)
+     || (myGlobals.device[actualDeviceId].numSessions == 0))
+    return;
+  
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "freeDeviceSessions() called for device %d", actualDeviceId);
+  
+  for(idx=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
+    IPSession *nextSession, *prevSession, *headSession;
+
+    if(myGlobals.device[actualDeviceId].sessions[idx] == NULL) continue;
+
+    prevSession = NULL, headSession = myGlobals.device[actualDeviceId].sessions[idx];
+
+    while(headSession != NULL) {
+      u_char free_session;
+
+      nextSession = headSession->next;
+
+      if(myGlobals.device[actualDeviceId].sessions[idx] == headSession) {
+	myGlobals.device[actualDeviceId].sessions[idx] = nextSession, prevSession = NULL;
+      } else {
+	if(prevSession)
+	  prevSession->next = nextSession;
+	else
+	  traceEvent(CONST_TRACE_ERROR, "Internal error: pointer inconsistency");
+      }
+      
+      freeSessionCount++;
+      freeSession(headSession, actualDeviceId, 1, 0 /* locked by the purge thread */);
+      
+      headSession = nextSession;
+    } /* while */
+  } /* end for */
+
+  //#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "DEBUG: freeDeviceSessions: freed %u sessions",
+	     freeSessionCount);
+  //#endif
+}
 
 /* *********************************** */
 
@@ -1918,8 +1975,9 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
 	      once = 1;
 	    }
 
-	    if(theSession->l7.src) free(theSession->l7.src);
-	    if(theSession->l7.dst) free(theSession->l7.dst);
+	    if(theSession->l7.src) { free(theSession->l7.src); theSession->l7.src = NULL; }
+	    if(theSession->l7.dst) { free(theSession->l7.dst); theSession->l7.dst = NULL; }
+	    free(theSession->l7.flow); theSession->l7.flow = NULL;
 	    free(theSession);
 
 	    releaseMutex(&myGlobals.sessionsMutex[mutex_idx]);
