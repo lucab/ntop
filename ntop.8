@@ -68,6 +68,8 @@ ntop \- display top network users
 .IR <max_num_TCP_sessions> ]
 .RB [ --disable-instantsessionpurge ]
 .RB [ --disable-mutexextrainfo ]
+.RB [ --disable-ndpi ]
+.RB [ --disable-python ]
 .RB [ --instance ]
 .RB [ --p3p-cp ]
 .RB [ --p3p-uri ]
@@ -869,6 +871,15 @@ disables the extra information.  It should have no processing impact on
  - however should
 .B ntop
 actually deadlock, we would lose the information that sometimes tells us why.
+
+.It --disable-ndpi
+.B ntop
+is started without nDPI support thus application protocols are not recognized.
+
+.It --disable-python
+.B ntop
+is started without the Python interpreter. Beware as some ntop reports are based on
+python, thus disabling it will prevent some reports to work properly.
 
 .It --instance
 

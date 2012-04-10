@@ -1292,6 +1292,8 @@ char **_argv;
 
 void init_python(int argc, char *argv[]) {
 
+  if(myGlobals.runningPref.disablePython) return;
+
   if(_argc == 0) {
     _argc = argc;
     _argv = argv;
@@ -1320,6 +1322,8 @@ void init_python(int argc, char *argv[]) {
 /* **************************************** */
 
 void term_python(void) {
+  if(myGlobals.runningPref.disablePython) return;
+
   Py_Finalize();   /* Cleaning up the interpreter */
 #ifdef HAVE_FASTBIT
   fastbit_cleanup();
@@ -1340,6 +1344,14 @@ int handlePythonHTTPRequest(char *url, u_int postLen) {
 #endif
 
   char *question_mark = strchr(url, '?');
+
+
+  if(myGlobals.runningPref.disablePython) {
+    returnHTTPpageNotFound(NULL);
+    free(document_root);
+    return(1);
+  }
+
 
   // traceEvent(CONST_TRACE_INFO, "Calling python... [%s]", url);
 

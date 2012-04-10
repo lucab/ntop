@@ -148,6 +148,7 @@ void usage(FILE * fp) {
   fprintf(fp, "    [--disable-mutexextrainfo]                            %sDisable extra mutex info\n", newLine);
   fprintf(fp, "    [--disable-stopcap]                                   %sCapture packets even if there's no memory left\n", newLine);
   fprintf(fp, "    [--disable-ndpi]                                      %sDisable nDPI for protocol discovery\n", newLine);
+  fprintf(fp, "    [--disable-python]                                    %sDisable Python interpreter\n", newLine);
 
   fprintf(fp, "    [--instance <name>]                                   %sSet log name for this ntop instance\n", newLine);
   fprintf(fp, "    [--p3p-cp]                                            %sSet return value for p3p compact policy, header\n", newLine);

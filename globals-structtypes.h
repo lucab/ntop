@@ -1873,6 +1873,7 @@ typedef struct _userPref {
 
   bool disableMutexExtraInfo;    /* --disable-mutexextrainfo '145' */
   bool disablenDPI;              /* --disable-ndpi '146' */
+  bool disablePython;            /* --disable-python '147' */
   bool skipVersionCheck;         /* --skip-version-check '150' */
   char *knownSubnets;            /* --known-subnets '151' */
 } UserPref;

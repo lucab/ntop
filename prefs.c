@@ -160,6 +160,7 @@ static struct option const long_options[] = {
   { "disable-instantsessionpurge",      no_argument,       NULL, 144 },
   { "disable-mutexextrainfo",           no_argument,       NULL, 145 },
   { "disable-ndpi",                     no_argument,       NULL, 146 },
+  { "disable-python",                   no_argument,       NULL, 147 },
   
   { "skip-version-check",               required_argument, NULL, 150 },
   { "known-subnets",                    required_argument, NULL, 151 },
@@ -720,7 +721,7 @@ int parseOptions(int argc, char* argv[]) {
       break;
 
     case 147:
-      myGlobals.runningPref.stickyHosts = TRUE;
+      myGlobals.runningPref.disablePython = TRUE;
       break;
 
     case 150:
