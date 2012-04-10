@@ -483,10 +483,10 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
     releaseMutex(&myGlobals.sessionsMutex[mutex_idx]);
   } /* end for */
 
-  //#ifdef DEBUG
+#ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: scanTimedoutTCPSessions: freed %u sessions [total: %u sessions]",
 	     freeSessionCount, tot_sessions);
-  //#endif
+#endif
 }
 
 /* #undef DEBUG */
@@ -512,8 +512,6 @@ void freeDeviceSessions(int actualDeviceId) {
     prevSession = NULL, headSession = myGlobals.device[actualDeviceId].sessions[idx];
 
     while(headSession != NULL) {
-      u_char free_session;
-
       nextSession = headSession->next;
 
       if(myGlobals.device[actualDeviceId].sessions[idx] == headSession) {
@@ -2544,7 +2542,8 @@ static IPSession* handleTCPUDPSession(u_int proto, const struct pcap_pkthdr *h,
     theSession->pktRcvd++;
   }
 
-  if((theSession->pktRcvd < 20) && (theSession->pktSent < 20)) {
+  if(myGlobals.device[actualDeviceId].l7.l7handler
+     && (theSession->pktRcvd < 20) && (theSession->pktSent < 20)) {
     if((ip_offset > 0) && (theSession->l7.major_proto == IPOQUE_PROTOCOL_UNKNOWN)) {
       u_int64_t when = ((u_int64_t) h->ts.tv_sec) * 1000 /* detection_tick_resolution */ + h->ts.tv_usec / 1000 /* (1000000 / detection_tick_resolution) */;
 

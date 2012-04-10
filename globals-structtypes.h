@@ -1872,6 +1872,7 @@ typedef struct _userPref {
   bool disableStopcap;           /* --disable-stopcap '142' */
 
   bool disableMutexExtraInfo;    /* --disable-mutexextrainfo '145' */
+  bool disablenDPI;              /* --disable-ndpi '146' */
   bool skipVersionCheck;         /* --skip-version-check '150' */
   char *knownSubnets;            /* --known-subnets '151' */
 } UserPref;

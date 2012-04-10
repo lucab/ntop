@@ -100,9 +100,9 @@ void usage(FILE * fp) {
   fprintf(fp, "    [-l <path>      | --pcap-log <path>]                  %sDump packets captured to a file (debug only!)\n", newLine);
   fprintf(fp, "    [-m <addresses> | --local-subnets <addresses>]        %sLocal subnetwork(s) (see man page)\n", newLine);
   fprintf(fp, "    [-n <mode>      | --numeric-ip-addresses <mode>]      %sNumeric IP addresses DNS resolution mode:\n", newLine);
-  fprintf(fp, "                                                          %s  %d - %s\n", newLine, 0, "No DNS resolution at all");
-  fprintf(fp, "                                                          %s  %d - %s\n", newLine, 1, "DNS resolution for local hosts only");
-  fprintf(fp, "                                                          %s  %d - %s\n", newLine, 2, "DNS resolution for remote hosts only");
+  fprintf(fp, "                                                          %s%d - %s\n", newLine, 0, "No DNS resolution at all");
+  fprintf(fp, "                                                          %s%d - %s\n", newLine, 1, "DNS resolution for local hosts only");
+  fprintf(fp, "                                                          %s%d - %s\n", newLine, 2, "DNS resolution for remote hosts only");
   fprintf(fp, "    [-p <list>      | --protocols <list>]                 %sList of IP protocols to monitor (see man page)\n", newLine);
   fprintf(fp, "    [-q             | --create-suspicious-packets]        %sCreate file ntop-suspicious-pkts.XXX.pcap file\n", newLine);
   fprintf(fp, "    [-r <number>    | --refresh-time <number>]            %sRefresh time in seconds, default is %d\n",
@@ -144,10 +144,10 @@ void usage(FILE * fp) {
 	  newLine, myGlobals.runningPref.maxNumSessions);
 
 /*  Please keep long-only options alphabetically ordered */
-
   fprintf(fp, "    [--disable-instantsessionpurge]                       %sDisable instant FIN session purge\n", newLine);
   fprintf(fp, "    [--disable-mutexextrainfo]                            %sDisable extra mutex info\n", newLine);
   fprintf(fp, "    [--disable-stopcap]                                   %sCapture packets even if there's no memory left\n", newLine);
+  fprintf(fp, "    [--disable-ndpi]                                      %sDisable nDPI for protocol discovery\n", newLine);
 
   fprintf(fp, "    [--instance <name>]                                   %sSet log name for this ntop instance\n", newLine);
   fprintf(fp, "    [--p3p-cp]                                            %sSet return value for p3p compact policy, header\n", newLine);

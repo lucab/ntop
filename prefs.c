@@ -159,7 +159,8 @@ static struct option const long_options[] = {
   { "disable-stopcap",                  no_argument,       NULL, 142 },
   { "disable-instantsessionpurge",      no_argument,       NULL, 144 },
   { "disable-mutexextrainfo",           no_argument,       NULL, 145 },
-
+  { "disable-ndpi",                     no_argument,       NULL, 146 },
+  
   { "skip-version-check",               required_argument, NULL, 150 },
   { "known-subnets",                    required_argument, NULL, 151 },
 
@@ -712,6 +713,10 @@ int parseOptions(int argc, char* argv[]) {
 
     case 145: /* disable-mutexextrainfo */
       myGlobals.runningPref.disableMutexExtraInfo = TRUE;
+      break;
+
+    case 146: /* disable-ndpi */
+      myGlobals.runningPref.disablenDPI = TRUE;
       break;
 
     case 147:

@@ -531,6 +531,8 @@ void initL7DeviceDiscovery(int deviceId) {
   IPOQUE_PROTOCOL_BITMASK all;
   u32 detection_tick_resolution = 1000;
 
+  if(myGlobals.runningPref.disablenDPI) return;
+
   myGlobals.device[deviceId].l7.l7handler = ipoque_init_detection_module(detection_tick_resolution, malloc_wrapper, debug_printf);
   if(myGlobals.device[deviceId].l7.l7handler == NULL) {
     traceEvent(CONST_TRACE_ERROR, "Unable to initialize L7 engine: disabling L7 discovery for deviceId %u", deviceId);
