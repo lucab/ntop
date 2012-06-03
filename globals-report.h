@@ -41,7 +41,7 @@
 /* Used for HTML tables */
 #define BASE_PROTOS_IDX  30
 
-#define CHART_FORMAT ".png"
+#define CHART_FORMAT ".html"
 #define MIME_TYPE_CHART_FORMAT FLAG_HTTP_TYPE_PNG
 
 /*
@@ -296,6 +296,7 @@ extern void drawTrafficPie(void);
 extern void drawThptGraph(int sortedColumn);
 extern void drawGlobalProtoDistribution(void);
 extern int  drawHostsDistanceGraph(int);
+extern void drawThroughputMeter(void);
 extern void drawGlobalIpProtoDistribution(void);
 extern void buildTalkersGraph(char **labels, HostTalkerSeries *talkers,
 			      int num_talkers, int num_datapoints);

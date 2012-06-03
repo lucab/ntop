@@ -1002,6 +1002,7 @@
 #define CONST_HOME_UNDERSCORE_HTML          "home_.html"
 #define CONST_HOST_HTML                     "host.html"
 #define CONST_BAR_HOST_DISTANCE             "hostsDistanceChart"
+#define CONST_THROUGHPUT_METER              "throughputMeter"
 #define CONST_HOSTS_INFO_HTML               "hostsInfo.html"
 #define CONST_HOST_SORT_NOTE_HTML           "hostSortNote.html"
 #define CONST_INDEX_HTML                    "index.html"

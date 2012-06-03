@@ -1120,32 +1120,7 @@ void printTrafficStatistics(int revertOrder) {
       sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Network Load</TH><TD "TH_BG">\n");
 
       if(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt > 0) {
-	sendString("<div id=\"netspeed\" style=\"align: center; width: 180px; height: 120px; margin: 0 auto\"></div>\n");
-	sendString("<script type=\"text/javascript\">\n");
-	sendString("	  s1 = [\n");
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.1f", myGlobals.device[myGlobals.actualReportDeviceId].actualThpt); sendString(buf);
-	sendString("];\n");
-      
-	sendString("	  $.jqplot('netspeed',[s1],{\n");
-	sendString("	    seriesDefaults: {\n");
-	sendString("	      renderer: $.jqplot.MeterGaugeRenderer,\n");
-	sendString("		  rendererOptions: {\n");
-	sendString("            showTickLabels: false,\n");
-	sendString("		min: 0,\n");
-	sendString("		    max: ");
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.1f,\n",
-		      myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput); sendString(buf);
-	sendString("		    intervals:[");
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.1f, %.1f, %.1f],\n", 
-		      myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput*0.33,
-		      myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput*0.75,
-		      myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput);
-	sendString(buf);
-	sendString("		    intervalColors:['#66cc66', '#E7E658', '#cc6666']\n");
-	sendString("		    }\n");
-	sendString("	      }\n");
-	sendString("	    });\n");
-	sendString("</script>\n");
+	sendString("<iframe frameborder=0 SRC=\"" CONST_THROUGHPUT_METER CHART_FORMAT "\" width=200 height=150 align=center scrolling=no></iframe>");
       }
 
       sendString("<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");

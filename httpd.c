@@ -1108,6 +1108,8 @@ void _sendStringLen(char *theString, unsigned int len, int allowSSI) {
 
 	compressFileFd = gzopen(compressedFilePath, "wb");
 	if(0) traceEvent(CONST_TRACE_INFO, "gzopen(%s)=%p", compressedFilePath, compressFileFd);
+
+	/* traceEvent(CONST_TRACE_ERROR, "[SSL] [%d] %s", theString[0], theString); */
       }
 
       if(gzwrite(compressFileFd, theString, len) == 0) {
@@ -1207,11 +1209,17 @@ void _sendString(char *theString, int allowSSI) {
 
 void sendJSLibraries(int graph_mode) {
 
+  /* Damn Internet explorer... */
+  // sendString("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\">\n");
+
+
   //  if(graph_mode) {
+
+  sendString("<!--[if lt IE 9]><script language=\"javascript\" type=\"text/javascript\" src=\"/jqplot/excanvas.min.js\"></script><![endif]-->\n");
+
     /* JQuery */
     sendString("<script type=\"text/javascript\" src=\"/jquery-1.7.min.js\"></script>\n");
     /* www.jqplot.com */
-    sendString("<!--[if lt IE 9]><script language=\"javascript\" type=\"text/javascript\" src=\"/jqplot/excanvas.min.js\"></script><![endif]-->\n");
     sendString("<script type=\"text/javascript\" src=\"/jqplot/jquery.jqplot.min.js\"></script>\n");
     sendString("<script type=\"text/javascript\" src=\"/jqplot/plugins/jqplot.pieRenderer.min.js\"></script>\n");
     sendString("<script type=\"text/javascript\" src=\"/jqplot/plugins/jqplot.barRenderer.min.js\"></script>\n");
@@ -1242,6 +1250,8 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
 
   if(htmlTitle != NULL) theTitle = htmlTitle; else theTitle = title;
 
+  sendString("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" http://www.w3.org/TR/html4/loose.dtd\"> ");
+
   if(0) sendString((myGlobals.runningPref.w3c == TRUE) ? CONST_W3C_DOCTYPE_LINE "\n" : "\n"); /* FIX */
   sendString("<HTML>\n<HEAD>\n");
   if(0) sendString((myGlobals.runningPref.w3c == TRUE) ? CONST_W3C_CHARTYPE_LINE "\n" : "\n"); /* FIX */
@@ -1263,17 +1273,17 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
 
   sendString("<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n");
   sendString("<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n");
-  if((headerFlags & BITFLAG_HTML_NO_STYLESHEET) == 0) {
-    sendString("<LINK REL=stylesheet HREF=\"/style.css\" type=\"text/css\">\n");
-  }
 
   /* sendString("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"ntop\" href=\"/rss.xml\">"); */
 
   sendJSLibraries(0);
 
+  if((headerFlags & BITFLAG_HTML_NO_STYLESHEET) == 0) {
+    sendString("<LINK REL=stylesheet HREF=\"/style.css\" type=\"text/css\">\n");
+  }
+
   /* ******************************************************* */
-  /*there should be no need to include the style again*/
-  /*sendString("<link rel=\"stylesheet\" href=\"/style.css\" TYPE=\"text/css\">\n");*/
+
   ssiMenu_Head();
   sendString("</head>");
 
@@ -1753,9 +1763,11 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
       compressFile = 1;
   }
 
+#if 1
   if((headerFlags & BITFLAG_HTTP_MORE_FIELDS) == 0) {
     sendString("\r\n");
   }
+#endif
 }
 
 /* ************************* */
@@ -2410,11 +2422,10 @@ static int returnHTTPPage(char* pageName,
 #endif
 
   if(fd != NULL) {
-    char theDate[48],
-      *buffer;
+    char theDate[48], *buffer;
     time_t theTime;
     int sz, len = strlen(pageURI), mimeType = FLAG_HTTP_TYPE_HTML;
-
+    
     if(len > 4) {
       if(strcasecmp(&pageURI[len-4], ".gif") == 0)
         mimeType = FLAG_HTTP_TYPE_GIF;
@@ -2953,6 +2964,11 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawHostsDistanceGraph(0);
 	printTrailer=0;
+      } else if(strncasecmp(pageName, CONST_THROUGHPUT_METER,
+			    strlen(CONST_THROUGHPUT_METER)) == 0) {
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+	drawThroughputMeter();
+	printTrailer=0;
       } else if((strncasecmp(pageName,    CONST_HOST_TRAFFIC_DISTR_HTML,
 			     strlen(CONST_HOST_TRAFFIC_DISTR_HTML)) == 0)
 		|| (strncasecmp(pageName, CONST_HOST_FRAGMENT_DISTR_HTML, 
@@ -3452,6 +3468,8 @@ static void compressAndSendData(u_int *gzipBytesSent) {
     sendStringLen(tmpStr, len);
   }
   fclose(fd);
+
+  // traceEvent(CONST_TRACE_ERROR, "[SSL] %s", compressedFilePath);
 
   unlink(compressedFilePath);
 }

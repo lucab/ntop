@@ -62,7 +62,7 @@ static void send_graph_footer(void) {
   sendString("			     seriesDefaults: {\n");
   sendString("			       renderer: jQuery.jqplot.PieRenderer, \n");
   sendString("				   rendererOptions: {\n");
-  sendString("				 showDataLabels: true,\n");
+  sendString("				 showDataLabels: true\n");
   sendString("				     }\n");
   sendString("			       }, \n");
 
@@ -82,6 +82,7 @@ static void send_graph_footer(void) {
   sendString("  </script>\n\n");
 
   sendString("<div id=\"container\" style=\"width: 350px; height: 320px; margin: 0 auto\"></div>\n");
+  sendString("</body>\n</html>\n");
 }
 
 /**********************************************************/
@@ -997,6 +998,8 @@ void buildTalkersGraph(char **labels, HostTalkerSeries *talkers,
 
   sendJSLibraries(1);
 
+  sendString("</head>\n<body>\n");
+
   sendString("<script type=\"text/javascript\">\n");
   sendString("  $(document).ready(function() {\n");
 
@@ -1114,3 +1117,49 @@ void buildTalkersGraph(char **labels, HostTalkerSeries *talkers,
 }
 
 /* ************************ */
+
+void drawThroughputMeter() {
+  char buf[256];
+
+  sendString("<HTML>\n"
+	     "<HEAD>\n"
+	     "<META HTTP-EQUIV=REFRESH CONTENT=120>\n"
+	     "<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n"
+	     "<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n");
+
+  sendJSLibraries(1);
+
+  sendString("</head>\n<body>\n");
+
+  sendString("<script type=\"text/javascript\">\n");
+  sendString("  $(document).ready(function() {\n");
+  sendString("	  s1 = [\n");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.1f", myGlobals.device[myGlobals.actualReportDeviceId].actualThpt); sendString(buf);
+  sendString("];\n");
+      
+  sendString("	  $.jqplot('netspeed',[s1],{\n");
+  sendString("	    seriesDefaults: {\n");
+  sendString("	      renderer: $.jqplot.MeterGaugeRenderer,\n");
+  sendString("		  rendererOptions: {\n");
+  sendString("            showTickLabels: false,\n");
+  sendString("		min: 0,\n");
+  sendString("		    max: ");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.1f,\n",
+		myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput); sendString(buf);
+  sendString("		    intervals:[");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.1f, %.1f, %.1f],\n", 
+		myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput*0.33,
+		myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput*0.75,
+		myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput);
+  sendString(buf);
+  sendString("		    intervalColors:['#66cc66', '#E7E658', '#cc6666']\n");
+  sendString("		    }\n");
+  sendString("	      }\n");
+  sendString("	    });\n");
+  sendString("  });\n");
+
+  sendString("</script>\n");
+
+  sendString("<div id=\"netspeed\" style=\"align: center; width: 180px; height: 120px; margin: 0 auto\"></div>\n");
+  sendString("</body>\n</html>\n");
+}
