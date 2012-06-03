@@ -47,52 +47,39 @@ static void send_graph_header(char *title) {
 
   sendJSLibraries(1);
 
-  sendString("<script type=\"text/javascript\">\n");
-  sendString("     var chart;\n");
-  sendString("  $(document).ready(function() {\n");
-  sendString("      chart = new Highcharts.Chart({\n");
-  sendString("	chart: {\n");
-  sendString("	  renderTo: 'container',\n");
-  sendString("	      plotBackgroundColor: null,\n");
-  sendString("	      plotBorderWidth: null,\n");
-  sendString("	      plotShadow: false\n");
-  sendString("	      },\n");
-  sendString("	    title: {\n");
-  sendString("	  text: '");
-  sendString(title);
-  sendString("'\n");
-  sendString("	      },\n");
-  sendString("	    tooltip: {\n");
-  sendString("	  formatter: function() {\n");
-  sendString("	      return '<b>'+ this.point.name +'</b>: '+ this.percentage +' %';\n");
-  sendString("	    }\n");
-  sendString("	  },\n");
-  sendString("	    plotOptions: {\n");
-  sendString("	  pie: {\n");
-  sendString("	    allowPointSelect: true,\n");
-  sendString("		cursor: 'pointer',\n");
-  sendString("		dataLabels: {\n");
-  sendString("	            enabled: true,\n");
-  sendString("	        },\n");
-  sendString("		showInLegend: true\n");
-  sendString("	      }\n");
-  sendString("	  },\n");
-  sendString("	    series: [{\n");
-  sendString("	    type: 'pie',\n");
-  sendString("		name: '");
-  sendString(title);
-  sendString("',\n");
-  sendString("		data: [\n");  
+  sendString("</head>\n<body>\n");
+
+  sendString("\n\n<script type=\"text/javascript\">\n");
+  sendString("var data = [\n");
 }
 
 /**********************************************************/
 
 static void send_graph_footer(void) {
-  sendString("		       ]\n");
-  sendString("		}]\n");
-  sendString("	    });\n");
+  sendString("$(document).ready(function(){\n\n");
+  sendString("  $.jqplot('container', [data], \n");
+  sendString("			     { \n");
+  sendString("			     seriesDefaults: {\n");
+  sendString("			       renderer: jQuery.jqplot.PieRenderer, \n");
+  sendString("				   rendererOptions: {\n");
+  sendString("				 showDataLabels: true,\n");
+  sendString("				     }\n");
+  sendString("			       }, \n");
+
+  /* Remove border around graphs */
+  sendString(" grid: { \n");
+  sendString("  gridLineColor: 'transparent', \n");
+  sendString("      background: 'transparent', \n");
+  sendString("      borderColor: 'transparent', \n");
+  sendString("      borderWidth: '1', \n");
+  sendString("      shadow: false \n");
+  sendString("      }, \n");
+
+  sendString("				 legend: { show:true, location: 'e' }\n");
+  sendString("			     }\n");
+  sendString("			     );\n");
   sendString("    });\n");
-  sendString("  </script>\n");
+  sendString("  </script>\n\n");
 
   sendString("<div id=\"container\" style=\"width: 350px; height: 320px; margin: 0 auto\"></div>\n");
 }
@@ -125,6 +112,7 @@ static void build_pie(char *title,
     }
   }
 
+  sendString("];\n");
   sendString("\n");
   send_graph_footer();
 }
@@ -334,7 +322,7 @@ void drawDeviceServiceDistribution(void) {
 
   for(i=0; i<myGlobals.l7.numSupportedProtocols; i++) {
     float val;
-    
+
     val = (float)myGlobals.device[myGlobals.actualReportDeviceId].l7.protoTraffic[i];
     if(val > 0) {
       val = (float)((val * 100) / totTraffic);
@@ -344,14 +332,14 @@ void drawDeviceServiceDistribution(void) {
       if(num == 20) break;
     }
   }
-  
+
   if(num == 0) {
     traceEvent(CONST_TRACE_WARNING, "Graph failure (1)");
     return; /* TODO: this has to be handled better */
   }
-  
+
   if(num == 1) p[0] = 100; /* just to be safe */
-  
+
   build_pie("Service Distribution", num, p, lbl);
 }
 
@@ -1010,18 +998,9 @@ void buildTalkersGraph(char **labels, HostTalkerSeries *talkers,
   sendJSLibraries(1);
 
   sendString("<script type=\"text/javascript\">\n");
-  sendString("    var chart;\n");
   sendString("  $(document).ready(function() {\n");
-  sendString("      chart = new Highcharts.Chart({\n");
-  sendString("	chart: {\n");
-  sendString("	  renderTo: 'container',\n");
-  sendString("	      defaultSeriesType: 'bar'\n");
-  sendString("	      },\n");
-  sendString("	    title: {\n");
-  sendString("	  text: 'Top Host Talkers'\n");
-  sendString("	      },\n");
-  sendString("	    xAxis: {\n");
-  sendString("	  categories: [\n");
+
+  sendString("    var ticks = [ ");
 
   for(i=0; i<num_datapoints; i++) {
     char buf[32];
@@ -1031,64 +1010,15 @@ void buildTalkersGraph(char **labels, HostTalkerSeries *talkers,
     sendString(buf);
   }
 
-  sendString("]\n");
-  sendString("	      },\n");
-  sendString("	    yAxis: {\n");
-  sendString("	  min: 0,\n");
-  sendString("	      title: {\n");
-  sendString("	    text: 'Host Traffic %'\n");
-  sendString("		},\n");
-  sendString("	      stackLabels: {\n");
-  sendString("	    enabled: true,\n");
-  sendString("		style: {\n");
-  sendString("	      fontWeight: 'bold',\n");
-  sendString("		  color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'\n");
-  sendString("		  }\n");
-  sendString("	    }\n");
-  sendString("	  },\n");
-
-#if 0
-  sendString("	    legend: {\n");
-  sendString("	  align: 'right',\n");
-  sendString("	      x: -100,\n");
-  sendString("	      verticalAlign: 'top',\n");
-  sendString("	      y: 20,\n");
-  sendString("	      floating: true,\n");
-  sendString("	      backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColorSolid) || 'white',\n");
-  sendString("	      borderColor: '#CCC',\n");
-  sendString("	      borderWidth: 1,\n");
-  sendString("	      shadow: false\n");
-  sendString("	      },\n");
-#endif
-
-  sendString("	    tooltip: {\n");
-  sendString("	  formatter: function() {\n");
-#if 0
-  sendString("	      return '<b>'+ this.x +'</b><br/>'+\n");
-  sendString("		 this.series.name +': '+ this.y +'<br/>'+\n");
-  sendString("		'Total: '+ this.point.stackTotal;\n");
-#else
-  sendString("        return ''+ this.series.name +': '+ Math.round(this.percentage) +'%';\n");
-#endif
-  sendString("	    }\n");
-  sendString("	  },\n");
-  sendString("	    plotOptions: {\n");
-  sendString("	  series: {\n");
-  sendString("	    stacking: 'percent',\n");
-  sendString("		dataLabels: {\n");
-  sendString("	      enabled: false,\n");
-  sendString("		  color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'white'\n");
-  sendString("		  }\n");
-  sendString("	    }\n");
-  sendString("	  },\n");
-  sendString("	    series: [\n");
+  sendString("];\n");
+  sendString("    var series = [ ");
 
   for(i=0; i<num_talkers; i++) {
     HostTraffic *el, tmpEl;
     char buf[LEN_GENERAL_WORK_BUFFER], *c;
 
     el = quickHostLink(talkers[i].hostSerial, myGlobals.actualReportDeviceId, &tmpEl);
-    
+
     if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE)
        || (el->hostResolvedName[0] == '\0') /* Safety check */
        ) {
@@ -1099,7 +1029,7 @@ void buildTalkersGraph(char **labels, HostTalkerSeries *talkers,
     }
 
     c = (el->hostResolvedName[0] != '\0') ? el->hostResolvedName : el->hostNumIpAddress;
-    
+
     if(el->hostResolvedName[0] != '\0') {
       c = el->hostResolvedName, j = 0;
 
@@ -1108,17 +1038,23 @@ void buildTalkersGraph(char **labels, HostTalkerSeries *talkers,
 	  c[j] = '\0';
 	  break;
 	}
-	
+
 	j++;
       }
     } else
       c = el->hostNumIpAddress;
-    
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "\t\t{\n\t\tname: '%s',\n", c);
-		  
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "{ label: '%s'}, ", c);
+    sendString(buf);
+  }
+  sendString("];\n\n");
+
+  for(i=0; i<num_talkers; i++) {
+    char buf[64];
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "var data%d =  [ ", i);
     sendString(buf);
 
-    sendString("\t\t\tdata: [\n");
     for(j=0; j<num_datapoints; j++) {
 
       if(j > 0) sendString(", ");
@@ -1126,15 +1062,55 @@ void buildTalkersGraph(char **labels, HostTalkerSeries *talkers,
       sendString(buf);
     }
 
-    sendString("]\n\t\t},\n");
+    sendString("];\n");
   }
 
-  sendString("		       ]\n");
-  sendString("	    });\n");
-  sendString("    });\n");
-  sendString("  </script>\n");
+  sendString("        $.jqplot('container', [ ");
+  for(i=0; i<num_talkers; i++) {
+    char buf[32];
 
-  sendString("<div id=\"container\" style=\"width: 100%; height: 100%; margin: 0 auto\"></div>\n");
+    if(i > 0) sendString(", ");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "data%d", i);
+    sendString(buf);
+  }
+
+  sendString("   ], {\n");
+  sendString("   animate: !$.jqplot.use_excanvas,\n");
+  sendString("            stackSeries: true,\n");
+  //  sendString("            title : 'Top Host Talkers',\n");
+  sendString("            seriesDefaults:{\n");
+  sendString("                renderer:$.jqplot.BarRenderer,\n");
+  sendString("\n");
+  sendString("            },\n");
+
+  sendString(" grid: { \n");
+  //  sendString("  gridLineColor: 'transparent', \n");
+  //  sendString("      background: 'transparent', \n");
+  sendString("      borderColor: 'transparent', \n");
+  sendString("      borderWidth: '1', \n");
+  sendString("      shadow: false \n");
+  sendString("  }, \n");
+
+
+  sendString("            axes: {\n");
+  sendString("                xaxis: {\n");
+  sendString("                    renderer: $.jqplot.CategoryAxisRenderer,\n");
+  sendString("                    ticks: ticks\n");
+  sendString("                }\n");
+  sendString("            },\n");
+  sendString("            series: series,\n");
+  sendString("            axesDefaults: { showTickMarks: false },\n");
+  sendString("            legend: {\n");
+  sendString("                show: true,\n");
+  sendString("                location: 'e',\n");
+  sendString("                placement: 'outside'\n");
+  sendString("      }\n");
+
+  sendString("  });\n");
+  sendString("});\n");
+  sendString("</script>\n");
+
+  sendString("<div id=\"container\" align=left style=\"width: 800px; margin: 0 auto\"></div>\n");
 }
 
 /* ************************ */

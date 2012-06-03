@@ -473,7 +473,8 @@ void printTrafficSummary (int revertOrder) {
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       updateThpt(0);
 
-      sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
+      sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Network Load</TH><TD "TH_BG">\n");
+      sendString("<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Actual</th><TD "TD_BG" align=right>%s</td>"
 		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkt/s</td></TR>\n",
 		    getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt,
@@ -1116,8 +1117,38 @@ void printTrafficStatistics(int revertOrder) {
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       updateThpt(0);
 
-      sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Network Load</TH><TD "TH_BG">\n"
-		 "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
+      sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Network Load</TH><TD "TH_BG">\n");
+
+      if(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt > 0) {
+	sendString("<div id=\"netspeed\" style=\"align: center; width: 180px; height: 120px; margin: 0 auto\"></div>\n");
+	sendString("<script type=\"text/javascript\">\n");
+	sendString("	  s1 = [\n");
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.1f", myGlobals.device[myGlobals.actualReportDeviceId].actualThpt); sendString(buf);
+	sendString("];\n");
+      
+	sendString("	  $.jqplot('netspeed',[s1],{\n");
+	sendString("	    seriesDefaults: {\n");
+	sendString("	      renderer: $.jqplot.MeterGaugeRenderer,\n");
+	sendString("		  rendererOptions: {\n");
+	sendString("            showTickLabels: false,\n");
+	sendString("		min: 0,\n");
+	sendString("		    max: ");
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.1f,\n",
+		      myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput); sendString(buf);
+	sendString("		    intervals:[");
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.1f, %.1f, %.1f],\n", 
+		      myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput*0.33,
+		      myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput*0.75,
+		      myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput);
+	sendString(buf);
+	sendString("		    intervalColors:['#66cc66', '#E7E658', '#cc6666']\n");
+	sendString("		    }\n");
+	sendString("	      }\n");
+	sendString("	    });\n");
+	sendString("</script>\n");
+      }
+
+      sendString("<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Actual</th><TD "TD_BG" align=right>%s</td>"
 		    "<TD "TD_BG" align=right>%.1f&nbsp;Pkt/s</td></TR>\n",
@@ -2028,18 +2059,10 @@ void printTopTalkers(u_int8_t printHourTalkers, u_int8_t show_graph) {
     }
 
     sendString("<CENTER>\n");
+
+    printTopTalkers(printHourTalkers ? 1 : 0, 1);
+
     sendString(TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
-
-    sendString("<TR><TD COLSPAN=4>\n");
-    sendString("<iframe frameborder=0 SRC=\"");
-    sendString(printHourTalkers ? CONST_LAST_HOUR_TOP_TALKERS_HTML : CONST_LAST_DAY_TOP_TALKERS_HTML);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "?mode=1\" width=750 height=%u></iframe>\n",
-		  min(350+10*numTalkers, 900));
-    sendString(buf);
-
-    sendString("</TD></TR>\n");
 
     sendString("<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG" COLSPAN=2>Time Period</A></TH>\n"

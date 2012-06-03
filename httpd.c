@@ -1207,24 +1207,30 @@ void _sendString(char *theString, int allowSSI) {
 
 void sendJSLibraries(int graph_mode) {
 
-  if(graph_mode) {
+  //  if(graph_mode) {
     /* JQuery */
     sendString("<script type=\"text/javascript\" src=\"/jquery-1.7.min.js\"></script>\n");
-    /* Highcharts */
-    sendString("<script type=\"text/javascript\" src=\"/highcharts.js\"></script>\n");
-    sendString("<script type=\"text/javascript\" src=\"/exporting.js\"></script>\n");
-  } else {
+    /* www.jqplot.com */
+    sendString("<!--[if lt IE 9]><script language=\"javascript\" type=\"text/javascript\" src=\"/jqplot/excanvas.min.js\"></script><![endif]-->\n");
+    sendString("<script type=\"text/javascript\" src=\"/jqplot/jquery.jqplot.min.js\"></script>\n");
+    sendString("<script type=\"text/javascript\" src=\"/jqplot/plugins/jqplot.pieRenderer.min.js\"></script>\n");
+    sendString("<script type=\"text/javascript\" src=\"/jqplot/plugins/jqplot.barRenderer.min.js\"></script>\n");
+    sendString("<script type=\"text/javascript\" src=\"/jqplot/plugins/jqplot.meterGaugeRenderer.min.js\"></script>\n");
+    sendString("<script type=\"text/javascript\" src=\"/jqplot/plugins/jqplot.categoryAxisRenderer.min.js\"></script>\n");
+    sendString("<script type=\"text/javascript\" src=\"/jqplot/plugins/jqplot.pointLabels.min.js\"></script>\n");
+    sendString("<link rel=\"stylesheet\" type=\"text/css\" href=\"/jqplot/jquery.jqplot.css\" />\n");
+    //  } else {
     sendString("<script type=\"text/javascript\" src=\"/reflection.js\"></script>\n");
     sendString("<script TYPE=\"text/javascript\" src=\"/functions.js\"></script>\n");
     sendString("<script type=\"text/javascript\" src=\"/domLib.js\"></script>\n");
     sendString("<script type=\"text/javascript\" src=\"/domTT.js\"></script>\n");
     sendString("<script type=\"text/javascript\">var domTT_styleClass = 'niceTitle';</script>\n");
     /* JQuery */
-    sendString("<script type=\"text/javascript\" src=\"/jquery-1.7.min.js\"></script>\n");
+    //sendString("<script type=\"text/javascript\" src=\"/jquery-1.7.min.js\"></script>\n");
     sendString("<link rel=\"stylesheet\" href=\"jquery-ui-1.8.16.custom.css\">\n");
     /* JQuery UI */
     sendString("<script type=\"text/javascript\" src=\"/jquery-ui-1.8.16.custom.min.js\"></script>\n");    
-  }
+    //  }
 
   sendString("<script type=\"text/javascript\" src=\"http://maps.googleapis.com/maps/api/js?sensor=false\"></script>\n");
 }
