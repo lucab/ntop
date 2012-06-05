@@ -27,7 +27,7 @@ DEFS      = @DEFS@
 INCS      = @INCS@
 
 INCLUDES  = -I. $(INCS) ${RRD_INC} -I @NDPI_INC@
-LIBS      = 
+LIBS      =
 BASE_LIBS = @LIBS@ @CORELIBS@  ${RRD_LIB} @NDPI_LIB@
 AS        = @AS@
 AWK       = @AWK@
@@ -35,7 +35,7 @@ CC        = @CC@
 CCLD      = @CCLD@
 
 #AM_CFLAGS =
-#AM_LDFLAGS= 
+#AM_LDFLAGS=
 ACLOCAL_AMFLAGS=-I m4
 
 DISTCLEANFILES = trivialcompilemessage *.db #* *~ *.log
@@ -73,6 +73,8 @@ NTOPDATA = ntop-cert.pem \
 
 NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png \
            html/*.css html/*.dtd \
+	   html/jqplot/*s \
+	   html/jqplot/plugins/*.js \
 	   html/img_inquisitor \
 	   html/img_inquisitor/*gif \
 	   html/jscalendar \
@@ -81,7 +83,7 @@ NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.p
 	   html/jscalendar/lang/*js \
            html/statsicons \
            html/statsicons/flags html/statsicons/os \
-           html/statsicons/flags/*.gif html/statsicons/os/*.gif 
+           html/statsicons/flags/*.gif html/statsicons/os/*.gif
 
 WEBFILES       = `cat www/FILES`
 PLUGINSFILES   = `cat plugins/FILES`
@@ -99,14 +101,14 @@ DOCSFILES      = `cat docs/FILES`
 #
 bin_PROGRAMS   = ntop
 EXTRA_PROGRAMS = ntops
-bin_SCRIPTS    = 
+bin_SCRIPTS    =
 
 ntop_SOURCES       = main.c admin.c
 ntop_DEPENDENCIES  = libntopreport.la libntop.la
 ntop_LDADD         = libntopreport.la libntop.la $(BASE_LIBS)
 ntop_LDFLAGS       = $(AM_LDFLAGS)
-ntop_CFLAGS        = 
-EXTRA_HEADERS      = 
+ntop_CFLAGS        =
+EXTRA_HEADERS      =
 noinst_HEADERS     = @GETOPT_H@ globals-core.h globals-report.h ntop.h
 
 # all the Archives
@@ -152,6 +154,7 @@ CLEANLIST = `ls -l $(DESTDIR)$(libdir)/*ntop*.so $(DESTDIR)$(libdir)/*Plugin*.so
           grep -v '\->' | \
           $(AWK) '{ print $$NF }'`
 
+CLEANLISTD = `find $(DESTDIR)$(datadir) -name '.svn'`
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # rules to handle nroff documentation
@@ -228,6 +231,11 @@ listlibclean:
              echo "   $$file"; \
           fi; \
         done
+	@for dir in $(CLEANLISTD); do \
+          if test -d $$dir; then \
+             echo "   $$dir"; \
+          fi; \
+        done
 	@echo ""
 
 libclean:
@@ -289,7 +297,7 @@ install: install-recursive
 	  echo ""; \
 	fi
 
-	@if test -f $(DESTDIR)/$(datadir)/ntop/warnuser; then \
+	@if test -f $(DESTDIR)$(datadir)/ntop/warnuser; then \
 	  echo ""; \
 	  echo ""; \
 	  echo "************************************************************"; \
@@ -298,15 +306,15 @@ install: install-recursive
 	  echo "  WARNING: This install created a directory for the ntop"; \
 	  echo "           files and databases:"; \
 	  echo ""; \
-	  echo "             $(DESTDIR)/$(datadir)/ntop"; \
+	  echo "             $(DESTDIR)$(datadir)/ntop"; \
 	  echo ""; \
 	  echo "           This directory MUST be owned by the user"; \
 	  echo "           which you are going to use to run ntop."; \
 	  echo ""; \
 	  echo "           The command you must issue is something like:"; \
 	  echo ""; \
-	  echo "           chown -R ntop.ntop $(DESTDIR)/$(datadir)/ntop"; \
-	  echo "     or    chown -R ntop:users $(DESTDIR)/$(datadir)/ntop"; \
+	  echo "           chown -R ntop.ntop $(DESTDIR)$(datadir)/ntop"; \
+	  echo "     or    chown -R ntop:users $(DESTDIR)$(datadir)/ntop"; \
 	  echo ""; \
 	  echo "           man chown to check the syntax for YOUR system"; \
 	  echo ""; \
@@ -314,7 +322,7 @@ install: install-recursive
 	  echo "************************************************************"; \
 	  echo ""; \
 	  echo ""; \
-	  rm -f $(DESTDIR)/$(datadir)/ntop/warnuser; \
+	  rm -f $(DESTDIR)$(datadir)/ntop/warnuser; \
 	fi
 
 	echo "Shall you be using SELinux please run:"
@@ -323,20 +331,20 @@ install: install-recursive
 install-selinux-policy:
 	chcon -t textrel_shlib_t $(DESTDIR)$(libdir)/*ntop*.so
 
-install-data-local: ntop.txt ntop.html faq.html 
+install-data-local: ntop.txt ntop.html faq.html
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
-	@if ! test -d $(DESTDIR)/$(datadir)/ntop; then \
-	  $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop; \
-	  touch $(DESTDIR)/$(datadir)/ntop/warnuser; \
+	@if ! test -d $(DESTDIR)$(datadir)/ntop; then \
+	  $(top_srcdir)/mkinstalldirs $(DESTDIR)$(datadir)/ntop; \
+	  touch $(DESTDIR)$(datadir)/ntop/warnuser; \
 	else \
-	  rm -f $(DESTDIR)/$(datadir)/ntop/warnuser; \
+	  rm -f $(DESTDIR)$(datadir)/ntop/warnuser; \
 	fi
-	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/html;
+	@$(top_srcdir)/mkinstalldirs $(DESTDIR)$(datadir)/ntop/html;
 	@for file in $(NTOPHTML); do \
           if test -d $$file; then \
-             $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/$$file; \
+             $(top_srcdir)/mkinstalldirs $(DESTDIR)$(datadir)/ntop/$$file; \
            else \
-             cp -p $$file $(DESTDIR)/$(datadir)/ntop/$$file; \
+             cp -p $$file $(DESTDIR)$(datadir)/ntop/$$file; \
           fi; \
         done
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(CFG_CONFIGFILE_DIR);
@@ -347,8 +355,8 @@ install-data-local: ntop.txt ntop.html faq.html
              cp -p $$file $(DESTDIR)/$(CFG_CONFIGFILE_DIR)/$$file; \
           fi; \
         done
-	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/python
-	cp -r python/* $(DESTDIR)/$(datadir)/ntop/python
+	@$(top_srcdir)/mkinstalldirs $(DESTDIR)$(datadir)/ntop/python
+	tar --exclude='.svn' -c -f - python/* | (cd $(DESTDIR)$(datadir)/ntop/python ; tar xfp -)
 
 # build the IPX SAP table
 #sapt: saptable.h

@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.19.2 -->
-<!-- CreationDate: Sat Jan  9 14:52:42 2010 -->
+<!-- CreationDate: Tue Jun  5 11:22:21 2012 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -57,13 +57,11 @@ display top network users</p>
 [<b>-e</b>|<b>--max-table-rows</b>]
 [<b>-f</b>|<b>--traffic-dump-file</b> <i>file&gt;</i>]
 [<b>-g</b>|<b>--track-local-hosts</b>]
-[<b>-h</b>|<b>--help</b>]
-[<b>-j</b>|<b>--create-other-packets</b>]
-[<b>-l</b>|<b>--pcap-log</b> <i>&lt;path&gt;</i>]
-[<b>-m</b>|<b>--local-subnets</b> <i>&lt;addresses&gt;</i>]
+[<b>-h</b>|<b>--help</b>] [<b>-l</b>|<b>--pcap-log</b>
+<i>&lt;path&gt;</i>] [<b>-m</b>|<b>--local-subnets</b>
+<i>&lt;addresses&gt;</i>]
 [<b>-n</b>|<b>--numeric-ip-addresses</b>]
-[<b>-o</b>|<b>--no-mac</b>] [<b>-p</b>|<b>--protocols</b>
-<i>&lt;list&gt;</i>]
+[<b>-p</b>|<b>--protocols</b> <i>&lt;list&gt;</i>]
 [<b>-q</b>|<b>--create-suspicious-packets</b>]
 [<b>-r</b>|<b>--refresh-time</b> <i>&lt;number&gt;</i>]
 [<b>-s</b>|<b>--no-promiscuous</b>]
@@ -85,12 +83,11 @@ display top network users</p>
 <i>&lt;URL&gt;</i>] [<b>-V</b>|<b>--version]</b> [<b>-X</b>
 <i>&lt;max_num_TCP_sessions&gt;</i>]
 [<b>--disable-instantsessionpurge</b>]
-[<b>--disable-mutexextrainfo</b>] [<b>--fc-only</b>]
-[<b>--instance</b>] [<b>--no-fc</b>]
-[<b>--no-invalid-lun</b>] [<b>--p3p-cp</b>]
-[<b>--p3p-uri</b>] [<b>--skip-version-check</b>]
-[<b>--w3c</b>] [<b>-4</b>|<b>--ipv4]</b>
-[<b>-6</b>|<b>--ipv6]</b></p>
+[<b>--disable-mutexextrainfo</b>] [<b>--disable-ndpi</b>]
+[<b>--disable-python</b>] [<b>--instance</b>]
+[<b>--p3p-cp</b>] [<b>--p3p-uri</b>]
+[<b>--skip-version-check</b>] [<b>--w3c</b>]
+[<b>-4</b>|<b>--ipv4]</b> [<b>-6</b>|<b>--ipv6]</b></p>
 
 <p style="margin-left:11%; margin-top: 1em">Unix
 options:</p>
@@ -362,18 +359,6 @@ its name, e.g. {6252C14C-44C9-49D9-BF59-B2DC18C7B811}. Run
 <b>ntop</b> -h to see a list of interface name-number
 mappings (at the end of the help information).</p>
 
-<p style="margin-left:11%;"><b>-j |
---create-other-packets</b></p>
-
-<p style="margin-left:12%;">This parameter causes
-<b>ntop</b> to create a dump file of the &rsquo;other&rsquo;
-network traffic captured. One file is created for each
-network interface where
-&lt;path&gt;/ntop-other-pkts.&lt;device&gt;.pcap, where
-&lt;path&gt; is defined by the -O | --output-packet-path
-parameter. This file is useful for understanding these
-unclassifed packets.</p>
-
 <p style="margin-left:11%;"><b>-l | --pcap-log</b></p>
 
 <p style="margin-left:12%;">This parameter causes a dump
@@ -432,48 +417,6 @@ causes <b>ntop</b> to skip DNS resolution, showing only
 numeric IP addresses instead of the symbolic names. This
 option can useful when the DNS is not present or quite
 slow.</p>
-
-<p style="margin-left:11%;"><b>-o | --no-mac</b></p>
-
-<p style="margin-left:12%;"><b>ntop</b> is a hybrid layer
-2/3 network monitor. That is, it uses both the lower level,
-physical device address - the MAC (Media Access Control)
-address - and the higher level, logical, tcp/ip address (the
-familiar www.ntop.org or 131.114.21.9 address). This allows
-<b>ntop</b> to link the logical addresses to a physical
-machine with multiple addresses (This occurs with virtual
-hosts or additional addresses assigned to the interface,
-etc.) to present consolidated reporting.</p>
-
-<p style="margin-left:12%; margin-top: 1em">This parameter
-specifies that <b>ntop</b> should not trust the MAC
-addresses but just use the IP addresses.</p>
-
-<p style="margin-left:12%; margin-top: 1em">Normally, since
-the MAC address must be globally unique, the dual nature of
-<b>ntop</b> is a benefit and provides far better information
-about the network than is available via a pure layer 2 or
-pure layer 3 monitor.</p>
-
-<p style="margin-left:12%; margin-top: 1em">Under certain
-circumstances - whenever <b>ntop</b> is started on an
-interface where MAC addresses cannot be really trusted - you
-may require this option.</p>
-
-<p style="margin-left:12%; margin-top: 1em">Situations
-which may require this option include port/VLAN mirror, some
-cases with switches and spanning tree protocol, and
-(reportedly) some specific models of Ethernet switches which
-re-write MAC addresses of the packets they process.
-Normally, you discover that this option is necessary when
-you observe that hosts seem to change their addresses or
-information about different machines get lumped
-together.</p>
-
-<p style="margin-left:12%; margin-top: 1em">Note that with
-this option, information which is dependent upon the MAC
-addresses (non tcp/ip protocols like IPX) will not be
-collected nor displayed.</p>
 
 <p style="margin-left:11%;"><b>-p | --protocols</b></p>
 
@@ -1120,10 +1063,18 @@ impact on <b>ntop</b> <br>
 - however should <b>ntop</b> actually deadlock, we would
 lose the information that sometimes tells us why.</p>
 
-<p style="margin-left:11%;"><b>--fc-only</b></p>
+<p style="margin-left:11%;"><b>--disable-ndpi</b></p>
 
-<p style="margin-left:12%; margin-top: 1em">Display only
-Fibre Channel statistics.</p>
+<p style="margin-left:12%;"><b>ntop</b> is started without
+nDPI support thus application protocols are not
+recognized.</p>
+
+<p style="margin-left:11%;"><b>--disable-python</b></p>
+
+<p style="margin-left:12%;"><b>ntop</b> is started without
+the Python interpreter. Beware as some ntop reports are
+based on python, thus disabling it will prevent some reports
+to work properly.</p>
 
 <p style="margin-left:11%;"><b>--instance</b></p>
 
@@ -1174,16 +1125,6 @@ original Solaris routine had a bug, replicated in FreeBSD
 name. If the &rsquo;running from&rsquo; value looks bogus
 but the &rsquo;libaries in&rsquo; value looks ok, go with
 the libarary.</p>
-
-<p style="margin-left:11%;"><b>--no-fc</b></p>
-
-<p style="margin-left:12%; margin-top: 1em">Disable
-processing &amp; Display of Fibre Channel</p>
-
-<p style="margin-left:11%;"><b>--no-invalid-lun</b></p>
-
-<p style="margin-left:12%; margin-top: 1em">Don&rsquo;t
-display Invalid LUN information.</p>
 
 <p style="margin-left:11%;"><b>--p3p-cp <br>
 --p3p-uri</b></p>
