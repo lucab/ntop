@@ -73,6 +73,7 @@ NTOPDATA = ntop-cert.pem \
 
 NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png \
            html/*.css html/*.dtd \
+	   html/jqplot \
 	   html/jqplot/*s \
 	   html/jqplot/plugins/*.js \
 	   html/img_inquisitor \
