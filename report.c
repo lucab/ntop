@@ -4452,7 +4452,7 @@ void printProtoTraffic(int printGraph) {
 	       "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
 
     sendString("\n<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
-	       "<iframe frameborder=0 SRC=\"" CONST_SERVICE_DISTR_HTML CHART_FORMAT "\" "
+	       "<iframe frameborder=0 SRC=\"" CONST_HOST_SERVICE_DISTR_HTML CHART_FORMAT "\" "
 	       "width=650 height=360></iframe>"
 	       "</TD></TR>\n");
 

@@ -2942,8 +2942,8 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawGlobalProtoDistribution();
 	printTrailer=0;
-      } else if(strncasecmp(pageName, CONST_SERVICE_DISTR_HTML,
-			    strlen(CONST_SERVICE_DISTR_HTML)) == 0) {
+      } else if(strncasecmp(pageName, CONST_HOST_SERVICE_DISTR_HTML,
+			    strlen(CONST_HOST_SERVICE_DISTR_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	drawDeviceServiceDistribution();
 	printTrailer=0;
